@@ -186,6 +186,12 @@
                (< (second p) 16))))))
 
 
+(comment
+  (->> ["docker-compose.usb.yml", "docker-compose.yml"]
+       (map #(second (re-matches #"docker-compose\.([a-z]+)\.yml$" %))))
+
+  )
+
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -199,6 +205,7 @@
         project        (-> @status :installation-parameters :project-name)
         working-dir    (-> @status :installation-parameters :working-dir)
         config-files     (-> @status :installation-parameters :config-files)
+        modules        (->> config-files (map #(second (re-matches #"docker-compose\.([a-z]+)\.yml$" %))) (into #{}))
         environment    (-> @status :installation-parameters :environment)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   #(swap! form-data assoc :nuvlabox-release %)
@@ -208,6 +215,7 @@
                                   (utils/format-update-data @form-data)
                                   on-success-fn on-error-fn])]
 
+
     (swap! form-data assoc :project-name project)
     (swap! form-data assoc :working-dir working-dir)
     (swap! form-data assoc :config-files (str/join "\n" config-files))
@@ -216,11 +224,12 @@
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
     (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
-      (let [correct-nb?    (= (:parent @status) id)
-            target-version (->> @releases
-                                (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
-                                :key)
-            selected-nb    (or (:nuvlabox-release @form-data) (:id (@releases-by-no nb-version)))]
+      (let [correct-nb?      (= (:parent @status) id)
+            target-version   (->> @releases
+                                  (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
+                                  :key)
+            release-id       (or (:nuvlabox-release @form-data) (:id (@releases-by-no nb-version)))
+            selected-release (get @releases-by-id release-id)]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
@@ -243,25 +252,57 @@
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                            [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
-                                  :target "_blank"}
-                              (str/capitalize (@tr [:see-more]))]])}])
+                           [:span (str (@tr [:nuvlabox-update-error-content])) " "
+                            [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
+                                 :target "_blank"}
+                             (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                            [:span (@tr [:nuvlabox-update-warning-content])])}])
+                           [:span (@tr [:nuvlabox-update-warning-content])])}])
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i nb-version]]])
           [ui/Segment
            [:b (@tr [:update-to])]
-           [DropdownReleases {:value       selected-nb
+           [DropdownReleases {:value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
                               :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]]
+          (let [{:keys [compose-files url]} selected-release]
+            [ui/Container
+             (when (> (count compose-files) 1)
+               [ui/Popup
+                {:trigger        (r/as-element [:span (@tr [:additional-modules])])
+                 :content        (str (@tr [:additional-modules-popup]))
+                 :on             "hover"
+                 :hide-on-scroll true}])
+                 (for [{:keys [scope]} compose-files]
+                   [:div scope])
+             (doall
+              (for [{:keys [scope]} compose-files]
+                (when-not (#{"core" ""} scope)
+              (js/console.error "scope" scope)
+              (js/console.error "modules" modules)
+                  [ui/Checkbox {:key       scope
+                                :label     scope
+                                :checked   (contains?
+                                            modules
+                                            scope)
+                                :style     {:margin "1em"}
+                                :on-change (ui-callback/checked
+                                            (fn [checked]
+                                              #_(if checked
+                                                (swap! nuvlabox-release-data assoc
+                                                       :nb-assets
+                                                       (conj nb-assets scope))
+                                                (swap! nuvlabox-release-data assoc
+                                                       :nb-assets
+                                                       (-> @nuvlabox-release-data
+                                                           :nb-assets
+                                                           (disj scope))))))}])))])
           [uix/Accordion
            [:<>
             [ui/Form
@@ -283,14 +324,14 @@
                             :default-value (:project-name @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change (ui-callback/input-callback
-                                         #(swap! form-data assoc :project-name %))}]
+                                        #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                             #(swap! form-data assoc :working-dir %))}]
+                                            #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
               [:label
                [general-utils/mandatory-name (@tr [:config-files])]
@@ -300,14 +341,14 @@
                             :default-value (:config-files @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                             #(swap! form-data assoc :config-files %))}]]
+                                            #(swap! form-data assoc :config-files %))}]]
              [ui/FormField
               [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                             #(swap! form-data assoc :environment %))}]]]]
+                                            #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
            :title-size :h4
            :default-open false]]

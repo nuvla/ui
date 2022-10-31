@@ -31,7 +31,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -105,15 +106,22 @@
 
 (defn DropdownReleases
   [_opts]
-  (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])]
+  (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])
+        tr       (subscribe [::i18n-subs/tr])]
     (fn [opts]
-      (when (empty? @releases)
-        (dispatch [::edges-events/get-nuvlabox-releases]))
-      [ui/Dropdown
-       (merge {:selection true
-               :loading   (empty? @releases)
-               :options   @releases}
-              opts)])))
+      (let [selected-release (subscribe [::edges-subs/nuvlabox-releases-from-id (:value opts)])]
+        (when (empty? @releases)
+          (dispatch [::edges-events/get-nuvlabox-releases]))
+        [:<> [ui/Dropdown
+
+              (merge {:selection true
+                      :loading   (empty? @releases)
+                      :options   @releases}
+                     (dissoc opts :pre-release))]
+         (when (:pre-release @selected-release) [:span {:style  {:margin "1em"
+                                                                 :color "darkorange"}}
+                                                 (r/as-element [ui/Icon {:name "exclamation triangle"}])
+                                                 (@tr [:nuvlabox-pre-release])])]))))
 
 
 (defn AddRevokeSSHButton
@@ -180,21 +188,23 @@
 
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        status        (subscribe [::subs/nuvlabox-status])
-        releases      (subscribe [::edges-subs/nuvlabox-releases-options])
-        close-fn      #(reset! show? false)
-        form-data     (r/atom nil)
-        force-restart (r/atom false)
-        project       (-> @status :installation-parameters :project-name)
-        working-dir   (-> @status :installation-parameters :working-dir)
-        config-files  (-> @status :installation-parameters :config-files)
-        environment   (-> @status :installation-parameters :environment)
-        nb-version    (get @status :nuvlabox-engine-version nil)
-        on-change-fn  #(swap! form-data assoc :nuvlabox-release %)
-        on-success-fn close-fn
-        on-error-fn   close-fn
-        on-click-fn   #(dispatch [::events/operation id operation
+  (let [tr             (subscribe [::i18n-subs/tr])
+        status         (subscribe [::subs/nuvlabox-status])
+        releases       (subscribe [::edges-subs/nuvlabox-releases-options])
+        releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
+        releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
+        close-fn       #(reset! show? false)
+        form-data      (r/atom nil)
+        force-restart  (r/atom false)
+        project        (-> @status :installation-parameters :project-name)
+        working-dir    (-> @status :installation-parameters :working-dir)
+        config-files     (-> @status :installation-parameters :config-files)
+        environment    (-> @status :installation-parameters :environment)
+        nb-version     (get @status :nuvlabox-engine-version nil)
+        on-change-fn   #(swap! form-data assoc :nuvlabox-release %)
+        on-success-fn  close-fn
+        on-error-fn    close-fn
+        on-click-fn    #(dispatch [::events/operation id operation
                                   (utils/format-update-data @form-data)
                                   on-success-fn on-error-fn])]
 
@@ -209,7 +219,8 @@
       (let [correct-nb?    (= (:parent @status) id)
             target-version (->> @releases
                                 (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
-                                :key)]
+                                :key)
+            selected-nb    (or (:nuvlabox-release @form-data) (:id (@releases-by-no nb-version)))]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
@@ -248,7 +259,7 @@
               [:i nb-version]]])
           [ui/Segment
            [:b (@tr [:update-to])]
-           [DropdownReleases {:placeholder (@tr [:select-version])
+           [DropdownReleases {:value       selected-nb
                               :on-change   (ui-callback/value #(on-change-fn %))
                               :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]]
           [uix/Accordion
@@ -270,12 +281,14 @@
                             :placeholder   "nuvlabox"
                             :required      true
                             :default-value (:project-name @form-data)
-                            :on-change     (ui-callback/input-callback
-                                             #(swap! form-data assoc :project-name %))}]
+                            :on-key-down #(-> % .stopPropagation)
+                            :on-change (ui-callback/input-callback
+                                         #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
+                            :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
@@ -285,12 +298,14 @@
               [ui/TextArea {:placeholder   "docker-compose.yml\ndocker-compose.gpu.yml\n..."
                             :required      true
                             :default-value (:config-files @form-data)
+                            :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :config-files %))}]]
              [ui/FormField
               [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
+                            :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
@@ -807,11 +822,6 @@
                    nil)
                  nil)]))))
 
-(defn OnlineStatusIcon
-  [online corner]
-  [ui/Icon {:name   "power"
-            :corner (true? corner)
-            :color  (utils/status->color online)}])
 
 (defn Load
   [resources]
@@ -1103,13 +1113,7 @@
          [:p (tr [:nuvlaedge-next-telemetry-expected])
           next-heartbeat-times-ago "."])
        [:p (tr [:nuvlaedge-last-telemetry-was])
-        (time/ago
-          (->> refresh-interval
-               (* 2)
-               (+ 10)
-               (* 1000)
-               (time/subtract-milliseconds next-heartbeat-moment)
-               ) locale) "."]])))
+        (utils/last-time-online next-heartbeat-moment refresh-interval locale) "."]])))
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]

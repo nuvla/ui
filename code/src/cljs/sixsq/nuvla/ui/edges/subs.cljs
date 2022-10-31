@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.edges.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.edges.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.edges.spec :as spec]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (reg-sub
   ::loading?
@@ -18,6 +18,29 @@
   ::nuvlaboxes
   (fn [db]
     (::spec/nuvlaboxes db)))
+
+(reg-sub
+  ::edges-status
+  (fn [db]
+    (::spec/nuvlaedges-select-status db)))
+
+(reg-sub
+  ::next-heartbeat-moment
+  :<- [::edges-status]
+  (fn [status [_ edge-id]]
+    (some-> (get-in status [edge-id :next-heartbeat]) time/parse-iso8601)))
+
+(reg-sub
+  ::engine-version
+  :<- [::edges-status]
+  (fn [edges-status [_ edge-id]]
+    (get-in edges-status [edge-id :nuvlabox-engine-version])))
+
+(reg-sub
+  ::one-edge-with-only-major-version
+  :<- [::edges-status]
+  (fn [edges-status [_ ids]]
+    (some (comp nil? :nuvlabox-engine-version edges-status) ids)))
 
 (reg-sub
   ::nuvlabox-locations
@@ -81,12 +104,30 @@
     (::spec/nuvlabox-releases db)))
 
 (reg-sub
+  ::nuvlabox-releases-by-id
+  :<- [::nuvlabox-releases]
+  (fn [nuvlabox-releases]
+    (zipmap (map :id nuvlabox-releases) nuvlabox-releases)))
+
+(reg-sub
+  ::nuvlabox-releases-from-id
+  :<- [::nuvlabox-releases-by-id]
+  (fn [nuvlabox-releases-by-id [_ id]]
+    (nuvlabox-releases-by-id id)))
+
+(reg-sub
+  ::nuvlabox-releases-by-release-number
+  :<- [::nuvlabox-releases]
+  (fn [nuvlabox-releases]
+    (zipmap (map :release nuvlabox-releases) nuvlabox-releases)))
+
+(reg-sub
   ::nuvlabox-releases-options
   :<- [::nuvlabox-releases]
   (fn [nuvlabox-releases]
     (map
-      (fn [{:keys [id release]}]
-        {:key release, :text release, :value id})
+      (fn [{:keys [id release pre-release]}]
+        {:key release, :text (str release (when pre-release " - pre-release")), :value id, :pre-release pre-release})
       nuvlabox-releases)))
 
 (reg-sub

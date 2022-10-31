@@ -71,7 +71,7 @@
                 :auto-complete :off
                 :auto-focus    true
                 :value         @search
-                :placeholder   (@tr [:search])
+                :placeholder   (str (@tr [:search]) "...")
                 :on-change     (ui-callback/input-callback
                                  #(reset! search %))
                 :on-click      #(.stopPropagation %)}]

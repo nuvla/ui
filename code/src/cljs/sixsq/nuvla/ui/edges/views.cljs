@@ -18,6 +18,8 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -26,6 +28,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
     [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
@@ -220,7 +223,7 @@
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
                                    (when @playbooks-cronjob
-                                     [ui/Popup {:content        @playbooks-cronjob
+                                     [ui/Popup {:content        (@playbooks-cronjob :cronjob)
                                                 :wide           "very"
                                                 :position       "bottom center"
                                                 :hide-on-scroll true
@@ -233,7 +236,7 @@
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
                               " ")
                    (values/copy-value-to-clipboard
-                     "" @playbooks-cronjob (@tr [:copy-to-clipboard]) true)]
+                     "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
 
             (when @new-private-ssh-key
@@ -390,7 +393,6 @@
           [ui/Button {:positive true
                       :on-click on-close-fn} (@tr [:close])]]]))))
 
-
 (defn AddModal
   []
   (let [modal-id                   :add
@@ -401,8 +403,8 @@
         vpn-infra-opts             (subscribe [::subs/vpn-infra-options])
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
-        nb-releases-by-id          (group-by :id @nb-releases)
-        first-nb-release           (->> @nb-releases
+        nb-releases-by-id          (subscribe [::subs/nuvlabox-releases-by-id])
+        first-nb-release            (->> @nb-releases
                                         (remove :pre-release)
                                         first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
@@ -529,8 +531,8 @@
                                    :placeholder (@tr [:none])
                                    :value       (:vpn-server-id @creation-data)
                                    :on-change   (ui-callback/callback
-                                                  :value #(swap! creation-data assoc
-                                                                 :vpn-server-id %))
+                                                 :value #(swap! creation-data assoc
+                                                                :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
 
                  [ui/Checkbox {:toggle    true
@@ -576,41 +578,33 @@
 
                  (let [{nb-rel                                          :nb-rel
                         nb-assets                                       :nb-assets
-                        {:keys [release compose-files url pre-release]} :nb-selected}
+                        {:keys [compose-files url]}  :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
                     [edges-detail/DropdownReleases
-                     {:placeholder release
-                      :value       nb-rel
+                     {:value       nb-rel
                       :on-change   (ui-callback/value
-                                     (fn [value]
-                                       (swap! nuvlabox-release-data
-                                              assoc :nb-rel value)
-                                       (let [nb-selected (->> value
-                                                              (get nb-releases-by-id)
-                                                              first)]
-                                         (swap! creation-data assoc
-                                                :version (-> nb-selected
-                                                             :release
-                                                             utils/get-major-version
-                                                             general-utils/str->int))
-                                         (swap! nuvlabox-release-data
-                                                assoc :nb-selected nb-selected)
-                                         (swap! nuvlabox-release-data assoc :nb-assets
-                                                (set (map :scope (:compose-files nb-selected)))))
-                                       ))}]
+                                    (fn [value]
+                                      (swap! nuvlabox-release-data
+                                             assoc :nb-rel value)
+                                      (let [nb-selected (get @nb-releases-by-id value)]
+                                        (swap! creation-data assoc
+                                               :version (-> nb-selected
+                                                            :release
+                                                            utils/get-major-version
+                                                            general-utils/str->int))
+                                        (swap! nuvlabox-release-data
+                                               assoc :nb-selected nb-selected)
+                                        (swap! nuvlabox-release-data assoc :nb-assets
+                                               (set (map :scope (:compose-files nb-selected)))))
+                                      ))}]
+
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}
                      (@tr [:nuvlabox-release-notes])]
-                    (when pre-release
-                      [ui/Popup
-                       {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
-                        :content        (@tr [:nuvlabox-pre-release])
-                        :on             "hover"
-                        :hide-on-scroll true}])
                     [ui/Container
                      (when (> (count compose-files) 1)
                        [ui/Popup
@@ -732,17 +726,24 @@
 
 
 (defn NuvlaboxRow
-  [{:keys [id name description created state tags online] :as _nuvlabox} managers]
-  (let [uuid (general-utils/id->uuid id)]
+  [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox} managers]
+  (let [uuid                  (general-utils/id->uuid id)
+        locale                (subscribe [::i18n-subs/locale])
+        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+        engine-version        @(subscribe [::subs/engine-version id])
+        creator               (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edges-detail/OnlineStatusIcon online]]
+      [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell (values/format-created created)]
+     [ui/TableCell @creator]
+     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
+     [ui/TableCell (or engine-version (str version ".x.x"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
@@ -778,7 +779,9 @@
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
                                                        (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
-                            (:resources @nuvlaboxes))]
+                            (:resources @nuvlaboxes))
+        maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
+        tr                (subscribe [::i18n-subs/tr])]
     [:div style/center-items
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
@@ -787,7 +790,12 @@
         [ui/TableHeaderCell "state"]
         [ui/TableHeaderCell "name"]
         [ui/TableHeaderCell "description"]
-        [ui/TableHeaderCell "created"]
+        [ui/TableHeaderCell (@tr [:created])]
+        [ui/TableHeaderCell (@tr [:created-by])]
+        [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
+        [ui/TableHeaderCell {:single-line true}
+         (@tr [:version])
+         (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
         [ui/TableHeaderCell "tags"]
         [ui/TableHeaderCell "manager"]]]
 
@@ -856,11 +864,13 @@
       [ui/Grid {:stackable true
                 :reversed  "mobile"
                 :style     {:padding-bottom 10}}
-       [ui/GridColumn {:width 3}
+       [ui/GridColumn {:width 4}
         [full-text-search-plugin/FullTextSearch
-         {:db-path      [::spec/edges-search]
-          :change-event [::pagination-plugin/change-page
-                         [::spec/pagination] 1]}]]
+         {:db-path            [::spec/edges-search]
+          :change-event       [::pagination-plugin/change-page
+                               [::spec/pagination] 1]
+          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
+          :style              {:width "100%"}}]]
        [ui/GridColumn {:width 10}
         (if (= @view-type :cluster)
           [views-clusters/StatisticStates]

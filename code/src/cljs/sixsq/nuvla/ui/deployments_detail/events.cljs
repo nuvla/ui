@@ -12,12 +12,6 @@
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.utils.response :as response]))
 
-(reg-event-fx
-  ::init
-  (fn [{db :db} [_ href]]
-    {:db (merge db spec/defaults)
-     :fx [[:dispatch [::get-deployment href]]]}))
-
 (reg-event-db
   ::set-module-versions
   (fn [db [_ module]]

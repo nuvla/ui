@@ -261,14 +261,16 @@
 
 
 (defn TwoFactorTokenInputEnable
-  []
+  [{:keys [show-confirmation]
+    :or {show-confirmation true}}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [TwoFactorTokenInput
      {:on-change #(dispatch [::events/clear-error-message])
       :on-submit #(dispatch [::events/two-factor-auth-callback-exec %1
                              [::events/two-factor-enabled
                               (@tr [:two-factor-auth-enabled])
-                              (@tr [:two-factor-auth-code-accepted-enabled])]])}]))
+                              (@tr [:two-factor-auth-code-accepted-enabled])
+                              show-confirmation]])}]))
 
 
 (defmulti ModalTwoFactorContent identity)
@@ -347,7 +349,7 @@
   [_step]
   [:<>
    [ui/ModalContent
-    [TwoFactorTokenInputEnable]]])
+    [TwoFactorTokenInputEnable {:show-confirmation false}]]])
 
 
 (defn ModalTwoFactorAuth
@@ -730,9 +732,9 @@
            [ui/FormRadio {:label     (@tr [:credit-card])
                           :checked   (= @payment-form "card")
                           :on-change (ui-callback/value #(reset! payment-form "card"))}]
-           #_[ui/FormRadio {:label     (@tr [:bank-account])
-                            :checked   (= @payment-form "sepa_debit")
-                            :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
+           [ui/FormRadio {:label     (@tr [:bank-account])
+                          :checked   (= @payment-form "sepa_debit")
+                          :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
           [ui/FormField {:width 9}
            [PaymentMethodInput
             (cond-> {:type         @payment-form

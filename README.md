@@ -61,15 +61,7 @@ To run your UI dev server and your backend server from the same host address we 
 a reverse-proxy during development. Caddy installs local certificates automatically, so we can run the development
 environment on a "real" URL.
 
-First, in your host file, after the `localhost entry`, add a new entry `nui.localhost` (you can choose something
-else)
-pointing `127.0.0.1` or `localhost`, for example `nui.localhost`:
-
-```
-127.0.0.1 nui.localhost
-```
-
-Second, you create a new file called `Caddyfile` with this content:
+First, create a new file called `Caddyfile` with this content:
 
 ```sh
 {

@@ -4,9 +4,48 @@
 
 ### Changed
 
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908<<<<<<< issue_901
+- Apps - Replaces "App Store" with "Marketplace"
+
+
+## [2.32.8] - 2022-10-14
+
+### Changed
+
+- Dictionary - Replace module by application, typo fix, NuvlaEdge/Cloud order change #916
+- acl - Make possible add principals by user/group uuid
+- acl - Principals dropdown searchable with groups/user
+- Dev tools - Cloudflare preview integration
+- NuvlaEdge overview - Shows last online times for offline edges #895
+- NuvlaEdge overview - Shows engine versions on table view #909
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form bugfix #908
+- Deployments overview - Shows created by on table and list view #926
+- Edges overview - Shows created by on table and list view #926
+- Profile - Removes auto closing modal on tab change to enable e-mail 2FA bugfix #918
+- Edges and Deployments - Adds filter indicator to full text search
+- Filter comp - Show filter in popoup and color the button when filter is set
+
+## [2.32.7] - 2022-09-29
+
+### Changed
+
+- Deployment detail - Page not refreshed bugfix #906
+- Profile - Let user choose Sepa payment again
+
+## [2.32.6] - 2022-09-28
+
+### Changed
+
 - Home - Update old links to point to new NuvlaEdge documentation
 - Profile - Groups tabs warns user of unsaved changes
-- Apps - Replaces "App Store" with "Marketplace"
+- Apps details - Adds button enabling re-opening comparison after closing it
+- App store - Only shows published apps on initial load bugfix #900
+- App store - My apps should filter on active-claim bugfix
+- App store - Show published tick also in my apps tab bugfix
+- App details - Pricing tab Follow user trial period toggle button not shown for read only app bugfix #897
+- NuvlaEdge add modal - Copies correct value to clipboard for cronjob when host level management enabled bugfix #879
+- NuvlaEdge add modal - Shows correct value for cronjob in hover popup bugfix
+- Global - Adds cursor style pointer to copy to clipboard component bugfix
 
 ## [2.32.5] - 2022-09-19
 

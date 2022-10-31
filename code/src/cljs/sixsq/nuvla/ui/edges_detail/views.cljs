@@ -230,9 +230,9 @@
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
-                       [ui/MenuItem {:on-click #(reset! show? true)}
-                        [ui/Icon {:name icon}]
-                        title])}
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name icon}]
+                         title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
           (when correct-nb?
@@ -243,17 +243,17 @@
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                           [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                            [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
-                                 :target "_blank"}
-                             (str/capitalize (@tr [:see-more]))]])}])
+                            [:span (str (@tr [:nuvlabox-update-error-content])) " "
+                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
+                                  :target "_blank"}
+                              (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                           [:span (@tr [:nuvlabox-update-warning-content])])}])
+                            [:span (@tr [:nuvlabox-update-warning-content])])}])
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i nb-version]]])
@@ -283,14 +283,14 @@
                             :default-value (:project-name @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change (ui-callback/input-callback
-                                        #(swap! form-data assoc :project-name %))}]
+                                         #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                            #(swap! form-data assoc :working-dir %))}]
+                                             #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
               [:label
                [general-utils/mandatory-name (@tr [:config-files])]
@@ -300,13 +300,13 @@
                             :default-value (:config-files @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                            #(swap! form-data assoc :config-files %))}]]
+                                             #(swap! form-data assoc :config-files %))}]]
              [ui/FormField
               [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
                             :on-change     (ui-callback/input-callback
-                                            #(swap! form-data assoc :environment %))}]]]]
+                                             #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
            :title-size :h4
            :default-open false]]

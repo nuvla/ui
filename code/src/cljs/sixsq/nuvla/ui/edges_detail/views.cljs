@@ -1829,6 +1829,7 @@
         nuvlabox    (subscribe [::subs/nuvlabox])
         can-edit?   @(subscribe [::subs/can-edit?])
         peripherals @(subscribe [::subs/nuvlabox-peripherals-ids])
+        deployments @(subscribe [::deployments-subs/deployments])
         overview    {:menuItem {:content "Overview"
                                 :key     :overview
                                 :icon    "info"}
@@ -1871,7 +1872,11 @@
        (events-plugin/events-section
          {:db-path [::spec/events]
           :href    (:id @nuvlabox)})
-       {:menuItem {:content "Deployments"
+       {:menuItem {:content (r/as-element [:span "Deployments"
+                                           [ui/Label {:circular true
+                                                      :size     "mini"
+                                                      :attached "top right"}
+                                            (count (:resources deployments))]])
                    :key     :deployments
                    :icon    "rocket"}
         :render   #(r/as-element

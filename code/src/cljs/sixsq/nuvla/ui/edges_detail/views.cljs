@@ -185,6 +185,18 @@
                (< (second p) 16))))))
 
 
+(defn- str->cleaned-set [s]
+  (remove str/blank? (str/split-lines s)))
+
+(defn- form-update-data-unchanged? [form-data {:keys [nuvlabox-release project-name working-dir environment config-files]}]
+  (and (= (:project-name form-data) project-name)
+       (= (:working-dir form-data) working-dir)
+       (= (set (str->cleaned-set (:environment form-data)))
+          (set (str->cleaned-set environment)))
+       (= (set (str->cleaned-set (:config-files form-data)))
+          (set (str->cleaned-set config-files)))
+       (= (:nuvlabox-release form-data) nuvlabox-release)))
+
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -205,17 +217,17 @@
         on-success-fn  close-fn
         on-error-fn    close-fn
         on-click-fn    #(dispatch [::events/operation id operation
-                                  (utils/format-update-data @form-data)
-                                  on-success-fn on-error-fn])]
+                                   (utils/format-update-data @form-data)
+                                   on-success-fn on-error-fn])
+        current-config  {:project-name project
+                         :working-dir working-dir
+                         :config-files (str/join "\n" config-files)
+                         :environment (str/join "\n" environment)
+                         :force-restart false
+                         :nuvlabox-release (:id (@releases-by-no nb-version))}]
 
 
-    (swap! form-data assoc :project-name project)
-    (swap! form-data assoc :working-dir working-dir)
-    (swap! form-data assoc :config-files (str/join "\n" config-files))
-    (swap! form-data assoc :environment (str/join "\n" environment))
-    (swap! form-data assoc :force-restart false)
-    (when nb-version
-      (swap! form-data assoc :current-version nb-version))
+    (reset! form-data current-config)
     (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
       (let [correct-nb?      (= (:parent @status) id)
             target-version   (->> @releases
@@ -275,13 +287,29 @@
              (doall
               (for [{:keys [scope]} compose-files]
                 (when-not (#{"core" ""} scope)
-                  [ui/Checkbox {:key       scope
-                                :label     scope
-                                :checked   (contains?
-                                            @modules
-                                            scope)
-                                :disabled true
-                                :style     {:margin "1em"}}])))])]
+                  [ui/Checkbox {:key              scope
+                                :label            scope
+                                :default-checked  (contains?
+                                                   @modules
+                                                   scope)
+                                :style            {:margin "1em"}
+                                :on-change        (ui-callback/checked
+                                                    (fn [checked]
+                                                      (let [config-files-str (:config-files @form-data)
+                                                            file-name (str "docker-compose." scope ".yml")]
+                                                        (if checked
+                                                          (swap! form-data
+                                                                 assoc
+                                                                 :config-files
+                                                                 (str config-files-str "\n" file-name))
+                                                          (swap! form-data
+                                                                 assoc
+                                                                 :config-files
+                                                                 (->> (str/split config-files-str "\n")
+                                                                      (remove
+                                                                       #{file-name})
+                                                                      (str/join "\n")))))))}])))])]
+
           [uix/Accordion
            [:<>
             [ui/Form
@@ -317,7 +345,7 @@
                [components/InfoPopup (@tr [:config-file-info])]]
               [ui/TextArea {:placeholder   "docker-compose.yml\ndocker-compose.gpu.yml\n..."
                             :required      true
-                            :default-value (:config-files @form-data)
+                            :value         (:config-files @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                             #(swap! form-data assoc :config-files %))}]]
@@ -334,7 +362,9 @@
          [ui/ModalActions
           [uix/Button
            {:text     button-text
-            :disabled (or (utils/form-update-data-incomplete? @form-data) (is-old-version? nb-version))
+            :disabled (or (utils/form-update-data-incomplete? @form-data)
+                          (is-old-version? nb-version)
+                          (form-update-data-unchanged? @form-data current-config))
             :primary  true
             :on-click on-click-fn}]]]))))
 

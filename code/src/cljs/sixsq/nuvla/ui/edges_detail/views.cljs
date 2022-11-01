@@ -115,7 +115,8 @@
         [:<> [ui/Dropdown
               (merge {:selection true
                       :loading   (empty? @releases)
-                      :options   (map #(dissoc % :pre-release) @releases)})]
+                      :options   (map #(dissoc % :pre-release) @releases)}
+                     opts)]
          (when (:pre-release @selected-release) [:span {:style  {:margin "1em"
                                                                  :color "darkorange"}}
                                                  (r/as-element [ui/Icon {:name "exclamation triangle"}])

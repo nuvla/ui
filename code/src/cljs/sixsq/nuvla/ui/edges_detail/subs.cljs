@@ -15,6 +15,16 @@
     (::spec/nuvlabox-status db)))
 
 (reg-sub
+ ::nuvlabox-modules
+ :<- [::nuvlabox-status]
+ (fn [nuvlabox-status]
+   (->> nuvlabox-status
+        :installation-parameters
+        :config-files
+        (map #(second (re-matches #"docker-compose\.([a-z]+)\.yml$" %)))
+        (into #{}))))
+
+(reg-sub
   ::nuvlabox-components
   :<- [::nuvlabox-status]
   (fn [{:keys [components]}]

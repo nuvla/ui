@@ -113,11 +113,9 @@
         (when (empty? @releases)
           (dispatch [::edges-events/get-nuvlabox-releases]))
         [:<> [ui/Dropdown
-
               (merge {:selection true
                       :loading   (empty? @releases)
-                      :options   @releases}
-                     (dissoc opts :pre-release))]
+                      :options   (map #(dissoc % :pre-release) @releases)})]
          (when (:pre-release @selected-release) [:span {:style  {:margin "1em"
                                                                  :color "darkorange"}}
                                                  (r/as-element [ui/Icon {:name "exclamation triangle"}])
@@ -186,16 +184,11 @@
                (< (second p) 16))))))
 
 
-(comment
-  (->> ["docker-compose.usb.yml", "docker-compose.yml"]
-       (map #(second (re-matches #"docker-compose\.([a-z]+)\.yml$" %))))
-
-  )
-
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
+        modules        (subscribe [::subs/nuvlabox-modules])
         releases       (subscribe [::edges-subs/nuvlabox-releases-options])
         releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
         releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
@@ -205,7 +198,6 @@
         project        (-> @status :installation-parameters :project-name)
         working-dir    (-> @status :installation-parameters :working-dir)
         config-files     (-> @status :installation-parameters :config-files)
-        modules        (->> config-files (map #(second (re-matches #"docker-compose\.([a-z]+)\.yml$" %))) (into #{}))
         environment    (-> @status :installation-parameters :environment)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   #(swap! form-data assoc :nuvlabox-release %)
@@ -270,8 +262,8 @@
            [:b (@tr [:update-to])]
            [DropdownReleases {:value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
-                              :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]]
-          (let [{:keys [compose-files url]} selected-release]
+                              :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]
+           (let [{:keys [compose-files]} selected-release]
             [ui/Container
              (when (> (count compose-files) 1)
                [ui/Popup
@@ -279,30 +271,16 @@
                  :content        (str (@tr [:additional-modules-popup]))
                  :on             "hover"
                  :hide-on-scroll true}])
-                 (for [{:keys [scope]} compose-files]
-                   [:div scope])
              (doall
               (for [{:keys [scope]} compose-files]
                 (when-not (#{"core" ""} scope)
-              (js/console.error "scope" scope)
-              (js/console.error "modules" modules)
                   [ui/Checkbox {:key       scope
                                 :label     scope
                                 :checked   (contains?
-                                            modules
+                                            @modules
                                             scope)
-                                :style     {:margin "1em"}
-                                :on-change (ui-callback/checked
-                                            (fn [checked]
-                                              #_(if checked
-                                                (swap! nuvlabox-release-data assoc
-                                                       :nb-assets
-                                                       (conj nb-assets scope))
-                                                (swap! nuvlabox-release-data assoc
-                                                       :nb-assets
-                                                       (-> @nuvlabox-release-data
-                                                           :nb-assets
-                                                           (disj scope))))))}])))])
+                                :disabled true
+                                :style     {:margin "1em"}}])))])]
           [uix/Accordion
            [:<>
             [ui/Form

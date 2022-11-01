@@ -4,8 +4,8 @@
 
 ### Changed
 
-- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908<<<<<<< issue_901
-- Apps - Replaces "App Store" with "Marketplace"
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908
+- Apps - Replaces "App Store" with "Marketplace" #901
 
 
 ## [2.32.8] - 2022-10-14

@@ -4,7 +4,7 @@
 
 ### Changed
 
-- NuvlaEdge details - Show cronjob in confirmation message when enabling host-level management
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908
 
 ## [2.32.8] - 2022-10-14
 

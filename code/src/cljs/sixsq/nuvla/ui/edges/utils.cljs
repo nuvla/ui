@@ -181,7 +181,7 @@
         module-scope->name (zipmap (map (comp keyword :scope) available-modules)
                                    (map :name available-modules))
         selected-modules   (remove nil? (:modules form-data))
-        config-files         (into [] (concat ["docker-compose.yml"] (map #(get module-scope->name %) selected-modules)))
+        config-files         (into [] (concat ["docker-compose.yml"] (remove nil? (map #(get module-scope->name %) selected-modules))))
         payload?           (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
         payload            (when payload?
                              (-> payload-releated

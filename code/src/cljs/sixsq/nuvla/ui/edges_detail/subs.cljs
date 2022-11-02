@@ -21,7 +21,9 @@
    (->> nuvlabox-status
         :installation-parameters
         :config-files
-        (map #(second (re-matches #"docker-compose\.([a-z]+)\.yml$" %)))
+        (map #(-> (re-matches #"docker-compose\.([a-z]+)\.yml$" %)
+                  second
+                  keyword))
         (into #{}))))
 
 (reg-sub

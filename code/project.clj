@@ -117,7 +117,8 @@
    :scljs {:dependencies [[thheller/shadow-cljs "2.17.8"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
                           [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
-                          [com.google.javascript/closure-compiler-unshaded "v20220202"]]}}
+                          [com.google.javascript/closure-compiler-unshaded "v20220202"]
+                          [com.lambdaisland/ornament "0.6.69"]]}}
 
 
 

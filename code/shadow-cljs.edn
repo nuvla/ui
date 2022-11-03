@@ -11,6 +11,7 @@
  :builds            {:nuvla-ui {:target     :browser
                                 :output-dir "resources/public/ui/js"
                                 :asset-path "/ui/js"
+                                :build-hooks [(hooks/write-styles-hook)]
 
                                 :modules    {:nuvla-ui {:entries [sixsq.nuvla.ui.core]}}
 

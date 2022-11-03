@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.welcome.views
   (:require
     [clojure.string :as str]
+    [lambdaisland.ornament :as o]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -27,6 +28,13 @@
       [ui/ListHeader title]
       [ui/ListDescription content]]]]])
 
+(o/defstyled growing-div :div
+  :text-xl :text-white :bg-red-800 :hover:text-9xl :hover:uppercase)
+
+(o/defstyled changing-color-div :div
+  :text-xl :text-white :bg-green-800 :lg:bg-gray-800)
+
+
 (defmethod panel/render :welcome
   [path]
   (let [tr           (subscribe [::i18n-subs/tr])
@@ -47,6 +55,14 @@
                :reversed      :mobile
                :style         {:margin-top "8px"}}
       [ui/GridColumn {:width 6}
+
+
+
+
+      [growing-div "big on hover"]
+      [changing-color-div "different color on small screens"]
+
+
        [ui/Header {:as "h1"}
         (@tr [:welcome-header])]
        [ui/HeaderSubheader {:as "h2"}

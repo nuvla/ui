@@ -8,6 +8,7 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   await expect(page).toHaveURL(dataURL);
 
   const date = new Date(new Date().setDate(new Date().getDate() - 30));
+  date.setDate(date.getDate() - 1);
   date.setMinutes(10);
   date.setSeconds(0);
   date.setHours(0);
@@ -17,16 +18,22 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   await page.route('/api/data-record', (route) => {
     const payload = route.request().postDataJSON();
     const matches = payload.filter.match(/\d{4}-\d{2}-(\d{2})/);
-    expect(Number(matches?.[1])).toBe(date.getDate() - 2);
+    expect(Number(matches?.[1])).toBe(date.getDate() - 1);
     route.fulfill({ status: 200 });
   });
 
   await Promise.all([
-    page.getByRole('option', { name: `day-${date.getDate() - 1}` }).click(),
+    Promise.race([
+      // Format of old version of react-datepicker
+      // Remove after react-datepicker is updated
+      page.getByRole('option', { name: `day-${date.getDate()}` }).click(),
+
+      // Format of updated react-datepicker
+      page.getByRole('option', { name: new RegExp(format(date)) }).click(),
+    ]),
     page.waitForResponse('/api/data-record'),
   ]);
 
-  date.setDate(date.getDate() - 1);
   const isoDateString = dateStringRemoveMS(date.toISOString());
   await page.route('/api/data-record', (route) => {
     const payload = route.request().postDataJSON();
@@ -41,6 +48,12 @@ test('Datepicker test', async ({ page }, { project, config }) => {
 
   await Promise.all([page.getByText(newTime).click(), page.waitForResponse('/api/data-record')]);
 });
+
+const format = new Intl.DateTimeFormat('en-US', {
+  day: 'numeric',
+  month: 'long',
+  weekday: 'long',
+}).format;
 
 const dateStringRemoveMS = (dateString) => {
   return dateString.replace(/\.\d\d\dZ/, 'Z');

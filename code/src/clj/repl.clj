@@ -10,7 +10,7 @@
 (defn generate-css []
   (let [result
         (-> @css-ref
-            (cb/generate '{:ui {:include [my.app*]}})
+            (cb/generate '{:ui {:include [sixsq.nuvla*]}})
             (cb/write-outputs-to (io/file "resources" "public" "ui" "css")))]
 
     (prn :CSS-GENERATED)

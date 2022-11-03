@@ -364,3 +364,25 @@ video {
   max-width: 100%;
   height: auto;
 }
+.sixsq_nuvla_ui_welcome_views__L55_C22 {
+  background-color: #991b1b;
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+.sixsq_nuvla_ui_welcome_views__L55_C22:hover {
+  font-size: 8rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.sixsq_nuvla_ui_welcome_views__L56_C22 {
+  background-color: #166534;
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+@media (min-width: 1024px){
+.sixsq_nuvla_ui_welcome_views__L56_C22 {
+  background-color: #1e293b;
+}
+}

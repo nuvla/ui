@@ -173,24 +173,31 @@
 
 (defn format-update-data
   [form-data]
-  (let [payload-releated (select-keys form-data [:project-name :working-dir
-                                                 :environment :config-files
-                                                 :current-version :force-restart])
-        payload?         (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
-        payload          (when payload?
-                           (-> payload-releated
-                               (update :environment str/split #"\n")
-                               (update :config-files str/split #"\n")))]
-    (cond-> (select-keys form-data [:nuvlabox-release])
-            payload (assoc :payload (general-utils/edn->json payload)))))
+  (let [payload-releated   (select-keys form-data [:project-name :working-dir
+                                                   :environment  :force-restart
+                                                   :current-version])
+        nuvlabox-release   (:nuvlabox-release form-data)
+        available-modules  (:compose-files nuvlabox-release)
+        module-scope->name (zipmap (map (comp keyword :scope) available-modules)
+                                   (map :name available-modules))
+        selected-modules   (remove nil? (:modules form-data))
+        config-files         (into [] (concat ["docker-compose.yml"] (remove nil? (map #(get module-scope->name %) selected-modules))))
+        payload?           (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
+        payload            (when payload?
+                             (-> payload-releated
+                                 (update :environment str/split #"\n")
+                                 (assoc :config-files config-files)))]
+    (when payload
+        (assoc {:nuvlabox-release (:id nuvlabox-release)}
+               :payload (general-utils/edn->json payload)))))
 
 
 (defn form-update-data-incomplete?
-  [{:keys [project-name working-dir environment config-files] :as form-data}]
-  (let [payload?            (->> [project-name working-dir environment config-files]
+  [{:keys [project-name working-dir environment] :as form-data}]
+  (let [payload?            (->> [project-name working-dir environment]
                                  (some (complement str/blank?))
                                  boolean)
-        payload-incomplete? (->> [project-name working-dir config-files]
+        payload-incomplete? (->> [project-name working-dir]
                                  (some str/blank?)
                                  boolean)]
     (or (str/blank? (:nuvlabox-release form-data))

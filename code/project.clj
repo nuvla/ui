@@ -105,7 +105,7 @@
   :source-paths ["src/clj" "src/cljs"]
 
   :profiles
-  {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]
+  {:dev   {:dependencies [[org.clojure/clojure "1.11.1"]
                           [org.clojure/clojurescript "1.10.914"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
@@ -117,7 +117,8 @@
    :scljs {:dependencies [[thheller/shadow-cljs "2.17.8"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
                           [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
-                          [com.google.javascript/closure-compiler-unshaded "v20220202"]]}}
+                          [com.google.javascript/closure-compiler-unshaded "v20220202"]
+                          [com.thheller/shadow-css "0.4.1"]]}}
 
 
 

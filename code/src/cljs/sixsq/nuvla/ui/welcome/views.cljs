@@ -2,6 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [shadow.css :refer [css]]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -47,6 +48,7 @@
                :reversed      :mobile
                :style         {:margin-top "8px"}}
       [ui/GridColumn {:width 6}
+       [:div {:class (css :w-64 :h-32 :shadow)} "BLUP"]
        [ui/Header {:as "h1"}
         (@tr [:welcome-header])]
        [ui/HeaderSubheader {:as "h2"}

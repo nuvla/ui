@@ -15,20 +15,20 @@
     (::spec/nuvlabox-status db)))
 
 
-(def scope-regex-match
-  #"docker-compose\.([a-z]+)\.yml$")
 
 (reg-sub
  ::nuvlabox-modules
  :<- [::nuvlabox-status]
  (fn [nuvlabox-status]
-   (->> nuvlabox-status
-        :installation-parameters
-        :config-files
-        (map #(-> (re-matches scope-regex-match %)
-                  second
-                  keyword))
-        (into #{}))))
+   (let [scope-regex-match
+         #".*docker-compose\.([a-z]+)\.yml$"]
+     (->> nuvlabox-status
+          :installation-parameters
+          :config-files
+          (map #(-> (re-matches scope-regex-match %)
+                    second
+                    keyword))
+          (into #{})))))
 
 (reg-sub
   ::nuvlabox-components

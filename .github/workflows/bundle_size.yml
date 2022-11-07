@@ -23,13 +23,11 @@ jobs:
           node-version: 16
       - name: Install dependencies
         run: npm ci
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
       - name: Analyze bundle size
         run: npx shadow-cljs run shadow.cljs.build-report nuvla-ui bundle-size-report-${{ github.sha }}.html
       - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: bundle-size-${{ github.sha }}
-          path: code/playwright-report/
+          path: code/resources/public/ui/bundle-size-report-${{ github.sha }}.html
           retention-days: 30

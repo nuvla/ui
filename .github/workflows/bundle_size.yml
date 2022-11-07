@@ -29,5 +29,5 @@ jobs:
         if: always()
         with:
           name: bundle-size-${{ github.sha }}
-          path: code/resources/public/ui/bundle-size-report-${{ github.sha }}.html
+          path: ./resources/public/ui/bundle-size-report-${{ github.sha }}.html
           retention-days: 30

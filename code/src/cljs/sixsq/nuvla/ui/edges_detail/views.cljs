@@ -1411,7 +1411,8 @@
                                               :location
                                               (update @new-location 0 map/normalize-lng))
                                        (@tr [:nuvlabox-position-update])])
-                                     (dispatch [::main-events/changes-protection? false]))}
+                                     (dispatch [::main-events/changes-protection? false]))
+                      :disabled (nil? @new-location)}
            (@tr [:save])]]]))))
 
 

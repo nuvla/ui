@@ -11,14 +11,14 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   date.setDate(date.getDate() - 1);
   date.setMinutes(10);
   date.setSeconds(0);
-  date.setHours(0);
+  date.setHours(8);
 
   await page.locator('input[type="text"]').first().click();
 
   await page.route('/api/data-record', (route) => {
     const payload = route.request().postDataJSON();
     const matches = payload.filter.match(/\d{4}-\d{2}-(\d{2})/);
-    expect(Number(matches?.[1])).toBe(date.getDate() - 1);
+    expect(Number(matches?.[1]), 'should send correct day').toBe(date.getDate() - 1);
     route.fulfill({ status: 200 });
   });
 

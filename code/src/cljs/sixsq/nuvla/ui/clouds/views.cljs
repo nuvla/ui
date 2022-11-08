@@ -28,6 +28,7 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
     [taoensso.timbre :as timbre]))
 
 (defn MenuBar []
@@ -59,7 +60,7 @@
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}
-                     [edges-detail/OnlineStatusIcon status]]
+                     [OnlineStatusIcon status]]
                     [edges-detail/ServiceIcon subtype]
                     (or name id)]
       :meta        path

@@ -28,6 +28,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
     [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
@@ -392,7 +393,6 @@
           [ui/Button {:positive true
                       :on-click on-close-fn} (@tr [:close])]]]))))
 
-
 (defn AddModal
   []
   (let [modal-id                   :add
@@ -403,8 +403,8 @@
         vpn-infra-opts             (subscribe [::subs/vpn-infra-options])
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
-        nb-releases-by-id          (group-by :id @nb-releases)
-        first-nb-release           (->> @nb-releases
+        nb-releases-by-id          (subscribe [::subs/nuvlabox-releases-by-id])
+        first-nb-release            (->> @nb-releases
                                         (remove :pre-release)
                                         first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
@@ -531,8 +531,8 @@
                                    :placeholder (@tr [:none])
                                    :value       (:vpn-server-id @creation-data)
                                    :on-change   (ui-callback/callback
-                                                  :value #(swap! creation-data assoc
-                                                                 :vpn-server-id %))
+                                                 :value #(swap! creation-data assoc
+                                                                :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
 
                  [ui/Checkbox {:toggle    true
@@ -578,41 +578,33 @@
 
                  (let [{nb-rel                                          :nb-rel
                         nb-assets                                       :nb-assets
-                        {:keys [release compose-files url pre-release]} :nb-selected}
+                        {:keys [compose-files url]}  :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
                     [edges-detail/DropdownReleases
-                     {:placeholder release
-                      :value       nb-rel
+                     {:value       nb-rel
                       :on-change   (ui-callback/value
-                                     (fn [value]
-                                       (swap! nuvlabox-release-data
-                                              assoc :nb-rel value)
-                                       (let [nb-selected (->> value
-                                                              (get nb-releases-by-id)
-                                                              first)]
-                                         (swap! creation-data assoc
-                                                :version (-> nb-selected
-                                                             :release
-                                                             utils/get-major-version
-                                                             general-utils/str->int))
-                                         (swap! nuvlabox-release-data
-                                                assoc :nb-selected nb-selected)
-                                         (swap! nuvlabox-release-data assoc :nb-assets
-                                                (set (map :scope (:compose-files nb-selected)))))
-                                       ))}]
+                                    (fn [value]
+                                      (swap! nuvlabox-release-data
+                                             assoc :nb-rel value)
+                                      (let [nb-selected (get @nb-releases-by-id value)]
+                                        (swap! creation-data assoc
+                                               :version (-> nb-selected
+                                                            :release
+                                                            utils/get-major-version
+                                                            general-utils/str->int))
+                                        (swap! nuvlabox-release-data
+                                               assoc :nb-selected nb-selected)
+                                        (swap! nuvlabox-release-data assoc :nb-assets
+                                               (set (map :scope (:compose-files nb-selected)))))
+                                      ))}]
+
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}
                      (@tr [:nuvlabox-release-notes])]
-                    (when pre-release
-                      [ui/Popup
-                       {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
-                        :content        (@tr [:nuvlabox-pre-release])
-                        :on             "hover"
-                        :hide-on-scroll true}])
                     [ui/Container
                      (when (> (count compose-files) 1)
                        [ui/Popup
@@ -743,7 +735,7 @@
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edges-detail/OnlineStatusIcon online]]
+      [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]

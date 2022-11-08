@@ -10,7 +10,7 @@ export default async (config) => {
 
 async function login(baseURL, config) {
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const page = await browser.newPage({ locale: 'de-CH' });
   page.setExtraHTTPHeaders({
     'CF-Access-Client-Secret': process.env.CF_CLIENT_SECRET,
     'CF-Access-Client-Id': process.env.CF_CLIENT_ID,

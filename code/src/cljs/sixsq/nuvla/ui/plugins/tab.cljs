@@ -36,15 +36,14 @@
 (reg-event-fx
   ::change-tab
   (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ db-path tab-key]]
-    (let [change-event (get-in db (conj db-path ::change-event))
-          normal-behavior {:db (-> db
-                                   (assoc-in (conj db-path ::active-tab) tab-key))
+    (let [change-event    (get-in db (conj db-path ::change-event))
+          normal-behavior {:db (assoc-in db (conj db-path ::active-tab) tab-key)
                            :fx [(when change-event
                                   [:dispatch change-event])
                                 [:dispatch [::main-events/changes-protection? false]]]}]
-           (if changes-protection?
-             {:db (assoc db ::main-spec/ignore-changes-modal normal-behavior)}
-             normal-behavior))))
+      (if changes-protection?
+        {:db (assoc db ::main-spec/ignore-changes-modal normal-behavior)}
+        normal-behavior))))
 
 (reg-sub
   ::active-tab

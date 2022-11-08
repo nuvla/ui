@@ -18,7 +18,7 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   await page.route('/api/data-record', (route) => {
     const payload = route.request().postDataJSON();
     const matches = payload.filter.match(/\d{4}-\d{2}-(\d{2})/);
-    expect(Number(matches?.[1]), 'should send correct day').toBe(date.getDate() - 1);
+    expect(Number(matches?.[1]), 'should send correct day').toBe(date.getDate());
     route.fulfill({ status: 200 });
   });
 

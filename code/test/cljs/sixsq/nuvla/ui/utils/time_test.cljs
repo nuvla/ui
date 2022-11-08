@@ -1,8 +1,9 @@
 (ns sixsq.nuvla.ui.utils.time-test
   (:require
-    [cljs.test :refer [is are deftest testing]]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.time :as time :refer [now]]))
+   [cljs.test :refer [is are deftest testing]]
+   [clojure.string :as str]
+   [sixsq.nuvla.ui.utils.time :as time :refer [now]]
+   [mockdate :as mock-date]))
 
 (def year 2022)
 (def month 10)
@@ -15,6 +16,7 @@
 (def test-date-as-iso-string (.toISOString test-date))
 (def test-date-as-iso-string-only-date (-> test-date-as-iso-string (str/split "T") (first)))
 (def test-date-as-unix-timestamp (Math/floor (/ (.getTime test-date) 1000)))
+(.set mock-date (js/Date.))
 (def this-moment (js/Date.))
 
 
@@ -87,10 +89,10 @@
    86400000 {:en "1 day", :fr "1 jour"},
    7200000 {:en "about 2 hours", :fr "environ 2 heures"},
    120000 {:en "2 minutes", :fr "2 minutes"},
-   60000 {:en "less than a minute", :fr "moins d’une minute"},
+   60000 {:en "1 minute", :fr "1 minute"},
    30000 {:en "half a minute", :fr "30 secondes"},
    1800000 {:en "30 minutes", :fr "30 minutes"},
-   2592000000 {:en "30 days", :fr "30 jours"}})
+   2592000000 {:en "about 1 month", :fr "environ 1 mois"}})
 
 
 (deftest remaining-test

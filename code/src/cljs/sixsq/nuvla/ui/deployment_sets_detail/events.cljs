@@ -69,21 +69,22 @@
 (reg-event-fx
   ::edit
   (fn [_ [_ resource-id data success-msg]]
-    {::cimi-api-fx/edit [resource-id data
-                         #(if (instance? js/Error %)
-                            (let [{:keys [status message]} (response/parse-ex-info %)]
-                              (dispatch [::messages-events/add
-                                         {:header  (cond-> (str "error editing " resource-id)
-                                                           status (str " (" status ")"))
-                                          :content message
-                                          :type    :error}]))
-                            (do
-                              (when success-msg
-                                (dispatch [::messages-events/add
-                                           {:header  success-msg
-                                            :content success-msg
-                                            :type    :success}]))
-                              (dispatch [::set-deployment-set %])))]}))
+    {::cimi-api-fx/edit
+     [resource-id data
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error editing " resource-id)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
+         (do
+           (when success-msg
+             (dispatch [::messages-events/add
+                        {:header  success-msg
+                         :content success-msg
+                         :type    :success}]))
+           (dispatch [::set-deployment-set %])))]}))
 
 (reg-event-fx
   ::delete
@@ -267,6 +268,15 @@
            (pagination/first-last-params db [::spec/edges-pagination]))
       #(dispatch [::set-edges %])]}))
 
+(defn changed-env-vars
+  [application env-vars]
+  (keep (fn [{:keys [::module-plugin/new-value :value :name]}]
+          (when (some-> new-value (not= value))
+            {:name        name
+             :value       new-value
+             :application application})
+          ) env-vars))
+
 
 (reg-event-fx
   ::create
@@ -283,6 +293,12 @@
                                       db [::spec/module-versions] (:id %))
                                    apps-selected)
                 :targets      (map :id targets-selected)
+                :env          (mapcat (fn [{:keys [id]}]
+                                        (->> id
+                                             (module-plugin/environment-variables
+                                               db [::spec/module-versions])
+                                             (changed-env-vars id)))
+                                      apps-selected)
                 :start        df-start}}
         df-name (assoc :name df-name)
         df-descr (assoc :description df-descr))

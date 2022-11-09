@@ -50,6 +50,11 @@
                               module-versions-indexed)]
     (module-content-id->version-url versions-indexed href module-content-id)))
 
+
+(defn environment-variables
+  [db db-path href]
+  (get-in db (conj db-path ::modules href :content :environmental-variables)))
+
 (reg-sub
   ::module-versions-indexed
   (fn [[_ db-path href]]

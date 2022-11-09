@@ -1876,7 +1876,7 @@
                                            [ui/Label {:circular true
                                                       :size     "mini"
                                                       :attached "top right"}
-                                            (count (:resources deployments))]])
+                                            (:count deployments)]])
                    :key     :deployments
                    :icon    "rocket"}
         :render   #(r/as-element

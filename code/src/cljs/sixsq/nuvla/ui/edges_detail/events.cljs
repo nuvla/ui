@@ -166,7 +166,7 @@
          (do
            (dispatch [::messages-events/add
                       {:header  (str "operation " operation " successful")
-                       :content %
+                       :content (or (:cronjob %) %)
                        :type    :success}])
            (on-success-fn (:message %))
            (dispatch [::get-nuvlabox resource-id])))

@@ -4,11 +4,27 @@
 
 ### Changed
 
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908
+- NuvlaEdge details - Shows currently installed modules in update modal as checkboxes #943
+- NuvlaEdge details - Disables Save button on location tab if location unchanged, bugfix #949
+- Apps - Replaces "App Store" with "Marketplace" #901
+
+## [2.32.8] - 2022-10-14
+
+### Changed
+
 - Dictionary - Replace module by application, typo fix, NuvlaEdge/Cloud order change #916
 - acl - Make possible add principals by user/group uuid
 - acl - Principals dropdown searchable with groups/user
 - Dev tools - Cloudflare preview integration
 - NuvlaEdge overview - Shows last online times for offline edges #895
+- NuvlaEdge overview - Shows engine versions on table view #909
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form bugfix #908
+- Deployments overview - Shows created by on table and list view #926
+- Edges overview - Shows created by on table and list view #926
+- Profile - Removes auto closing modal on tab change to enable e-mail 2FA bugfix #918
+- Edges and Deployments - Adds filter indicator to full text search
+- Filter comp - Show filter in popoup and color the button when filter is set
 
 ## [2.32.7] - 2022-09-29
 

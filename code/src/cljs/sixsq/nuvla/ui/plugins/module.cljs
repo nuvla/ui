@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.plugins.module-version
+(ns sixsq.nuvla.ui.plugins.module
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
@@ -29,23 +29,32 @@
        (get-version-id versions-indexed)
        (str id "_")))
 
-(defn selected-version
+(defn module-db
   [db db-path href]
-  (let [module-content-id (get-in db (conj db-path ::modules href :content :id))
-        versions-indexed  (subscribe [::module-versions-indexed db-path href])]
-    (module-content-id->version-url @versions-indexed href module-content-id)))
+  (get-in db (conj db-path ::modules href)))
+
+(defn module-versions-indexed
+  [module]
+  (-> module :versions apps-utils/map-versions-index))
 
 (reg-sub
   ::module
   (fn [db [_ db-path href]]
-    (get-in db (conj db-path ::modules href))))
+    (module-db db db-path href)))
+
+(defn selected-version
+  [db db-path href]
+  (let [module-content-id (get-in db (conj db-path ::modules href :content :id))
+        versions-indexed  (-> db
+                              (module-db db-path href)
+                              module-versions-indexed)]
+    (module-content-id->version-url versions-indexed href module-content-id)))
 
 (reg-sub
   ::module-versions-indexed
   (fn [[_ db-path href]]
     (subscribe [::module db-path href]))
-  (fn [{:keys [versions]}]
-    (apps-utils/map-versions-index versions)))
+  module-versions-indexed)
 
 (reg-sub
   ::module-env-value
@@ -113,21 +122,21 @@
           env-required    :required} on-change get-value]
   (let [updated-env-value @(subscribe [::module-env-value db-path href index])]
     [ui/FormField {:required env-required}
-    [:label env-name ff/nbsp (ff/help-popup env-description)]
-    ;(if selected-creds
-    ;  [CredentialsDropdown env-value index deployment selected-creds]
-    [ui/Input
-     {:type      "text"
-      :name      env-name
-      :value     (or updated-env-value env-value "")
-      :read-only false
-      :fluid     true
-      :on-change (ui-callback/input-callback
-                   #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index)
-                               ::new-value %])
-                   )}]
-    ;)
-    ]))
+     [:label env-name ff/nbsp (ff/help-popup env-description)]
+     ;(if selected-creds
+     ;  [CredentialsDropdown env-value index deployment selected-creds]
+     [ui/Input
+      {:type      "text"
+       :name      env-name
+       :value     (or updated-env-value env-value "")
+       :read-only false
+       :fluid     true
+       :on-change (ui-callback/input-callback
+                    #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index)
+                                ::new-value %])
+                    )}]
+     ;)
+     ]))
 
 
 (defn EnvVariables
@@ -151,21 +160,17 @@
         options          (subscribe [::module-versions-options db-path href])]
     (fn [{:keys [db-path] :as _opts}]
       (let [{:keys [id content]} @module]
-        [:<>
-         [ui/FormDropdown
-          {:value     (:id content)
-           :scrolling true
-           :upward    false
-           :selection true
-           :on-change (ui-callback/value
-                        #(dispatch [::load-module db-path
-                                    (module-content-id->version-url
-                                      @versions-indexed id %)]))
-           :fluid     true
-           :options   @options}]
-         #_[:div (str content)]
-
-         ]))))
+        [ui/FormDropdown
+         {:value     (:id content)
+          :scrolling true
+          :upward    false
+          :selection true
+          :on-change (ui-callback/value
+                       #(dispatch [::load-module db-path
+                                   (module-content-id->version-url
+                                     @versions-indexed id %)]))
+          :fluid     true
+          :options   @options}]))))
 
 (s/def ::href string?)
 

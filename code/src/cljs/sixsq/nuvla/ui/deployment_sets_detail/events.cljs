@@ -11,7 +11,7 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
-    [sixsq.nuvla.ui.plugins.module-version :as module-version-plugin]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.session.spec :as session-spec]
@@ -157,7 +157,7 @@
     (let [select? (nil? (apps-selected module))
           op      (if select? conj disj)]
       (cond-> {:db (update db ::spec/apps-selected op module)}
-              select? (assoc :fx [[:dispatch [::module-version-plugin/load-module [::spec/module-versions] id]]])))))
+              select? (assoc :fx [[:dispatch [::module-plugin/load-module [::spec/module-versions] id]]])))))
 
 (reg-event-db
   ::toggle-select-target
@@ -279,7 +279,7 @@
     {::cimi-api-fx/add
      [:deployment-set
       (cond->
-        {:spec {:applications (map #(module-version-plugin/selected-version
+        {:spec {:applications (map #(module-plugin/selected-version
                                       db [::spec/module-versions] (:id %))
                                    apps-selected)
                 :targets      (map :id targets-selected)

@@ -18,7 +18,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.module-version :as module-version-plugin]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.tab :as tab]
@@ -253,11 +253,7 @@
                           :change-event [::events/search-apps]}]]))]
       [tab/Tab
        {:db-path      [::spec/tab-new-apps]
-        :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
-                                   :key     :my-apps
-                                   :icon    "user"}
-                        :render   render}
-                       {:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
+        :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
                                    :key     :app-store
                                    :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
                         :render   render}
@@ -265,7 +261,7 @@
                                    :key     :all-apps
                                    :icon    "grid layout"}
                         :render   render}
-                       {:menuItem {:content "My apps"
+                       {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
                                    :key     :my-apps
                                    :icon    "user"}
                         :render   render}]
@@ -405,13 +401,13 @@
                                   [ui/TabPane
                                    [uix/Accordion
                                     ^{:key id}
-                                    [module-version-plugin/ModuleVersions
+                                    [module-plugin/ModuleVersions
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
                                     :label "Select version"
                                     :default-open true]
                                    [uix/Accordion
-                                    [module-version-plugin/EnvVariables
+                                    [module-plugin/EnvVariables
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
                                     :label "Environment variables"
@@ -428,7 +424,7 @@
                     ) @apps-selected)
 
        }]
-     #_[module-version-plugin/ModuleVersions
+     #_[module-plugin/ModuleVersions
         {:db-path [::spec/module-versions]
          :hrefs   @app-selected}]]))
 

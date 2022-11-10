@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  job-build:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -91,11 +91,11 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: mvn deploy
 
-  job-notify:
+  notify:
     if: always()
     name: Post Workflow Status To Slack
     needs:
-      - job-build
+      - build
     runs-on: ubuntu-latest
     steps:
       - uses: Gamesight/slack-workflow-status@master

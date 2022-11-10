@@ -4,6 +4,7 @@
 
 ### Changed
 
+- NuvlaEdge details - Shows number of deployments in a bubble on tabs item #940
 - CI - adds bundle analyzer job to pipeline
 - NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908
 - NuvlaEdge details - Shows currently installed modules in update modal as checkboxes #943

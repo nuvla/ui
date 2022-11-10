@@ -1,4 +1,4 @@
-name: Unit tests
+name: Unit Tests
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

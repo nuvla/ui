@@ -215,9 +215,14 @@
         form-data      (r/atom nil)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   (fn [release]
-                         (let [modules-new (get-modules (get @releases-by-id release))
-                               modules-old (get-modules (:nuvlabox-release @form-data))]
+                         (let [modules-new                   (get-modules (get @releases-by-id release))
+                               modules-old                   (get-modules (:nuvlabox-release @form-data))
+                               modules-available-cur-release (->> ((@releases-by-no nb-version)
+                                                                   :compose-files)
+                                                                  (map (comp keyword :scope))
+                                                                  (set))]
                            (when (and (:security modules-new)
+                                      (not (:security modules-available-cur-release))
                                       (not (:security modules-old)))
                              (swap! form-data assoc :modules (conj (:modules @form-data) :security)))
                            (swap! form-data assoc :nuvlabox-release (@releases-by-id release))))

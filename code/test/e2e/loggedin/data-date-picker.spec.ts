@@ -18,19 +18,14 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   await page.route('/api/data-record', (route) => {
     const payload = route.request().postDataJSON();
     const matches = payload.filter.match(/\d{4}-\d{2}-(\d{2})/);
-    expect(Number(matches?.[1]), 'should send correct day').toBe(date.getDate());
+    expect(Number(matches?.[1]), 'should send correct day').toBe(date.getDate() - 1);
     route.fulfill({ status: 200 });
   });
 
+  await page.pause();
   await Promise.all([
-    Promise.race([
-      // Format of old version of react-datepicker
-      // Remove after react-datepicker is updated
-      page.getByRole('option', { name: `day-${date.getDate()}` }).click(),
-
-      // Format of updated react-datepicker
-      page.getByRole('option', { name: new RegExp(format(date)) }).click(),
-    ]),
+    // Format of updated react-datepicker
+    page.getByRole('option', { name: new RegExp(format(date)) }).click(),
     page.waitForResponse('/api/data-record'),
   ]);
 

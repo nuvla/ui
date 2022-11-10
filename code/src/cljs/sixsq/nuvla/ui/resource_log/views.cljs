@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.resource-log.events :as events]
     [sixsq.nuvla.ui.resource-log.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn log-controller
@@ -46,7 +47,7 @@
           {:custom-input     (r/as-element
                                [ui/Input {:transparent true
                                           :style       {:width "17em"}}])
-           :locale           @locale
+           :locale           (or (time/locale-string->locale-object @locale) @locale)
            :date-format      "MMMM d, yyyy hh:mm aa"
            :show-time-select true
            :timeIntervals    1

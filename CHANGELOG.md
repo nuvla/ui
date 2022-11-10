@@ -5,6 +5,11 @@
 ### Changed
 
 - CI - adds bundle analyzer job to pipeline
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908
+- NuvlaEdge details - Shows currently installed modules in update modal as checkboxes #943
+- NuvlaEdge details - Disables Save button on location tab if location unchanged, bugfix #949
+- Apps - Replaces "App Store" with "Marketplace" #901
+- Global - Clears change protection event listener on beforeunload when Ignore Changes clicked, bugfix #948
 
 ## [2.32.8] - 2022-10-14
 

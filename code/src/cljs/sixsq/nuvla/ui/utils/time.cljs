@@ -12,7 +12,7 @@
                         startOfDay
                         subDays
                         format]]
-   ["date-fns/locale/fr" :as fr]))
+   ["date-fns/locale/fr$default" :as fr]))
 
 (def ^:const default-locale "en")
 (def ^:const locale-string->locale-object {"fr" fr})

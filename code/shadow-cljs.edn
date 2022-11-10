@@ -33,7 +33,6 @@
                                                                 :optimizations :advanced
                                                                 :pseudo-names  false
                                                                 :pretty-print  false}}}
-                     :test     {:target     :node-test
-                                :output-to  "out/node-tests.js"
-                                :autorun    true
-                                :compiler-options {:infer-externs true}}}}
+                     :test     {:target     :karma
+                                :output-to  "target/ci.js"
+                                :ns-regexp  "-(spec|test)$"}}}

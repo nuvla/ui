@@ -24,7 +24,7 @@
                                                                 #_"https://localhost"
                                                                 ;; Serve everything from the same host:
                                                                 ;; host file needs this entry to point to localhost
-                                                                "https://nui.localhost"
+                                                                ""
                                                                 re_frame.trace.trace_enabled_QMARK_ true}
                                              :compiler-options {:infer-externs :auto}}
 
@@ -32,4 +32,7 @@
                                              :compiler-options {:infer-externs :auto
                                                                 :optimizations :advanced
                                                                 :pseudo-names  false
-                                                                :pretty-print  false}}}}}
+                                                                :pretty-print  false}}}
+                     :test     {:target     :karma
+                                :output-to  "target/ci.js"
+                                :ns-regexp  "-(spec|test)$"}}}

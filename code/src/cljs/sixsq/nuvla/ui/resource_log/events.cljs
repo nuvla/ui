@@ -114,7 +114,7 @@
                               #(if (instance? js/Error %)
                                  (cimi-api-fx/default-error-message % "Create log action failed!")
                                  (dispatch [::set-log-id (:resource-id %)]))
-                              {:since      (time/time->utc-str since)
+                              {:since      since
                                :components (or components [])}]}))
 
 (reg-event-fx

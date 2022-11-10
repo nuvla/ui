@@ -25,6 +25,10 @@ jobs:
         run: npm ci
       - name: Analyze bundle size
         run: npx shadow-cljs run shadow.cljs.build-report nuvla-ui bundle-size-report-${{ github.sha }}.html
+      - name: LS
+        run: |
+          ls
+          ls ..
       - uses: actions/upload-artifact@v3
         if: always()
         with:

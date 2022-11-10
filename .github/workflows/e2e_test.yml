@@ -1,13 +1,12 @@
 name: Playwright Tests
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 on:
   push:
-    branches: [issue_929]
-  # pull_request:
-  #   branches: [master]
+  pull_request:
   workflow_dispatch:
     inputs:
       baseUrl:

@@ -101,13 +101,13 @@ When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui a
 
 We use [`playwright`](https://playwright.dev/) for e2e-testing.
 To run playwright locally, inside the code directory, you `cp .env.e2e.TEMPLATE .env.e2e` and set the environment variables specified in that file.
-Tests are located in the `code/tests/` directory.
+Tests are located in the `code/test/e2e/` directory.
 
 ### Create tests
 
 1. Run
 ```
-npm run tests:e2e:gen
+npm run test:e2e:gen
 ```
 
 you open the [playwright Test Generator](https://playwright.dev/docs/codegen).
@@ -117,7 +117,7 @@ It allows you to visit a website, record all interactions and let `playwright` g
    You can remove the code used to log in, as all tests run with a logged-in user (you can change the user in the `.env.e2e` file).
    Adjust the code to suit your needs, e.g., writing assertions using `expect`.
 
-3. Put new tests inside the `code/tests/loggedin` directory.
+3. Put new tests inside the `code/test/e2e/loggedin` directory.
    The file has to end with `.spec.js` (`.ts` for typescript files is possible).
 
 ### Run tests
@@ -145,7 +145,7 @@ Run tests in headed mode, i.e. a browser window opens and you can see the test r
 
 You have to specify a path; this example runs all tests:
 ```
-npm run test:e2e:headed tests
+npm run test:e2e:headed
 ```
 
 The headed test runs are also available in watch mode.

@@ -12,7 +12,7 @@
     "test:e2e:gen": "playwright codegen",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:watch": "chokidar 'tests/**/*.{spec,test}.{js,ts}' -c 'npm run test:e2e -- --retries=0 {path}'",
-    "test:e2e:headed": "playwright test --config=playwright.config.ts --headed true",
+    "test:e2e:headed": "playwright test --config=playwright.config.ts --headed",
     "test:e2e:headed:watch": "chokidar 'tests/**/*.{spec,test}.{js,ts}' -c 'npm run test:e2e:headed -- --retries=0 {path}'",
     "test:unit": "./node_modules/.bin/shadow-cljs compile test && karma start --single-run"
   },

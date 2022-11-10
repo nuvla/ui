@@ -2,6 +2,7 @@
   (:require
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -35,15 +36,14 @@
 (reg-event-fx
   ::change-tab
   (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ db-path tab-key]]
-    (let [change-event (get-in db (conj db-path ::change-event))
-          normal-behavior {:db (-> db
-                                   (assoc-in (conj db-path ::active-tab) tab-key)
-                                   (assoc ::main-spec/changes-protection? false))
+    (let [change-event    (get-in db (conj db-path ::change-event))
+          normal-behavior {:db (assoc-in db (conj db-path ::active-tab) tab-key)
                            :fx [(when change-event
-                                  [:dispatch change-event])]}]
-           (if changes-protection?
-             {:db (assoc db ::main-spec/ignore-changes-modal normal-behavior)}
-             normal-behavior))))
+                                  [:dispatch change-event])
+                                [:dispatch [::main-events/changes-protection? false]]]}]
+      (if changes-protection?
+        {:db (assoc db ::main-spec/ignore-changes-modal normal-behavior)}
+        normal-behavior))))
 
 (reg-sub
   ::active-tab

@@ -5,10 +5,10 @@
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.time :as time]))
 
-(defn- isDate? [d] (instance? js/Date d))
+
 
 (s/def ::not-found? boolean?)
-(s/def ::time-period (s/tuple isDate? isDate?))
+(s/def ::time-period (s/tuple inst? inst?))
 (s/def ::time-period-filter (s/nilable string?))
 (s/def ::data-set-id (s/nilable string?))
 (s/def ::data-set any?)

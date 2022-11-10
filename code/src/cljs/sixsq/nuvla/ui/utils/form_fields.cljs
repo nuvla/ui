@@ -84,8 +84,7 @@
         {:keys [value default]} value-scope
         default-value (or value default)
         date-atom     (reagent/atom (when default-value
-                                      (js/Date.
-                                       (time/parse-iso8601 default-value))))]
+                                      (time/parse-iso8601 default-value)))]
     (fn [update-fn form-id {:keys [name display-name help hidden required editable] :as _attribute}]
 
       (let [label     (or display-name name)

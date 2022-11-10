@@ -182,6 +182,15 @@ and
 ```
 npx playwright test --help
 ```
+## Bundle size analyze
+
+shadow-cljs can create a bundle size report.
+
+```
+npx shadow-cljs run shadow.cljs.build-report nuvla-ui report.html
+```
+
+This saves the report as `report.html` in `resources/public/ui/js`.
 
 
 ## Contributing

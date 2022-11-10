@@ -97,6 +97,17 @@ Run `npm install` inside `code` folder of the cloned repository. This only needs
 then whenever dependencies change.
 When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui at https://nui.localhost.
 
+### Bundle size analyze
+
+shadow-cljs can create a bundle size report.
+
+```
+npx shadow-cljs run shadow.cljs.build-report nuvla-ui report.html
+```
+
+This saves the report as `report.html` in `resources/public/ui/js`.
+
+
 ## Contributing
 
 ### Source Code Changes

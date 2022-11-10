@@ -4,6 +4,7 @@
 
 ### Changed
 
+- CI - adds bundle analyzer job to pipeline
 - NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908
 - NuvlaEdge details - Shows currently installed modules in update modal as checkboxes #943
 - NuvlaEdge details - Disables Save button on location tab if location unchanged, bugfix #949

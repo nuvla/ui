@@ -95,7 +95,7 @@
          [ui/DatePicker (cond-> {:custom-input     (reagent/as-element [ui/Input {:style {:width "250px"}}])
                                  :show-time-select true
                                  :read-only        read-only
-                                 :locale           @locale
+                                 :locale           (or (time/locale-string->locale-object @locale) @locale)
                                  :date-format      "d MMMM yyyy, hh:mm a"
                                  :on-change        (fn [date]
                                                      (reset! date-atom date)

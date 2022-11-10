@@ -216,7 +216,7 @@
         locale      (subscribe [::i18n-subs/locale])]
     (fn [refresh-fn extra]
       (let [[time-start time-end] @time-period
-            date-format "MMMM DD, YYYY HH:mm"
+            date-format "MMMM dd, yyyy HH:mm"
             time-format "HH:mm"]
         [ui/Form
          [ui/FormGroup {:widths (if extra 3 2)}

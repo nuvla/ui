@@ -103,6 +103,7 @@
                  [clj-kondo "RELEASE" :scope "provided"]]
 
   :source-paths ["src/clj" "src/cljs"]
+  :test-paths ["test/cljs"]
 
   :profiles
   {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]

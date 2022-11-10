@@ -6,7 +6,11 @@
 
 - Testing - Added playwright for e2e testing UI and Server
 - NuvlaEdge details - Shows number of deployments in a bubble on tabs item #940
+- Global - upgrades react-datepicker to newest version
+- Global - upgrades react-charts-js to newest version
+- Global - replaces moment with date-fns
 - CI - adds bundle analyzer job to pipeline
+- NuvlaEdge details - Shows number of deployments in a bubble on tabs item #940
 - NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908
 - NuvlaEdge details - Shows currently installed modules in update modal as checkboxes #943
 - NuvlaEdge details - Disables Save button on location tab if location unchanged, bugfix #949

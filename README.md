@@ -1,6 +1,6 @@
 # Nuvla Web UI
 
-[![Build Status](https://github.com/nuvla/ui/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/nuvla/ui/actions/workflows/main.yml)
+[![Build Status](https://github.com/nuvla/ui/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/nuvla/ui/actions/workflows/main.yml)
 
 This repository contains the web user interface of the Nuvla solution. It is built as a modern
 single page application.

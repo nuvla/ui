@@ -1,4 +1,4 @@
-name: Bundle Size
+name: Unit tests
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,7 +16,7 @@ defaults:
     working-directory: ./code
 
 jobs:
-  bundle-size:
+  unit-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -26,11 +26,5 @@ jobs:
           node-version: 16
       - name: Install dependencies
         run: npm ci
-      - name: Analyze bundle size
-        run: npx shadow-cljs run shadow.cljs.build-report nuvla-ui bundle-size-report-${{ github.sha }}.html
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: bundle-size-${{ github.sha }}
-          path: code/bundle-size-report-${{ github.sha }}.html
-          retention-days: 30
+      - name: Run unit tests
+        run: npm run test:unit

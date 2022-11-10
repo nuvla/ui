@@ -14,4 +14,5 @@ module.exports = function (config) {
       singleRun: true,
     },
   });
+  process.env.TZ = 'Europe/Zurich';
 };

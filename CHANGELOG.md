@@ -5,7 +5,6 @@
 ### Changed
 
 - Testing - Added playwright for e2e testing UI and Server
-- NuvlaEdge details - Shows number of deployments in a bubble on tabs item #940
 - Global - upgrades react-datepicker to newest version
 - Global - upgrades react-charts-js to newest version
 - Global - replaces moment with date-fns

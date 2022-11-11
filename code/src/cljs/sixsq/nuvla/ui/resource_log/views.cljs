@@ -47,7 +47,7 @@
                                [ui/Input {:transparent true
                                           :style       {:width "17em"}}])
            :locale           @locale
-           :date-format      "LLL"
+           :date-format      "MMMM d, yyyy hh:mm aa"
            :show-time-select true
            :timeIntervals    1
            :selected         @since

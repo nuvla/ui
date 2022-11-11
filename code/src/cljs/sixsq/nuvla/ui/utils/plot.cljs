@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.utils.plot
   (:require
-    ["react-chartjs-2" :as chartjs2]
+    ["react-chartjs-2" :rename {Bar BarChart Doughnut DoughnutChart}]
     [reagent.core :as reagent]))
 
 
-(def Bar (reagent/adapt-react-class chartjs2/Bar))
+(def Bar (reagent/adapt-react-class BarChart))
 
-(def Doughnut (reagent/adapt-react-class chartjs2/Doughnut))
+(def Doughnut (reagent/adapt-react-class DoughnutChart))

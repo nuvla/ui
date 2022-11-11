@@ -888,9 +888,9 @@
                                                           :text     (:title stat)
                                                           :position "bottom"}
                                     :maintainAspectRatio false
-                                    :circumference       4.14
-                                    :rotation            -3.64
-                                    :cutoutPercentage    60}}]]
+                                    :circumference       236
+                                    :rotation            -118
+                                    :cutout              "60%"}}]]
 
          (when (pos? (count (:data-gateway stat)))
            [ui/Container {:key        (:topic stat)
@@ -940,9 +940,9 @@
                                :title  {:display  true
                                         :text     (:title net-stats)
                                         :position "bottom"}
-                               :scales {:yAxes [{:type       "logarithmic"
-                                                 :scaleLabel {:labelString "megabytes"
-                                                              :display     true}}]}}}]]]])
+                               :scales {:y {:type  "logarithmic"
+                                            :title {:text    "megabytes"
+                                                    :display true}}}}}]]]])
      (when container-stats
        [ui/GridRow {:centered true
                     :columns  1}
@@ -1865,6 +1865,7 @@
         nuvlabox    (subscribe [::subs/nuvlabox])
         can-edit?   @(subscribe [::subs/can-edit?])
         peripherals @(subscribe [::subs/nuvlabox-peripherals-ids])
+        deployments @(subscribe [::deployments-subs/deployments])
         overview    {:menuItem {:content "Overview"
                                 :key     :overview
                                 :icon    "info"}
@@ -1907,7 +1908,11 @@
        (events-plugin/events-section
          {:db-path [::spec/events]
           :href    (:id @nuvlabox)})
-       {:menuItem {:content "Deployments"
+       {:menuItem {:content (r/as-element [:span "Deployments"
+                                           [ui/Label {:circular true
+                                                      :size     "mini"
+                                                      :attached "top right"}
+                                            (:count deployments)]])
                    :key     :deployments
                    :icon    "rocket"}
         :render   #(r/as-element

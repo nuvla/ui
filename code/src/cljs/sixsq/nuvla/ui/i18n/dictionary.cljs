@@ -1,7 +1,4 @@
-(ns sixsq.nuvla.ui.i18n.dictionary
-  ;; the moment.js locale must be included for any supported language
-  (:require
-    ["moment/locale/fr"]))
+(ns sixsq.nuvla.ui.i18n.dictionary)
 
 
 (def dictionary

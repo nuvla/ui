@@ -1,6 +1,6 @@
 # Nuvla Web UI
 
-[![Build Status](https://github.com/nuvla/ui/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/nuvla/ui/actions/workflows/main.yml)
+[![Build Status](https://github.com/nuvla/ui/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/nuvla/ui/actions/workflows/main.yml)
 
 This repository contains the web user interface of the Nuvla solution. It is built as a modern
 single page application.
@@ -96,6 +96,17 @@ case:
 Run `npm install` inside `code` folder of the cloned repository. This only needs to be done once at the beginning and
 then whenever dependencies change.
 When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui at https://nui.localhost.
+
+### Bundle size analyze
+
+shadow-cljs can create a bundle size report.
+
+```
+npx shadow-cljs run shadow.cljs.build-report nuvla-ui report.html
+```
+
+This saves the report as `report.html` in `resources/public/ui/js`.
+
 
 ## Contributing
 

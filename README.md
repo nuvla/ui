@@ -97,7 +97,92 @@ Run `npm install` inside `code` folder of the cloned repository. This only needs
 then whenever dependencies change.
 When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui at https://nui.localhost.
 
-### Bundle size analyze
+## Testing with playwright
+
+We use [`playwright`](https://playwright.dev/) for e2e-testing.
+To run playwright locally, inside the code directory, you `cp .env.e2e.TEMPLATE .env.e2e` and set the environment variables specified in that file.
+Tests are located in the `code/test/e2e/` directory.
+
+### Create tests
+
+1. Run
+```
+npm run test:e2e:gen
+```
+
+you open the [playwright Test Generator](https://playwright.dev/docs/codegen).
+It allows you to visit a website, record all interactions and let `playwright` generate all code necessary to replay those interactions.
+
+2. Copy the generated code into a new file.
+   You can remove the code used to log in, as all tests run with a logged-in user (you can change the user in the `.env.e2e` file).
+   Adjust the code to suit your needs, e.g., writing assertions using `expect`.
+
+3. Put new tests inside the `code/test/e2e/loggedin` directory.
+   The file has to end with `.spec.js` (`.ts` for typescript files is possible).
+
+### Run tests
+
+Four additional commands are configured in `package.json` to run the tests (all starting with `test:e2e`).
+
+Run all tests:
+
+```
+npm run test:e2e
+```
+
+Run a single file by specifying a path, treated as a regex:
+
+```
+npm run test:e2e logout
+```
+
+Watch the test folder and run a test if the test file changes:
+```
+npm run test:e2e:watch
+```
+
+Run tests in headed mode, i.e. a browser window opens and you can see the test run.
+
+You have to specify a path; this example runs all tests:
+```
+npm run test:e2e:headed
+```
+
+The headed test runs are also available in watch mode.
+You do not have to provide a path regex: the path is provided by the watching process.
+```
+npm run test:e2e:headed:watch
+```
+
+### Run in parallel
+
+It is possible to run the tests in parallel.
+Because they share the same logged in session (through `global-setup.js`), it could be that tests fail if the `logout.spec.js` tests runs first.
+To prevent this, only run tests inside the loggedin folder.
+
+```
+npm run test:e2e loggedin -- --workers 5
+```
+
+### Debug tests
+
+By adding a `page.pause()` inside a test file and running in `headed` mode, you can stop and open an inspector view.
+
+When a test fails, you find a `trace.zip` file inside the respective directory in the `code/test-report` folder. You can open it by
+```
+npx playwright show-trace test-results/<path-to-test-file>-<test-name>-retry<retrynumber>/trace.zip
+```
+
+### Find additional playwright settings
+
+```
+npx playwright --help
+```
+and
+```
+npx playwright test --help
+```
+## Bundle size analyze
 
 shadow-cljs can create a bundle size report.
 

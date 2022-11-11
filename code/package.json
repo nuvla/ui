@@ -8,8 +8,13 @@
     "dev": "./node_modules/.bin/shadow-cljs watch nuvla-ui",
     "build": "./node_modules/.bin/shadow-cljs compile nuvla-ui",
     "release": "./node_modules/.bin/shadow-cljs release nuvla-ui",
-    "test:unit": "./node_modules/.bin/shadow-cljs compile test && karma start --single-run",
-    "clean": "rm -rf resources/public/js/* && rm -rf target"
+    "clean": "rm -rf resources/public/js/* && rm -rf target",
+    "test:e2e:gen": "playwright codegen",
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test:e2e:watch": "chokidar 'tests/**/*.{spec,test}.{js,ts}' -c 'npm run test:e2e -- --retries=0 {path}'",
+    "test:e2e:headed": "playwright test --config=playwright.config.ts --headed",
+    "test:e2e:headed:watch": "chokidar 'tests/**/*.{spec,test}.{js,ts}' -c 'npm run test:e2e:headed -- --retries=0 {path}'",
+    "test:unit": "./node_modules/.bin/shadow-cljs compile test && karma start --single-run"
   },
   "author": "SixSq SA",
   "license": "Apache-2.0",
@@ -18,6 +23,11 @@
   },
   "homepage": "https://github.com/nuvla/ui",
   "devDependencies": {
+    "@playwright/test": "^1.27.1",
+    "@types/node": "^18.11.0",
+    "chokidar-cli": "^3.0.0",
+    "dotenv": "^16.0.3",
+    "playwright": "^1.27.1",
     "karma": "^6.4.1",
     "karma-chrome-launcher": "^3.1.1",
     "karma-cljs-test": "^0.1.0",

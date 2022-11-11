@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Testing - Added playwright for e2e testing UI and Server
 - Global - upgrades react-datepicker to newest version
 - Global - upgrades react-charts-js to newest version
 - Global - replaces moment with date-fns

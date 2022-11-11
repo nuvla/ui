@@ -235,7 +235,7 @@
              :show-time-select true
              :time-format      time-format
              :time-intervals   1
-             :locale           @locale
+             :locale           (or (time/locale-string->locale-object @locale) @locale)
              :fixed-height     true
              :date-format      date-format
              :on-change        #(do (dispatch [::events/set-time-period
@@ -257,7 +257,7 @@
                            :show-time-select true
                            :time-format      time-format
                            :time-intervals   1
-                           :locale           @locale
+                           :locale           (or (time/locale-string->locale-object @locale) @locale)
                            :fixed-height     true
                            :date-format      date-format
                            :on-change        #(do (dispatch

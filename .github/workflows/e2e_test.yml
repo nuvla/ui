@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: sudo timedatectl set-timezone Europe/Zurich
       - name: Await CF Pages
         if: github.event_name == 'pull_request' || github.event_name == 'push'
         uses: WalshyDev/cf-pages-await@v1

@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
@@ -141,9 +142,21 @@
          boolean)))
 
 (reg-sub
-  ::create-disabled?
+  ::configure-disabled?
   (fn [{:keys [::spec/targets-selected
                ::spec/apps-selected]}]
-    (boolean
-      (or (empty? apps-selected)
-          (empty? targets-selected)))))
+    (or (empty? apps-selected)
+        (empty? targets-selected))))
+
+(reg-sub
+  ::some-license-not-accepted?
+  (fn [{:keys [::spec/apps-selected] :as db}]
+    (some #(false? (module-plugin/db-license-accepted? db [::spec/module-versions] (:id %))) apps-selected)))
+
+(reg-sub
+  ::create-disabled?
+  :<- [::configure-disabled?]
+  :<- [::some-license-not-accepted?]
+  (fn [[configure-disabled?
+        some-license-not-accepted?]]
+    (or configure-disabled? some-license-not-accepted?)))

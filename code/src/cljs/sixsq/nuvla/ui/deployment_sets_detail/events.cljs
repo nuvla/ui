@@ -289,13 +289,13 @@
     {::cimi-api-fx/add
      [:deployment-set
       (cond->
-        {:spec {:applications (map #(module-plugin/selected-version
+        {:spec {:applications (map #(module-plugin/db-selected-version
                                       db [::spec/module-versions] (:id %))
                                    apps-selected)
                 :targets      (map :id targets-selected)
                 :env          (mapcat (fn [{:keys [id]}]
                                         (->> id
-                                             (module-plugin/environment-variables
+                                             (module-plugin/db-environment-variables
                                                db [::spec/module-versions])
                                              (changed-env-vars id)))
                                       apps-selected)

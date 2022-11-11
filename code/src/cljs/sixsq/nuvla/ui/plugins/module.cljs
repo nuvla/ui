@@ -42,7 +42,7 @@
   (fn [db [_ db-path href]]
     (module-db db db-path href)))
 
-(defn selected-version
+(defn db-selected-version
   [db db-path href]
   (let [module-content-id (get-in db (conj db-path ::modules href :content :id))
         versions-indexed  (-> db
@@ -51,9 +51,15 @@
     (module-content-id->version-url versions-indexed href module-content-id)))
 
 
-(defn environment-variables
+(defn db-environment-variables
   [db db-path href]
   (get-in db (conj db-path ::modules href :content :environmental-variables)))
+
+(defn db-license-accepted?
+  [db db-path href]
+  (let [license (get-in db (conj db-path ::modules href :license))]
+    (or (nil? license)
+        (get license ::accepted? false))))
 
 (reg-sub
   ::module-versions-indexed
@@ -157,6 +163,26 @@
          env-variables)]
       [ui/Message "No environment variables defined"]
       )))
+
+(defn AcceptLicense
+  [{:keys [db-path href] :as _opts}]
+  (let [tr     @(subscribe [::i18n-subs/tr])
+        module @(subscribe [::module db-path href])
+        {:keys [name description url] :as license} (:license module)]
+    (if license
+      [ui/Form
+       [:p
+        [:b (str/capitalize (tr [:license])) " "]
+        [:a {:href   url
+             :target "_blank"} name]]
+       (when description
+         [:p description])
+       [ui/Checkbox {:label     (tr [:accept-license])
+                     :checked   (get license ::accepted? false)
+                     :on-change (ui-callback/checked
+                                  #(dispatch [::helpers/set (conj db-path ::modules href :license)
+                                              ::accepted? %]))}]]
+      [ui/Message "No license defined"])))
 
 (defn ModuleVersions
   [{:keys [db-path href] :as _opts}]

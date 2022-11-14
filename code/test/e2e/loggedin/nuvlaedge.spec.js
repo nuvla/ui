@@ -114,7 +114,7 @@ test.skip('NuvlaEdge update to version with security module from unofficial rele
   // 5. When changing nuvla edge version to 2.4.3 security module should be checked
 });
 
-test.only('NuvlaEdge update from version with security module but not installed', async ({ page, context }, {
+test.skip('NuvlaEdge update from version with security module but not installed', async ({ page, context }, {
   project,
   config,
 }) => {

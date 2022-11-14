@@ -190,16 +190,23 @@
     (and (<= 2 major)
          (<= 3 minor))))
 
-(defn- calc-new-modules-on-release-change [cur-release new-release form-modules]
-  (cond
+(defn- calc-new-modules-on-release-change [form-data new-release]
+  (let [form-modules (:modules form-data)
+        form-release-old (get-in form-data [:nuvlabox-release :release])]
+    (cond
 
-    (and (not (security-available? cur-release))
-         (security-available? new-release)) (assoc form-modules :security (get form-modules :security true))
+      (and (not (security-available? form-release-old))
+           (security-available? new-release))
+      (assoc form-modules :security
+             (get form-modules :security true))
 
-    (and (not (security-available? new-release))
-         (security-available? cur-release)) (dissoc form-modules :security)
+      (and (not (security-available? new-release))
+           (security-available? form-release-old))
+      (if (form-modules :security)
+        (dissoc form-modules :security)
+        (assoc form-modules :security false))
 
-    :else form-modules))
+      :else form-modules)))
 
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
@@ -214,8 +221,7 @@
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   (fn [release]
                          (let [release-new  (:release (get @releases-by-id release))
-                               form-modules (:modules @form-data)
-                               new-modules (calc-new-modules-on-release-change nb-version release-new form-modules)]
+                               new-modules (calc-new-modules-on-release-change @form-data release-new )]
                            (swap! form-data assoc
                                   :modules new-modules
                                   :nuvlabox-release (@releases-by-id release))))

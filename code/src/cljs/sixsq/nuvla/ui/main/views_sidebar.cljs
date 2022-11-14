@@ -26,6 +26,7 @@
                  :overflow-x "hidden"}
       :active   @active?
       :href     (if auth-needed? "sign-in" url)
+      :class    (str "nuvla-" url)
       :on-click (fn [event]
                   (dispatch (if auth-needed?
                               [::history-events/navigate "sign-in"]

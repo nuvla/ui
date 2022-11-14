@@ -279,7 +279,8 @@
          [:<>
           [intercom/widget]
           [sidebar/menu]
-          [:div {:style {:transition  "0.5s"
+          [:div {:class (str "nuvla-" (first @resource-path))
+                 :style {:transition  "0.5s"
                          :margin-left (if (and (not @is-small-device?) @show?)
                                         sidebar/sidebar-width "0")}}
            [ui/Dimmer {:active   (and @is-small-device? @show?)

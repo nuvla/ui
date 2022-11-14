@@ -177,11 +177,12 @@
                                                    :environment  :force-restart
                                                    :current-version])
         nuvlabox-release   (:nuvlabox-release form-data)
-        available-modules  (:compose-files nuvlabox-release)
-        module-scope->name (zipmap (map (comp keyword :scope) available-modules)
-                                   (map :name available-modules))
-        selected-modules   (remove nil? (:modules form-data))
-        config-files         (into [] (concat ["docker-compose.yml"] (remove nil? (map #(get module-scope->name %) selected-modules))))
+        selected-modules   (->> (:modules form-data)
+                                (filter val)
+                                (map key)
+                                (remove nil?))
+        config-files         (concat ["docker-compose.yml"]
+                                     (map #(str "docker-compose." (name %) ".yml") selected-modules))
         payload?           (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
         payload            (when payload?
                              (-> payload-releated

@@ -185,29 +185,27 @@
                (< (second p) 16))))))
 
 
-(defn- str->cleaned-set [s]
-  (remove str/blank? (str/split-lines s)))
-
-(defn- form-update-data-unchanged? [form-data {:keys [nuvlabox-release project-name working-dir environment modules]}]
-  (and (= (:project-name form-data) project-name)
-       (= (:working-dir form-data) working-dir)
-       (= (set (str->cleaned-set (:environment form-data)))
-          (set (str->cleaned-set environment)))
-       (= (:modules form-data)
-          modules)
-       (= (:id (:nuvlabox-release form-data)) (:id nuvlabox-release))))
-
-
 (defn- security-available? [version]
   (let [[major minor _] (map js/Number (str/split version "."))]
     (and (<= 2 major)
          (<= 3 minor))))
 
+(defn- calc-new-modules-on-release-change [cur-release new-release form-modules]
+  (cond
+
+    (and (not (security-available? cur-release))
+         (security-available? new-release)) (assoc form-modules :security (get form-modules :security true))
+
+    (and (not (security-available? new-release))
+         (security-available? cur-release)) (dissoc form-modules :security)
+
+    :else form-modules))
+
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
-        modules        (subscribe [::subs/nuvlabox-modules])
+        modules        (zipmap @(subscribe [::subs/nuvlabox-modules]) (cycle [true]))
         releases       (subscribe [::edges-subs/nuvlabox-releases-options])
         releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
         releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
@@ -215,10 +213,12 @@
         form-data      (r/atom nil)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   (fn [release]
-                         (when (and (not (security-available? nb-version))
-                                    (security-available? (:release (get @releases-by-id release))))
-                           (swap! form-data assoc :modules (conj (:modules @form-data) :security)))
-                         (swap! form-data assoc :nuvlabox-release (@releases-by-id release)))
+                         (let [release-new  (:release (get @releases-by-id release))
+                               form-modules (:modules @form-data)
+                               new-modules (calc-new-modules-on-release-change nb-version release-new form-modules)]
+                           (swap! form-data assoc
+                                  :modules new-modules
+                                  :nuvlabox-release (@releases-by-id release))))
         on-success-fn  close-fn
         on-error-fn    close-fn
         on-click-fn    #(dispatch [::events/operation id operation
@@ -226,7 +226,7 @@
                                    on-success-fn on-error-fn])
         current-config  {:project-name   (-> @status :installation-parameters :project-name)
                          :working-dir   (-> @status :installation-parameters :working-dir)
-                         :modules       @modules
+                         :modules       modules
                          :environment   (str/join "\n" (-> @status :installation-parameters :environment))
                          :force-restart false
                          :nuvlabox-release (@releases-by-no nb-version)}]
@@ -299,14 +299,13 @@
                    (let [scope-key       (keyword scope)]
                      [ui/Checkbox {:key              scope
                                    :label            scope
-                                   :checked         (contains?
+                                   :checked         (get
                                                      selected-modules
-                                                     scope-key)
+                                                     scope-key
+                                                     false)
                                    :style            {:margin "1em"}
                                    :on-change        (fn []
-                                                       (if (scope-key selected-modules)
-                                                         (swap! form-data update :modules disj scope-key)
-                                                         (swap! form-data update :modules conj scope-key)))}]))))])]
+                                                       (swap! form-data update-in [:modules scope-key] not))}]))))])]
           [uix/Accordion
            [:<>
             [ui/Form
@@ -346,9 +345,6 @@
          [ui/ModalActions
           [uix/Button
            {:text     button-text
-            :disabled (or (utils/form-update-data-incomplete? @form-data)
-                          (is-old-version? nb-version)
-                          (form-update-data-unchanged? @form-data current-config))
             :primary  true
             :on-click on-click-fn}]]]))))
 

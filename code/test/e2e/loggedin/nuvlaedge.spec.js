@@ -72,27 +72,6 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
  * I used these tests for local verification, but the need more work for CI.
  * I left them here but could also remove them.
  */
-test.skip('NuvlaEdge update to version with security module from official release', async ({ page, context }, {
-  project,
-  config,
-}) => {
-  const releaseVersion = '2.1.1';
-  const { baseURL } = config.projects[0].use;
-  await page.goto(baseURL + '/ui/welcome');
-  await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
-  });
-  await page.route('api/nuvlabox-status/**', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)) });
-  });
-  await page.pause();
-  // 1. Go to Edges page
-  // 2. Go to Click dream big edge
-  // 3. Update Edge
-  // 4. Checkboxes should be available, only GPU and Network checked
-  // 5. When changing nuvla edge version to 2.4.3 security module should be checked
-});
-
 test.skip('NuvlaEdge update to version with security module from unofficial release', async ({ page, context }, {
   project,
   config,
@@ -111,6 +90,27 @@ test.skip('NuvlaEdge update to version with security module from unofficial rele
   // 2. Go to Click dream big edge
   // 3. Update Edge
   // 4. No checkboxes available
+  // 5. When changing nuvla edge version to 2.4.3 security module should be checked
+});
+
+test.skip('NuvlaEdge update to version with security module from official release', async ({ page, context }, {
+  project,
+  config,
+}) => {
+  const releaseVersion = '2.1.1';
+  const { baseURL } = config.projects[0].use;
+  await page.goto(baseURL + '/ui/welcome');
+  await page.route('api/nuvlabox-status', async (route) => {
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+  });
+  await page.route('api/nuvlabox-status/**', async (route) => {
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)) });
+  });
+  await page.pause();
+  // 1. Go to Edges page
+  // 2. Go to Click dream big edge
+  // 3. Update Edge
+  // 4. Checkboxes should be available, only GPU and Network checked
   // 5. When changing nuvla edge version to 2.4.3 security module should be checked
 });
 

@@ -28,7 +28,8 @@
           (map #(-> (re-matches scope-regex-match %)
                     second
                     keyword))
-          (into #{})))))
+          (into #{})
+          (remove nil?)))))
 
 (reg-sub
   ::nuvlabox-components

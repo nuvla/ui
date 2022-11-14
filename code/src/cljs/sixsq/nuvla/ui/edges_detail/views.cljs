@@ -197,11 +197,11 @@
           modules)
        (= (:id (:nuvlabox-release form-data)) (:id nuvlabox-release))))
 
-(defn- get-modules [release]
-  (->> release
-       :compose-files
-       (map (comp keyword :scope))
-       set))
+
+(defn- security-available? [version]
+  (let [[major minor _] (map js/Number (str/split version "."))]
+    (and (<= 2 major)
+         (<= 3 minor))))
 
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
@@ -215,17 +215,10 @@
         form-data      (r/atom nil)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   (fn [release]
-                         (let [modules-new                   (get-modules (get @releases-by-id release))
-                               modules-old                   (get-modules (:nuvlabox-release @form-data))
-                               modules-available-cur-release (->> ((@releases-by-no nb-version)
-                                                                   :compose-files)
-                                                                  (map (comp keyword :scope))
-                                                                  (set))]
-                           (when (and (:security modules-new)
-                                      (not (:security modules-available-cur-release))
-                                      (not (:security modules-old)))
-                             (swap! form-data assoc :modules (conj (:modules @form-data) :security)))
-                           (swap! form-data assoc :nuvlabox-release (@releases-by-id release))))
+                         (when (and (not (security-available? nb-version))
+                                    (security-available? (:release (get @releases-by-id release))))
+                           (swap! form-data assoc :modules (conj (:modules @form-data) :security)))
+                         (swap! form-data assoc :nuvlabox-release (@releases-by-id release)))
         on-success-fn  close-fn
         on-error-fn    close-fn
         on-click-fn    #(dispatch [::events/operation id operation
@@ -288,7 +281,8 @@
               [:i nb-version]]])
           [ui/Segment
            [:b (@tr [:update-to])]
-           [DropdownReleases {:value       release-id
+           [DropdownReleases {:placeholder (@tr [:select-version])
+                              :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
                               :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]
            (let [{:keys [compose-files]} selected-release]

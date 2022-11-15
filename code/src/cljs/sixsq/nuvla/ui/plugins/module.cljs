@@ -61,6 +61,12 @@
     (or (nil? license)
         (get license ::accepted? false))))
 
+(defn db-price-accepted?
+  [db db-path href]
+  (let [price (get-in db (conj db-path ::modules href :price))]
+    (or (nil? price)
+        (get price ::accepted? false))))
+
 (reg-sub
   ::module-versions-indexed
   (fn [[_ db-path href]]
@@ -183,6 +189,38 @@
                                   #(dispatch [::helpers/set (conj db-path ::modules href :license)
                                               ::accepted? %]))}]]
       [ui/Message "No license defined"])))
+
+(defn AcceptPrice
+  [{:keys [db-path href] :as _opts}]
+  (let [tr     @(subscribe [::i18n-subs/tr])
+        module @(subscribe [::module db-path href])
+        price (:price module)
+        format-price     #(if (>= (:cent-amount-daily %) 100)
+                            (str (float (/ (:cent-amount-daily %) 100)) "€/" (tr [:day]))
+                            (str (:cent-amount-daily %) "ct€/" (tr [:day])))]
+    (if price
+      [:<>
+       [ui/Segment
+        [:p
+         (str (if (:follow-customer-trial price)
+                (tr [:trial-deployment-follow])
+                (tr [:trial-deployment]))
+              (tr [:deployment-will-cost]))
+
+         [:b (format-price price)]]
+        [ui/Checkbox {:label     (tr [:accept-costs])
+                      :checked   (get price ::accepted? false)
+                      :on-change (ui-callback/checked
+                                   #(dispatch [::helpers/set (conj db-path ::modules href :price)
+                                               ::accepted? %]))}]]
+       [ui/Input
+        {:label         "Coupon"
+         :placeholder   "code"
+         :default-value (get price ::coupon "")
+         :on-change     (ui-callback/input-callback
+                          #(dispatch [::helpers/set (conj db-path ::modules href :price)
+                                      ::coupon %]))}]]
+      [ui/Message "No price defined"])))
 
 (defn ModuleVersions
   [{:keys [db-path href] :as _opts}]

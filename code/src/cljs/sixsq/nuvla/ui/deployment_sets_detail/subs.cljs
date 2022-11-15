@@ -154,9 +154,18 @@
     (some #(false? (module-plugin/db-license-accepted? db [::spec/module-versions] (:id %))) apps-selected)))
 
 (reg-sub
+  ::some-price-not-accepted?
+  (fn [{:keys [::spec/apps-selected] :as db}]
+    (some #(false? (module-plugin/db-price-accepted? db [::spec/module-versions] (:id %))) apps-selected)))
+
+(reg-sub
   ::create-disabled?
   :<- [::configure-disabled?]
   :<- [::some-license-not-accepted?]
+  :<- [::some-price-not-accepted?]
   (fn [[configure-disabled?
-        some-license-not-accepted?]]
-    (or configure-disabled? some-license-not-accepted?)))
+        some-license-not-accepted?
+        some-price-not-accepted?]]
+    (or configure-disabled?
+        some-license-not-accepted?
+        some-price-not-accepted?)))

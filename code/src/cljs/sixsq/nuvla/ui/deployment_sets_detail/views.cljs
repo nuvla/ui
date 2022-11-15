@@ -419,9 +419,11 @@
                                     :label "License"
                                     :default-open true]
                                    [uix/Accordion
-                                    [:div "price"]
+                                    [module-plugin/AcceptPrice
+                                     {:db-path [::spec/module-versions]
+                                      :href    id}]
                                     :label "Price"
-                                    :default-open false]
+                                    :default-open true]
                                    ])}
                     ) @apps-selected)}]]))
 
@@ -464,6 +466,7 @@
         apps-selected         (subscribe [::subs/apps-selected])
         targets-selected      (subscribe [::subs/targets-selected])
         license-not-accepted? (subscribe [::subs/some-license-not-accepted?])
+        price-not-accepted? (subscribe [::subs/some-price-not-accepted?])
         create-name-descr     (r/atom {:start false})
         on-change-input       (fn [key]
                                 (ui-callback/input-callback
@@ -501,6 +504,10 @@
            [ui/Message {:warning true}
             [ui/Icon {:name "warning"}]
             "You have to accept all applications licenses!"])
+         (when @price-not-accepted?
+           [ui/Message {:warning true}
+            [ui/Icon {:name "warning"}]
+            "You have to accept all applications prices!"])
          [ui/Button
           {:positive true
            :on-click #(dispatch [::events/create @create-name-descr])

@@ -15,6 +15,7 @@
 - NuvlaEdge details - Disables Save button on location tab if location unchanged, bugfix #949
 - Apps - Replaces "App Store" with "Marketplace" #901
 - Global - Clears change protection event listener on beforeunload when Ignore Changes clicked, bugfix #948
+- Edges table view - Shows state icons again, bugfix #60
 
 ## [2.32.8] - 2022-10-14
 

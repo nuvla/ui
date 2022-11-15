@@ -30,14 +30,12 @@
 (defn FullTextSearch
   [{:keys [db-path change-event placeholder-suffix] :as opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
-  (let [tr   @(subscribe [::i18n-subs/tr])
-        text @(subscribe [::helpers/retrieve db-path ::text])]
+  (let [tr   @(subscribe [::i18n-subs/tr])]
     [ui/Input
      (-> opts
          (dissoc :db-path :change-event :placeholder-suffix)
          (assoc :placeholder (str (tr [:search]) placeholder-suffix "...")
                 :icon "search"
-                :value (or text "")
                 :on-change (ui-callback/input-callback
                              #(dispatch [::search db-path %]))))]))
 

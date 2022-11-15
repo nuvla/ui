@@ -16,6 +16,7 @@
 - Apps - Replaces "App Store" with "Marketplace" #901
 - Global - Clears change protection event listener on beforeunload when Ignore Changes clicked, bugfix #948
 - Edges table view - Shows state icons again, bugfix #60
+- Global - Fixes jump of caret to back when typing in search input fields, bugfix #974
 
 ## [2.32.8] - 2022-10-14
 

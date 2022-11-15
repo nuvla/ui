@@ -17,12 +17,19 @@ test.describe('Full text search', () => {
       await page.keyboard.press('ArrowLeft');
       await page.keyboard.press('ArrowLeft');
       await page.keyboard.press('ArrowLeft');
-      await page.getByPlaceholder('Search').press('t');
-      await page.getByPlaceholder('Search').press('e');
-      await page.getByPlaceholder('Search').press('s');
-      await page.getByPlaceholder('Search').press('t');
+      await page.keyboard.press('t');
+      await page.keyboard.press('e');
+      await page.keyboard.press('s');
+      await page.keyboard.press('t');
 
       await expect(page.getByPlaceholder('Search')).toHaveValue('hello testworld', { timeout: 100 });
+
+      await page.keyboard.press('Backspace');
+      await page.keyboard.press('Backspace');
+      await page.keyboard.press('Backspace');
+      await page.keyboard.press('Backspace');
+
+      await expect(page.getByPlaceholder('Search')).toHaveValue('hello world', { timeout: 100 });
     });
   }
 });

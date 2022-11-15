@@ -39,7 +39,7 @@
                 :icon "search"
                 :default-value (or text "")
                 :on-change (ui-callback/input-callback
-                            #(dispatch [::search db-path %]))))]))
+                             #(dispatch [::search db-path %]))))]))
 
 (s/fdef FullTextSearch
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path

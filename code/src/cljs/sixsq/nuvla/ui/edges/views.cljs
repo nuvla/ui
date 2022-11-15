@@ -737,7 +737,7 @@
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
-      [ui/Icon {:icon (utils/state->icon state)}]]
+      [ui/Icon {:class (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell (values/format-created created)]

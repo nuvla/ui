@@ -213,3 +213,36 @@ tr.active td {
 .leaflet-top, .leaflet-bottom {
   z-index: 998 !important;
 }
+
+/* Overriding semantic UI fonts when fa is used */
+i.icon.fa-classic,
+i.icon.fa-light,
+i.icon.fa-regular,
+i.icon.fa-solid,
+i.icon.fa-thin,
+i.icon.fal,
+i.icon.far,
+i.icon.fas,
+i.icon.fat {
+  font-family: 'Font Awesome 6 Pro';
+}
+
+i.icon.fa-thin,
+i.icon.fat {
+  font-weight: 100;
+}
+
+i.icon.fa-light,
+i.icon.fal {
+  font-weight: 300;
+}
+
+i.icon.fa-regular,
+i.icon.far {
+  font-weight: 400;
+}
+
+i.icon.fa-solid,
+i.icon.fas {
+  font-weight: 900;
+}

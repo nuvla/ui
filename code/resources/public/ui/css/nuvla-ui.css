@@ -209,7 +209,39 @@ tr.active td {
   max-width: 100%;
 }
 
-
-.leaflet-top, .leaflet-bottom {
+.leaflet-top,
+.leaflet-bottom {
   z-index: 998 !important;
+}
+
+.resource-logs-container-name {
+  word-wrap: break-word;
+}
+
+@media (min-width: 640px) {
+  .resource-logs-container-name {
+    max-width: 150px;
+  }
+}
+
+@media (min-width: 768px) {
+  .resource-logs-container-name {
+    max-width: 200px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .resource-logs-container-name {
+    max-width: 250px;
+  }
+}
+@media (min-width: 1280px) {
+  .resource-logs-container-name {
+    max-width: 350px;
+  }
+}
+@media (min-width: 1536px) {
+  .resource-logs-container-name {
+    max-width: 450px;
+  }
 }

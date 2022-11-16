@@ -185,23 +185,20 @@
                (< (second p) 16))))))
 
 
-(defn- security-available? [version]
-  (let [[major minor _] (map js/Number (str/split version "."))]
-    (and (<= 2 major)
-         (<= 3 minor))))
+
 
 (defn- calc-new-modules-on-release-change [form-data new-release]
   (let [form-modules (:modules form-data)
         form-release-old (get-in form-data [:nuvlabox-release :release])]
     (cond
 
-      (and (not (security-available? form-release-old))
-           (security-available? new-release))
+      (and (not (subs/security-available? form-release-old))
+           (subs/security-available? new-release))
       (assoc form-modules :security
              (get form-modules :security true))
 
-      (and (not (security-available? new-release))
-           (security-available? form-release-old))
+      (and (not (subs/security-available? new-release))
+           (subs/security-available? form-release-old))
       (if (form-modules :security)
         (dissoc form-modules :security)
         (assoc form-modules :security false))
@@ -212,7 +209,7 @@
   [{:keys [id] :as _resource} operation show?]
   (let [tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
-        modules        (zipmap @(subscribe [::subs/nuvlabox-modules]) (cycle [true]))
+        modules        (subscribe [::subs/nuvlabox-modules])
         releases       (subscribe [::edges-subs/nuvlabox-releases-options])
         releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
         releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
@@ -232,7 +229,7 @@
                                    on-success-fn on-error-fn])
         current-config  {:project-name   (-> @status :installation-parameters :project-name)
                          :working-dir   (-> @status :installation-parameters :working-dir)
-                         :modules       modules
+                         :modules       @modules
                          :environment   (str/join "\n" (-> @status :installation-parameters :environment))
                          :force-restart false
                          :nuvlabox-release (@releases-by-no nb-version)}]

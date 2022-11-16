@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edges-detail.subs
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.edges-detail.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
@@ -15,21 +16,33 @@
     (::spec/nuvlabox-status db)))
 
 
+(defn- version-string->number-vec [version-string->number-vec]
+  (map js/Number (str/split "test" ".")))
+
+(defn security-available? [version]
+  (let [[major minor _] (version-string->number-vec version)]
+    (and (<= 2 major)
+         (<= 3 minor))))
 
 (reg-sub
  ::nuvlabox-modules
  :<- [::nuvlabox-status]
  (fn [nuvlabox-status]
-   (let [scope-regex-match
-         #".*docker-compose\.([a-z]+)\.yml$"]
-     (->> nuvlabox-status
-          :installation-parameters
-          :config-files
-          (map #(-> (re-matches scope-regex-match %)
-                    second
-                    keyword))
-          (into #{})
-          (remove nil?)))))
+   (let [scope-regex-match       #".*docker-compose\.([a-z]+)\.yml$"
+         version                 (:nuvlabox-engine-version nuvlabox-status)
+         invalid-version-string    (not (every? number? (take 2 (version-string->number-vec version))))
+         version-with-sec-module (security-available? version)
+         config-files              (get-in nuvlabox-status [:installation-parameters :config-files])
+         modules                 (remove nil?
+                                         (map #(-> (re-matches scope-regex-match %)
+                                                   second
+                                                   keyword) config-files))
+         modules->bool (zipmap modules (cycle [true]))]
+     (if (and (or version-with-sec-module
+                  invalid-version-string)
+              (nil? (modules->bool :security)))
+       (assoc modules->bool :security false)
+       modules->bool))))
 
 (reg-sub
   ::nuvlabox-components

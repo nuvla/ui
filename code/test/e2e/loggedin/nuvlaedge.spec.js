@@ -133,7 +133,7 @@ test.skip('NuvlaEdge update from version with security module but not installed'
   // 4. When changing nuvla edge version to 2.4.3 security module should NOT be unchecked
 });
 
-test.skip('NuvlaEdge upgrade from version with security module and installed', async ({ page, context }, {
+test.skip('NuvlaEdge update from version with security module and installed', async ({ page, context }, {
   project,
   config,
 }) => {
@@ -141,10 +141,82 @@ test.skip('NuvlaEdge upgrade from version with security module and installed', a
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus('2.3.0')) });
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
   });
   await page.route('api/nuvlabox-status/**', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB('2.3.1', 'docker-compose.security.yml')) });
+    route.fulfill({
+      status: 200,
+      body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion, 'docker-compose.security.yml')),
+    });
+  });
+  await page.pause();
+  // 1. Go to Edges page
+  // 2. Go to Click dream big edge
+  // 3. Update Edge
+  // 4. When changing nuvla edge version to 2.4.3 security module should be checked
+});
+
+test.skip('NuvlaEdge update from version with security module and installed, but unpublished release', async ({
+  page,
+  context,
+}, { project, config }) => {
+  const releaseVersion = '2.4.2';
+  const { baseURL } = config.projects[0].use;
+  await page.goto(baseURL + '/ui/welcome');
+  await page.route('api/nuvlabox-status', async (route) => {
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+  });
+  await page.route('api/nuvlabox-status/**', async (route) => {
+    route.fulfill({
+      status: 200,
+      body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion, 'docker-compose.security.yml')),
+    });
+  });
+  await page.pause();
+  // 1. Go to Edges page
+  // 2. Go to Click dream big edge
+  // 3. Update Edge
+  // 4. When changing nuvla edge version to 2.4.3 security module should be checked
+});
+
+test.skip('NuvlaEdge update WITH security installed, but non-standard version numbering', async ({ page, context }, {
+  project,
+  config,
+}) => {
+  const releaseVersion = 'test';
+  const { baseURL } = config.projects[0].use;
+  await page.goto(baseURL + '/ui/welcome');
+  await page.route('api/nuvlabox-status', async (route) => {
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+  });
+  await page.route('api/nuvlabox-status/**', async (route) => {
+    route.fulfill({
+      status: 200,
+      body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion, 'docker-compose.security.yml')),
+    });
+  });
+  await page.pause();
+  // 1. Go to Edges page
+  // 2. Go to Click dream big edge
+  // 3. Update Edge
+  // 4. When changing nuvla edge version to 2.4.3 security module should be checked
+});
+
+test.only('NuvlaEdge update WITHOUT security installed and not installed, but non-standard version numbering', async ({
+  page,
+  context,
+}, { project, config }) => {
+  const releaseVersion = 'test';
+  const { baseURL } = config.projects[0].use;
+  await page.goto(baseURL + '/ui/welcome');
+  await page.route('api/nuvlabox-status', async (route) => {
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+  });
+  await page.route('api/nuvlabox-status/**', async (route) => {
+    route.fulfill({
+      status: 200,
+      body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)),
+    });
   });
   await page.pause();
   // 1. Go to Edges page

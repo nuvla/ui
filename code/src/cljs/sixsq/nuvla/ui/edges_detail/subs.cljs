@@ -16,8 +16,9 @@
     (::spec/nuvlabox-status db)))
 
 
-(defn- version-string->number-vec [version-string->number-vec]
-  (map js/Number (str/split "test" ".")))
+(defn- version-string->number-vec [version]
+  (map js/Number (str/split version ".")))
+
 
 (defn security-available? [version]
   (let [[major minor _] (version-string->number-vec version)]
@@ -30,7 +31,7 @@
  (fn [nuvlabox-status]
    (let [scope-regex-match       #".*docker-compose\.([a-z]+)\.yml$"
          version                 (:nuvlabox-engine-version nuvlabox-status)
-         invalid-version-string    (not (every? number? (take 2 (version-string->number-vec version))))
+         invalid-version-string  (not (every? int? (take 2 (version-string->number-vec version))))
          version-with-sec-module (security-available? version)
          config-files              (get-in nuvlabox-status [:installation-parameters :config-files])
          modules                 (remove nil?

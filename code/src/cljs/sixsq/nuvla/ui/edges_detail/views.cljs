@@ -951,7 +951,8 @@
           [ui/TableHeader
            [ui/TableRow
             [ui/TableHeaderCell "ID"]
-            [ui/TableHeaderCell "Container Name"]
+            [ui/TableHeaderCell {:style {:max-width "180px"
+                                         :word-wrap "break-word"}} "Container Name"]
             [ui/TableHeaderCell "CPU %"]
             [ui/TableHeaderCell "Mem Usage/Limit"]
             [ui/TableHeaderCell "Mem %"]
@@ -968,7 +969,8 @@
                ^{:key id}
                [ui/TableRow
                 [ui/TableCell (apply str (take 8 id))]
-                [ui/TableCell (apply str (take 25 name))]
+                [ui/TableCell {:style {:max-width "180px"
+                                         :word-wrap "break-word"}}  name #_(apply str (take 30 name))]
                 [ui/TableCell cpu-percent]
                 [ui/TableCell mem-usage-limit]
                 [ui/TableCell mem-percent]

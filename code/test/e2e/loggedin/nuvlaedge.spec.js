@@ -69,8 +69,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 });
 
 /**
- * I used these tests for local verification, but the need more work for CI.
- * I left them here but could also remove them.
+ * Used these tests for local verification of update modal changes #959, but they need more work to be run in CI.
  */
 test.skip('NuvlaEdge update to version with security module from unofficial release', async ({ page, context }, {
   project,

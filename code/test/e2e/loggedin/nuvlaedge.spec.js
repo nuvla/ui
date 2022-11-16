@@ -202,7 +202,7 @@ test.skip('NuvlaEdge update WITH security installed, but non-standard version nu
   // 4. When changing nuvla edge version to 2.4.3 security module should be checked
 });
 
-test.only('NuvlaEdge update WITHOUT security installed and not installed, but non-standard version numbering', async ({
+test.skip('NuvlaEdge update WITHOUT security installed and not installed, but non-standard version numbering', async ({
   page,
   context,
 }, { project, config }) => {

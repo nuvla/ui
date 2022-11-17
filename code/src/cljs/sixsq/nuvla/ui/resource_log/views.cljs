@@ -7,8 +7,8 @@
     [sixsq.nuvla.ui.resource-log.events :as events]
     [sixsq.nuvla.ui.resource-log.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn log-controller
   [_go-live? _current-log]

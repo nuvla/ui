@@ -2,11 +2,13 @@
 
 ## Unreleased
 
+## [2.32.9] - 2022-11-17
+
 ### Changed
 
 - Testing - Added playwright for e2e testing UI and Server
-- Global - upgrades react-datepicker to newest version
-- Global - upgrades react-charts-js to newest version
+- Global - upgrades react-datepicker to the newest version
+- Global - upgrades react-charts-js to the newest version
 - Global - replaces moment with date-fns
 - CI - adds bundle analyzer job to pipeline
 - NuvlaEdge details - Shows number of deployments in a bubble on tabs item #940
@@ -14,13 +16,13 @@
 - NuvlaEdge details - Shows currently installed modules in update modal as checkboxes #943
 - NuvlaEdge details - Disables Save button on location tab if location unchanged, bugfix #949
 - Apps - Replaces "App Store" with "Marketplace" #901
-- Deployments - higher z-index on manual filter button to enable click on medium sized screens, bugfix #950
-- Global - Clears change protection event listener on beforeunload when Ignore Changes clicked, bugfix #948
+- Deployments - higher z-index on manual filter button to enable click on medium-sized screens, bugfix #950
+- Global - Clears change protection event listener on before unload when Ignore Changes clicked, bugfix #948
 - App details - Configuration Files section warns if Files are not supported instead of hiding #813
 - Edges table view - Shows state icons again, bugfix #60
 - Edges details - Resource consumption tab showing full container name in table #834
 - Search plugin - Fixes jump of caret to back when typing in search input fields, bugfix #974
-- Global - Renames all occurences of "NuvlaEdge Engine" to "NuvlaEdge" #946
+- Global - Renames all occurrences of "NuvlaEdge Engine" to "NuvlaEdge" #946
 
 ## [2.32.8] - 2022-10-14
 

@@ -858,12 +858,12 @@
                  nil)]))))
 
 
-
-(defn- Table-With-Multiline [container-stats]
+(defn- StatsTable [container-stats]
   [ui/GridRow {:centered true
                :columns  1}
    [ui/GridColumn
-    [ui/Table {:compact "very", :selectable true, :basic "very"}
+    [ui/Table {:compact "very", :selectable true,
+               :basic "very", :style {:font-size "13px"}}
      [ui/TableHeader
       [ui/TableRow
        [ui/TableHeaderCell "ID"]
@@ -884,7 +884,9 @@
           ^{:key id}
           [ui/TableRow
            [ui/TableCell (apply str (take 8 id))]
-           [ui/TableCell {:class "resource-logs-container-name"}  name #_(apply str (take 30 name))]
+           [ui/TableCell {:class "resource-logs-container-name"}
+            [ui/Popup {:content name
+                       :trigger (r/as-element [:div name])}]]
            [ui/TableCell cpu-percent]
            [ui/TableCell mem-usage-limit]
            [ui/TableCell mem-percent]
@@ -893,40 +895,6 @@
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
 
-(defn- Table-With-Tooltip [container-stats]
-  [ui/GridRow {:centered true
-                    :columns  1}
-        [ui/GridColumn
-         [ui/Table {:compact "very", :selectable true, :basic "very"}
-          [ui/TableHeader
-           [ui/TableRow
-            [ui/TableHeaderCell "ID"]
-            [ui/TableHeaderCell  "Container Name"]
-            [ui/TableHeaderCell "CPU %"]
-            [ui/TableHeaderCell "Mem Usage/Limit"]
-            [ui/TableHeaderCell "Mem %"]
-            [ui/TableHeaderCell "Net I/O"]
-            [ui/TableHeaderCell "Block I/O"]
-            [ui/TableHeaderCell "Status"]
-            [ui/TableHeaderCell "Restart Count"]]]
-
-          [ui/TableBody
-           (for [{:keys [id name cpu-percent mem-usage-limit
-                         mem-percent net-in-out blk-in-out
-                         container-status restart-count] :as _cstat} container-stats]
-             (when id
-               ^{:key id}
-               [ui/TableRow
-                [ui/TableCell (apply str (take 8 id))]
-                [ui/TableCell [ui/Popup {:content name
-                                         :trigger (r/as-element [:div (apply str (take 30 name))])}]]
-                [ui/TableCell cpu-percent]
-                [ui/TableCell mem-usage-limit]
-                [ui/TableCell mem-percent]
-                [ui/TableCell net-in-out]
-                [ui/TableCell blk-in-out]
-                [ui/TableCell container-status]
-                [ui/TableCell restart-count]]))]]]])
 
 (defn Load
   [resources]
@@ -1014,10 +982,7 @@
                                             :title {:text    "megabytes"
                                                     :display true}}}}}]]]])
      (when container-stats
-       [:div [:h1 "Option 1: Tooltip"]
-        [Table-With-Tooltip container-stats]
-        [:h1 "Option 2: Multiline"]
-        [Table-With-Multiline container-stats]])]))
+        [StatsTable (sort-by :name container-stats)])]))
 
 
 (defn edit-action

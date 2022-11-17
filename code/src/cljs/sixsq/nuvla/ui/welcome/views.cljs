@@ -116,7 +116,7 @@
        [ui/HeaderSubheader {:as "h2"}
         (@tr [:welcome-how-to-nb-header])]
        [ui/HeaderSubheader {:as "h4"}
-        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvlaedge/nuvlaedge-engine/"
+        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvlaedge/nuvlaedge-software/"
                                                       :target "_blank"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1
@@ -125,7 +125,7 @@
               " "
               [:a {:target "_blank"
                    :key    "nuvlabox-engine-requirements"
-                   :href   "https://docs.nuvla.io/nuvlaedge/nuvlaedge-engine/requirements/"}
+                   :href   "https://docs.nuvla.io/nuvlaedge/installation/requirements/"}
                (@tr [:welcome-how-to-nb-1-subheader-mid])]
               " "
               (@tr [:welcome-how-to-nb-1-subheader-post])

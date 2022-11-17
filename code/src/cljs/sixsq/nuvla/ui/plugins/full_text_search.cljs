@@ -37,7 +37,7 @@
          (dissoc :db-path :change-event :placeholder-suffix)
          (assoc :placeholder (str (tr [:search]) placeholder-suffix "...")
                 :icon "search"
-                :value (or text "")
+                :default-value (or text "")
                 :on-change (ui-callback/input-callback
                              #(dispatch [::search db-path %]))))]))
 

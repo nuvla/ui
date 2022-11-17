@@ -209,8 +209,7 @@ tr.active td {
   max-width: 100%;
 }
 
-.leaflet-top,
-.leaflet-bottom {
+.leaflet-top, .leaflet-bottom {
   z-index: 998 !important;
 }
 

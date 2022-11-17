@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- NuvleEdge details - Shows public and interface IPs in host card #969
+
 ## [2.32.9] - 2022-11-17
 
 ### Changed

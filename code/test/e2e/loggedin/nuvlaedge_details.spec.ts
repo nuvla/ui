@@ -32,7 +32,6 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
       body: JSON.stringify(nuvlaboxStatusMock),
     });
   });
-  await page.pause();
 
   await page.getByRole('link', { name: 'Edges' }).click();
 

@@ -173,23 +173,24 @@
 
 (defn format-update-data
   [form-data]
-  (let [payload-releated   (select-keys form-data [:project-name :working-dir
-                                                   :environment  :force-restart
-                                                   :current-version])
-        nuvlabox-release   (:nuvlabox-release form-data)
-        available-modules  (:compose-files nuvlabox-release)
-        module-scope->name (zipmap (map (comp keyword :scope) available-modules)
-                                   (map :name available-modules))
-        selected-modules   (remove nil? (:modules form-data))
-        config-files         (into [] (concat ["docker-compose.yml"] (remove nil? (map #(get module-scope->name %) selected-modules))))
-        payload?           (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
-        payload            (when payload?
-                             (-> payload-releated
-                                 (update :environment str/split #"\n")
-                                 (assoc :config-files config-files)))]
+  (let [payload-releated (select-keys form-data [:project-name :working-dir
+                                                 :environment :force-restart
+                                                 :current-version])
+        nuvlabox-release (:nuvlabox-release form-data)
+        selected-modules (->> (:modules form-data)
+                              (filter val)
+                              (map key)
+                              (remove nil?))
+        config-files     (concat ["docker-compose.yml"]
+                                 (map #(str "docker-compose." (name %) ".yml") selected-modules))
+        payload?         (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
+        payload          (when payload?
+                           (-> payload-releated
+                               (update :environment str/split #"\n")
+                               (assoc :config-files config-files)))]
     (when payload
-        (assoc {:nuvlabox-release (:id nuvlabox-release)}
-               :payload (general-utils/edn->json payload)))))
+      (assoc {:nuvlabox-release (:id nuvlabox-release)}
+        :payload (general-utils/edn->json payload)))))
 
 
 (defn form-update-data-incomplete?
@@ -212,9 +213,9 @@
 
 (defn last-time-online [next-heartbeat-moment refresh-interval locale]
   (time/ago
-          (->> refresh-interval
-               (* 2)
-               (+ 10)
-               (* 1000)
-               (time/subtract-milliseconds next-heartbeat-moment)
-               ) locale))
+    (->> refresh-interval
+         (* 2)
+         (+ 10)
+         (* 1000)
+         (time/subtract-milliseconds next-heartbeat-moment)
+         ) locale))

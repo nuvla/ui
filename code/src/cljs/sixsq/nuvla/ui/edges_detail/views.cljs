@@ -117,8 +117,8 @@
                       :loading   (empty? @releases)
                       :options   (map #(dissoc % :pre-release) @releases)}
                      opts)]
-         (when (:pre-release @selected-release) [:span {:style  {:margin "1em"
-                                                                 :color "darkorange"}}
+         (when (:pre-release @selected-release) [:span {:style {:margin "1em"
+                                                                :color  "darkorange"}}
                                                  (r/as-element [ui/Icon {:name "exclamation triangle"}])
                                                  (@tr [:nuvlabox-pre-release])])]))))
 
@@ -185,23 +185,25 @@
                (< (second p) 16))))))
 
 
-(defn- str->cleaned-set [s]
-  (remove str/blank? (str/split-lines s)))
 
-(defn- form-update-data-unchanged? [form-data {:keys [nuvlabox-release project-name working-dir environment modules]}]
-  (and (= (:project-name form-data) project-name)
-       (= (:working-dir form-data) working-dir)
-       (= (set (str->cleaned-set (:environment form-data)))
-          (set (str->cleaned-set environment)))
-       (= (:modules form-data)
-          modules)
-       (= (:id (:nuvlabox-release form-data)) (:id nuvlabox-release))))
 
-(defn- get-modules [release]
-  (->> release
-       :compose-files
-       (map (comp keyword :scope))
-       set))
+(defn- calc-new-modules-on-release-change [form-data new-release]
+  (let [form-modules     (:modules form-data)
+        form-release-old (get-in form-data [:nuvlabox-release :release])]
+    (cond
+
+      (and (not (subs/security-available? form-release-old))
+           (subs/security-available? new-release))
+      (assoc form-modules :security
+                          (get form-modules :security true))
+
+      (and (not (subs/security-available? new-release))
+           (subs/security-available? form-release-old))
+      (if (form-modules :security)
+        (dissoc form-modules :security)
+        (assoc form-modules :security false))
+
+      :else form-modules)))
 
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
@@ -215,23 +217,22 @@
         form-data      (r/atom nil)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   (fn [release]
-                         (let [modules-new (get-modules (get @releases-by-id release))
-                               modules-old (get-modules (:nuvlabox-release @form-data))]
-                           (when (and (:security modules-new)
-                                      (not (:security modules-old)))
-                             (swap! form-data assoc :modules (conj (:modules @form-data) :security)))
-                           (swap! form-data assoc :nuvlabox-release (@releases-by-id release))))
+                         (let [release-new (:release (get @releases-by-id release))
+                               new-modules (calc-new-modules-on-release-change @form-data release-new)]
+                           (swap! form-data assoc
+                                  :modules new-modules
+                                  :nuvlabox-release (@releases-by-id release))))
         on-success-fn  close-fn
         on-error-fn    close-fn
         on-click-fn    #(dispatch [::events/operation id operation
                                    (utils/format-update-data @form-data)
                                    on-success-fn on-error-fn])
-        current-config  {:project-name   (-> @status :installation-parameters :project-name)
-                         :working-dir   (-> @status :installation-parameters :working-dir)
-                         :modules       @modules
-                         :environment   (str/join "\n" (-> @status :installation-parameters :environment))
-                         :force-restart false
-                         :nuvlabox-release (@releases-by-no nb-version)}]
+        current-config {:project-name     (-> @status :installation-parameters :project-name)
+                        :working-dir      (-> @status :installation-parameters :working-dir)
+                        :modules          @modules
+                        :environment      (str/join "\n" (-> @status :installation-parameters :environment))
+                        :force-restart    false
+                        :nuvlabox-release (@releases-by-no nb-version)}]
 
     (reset! form-data current-config)
     (when nb-version
@@ -254,9 +255,9 @@
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
-                       [ui/MenuItem {:on-click #(reset! show? true)}
-                        [ui/Icon {:name icon}]
-                        title])}
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name icon}]
+                         title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
           (when correct-nb?
@@ -267,23 +268,24 @@
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                           [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                            [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
-                                 :target "_blank"}
-                             (str/capitalize (@tr [:see-more]))]])}])
+                            [:span (str (@tr [:nuvlabox-update-error-content])) " "
+                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
+                                  :target "_blank"}
+                              (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                           [:span (@tr [:nuvlabox-update-warning-content])])}])
+                            [:span (@tr [:nuvlabox-update-warning-content])])}])
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i nb-version]]])
           [ui/Segment
            [:b (@tr [:update-to])]
-           [DropdownReleases {:value       release-id
+           [DropdownReleases {:placeholder (@tr [:select-version])
+                              :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
                               :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]
            (let [{:keys [compose-files]} selected-release]
@@ -295,19 +297,18 @@
                   :on             "hover"
                   :hide-on-scroll true}])
               (doall
-               (for [{:keys [scope]} compose-files]
-                 (when-not (#{"core" ""} scope)
-                   (let [scope-key       (keyword scope)]
-                     [ui/Checkbox {:key              scope
-                                   :label            scope
-                                   :checked         (contains?
-                                                     selected-modules
-                                                     scope-key)
-                                   :style            {:margin "1em"}
-                                   :on-change        (fn []
-                                                       (if (scope-key selected-modules)
-                                                         (swap! form-data update :modules disj scope-key)
-                                                         (swap! form-data update :modules conj scope-key)))}]))))])]
+                (for [{:keys [scope]} compose-files]
+                  (when-not (#{"core" ""} scope)
+                    (let [scope-key (keyword scope)]
+                      [ui/Checkbox {:key       scope
+                                    :label     scope
+                                    :checked   (get
+                                                 selected-modules
+                                                 scope-key
+                                                 false)
+                                    :style     {:margin "1em"}
+                                    :on-change (fn []
+                                                 (swap! form-data update-in [:modules scope-key] not))}]))))])]
           [uix/Accordion
            [:<>
             [ui/Form
@@ -324,32 +325,29 @@
                             :placeholder   "nuvlabox"
                             :required      true
                             :default-value (:project-name @form-data)
-                            :on-key-down #(-> % .stopPropagation)
-                            :on-change (ui-callback/input-callback
-                                        #(swap! form-data assoc :project-name %))}]
+                            :on-key-down   #(-> % .stopPropagation)
+                            :on-change     (ui-callback/input-callback
+                                             #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
-                            :on-key-down #(-> % .stopPropagation)
+                            :on-key-down   #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                            #(swap! form-data assoc :working-dir %))}]
+                                             #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
               [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
-                            :on-key-down #(-> % .stopPropagation)
+                            :on-key-down   #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                            #(swap! form-data assoc :environment %))}]]]]
+                                             #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
            :title-size :h4
            :default-open false]]
          [ui/ModalActions
           [uix/Button
            {:text     button-text
-            :disabled (or (utils/form-update-data-incomplete? @form-data)
-                          (is-old-version? nb-version)
-                          (form-update-data-unchanged? @form-data current-config))
             :primary  true
             :on-click on-click-fn}]]]))))
 
@@ -858,6 +856,44 @@
                  nil)]))))
 
 
+(defn- StatsTable [container-stats]
+  [ui/GridRow {:centered true
+               :columns  1}
+   [ui/GridColumn
+    [ui/Table {:compact "very", :selectable true,
+               :basic   "very", :style {:font-size "13px"}}
+     [ui/TableHeader
+      [ui/TableRow
+       [ui/TableHeaderCell "ID"]
+       [ui/TableHeaderCell {:class "resource-logs-container-name"} "Container Name"]
+       [ui/TableHeaderCell "CPU %"]
+       [ui/TableHeaderCell "Mem Usage/Limit"]
+       [ui/TableHeaderCell "Mem %"]
+       [ui/TableHeaderCell "Net I/O"]
+       [ui/TableHeaderCell "Block I/O"]
+       [ui/TableHeaderCell "Status"]
+       [ui/TableHeaderCell "Restart Count"]]]
+
+     [ui/TableBody
+      (for [{:keys [id name cpu-percent mem-usage-limit
+                    mem-percent net-in-out blk-in-out
+                    container-status restart-count] :as _cstat} container-stats]
+        (when id
+          ^{:key id}
+          [ui/TableRow
+           [ui/TableCell (general-utils/id->short-uuid id)]
+           [ui/TableCell {:class "resource-logs-container-name"}
+            [ui/Popup {:content name
+                       :trigger (r/as-element [:div {:class "ellipsing"} name])}]]
+           [ui/TableCell cpu-percent]
+           [ui/TableCell mem-usage-limit]
+           [ui/TableCell mem-percent]
+           [ui/TableCell net-in-out]
+           [ui/TableCell blk-in-out]
+           [ui/TableCell container-status]
+           [ui/TableCell restart-count]]))]]]])
+
+
 (defn Load
   [resources]
   (let [load-stats      (utils/load-statistics resources)
@@ -944,38 +980,7 @@
                                             :title {:text    "megabytes"
                                                     :display true}}}}}]]]])
      (when container-stats
-       [ui/GridRow {:centered true
-                    :columns  1}
-        [ui/GridColumn
-         [ui/Table {:compact "very", :selectable true, :basic "very"}
-          [ui/TableHeader
-           [ui/TableRow
-            [ui/TableHeaderCell "ID"]
-            [ui/TableHeaderCell "Container Name"]
-            [ui/TableHeaderCell "CPU %"]
-            [ui/TableHeaderCell "Mem Usage/Limit"]
-            [ui/TableHeaderCell "Mem %"]
-            [ui/TableHeaderCell "Net I/O"]
-            [ui/TableHeaderCell "Block I/O"]
-            [ui/TableHeaderCell "Status"]
-            [ui/TableHeaderCell "Restart Count"]]]
-
-          [ui/TableBody
-           (for [{:keys [id name cpu-percent mem-usage-limit
-                         mem-percent net-in-out blk-in-out
-                         container-status restart-count] :as _cstat} container-stats]
-             (when id
-               ^{:key id}
-               [ui/TableRow
-                [ui/TableCell (apply str (take 8 id))]
-                [ui/TableCell (apply str (take 25 name))]
-                [ui/TableCell cpu-percent]
-                [ui/TableCell mem-usage-limit]
-                [ui/TableCell mem-percent]
-                [ui/TableCell net-in-out]
-                [ui/TableCell blk-in-out]
-                [ui/TableCell container-status]
-                [ui/TableCell restart-count]]))]]]])]))
+       [StatsTable (sort-by :name container-stats)])]))
 
 
 (defn edit-action
@@ -1406,11 +1411,11 @@
            (@tr [:cancel])]
           [ui/Button {:primary  true
                       :on-click #(do (dispatch
-                                      [::events/edit id
-                                       (assoc @nuvlabox
-                                              :location
-                                              (update @new-location 0 map/normalize-lng))
-                                       (@tr [:nuvlabox-position-update])])
+                                       [::events/edit id
+                                        (assoc @nuvlabox
+                                          :location
+                                          (update @new-location 0 map/normalize-lng))
+                                        (@tr [:nuvlabox-position-update])])
                                      (dispatch [::main-events/changes-protection? false]))
                       :disabled (nil? @new-location)}
            (@tr [:save])]]]))))

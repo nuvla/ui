@@ -299,6 +299,13 @@
                                                db [::spec/module-versions])
                                              (changed-env-vars id)))
                                       apps-selected)
+                :coupons      (keep (fn [{:keys [id]}]
+                                      (when-let [coupon (->> id
+                                                             (module-plugin/db-coupon
+                                                               db [::spec/module-versions]))]
+                                        {:application id
+                                         :code        coupon}))
+                                    apps-selected)
                 :start        df-start}}
         df-name (assoc :name df-name)
         df-descr (assoc :description df-descr))

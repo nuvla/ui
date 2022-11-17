@@ -67,6 +67,12 @@
     (or (nil? price)
         (get price ::accepted? false))))
 
+(defn db-coupon
+  [db db-path href]
+  (let [coupon (get-in db (conj db-path ::modules href :price ::coupon))]
+    (when-not (str/blank? coupon)
+      coupon)))
+
 (reg-sub
   ::module-versions-indexed
   (fn [[_ db-path href]]
@@ -213,6 +219,7 @@
                       :on-change (ui-callback/checked
                                    #(dispatch [::helpers/set (conj db-path ::modules href :price)
                                                ::accepted? %]))}]]
+       ^{:key href}
        [ui/Input
         {:label         "Coupon"
          :placeholder   "code"

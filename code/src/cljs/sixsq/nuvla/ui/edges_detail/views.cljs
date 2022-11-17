@@ -886,7 +886,7 @@
            [ui/TableCell (apply str (take 8 id))]
            [ui/TableCell {:class "resource-logs-container-name"}
             [ui/Popup {:content name
-                       :trigger (r/as-element [:div name])}]]
+                       :trigger (r/as-element [:div {:class "ellipsing"} name])}]]
            [ui/TableCell cpu-percent]
            [ui/TableCell mem-usage-limit]
            [ui/TableCell mem-percent]

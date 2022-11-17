@@ -214,7 +214,7 @@ tr.active td {
   z-index: 998 !important;
 }
 
-.resource-logs-container-name > div {
+.ellipsing {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -232,13 +232,13 @@ tr.active td {
 
 @media (min-width: 768px) {
   .resource-logs-container-name {
-    max-width: 200px;
+    max-width: 250px;
   }
 }
 
 @media (min-width: 1024px) {
   .resource-logs-container-name {
-    max-width: 300px;
+    max-width: 400px;
   }
 }
 @media (min-width: 1280px) {

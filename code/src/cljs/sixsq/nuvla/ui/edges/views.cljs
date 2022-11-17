@@ -209,7 +209,7 @@
       (let [tr                  (subscribe [::i18n-subs/tr])
             nuvlabox-name-or-id (str "NuvlaEdge " (or (:name creation-data)
                                                       (general-utils/id->short-uuid nuvlabox-id)))
-            execute-command     (str "docker-compose -p nuvlabox -f "
+            execute-command     (str "docker-compose -p nuvlaedge -f "
                                      (str/join " -f " (map :name download-files)) " up -d")]
         [:<>
          [uix/ModalHeader {:header (str nuvlabox-name-or-id " created") :icon "box"}]
@@ -269,7 +269,7 @@
              [:a {:href     @zip-url
                   :target   "_blank"
                   :style    {:margin "1em"}
-                  :download "nuvlabox-engine.zip"} "nuvlabox-engine.zip " [ui/Icon {:name "download"}]]]
+                  :download "nuvlaedge.zip"} "nuvlaedge.zip " [ui/Icon {:name "download"}]]]
 
             [ui/Segment {:text-align :center}
              [ui/Label {:circular true

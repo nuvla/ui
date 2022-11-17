@@ -17,6 +17,7 @@
 - Global - Clears change protection event listener on beforeunload when Ignore Changes clicked, bugfix #948
 - Edges table view - Shows state icons again, bugfix #60
 - Edges details - Resource consumption tab showing full container name in table #834
+- Global - Renames all occurences of "NuvlaEdge Engine" to "NuvlaEdge" #946
 
 ## [2.32.8] - 2022-10-14
 

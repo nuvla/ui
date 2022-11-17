@@ -1063,12 +1063,14 @@
       children
       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])))
 
+(def show-ips (r/atom false))
 (defn HostInfo
-  [{:keys [hostname ip docker-server-version
+  [{:keys [hostname ip docker-server-version network
            operating-system architecture last-boot docker-plugins]
     :as   _nb-status}
    ssh-creds]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        copy-to-clipboard (@tr [:copy-to-clipboard])]
     [ui/Table {:basic  "very"
                :padded false}
      [ui/TableBody
@@ -1088,7 +1090,14 @@
         [ui/TableRow
          [ui/TableCell "IP"]
          [ui/TableCell (values/copy-value-to-clipboard
-                         ip ip (@tr [:copy-to-clipboard]) true)]])
+                        ip ip copy-to-clipboard true)]])
+      (for [[name ip] (:ips network)]
+        ^{:key (str name ip)}
+        (when (seq ip)
+          [ui/TableRow
+           [ui/TableCell name]
+           [ui/TableCell (values/copy-value-to-clipboard
+                          ip ip copy-to-clipboard true)]]))
       (when (pos? (count @ssh-creds))
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
@@ -1126,7 +1135,27 @@
       (when last-boot
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-         [ui/TableCell (time/time->format last-boot)]])]]))
+         [ui/TableCell (time/time->format last-boot)]])
+      (let [interfaces   (:interfaces network)
+            n-interfaces (count interfaces)
+            n-ips        (reduce + (map (comp count :ips) (vals interfaces)))]
+        [:<>
+         (when (< 0 n-ips)
+           [ui/TableRow
+            {:on-click #(swap! show-ips not)
+             :style    {:cursor :pointer}}
+            [ui/TableCell (str (@tr [:nuvlaedge-network-interfaces-ips]) ":")]
+            [ui/TableCell [:div {:style {:display :flex
+                                         :justify-content :space-between}} (str n-interfaces " " (@tr [:interfaces]) ", " n-interfaces " IPs, ")
+                           (@tr [(if @show-ips :hide :show-more)])
+                               [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
+         (when @show-ips
+           (for [[name {ips :ips}] interfaces]
+             (when (seq ips)
+               ^{:key name}
+               [ui/TableRow
+                [ui/TableCell {:style {:padding-left "8px"}} name]
+                [ui/TableCell (str/join ", " (map :address ips))]])))])]]))
 
 (defn TabOverviewHost
   [nb-status ssh-creds]

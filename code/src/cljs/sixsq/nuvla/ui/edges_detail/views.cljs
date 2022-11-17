@@ -858,6 +858,44 @@
                  nil)]))))
 
 
+(defn- StatsTable [container-stats]
+  [ui/GridRow {:centered true
+               :columns  1}
+   [ui/GridColumn
+    [ui/Table {:compact "very", :selectable true,
+               :basic "very", :style {:font-size "13px"}}
+     [ui/TableHeader
+      [ui/TableRow
+       [ui/TableHeaderCell "ID"]
+       [ui/TableHeaderCell {:class "resource-logs-container-name"} "Container Name"]
+       [ui/TableHeaderCell "CPU %"]
+       [ui/TableHeaderCell "Mem Usage/Limit"]
+       [ui/TableHeaderCell "Mem %"]
+       [ui/TableHeaderCell "Net I/O"]
+       [ui/TableHeaderCell "Block I/O"]
+       [ui/TableHeaderCell "Status"]
+       [ui/TableHeaderCell "Restart Count"]]]
+
+     [ui/TableBody
+      (for [{:keys [id name cpu-percent mem-usage-limit
+                    mem-percent net-in-out blk-in-out
+                    container-status restart-count] :as _cstat} container-stats]
+        (when id
+          ^{:key id}
+          [ui/TableRow
+           [ui/TableCell (apply str (take 8 id))]
+           [ui/TableCell {:class "resource-logs-container-name"}
+            [ui/Popup {:content name
+                       :trigger (r/as-element [:div {:class "ellipsing"} name])}]]
+           [ui/TableCell cpu-percent]
+           [ui/TableCell mem-usage-limit]
+           [ui/TableCell mem-percent]
+           [ui/TableCell net-in-out]
+           [ui/TableCell blk-in-out]
+           [ui/TableCell container-status]
+           [ui/TableCell restart-count]]))]]]])
+
+
 (defn Load
   [resources]
   (let [load-stats      (utils/load-statistics resources)
@@ -944,38 +982,7 @@
                                             :title {:text    "megabytes"
                                                     :display true}}}}}]]]])
      (when container-stats
-       [ui/GridRow {:centered true
-                    :columns  1}
-        [ui/GridColumn
-         [ui/Table {:compact "very", :selectable true, :basic "very"}
-          [ui/TableHeader
-           [ui/TableRow
-            [ui/TableHeaderCell "ID"]
-            [ui/TableHeaderCell "Container Name"]
-            [ui/TableHeaderCell "CPU %"]
-            [ui/TableHeaderCell "Mem Usage/Limit"]
-            [ui/TableHeaderCell "Mem %"]
-            [ui/TableHeaderCell "Net I/O"]
-            [ui/TableHeaderCell "Block I/O"]
-            [ui/TableHeaderCell "Status"]
-            [ui/TableHeaderCell "Restart Count"]]]
-
-          [ui/TableBody
-           (for [{:keys [id name cpu-percent mem-usage-limit
-                         mem-percent net-in-out blk-in-out
-                         container-status restart-count] :as _cstat} container-stats]
-             (when id
-               ^{:key id}
-               [ui/TableRow
-                [ui/TableCell (apply str (take 8 id))]
-                [ui/TableCell (apply str (take 25 name))]
-                [ui/TableCell cpu-percent]
-                [ui/TableCell mem-usage-limit]
-                [ui/TableCell mem-percent]
-                [ui/TableCell net-in-out]
-                [ui/TableCell blk-in-out]
-                [ui/TableCell container-status]
-                [ui/TableCell restart-count]]))]]]])]))
+        [StatsTable (sort-by :name container-stats)])]))
 
 
 (defn edit-action

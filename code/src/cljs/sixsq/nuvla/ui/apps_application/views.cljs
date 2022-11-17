@@ -87,11 +87,10 @@
 
 (defn FilesSection []
   (let [tr            (subscribe [::i18n-subs/tr])
-        files          (subscribe [::subs/files])
+        files         (subscribe [::subs/files])
         editable?     (subscribe [::apps-subs/editable?])
         module-app    (subscribe [::apps-subs/module])
         compatibility (:compatibility @module-app)]
-
     (fn []
       [uix/Accordion
        (if (not= compatibility "docker-compose")
@@ -116,7 +115,8 @@
           (when @editable?
             [:div {:style {:padding-top 10}}
              [apps-views-detail/plus ::events/add-file]])]
-         [:div (@tr [:apps-file-config-warning]) [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]])
+         [:div (@tr [:apps-file-config-warning])
+          [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]])
        :label (@tr [:module-files])
        :count (count @files)
        :default-open true])))

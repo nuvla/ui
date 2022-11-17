@@ -209,7 +209,44 @@ tr.active td {
   max-width: 100%;
 }
 
-
 .leaflet-top, .leaflet-bottom {
   z-index: 998 !important;
+}
+
+.ellipsing {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resource-logs-container-name {
+  max-width: 100px;
+}
+
+@media (min-width: 640px) {
+  .resource-logs-container-name {
+    max-width: 150px;
+  }
+}
+
+@media (min-width: 768px) {
+  .resource-logs-container-name {
+    max-width: 250px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .resource-logs-container-name {
+    max-width: 400px;
+  }
+}
+@media (min-width: 1280px) {
+  .resource-logs-container-name {
+    max-width: 550px;
+  }
+}
+@media (min-width: 1536px) {
+  .resource-logs-container-name {
+    max-width: 750px;
+  }
 }

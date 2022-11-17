@@ -323,7 +323,8 @@
                                       [ui/Button {:icon     "magic"
                                                   :disabled (nil? resource-name)
                                                   :on-click open-fn
-                                                  :color    (when active-filter? :teal)}])
+                                                  :color    (when active-filter? :teal)
+                                                  :style {:z-index 100}}])
                           :disabled (not active-filter?)}
                          [FilterSummary {:additional-filters-applied default-filter}]])
           :open       @open?

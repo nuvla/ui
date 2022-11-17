@@ -3,7 +3,6 @@
 
 (def dictionary
   {:en {
-        :add-by-user-group-id                          "Add by user/group ID: "
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -30,6 +29,7 @@
         :actions                                       "actions"
         :active?                                       "active only?"
         :add                                           "add"
+        :add-by-user-group-id                          "Add by user/group ID: "
         :add-coupon                                    "Add coupon"
         :add-dropdown                                  "Add:"
         :add-group                                     "add group"
@@ -60,6 +60,8 @@
         :application-docker                            "Docker Application"
         :application-kubernetes                        "Kubernetes Application"
         :apps                                          "apps"
+        :apps-file-config-warning                      "Files are supported as Config or Secret on Docker Swarm only. However, your docker-compose.yml is not compatible with Docker Swarm because"
+        :apps-file-config-warning-options-link         "some configuration options are not supported."
         :apps-header                                   "Marketplace & Workspace"
         :apps-more-info                                "Would you like to enable fast deployment monitoring? If so, please check the "
         :apps-sub-modules                              "sub-modules"
@@ -890,7 +892,6 @@
         }
 
    :fr {
-        :add-by-user-group-id                          "Ajout par utilisateur/groupe ID : "
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
@@ -913,6 +914,7 @@
         :actions                                       "actions"
         :active?                                       "uniquement actif ?"
         :add                                           "ajouter"
+        :add-by-user-group-id                          "Ajout par utilisateur/groupe ID : "
         :add-coupon                                    "Ajouter un coupon"
         :add-license                                   "Ajouter une licence"
         :add-payment-method                            "Ajouter un moyen de paiement"
@@ -933,6 +935,8 @@
         :api-key-generated                             "Clé API générée avec succès"
         :application                                   "application"
         :apps                                          "apps"
+        :apps-file-config-warning                      "Les fichiers sont pris en charge en tant que Config ou Secret sur Docker Swarm uniquement. Cependant, votre docker-compose.yml n'est pas compatible avec Docker Swarm car"
+        :apps-file-config-warning-options-link         "certaines options de configuration ne sont pas prises en charge."
         :apps-header                                   "Marketplace & Espace de travail"
         :apps-more-info                                "Souhaitez-vous activer la surveillance de déploiement rapide? Si oui, veuillez visiter les "
         :apps-sub-modules                              "sous-modules"

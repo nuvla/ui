@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- NuvlaEdge details - Changes wording of menu item "Enable host level management" to show relation to playbooks #874
+
 ## [2.32.9] - 2022-11-17
 
 ### Changed

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- NuvlaEdges - Table view shows ".y.z" for new edges version number #962
+
 ## [2.32.9] - 2022-11-17
 
 ### Changed

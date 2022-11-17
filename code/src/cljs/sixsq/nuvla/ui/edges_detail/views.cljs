@@ -883,7 +883,7 @@
         (when id
           ^{:key id}
           [ui/TableRow
-           [ui/TableCell (apply str (take 8 id))]
+           [ui/TableCell (general-utils/id->short-uuid id)]
            [ui/TableCell {:class "resource-logs-container-name"}
             [ui/Popup {:content name
                        :trigger (r/as-element [:div {:class "ellipsing"} name])}]]

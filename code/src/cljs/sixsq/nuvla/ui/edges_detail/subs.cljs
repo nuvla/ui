@@ -26,24 +26,24 @@
          (<= 3 minor))))
 
 (reg-sub
- ::nuvlabox-modules
- :<- [::nuvlabox-status]
- (fn [nuvlabox-status]
-   (let [scope-regex-match        #".*docker-compose\.([a-z]+)\.yml$"
-         version                  (:nuvlabox-engine-version nuvlabox-status)
-         invalid-version-string?  (not (every? int? (take 2 (version-string->number-vec version))))
-         version-with-sec-module? (security-available? version)
-         config-files               (get-in nuvlabox-status [:installation-parameters :config-files])
-         modules                  (remove nil?
-                                          (map #(-> (re-matches scope-regex-match %)
-                                                    second
-                                                    keyword) config-files))
-         modules->bool (zipmap modules (cycle [true]))]
-     (if (and (or version-with-sec-module?
-                  invalid-version-string?)
-              (nil? (modules->bool :security)))
-       (assoc modules->bool :security false)
-       modules->bool))))
+  ::nuvlabox-modules
+  :<- [::nuvlabox-status]
+  (fn [nuvlabox-status]
+    (let [scope-regex-match        #".*docker-compose\.([a-z]+)\.yml$"
+          version                  (:nuvlabox-engine-version nuvlabox-status)
+          invalid-version-string?  (not (every? int? (take 2 (version-string->number-vec version))))
+          version-with-sec-module? (security-available? version)
+          config-files             (get-in nuvlabox-status [:installation-parameters :config-files])
+          modules                  (remove nil?
+                                           (map #(-> (re-matches scope-regex-match %)
+                                                     second
+                                                     keyword) config-files))
+          modules->bool            (zipmap modules (cycle [true]))]
+      (if (and (or version-with-sec-module?
+                   invalid-version-string?)
+               (nil? (modules->bool :security)))
+        (assoc modules->bool :security false)
+        modules->bool))))
 
 (reg-sub
   ::nuvlabox-components

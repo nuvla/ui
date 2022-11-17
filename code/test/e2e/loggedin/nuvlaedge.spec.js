@@ -79,7 +79,7 @@ test.skip('NuvlaEdge update to version with security module from unofficial rele
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatus(releaseVersion)) });
   });
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)) });
@@ -100,7 +100,7 @@ test.skip('NuvlaEdge update to version with security module from official releas
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatus(releaseVersion)) });
   });
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)) });
@@ -121,7 +121,7 @@ test.skip('NuvlaEdge update from version with security module but not installed'
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatus(releaseVersion)) });
   });
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)) });
@@ -141,7 +141,7 @@ test.skip('NuvlaEdge update from version with security module and installed', as
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatus(releaseVersion)) });
   });
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({
@@ -164,7 +164,7 @@ test.skip('NuvlaEdge update from version with security module and installed, but
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatus(releaseVersion)) });
   });
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({
@@ -187,7 +187,7 @@ test.skip('NuvlaEdge update WITH security installed, but non-standard version nu
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatus(releaseVersion)) });
   });
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({
@@ -210,7 +210,7 @@ test.skip('NuvlaEdge update WITHOUT security installed and not installed, but no
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.route('api/nuvlabox-status', async (route) => {
-    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBosStatus(releaseVersion)) });
+    route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatus(releaseVersion)) });
   });
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({
@@ -517,7 +517,7 @@ const getNuvlaBoxStatuForNB = (version = '2.1.1', additionalModule = '') => ({
   'inferred-location': [8, 47],
 });
 
-const getNuvlaBosStatus = (version = '2.1.1') => ({
+const getNuvlaBoxStatus = (version = '2.1.1') => ({
   count: 1,
   acl: {
     add: ['group/nuvla-admin'],

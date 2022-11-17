@@ -117,8 +117,8 @@
                       :loading   (empty? @releases)
                       :options   (map #(dissoc % :pre-release) @releases)}
                      opts)]
-         (when (:pre-release @selected-release) [:span {:style  {:margin "1em"
-                                                                 :color "darkorange"}}
+         (when (:pre-release @selected-release) [:span {:style {:margin "1em"
+                                                                :color  "darkorange"}}
                                                  (r/as-element [ui/Icon {:name "exclamation triangle"}])
                                                  (@tr [:nuvlabox-pre-release])])]))))
 
@@ -188,14 +188,14 @@
 
 
 (defn- calc-new-modules-on-release-change [form-data new-release]
-  (let [form-modules (:modules form-data)
+  (let [form-modules     (:modules form-data)
         form-release-old (get-in form-data [:nuvlabox-release :release])]
     (cond
 
       (and (not (subs/security-available? form-release-old))
            (subs/security-available? new-release))
       (assoc form-modules :security
-             (get form-modules :security true))
+                          (get form-modules :security true))
 
       (and (not (subs/security-available? new-release))
            (subs/security-available? form-release-old))
@@ -217,8 +217,8 @@
         form-data      (r/atom nil)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   (fn [release]
-                         (let [release-new  (:release (get @releases-by-id release))
-                               new-modules (calc-new-modules-on-release-change @form-data release-new )]
+                         (let [release-new (:release (get @releases-by-id release))
+                               new-modules (calc-new-modules-on-release-change @form-data release-new)]
                            (swap! form-data assoc
                                   :modules new-modules
                                   :nuvlabox-release (@releases-by-id release))))
@@ -227,12 +227,12 @@
         on-click-fn    #(dispatch [::events/operation id operation
                                    (utils/format-update-data @form-data)
                                    on-success-fn on-error-fn])
-        current-config  {:project-name   (-> @status :installation-parameters :project-name)
-                         :working-dir   (-> @status :installation-parameters :working-dir)
-                         :modules       @modules
-                         :environment   (str/join "\n" (-> @status :installation-parameters :environment))
-                         :force-restart false
-                         :nuvlabox-release (@releases-by-no nb-version)}]
+        current-config {:project-name     (-> @status :installation-parameters :project-name)
+                        :working-dir      (-> @status :installation-parameters :working-dir)
+                        :modules          @modules
+                        :environment      (str/join "\n" (-> @status :installation-parameters :environment))
+                        :force-restart    false
+                        :nuvlabox-release (@releases-by-no nb-version)}]
 
     (reset! form-data current-config)
     (when nb-version
@@ -255,9 +255,9 @@
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
-                       [ui/MenuItem {:on-click #(reset! show? true)}
-                        [ui/Icon {:name icon}]
-                        title])}
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name icon}]
+                         title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
           (when correct-nb?
@@ -268,17 +268,17 @@
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                           [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                            [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
-                                 :target "_blank"}
-                             (str/capitalize (@tr [:see-more]))]])}])
+                            [:span (str (@tr [:nuvlabox-update-error-content])) " "
+                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
+                                  :target "_blank"}
+                              (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                           [:span (@tr [:nuvlabox-update-warning-content])])}])
+                            [:span (@tr [:nuvlabox-update-warning-content])])}])
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i nb-version]]])
@@ -297,18 +297,18 @@
                   :on             "hover"
                   :hide-on-scroll true}])
               (doall
-               (for [{:keys [scope]} compose-files]
-                 (when-not (#{"core" ""} scope)
-                   (let [scope-key       (keyword scope)]
-                     [ui/Checkbox {:key              scope
-                                   :label            scope
-                                   :checked         (get
-                                                     selected-modules
-                                                     scope-key
-                                                     false)
-                                   :style            {:margin "1em"}
-                                   :on-change        (fn []
-                                                       (swap! form-data update-in [:modules scope-key] not))}]))))])]
+                (for [{:keys [scope]} compose-files]
+                  (when-not (#{"core" ""} scope)
+                    (let [scope-key (keyword scope)]
+                      [ui/Checkbox {:key       scope
+                                    :label     scope
+                                    :checked   (get
+                                                 selected-modules
+                                                 scope-key
+                                                 false)
+                                    :style     {:margin "1em"}
+                                    :on-change (fn []
+                                                 (swap! form-data update-in [:modules scope-key] not))}]))))])]
           [uix/Accordion
            [:<>
             [ui/Form
@@ -325,23 +325,23 @@
                             :placeholder   "nuvlabox"
                             :required      true
                             :default-value (:project-name @form-data)
-                            :on-key-down #(-> % .stopPropagation)
-                            :on-change (ui-callback/input-callback
-                                        #(swap! form-data assoc :project-name %))}]
+                            :on-key-down   #(-> % .stopPropagation)
+                            :on-change     (ui-callback/input-callback
+                                             #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
-                            :on-key-down #(-> % .stopPropagation)
+                            :on-key-down   #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                            #(swap! form-data assoc :working-dir %))}]
+                                             #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
               [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
-                            :on-key-down #(-> % .stopPropagation)
+                            :on-key-down   #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                            #(swap! form-data assoc :environment %))}]]]]
+                                             #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
            :title-size :h4
            :default-open false]]
@@ -861,7 +861,7 @@
                :columns  1}
    [ui/GridColumn
     [ui/Table {:compact "very", :selectable true,
-               :basic "very", :style {:font-size "13px"}}
+               :basic   "very", :style {:font-size "13px"}}
      [ui/TableHeader
       [ui/TableRow
        [ui/TableHeaderCell "ID"]
@@ -980,7 +980,7 @@
                                             :title {:text    "megabytes"
                                                     :display true}}}}}]]]])
      (when container-stats
-        [StatsTable (sort-by :name container-stats)])]))
+       [StatsTable (sort-by :name container-stats)])]))
 
 
 (defn edit-action
@@ -1411,11 +1411,11 @@
            (@tr [:cancel])]
           [ui/Button {:primary  true
                       :on-click #(do (dispatch
-                                      [::events/edit id
-                                       (assoc @nuvlabox
-                                              :location
-                                              (update @new-location 0 map/normalize-lng))
-                                       (@tr [:nuvlabox-position-update])])
+                                       [::events/edit id
+                                        (assoc @nuvlabox
+                                          :location
+                                          (update @new-location 0 map/normalize-lng))
+                                        (@tr [:nuvlabox-position-update])])
                                      (dispatch [::main-events/changes-protection? false]))
                       :disabled (nil? @new-location)}
            (@tr [:save])]]]))))

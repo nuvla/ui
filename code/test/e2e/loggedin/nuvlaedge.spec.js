@@ -59,8 +59,8 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page.keyboard.press(`${modifier}+KeyV`);
   await page.keyboard.press(`${modifier}+KeyV`);
   const cronjob = await page.evaluate(() => document.querySelector('div').textContent);
-  expect(cronjob.startsWith('* 0 * * * ')).toBeTruthy();
-  for (const envVar of ['NUVLABOX_API_KEY', 'NUVLABOX_API_SECRET', 'NUVLA_ENDPOINT']) {
+  expect(cronjob.startsWith('0 * * * * ')).toBeTruthy();
+  for (const envVar of ['NUVLABOX_API_KEY', 'NUVLABOX_API_SECRET', 'NUVLA_API_ENDPOINT']) {
     const testRegex = new RegExp(` (${envVar})=`);
     const [_, matchedEnvVar] = cronjob.match(testRegex) || [];
 

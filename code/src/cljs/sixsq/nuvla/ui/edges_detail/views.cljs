@@ -1086,18 +1086,29 @@
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:architecture]))]
          [ui/TableCell architecture]])
-      (when ip
-        [ui/TableRow
-         [ui/TableCell "IP"]
-         [ui/TableCell (values/copy-value-to-clipboard
-                        ip ip copy-to-clipboard true)]])
-      (for [[name ip] (:ips network)]
-        ^{:key (str name ip)}
-        (when (seq ip)
+      (let [ips           (:ips network)
+            ips-available (some #(seq (second %)) ips)]
+       [:<>
+        (when (and (not ips-available) ip)
           [ui/TableRow
-           [ui/TableCell name]
+           [ui/TableCell "IP"]
            [ui/TableCell (values/copy-value-to-clipboard
-                          ip ip copy-to-clipboard true)]]))
+                          ip ip copy-to-clipboard true)]])
+        (when ips-available
+          [ui/TableRow
+           [ui/TableCell "IPs"]
+           [ui/TableCell
+            [ui/Table {:style {:background-color "#f3f4f5"
+                               :border "none"}}
+             [ui/TableBody {:basic  "very"
+                            :padded false}
+              (for [[name ip] (:ips network)]
+                ^{:key (str name ip)}
+                (when (seq ip)
+                  [ui/TableRow
+                   [ui/TableCell name]
+                   [ui/TableCell (values/copy-value-to-clipboard
+                                  ip ip copy-to-clipboard true)]]))]]]])])
       (when (pos? (count @ssh-creds))
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
@@ -1146,9 +1157,10 @@
              :style    {:cursor :pointer}}
             [ui/TableCell (str (@tr [:nuvlaedge-network-interfaces-ips]) ":")]
             [ui/TableCell [:div {:style {:display :flex
-                                         :justify-content :space-between}} (str n-interfaces " " (@tr [:interfaces]) ", " n-interfaces " IPs, ")
-                           (@tr [(if @show-ips :hide :show-more)])
-                               [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
+                                         :justify-content :space-between}}
+                           [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs, ")
+                            [:span {:style {:text-decoration :underline}} (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
+                           [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
          (when @show-ips
            (for [[name {ips :ips}] interfaces]
              (when (seq ips)

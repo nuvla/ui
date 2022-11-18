@@ -916,9 +916,9 @@
                                                                   "rgb(230, 99, 100)"]}]}
                           :options {:legend              {:display true
                                                           :labels  {:fontColor "grey"}}
-                                    :title               {:display  true
-                                                          :text     (:title stat)
-                                                          :position "bottom"}
+                                    :plugins {:title {:display  true
+                                                      :text     (:title stat)
+                                                      :position "bottom"}}
                                     :maintainAspectRatio false
                                     :circumference       236
                                     :rotation            -118
@@ -969,9 +969,9 @@
                                            :borderWidth     1}]}
                      :options {:legend {:display true
                                         :labels  {:fontColor "grey"}}
-                               :title  {:display  true
-                                        :text     (:title net-stats)
-                                        :position "bottom"}
+                               :plugins {:title {:display  true
+                                                  :text     (:title net-stats)
+                                                  :position "bottom"}}
                                :scales {:y {:type  "logarithmic"
                                             :title {:text    "megabytes"
                                                     :display true}}}}}]]]])

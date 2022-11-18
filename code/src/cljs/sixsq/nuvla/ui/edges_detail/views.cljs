@@ -1098,7 +1098,10 @@
           [ui/TableRow
            [ui/TableCell "IPs"]
            [ui/TableCell
-            [ui/Table {:style {:background-color "#f3f4f5"
+            {:style {:padding-top 0 :padding-bottom 0}}
+            [ui/Table {:compact true
+                       :collapsing true
+                       :style {:background-color "#f3f4f5"
                                :border "none"}}
              [ui/TableBody {:basic  "very"
                             :padded false}

@@ -864,7 +864,6 @@
                :basic   "very", :style {:font-size "13px"}}
      [ui/TableHeader
       [ui/TableRow
-       [ui/TableHeaderCell "ID"]
        [ui/TableHeaderCell {:class "resource-logs-container-name"} "Container Name"]
        [ui/TableHeaderCell "CPU %"]
        [ui/TableHeaderCell "Mem Usage/Limit"]
@@ -881,7 +880,6 @@
         (when id
           ^{:key id}
           [ui/TableRow
-           [ui/TableCell (general-utils/id->short-uuid id)]
            [ui/TableCell {:class "resource-logs-container-name"}
             [ui/Popup {:content name
                        :trigger (r/as-element [:div {:class "ellipsing"} name])}]]
@@ -915,9 +913,7 @@
                                     :datasets [{:data            [(:percentage stat), (:value stat)]
                                                 :backgroundColor ["rgb(230, 99, 100)",
                                                                   "rgba(155, 99, 132, 0.1)",
-                                                                  "rgb(230, 99, 100)"]
-                                                :borderColor     ["rgba(230, 99, 100,1)"]
-                                                :borderWidth     3}]}
+                                                                  "rgb(230, 99, 100)"]}]}
                           :options {:legend              {:display true
                                                           :labels  {:fontColor "grey"}}
                                     :title               {:display  true

@@ -24,7 +24,7 @@
                                                                 #_"https://localhost"
                                                                 ;; Serve everything from the same host:
                                                                 ;; host file needs this entry to point to localhost
-                                                                ""
+                                                                "https://nuio.localhost"
                                                                 re_frame.trace.trace_enabled_QMARK_ true}
                                              :compiler-options {:infer-externs :auto}}
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- NuvlaEdge details - Remove outline on the gages and display chart titles #988
+- NuvlaEdge details - Remove ID column #987
+
 ## [2.32.9] - 2022-11-17
 
 ### Changed

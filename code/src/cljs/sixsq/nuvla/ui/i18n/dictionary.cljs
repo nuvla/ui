@@ -707,8 +707,7 @@
         :settings                                      "settings"
         :share                                         "Share"
         :should-not-be-empty                           "Should not be empty."
-        :show-me                                       "show me"
-        :show-more                                     "show more"
+        :show-me                                       "show me"`
         :show-versions                                 "show versions"
         :shutdown                                      "shutdown"
         :shutdown-deployment                           "Shut down deployment?"
@@ -1433,7 +1432,6 @@
         :settings                                      "paramètres"
         :should-not-be-empty                           "Ne doit pas être vide."
         :show-me                                       "montrez-moi"
-        :show-more                                     "montrez plus"
         :show-versions                                 "montrer les versions"
         :shutdown                                      "arrêter"
         :shutdown-deployment                           "Arrêter le déploiement ?"

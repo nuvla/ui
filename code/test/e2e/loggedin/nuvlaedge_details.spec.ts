@@ -80,7 +80,6 @@ const oneBox = {
   'refresh-interval': 30,
   updated: '2022-11-16T18:54:06.387Z',
   name: 'em2e 1',
-  // "credential-api-key": "credential/4988e9d9-04d9-4640-8fa4-c373f2ce50bb",
   'credential-api-key': '1234567890',
   created: '2022-10-31T17:02:32.513Z',
   state: 'COMMISSIONED',

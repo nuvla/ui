@@ -41,7 +41,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await expect(page.locator('td:text("swarm") + td')).toHaveText('234.234.234.234');
   await expect(page.locator('td:text("local") + td')).toHaveText('345.345.345.345');
 
-  await page.getByText('8 interfaces, 8 IPs').click();
+  await page.getByText('8 interfaces, 9 IPs').click();
 
   await expect(page.locator('td:text("eth0") + td')).toHaveText('111.111.111.111, 222.222.222.222');
   await expect(page.locator('td:text("docker0") + td')).toHaveText('333.333.333.333');
@@ -50,6 +50,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await expect(page.locator('td:text("br-9f554fddf09f") + td')).toHaveText('666.666.666.666');
   await expect(page.locator('td:text("br-00f62a45526d") + td')).toHaveText('777.777.777.777');
   await expect(page.locator('td:text("br-282adf02575a") + td')).toHaveText('888.888.888.888');
+  await expect(page.locator('td:text("br-d037ba84c3c8") + td')).toHaveText('999.999.999.999');
 });
 
 const mocknuvlaboxes = () => ({

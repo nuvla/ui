@@ -4,6 +4,7 @@
 
 ### Changed
 
+- NuvleEdge details - Shows public and interface IPs in host card #969
 - E2E nuvlaedge - fix tests to align with api changes
 - NuvlaEdge details - Remove outline on the gages and display chart titles #988
 - NuvlaEdge details - Remove ID column #987

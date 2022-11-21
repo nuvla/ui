@@ -2,7 +2,15 @@
 
 ## Unreleased
 
+### Changed
+
 - NuvlaEdge details - Changes wording of menu item "Enable host level management" to show relation to playbooks #874
+- NuvleEdge details - Shows public and interface IPs in host card #969
+- E2E nuvlaedge - fix tests to align with api changes
+- NuvlaEdge details - Remove outline on the gages and display chart titles #988
+- NuvlaEdge details - Remove ID column #987
+- Logs view - Fix broken view of datepicker, bugfix #992
+- NuvlaEdges - Table view shows ".y.z" for new edges version number #962
 
 ## [2.32.9] - 2022-11-17
 

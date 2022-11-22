@@ -707,7 +707,7 @@
         :settings                                      "settings"
         :share                                         "Share"
         :should-not-be-empty                           "Should not be empty."
-        :show-me                                       "show me"`
+        :show-me                                       "show me"
         :show-versions                                 "show versions"
         :shutdown                                      "shutdown"
         :shutdown-deployment                           "Shut down deployment?"

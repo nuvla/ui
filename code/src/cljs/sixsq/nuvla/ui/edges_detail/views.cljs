@@ -864,7 +864,6 @@
                :basic   "very", :style {:font-size "13px"}}
      [ui/TableHeader
       [ui/TableRow
-       [ui/TableHeaderCell "ID"]
        [ui/TableHeaderCell {:class "resource-logs-container-name"} "Container Name"]
        [ui/TableHeaderCell "CPU %"]
        [ui/TableHeaderCell "Mem Usage/Limit"]
@@ -881,7 +880,6 @@
         (when id
           ^{:key id}
           [ui/TableRow
-           [ui/TableCell (general-utils/id->short-uuid id)]
            [ui/TableCell {:class "resource-logs-container-name"}
             [ui/Popup {:content name
                        :trigger (r/as-element [:div {:class "ellipsing"} name])}]]
@@ -915,14 +913,12 @@
                                     :datasets [{:data            [(:percentage stat), (:value stat)]
                                                 :backgroundColor ["rgb(230, 99, 100)",
                                                                   "rgba(155, 99, 132, 0.1)",
-                                                                  "rgb(230, 99, 100)"]
-                                                :borderColor     ["rgba(230, 99, 100,1)"]
-                                                :borderWidth     3}]}
+                                                                  "rgb(230, 99, 100)"]}]}
                           :options {:legend              {:display true
                                                           :labels  {:fontColor "grey"}}
-                                    :title               {:display  true
-                                                          :text     (:title stat)
-                                                          :position "bottom"}
+                                    :plugins             {:title {:display  true
+                                                                  :text     (:title stat)
+                                                                  :position "bottom"}}
                                     :maintainAspectRatio false
                                     :circumference       236
                                     :rotation            -118
@@ -971,14 +967,14 @@
                                            :backgroundColor "rgb(230, 99, 100)"
                                            :borderColor     "white"
                                            :borderWidth     1}]}
-                     :options {:legend {:display true
-                                        :labels  {:fontColor "grey"}}
-                               :title  {:display  true
-                                        :text     (:title net-stats)
-                                        :position "bottom"}
-                               :scales {:y {:type  "logarithmic"
-                                            :title {:text    "megabytes"
-                                                    :display true}}}}}]]]])
+                     :options {:legend  {:display true
+                                         :labels  {:fontColor "grey"}}
+                               :plugins {:title {:display  true
+                                                 :text     (:title net-stats)
+                                                 :position "bottom"}}
+                               :scales  {:y {:type  "logarithmic"
+                                             :title {:text    "megabytes"
+                                                     :display true}}}}}]]]])
      (when container-stats
        [StatsTable (sort-by :name container-stats)])]))
 
@@ -1064,69 +1060,117 @@
       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])))
 
 (defn HostInfo
-  [{:keys [hostname ip docker-server-version
-           operating-system architecture last-boot docker-plugins]
-    :as   _nb-status}
-   ssh-creds]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Table {:basic  "very"
-               :padded false}
-     [ui/TableBody
-      (when hostname
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:hostname]))]
-         [ui/TableCell hostname]])
-      (when operating-system
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:operating-system]))]
-         [ui/TableCell operating-system]])
-      (when architecture
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:architecture]))]
-         [ui/TableCell architecture]])
-      (when ip
-        [ui/TableRow
-         [ui/TableCell "IP"]
-         [ui/TableCell (values/copy-value-to-clipboard
-                         ip ip (@tr [:copy-to-clipboard]) true)]])
-      (when (pos? (count @ssh-creds))
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
-         [ui/TableCell
-          [ui/Popup
-           {:hoverable true
-            :flowing   true
-            :position  "bottom center"
-            :content   (r/as-element [ui/ListSA {:divided true
-                                                 :relaxed true}
-                                      (for [sshkey @ssh-creds]
-                                        ^{:key (:id sshkey)}
-                                        [ui/ListItem
-                                         [ui/ListContent
-                                          [ui/ListHeader
-                                           [:a {:href   (str @config/path-prefix
-                                                             "/api/" (:id sshkey))
-                                                :target "_blank"}
-                                            (or (:name sshkey) (:id sshkey))]]
-                                          [ui/ListDescription
-                                           (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-            :trigger   (r/as-element [ui/Icon {:name   "key"
-                                               :fitted true}
-                                      (@tr [:nuvlabox-detail-ssh-enabled])
-                                      [ui/Icon {:name   "angle down"
-                                                :fitted true}]])}]]])
-      (when docker-server-version
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
-         [ui/TableCell docker-server-version]])
-      (when (seq docker-plugins)
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
-         [ui/TableCell (str/join ", " docker-plugins)]])
-      (when last-boot
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-         [ui/TableCell (time/time->format last-boot)]])]]))
+  [_nb-status _ssh-creds]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        show-ips (r/atom false)]
+    (fn [{:keys [hostname ip docker-server-version network
+                 operating-system architecture last-boot docker-plugins]
+          :as   _nb-status}
+         ssh-creds]
+      (let [copy-to-clipboard (@tr [:copy-to-clipboard])]
+        [ui/Table {:basic  "very"
+                   :padded false}
+         [ui/TableBody
+          (when hostname
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:hostname]))]
+             [ui/TableCell hostname]])
+          (when operating-system
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:operating-system]))]
+             [ui/TableCell operating-system]])
+          (when architecture
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:architecture]))]
+             [ui/TableCell architecture]])
+          (let [ips           (:ips network)
+                ips-available (some #(seq (second %)) ips)]
+            [:<>
+             (when (and (not ips-available) ip)
+               [ui/TableRow
+                [ui/TableCell "IP"]
+                [ui/TableCell (values/copy-value-to-clipboard
+                                ip ip copy-to-clipboard true)]])
+             (when ips-available
+               [ui/TableRow
+                [ui/TableCell "IPs"]
+                [ui/TableCell
+                 {:style {:padding-top 0 :padding-bottom 0}}
+                 [ui/Table {:compact    true
+                            :collapsing true
+                            :style      {:background-color "#f3f4f5"
+                                         :border           "none"}}
+                  [ui/TableBody {:basic  "very"
+                                 :padded false}
+                   (for [[name ip] (:ips network)]
+                     ^{:key (str name ip)}
+                     (when (seq ip)
+                       [ui/TableRow
+                        [ui/TableCell name]
+                        [ui/TableCell (values/copy-value-to-clipboard
+                                        ip ip copy-to-clipboard true)]]))]]]])])
+          (when (pos? (count @ssh-creds))
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
+             [ui/TableCell
+              [ui/Popup
+               {:hoverable true
+                :flowing   true
+                :position  "bottom center"
+                :content   (r/as-element
+                             [ui/ListSA {:divided true
+                                         :relaxed true}
+                              (for [sshkey @ssh-creds]
+                                ^{:key (:id sshkey)}
+                                [ui/ListItem
+                                 [ui/ListContent
+                                  [ui/ListHeader
+                                   [:a {:href   (str @config/path-prefix
+                                                     "/api/" (:id sshkey))
+                                        :target "_blank"}
+                                    (or (:name sshkey) (:id sshkey))]]
+                                  [ui/ListDescription
+                                   (str (subs (:public-key sshkey) 0 55) " ...")]]])])
+                :trigger   (r/as-element [ui/Icon {:name   "key"
+                                                   :fitted true}
+                                          (@tr [:nuvlabox-detail-ssh-enabled])
+                                          [ui/Icon {:name   "angle down"
+                                                    :fitted true}]])}]]])
+          (when docker-server-version
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
+             [ui/TableCell docker-server-version]])
+          (when (seq docker-plugins)
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
+             [ui/TableCell (str/join ", " docker-plugins)]])
+          (when last-boot
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:last-boot]))]
+             [ui/TableCell (time/time->format last-boot)]])
+          (let [interfaces   (:interfaces network)
+                n-interfaces (count interfaces)
+                n-ips        (reduce + (map (comp count :ips) (vals interfaces)))]
+            [:<>
+             (when (pos? n-ips)
+               [ui/TableRow
+                {:on-click #(swap! show-ips not)
+                 :style    {:cursor :pointer}}
+                [ui/TableCell (str (@tr [:nuvlaedge-network-interfaces-ips]) ":")]
+                [ui/TableCell
+                 [:div {:style {:display         :flex
+                                :justify-content :space-between}}
+                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs, ")
+                   [:span {:style {:text-decoration :underline}}
+                    (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
+                  [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
+             (when @show-ips
+               (for [[name {ips :ips}] interfaces]
+                 (when (seq ips)
+                   ^{:key name}
+                   [ui/TableRow
+                    [ui/TableCell {:style {:padding-left "8px"}} name]
+                    [ui/TableCell (str/join ", " (map :address ips))]])))])]]))))
 
 (defn TabOverviewHost
   [nb-status ssh-creds]

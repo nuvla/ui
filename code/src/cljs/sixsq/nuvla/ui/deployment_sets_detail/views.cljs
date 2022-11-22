@@ -57,6 +57,20 @@
      [ui/Icon {:name "play"}]
      (@tr [:start])]))
 
+(defn StopButton
+  [{:keys [id] :as deployment-set}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/MenuItem
+     {:on-click (fn [_]
+                  (dispatch [::events/operation id "stop" {}
+                             #(dispatch [::bulk-progress-plugin/monitor
+                                         [::spec/bulk-jobs] (:location %)])
+                             #()]))
+      :disabled (not (general-utils/can-operation?
+                       "stop" deployment-set))}
+     [ui/Icon {:name "stop"}]
+     (@tr [:stop])]))
+
 
 (defn DeleteButton
   [{:keys [id name description] :as _deployment-set}]
@@ -78,12 +92,14 @@
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
                         @deployment-set
-                        #{"start" "delete"})]
+                        #{"start" "stop" "delete"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
                 ^{:key "delete"}
                 [DeleteButton @deployment-set]
+                ^{:key "stop"}
+                [StopButton @deployment-set]
                 ^{:key "start"}
                 [StartButton @deployment-set])
           [components/RefreshMenu

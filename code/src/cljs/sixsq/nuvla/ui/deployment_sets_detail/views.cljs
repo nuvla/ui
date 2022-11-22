@@ -82,11 +82,10 @@
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
+                ^{:key "delete"}
+                [DeleteButton @deployment-set]
                 ^{:key "start"}
                 [StartButton @deployment-set])
-          (conj MenuItems
-                ^{:key "delete"}
-                [DeleteButton @deployment-set])
           [components/RefreshMenu
            {:action-id  refresh-action-id
             :loading?   @loading?

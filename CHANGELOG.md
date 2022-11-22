@@ -11,6 +11,7 @@
 - NuvlaEdge details - Remove ID column #987
 - Logs view - Fix broken view of datepicker, bugfix #992
 - NuvlaEdges - Table view shows ".y.z" for new edges version number #962
+- NuvlaEdge creation - Removes vpn service from compose file if deselected, bugfix #999
 
 ## [2.32.9] - 2022-11-17
 

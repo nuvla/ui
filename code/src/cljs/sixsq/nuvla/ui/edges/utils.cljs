@@ -153,18 +153,27 @@
                   full-text-search
                   (when extra extra))})
 
+(defn remove-vpn-service
+  [file]
+  (str/replace file #"\n\n  vpn-client:(\n\s{4,}.*)*\n" "\n  "))
 
 (defn prepare-compose-files
-  ([nuvlabox-release selected-peripherals]
-   (prepare-compose-files nuvlabox-release selected-peripherals identity))
-  ([nuvlabox-release selected-peripherals transform-fn]
+  ([config]
+   (prepare-compose-files config identity))
+  ([{:keys [nuvlabox-release
+            selected-peripherals
+            creation-data]} transform-fn]
    (let [nuvlabox-file-scopes (group-by :scope (:compose-files nuvlabox-release))]
      (map
-       (fn [peripheral]
-         (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))]
-           {:name name
-            :file (transform-fn file)}))
-       selected-peripherals))))
+      (fn [peripheral]
+        (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))
+              cleaned-file (if
+                            (str/blank? (:vpn-server-id creation-data))
+                             (remove-vpn-service file)
+                             file)]
+          {:name name
+           :file (transform-fn cleaned-file)}))
+      selected-peripherals))))
 
 
 (defn get-major-version

@@ -184,7 +184,7 @@
     (@tr [:nuvlabox-modal-private-ssh-key-info])]])
 
 (defn CreatedNuvlaBox
-  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys
+  [nuvlabox-id creation-data nuvlabox-release-data nuvlabox-ssh-keys
    _new-private-ssh-key playbooks-toggle _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
@@ -197,7 +197,9 @@
                                       "${NUVLAEDGE_UUID}" nuvlabox-id}
                                      public-keys (assoc "${NUVLABOX_SSH_PUB_KEY}" public-keys
                                                         "${NUVLAEDGE_SSH_PUB_KEY}" public-keys))
-        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
+        download-files       (utils/prepare-compose-files {:nuvlabox-release nuvlabox-release
+                                                           :selected-peripherals nuvlabox-peripherals
+                                                           :creation-data creation-data}
                                                           (partial general-utils/envsubst-str envsubst))]
     (when playbooks-toggle
       (dispatch [::events/enable-host-level-management nuvlabox-id]))
@@ -288,11 +290,13 @@
 
 
 (defn CreatedNuvlaBoxUSBTrigger
-  [_creation-data nuvlabox-release-data _new-api-key _nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
+  [creation-data nuvlabox-release-data _new-api-key _nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         private-ssh-key-file "nuvlabox.ssh.private"
-        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals)
+        download-files       (utils/prepare-compose-files {:nuvlabox-release nuvlabox-release
+                                                           :selected-peripherals nuvlabox-peripherals
+                                                           :creation-data creation-data})
         download-files-names (map :name download-files)]
     (fn [creation-data _nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
       (let [tr                    (subscribe [::i18n-subs/tr])

@@ -3,6 +3,7 @@
 
 (def dictionary
   {:en {
+        :delete-deployment-set                         "Delete deployment set?"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "

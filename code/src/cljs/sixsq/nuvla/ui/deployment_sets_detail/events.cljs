@@ -88,7 +88,7 @@
 
 (reg-event-fx
   ::delete
-  (fn [{{:keys [::spec/deployment-set]} :db} _]
+  (fn [{{:keys [::spec/deployment-set]} :db}]
     (let [id (:id deployment-set)]
       {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-sets"])]})))
 

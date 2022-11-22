@@ -57,18 +57,36 @@
      [ui/Icon {:name "play"}]
      (@tr [:start])]))
 
+
+(defn DeleteButton
+  [{:keys [id name description] :as _deployment-set}]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:on-confirm  #(dispatch [::events/delete])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "trash"}]
+                                  (@tr [:delete])])
+      :content     [:h3 content]
+      :header      (@tr [:delete-deployment-set])
+      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :button-text (@tr [:delete])}]))
+
 (defn MenuBar [uuid]
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])]
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
                         @deployment-set
-                        #{"start"})]
+                        #{"start" "delete"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
                 ^{:key "start"}
                 [StartButton @deployment-set])
+          (conj MenuItems
+                ^{:key "delete"}
+                [DeleteButton @deployment-set])
           [components/RefreshMenu
            {:action-id  refresh-action-id
             :loading?   @loading?

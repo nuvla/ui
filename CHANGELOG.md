@@ -4,11 +4,51 @@
 
 ### Changed
 
+- NuvleEdge details - Shows public and interface IPs in host card #969
+- E2E nuvlaedge - fix tests to align with api changes
+- NuvlaEdge details - Remove outline on the gages and display chart titles #988
+- NuvlaEdge details - Remove ID column #987
+- Logs view - Fix broken view of datepicker, bugfix #992
+- NuvlaEdges - Table view shows ".y.z" for new edges version number #962
+
+## [2.32.9] - 2022-11-17
+
+### Changed
+
+- Testing - Added playwright for e2e testing UI and Server
+- Global - upgrades react-datepicker to the newest version
+- Global - upgrades react-charts-js to the newest version
+- Global - replaces moment with date-fns
+- CI - adds bundle analyzer job to pipeline
+- NuvlaEdge details - Shows number of deployments in a bubble on tabs item #940
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form Env Vars bugfix #908
+- NuvlaEdge details - Shows currently installed modules in update modal as checkboxes #943
+- NuvlaEdge details - Disables Save button on location tab if location unchanged, bugfix #949
+- Apps - Replaces "App Store" with "Marketplace" #901
+- Deployments - higher z-index on manual filter button to enable click on medium-sized screens, bugfix #950
+- Global - Clears change protection event listener on before unload when Ignore Changes clicked, bugfix #948
+- App details - Configuration Files section warns if Files are not supported instead of hiding #813
+- Edges table view - Shows state icons again, bugfix #60
+- Edges details - Resource consumption tab showing full container name in table #834
+- Search plugin - Fixes jump of caret to back when typing in search input fields, bugfix #974
+- Global - Renames all occurrences of "NuvlaEdge Engine" to "NuvlaEdge" #946
+
+## [2.32.8] - 2022-10-14
+
+### Changed
+
 - Dictionary - Replace module by application, typo fix, NuvlaEdge/Cloud order change #916
 - acl - Make possible add principals by user/group uuid
 - acl - Principals dropdown searchable with groups/user
 - Dev tools - Cloudflare preview integration
 - NuvlaEdge overview - Shows last online times for offline edges #895
+- NuvlaEdge overview - Shows engine versions on table view #909
+- NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form bugfix #908
+- Deployments overview - Shows created by on table and list view #926
+- Edges overview - Shows created by on table and list view #926
+- Profile - Removes auto closing modal on tab change to enable e-mail 2FA bugfix #918
+- Edges and Deployments - Adds filter indicator to full text search
+- Filter comp - Show filter in popoup and color the button when filter is set
 
 ## [2.32.7] - 2022-09-29
 

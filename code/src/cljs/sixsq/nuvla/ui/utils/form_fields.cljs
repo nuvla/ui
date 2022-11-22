@@ -83,8 +83,10 @@
   (let [locale        (subscribe [::i18n-subs/locale])
         {:keys [value default]} value-scope
         default-value (or value default)
-        date-atom     (reagent/atom (when default-value (time/parse-iso8601 default-value)))]
+        date-atom     (reagent/atom (when default-value
+                                      (time/parse-iso8601 default-value)))]
     (fn [update-fn form-id {:keys [name display-name help hidden required editable] :as _attribute}]
+
       (let [label     (or display-name name)
             read-only (not editable)]
         ^{:key name}
@@ -93,8 +95,8 @@
          [ui/DatePicker (cond-> {:custom-input     (reagent/as-element [ui/Input {:style {:width "250px"}}])
                                  :show-time-select true
                                  :read-only        read-only
-                                 :locale           @locale
-                                 :date-format      "d MMMM YYYY, hh:mm a"
+                                 :locale           (or (time/locale-string->locale-object @locale) @locale)
+                                 :date-format      "d MMMM yyyy, hh:mm a"
                                  :on-change        (fn [date]
                                                      (reset! date-atom date)
                                                      (update-fn form-id name date))}

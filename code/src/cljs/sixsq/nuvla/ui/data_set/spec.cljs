@@ -5,8 +5,10 @@
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.time :as time]))
 
+
+
 (s/def ::not-found? boolean?)
-(s/def ::time-period (s/tuple any? any?))
+(s/def ::time-period (s/tuple inst? inst?))
 (s/def ::time-period-filter (s/nilable string?))
 (s/def ::data-set-id (s/nilable string?))
 (s/def ::data-set any?)

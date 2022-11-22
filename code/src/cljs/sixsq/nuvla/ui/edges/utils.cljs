@@ -89,7 +89,7 @@
   (case state
     "ONLINE" "online=true"
     "OFFLINE" "online=false"
-    "UNKNOWN" "online!=true and online!=false"
+    "UNKNOWN" "online=null"
     (str "state='" state "'")))
 
 
@@ -174,23 +174,31 @@
 (defn format-update-data
   [form-data]
   (let [payload-releated (select-keys form-data [:project-name :working-dir
-                                                 :environment :config-files
-                                                 :current-version :force-restart])
+                                                 :environment :force-restart
+                                                 :current-version])
+        nuvlabox-release (:nuvlabox-release form-data)
+        selected-modules (->> (:modules form-data)
+                              (filter val)
+                              (map key)
+                              (remove nil?))
+        config-files     (concat ["docker-compose.yml"]
+                                 (map #(str "docker-compose." (name %) ".yml") selected-modules))
         payload?         (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
         payload          (when payload?
                            (-> payload-releated
                                (update :environment str/split #"\n")
-                               (update :config-files str/split #"\n")))]
-    (cond-> (select-keys form-data [:nuvlabox-release])
-            payload (assoc :payload (general-utils/edn->json payload)))))
+                               (assoc :config-files config-files)))]
+    (when payload
+      (assoc {:nuvlabox-release (:id nuvlabox-release)}
+        :payload (general-utils/edn->json payload)))))
 
 
 (defn form-update-data-incomplete?
-  [{:keys [project-name working-dir environment config-files] :as form-data}]
-  (let [payload?            (->> [project-name working-dir environment config-files]
+  [{:keys [project-name working-dir environment] :as form-data}]
+  (let [payload?            (->> [project-name working-dir environment]
                                  (some (complement str/blank?))
                                  boolean)
-        payload-incomplete? (->> [project-name working-dir config-files]
+        payload-incomplete? (->> [project-name working-dir]
                                  (some str/blank?)
                                  boolean)]
     (or (str/blank? (:nuvlabox-release form-data))
@@ -205,9 +213,9 @@
 
 (defn last-time-online [next-heartbeat-moment refresh-interval locale]
   (time/ago
-          (->> refresh-interval
-               (* 2)
-               (+ 10)
-               (* 1000)
-               (time/subtract-milliseconds next-heartbeat-moment)
-               ) locale))
+    (->> refresh-interval
+         (* 2)
+         (+ 10)
+         (* 1000)
+         (time/subtract-milliseconds next-heartbeat-moment)
+         ) locale))

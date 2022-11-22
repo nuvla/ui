@@ -216,7 +216,7 @@
         locale      (subscribe [::i18n-subs/locale])]
     (fn [refresh-fn extra]
       (let [[time-start time-end] @time-period
-            date-format "MMMM DD, YYYY HH:mm"
+            date-format "MMMM dd, yyyy HH:mm"
             time-format "HH:mm"]
         [ui/Form
          [ui/FormGroup {:widths (if extra 3 2)}
@@ -235,7 +235,7 @@
              :show-time-select true
              :time-format      time-format
              :time-intervals   1
-             :locale           @locale
+             :locale           (or (time/locale-string->locale-object @locale) @locale)
              :fixed-height     true
              :date-format      date-format
              :on-change        #(do (dispatch [::events/set-time-period
@@ -257,7 +257,7 @@
                            :show-time-select true
                            :time-format      time-format
                            :time-intervals   1
-                           :locale           @locale
+                           :locale           (or (time/locale-string->locale-object @locale) @locale)
                            :fixed-height     true
                            :date-format      date-format
                            :on-change        #(do (dispatch

@@ -1,8 +1,8 @@
 (def parent-version "6.7.11")
 (def sixsq-nuvla-api-version "2.0.10")
-(def version "2.32.8-SNAPSHOT")
+(def version "2.32.10-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "2.32.8-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.32.10-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -103,6 +103,7 @@
                  [clj-kondo "RELEASE" :scope "provided"]]
 
   :source-paths ["src/clj" "src/cljs"]
+  :test-paths ["test/cljs"]
 
   :profiles
   {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]

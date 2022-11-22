@@ -106,7 +106,7 @@
   (let [grid-style   {:style {:padding-top    5
                               :padding-bottom 5
                               :text-align     "center"}}
-        current-year (.year (time/now))]
+        current-year (.getFullYear (time/now))]
     [ui/Segment {:style {:border-radius 0}}
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]

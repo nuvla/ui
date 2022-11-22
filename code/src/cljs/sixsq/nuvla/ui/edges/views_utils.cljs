@@ -2,18 +2,20 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.edges.events :as events]
     [sixsq.nuvla.ui.edges.subs :as subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (defn NuvlaboxRow
@@ -22,7 +24,7 @@
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edges-detail/OnlineStatusIcon online]]
+      [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
@@ -52,16 +54,17 @@
   [_nuvlabox _managers]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
-    (fn [{:keys [id name description created state tags online refresh-interval] :as _nuvlabox} managers]
+    (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
       (let [href                  (str "edges/" (general-utils/id->uuid id))
-            next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])]
+            next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+            creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
           :href        href
           :header      [:<>
                         [:div {:style {:float "right"}}
-                         [edges-detail/OnlineStatusIcon online :corner "top right"]]
+                         [OnlineStatusIcon online :corner "top right"]]
                         [ui/IconGroup
                          [ui/Icon {:name "box"}]
                          (when (some #{id} managers)
@@ -71,6 +74,9 @@
                         (or name id)]
           :meta        [:<>
                         [:div (str (@tr [:created]) " " (date-string->time-ago created))]
+                        (when @creator
+                          [:div (str (@tr [:by]) " "
+                                     @creator)])
                         (when next-heartbeat-moment
                           [:div (str (@tr [:last-online]) " "
                                      (utils/last-time-online next-heartbeat-moment refresh-interval @locale))])]
@@ -82,3 +88,11 @@
 (defn orchestrator-icon
   [orchestrator]
   [uix/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}])
+
+(defn PreReleaseWarning [{:keys [show? warning-text]}]
+  (when show?
+    [ui/Popup
+     {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
+      :content        warning-text
+      :on             "hover"
+      :hide-on-scroll true}]))

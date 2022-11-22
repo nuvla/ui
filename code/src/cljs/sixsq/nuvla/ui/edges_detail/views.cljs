@@ -31,7 +31,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -105,15 +106,21 @@
 
 (defn DropdownReleases
   [_opts]
-  (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])]
+  (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])
+        tr       (subscribe [::i18n-subs/tr])]
     (fn [opts]
-      (when (empty? @releases)
-        (dispatch [::edges-events/get-nuvlabox-releases]))
-      [ui/Dropdown
-       (merge {:selection true
-               :loading   (empty? @releases)
-               :options   @releases}
-              opts)])))
+      (let [selected-release (subscribe [::edges-subs/nuvlabox-releases-from-id (:value opts)])]
+        (when (empty? @releases)
+          (dispatch [::edges-events/get-nuvlabox-releases]))
+        [:<> [ui/Dropdown
+              (merge {:selection true
+                      :loading   (empty? @releases)
+                      :options   (map #(dissoc % :pre-release) @releases)}
+                     opts)]
+         (when (:pre-release @selected-release) [:span {:style {:margin "1em"
+                                                                :color  "darkorange"}}
+                                                 (r/as-element [ui/Icon {:name "exclamation triangle"}])
+                                                 (@tr [:nuvlabox-pre-release])])]))))
 
 
 (defn AddRevokeSSHButton
@@ -178,38 +185,67 @@
                (< (second p) 16))))))
 
 
+
+
+(defn- calc-new-modules-on-release-change [form-data new-release]
+  (let [form-modules     (:modules form-data)
+        form-release-old (get-in form-data [:nuvlabox-release :release])]
+    (cond
+
+      (and (not (subs/security-available? form-release-old))
+           (subs/security-available? new-release))
+      (assoc form-modules :security
+                          (get form-modules :security true))
+
+      (and (not (subs/security-available? new-release))
+           (subs/security-available? form-release-old))
+      (if (form-modules :security)
+        (dissoc form-modules :security)
+        (assoc form-modules :security false))
+
+      :else form-modules)))
+
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        status        (subscribe [::subs/nuvlabox-status])
-        releases      (subscribe [::edges-subs/nuvlabox-releases-options])
-        close-fn      #(reset! show? false)
-        form-data     (r/atom nil)
-        force-restart (r/atom false)
-        project       (-> @status :installation-parameters :project-name)
-        working-dir   (-> @status :installation-parameters :working-dir)
-        config-files  (-> @status :installation-parameters :config-files)
-        environment   (-> @status :installation-parameters :environment)
-        nb-version    (get @status :nuvlabox-engine-version nil)
-        on-change-fn  #(swap! form-data assoc :nuvlabox-release %)
-        on-success-fn close-fn
-        on-error-fn   close-fn
-        on-click-fn   #(dispatch [::events/operation id operation
-                                  (utils/format-update-data @form-data)
-                                  on-success-fn on-error-fn])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        status         (subscribe [::subs/nuvlabox-status])
+        modules        (subscribe [::subs/nuvlabox-modules])
+        releases       (subscribe [::edges-subs/nuvlabox-releases-options])
+        releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
+        releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
+        close-fn       #(reset! show? false)
+        form-data      (r/atom nil)
+        nb-version     (get @status :nuvlabox-engine-version nil)
+        on-change-fn   (fn [release]
+                         (let [release-new (:release (get @releases-by-id release))
+                               new-modules (calc-new-modules-on-release-change @form-data release-new)]
+                           (swap! form-data assoc
+                                  :modules new-modules
+                                  :nuvlabox-release (@releases-by-id release))))
+        on-success-fn  close-fn
+        on-error-fn    close-fn
+        on-click-fn    #(dispatch [::events/operation id operation
+                                   (utils/format-update-data @form-data)
+                                   on-success-fn on-error-fn])
+        current-config {:project-name     (-> @status :installation-parameters :project-name)
+                        :working-dir      (-> @status :installation-parameters :working-dir)
+                        :modules          @modules
+                        :environment      (str/join "\n" (-> @status :installation-parameters :environment))
+                        :force-restart    false
+                        :nuvlabox-release (@releases-by-no nb-version)}]
 
-    (swap! form-data assoc :project-name project)
-    (swap! form-data assoc :working-dir working-dir)
-    (swap! form-data assoc :config-files (str/join "\n" config-files))
-    (swap! form-data assoc :environment (str/join "\n" environment))
-    (swap! form-data assoc :force-restart false)
+    (reset! form-data current-config)
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
     (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
-      (let [correct-nb?    (= (:parent @status) id)
-            target-version (->> @releases
-                                (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
-                                :key)]
+      (let [correct-nb?      (= (:parent @status) id)
+            target-version   (->> @releases
+                                  (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
+                                  :key)
+            selected-release (:nuvlabox-release @form-data)
+            release-id       (get selected-release :id)
+            selected-modules (:modules @form-data)
+            force-restart    (:force-restart @form-data)]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
@@ -249,8 +285,30 @@
           [ui/Segment
            [:b (@tr [:update-to])]
            [DropdownReleases {:placeholder (@tr [:select-version])
+                              :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
-                              :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]]
+                              :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]
+           (let [{:keys [compose-files]} selected-release]
+             [ui/Container
+              (when (> (count compose-files) 1)
+                [ui/Popup
+                 {:trigger        (r/as-element [:span (@tr [:additional-modules])])
+                  :content        (str (@tr [:additional-modules-popup]))
+                  :on             "hover"
+                  :hide-on-scroll true}])
+              (doall
+                (for [{:keys [scope]} compose-files]
+                  (when-not (#{"core" ""} scope)
+                    (let [scope-key (keyword scope)]
+                      [ui/Checkbox {:key       scope
+                                    :label     scope
+                                    :checked   (get
+                                                 selected-modules
+                                                 scope-key
+                                                 false)
+                                    :style     {:margin "1em"}
+                                    :on-change (fn []
+                                                 (swap! form-data update-in [:modules scope-key] not))}]))))])]
           [uix/Accordion
            [:<>
             [ui/Form
@@ -258,39 +316,30 @@
               [:label
                "Force Restart"]
               [ui/Radio {:toggle    true
-                         :checked   @force-restart
-                         :label     (if (:force-restart @form-data)
+                         :checked   force-restart
+                         :label     (if force-restart
                                       (@tr [:nuvlabox-update-force-restart])
                                       (@tr [:nuvlabox-update-no-force-restart]))
-                         :on-change #(do
-                                       (swap! force-restart not)
-                                       (swap! form-data assoc :force-restart @force-restart))}]]
-
+                         :on-change #(swap! form-data update :force-restart not)}]]
              [ui/FormInput {:label         (str/capitalize (@tr [:project]))
                             :placeholder   "nuvlabox"
                             :required      true
                             :default-value (:project-name @form-data)
+                            :on-key-down   #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
+                            :on-key-down   #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :working-dir %))}]
-             [ui/FormField
-              [:label
-               [general-utils/mandatory-name (@tr [:config-files])]
-               [components/InfoPopup (@tr [:config-file-info])]]
-              [ui/TextArea {:placeholder   "docker-compose.yml\ndocker-compose.gpu.yml\n..."
-                            :required      true
-                            :default-value (:config-files @form-data)
-                            :on-change     (ui-callback/input-callback
-                                             #(swap! form-data assoc :config-files %))}]]
              [ui/FormField
               [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
+                            :on-key-down   #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
@@ -299,7 +348,6 @@
          [ui/ModalActions
           [uix/Button
            {:text     button-text
-            :disabled (or (utils/form-update-data-incomplete? @form-data) (is-old-version? nb-version))
             :primary  true
             :on-click on-click-fn}]]]))))
 
@@ -807,11 +855,42 @@
                    nil)
                  nil)]))))
 
-(defn OnlineStatusIcon
-  [online corner]
-  [ui/Icon {:name   "power"
-            :corner (true? corner)
-            :color  (utils/status->color online)}])
+
+(defn- StatsTable [container-stats]
+  [ui/GridRow {:centered true
+               :columns  1}
+   [ui/GridColumn
+    [ui/Table {:compact "very", :selectable true,
+               :basic   "very", :style {:font-size "13px"}}
+     [ui/TableHeader
+      [ui/TableRow
+       [ui/TableHeaderCell {:class "resource-logs-container-name"} "Container Name"]
+       [ui/TableHeaderCell "CPU %"]
+       [ui/TableHeaderCell "Mem Usage/Limit"]
+       [ui/TableHeaderCell "Mem %"]
+       [ui/TableHeaderCell "Net I/O"]
+       [ui/TableHeaderCell "Block I/O"]
+       [ui/TableHeaderCell "Status"]
+       [ui/TableHeaderCell "Restart Count"]]]
+
+     [ui/TableBody
+      (for [{:keys [id name cpu-percent mem-usage-limit
+                    mem-percent net-in-out blk-in-out
+                    container-status restart-count] :as _cstat} container-stats]
+        (when id
+          ^{:key id}
+          [ui/TableRow
+           [ui/TableCell {:class "resource-logs-container-name"}
+            [ui/Popup {:content name
+                       :trigger (r/as-element [:div {:class "ellipsing"} name])}]]
+           [ui/TableCell cpu-percent]
+           [ui/TableCell mem-usage-limit]
+           [ui/TableCell mem-percent]
+           [ui/TableCell net-in-out]
+           [ui/TableCell blk-in-out]
+           [ui/TableCell container-status]
+           [ui/TableCell restart-count]]))]]]])
+
 
 (defn Load
   [resources]
@@ -834,18 +913,16 @@
                                     :datasets [{:data            [(:percentage stat), (:value stat)]
                                                 :backgroundColor ["rgb(230, 99, 100)",
                                                                   "rgba(155, 99, 132, 0.1)",
-                                                                  "rgb(230, 99, 100)"]
-                                                :borderColor     ["rgba(230, 99, 100,1)"]
-                                                :borderWidth     3}]}
+                                                                  "rgb(230, 99, 100)"]}]}
                           :options {:legend              {:display true
                                                           :labels  {:fontColor "grey"}}
-                                    :title               {:display  true
-                                                          :text     (:title stat)
-                                                          :position "bottom"}
+                                    :plugins             {:title {:display  true
+                                                                  :text     (:title stat)
+                                                                  :position "bottom"}}
                                     :maintainAspectRatio false
-                                    :circumference       4.14
-                                    :rotation            -3.64
-                                    :cutoutPercentage    60}}]]
+                                    :circumference       236
+                                    :rotation            -118
+                                    :cutout              "60%"}}]]
 
          (when (pos? (count (:data-gateway stat)))
            [ui/Container {:key        (:topic stat)
@@ -890,47 +967,16 @@
                                            :backgroundColor "rgb(230, 99, 100)"
                                            :borderColor     "white"
                                            :borderWidth     1}]}
-                     :options {:legend {:display true
-                                        :labels  {:fontColor "grey"}}
-                               :title  {:display  true
-                                        :text     (:title net-stats)
-                                        :position "bottom"}
-                               :scales {:yAxes [{:type       "logarithmic"
-                                                 :scaleLabel {:labelString "megabytes"
-                                                              :display     true}}]}}}]]]])
+                     :options {:legend  {:display true
+                                         :labels  {:fontColor "grey"}}
+                               :plugins {:title {:display  true
+                                                 :text     (:title net-stats)
+                                                 :position "bottom"}}
+                               :scales  {:y {:type  "logarithmic"
+                                             :title {:text    "megabytes"
+                                                     :display true}}}}}]]]])
      (when container-stats
-       [ui/GridRow {:centered true
-                    :columns  1}
-        [ui/GridColumn
-         [ui/Table {:compact "very", :selectable true, :basic "very"}
-          [ui/TableHeader
-           [ui/TableRow
-            [ui/TableHeaderCell "ID"]
-            [ui/TableHeaderCell "Container Name"]
-            [ui/TableHeaderCell "CPU %"]
-            [ui/TableHeaderCell "Mem Usage/Limit"]
-            [ui/TableHeaderCell "Mem %"]
-            [ui/TableHeaderCell "Net I/O"]
-            [ui/TableHeaderCell "Block I/O"]
-            [ui/TableHeaderCell "Status"]
-            [ui/TableHeaderCell "Restart Count"]]]
-
-          [ui/TableBody
-           (for [{:keys [id name cpu-percent mem-usage-limit
-                         mem-percent net-in-out blk-in-out
-                         container-status restart-count] :as _cstat} container-stats]
-             (when id
-               ^{:key id}
-               [ui/TableRow
-                [ui/TableCell (apply str (take 8 id))]
-                [ui/TableCell (apply str (take 25 name))]
-                [ui/TableCell cpu-percent]
-                [ui/TableCell mem-usage-limit]
-                [ui/TableCell mem-percent]
-                [ui/TableCell net-in-out]
-                [ui/TableCell blk-in-out]
-                [ui/TableCell container-status]
-                [ui/TableCell restart-count]]))]]]])]))
+       [StatsTable (sort-by :name container-stats)])]))
 
 
 (defn edit-action
@@ -1014,69 +1060,117 @@
       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])))
 
 (defn HostInfo
-  [{:keys [hostname ip docker-server-version
-           operating-system architecture last-boot docker-plugins]
-    :as   _nb-status}
-   ssh-creds]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Table {:basic  "very"
-               :padded false}
-     [ui/TableBody
-      (when hostname
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:hostname]))]
-         [ui/TableCell hostname]])
-      (when operating-system
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:operating-system]))]
-         [ui/TableCell operating-system]])
-      (when architecture
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:architecture]))]
-         [ui/TableCell architecture]])
-      (when ip
-        [ui/TableRow
-         [ui/TableCell "IP"]
-         [ui/TableCell (values/copy-value-to-clipboard
-                         ip ip (@tr [:copy-to-clipboard]) true)]])
-      (when (pos? (count @ssh-creds))
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
-         [ui/TableCell
-          [ui/Popup
-           {:hoverable true
-            :flowing   true
-            :position  "bottom center"
-            :content   (r/as-element [ui/ListSA {:divided true
-                                                 :relaxed true}
-                                      (for [sshkey @ssh-creds]
-                                        ^{:key (:id sshkey)}
-                                        [ui/ListItem
-                                         [ui/ListContent
-                                          [ui/ListHeader
-                                           [:a {:href   (str @config/path-prefix
-                                                             "/api/" (:id sshkey))
-                                                :target "_blank"}
-                                            (or (:name sshkey) (:id sshkey))]]
-                                          [ui/ListDescription
-                                           (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-            :trigger   (r/as-element [ui/Icon {:name   "key"
-                                               :fitted true}
-                                      (@tr [:nuvlabox-detail-ssh-enabled])
-                                      [ui/Icon {:name   "angle down"
-                                                :fitted true}]])}]]])
-      (when docker-server-version
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
-         [ui/TableCell docker-server-version]])
-      (when (seq docker-plugins)
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
-         [ui/TableCell (str/join ", " docker-plugins)]])
-      (when last-boot
-        [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-         [ui/TableCell (time/time->format last-boot)]])]]))
+  [_nb-status _ssh-creds]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        show-ips (r/atom false)]
+    (fn [{:keys [hostname ip docker-server-version network
+                 operating-system architecture last-boot docker-plugins]
+          :as   _nb-status}
+         ssh-creds]
+      (let [copy-to-clipboard (@tr [:copy-to-clipboard])]
+        [ui/Table {:basic  "very"
+                   :padded false}
+         [ui/TableBody
+          (when hostname
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:hostname]))]
+             [ui/TableCell hostname]])
+          (when operating-system
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:operating-system]))]
+             [ui/TableCell operating-system]])
+          (when architecture
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:architecture]))]
+             [ui/TableCell architecture]])
+          (let [ips           (:ips network)
+                ips-available (some #(seq (second %)) ips)]
+            [:<>
+             (when (and (not ips-available) ip)
+               [ui/TableRow
+                [ui/TableCell "IP"]
+                [ui/TableCell (values/copy-value-to-clipboard
+                                ip ip copy-to-clipboard true)]])
+             (when ips-available
+               [ui/TableRow
+                [ui/TableCell "IPs"]
+                [ui/TableCell
+                 {:style {:padding-top 0 :padding-bottom 0}}
+                 [ui/Table {:compact    true
+                            :collapsing true
+                            :style      {:background-color "#f3f4f5"
+                                         :border           "none"}}
+                  [ui/TableBody {:basic  "very"
+                                 :padded false}
+                   (for [[name ip] (:ips network)]
+                     ^{:key (str name ip)}
+                     (when (seq ip)
+                       [ui/TableRow
+                        [ui/TableCell name]
+                        [ui/TableCell (values/copy-value-to-clipboard
+                                        ip ip copy-to-clipboard true)]]))]]]])])
+          (when (pos? (count @ssh-creds))
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
+             [ui/TableCell
+              [ui/Popup
+               {:hoverable true
+                :flowing   true
+                :position  "bottom center"
+                :content   (r/as-element
+                             [ui/ListSA {:divided true
+                                         :relaxed true}
+                              (for [sshkey @ssh-creds]
+                                ^{:key (:id sshkey)}
+                                [ui/ListItem
+                                 [ui/ListContent
+                                  [ui/ListHeader
+                                   [:a {:href   (str @config/path-prefix
+                                                     "/api/" (:id sshkey))
+                                        :target "_blank"}
+                                    (or (:name sshkey) (:id sshkey))]]
+                                  [ui/ListDescription
+                                   (str (subs (:public-key sshkey) 0 55) " ...")]]])])
+                :trigger   (r/as-element [ui/Icon {:name   "key"
+                                                   :fitted true}
+                                          (@tr [:nuvlabox-detail-ssh-enabled])
+                                          [ui/Icon {:name   "angle down"
+                                                    :fitted true}]])}]]])
+          (when docker-server-version
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
+             [ui/TableCell docker-server-version]])
+          (when (seq docker-plugins)
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
+             [ui/TableCell (str/join ", " docker-plugins)]])
+          (when last-boot
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:last-boot]))]
+             [ui/TableCell (time/time->format last-boot)]])
+          (let [interfaces   (:interfaces network)
+                n-interfaces (count interfaces)
+                n-ips        (reduce + (map (comp count :ips) (vals interfaces)))]
+            [:<>
+             (when (pos? n-ips)
+               [ui/TableRow
+                {:on-click #(swap! show-ips not)
+                 :style    {:cursor :pointer}}
+                [ui/TableCell (str (@tr [:nuvlaedge-network-interfaces-ips]) ":")]
+                [ui/TableCell
+                 [:div {:style {:display         :flex
+                                :justify-content :space-between}}
+                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs, ")
+                   [:span {:style {:text-decoration :underline}}
+                    (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
+                  [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
+             (when @show-ips
+               (for [[name {ips :ips}] interfaces]
+                 (when (seq ips)
+                   ^{:key name}
+                   [ui/TableRow
+                    [ui/TableCell {:style {:padding-left "8px"}} name]
+                    [ui/TableCell (str/join ", " (map :address ips))]])))])]]))))
 
 (defn TabOverviewHost
   [nb-status ssh-creds]
@@ -1361,12 +1455,13 @@
            (@tr [:cancel])]
           [ui/Button {:primary  true
                       :on-click #(do (dispatch
-                                      [::events/edit id
-                                       (assoc @nuvlabox
-                                              :location
-                                              (update @new-location 0 map/normalize-lng))
-                                       (@tr [:nuvlabox-position-update])])
-                                     (dispatch [::main-events/changes-protection? false]))}
+                                       [::events/edit id
+                                        (assoc @nuvlabox
+                                          :location
+                                          (update @new-location 0 map/normalize-lng))
+                                        (@tr [:nuvlabox-position-update])])
+                                     (dispatch [::main-events/changes-protection? false]))
+                      :disabled (nil? @new-location)}
            (@tr [:save])]]]))))
 
 
@@ -1819,6 +1914,7 @@
         nuvlabox    (subscribe [::subs/nuvlabox])
         can-edit?   @(subscribe [::subs/can-edit?])
         peripherals @(subscribe [::subs/nuvlabox-peripherals-ids])
+        deployments @(subscribe [::deployments-subs/deployments])
         overview    {:menuItem {:content "Overview"
                                 :key     :overview
                                 :icon    "info"}
@@ -1861,7 +1957,11 @@
        (events-plugin/events-section
          {:db-path [::spec/events]
           :href    (:id @nuvlabox)})
-       {:menuItem {:content "Deployments"
+       {:menuItem {:content (r/as-element [:span "Deployments"
+                                           [ui/Label {:circular true
+                                                      :size     "mini"
+                                                      :attached "top right"}
+                                            (:count deployments)]])
                    :key     :deployments
                    :icon    "rocket"}
         :render   #(r/as-element

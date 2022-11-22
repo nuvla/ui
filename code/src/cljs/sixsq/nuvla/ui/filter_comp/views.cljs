@@ -230,13 +230,15 @@
                                                                      :width            160}
                                                        :transparent true}])
                         :show-time-select true
-                        :date-format      "LLL"
+                        :date-format      "MMMM d, yyyy HH:mm"
+                        :time-format      "HH:mm"
                         :on-change        #(reset! data (assoc-in @data [i :value]
                                                                   (time/time->utc-str %)))}
                        (and value
                             (not value-is-null?)
                             (not value-now-expression?))
-                       (assoc :selected (time/parse-iso8601 value)))]]]))
+                       (assoc :selected (js/Date. (time/parse-iso8601 value))))]]]))
+
 
 
 (defn CellAttribute
@@ -286,6 +288,15 @@
         "logic" ^{:key i} [CellLogic resource-name data i]
         "attribute" ^{:key i} [CellAttribute resource-name data i]))]])
 
+(defn- FilterSummary
+  [{:keys [additional-filters-applied]}]
+  (when additional-filters-applied
+    [:div {:style {:padding-left  "4px"
+                   :font-size     "0.8rem"
+                   :inline-size   "200px"
+                   :overflow-wrap :break-word}}
+     [:div {:style {:font-weight "bold"}} "Filter: "]
+     additional-filters-applied]))
 
 (defn ButtonFilter
   [{:keys [resource-name open? default-filter _on-done]}]
@@ -301,13 +312,21 @@
         open-fn     #(reset! open? true)]
     (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
     (fn [{:keys [resource-name open? _default-filter on-done]}]
-      (let [filter-string (utils/data->filter-str @data)
-            error         (when (and @show-error? (not (str/blank? filter-string)))
-                            (utils/filter-syntax-error filter-string))]
+      (let [filter-string  (utils/data->filter-str @data)
+            error          (when (and @show-error? (not (str/blank? filter-string)))
+                             (utils/filter-syntax-error filter-string))
+            active-filter? (boolean (some-> filter-string (utils/filter-str->data)))]
         [ui/Modal
-         {:trigger    (r/as-element [ui/Button {:icon     "magic"
-                                                :disabled (nil? resource-name)
-                                                :on-click open-fn}])
+         {:trigger    (r/as-element
+                        [ui/Popup
+                         {:trigger  (r/as-element
+                                      [ui/Button {:icon     "magic"
+                                                  :disabled (nil? resource-name)
+                                                  :on-click open-fn
+                                                  :color    (when active-filter? :teal)
+                                                  :style {:z-index 100}}])
+                          :disabled (not active-filter?)}
+                         [FilterSummary {:additional-filters-applied default-filter}]])
           :open       @open?
           :on-close   close-fn
           :close-icon true}

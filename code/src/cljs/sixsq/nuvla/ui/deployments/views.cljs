@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -35,12 +36,13 @@
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [:div {:style {:display    :flex
-                      :align-self :baseline}}
-        [full-text-search-plugin/FullTextSearch
-         {:db-path      [::spec/deployments-search]
-          :change-event [::pagination-plugin/change-page
-                         [::spec/pagination] 1]}]
+       [:div {:style {:display     :flex
+                      :align-items :baseline}}
+        [:div [full-text-search-plugin/FullTextSearch
+               {:db-path            [::spec/deployments-search]
+                :change-event       [::pagination-plugin/change-page
+                                     [::spec/pagination] 1]
+                :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))}]]
         " "
         ^{:key (random-uuid)}
         [filter-comp/ButtonFilter
@@ -164,14 +166,16 @@
   [select-all? no-actions]
   (not (or select-all? (true? no-actions))))
 
+
 (defn RowFn
-  [{:keys [id state module] :as deployment}
+  [{:keys [id state module created-by] :as deployment}
    {:keys [no-actions no-module-name select-all] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url           @(subscribe [::subs/deployment-url id primary-url-pattern])
         selected?     (subscribe [::subs/is-selected? id])
-        show-options? (show-options select-all no-actions)]
+        show-options? (show-options select-all no-actions)
+        creator       (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow
      (when show-options?
        [ui/TableCell
@@ -192,6 +196,7 @@
                       [ui/Icon {:name "external"}]
                       primary-url-name])]
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
+     [ui/TableCell @creator]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
@@ -228,6 +233,7 @@
              [ui/TableHeaderCell (@tr [:status])]
              [ui/TableHeaderCell (@tr [:url])]
              [ui/TableHeaderCell (@tr [:created])]
+             [ui/TableHeaderCell (@tr [:created-by])]
              [ui/TableHeaderCell (@tr [:infrastructure])]
              (when show-options? [ui/TableHeaderCell (@tr [:actions])])]]
            [ui/TableBody
@@ -235,8 +241,9 @@
               ^{:key id}
               [RowFn deployment options])]])))))
 
+
 (defn DeploymentCard
-  [{:keys [id state module tags] :as deployment}]
+  [{:keys [id state module tags created-by] :as deployment}]
   (let [tr           (subscribe [::i18n-subs/tr])
         {module-logo-url :logo-url
          module-name     :name
@@ -247,14 +254,17 @@
         started?     (utils/started? state)
         dep-href     (utils/deployment-href id)
         select-all?  (subscribe [::subs/select-all?])
+        creator      (subscribe [::session-subs/resolve-user created-by])
         is-selected? (subscribe [::subs/is-selected? id])]
     ^{:key id}
     [uix/Card
      (cond-> {:header        [:span [:p {:style {:overflow      "hidden",
                                                  :text-overflow "ellipsis",
                                                  :max-width     "20ch"}} module-name]]
-              :meta          (str (@tr [:created]) " " (-> deployment :created
-                                                           time/parse-iso8601 time/ago))
+              :meta          [:<>
+                              [:div (str (@tr [:created]) " " (-> deployment :created
+                                                                  time/parse-iso8601 time/ago))]
+                              (when @creator [:div (str (@tr [:by]) " " @creator)])]
               :description   [utils/CloudNuvlaEdgeLink deployment :link false]
               :tags          tags
               :button        (when (and started? @primary-url)

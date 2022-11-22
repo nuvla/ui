@@ -30,6 +30,7 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
 
+(def docker-docu-link "https://docs.docker.com/compose/compose-file/compose-file-v3/#not-supported-for-docker-stack-deploy")
 
 (defn clear-module
   []
@@ -90,12 +91,13 @@
         editable?     (subscribe [::apps-subs/editable?])
         module-app    (subscribe [::apps-subs/module])
         compatibility (:compatibility @module-app)]
-    (when (not= compatibility "docker-compose")
-      (fn []
-        [uix/Accordion
+    (fn []
+      [uix/Accordion
+       (if (not= compatibility "docker-compose")
          [:<>
           [:div (@tr [:module-files])
            [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
+
           (if (empty? @files)
             [ui/Message
              (str/capitalize (str (@tr [:no-files]) "."))]
@@ -113,9 +115,11 @@
           (when @editable?
             [:div {:style {:padding-top 10}}
              [apps-views-detail/plus ::events/add-file]])]
-         :label (@tr [:module-files])
-         :count (count @files)
-         :default-open true]))))
+         [:div (@tr [:apps-file-config-warning])
+          [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]])
+       :label (@tr [:module-files])
+       :count (count @files)
+       :default-open true])))
 
 
 (defn DockerComposeValidationPopup

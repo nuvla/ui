@@ -1043,17 +1043,18 @@
 (defn subscription-configs-table-header
   [tr]
   [ui/TableHeader
+   {:style {:font-weight 600}}
    [ui/TableRow
-    [ui/TableCell {:content ""}]
+    [ui/TableCell      [:span (str/capitalize (@tr [:name]))]
+     [:span ff/nbsp (ff/help-popup (@tr [:subscription-name]))]]
+    [ui/TableCell      [:span (str/capitalize (@tr [:criteria]))]
+     [:span ff/nbsp (ff/help-popup (@tr [:criteria-for-notifications]))]]
     [ui/TableCell
      [:span (str/capitalize (@tr [:enable]))]
      [:span ff/nbsp (ff/help-popup (@tr [:notifications-enable-disable-help]))]]
     [ui/TableCell
      [:span (str/capitalize (@tr [:notification-methods]))]
      [:span ff/nbsp (ff/help-popup (@tr [:notifications-methods-help]))]]
-    [ui/TableCell
-     [:span (str/capitalize (@tr [:subscriptions]))]
-     [:span ff/nbsp (ff/help-popup (@tr [:subscriptions-manage-help]))]]
     [ui/TableCell
      [:span (str/capitalize "action")]]]])
 
@@ -1062,7 +1063,7 @@
   [subs-conf]
   (let [{:keys [metric condition kind value]} (:criteria subs-conf)]
     (r/as-element
-      [:span "criteria: " metric " "
+      [:span (str metric " ")
        [:span {:style {:font-weight "bold"}} condition]
        (when-not (= "boolean" kind) (str " " value))])))
 
@@ -1100,65 +1101,50 @@
                       [uix/Accordion
                        [ui/Table {:basic   "very"
                                   :compact true
+                                  :striped true
                                   :style   {:margin-top 10}}
 
                         [subscription-configs-table-header tr]
 
                         [ui/TableBody
-                         (doall (for [subs-conf resource-subs-confs]
-                                  ^{:key subs-conf}
-                                  [ui/TableRow
-                                   [ui/TableCell {:floated :left
-                                                  :width   2}
-                                    [:span (:name subs-conf)]
-                                    [:span ff/nbsp (ff/help-popup (criteria-popup subs-conf))]]
-                                   [ui/TableCell {:floated :left
-                                                  :width   2}
-                                    [:span
-                                     [ui/Checkbox {:key             "enable-new"
-                                                   :disabled        (empty? @notif-methods)
-                                                   :default-checked (:enabled subs-conf)
-                                                   :style           {:margin "1em"}
-                                                   :on-change       (ui-callback/checked
-                                                                      #(do
-                                                                         (dispatch-sync [::events/set-notification-subscription-config subs-conf])
-                                                                         (on-change :collection (:resource-kind subs-conf))
-                                                                         (on-change :enabled %)
-                                                                         (when (= 1 (count @notif-methods))
-                                                                           (on-change :method-id (-> @notif-methods
-                                                                                                     first
-                                                                                                     :id)))
-                                                                         (dispatch [::events/toggle-enabled (:id subs-conf) %])))}]]]
-                                   [ui/TableCell {:floated :left
-                                                  :width   4}
-                                    [SubsNotifMethodDropdown
-                                     (:method-ids subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
-
-                                   (let [subs-conf-id (:id subs-conf)]
-                                     [ui/TableCell {:floated :left
-                                                    :width   2
-                                                    :align   :right}
-                                      [uix/Button {:text     (@tr [:manage])
-                                                   :positive true
-                                                   :size     "small"
-                                                   :active   true
-                                                   :on-click #(do
-                                                                (dispatch [::events/set-notification-subscription-config-id subs-conf-id])
-                                                                (dispatch [::events/get-notification-subscriptions subs-conf-id])
-                                                                (dispatch [::events/open-notification-subscription-modal (get @subs-by-parent subs-conf-id)]))}]
-
-                                      [:span ff/nbsp ff/nbsp [ui/Label {:circular true} (get @subs-by-parent-counts subs-conf-id 0)]]])
-
-                                   [ui/TableCell {:floated :right
-                                                  :width   1
-                                                  :align   :right}
-                                    (when (general-utils/can-delete? subs-conf)
-                                      [DeleteButtonSubscriptionConfig subs-conf])
-                                    (when (general-utils/can-edit? subs-conf)
-                                      [ui/Icon {:name     :cog
-                                                :color    :blue
-                                                :style    {:cursor :pointer}
-                                                :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]]))]]
+                         (for [subs-conf resource-subs-confs]
+                           ^{:key subs-conf}
+                           [ui/TableRow
+                            [ui/TableCell {:floated :left
+                                           :width   2}
+                             [:span (:name subs-conf)]]
+                            [ui/TableCell {:width 2} (criteria-popup subs-conf)]
+                            [ui/TableCell {:floated :left
+                                           :width   2}
+                             [:span
+                              [ui/Checkbox {:key             "enable-new"
+                                            :disabled        (empty? @notif-methods)
+                                            :default-checked (:enabled subs-conf)
+                                            :style           {:margin "1em"}
+                                            :on-change       (ui-callback/checked
+                                                              #(do
+                                                                 (dispatch-sync [::events/set-notification-subscription-config subs-conf])
+                                                                 (on-change :collection (:resource-kind subs-conf))
+                                                                 (on-change :enabled %)
+                                                                 (when (= 1 (count @notif-methods))
+                                                                   (on-change :method-id (-> @notif-methods
+                                                                                             first
+                                                                                             :id)))
+                                                                 (dispatch [::events/toggle-enabled (:id subs-conf) %])))}]]]
+                            [ui/TableCell {:floated :left
+                                           :width   4}
+                             [SubsNotifMethodDropdown
+                              (:method-ids subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
+                            [ui/TableCell {:floated :right
+                                           :width   1
+                                           :align   :right}
+                             (when (general-utils/can-delete? subs-conf)
+                               [DeleteButtonSubscriptionConfig subs-conf])
+                             (when (general-utils/can-edit? subs-conf)
+                               [ui/Icon {:name     :cog
+                                         :color    :blue
+                                         :style    {:cursor :pointer}
+                                         :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]])]]
                        :title-size :h4
                        :default-open (= 0 idx)
                        :count (count resource-subs-confs)

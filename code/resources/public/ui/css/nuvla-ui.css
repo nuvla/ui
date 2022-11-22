@@ -1,32 +1,32 @@
 #nuvla-ui-sidebar {
-    z-index: 1000;
-    overflow: hidden;
-    overflow-y: auto;
+  z-index: 1000;
+  overflow: hidden;
+  overflow-y: auto;
 }
 
 #nuvla-ui-sidebar:after {
-    background-image: url(/ui/images/mountains.jpg);
-    background-color: black;
-    background-repeat: no-repeat;
-    z-index: -1;
-    opacity: 0.5;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    position: fixed;
-    width: inherit;
-    height: 100vh;
-    visibility: unset;
+  background-image: url(/ui/images/mountains.jpg);
+  background-color: black;
+  background-repeat: no-repeat;
+  z-index: -1;
+  opacity: 0.5;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  position: fixed;
+  width: inherit;
+  height: 100vh;
+  visibility: unset;
 }
 
 #nuvla-ui-sidebar .active {
-    color: black !important;
-    background-color: rgba(255, 255, 255, 0.65);
+  color: black !important;
+  background-color: rgba(255, 255, 255, 0.65);
 }
 
 .nuvla-close-menu-item {
-    padding: 5px !important;
+  padding: 5px !important;
 }
 
 /*
@@ -35,13 +35,13 @@
   the Semantic UI Container.
 */
 .nuvla-ui-x-autoscroll {
-    overflow-x: auto;
+  overflow-x: auto;
 }
 
 #nuvla-ui-main {
-    display: flex !important; /* will be block without !important */
-    flex-direction: column;
-    background-color: #f5f5f5 !important;
+  display: flex !important; /* will be block without !important */
+  flex-direction: column;
+  background-color: #f5f5f5 !important;
 }
 
 /*
@@ -50,44 +50,44 @@
 */
 
 #nuvla-ui-content {
-    padding: 1ex;
-    min-height: calc(100vh - 85px);
+  padding: 1ex;
+  min-height: calc(100vh - 85px);
 }
 
 @media only screen and (max-width: 768px) {
-    #nuvla-username {
-        display: none;
-    }
-    #nuvla-username-button {
-        padding-left: 15px;
-        padding-right: 5px;
-    }
+  #nuvla-username {
+    display: none;
+  }
+  #nuvla-username-button {
+    padding-left: 15px;
+    padding-right: 5px;
+  }
 }
 
 .nuvla-ui-header {
-    height: 30px;
-    border-radius: unset !important;
+  height: 30px;
+  border-radius: unset !important;
 }
 
 .nuvla-ui-section-header {
-    background-color: Gainsboro !important;
+  background-color: Gainsboro !important;
 }
 
 .nuvla-ui-session-left {
-    margin-left: 10%;
-    margin-right: 10%;
-    margin-top: 10%;
-    margin-bottom: 10%;
-    padding: 25px;
-    background-color: rgba(0, 0, 0, 0.4);
+  margin-left: 10%;
+  margin-right: 10%;
+  margin-top: 10%;
+  margin-bottom: 10%;
+  padding: 25px;
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 @media only screen and (max-width: 768px) {
-    .nuvla-ui-session-left {
-        margin: 0px;
-        margin-bottom: 25%;
-        padding: 10px;
-    }
+  .nuvla-ui-session-left {
+    margin: 0px;
+    margin-bottom: 25%;
+    padding: 10px;
+  }
 }
 
 /*
@@ -101,11 +101,11 @@
  */
 
 div.search.dropdown > input {
-    width: 100% !important;
+  width: 100% !important;
 }
 
 .ui.styled.accordion > .active.title {
-    background-color: lightgrey;
+  background-color: lightgrey;
 }
 
 /*
@@ -113,11 +113,11 @@ div.search.dropdown > input {
  */
 
 .nuvla-command {
-    font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 .react-datepicker-popper {
-    z-index: 999 !important;
+  z-index: 999 !important;
 }
 
 .mapbox-map {
@@ -144,9 +144,9 @@ div.search.dropdown > input {
 }
 
 .stripe-input {
-  border: 1px solid rgba(34,36,38,.15);
-  padding: .67857143em 1em;
-  border-radius: .28571429rem;
+  border: 1px solid rgba(34, 36, 38, 0.15);
+  padding: 0.67857143em 1em;
+  border-radius: 0.28571429rem;
   background: #fff;
   outline: 0px;
 }
@@ -169,16 +169,16 @@ div.search.dropdown > input {
 }
 
 .ui.message a {
-    color: inherit;
-    text-decoration: underline;
+  color: inherit;
+  text-decoration: underline;
 }
 
 tr.active td:first-child {
-    padding-left: 5px !important;
+  padding-left: 5px !important;
 }
 
 tr.active td {
-    font-weight: bold !important;
+  font-weight: bold !important;
 }
 
 /* Show clipboard on hover of value */
@@ -209,7 +209,8 @@ tr.active td {
   max-width: 100%;
 }
 
-.leaflet-top, .leaflet-bottom {
+.leaflet-top,
+.leaflet-bottom {
   z-index: 998 !important;
 }
 
@@ -223,6 +224,8 @@ tr.active td {
     grid-template-columns: 45% 45%;
     justify-content: space-between;
     align-items: center;
+  }
+}
 
 .ellipsing {
   white-space: nowrap;

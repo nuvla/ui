@@ -3,6 +3,9 @@
 
 (def dictionary
   {:en {
+        :detach                                        "detach"
+        :detach-deployment                             "Detach deployment from deployment set"
+        :deployment-detach-msg                         "Detach from the deployment set. After detaching the deployment, you will be sure that actions performed on the deployment set will no longer impact it."
         :delete-deployment-set                         "Delete deployment set?"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"

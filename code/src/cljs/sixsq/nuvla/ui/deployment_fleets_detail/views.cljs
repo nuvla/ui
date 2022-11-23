@@ -161,7 +161,9 @@
                                            {:no-actions true
                                             :empty-msg  (tr [:empty-deployemnt-msg])}])}
                 (job-views/jobs-section)
-                (acl/TabAcls deployment-fleet can-edit? ::events/edit)]
+                (acl/TabAcls {:e          deployment-fleet
+                              :can-edit?  can-edit?
+                              :edit-event ::events/edit})]
       :menu    {:secondary true
                 :pointing  true}}]))
 

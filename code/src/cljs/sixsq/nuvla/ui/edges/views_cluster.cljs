@@ -241,7 +241,9 @@
                  :key     :overview
                  :icon    "info"}
       :render   #(r/as-element [TabOverview])}
-     (acl/TabAcls cluster @can-edit? ::events/edit)]))
+     (acl/TabAcls {:e          cluster
+                   :can-edit?  @can-edit?
+                   :edit-event ::events/edit})]))
 
 
 (defn TabsCluster

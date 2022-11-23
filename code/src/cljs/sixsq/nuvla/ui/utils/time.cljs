@@ -127,7 +127,7 @@
   ([start]
    (delta-minutes start (now)))
   ([start end]
-   (differenceInMinutes end start)))
+   (differenceInMinutes (parse-iso8601 end) (parse-iso8601 start))))
 
 
 (defn days-before

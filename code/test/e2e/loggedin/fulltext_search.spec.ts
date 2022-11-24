@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 
+async function delay(ms = 1000) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 test.describe('Full text search', () => {
   for (const pageName of ['apps', 'deployments', 'edges', 'data']) {
     test('on page ' + pageName, async ({ page, context }, { project, config }) => {

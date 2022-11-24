@@ -440,7 +440,7 @@
                                        (.preventDefault event))
                         :button-text (@tr [:detach])
                         :popup-text  (@tr [:deployment-detach-msg])
-                        :icon-name   "circle outline"
+                        :icon-name   "times circle outline"
                         :menu-item?  true})]
           [uix/ModalDanger
            {:on-close    (fn [event]

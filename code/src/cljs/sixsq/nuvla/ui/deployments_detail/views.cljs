@@ -732,7 +732,9 @@
      (env-vars-section)
      (billing-section)
      (job-views/jobs-section)
-     (acl/TabAcls deployment (not @read-only?) ::events/edit)]))
+     (acl/TabAcls {:e          deployment
+                   :can-edit?  (not @read-only?)
+                   :edit-event ::events/edit})]))
 
 
 (defn depl-state->status

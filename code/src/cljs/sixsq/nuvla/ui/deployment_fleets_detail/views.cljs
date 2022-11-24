@@ -161,7 +161,9 @@
                                            {:no-actions true
                                             :empty-msg  (tr [:empty-deployemnt-msg])}])}
                 (job-views/jobs-section)
-                (acl/TabAcls deployment-fleet can-edit? ::events/edit)]
+                (acl/TabAcls {:e          deployment-fleet
+                              :can-edit?  can-edit?
+                              :edit-event ::events/edit})]
       :menu    {:secondary true
                 :pointing  true}}]))
 
@@ -221,7 +223,7 @@
     (let [{:keys [count]} @(subscribe [::subs/apps])
           apps     @(subscribe [::subs/apps-tree])
           loading? @(subscribe [::subs/apps-loading?])
-          tr     @(subscribe [::i18n-subs/tr])
+          tr       @(subscribe [::i18n-subs/tr])
           render   (fn []
                      (r/as-element
                        [ui/TabPane {:loading loading?}

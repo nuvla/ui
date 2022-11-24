@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Deployment set - Experimental feature (hidden for prod env)
 - Time - delta minutes bugfix
 - NuvleEdge details - Shows public and interface IPs in host card #969
 - E2E nuvlaedge - fix tests to align with api changes

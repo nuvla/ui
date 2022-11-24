@@ -255,7 +255,7 @@
 
              (for [owner owners]
                ^{:key owner}
-               [OwnerItem opts ui-acl (>= (count owners) 2) owner])
+               [OwnerItem opts ui-acl (and (not read-only) (>= (count owners) 2)) owner])
 
              (when-not read-only
                [ui/ListItem {:style {:vertical-align "middle"}}

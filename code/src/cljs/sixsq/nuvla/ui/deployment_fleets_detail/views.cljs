@@ -223,7 +223,7 @@
     (let [{:keys [count]} @(subscribe [::subs/apps])
           apps     @(subscribe [::subs/apps-tree])
           loading? @(subscribe [::subs/apps-loading?])
-          tr     @(subscribe [::i18n-subs/tr])
+          tr       @(subscribe [::i18n-subs/tr])
           render   (fn []
                      (r/as-element
                        [ui/TabPane {:loading loading?}

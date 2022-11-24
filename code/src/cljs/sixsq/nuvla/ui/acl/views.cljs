@@ -180,7 +180,7 @@
          ui-acl]
       (let [used-principals (utils/acl-get-all-principals-set @ui-acl)
             options         (subscribe [::session-subs/peers-groups-options used-principals])]
-        [ui/Dropdown {:fluid                 fluid
+        [ui/Dropdown {:fluid                fluid
                       :selection            true
                       :style                {:width "350px"}
                       :upward               false
@@ -191,7 +191,7 @@
                       :select-on-blur       false
                       :addition-label       (@tr [:add-by-user-group-id])
                       :on-add-item          on-add-item
-                      :on-change            #(do (js/console.error "changed?") (ui-callback/value on-change))}]))))
+                      :on-change            (ui-callback/value on-change)}]))))
 
 (defn AddRight
   [{:keys [on-change _mode] :as _opts} ui-acl]
@@ -340,9 +340,9 @@
                                  :read-only       (not can-edit?)
                                  :owner-read-only owner-read-only
                                  :on-change       #(dispatch
-                                                    [edit-event
-                                                     (:id @e) (assoc @e :acl %)
-                                                     (@tr [:acl-updated])])}
+                                                     [edit-event
+                                                      (:id @e) (assoc @e :acl %)
+                                                      (@tr [:acl-updated])])}
                       ui-acl])))}))
 
 

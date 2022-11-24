@@ -1,17 +1,17 @@
 (ns sixsq.nuvla.ui.utils.time
   (:require
-    ["date-fns" :refer [parseISO
-                        addMilliseconds
-                        subMilliseconds
+    ["date-fns" :refer [addMilliseconds
                         differenceInMilliseconds
-                        intlFormatDistance
-                        isBefore
-                        isAfter
-                        formatDistance
                         differenceInMinutes
+                        format
+                        formatDistance
+                        intlFormatDistance
+                        isAfter
+                        isBefore
+                        parseISO
                         startOfDay
                         subDays
-                        format]]
+                        subMilliseconds]]
    ["date-fns/locale/fr$default" :as fr]))
 
 (def ^:const default-locale "en")
@@ -127,7 +127,7 @@
   ([start]
    (delta-minutes start (now)))
   ([start end]
-   (differenceInMinutes end start)))
+   (differenceInMinutes (parse-iso8601 end) (parse-iso8601 start))))
 
 
 (defn days-before

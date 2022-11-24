@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.utils.time-test
   (:require
-   [cljs.test :refer [is are deftest testing]]
+   [cljs.test :refer [are deftest is testing]]
    [clojure.string :as str]
-   [sixsq.nuvla.ui.utils.time :as time :refer [now]]
-   [mockdate :as mock-date]))
+   [mockdate :as mock-date]
+   [sixsq.nuvla.ui.utils.time :as time :refer [now]]))
 
 (def year 2022)
 (def month 10)

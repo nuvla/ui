@@ -11,6 +11,7 @@
 - NuvlaEdge details - Remove ID column #987
 - Logs view - Fix broken view of datepicker, bugfix #992
 - NuvlaEdges - Table view shows ".y.z" for new edges version number #962
+- NuvlaEdges and Deployments - Sets default items per page to 25 with increasing items-per-page multiplier #1004
 
 ## [2.32.9] - 2022-11-17
 

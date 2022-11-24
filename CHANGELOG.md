@@ -11,6 +11,7 @@
 - NuvlaEdge details - Remove ID column #987
 - Logs view - Fix broken view of datepicker, bugfix #992
 - NuvlaEdges - Table view shows ".y.z" for new edges version number #962
+- NuvlaEdges and Deployments - Makes table view default #1012
 
 ## [2.32.9] - 2022-11-17
 

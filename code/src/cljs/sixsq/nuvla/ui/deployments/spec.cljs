@@ -38,4 +38,4 @@
                ::select-all?             false
                ::bulk-jobs-monitored     (sorted-map)
                ::pagination              (pagination-plugin/build-spec
-                                           :default-items-per-page 8)})
+                                           :default-items-per-page 25)})

@@ -376,9 +376,10 @@
   []
   (let [dep-count @(subscribe [::subs/deployments-count])]
     [pagination-plugin/Pagination
-     {:db-path      [::spec/pagination]
-      :total-items  dep-count
-      :change-event [::events/refresh]}]))
+     {:db-path                [::spec/pagination]
+      :total-items            dep-count
+      :change-event           [::events/refresh]
+      :i-per-page-multipliers [1 2 4]}]))
 
 (defn DeploymentTable
   [options]

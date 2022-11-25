@@ -70,19 +70,26 @@
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
+(defn- ordering->order-payload
+  [{:keys [field order]}]
+  (str (name field) ":" order))
+
 (reg-event-fx
   ::get-nuvlaboxes
-  (fn [{{:keys [::spec/state-selector] :as db} :db} _]
-    {::cimi-api-fx/search
-     [:nuvlabox
-      (->> {:orderby "created:desc"
-            :filter  (general-utils/join-and
-                       (when state-selector (utils/state-filter state-selector))
-                       (full-text-search-plugin/filter-text
-                         db [::spec/edges-search]))}
-           (pagination-plugin/first-last-params
-             db [::spec/pagination]))
-      #(dispatch [::set-nuvlaboxes %])]}))
+  (fn [{{:keys [::spec/state-selector
+                ::spec/ordering] :as db} :db} [_ new-ordering]]
+    (let [new-ordering (or new-ordering ordering spec/default-ordering)]
+      {:db (assoc db ::spec/ordering new-ordering)
+       ::cimi-api-fx/search
+       [:nuvlabox
+        (->> {:orderby (ordering->order-payload new-ordering)
+              :filter   (general-utils/join-and
+                         (when state-selector (utils/state-filter state-selector))
+                         (full-text-search-plugin/filter-text
+                          db [::spec/edges-search]))}
+             (pagination-plugin/first-last-params
+              db [::spec/pagination]))
+        #(dispatch [::set-nuvlaboxes % new-ordering])]})))
 
 
 (reg-event-fx
@@ -92,7 +99,7 @@
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
                    {:header  (cond-> (str "failure getting nuvlaboxes")
-                                     status (str " (" status ")"))
+                               status (str " (" status ")"))
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes

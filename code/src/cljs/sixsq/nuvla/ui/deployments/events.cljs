@@ -9,10 +9,10 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)

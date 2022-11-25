@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -25,8 +26,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn refresh
   []

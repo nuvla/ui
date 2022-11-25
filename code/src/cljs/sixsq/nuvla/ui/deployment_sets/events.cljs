@@ -36,13 +36,14 @@
 (reg-event-fx
   ::get-deployment-sets
   (fn [{{:keys [::spec/state-selector] :as db} :db}]
-    (let [params (->> {:orderby "created:desc"
-                       :filter  (general-utils/join-and
-                                  (when state-selector
-                                    (state-filter state-selector))
-                                  (full-text-search-plugin/filter-text
-                                    db [::spec/search]))}
-                      (pagination-plugin/first-last-params db [::spec/pagination]))]
+    (let [params (pagination-plugin/first-last-params
+                   db [::spec/pagination]
+                   {:orderby "created:desc"
+                    :filter  (general-utils/join-and
+                               (when state-selector
+                                 (state-filter state-selector))
+                               (full-text-search-plugin/filter-text
+                                 db [::spec/search]))})]
       {::cimi-api-fx/search [:deployment-set params
                              #(dispatch [::set-deployment-sets %])]})))
 

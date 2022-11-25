@@ -281,8 +281,7 @@
 (reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
-                ::spec/apps-selected
-                ::spec/module-versions] :as db} :db}
+                ::spec/apps-selected] :as db} :db}
        [_ {df-name  :name
            df-descr :description
            df-start :start}]]

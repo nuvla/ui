@@ -8,35 +8,31 @@
 
 (reg-sub
   ::loading?
-  (fn [db]
-    (::spec/loading? db)))
+  :-> ::spec/loading?)
 
 (reg-sub
   ::deployment-set
-  (fn [db]
-    (::spec/deployment-set db)))
+  :-> ::spec/deployment-set)
 
 (reg-sub
   ::can-edit?
   :<- [::deployment-set]
-  (fn [deployment-set _]
+  (fn [deployment-set]
     (general-utils/can-edit? deployment-set)))
 
 (reg-sub
   ::can-delete?
   :<- [::deployment-set]
-  (fn [deployment-set _]
+  (fn [deployment-set]
     (general-utils/can-delete? deployment-set)))
 
 (reg-sub
   ::deployment-set-not-found?
-  (fn [db]
-    (::spec/deployment-set-not-found? db)))
+  :-> ::spec/deployment-set-not-found?)
 
 (reg-sub
   ::apps
-  (fn [db]
-    (::spec/apps db)))
+  :-> ::spec/apps)
 
 (defn transform
   [tree {:keys [parent-path] :as app}]
@@ -55,8 +51,7 @@
 
 (reg-sub
   ::apps-selected
-  (fn [db]
-    (::spec/apps-selected db)))
+  :-> ::spec/apps-selected)
 
 (reg-sub
   ::apps-selected?
@@ -66,23 +61,19 @@
 
 (reg-sub
   ::apps-loading?
-  (fn [db]
-    (::spec/apps-loading? db)))
+  :-> ::spec/apps-loading?)
 
 (reg-sub
   ::targets-loading?
-  (fn [db]
-    (::spec/targets-loading? db)))
+  :-> ::spec/targets-loading?)
 
 (reg-sub
   ::edges
-  (fn [db]
-    (::spec/edges db)))
+  :-> ::spec/edges)
 
 (reg-sub
   ::credentials
-  (fn [db]
-    (::spec/credentials db)))
+  :-> ::spec/credentials)
 
 (reg-sub
   ::credentials-grouped-by-parent
@@ -92,8 +83,7 @@
 
 (reg-sub
   ::infrastructures
-  (fn [db]
-    (::spec/infrastructures db)))
+  :-> ::spec/infrastructures)
 
 (reg-sub
   ::infrastructures-with-credentials
@@ -130,8 +120,7 @@
 
 (reg-sub
   ::targets-selected
-  (fn [db]
-    (::spec/targets-selected db)))
+  :-> ::spec/targets-selected)
 
 (reg-sub
   ::targets-selected?

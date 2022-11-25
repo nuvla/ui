@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.module :as module-plugin]
@@ -26,11 +27,10 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :deployment-set-get-deployment-set)
@@ -197,14 +197,14 @@
         can-edit?      @(subscribe [::subs/can-edit?])]
     [tab/Tab
      {:db-path [::spec/tab]
-      :panes   [{:menuItem {:content "Overview"
+      :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
                             :key     :overview
                             :icon    "info"}
                  :render   #(r/as-element [TabOverview])}
                 (events-plugin/events-section
                   {:db-path [::spec/events]
                    :href    (:id @deployment-set)})
-                {:menuItem {:content "Deployments"
+                {:menuItem {:content (str/capitalize (tr [:deployments]))
                             :key     :deployments
                             :icon    "rocket"}
                  :render   #(r/as-element [deployments-views/DeploymentTable
@@ -407,21 +407,23 @@
 
 (defn StepApplicationsTargets
   []
-  [ui/Grid {:stackable true}
-   [ui/GridRow {:columns   2
-                :stretched true}
-    [ui/GridColumn
-     [ui/Segment
-      [:h2 "Applications"]
-      [SelectApps]]]
-    [ui/GridColumn
-     [ui/Segment
-      [:h2 "Targets"]
-      [SelectTargets]]]]])
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [ui/Grid {:stackable true}
+     [ui/GridRow {:columns   2
+                  :stretched true}
+      [ui/GridColumn
+       [ui/Segment
+        [:h2 (tr [:applications])]
+        [SelectApps]]]
+      [ui/GridColumn
+       [ui/Segment
+        [:h2 (tr [:targets])]
+        [SelectTargets]]]]]))
 
 (defn ConfigureApplications
   []
-  (let [apps-selected (subscribe [::subs/apps-selected])]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        apps-selected (subscribe [::subs/apps-selected])]
     [:div
      [tab/Tab
       {:db-path [::spec/config-apps-tab]
@@ -439,32 +441,33 @@
                                     [module-plugin/ModuleVersions
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
-                                    :label "Select version"
+                                    :label @(tr [:select-version])
                                     :default-open true]
                                    [uix/Accordion
                                     [module-plugin/EnvVariables
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
-                                    :label "Environment variables"
+                                    :label (@tr [:env-variables])
                                     :default-open true]
                                    [uix/Accordion
                                     [module-plugin/AcceptLicense
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
-                                    :label "License"
+                                    :label (str/capitalize (@tr [:license]))
                                     :default-open true]
                                    [uix/Accordion
                                     [module-plugin/AcceptPrice
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
-                                    :label "Price"
+                                    :label (str/capitalize (@tr [:price]))
                                     :default-open true]
                                    ])}
                     ) @apps-selected)}]]))
 
 (defn AddSelectedTargetsApps
   [header apps-names targets-names]
-  (let [warning? (not (and (seq apps-names)
+  (let [tr       (subscribe [::i18n-subs/tr])
+        warning? (not (and (seq apps-names)
                            (seq targets-names)))]
     (when (or (seq apps-names)
               (seq targets-names))
@@ -475,14 +478,16 @@
          [ui/TableBody
           [ui/TableRow
            [ui/TableCell {:collapsing true}
-            [ui/Header {:as :h5 :content "Targets:"}]]
+            [ui/Header {:as :h5 :content (str (str/capitalize (@tr [:targets]))
+                                              ":")}]]
            [ui/TableCell
             (for [target-name targets-names]
               ^{:key target-name}
               [ui/Label {:content target-name}])]]
           [ui/TableRow
            [ui/TableCell {:collapsing true}
-            [ui/Header {:as :h5 :content "Apps:"}]]
+            [ui/Header {:as :h5 :content (str (str/capitalize (@tr [:apps]))
+                                              ":")}]]
            [ui/TableCell
             (for [app-name apps-names]
               ^{:key app-name}
@@ -491,8 +496,8 @@
          [ui/Message {:warning true :attached :bottom}
           [ui/Icon {:name "warning"}]
           (if (seq apps-names)
-            "You selected an app without selecting at least one compatible target!"
-            "You selected a target without selecting a compatible application!")])])))
+            (@tr [:warning-app-selected-not-compatible-targets])
+            (@tr [:warning-target-selected-not-compatible-apps]))])])))
 
 (defn Summary
   []
@@ -501,7 +506,7 @@
         apps-selected         (subscribe [::subs/apps-selected])
         targets-selected      (subscribe [::subs/targets-selected])
         license-not-accepted? (subscribe [::subs/some-license-not-accepted?])
-        price-not-accepted? (subscribe [::subs/some-price-not-accepted?])
+        price-not-accepted?   (subscribe [::subs/some-price-not-accepted?])
         create-name-descr     (r/atom {:start false})
         on-change-input       (fn [key]
                                 (ui-callback/input-callback
@@ -519,17 +524,17 @@
          [ui/Form
           [ui/FormInput
            {:label       (str/capitalize (@tr [:name]))
-            :placeholder "Name your deployment set"
+            :placeholder (@tr [:name-deployment-set])
             :required    true
             :value       (or dep-set-name "")
             :on-change   (on-change-input :name)}]
           [ui/FormInput
            {:label       (str/capitalize (@tr [:description]))
-            :placeholder "Describe your deployment set"
+            :placeholder (@tr [:describe-deployment-set])
             :value       (or (:description @create-name-descr) "")
             :on-change   (on-change-input :description)}]
           [ui/FormCheckbox
-           {:label     "Start deployment automatically directly after creation"
+           {:label     (@tr [:start-deployment-set-after-creation])
             :checked   (:start @create-name-descr)
             :on-change (ui-callback/checked
                          #(swap! create-name-descr update :start not))}]]
@@ -538,17 +543,17 @@
          (when @license-not-accepted?
            [ui/Message {:warning true}
             [ui/Icon {:name "warning"}]
-            "You have to accept all applications licenses!"])
+            (@tr [:accept-applications-licenses])])
          (when @price-not-accepted?
            [ui/Message {:warning true}
             [ui/Icon {:name "warning"}]
-            "You have to accept all applications prices!"])
+            (@tr [:accept-applications-prices])])
          [ui/Button
           {:positive true
            :on-click #(dispatch [::events/create @create-name-descr])
            :disabled (or @create-disabled?
                          (str/blank? dep-set-name))
-           :floated  :right} "Create"]]))))
+           :floated  :right} (str/capitalize (@tr [:create]))]]))))
 
 (defn AddPage
   []
@@ -557,7 +562,7 @@
     (dispatch [::events/new])
     (fn []
       [ui/Container {:fluid true}
-       [uix/PageHeader "add" "Add"]
+       [uix/PageHeader "add" (str/capitalize (@tr [:add]))]
        [step-group/StepGroup
         {:db-path [::spec/steps]
          :size    :mini
@@ -565,31 +570,19 @@
          :items   [{:key         :select-apps-targets
                     :icon        "bullseye"
                     :content     [StepApplicationsTargets]
-                    :title       "Applications/Targets"
-                    :description "Select applications and targets"}
+                    :title       (@tr [:applications-targets])
+                    :description (@tr [:select-applications-targets])}
                    {:key         :configure
                     :icon        "configure"
                     :content     [ConfigureApplications]
-                    :title       "Configure"
+                    :title       (str/capitalize (@tr [:configure]))
                     :disabled    @configure-disabled?
-                    :description "Configure applications"}
-                   #_{:key         :license-price
-                      :icon        "book"
-                      :content     [:div "Accept applications licenses"]
-                      :title       "License"
-                      :disabled    @configure-disabled?
-                      :description "Accept licenses"}
-                   #_{:key         :price
-                      :icon        "eur"
-                      :content     [:div "Accept prices"]
-                      :title       "Prices"
-                      :disabled    @configure-disabled?
-                      :description "Accept prices"}
+                    :description (@tr [:configure-applications])}
                    {:key         :summary
                     :icon        "info"
                     :content     [Summary]
-                    :title       "Summary"
-                    :description "Overall summary"}]}]])))
+                    :title       (str/capitalize (@tr [:summary]))
+                    :description (@tr [:overall-summary])}]}]])))
 
 (defn DeploymentSet
   [uuid]

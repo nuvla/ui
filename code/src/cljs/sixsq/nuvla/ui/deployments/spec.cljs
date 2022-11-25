@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.deployments.spec
   (:require
     [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]))
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::deployments any?)
 (s/def ::deployments-summary any?)

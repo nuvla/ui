@@ -5,20 +5,16 @@
 
 (reg-sub
   ::loading?
-  (fn [db]
-    (::spec/loading? db)))
+  :-> ::spec/loading?)
 
 (reg-sub
   ::deployment-sets
-  (fn [db]
-    (::spec/deployment-sets db)))
+  :-> ::spec/deployment-sets)
 
 (reg-sub
   ::deployment-sets-summary
-  (fn [db]
-    (::spec/deployment-sets-summary db)))
+  :-> ::spec/deployment-sets-summary)
 
 (reg-sub
   ::state-selector
-  (fn [db]
-    (::spec/state-selector db)))
+  :-> ::spec/state-selector)

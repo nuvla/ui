@@ -4,15 +4,15 @@
             [re-frame.core :refer
              [dispatch reg-event-db reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.history.events :as history-events]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.history.views :as history-views]
-            [sixsq.nuvla.ui.utils.general :as general-utils]))
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (s/def ::monitored-ids set?)
 (s/def ::jobs map?)

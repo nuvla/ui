@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Apps - Saving an app should move user to it #991
 - Deployment set - Experimental feature (hidden for prod env)
 - Time - delta minutes bugfix
 - NuvleEdge details - Shows public and interface IPs in host card #969

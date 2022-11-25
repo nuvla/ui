@@ -165,3 +165,8 @@
   ::nuvlaboxes-in-clusters
   (fn [db]
     (::spec/nuvlaboxes-in-clusters db)))
+
+(reg-sub
+  ::nuvlabox-ordering
+  (fn [db]
+    (::spec/ordering db)))

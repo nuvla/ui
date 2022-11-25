@@ -766,6 +766,45 @@
       :change-event [::events/refresh-root]
       :total-items  total-elements}]))
 
+(defn- custom-children
+  [{:keys [col selected-nbs] }]
+  (let [tr (subscribe [::i18n-subs/tr])
+        maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])]
+    ({:online [ui/Icon {:name "heartbeat"}]
+      :version [:<> (@tr [:version])
+                (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
+     col)))
+
+(def additional-props
+  {:version     {:style {:cursor "unset"}  }
+   :last-online {:style {:cursor "unset"}  :single-line true}})
+
+;; FIXME: How to sort other columns?
+(def sortables #{:online :name :description :created :created-by :state})
+
+(defn- col->cursor-style
+  [col-name]
+  (cond
+    (sortables col-name)
+    "pointer"
+
+    (#{:online :state :last-online :version :tags :manager} col-name)
+    "unset"))
+
+(defn- NuvlaBoxTableHeaderCell
+  [{:keys [col] :as opts}]
+  (let [tr                   @(subscribe [::i18n-subs/tr])
+        {:keys [field order]} @(subscribe [::subs/nuvlabox-ordering])
+        toggle-order         {"desc" "asc" "asc" "desc"}
+        click-handler        (if (sortables col)
+                               #(dispatch [::events/get-nuvlaboxes {:field  col
+                                                                    :order (toggle-order order)}])
+                               (fn []))]
+    [ui/TableHeaderCell {:on-click click-handler
+                         :style (merge {:cursor (col->cursor-style col)} (additional-props col))
+                         :single-line true}
+     (or (custom-children opts) (tr [col]))
+     [ui/Icon (when (= col field) {:name ({"desc" "angle down" "asc" "angle up"} order)})]]))
 
 (defn NuvlaboxTable
   []
@@ -779,24 +818,14 @@
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
                                                        (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
-                            (:resources @nuvlaboxes))
-        maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
-        tr                (subscribe [::i18n-subs/tr])]
-    [ui/Table {:compact "very", :selectable true}
+                            (:resources @nuvlaboxes))]
+    [ui/Table {:sortable true :compact "very", :selectable true}
      [ui/TableHeader
       [ui/TableRow
-       [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
-       [ui/TableHeaderCell "state"]
-       [ui/TableHeaderCell "name"]
-       [ui/TableHeaderCell "description"]
-       [ui/TableHeaderCell (@tr [:created])]
-       [ui/TableHeaderCell (@tr [:created-by])]
-       [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
-       [ui/TableHeaderCell {:single-line true}
-        (@tr [:version])
-        (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
-       [ui/TableHeaderCell "tags"]
-       [ui/TableHeaderCell "manager"]]]
+       (doall (for [col spec/columns]
+                ^{:key col}
+                [NuvlaBoxTableHeaderCell {:col col :selected-nbs selected-nbs}]))
+       ]]
 
      [ui/TableBody
       (doall

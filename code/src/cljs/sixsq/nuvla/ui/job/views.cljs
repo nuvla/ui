@@ -67,7 +67,7 @@
       :icon    "clipboard list"}
      :render #(r/as-element [JobsTable @jobs])}))
 
-(def filtered-actions #{"dct_check"})
+(def filtered-actions #{"dct_check" "stop_deployment_set" "start_deployment_set"})
 
 (defn filter-actions
   "Filter out actions included in filtered-actions"

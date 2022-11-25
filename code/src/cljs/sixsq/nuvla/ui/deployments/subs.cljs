@@ -105,8 +105,3 @@
   :<- [::selected-set]
   (fn [selected-set [_ id]]
     (utils/is-selected? selected-set id)))
-
-(reg-sub
-  ::bulk-jobs-monitored
-  (fn [db]
-    (::spec/bulk-jobs-monitored db)))

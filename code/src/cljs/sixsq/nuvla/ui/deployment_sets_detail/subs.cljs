@@ -1,41 +1,38 @@
-(ns sixsq.nuvla.ui.deployment-fleets-detail.subs
+(ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
   ::loading?
-  (fn [db]
-    (::spec/loading? db)))
+  :-> ::spec/loading?)
 
 (reg-sub
-  ::deployment-fleet
-  (fn [db]
-    (::spec/deployment-fleet db)))
+  ::deployment-set
+  :-> ::spec/deployment-set)
 
 (reg-sub
   ::can-edit?
-  :<- [::deployment-fleet]
-  (fn [deployment-fleet _]
-    (general-utils/can-edit? deployment-fleet)))
+  :<- [::deployment-set]
+  (fn [deployment-set]
+    (general-utils/can-edit? deployment-set)))
 
 (reg-sub
   ::can-delete?
-  :<- [::deployment-fleet]
-  (fn [deployment-fleet _]
-    (general-utils/can-delete? deployment-fleet)))
+  :<- [::deployment-set]
+  (fn [deployment-set]
+    (general-utils/can-delete? deployment-set)))
 
 (reg-sub
-  ::deployment-fleet-not-found?
-  (fn [db]
-    (::spec/deployment-fleet-not-found? db)))
+  ::deployment-set-not-found?
+  :-> ::spec/deployment-set-not-found?)
 
 (reg-sub
   ::apps
-  (fn [db]
-    (::spec/apps db)))
+  :-> ::spec/apps)
 
 (defn transform
   [tree {:keys [parent-path] :as app}]
@@ -54,8 +51,7 @@
 
 (reg-sub
   ::apps-selected
-  (fn [db]
-    (::spec/apps-selected db)))
+  :-> ::spec/apps-selected)
 
 (reg-sub
   ::apps-selected?
@@ -65,23 +61,19 @@
 
 (reg-sub
   ::apps-loading?
-  (fn [db]
-    (::spec/apps-loading? db)))
+  :-> ::spec/apps-loading?)
 
 (reg-sub
   ::targets-loading?
-  (fn [db]
-    (::spec/targets-loading? db)))
+  :-> ::spec/targets-loading?)
 
 (reg-sub
   ::edges
-  (fn [db]
-    (::spec/edges db)))
+  :-> ::spec/edges)
 
 (reg-sub
   ::credentials
-  (fn [db]
-    (::spec/credentials db)))
+  :-> ::spec/credentials)
 
 (reg-sub
   ::credentials-grouped-by-parent
@@ -91,8 +83,7 @@
 
 (reg-sub
   ::infrastructures
-  (fn [db]
-    (::spec/infrastructures db)))
+  :-> ::spec/infrastructures)
 
 (reg-sub
   ::infrastructures-with-credentials
@@ -129,8 +120,7 @@
 
 (reg-sub
   ::targets-selected
-  (fn [db]
-    (::spec/targets-selected db)))
+  :-> ::spec/targets-selected)
 
 (reg-sub
   ::targets-selected?
@@ -141,9 +131,30 @@
          boolean)))
 
 (reg-sub
-  ::create-disabled?
+  ::configure-disabled?
   (fn [{:keys [::spec/targets-selected
                ::spec/apps-selected]}]
-    (boolean
-      (or (empty? apps-selected)
-          (empty? targets-selected)))))
+    (or (empty? apps-selected)
+        (empty? targets-selected))))
+
+(reg-sub
+  ::some-license-not-accepted?
+  (fn [{:keys [::spec/apps-selected] :as db}]
+    (some #(false? (module-plugin/db-license-accepted? db [::spec/module-versions] (:id %))) apps-selected)))
+
+(reg-sub
+  ::some-price-not-accepted?
+  (fn [{:keys [::spec/apps-selected] :as db}]
+    (some #(false? (module-plugin/db-price-accepted? db [::spec/module-versions] (:id %))) apps-selected)))
+
+(reg-sub
+  ::create-disabled?
+  :<- [::configure-disabled?]
+  :<- [::some-license-not-accepted?]
+  :<- [::some-price-not-accepted?]
+  (fn [[configure-disabled?
+        some-license-not-accepted?
+        some-price-not-accepted?]]
+    (or configure-disabled?
+        some-license-not-accepted?
+        some-price-not-accepted?)))

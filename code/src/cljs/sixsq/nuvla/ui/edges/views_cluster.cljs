@@ -88,9 +88,9 @@
                     :itemsPerRow 4}
       (doall
         (for [{:keys [id] :as nuvlabox} selected-nbs]
-         (when id
-           ^{:key id}
-           [views-utils/NuvlaboxCard nuvlabox managers])))]]))
+          (when id
+            ^{:key id}
+            [views-utils/NuvlaboxCard nuvlabox managers])))]]))
 
 
 (defn NuvlaboxTable
@@ -241,18 +241,20 @@
                  :key     :overview
                  :icon    "info"}
       :render   #(r/as-element [TabOverview])}
-     (acl/TabAcls cluster @can-edit? ::events/edit)]))
+     (acl/TabAcls {:e          cluster
+                   :can-edit?  @can-edit?
+                   :edit-event ::events/edit})]))
 
 
 (defn TabsCluster
   []
   [ui/Tab
-   {:menu        {:secondary true
-                  :pointing  true
-                  :style     {:display        "flex"
-                              :flex-direction "row"
-                              :flex-wrap      "wrap"}}
-    :panes       (tabs)}])
+   {:menu  {:secondary true
+            :pointing  true
+            :style     {:display        "flex"
+                        :flex-direction "row"
+                        :flex-wrap      "wrap"}}
+    :panes (tabs)}])
 
 (defn ClusterView
   [cluster-id]

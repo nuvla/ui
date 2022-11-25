@@ -12,8 +12,8 @@
     [sixsq.nuvla.ui.data-set.spec :as data-set]
     [sixsq.nuvla.ui.data.spec :as data]
     [sixsq.nuvla.ui.deployment-dialog.spec :as deployment-dialog]
-    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as deployment-fleets-detail]
-    [sixsq.nuvla.ui.deployment-fleets.spec :as deployment-fleets]
+    [sixsq.nuvla.ui.deployment-sets-detail.spec :as deployment-sets-detail]
+    [sixsq.nuvla.ui.deployment-sets.spec :as deployment-sets]
     [sixsq.nuvla.ui.deployments.spec :as deployments]
     [sixsq.nuvla.ui.docs.spec :as docs]
     [sixsq.nuvla.ui.edges-detail.spec :as edges-detail]
@@ -52,6 +52,6 @@
          session/defaults
          job/defaults
          resource-log/defaults
-         deployment-fleets/defaults
-         deployment-fleets-detail/defaults
+         deployment-sets/defaults
+         deployment-sets-detail/defaults
          ))

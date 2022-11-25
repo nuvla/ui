@@ -32,6 +32,15 @@
 (s/def ::nuvlabox-not-found? boolean?)
 (s/def ::nuvlabox-playbooks-cronjob any?)
 
+(def columns
+  [:online :state :name :description :created
+   :created-by :last-online :version :tags :manager])
+
+(s/def ::ordering
+  (s/cat :field (into #{} columns) :order #{"desc" "asc"}))
+
+(def default-ordering {:field :created :order "desc"})
+
 (def defaults
   {::nuvlaboxes                   nil
    ::next-heartbeats-offline-edges nil
@@ -52,6 +61,7 @@
    ::nuvlabox-cluster             nil
    ::nuvlaboxes-in-clusters       nil
    ::nuvlabox-playbooks-cronjob   nil
+   ::ordering                     default-ordering
    ::pagination                   (pagination-plugin/build-spec
-                                    :default-items-per-page 8)
+                                   :default-items-per-page 8)
    ::edges-search                 (full-text-search-plugin/build-spec)})

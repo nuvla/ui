@@ -743,7 +743,7 @@
      [ui/TableCell (values/format-created created)]
      [ui/TableCell @creator]
      [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
-     [ui/TableCell (or engine-version (str version ".x.x"))]
+     [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)

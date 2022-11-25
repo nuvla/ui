@@ -13,9 +13,9 @@
 
 (defn item
   [label-kw url icon protected?]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        is-user? (subscribe [::session-subs/is-user?])
-        active?  (subscribe [::subs/nav-url-active? url])
+  (let [tr           (subscribe [::i18n-subs/tr])
+        is-user?     (subscribe [::session-subs/is-user?])
+        active?      (subscribe [::subs/nav-url-active? url])
         auth-needed? (and protected? (not @is-user?))]
 
     ^{:key (name label-kw)}
@@ -64,7 +64,8 @@
               :inverted   true
               :fixed      "left"}
      (when-not iframe? [logo-item])
-     (for [{:keys [url label-kw icon protected? iframe-visble?]} pages-list]
-       (when (or (not iframe?) iframe-visble?)
+     (for [{:keys [url label-kw icon protected? iframe-visble? hidden?]
+            :or   {hidden? false}} pages-list]
+       (when (and (or (not iframe?) iframe-visble?) (not hidden?))
          ^{:key url}
          [item label-kw url icon protected?]))]))

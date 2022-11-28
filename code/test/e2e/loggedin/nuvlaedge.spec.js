@@ -26,7 +26,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await page.getByText('Enable host-level management').click();
 
-  const newEdgeName = `e2e Tesing: Edge creation and deletion in ${project.name} ${new Date().toISOString()}`;
+  const newEdgeName = `e2e Testing: Edge creation and deletion in ${project.name} ${new Date().toISOString()}`;
 
   await page.locator('input[type="input"]').click();
   await page.locator('input[type="input"]').fill(newEdgeName);
@@ -41,7 +41,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await page.locator('.close').click();
 
-  await page.getByRole('link', { name: new RegExp(`${newEdgeName}`) }).click();
+  await page.getByText(newEdgeName).click();
 
   await page.getByText('Disable host level management').click({ timeout: 5000 });
   await page.getByRole('button', { name: 'Disable Host Level Management' }).click();

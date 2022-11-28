@@ -44,7 +44,6 @@
 (defn Pagination
   [{:keys [db-path total-items change-event i-per-page-multipliers] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
-(js/console.error "i-per-page-opts" i-per-page-multipliers)
   (let [dipp          @(subscribe [::helpers/retrieve db-path
                                    ::default-items-per-page])
         per-page-opts (map (fn [i]

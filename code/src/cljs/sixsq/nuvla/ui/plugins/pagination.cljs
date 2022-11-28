@@ -64,26 +64,26 @@
     [:div {:style {:display         :flex
                    :justify-content :space-between
                    :align-items     :baseline
-                   :flex-wrap       :wrap-reverse
+                   :flex-wrap        :wrap-reverse
                    :margin-top      10}}
-     [ui/Label {:size :medium}
-      (str (str/capitalize (tr [:total])) " : " (or total-items 0))
-      [:div {:style {:display :inline-block}}
-       ff/nbsp
-       "| "
-       [ui/Dropdown {:value     per-page
+     [:div {:style {:display :flex}}
+      [:div {:style {:display :flex  }} [:div {:style {:margin-right "0.5rem"}} (str (str/capitalize (tr [:total]))":")] [:div (or total-items 0)]]
+      [:div {:style {:color "#C10E12" :margin-right "1rem" :margin-left "1rem"}} "| "]
+      [:div {:style {:display :flex}}
+       [:div {:style {:margin-right "0.5rem"}} (str (tr [:per-page]) ": ")]
+       [ui/Dropdown {:text (tr [:per-page])
+                     :value     per-page
                      :trigger   per-page
                      :options   per-page-opts
                      :on-change (ui-callback/value
-                                  #(do
-                                     (dispatch [::helpers/set db-path
-                                                ::items-per-page %])
-                                     (change-page active-page)))}]
-       " " (tr [:per-page])]]
+                                 #(do
+                                    (dispatch [::helpers/set db-path
+                                               ::items-per-page %])
+                                    (change-page active-page)))}]]]
      [ui/Pagination
       {:size          :tiny
        :total-pages   total-pages
-       :first-item    (icon "angle double left")
+       :first-item     (icon "angle double left")
        :last-item     (icon "angle double right")
        :prev-item     (icon "angle left")
        :next-item     (icon "angle right")

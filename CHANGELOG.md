@@ -16,6 +16,7 @@
 - Global share tabs - Show removing check mark only if owners editable, bugfix #1017
 - NuvlaEdge details - Hides owner dropdown in share tab, bugfix #998
 - NuvlaEdges table view - Table uses full width #1007
+- NuvlaEdges table view - Makes pagination details more readable #1008
 
 ## [2.32.9] - 2022-11-17
 

@@ -34,7 +34,7 @@
 
 (def columns
   [:online :state :name :description :created
-   :created-by :last-online :version :tags :manager])
+   :created-by :refresh-interval :last-online :version :tags :manager])
 
 (s/def ::ordering
   (s/cat :field (into #{} columns) :order #{"desc" "asc"}))

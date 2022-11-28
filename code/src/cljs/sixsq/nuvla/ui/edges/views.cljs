@@ -742,6 +742,7 @@
      [ui/TableCell description]
      [ui/TableCell (values/format-created created)]
      [ui/TableCell @creator]
+     [ui/TableCell (str refresh-interval "s")]
      [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
@@ -780,7 +781,7 @@
    :last-online {:style {:cursor "unset"}  :single-line true}})
 
 ;; FIXME: How to sort other columns?
-(def sortables #{:online :name :description :created :created-by :state})
+(def sortables #{:online :name :description :created :created-by :refresh-interval :state})
 
 (defn- col->cursor-style
   [col-name]

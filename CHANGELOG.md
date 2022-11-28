@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Apps - Saving an app should move user to it #991
+- Deployment set - Experimental feature (hidden for prod env)
 - Time - delta minutes bugfix
 - NuvleEdge details - Shows public and interface IPs in host card #969
 - E2E nuvlaedge - fix tests to align with api changes
@@ -11,6 +13,9 @@
 - NuvlaEdge details - Remove ID column #987
 - Logs view - Fix broken view of datepicker, bugfix #992
 - NuvlaEdges - Table view shows ".y.z" for new edges version number #962
+- Global share tabs - Show removing check mark only if owners editable, bugfix #1017
+- NuvlaEdge details - Hides owner dropdown in share tab, bugfix #998
+- NuvlaEdges table view - Table uses full width #1007
 - NuvlaEdges and Deployments - Makes table view default #1012
 
 ## [2.32.9] - 2022-11-17

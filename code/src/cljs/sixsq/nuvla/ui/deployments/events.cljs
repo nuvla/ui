@@ -6,17 +6,16 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.deployments.utils :as utils]
-    [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
-(def refresh-action-nuvlaboxes-id :dashboard-get-nuvlaboxes-summary)
 
 (reg-event-fx
   ::init
@@ -178,14 +177,10 @@
   (fn [{db :db} [_ bulk-action data dispatch-vec]]
     (cond-> {::cimi-api-fx/operation-bulk
              [:deployment
-              (fn [response]
-                (dispatch [::job-events/wait-job-to-complete
-                           {:job-id              (:location response)
-                            :on-complete         #(do
-                                                    (dispatch [::add-bulk-job-monitored %])
-                                                    (dispatch [::reset-selected-set]))
-                            :on-refresh          #(dispatch [::add-bulk-job-monitored %])
-                            :refresh-interval-ms 10000}]))
+              (fn [{:keys [location] :as _response}]
+                (dispatch [::bulk-progress-plugin/monitor
+                           [::spec/bulk-jobs] location])
+                (dispatch [::reset-selected-set]))
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
 
@@ -222,8 +217,3 @@
   ::add-bulk-job-monitored
   (fn [db [_ {:keys [id] :as job}]]
     (update db ::spec/bulk-jobs-monitored assoc id job)))
-
-(reg-event-db
-  ::dissmiss-bulk-job-monitored
-  (fn [db [_ job-id]]
-    (update db ::spec/bulk-jobs-monitored dissoc job-id)))

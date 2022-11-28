@@ -579,6 +579,11 @@
                                                   [::docker-compose-validation-complete %])
                           :refresh-interval-ms 5000}])))]}))))
 
+(defn version-id->index
+  [{:keys [versions] :as module}]
+  (let [version-id   (-> module :content :id)
+        map-versions (utils/map-versions-index versions)]
+    (ffirst (filter #(-> % second :href (= version-id)) map-versions))))
 
 (reg-event-fx
   ::edit-module
@@ -609,7 +614,7 @@
                                                                status (str " (" status ")"))
                                               :content message
                                               :type    :error}]))
-                                (do (dispatch [::get-module])
+                                (do (dispatch [::get-module (version-id->index %)])
                                     (when (= subtype "application")
                                       (dispatch [::validate-docker-compose %]))
                                     (dispatch [::main-events/changes-protection? false])))]}))))
@@ -663,13 +668,6 @@
                                        (when (= status 409)
                                          (dispatch [::name nil])
                                          (dispatch [::validate-form])))]})))
-
-
-(defn version-id->index
-  [{:keys [versions] :as module}]
-  (let [version-id   (-> module :content :id)
-        map-versions (utils/map-versions-index versions)]
-    (ffirst (filter #(-> % second :href (= version-id)) map-versions))))
 
 
 (reg-event-db

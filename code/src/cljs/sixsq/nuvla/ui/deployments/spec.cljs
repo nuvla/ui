@@ -33,7 +33,7 @@
                ::deployments-summary-all nil
                ::deployments-params-map  nil
                ::filter-external         nil
-               ::view                    "cards"
+               ::view                    "table"
                ::state-selector          "all"
                ::bulk-update-modal       nil
                ::selected-set            #{}

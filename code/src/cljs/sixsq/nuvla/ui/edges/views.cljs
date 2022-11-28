@@ -32,7 +32,7 @@
     [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
-(def view-type (r/atom :cards))
+(def view-type (r/atom :table))
 (def show-state-statistics (r/atom false))
 
 

@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.deployment-fleets-detail.views
+(ns sixsq.nuvla.ui.deployment-sets-detail.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -6,9 +6,9 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-    [sixsq.nuvla.ui.deployment-fleets-detail.events :as events]
-    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployment-fleets-detail.subs :as subs]
+    [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
+    [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -16,9 +16,10 @@
     [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.module-version :as module-version-plugin]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.tab :as tab]
@@ -26,12 +27,13 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
-(def refresh-action-id :deployment-fleet-get-deployment-fleet)
+(def refresh-action-id :deployment-set-get-deployment-set)
 
 
 (defn refresh
@@ -39,19 +41,67 @@
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
-              :event     [::events/get-deployment-fleet (str "deployment-fleet/" uuid)]}]))
+              :event     [::events/get-deployment-set (str "deployment-set/" uuid)]}]))
 
+(defn StartButton
+  [{:keys [id] :as deployment-set}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/MenuItem
+     {:on-click (fn [_]
+                  (dispatch [::events/operation id "start" {}
+                             #(dispatch [::bulk-progress-plugin/monitor
+                                         [::spec/bulk-jobs] (:location %)])
+                             #()]))
+      :disabled (not (general-utils/can-operation?
+                       "start" deployment-set))}
+     [ui/Icon {:name "play"}]
+     (@tr [:start])]))
+
+(defn StopButton
+  [{:keys [id] :as deployment-set}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/MenuItem
+     {:on-click (fn [_]
+                  (dispatch [::events/operation id "stop" {}
+                             #(dispatch [::bulk-progress-plugin/monitor
+                                         [::spec/bulk-jobs] (:location %)])
+                             #()]))
+      :disabled (not (general-utils/can-operation?
+                       "stop" deployment-set))}
+     [ui/Icon {:name "stop"}]
+     (@tr [:stop])]))
+
+
+(defn DeleteButton
+  [{:keys [id name description] :as _deployment-set}]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:on-confirm  #(dispatch [::events/delete])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "trash"}]
+                                  (@tr [:delete])])
+      :content     [:h3 content]
+      :header      (@tr [:delete-deployment-set])
+      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :button-text (@tr [:delete])}]))
 
 (defn MenuBar [uuid]
-  (let [deployment-fleet (subscribe [::subs/deployment-fleet])
-        loading?         (subscribe [::subs/loading?])]
+  (let [deployment-set (subscribe [::subs/deployment-set])
+        loading?       (subscribe [::subs/loading?])]
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
-                        @deployment-fleet
-                        #{})]
+                        @deployment-set
+                        #{"start" "stop" "delete"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
-          MenuItems
+          (conj MenuItems
+                ^{:key "delete"}
+                [DeleteButton @deployment-set]
+                ^{:key "stop"}
+                [StopButton @deployment-set]
+                ^{:key "start"}
+                [StartButton @deployment-set])
           [components/RefreshMenu
            {:action-id  refresh-action-id
             :loading?   @loading?
@@ -60,26 +110,26 @@
 
 (defn EditableCell
   [attribute]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        deployment-fleet (subscribe [::subs/deployment-fleet])
-        can-edit?        (subscribe [::subs/can-edit?])
-        id               (:id @deployment-fleet)
-        on-change-fn     #(dispatch [::events/edit
-                                     id {attribute %}
-                                     (@tr [:updated-successfully])])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        deployment-set (subscribe [::subs/deployment-set])
+        can-edit?      (subscribe [::subs/can-edit?])
+        id             (:id @deployment-set)
+        on-change-fn   #(dispatch [::events/edit
+                                   id {attribute %}
+                                   (@tr [:updated-successfully])])]
     (if @can-edit?
-      [components/EditableInput attribute @deployment-fleet on-change-fn]
-      [ui/TableCell (get @deployment-fleet attribute)])))
+      [components/EditableInput attribute @deployment-set on-change-fn]
+      [ui/TableCell (get @deployment-set attribute)])))
 
 
-(defn TabOverviewDeploymentFleet
+(defn TabOverviewDeploymentSet
   [{:keys [id created updated created-by state]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 "Deployment fleet"]
+     [:h4 "Deployment set"]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -109,28 +159,28 @@
 
 
 (defn TabOverviewTags
-  [{:keys [id] :as deployment-fleet}]
+  [{:keys [id] :as deployment-set}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :color     "teal"
                  :raised    true}
      [:h4 "Tags"]
      [components/EditableTags
-      deployment-fleet #(dispatch [::events/edit id {:tags %}
-                                   (@tr [:updated-successfully])])]]))
+      deployment-set #(dispatch [::events/edit id {:tags %}
+                                 (@tr [:updated-successfully])])]]))
 
 (defn TabOverview
   []
-  (let [deployment-fleet (subscribe [::subs/deployment-fleet])]
+  (let [deployment-set (subscribe [::subs/deployment-set])]
     (fn []
-      (let [{:keys [tags]} @deployment-fleet]
+      (let [{:keys [tags]} @deployment-set]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
                    :padded    true}
           [ui/GridRow
            [ui/GridColumn {:stretched true}
-            [TabOverviewDeploymentFleet @deployment-fleet]]
+            [TabOverviewDeploymentSet @deployment-set]]
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
@@ -138,30 +188,32 @@
 
           (when (seq tags)
             [ui/GridColumn
-             [TabOverviewTags @deployment-fleet]])]]))))
+             [TabOverviewTags @deployment-set]])]]))))
 
-(defn TabsDeploymentFleet
+(defn TabsDeploymentSet
   []
-  (let [tr               @(subscribe [::i18n-subs/tr])
-        deployment-fleet (subscribe [::subs/deployment-fleet])
-        can-edit?        @(subscribe [::subs/can-edit?])]
+  (let [tr             @(subscribe [::i18n-subs/tr])
+        deployment-set (subscribe [::subs/deployment-set])
+        can-edit?      @(subscribe [::subs/can-edit?])]
     [tab/Tab
      {:db-path [::spec/tab]
-      :panes   [{:menuItem {:content "Overview"
+      :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
                             :key     :overview
                             :icon    "info"}
                  :render   #(r/as-element [TabOverview])}
                 (events-plugin/events-section
                   {:db-path [::spec/events]
-                   :href    (:id @deployment-fleet)})
-                {:menuItem {:content "Deployments"
+                   :href    (:id @deployment-set)})
+                {:menuItem {:content (str/capitalize (tr [:deployments]))
                             :key     :deployments
                             :icon    "rocket"}
                  :render   #(r/as-element [deployments-views/DeploymentTable
                                            {:no-actions true
                                             :empty-msg  (tr [:empty-deployemnt-msg])}])}
                 (job-views/jobs-section)
-                (acl/TabAcls deployment-fleet can-edit? ::events/edit)]
+                (acl/TabAcls {:e          deployment-set
+                              :can-edit?  can-edit?
+                              :edit-event ::events/edit})]
       :menu    {:secondary true
                 :pointing  true}}]))
 
@@ -221,7 +273,7 @@
     (let [{:keys [count]} @(subscribe [::subs/apps])
           apps     @(subscribe [::subs/apps-tree])
           loading? @(subscribe [::subs/apps-loading?])
-          tr     @(subscribe [::i18n-subs/tr])
+          tr       @(subscribe [::i18n-subs/tr])
           render   (fn []
                      (r/as-element
                        [ui/TabPane {:loading loading?}
@@ -236,17 +288,17 @@
                           :change-event [::events/search-apps]}]]))]
       [tab/Tab
        {:db-path      [::spec/tab-new-apps]
-        :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
-                                   :key     :my-apps
-                                   :icon    "user"}
-                        :render   render}
-                       {:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
+        :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
                                    :key     :app-store
                                    :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
                         :render   render}
                        {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
                                    :key     :all-apps
                                    :icon    "grid layout"}
+                        :render   render}
+                       {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
+                                   :key     :my-apps
+                                   :icon    "user"}
                         :render   render}]
         :change-event [::events/search-apps]}])))
 
@@ -355,23 +407,24 @@
 
 (defn StepApplicationsTargets
   []
-  [ui/Grid {:stackable true}
-   [ui/GridRow {:columns   2
-                :stretched true}
-    [ui/GridColumn
-     [ui/Segment
-      [:h2 "Applications"]
-      [SelectApps]]]
-    [ui/GridColumn
-     [ui/Segment
-      [:h2 "Targets"]
-      [SelectTargets]]]]])
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [ui/Grid {:stackable true}
+     [ui/GridRow {:columns   2
+                  :stretched true}
+      [ui/GridColumn
+       [ui/Segment
+        [:h2 (tr [:applications])]
+        [SelectApps]]]
+      [ui/GridColumn
+       [ui/Segment
+        [:h2 (tr [:targets])]
+        [SelectTargets]]]]]))
 
 (defn ConfigureApplications
   []
-  (let [apps-selected (subscribe [::subs/apps-selected])]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        apps-selected (subscribe [::subs/apps-selected])]
     [:div
-     "Configure the applications here"
      [tab/Tab
       {:db-path [::spec/config-apps-tab]
        :panes   (map
@@ -385,152 +438,176 @@
                                   [ui/TabPane
                                    [uix/Accordion
                                     ^{:key id}
-                                    [module-version-plugin/ModuleVersions
+                                    [module-plugin/ModuleVersions
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
-                                    :label "Select version"
+                                    :label @(tr [:select-version])
                                     :default-open true]
                                    [uix/Accordion
-                                    [module-version-plugin/EnvVariables
+                                    [module-plugin/EnvVariables
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
-                                    :label "Environment variables"
+                                    :label (@tr [:env-variables])
                                     :default-open true]
                                    [uix/Accordion
-                                    [:div "licence"]
-                                    :label "License"
-                                    :default-open false]
+                                    [module-plugin/AcceptLicense
+                                     {:db-path [::spec/module-versions]
+                                      :href    id}]
+                                    :label (str/capitalize (@tr [:license]))
+                                    :default-open true]
                                    [uix/Accordion
-                                    [:div "price"]
-                                    :label "Price"
-                                    :default-open false]
+                                    [module-plugin/AcceptPrice
+                                     {:db-path [::spec/module-versions]
+                                      :href    id}]
+                                    :label (str/capitalize (@tr [:price]))
+                                    :default-open true]
                                    ])}
-                    ) @apps-selected)
+                    ) @apps-selected)}]]))
 
-       }]
-     #_[module-version-plugin/ModuleVersions
-        {:db-path [::spec/module-versions]
-         :hrefs   @app-selected}]]))
+(defn AddSelectedTargetsApps
+  [header apps-names targets-names]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        warning? (not (and (seq apps-names)
+                           (seq targets-names)))]
+    (when (or (seq apps-names)
+              (seq targets-names))
+      [:<>
+       [ui/Header {:as :h4, :attached :top} header]
+       [ui/Segment {:attached (or warning? :bottom)}
+        [ui/Table {:basic :very :celled true}
+         [ui/TableBody
+          [ui/TableRow
+           [ui/TableCell {:collapsing true}
+            [ui/Header {:as :h5 :content (str (str/capitalize (@tr [:targets]))
+                                              ":")}]]
+           [ui/TableCell
+            (for [target-name targets-names]
+              ^{:key target-name}
+              [ui/Label {:content target-name}])]]
+          [ui/TableRow
+           [ui/TableCell {:collapsing true}
+            [ui/Header {:as :h5 :content (str (str/capitalize (@tr [:apps]))
+                                              ":")}]]
+           [ui/TableCell
+            (for [app-name apps-names]
+              ^{:key app-name}
+              [ui/Label {:content app-name}])]]]]]
+       (when warning?
+         [ui/Message {:warning true :attached :bottom}
+          [ui/Icon {:name "warning"}]
+          (if (seq apps-names)
+            (@tr [:warning-app-selected-not-compatible-targets])
+            (@tr [:warning-target-selected-not-compatible-apps]))])])))
+
+(defn Summary
+  []
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        create-disabled?      (subscribe [::subs/create-disabled?])
+        apps-selected         (subscribe [::subs/apps-selected])
+        targets-selected      (subscribe [::subs/targets-selected])
+        license-not-accepted? (subscribe [::subs/some-license-not-accepted?])
+        price-not-accepted?   (subscribe [::subs/some-price-not-accepted?])
+        create-name-descr     (r/atom {:start false})
+        on-change-input       (fn [key]
+                                (ui-callback/input-callback
+                                  #(swap! create-name-descr assoc key %)))]
+    (fn []
+      (let [dep-set-name                 (:name @create-name-descr)
+            resource-names-of-subtype    (fn [resources subtype]
+                                           (map #(or (:name %) (:id %)) (get (group-by :subtype resources)
+                                                                             subtype)))
+            selected-swarm-targets-names (resource-names-of-subtype @targets-selected "infrastructure-service-swarm")
+            selected-swarm-apps-names    (map :name (remove #(= (:subtype %) "application_kubernetes") @apps-selected))
+            selected-k8s-targets-names   (resource-names-of-subtype @targets-selected "infrastructure-service-kubernetes")
+            selected-k8s-apps-names      (resource-names-of-subtype @apps-selected "application_kubernetes")]
+        [ui/Segment (merge style/basic {:clearing true})
+         [ui/Form
+          [ui/FormInput
+           {:label       (str/capitalize (@tr [:name]))
+            :placeholder (@tr [:name-deployment-set])
+            :required    true
+            :value       (or dep-set-name "")
+            :on-change   (on-change-input :name)}]
+          [ui/FormInput
+           {:label       (str/capitalize (@tr [:description]))
+            :placeholder (@tr [:describe-deployment-set])
+            :value       (or (:description @create-name-descr) "")
+            :on-change   (on-change-input :description)}]
+          [ui/FormCheckbox
+           {:label     (@tr [:start-deployment-set-after-creation])
+            :checked   (:start @create-name-descr)
+            :on-change (ui-callback/checked
+                         #(swap! create-name-descr update :start not))}]]
+         [AddSelectedTargetsApps "Kubernetes" selected-k8s-apps-names selected-k8s-targets-names]
+         [AddSelectedTargetsApps "Docker" selected-swarm-apps-names selected-swarm-targets-names]
+         (when @license-not-accepted?
+           [ui/Message {:warning true}
+            [ui/Icon {:name "warning"}]
+            (@tr [:accept-applications-licenses])])
+         (when @price-not-accepted?
+           [ui/Message {:warning true}
+            [ui/Icon {:name "warning"}]
+            (@tr [:accept-applications-prices])])
+         [ui/Button
+          {:positive true
+           :on-click #(dispatch [::events/create @create-name-descr])
+           :disabled (or @create-disabled?
+                         (str/blank? dep-set-name))
+           :floated  :right} (str/capitalize (@tr [:create]))]]))))
 
 (defn AddPage
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        disabled?         (subscribe [::subs/create-disabled?])
-        apps-selected     (subscribe [::subs/apps-selected])
-        targets-selected  (subscribe [::subs/targets-selected])
-        create-disabled?  (subscribe [::subs/create-disabled?])
-        create-name-descr (r/atom {:start false})
-        on-change-input   (fn [key]
-                            (ui-callback/input-callback
-                              #(swap! create-name-descr assoc key %)))]
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        configure-disabled? (subscribe [::subs/configure-disabled?])]
     (dispatch [::events/new])
     (fn []
-      (js/console.warn @create-name-descr)
-      (let [items [{:key         :select-apps-targets
+      [ui/Container {:fluid true}
+       [uix/PageHeader "add" (str/capitalize (@tr [:add]))]
+       [step-group/StepGroup
+        {:db-path [::spec/steps]
+         :size    :mini
+         :fluid   true
+         :items   [{:key         :select-apps-targets
                     :icon        "bullseye"
                     :content     [StepApplicationsTargets]
-                    :title       "Applications/Targets"
-                    :description "Select applications and targets"}
+                    :title       (@tr [:applications-targets])
+                    :description (@tr [:select-applications-targets])}
                    {:key         :configure
                     :icon        "configure"
                     :content     [ConfigureApplications]
-                    :title       "Configure"
-                    :disabled    @disabled?
-                    :description "Configure applications"}
-                   #_{:key         :license
-                      :icon        "book"
-                      :content     [:div "Accept applications licenses"]
-                      :title       "License"
-                      :disabled    @disabled?
-                      :description "Accept licenses"}
-                   #_{:key         :price
-                      :icon        "eur"
-                      :content     [:div "Accept prices"]
-                      :title       "Prices"
-                      :disabled    @disabled?
-                      :description "Accept prices"}
+                    :title       (str/capitalize (@tr [:configure]))
+                    :disabled    @configure-disabled?
+                    :description (@tr [:configure-applications])}
                    {:key         :summary
                     :icon        "info"
-                    :content     [:div "This will contain a summary"
-                                  [ui/Form
-                                   [ui/FormInput
-                                    {:label       (str/capitalize (@tr [:name]))
-                                     :placeholder "Name your deployment fleet"
-                                     :value       (or (:name @create-name-descr) "")
-                                     :on-change   (on-change-input :name)}]
-                                   [ui/FormInput
-                                    {:label       (str/capitalize (@tr [:description]))
-                                     :placeholder "Describe your deployment fleet"
-                                     :value       (or (:description @create-name-descr) "")
-                                     :on-change   (on-change-input :description)}]
-                                   [ui/FormCheckbox
-                                    {:label     "Start deployment automatically directly after creation"
-                                     :checked   (:start @create-name-descr)
-                                     :on-change (ui-callback/checked
-                                                  #(swap! create-name-descr update :start not))}]]
+                    :content     [Summary]
+                    :title       (str/capitalize (@tr [:summary]))
+                    :description (@tr [:overall-summary])}]}]])))
 
-                                  [ui/Segment
-                                   "Kubernetes"
-                                   [:div "Targets: "
-                                    (str (map :name (get (group-by :subtype @targets-selected)
-                                                         "infrastructure-service-kubernetes")))]
-                                   [:span "Apps: "
-                                    (str (map :name (get (group-by :subtype @apps-selected) "application_kubernetes")))
-                                    ]
-                                   ]
-                                  [ui/Segment
-                                   "Docker"
-                                   [:div "Targets: "
-                                    (str (map :name (get (group-by :subtype @targets-selected)
-                                                         "infrastructure-service-swarm")))]
-                                   [:span "Apps: "
-                                    (str (map :name (remove #(= (:subtype %) "application_kubernetes") @apps-selected)))
-                                    ]
-                                   ]
-
-                                  [ui/Button
-                                   {:positive true
-                                    :on-click #(dispatch [::events/create @create-name-descr])
-                                    :disabled @create-disabled?
-                                    :floated  :right} "Create"]
-                                  [:br] [:br] [:br]
-                                  ]
-                    :title       "Summary"
-                    :description "Overall summary"}]]
-        [ui/Container {:fluid true}
-         [uix/PageHeader "add" "Add"]
-         ;(dispatch [::module-version/load-module [::spec/module-versions]
-         ;           "module/f34b5882-45b5-4eb3-95a2-bc7fd236b8ff"])
-         ;[module-version/ModuleVersions
-         ; {:db-path [::spec/module-versions]
-         ;  :href    "module/f34b5882-45b5-4eb3-95a2-bc7fd236b8ff"}]
-         [step-group/StepGroup
-          {:db-path [::spec/steps]
-           :size    :mini
-           :fluid   true
-           :items   items}]]))))
-
-(defn DeploymentFleet
+(defn DeploymentSet
   [uuid]
   (refresh uuid)
-  (let [{:keys [id name]} @(subscribe [::subs/deployment-fleet])]
+  (let [{:keys [id name]} @(subscribe [::subs/deployment-set])]
     [components/LoadingPage {:dimmable? true}
      [:<>
       [components/NotFoundPortal
-       ::subs/deployment-fleet-not-found?
-       :no-deployment-fleet-message-header
-       :no-deployment-fleet-message-content]
+       ::subs/deployment-set-not-found?
+       :no-deployment-set-message-header
+       :no-deployment-set-message-content]
       [ui/Container {:fluid true}
        [uix/PageHeader "bullseye" (or name id)]
        [MenuBar uuid]
+       [job-views/ProgressJobAction]
+       [bulk-progress-plugin/MonitoredJobs
+        {:db-path [::spec/bulk-jobs]}]
        [components/ErrorJobsMessage
         ::job-subs/jobs nil nil
         #(dispatch [::tab/change-tab [::spec/tab] :jobs])]
-       [TabsDeploymentFleet]]]]))
+       [TabsDeploymentSet]]]]))
 
 
 (defn Details
   [uuid]
   (if (= (str/lower-case uuid) "new")
     [AddPage]
-    [DeploymentFleet uuid]))
+    [DeploymentSet uuid]))

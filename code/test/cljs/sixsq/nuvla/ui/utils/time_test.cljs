@@ -2,7 +2,7 @@
   (:require
    [cljs.test :refer [are deftest is testing]]
    [clojure.string :as str]
-   [mockdate :as mock-date]
+   ["mockdate" :as mock-date]
    [sixsq.nuvla.ui.utils.time :as time :refer [now]]))
 
 (def year 2022)
@@ -56,7 +56,7 @@
    (* 20 60 60 1000) {:en "20 hours ago"       :fr "il y a 20 heures"}
    (* 24 60 60 1000) {:en "1 day ago"          :fr "il y a 1 jour"}
    (* 30 24 60 60 1000) {:en "30 days ago"     :fr "il y a 30 jours"}
-   (* 180 24 60 60 1000) {:en "6 months ago"   :fr "il y a 6 mois"}
+   (* 185 24 60 60 1000) {:en "6 months ago"   :fr "il y a 6 mois"}
    (* 365 24 60 60 1000) {:en "1 year ago"     :fr "il y a 1 an"}
    (* 720 24 60 60 1000) {:en "2 years ago"    :fr "il y a 2 ans"}
    (* 2000 24 60 60 1000) {:en "5 years ago"   :fr "il y a 5 ans"}})

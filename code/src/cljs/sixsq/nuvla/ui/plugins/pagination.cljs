@@ -44,15 +44,16 @@
 (defn Pagination
   [{:keys [db-path total-items change-event i-per-page-multipliers] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
-  (let [dipp          @(subscribe [::helpers/retrieve db-path
-                                   ::default-items-per-page])
+  (let [tr            @(subscribe [::i18n-subs/tr])
+        dipp          @(subscribe [::helpers/retrieve db-path ::default-items-per-page])
         per-page-opts (map (fn [i]
-                             {:key   (* dipp i)
-                              :value (* dipp i)
-                              :text  (* dipp i)})
+                             (let [n-per-page (* dipp i)]
+                               {:key     n-per-page
+                                :value   n-per-page
+                                :content n-per-page
+                                :text    (str n-per-page " " (tr [:per-page]))}))
                            (or i-per-page-multipliers (range 1 4)))
         change-page   #(dispatch [::change-page db-path %])
-        tr            @(subscribe [::i18n-subs/tr])
         active-page   @(subscribe [::helpers/retrieve db-path ::active-page])
         per-page      @(subscribe [::helpers/retrieve db-path ::items-per-page])
         total-pages   (or (some-> total-items
@@ -66,20 +67,19 @@
                    :align-items     :baseline
                    :flex-wrap       :wrap-reverse
                    :margin-top      10}}
-     [ui/Label {:size :medium}
-      (str (str/capitalize (tr [:total])) " : " (or total-items 0))
-      [:div {:style {:display :inline-block}}
-       ff/nbsp
-       "| "
-       [ui/Dropdown {:value     per-page
-                     :trigger   per-page
-                     :options   per-page-opts
-                     :on-change (ui-callback/value
-                                  #(do
-                                     (dispatch [::helpers/set db-path
-                                                ::items-per-page %])
-                                     (change-page active-page)))}]
-       " " (tr [:per-page])]]
+     [:div {:style {:display :flex}}
+      [:div {:style {:display :flex}}
+       [:div {:style {:margin-right "0.5rem"}}
+        (str (str/capitalize (tr [:total])) ":")]
+       [:div (or total-items 0)]]
+      [:div {:style {:color "#C10E12" :margin-right "1rem" :margin-left "1rem"}} "| "]
+      [ui/Dropdown {:value     per-page
+                    :options   per-page-opts
+                    :pointing  true
+                    :on-change (ui-callback/value
+                                 #(do
+                                    (dispatch [::helpers/set db-path ::items-per-page %])
+                                    (change-page active-page)))}]]
      [ui/Pagination
       {:size          :tiny
        :total-pages   total-pages
@@ -93,9 +93,9 @@
 
 (s/def ::total-items (s/nilable nat-int?))
 (s/def ::i-per-page-multipliers (s/nilable #(and
-                                             (vector? %)
-                                             (nat-int? (first %))
-                                             (apply < %))))
+                                              (vector? %)
+                                              (nat-int? (first %))
+                                              (apply < %))))
 
 (s/fdef Pagination
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path

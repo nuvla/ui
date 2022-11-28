@@ -764,7 +764,8 @@
     [pagination-plugin/Pagination
      {:db-path      [::spec/pagination]
       :change-event [::events/refresh-root]
-      :total-items  total-elements}]))
+      :total-items  total-elements
+      :i-per-page-multipliers [1 2 4]}]))
 
 
 (defn NuvlaboxTable

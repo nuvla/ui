@@ -399,8 +399,6 @@
     (fn []
       [components/LoadingPage {}
        [:<>
-        [uix/PageHeader "rocket"
-         (general-utils/capitalize-first-letter (@tr [:deployments]))]
         [MenuBar]
         [ui/Grid {:stackable true
                   :reversed  "mobile"}

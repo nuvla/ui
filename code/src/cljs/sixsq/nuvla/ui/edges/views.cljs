@@ -856,10 +856,6 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [components/LoadingPage {}
      [:<>
-      [uix/PageHeader "box"
-       (str (general-utils/capitalize-first-letter (@tr [:edges])) " "
-            (when (= @view-type :cluster)
-              (general-utils/capitalize-first-letter (@tr [:clusters]))))]
       [MenuBar]
       [ui/Grid {:stackable true
                 :reversed  "mobile"

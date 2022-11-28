@@ -116,7 +116,6 @@
     (fn []
       (let [infra-group-count (get @isgs :count 0)]
         [:<>
-         [uix/PageHeader "cloud" (@tr [:clouds])]
          [MenuBar]
          (when (pos-int? infra-group-count)
            [:<>

@@ -130,7 +130,6 @@
        [:<>
         [:div {:style {:display         :flex
                        :justify-content :space-between}}
-         [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
          [MenuRefresh]]
         [Statistics]
         [:div utils-style/center-items

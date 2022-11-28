@@ -1985,7 +1985,10 @@
                    :icon    "book"}
         :render   #(r/as-element [TabPlaybooks])}
        (job-views/jobs-section)
-       (acl/TabAcls nuvlabox can-edit? ::events/edit)])))
+       (acl/TabAcls {:e               nuvlabox
+                     :can-edit?       can-edit?
+                     :owner-read-only true
+                     :edit-event      ::events/edit})])))
 
 
 (defn TabsNuvlaBox

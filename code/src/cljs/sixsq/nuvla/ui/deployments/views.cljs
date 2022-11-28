@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -376,9 +377,10 @@
   []
   (let [dep-count @(subscribe [::subs/deployments-count])]
     [pagination-plugin/Pagination
-     {:db-path      [::spec/pagination]
-      :total-items  dep-count
-      :change-event [::events/refresh]}]))
+     {:db-path                [::spec/pagination]
+      :total-items            dep-count
+      :change-event           [::events/refresh]
+      :i-per-page-multipliers [1 2 4]}]))
 
 (defn DeploymentTable
   [options]
@@ -393,8 +395,7 @@
 
 (defn DeploymentsMainContent
   []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (dispatch [::events/init])
     (fn []
       [components/LoadingPage {}
@@ -406,12 +407,8 @@
                   :reversed  "mobile"}
          [ControlBar]
          [StatisticStates true ::subs/deployments-summary]]
-        (for [[job-id job] @bulk-jobs-monitored]
-          ^{:key job-id}
-          [components/BulkActionProgress
-           {:header      "Bulk update in progress"
-            :job         job
-            :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
+        [bulk-progress-plugin/MonitoredJobs
+         {:db-path [::spec/bulk-jobs]}]
         [DeploymentsDisplay]
         [Pagination]]])))
 

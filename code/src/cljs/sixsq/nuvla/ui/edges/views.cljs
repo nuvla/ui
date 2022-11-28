@@ -32,7 +32,7 @@
     [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
-(def view-type (r/atom :cards))
+(def view-type (r/atom :table))
 (def show-state-statistics (r/atom false))
 
 
@@ -764,7 +764,8 @@
     [pagination-plugin/Pagination
      {:db-path      [::spec/pagination]
       :change-event [::events/refresh-root]
-      :total-items  total-elements}]))
+      :total-items  total-elements
+      :i-per-page-multipliers [1 2 4]}]))
 
 
 (defn NuvlaboxTable
@@ -772,8 +773,8 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                            (apply concat
-                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                           (apply concat
+                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
@@ -782,29 +783,28 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])]
-    [:div style/center-items
-     [ui/Table {:compact "very", :selectable true}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
-        [ui/TableHeaderCell "state"]
-        [ui/TableHeaderCell "name"]
-        [ui/TableHeaderCell "description"]
-        [ui/TableHeaderCell (@tr [:created])]
-        [ui/TableHeaderCell (@tr [:created-by])]
-        [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
-        [ui/TableHeaderCell {:single-line true}
-         (@tr [:version])
-         (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
-        [ui/TableHeaderCell "tags"]
-        [ui/TableHeaderCell "manager"]]]
+    [ui/Table {:compact "very", :selectable true}
+     [ui/TableHeader
+      [ui/TableRow
+       [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+       [ui/TableHeaderCell "state"]
+       [ui/TableHeaderCell "name"]
+       [ui/TableHeaderCell "description"]
+       [ui/TableHeaderCell (@tr [:created])]
+       [ui/TableHeaderCell (@tr [:created-by])]
+       [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
+       [ui/TableHeaderCell {:single-line true}
+        (@tr [:version])
+        (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
+       [ui/TableHeaderCell "tags"]
+       [ui/TableHeaderCell "manager"]]]
 
-      [ui/TableBody
-       (doall
-         (for [{:keys [id] :as nuvlabox} selected-nbs]
-           (when id
-             ^{:key id}
-             [NuvlaboxRow nuvlabox managers])))]]]))
+     [ui/TableBody
+      (doall
+       (for [{:keys [id] :as nuvlabox} selected-nbs]
+         (when id
+           ^{:key id}
+           [NuvlaboxRow nuvlabox managers])))]]))
 
 
 (defn NuvlaboxMapPoint

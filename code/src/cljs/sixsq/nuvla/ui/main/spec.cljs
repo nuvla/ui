@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.main.spec
   (:require
-    [clojure.spec.alpha :as s]))
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.config :as config]))
 
 (s/def ::loading? boolean?)
 
@@ -60,69 +61,70 @@
                ::message              nil
                ::actions-interval     {}
                ::content-key          (random-uuid)
-               ::pages                {"welcome"           {:url        "welcome"
-                                                            :label-kw   :home
-                                                            :icon       "home"
-                                                            :protected? false
-                                                            :order      0}
-                                       "documentation"     {:url        "documentation"
-                                                            :label-kw   :api-doc
-                                                            :icon       "info"
-                                                            :protected? false}
-                                       "dashboard"         {:url        "dashboard"
-                                                            :label-kw   :dashboard
-                                                            :icon       "dashboard"
-                                                            :protected? true
-                                                            :order      10}
-                                       "apps"              {:url        "apps"
-                                                            :label-kw   :apps
-                                                            :icon       "fas fa-store"
-                                                            :protected? true
-                                                            :order      20}
-                                       "deployments"       {:url        "deployments"
-                                                            :label-kw   :deployments
-                                                            :name       "deployments"
-                                                            :icon       "rocket"
-                                                            :protected? true
-                                                            :order      30}
-                                       ;"deployment-fleets" {:url        "deployment-fleets"
-                                       ;                     :label-kw   :deployment-fleets
-                                       ;                     :name       "deployments-fleets"
-                                       ;                     :icon       "bullseye"
-                                       ;                     :protected? true
-                                       ;                     :order      31}
-                                       "edges"             {:url        "edges"
-                                                            :label-kw   :edges
-                                                            :name       "edges"
-                                                            :icon       "box"
-                                                            :protected? true
-                                                            :order      40}
-                                       "credentials"       {:url        "credentials"
-                                                            :label-kw   :credentials
-                                                            :icon       "key"
-                                                            :protected? true
-                                                            :order      50}
-                                       "notifications"     {:url        "notifications"
-                                                            :label-kw   :notifications
-                                                            :icon       "bell"
-                                                            :protected? true
-                                                            :order      60}
-                                       "data"              {:url             "data"
-                                                            :label-kw        :data
-                                                            :icon            "database"
-                                                            :protected?      true
-                                                            :iframe-visible? true
-                                                            :order           70}
-                                       "clouds"            {:url        "clouds"
-                                                            :label-kw   :infra-service-short
-                                                            :icon       "cloud"
-                                                            :protected? true
-                                                            :order      80}
-                                       "api"               {:url        "api"
-                                                            :label-kw   :api
-                                                            :icon       "code"
-                                                            :protected? false
-                                                            :order      90}
+               ::pages                {"welcome"         {:url        "welcome"
+                                                          :label-kw   :home
+                                                          :icon       "home"
+                                                          :protected? false
+                                                          :order      0}
+                                       "documentation"   {:url        "documentation"
+                                                          :label-kw   :api-doc
+                                                          :icon       "info"
+                                                          :protected? false}
+                                       "dashboard"       {:url        "dashboard"
+                                                          :label-kw   :dashboard
+                                                          :icon       "dashboard"
+                                                          :protected? true
+                                                          :order      10}
+                                       "apps"            {:url        "apps"
+                                                          :label-kw   :apps
+                                                          :icon       "fas fa-store"
+                                                          :protected? true
+                                                          :order      20}
+                                       "deployments"     {:url        "deployments"
+                                                          :label-kw   :deployments
+                                                          :name       "deployments"
+                                                          :icon       "rocket"
+                                                          :protected? true
+                                                          :order      30}
+                                       "deployment-sets" {:url        "deployment-sets"
+                                                          :label-kw   :deployment-sets
+                                                          :name       "deployments-sets"
+                                                          :icon       "bullseye"
+                                                          :protected? true
+                                                          :hidden?    (not config/debug?)
+                                                          :order      31}
+                                       "edges"           {:url        "edges"
+                                                          :label-kw   :edges
+                                                          :name       "edges"
+                                                          :icon       "box"
+                                                          :protected? true
+                                                          :order      40}
+                                       "credentials"     {:url        "credentials"
+                                                          :label-kw   :credentials
+                                                          :icon       "key"
+                                                          :protected? true
+                                                          :order      50}
+                                       "notifications"   {:url        "notifications"
+                                                          :label-kw   :notifications
+                                                          :icon       "bell"
+                                                          :protected? true
+                                                          :order      60}
+                                       "data"            {:url             "data"
+                                                          :label-kw        :data
+                                                          :icon            "database"
+                                                          :protected?      true
+                                                          :iframe-visible? true
+                                                          :order           70}
+                                       "clouds"          {:url        "clouds"
+                                                          :label-kw   :infra-service-short
+                                                          :icon       "cloud"
+                                                          :protected? true
+                                                          :order      80}
+                                       "api"             {:url        "api"
+                                                          :label-kw   :api
+                                                          :icon       "code"
+                                                          :protected? false
+                                                          :order      90}
                                        }
                ::open-modal           nil
                ::stripe               nil})

@@ -27,23 +27,88 @@ body #nuvla-ui-sidebar .active {
 }
 
 body #nuvla-ui-sidebar .active.nuvla-apps,
-body .menu.vertical a.nuvla-apps:hover {
+body .menu.vertical a.nuvla-apps:hover,
+body .nuvla-apps .ui.breadcrumb  {
     color: #ffffff !important;
     background-color: rgba(20, 86, 255, 1) !important;
 }
 
 body #nuvla-ui-sidebar .active.nuvla-deployments,
-body .menu.vertical a.nuvla-deployments:hover {
+body .menu.vertical a.nuvla-deployments:hover,
+body .nuvla-deployments .ui.breadcrumb  {
     color: #ffffff !important;
     background-color: rgba(114, 6, 255, 1) !important;
 }
 
 body #nuvla-ui-sidebar .active.nuvla-edges,
-body .menu.vertical a.nuvla-edges:hover {
+body .menu.vertical a.nuvla-edges:hover,
+body .nuvla-edges .ui.breadcrumb {
     color: #ffffff !important;
     background-color: rgba(22, 173, 146, 1) !important;
 }
 
 body .menu.vertical a:hover {
     background-color: rgba(237, 43, 43, .6) !important;
+}
+
+/** top menu **/
+body .ui.menu {
+    min-height: 3.5rem;
+    border: none;
+    box-shadow: 0 1px 5px 0 rgb(0 1 5 / 8%);
+}
+
+body .ui.breadcrumb {
+    background: #C10E12;
+    padding: 0.5em 1em 0.5em 1em;
+    border-radius: 4px !important;
+}
+
+
+body .ui.breadcrumb a, body .ui.breadcrumb a:hover {
+    color: #fff;
+    font-size: 1rem;
+}
+body .ui.breadcrumb a::before {
+         font-family: "Font Awesome 6 Pro";
+         padding-right: 10px;
+         font-weight: 300;
+}
+
+body .nuvla-welcome .ui.breadcrumb a::before {
+     content: "\f015";
+}
+body .nuvla-dashboard .ui.breadcrumb a::before {
+     content: "\f628";
+}
+body .nuvla-apps .ui.breadcrumb a::before {
+     content: "\f5fd";
+}
+body .nuvla-deployments .ui.breadcrumb a::before {
+     content: "\e027";
+}
+body .nuvla-edges .ui.breadcrumb a::before {
+     content: "\f466";
+}
+body .nuvla-credentials .ui.breadcrumb a::before {
+     content: "\f084";
+}
+body .nuvla-notifications .ui.breadcrumb a::before {
+     content: "\f0f3";
+}
+body .nuvla-data .ui.breadcrumb a::before {
+     content: "\f1c0";
+}
+body .nuvla-clouds .ui.breadcrumb a::before {
+     content: "\f0c2";
+}
+body .nuvla-api .ui.breadcrumb a::before {
+     content: "\f121";
+}
+
+body i.icon.chevron.right:before {
+      font-family: "Font Awesome 6 Pro";
+    content: "\f054";
+    color: #ffffff;
+    font-weight: 300;
 }

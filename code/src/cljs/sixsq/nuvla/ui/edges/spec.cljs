@@ -63,5 +63,5 @@
    ::nuvlabox-playbooks-cronjob   nil
    ::ordering                     default-ordering
    ::pagination                   (pagination-plugin/build-spec
-                                   :default-items-per-page 8)
+                                    :default-items-per-page 25)
    ::edges-search                 (full-text-search-plugin/build-spec)})

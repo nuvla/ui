@@ -32,7 +32,7 @@
     [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
-(def view-type (r/atom :cards))
+(def view-type (r/atom :table))
 (def show-state-statistics (r/atom false))
 
 
@@ -765,7 +765,8 @@
     [pagination-plugin/Pagination
      {:db-path      [::spec/pagination]
       :change-event [::events/refresh-root]
-      :total-items  total-elements}]))
+      :total-items  total-elements
+      :i-per-page-multipliers [1 2 4]}]))
 
 (defn- custom-children
   [{:keys [col selected-nbs] }]

@@ -18,6 +18,8 @@
 - NuvlaEdges table view - Table uses full width #1007
 - NuvlaEdges table view - Adds refresh interval column #1013
 - NuvlaEdges table view - Implements column sorting #1005
+- NuvlaEdges and Deployments - Makes table view default #1012
+- NuvlaEdges and Deployments - Sets default items per page to 25 with increasing items-per-page multiplier #1004
 
 ## [2.32.9] - 2022-11-17
 

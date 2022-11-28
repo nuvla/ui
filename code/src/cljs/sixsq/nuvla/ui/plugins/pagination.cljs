@@ -42,18 +42,17 @@
   {:content (r/as-element [ui/Icon {:name icon-name}]) :icon true})
 
 (defn Pagination
-  [{:keys [db-path total-items change-event] :as _opts}]
+  [{:keys [db-path total-items change-event i-per-page-multipliers] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [tr            @(subscribe [::i18n-subs/tr])
-        dipp          @(subscribe [::helpers/retrieve db-path
-                                   ::default-items-per-page])
+        dipp          @(subscribe [::helpers/retrieve db-path ::default-items-per-page])
         per-page-opts (map (fn [i]
                              (let [n-per-page (* dipp i)]
                                {:key     n-per-page
                                 :value   n-per-page
                                 :content n-per-page
                                 :text    (str n-per-page " " (tr [:per-page]))}))
-                           (range 1 4))
+                           (or i-per-page-multipliers (range 1 4)))
         change-page   #(dispatch [::change-page db-path %])
         active-page   @(subscribe [::helpers/retrieve db-path ::active-page])
         per-page      @(subscribe [::helpers/retrieve db-path ::items-per-page])
@@ -93,8 +92,13 @@
        :onPageChange  (ui-callback/callback :activePage #(change-page %))}]]))
 
 (s/def ::total-items (s/nilable nat-int?))
+(s/def ::i-per-page-multipliers (s/nilable #(and
+                                              (vector? %)
+                                              (nat-int? (first %))
+                                              (apply < %))))
 
 (s/fdef Pagination
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
                                             ::helpers/change-event
-                                            ::total-items])))
+                                            ::total-items]
+                                   :opt-un [::i-per-page-multipliers])))

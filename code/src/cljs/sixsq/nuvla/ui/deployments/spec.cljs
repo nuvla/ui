@@ -33,7 +33,7 @@
                ::deployments-summary-all nil
                ::deployments-params-map  nil
                ::filter-external         nil
-               ::view                    "cards"
+               ::view                    "table"
                ::state-selector          "all"
                ::bulk-update-modal       nil
                ::selected-set            #{}
@@ -41,4 +41,4 @@
                ::bulk-jobs-monitored     (sorted-map)
                ::bulk-jobs               (bulk-progress-plugin/build-spec)
                ::pagination              (pagination-plugin/build-spec
-                                           :default-items-per-page 8)})
+                                           :default-items-per-page 25)})

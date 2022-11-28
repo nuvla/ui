@@ -44,15 +44,17 @@
 (defn Pagination
   [{:keys [db-path total-items change-event] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
-  (let [dipp          @(subscribe [::helpers/retrieve db-path
+  (let [tr            @(subscribe [::i18n-subs/tr])
+        dipp          @(subscribe [::helpers/retrieve db-path
                                    ::default-items-per-page])
         per-page-opts (map (fn [i]
-                             {:key   (* dipp i)
-                              :value (* dipp i)
-                              :text  (* dipp i)})
+                             (let [n-per-page (* dipp i)]
+                               {:key     n-per-page
+                                :value   n-per-page
+                                :content n-per-page
+                                :text    (str n-per-page " " (tr [:per-page]))}))
                            (range 1 4))
         change-page   #(dispatch [::change-page db-path %])
-        tr            @(subscribe [::i18n-subs/tr])
         active-page   @(subscribe [::helpers/retrieve db-path ::active-page])
         per-page      @(subscribe [::helpers/retrieve db-path ::items-per-page])
         total-pages   (or (some-> total-items
@@ -64,26 +66,25 @@
     [:div {:style {:display         :flex
                    :justify-content :space-between
                    :align-items     :baseline
-                   :flex-wrap        :wrap-reverse
+                   :flex-wrap       :wrap-reverse
                    :margin-top      10}}
      [:div {:style {:display :flex}}
-      [:div {:style {:display :flex  }} [:div {:style {:margin-right "0.5rem"}} (str (str/capitalize (tr [:total]))":")] [:div (or total-items 0)]]
-      [:div {:style {:color "#C10E12" :margin-right "1rem" :margin-left "1rem"}} "| "]
       [:div {:style {:display :flex}}
-       [:div {:style {:margin-right "0.5rem"}} (str (tr [:per-page]) ": ")]
-       [ui/Dropdown {:text (tr [:per-page])
-                     :value     per-page
-                     :trigger   per-page
-                     :options   per-page-opts
-                     :on-change (ui-callback/value
+       [:div {:style {:margin-right "0.5rem"}}
+        (str (str/capitalize (tr [:total])) ":")]
+       [:div (or total-items 0)]]
+      [:div {:style {:color "#C10E12" :margin-right "1rem" :margin-left "1rem"}} "| "]
+      [ui/Dropdown {:value     per-page
+                    :options   per-page-opts
+                    :pointing  true
+                    :on-change (ui-callback/value
                                  #(do
-                                    (dispatch [::helpers/set db-path
-                                               ::items-per-page %])
-                                    (change-page active-page)))}]]]
+                                    (dispatch [::helpers/set db-path ::items-per-page %])
+                                    (change-page active-page)))}]]
      [ui/Pagination
       {:size          :tiny
        :total-pages   total-pages
-       :first-item     (icon "angle double left")
+       :first-item    (icon "angle double left")
        :last-item     (icon "angle double right")
        :prev-item     (icon "angle left")
        :next-item     (icon "angle right")

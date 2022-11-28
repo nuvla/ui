@@ -19,6 +19,7 @@
 - NuvlaEdges and Deployments - Makes table view default #1012
 - NuvlaEdges and Deployments - Sets default items per page to 25 with increasing items-per-page multiplier #1004
 - NuvlaEdges table view - Makes pagination details more readable #1008
+- NuvlaEdge details - Changes wording of menu item "Enable host level management" to show relation to playbooks #874
 
 ## [2.32.9] - 2022-11-17
 

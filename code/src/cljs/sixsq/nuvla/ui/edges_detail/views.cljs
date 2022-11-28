@@ -660,8 +660,15 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "enable-host-level-management" @show?)}
-      [TextActionButton resource operation show? "Enable host level management" "cog" (@tr [:enable])])))
+      [TextActionButton resource operation show? "Enable host level management (required for playbooks)" "cog" (@tr [:enable])])))
 
+(defmethod cimi-detail-views/other-button ["nuvlabox" "disable-host-level-management"]
+  [_resource _operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "disable-host-level-management" @show?)}
+      [TextActionButton resource operation show? "Disable host level management (disables playbooks)" "cog" (@tr [:disable])])))
 
 (defn MenuBar [uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])

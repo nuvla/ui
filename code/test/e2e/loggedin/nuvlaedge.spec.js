@@ -44,8 +44,8 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page.getByText(newEdgeName).click();
 
   await page.getByText('Disable host level management').click({ timeout: 5000 });
-  await page.getByRole('button', { name: 'Disable Host Level Management' }).click();
-  await page.getByText('success executing operation disable-host-level-management').click();
+  await page.getByRole('button', { name: 'disable' }).click();
+  await page.getByText('operation disable-host-level-management successful').click();
 
   await page.getByText(/^delete$/i).click();
   await page.getByRole('button', { name: 'delete' }).click();

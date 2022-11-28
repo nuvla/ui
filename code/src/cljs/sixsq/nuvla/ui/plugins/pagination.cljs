@@ -93,12 +93,12 @@
 
 (s/def ::total-items (s/nilable nat-int?))
 (s/def ::i-per-page-multipliers (s/nilable #(and
-                                 (vector? %)
-                                 (nat-int? (first %))
-                                 (apply < %))))
+                                             (vector? %)
+                                             (nat-int? (first %))
+                                             (apply < %))))
 
 (s/fdef Pagination
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
                                             ::helpers/change-event
-                                            ::total-items
-                                            ::i-per-page-multipliers])))
+                                            ::total-items]
+                                   :opt-un [::i-per-page-multipliers])))

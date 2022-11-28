@@ -318,7 +318,6 @@
       (let [panes (data-panes)]
         [components/LoadingPage {}
          [ui/Segment style/basic
-          [uix/PageHeader "database" (@tr [:data-processing])]
           [MenuBar]
           [NewDatasetModal]
           [tab-plugin/Tab

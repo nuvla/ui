@@ -523,7 +523,6 @@
                        3 [cimi-detail-views/cimi-detail]
                        [menu-bar])]
         [ui/Segment style/basic
-         [uix/PageHeader "code" (general-utils/capitalize-first-letter (@tr [:api])) :inline inline]
          children]))))
 
 

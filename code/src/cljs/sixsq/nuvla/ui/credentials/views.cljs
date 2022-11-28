@@ -1128,7 +1128,6 @@
   [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic
-     [uix/PageHeader "key" (@tr [:credentials])]
      [MenuBar]
      [TabsCredentials]
      [AddCredentialModal]

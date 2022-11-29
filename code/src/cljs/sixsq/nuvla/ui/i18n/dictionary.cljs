@@ -1392,6 +1392,7 @@
         :payment-methods                               "Moyens de paiement"
         :per-deployment                                "par déploiement"
         :per-month-each                                "par mois, chacun"
+        :per-page                                      "par page"
         :per-nuvlabox                                  "par NuvlaEdge"
         :percent-off                                   "Pourcentage de réduction"
         :period                                        "période"

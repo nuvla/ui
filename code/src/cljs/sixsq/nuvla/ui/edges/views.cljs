@@ -29,7 +29,8 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-    [sixsq.nuvla.ui.utils.zip :as zip]))
+    [sixsq.nuvla.ui.utils.zip :as zip]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (def view-type (r/atom :table))
@@ -728,7 +729,7 @@
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox} managers]
   (let [uuid                  (general-utils/id->uuid id)
-        locale                (subscribe [::i18n-subs/locale])
+        locale                @(subscribe [::i18n-subs/locale])
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
@@ -740,7 +741,7 @@
       [ui/Icon {:class (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
-     [ui/TableCell (values/format-created created)]
+     [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell @creator]
      [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
      [ui/TableCell (or engine-version (str version ".y.z"))]

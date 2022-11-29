@@ -20,7 +20,8 @@
 
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
-  (let [uuid (general-utils/id->uuid id)]
+  (let [locale (subscribe [::i18n-subs/locale])
+        uuid   (general-utils/id->uuid id)]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
@@ -29,7 +30,7 @@
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
-     [ui/TableCell (utils-values/format-created created)]
+     [ui/TableCell (time/parse-ago created @locale)]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)

@@ -96,21 +96,22 @@
 
 (defn DeploymentSetRow
   [{:keys [id name description created state tags] :as _deployment-set}]
-  (let [uuid (general-utils/id->uuid id)]
+  (let [locale @(subscribe [::i18n-subs/locale])
+        uuid   (general-utils/id->uuid id)]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "deployment-sets/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell state]
-     [ui/TableCell (values/format-created created)]
+     [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell [uix/Tags tags]]]))
 
 (defn Pagination
   []
   (let [deployment-sets @(subscribe [::subs/deployment-sets])]
-    [pagination-plugin/Pagination {:db-path [::spec/pagination]
-                            :total-items    (get deployment-sets :count 0)
-                            :change-event   [::events/refresh]}]))
+    [pagination-plugin/Pagination {:db-path      [::spec/pagination]
+                                   :total-items  (get deployment-sets :count 0)
+                                   :change-event [::events/refresh]}]))
 
 (defn DeploymentSetTable
   []
@@ -133,8 +134,9 @@
 
 (defn DeploymentSetCard
   [{:keys [id created name state description tags] :as _deployment-set}]
-  (let [tr   (subscribe [::i18n-subs/tr])
-        href (str "deployment-sets/" (general-utils/id->uuid id))]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale (subscribe [::i18n-subs/locale])
+        href   (str "deployment-sets/" (general-utils/id->uuid id))]
     ^{:key id}
     [uix/Card
      {:on-click    #(dispatch [::history-events/navigate href])
@@ -142,7 +144,7 @@
       :header      [:<>
                     [ui/Icon {:name (state->icon state)}]
                     (or name id)]
-      :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
+      :meta        (str (@tr [:created]) " " (time/parse-ago created @locale))
       :state       state
       :description (when-not (str/blank? description) description)
       :tags        tags}]))

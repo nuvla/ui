@@ -158,3 +158,9 @@
     (or configure-disabled?
         some-license-not-accepted?
         some-price-not-accepted?)))
+
+(reg-sub
+  ::get
+  (fn [db [_ k]]
+    (get db k)))
+

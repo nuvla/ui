@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.table :refer [Table]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
@@ -26,11 +27,11 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-    [sixsq.nuvla.ui.utils.zip :as zip]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
 (def view-type (r/atom :table))
@@ -725,12 +726,15 @@
     ^{:key (count @nb-release)}
     [AddModal]))
 
+(defn- LastHeartbeat [{:keys [id refresh-interval]}]
+(let [next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+      locale                @(subscribe [::i18n-subs/locale])]
+  (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))))
 
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox} managers]
   (let [uuid                  (general-utils/id->uuid id)
         locale                @(subscribe [::i18n-subs/locale])
-        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
@@ -743,7 +747,7 @@
      [ui/TableCell description]
      [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell @creator]
-     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))]
+     [ui/TableCell [LastHeartbeat {:id id :refresh-interval refresh-interval}]]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
@@ -784,28 +788,107 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])]
-    [ui/Table {:compact "very", :selectable true}
-     [ui/TableHeader
-      [ui/TableRow
-       [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
-       [ui/TableHeaderCell "state"]
-       [ui/TableHeaderCell "name"]
-       [ui/TableHeaderCell "description"]
-       [ui/TableHeaderCell (@tr [:created])]
-       [ui/TableHeaderCell (@tr [:created-by])]
-       [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
-       [ui/TableHeaderCell {:single-line true}
-        (@tr [:version])
-        (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
-       [ui/TableHeaderCell "tags"]
-       [ui/TableHeaderCell "manager"]]]
+    [:<>
+     [ui/Table {:compact "very", :selectable true}
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+        [ui/TableHeaderCell "state"]
+        [ui/TableHeaderCell "name"]
+        [ui/TableHeaderCell "description"]
+        [ui/TableHeaderCell (@tr [:created])]
+        [ui/TableHeaderCell (@tr [:created-by])]
+        [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
+        [ui/TableHeaderCell {:single-line true}
+         (@tr [:version])
+         (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
+        [ui/TableHeaderCell "tags"]
+        [ui/TableHeaderCell "manager"]]]
 
-     [ui/TableBody
-      (doall
-       (for [{:keys [id] :as nuvlabox} selected-nbs]
-         (when id
-           ^{:key id}
-           [NuvlaboxRow nuvlabox managers])))]]))
+      [ui/TableBody
+       (doall
+         (for [{:keys [id] :as nuvlabox} selected-nbs]
+           (when id
+             ^{:key id}
+             [NuvlaboxRow nuvlabox managers])))]]
+           ]))
+
+(defn NuvlaboxTable-2
+  []
+  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+        nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
+        managers          (distinct
+                            (apply concat
+                              (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+        current-cluster   (subscribe [::subs/nuvlabox-cluster])
+        selected-nbs      (if @current-cluster
+                            (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
+                                                 (:nuvlabox-workers @current-cluster))]
+                              (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
+                            (:resources @nuvlaboxes))
+        maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
+        tr                (subscribe [::i18n-subs/tr])
+        locale            @(subscribe [::i18n-subs/locale])
+        columns
+        [{:field-key :online
+          :header-content [ui/Icon {:name "heartbeat"}]
+          :cell-props {:collapsing true}
+          :cell (fn [{online :cell-data}] [OnlineStatusIcon online])}
+         {:field-key :state
+          :cell (fn [{state :cell-data}]
+                  [ui/Icon {:class (utils/state->icon state)}])}
+         {:field-key :name
+          :cell (fn [{name     :cell-data
+                      {id :id} :row-data}]
+                  (or name (general-utils/id->uuid id)))}
+         {:field-key :description}
+         {:field-key :created
+          :cell (fn [{created :cell-data}] (time/parse-ago created locale))}
+         {:field-key :created-by
+          :cell (fn [{creator :cell-data}]
+                  @(subscribe [::session-subs/resolve-user creator]))}
+         {:field-key :last-online
+          :header-cell-props {:single-line true}
+          :cell (fn [data]
+                  [LastHeartbeat (:row-data data)])}
+         {:field-key :version :header-cell-props {:single-line true}
+          :header-content [:<> (@tr [:version])
+                           (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
+         {:field-key :tags
+          :cell (fn [{tags :cell-data}] [uix/Tags tags])}
+         {:field-key :manager}]]
+    [:<>
+     [ui/Table {:compact "very", :selectable true}
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+        [ui/TableHeaderCell "state"]
+        [ui/TableHeaderCell "name"]
+        [ui/TableHeaderCell "description"]
+        [ui/TableHeaderCell (@tr [:created])]
+        [ui/TableHeaderCell (@tr [:created-by])]
+        [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
+        [ui/TableHeaderCell {:single-line true}
+         (@tr [:version])
+         (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
+        [ui/TableHeaderCell "tags"]
+        [ui/TableHeaderCell "manager"]]]
+
+      [ui/TableBody
+       (doall
+         (for [{:keys [id] :as nuvlabox} selected-nbs]
+           (when id
+             ^{:key id}
+             [NuvlaboxRow nuvlabox managers])))]]
+     [Table {:columns columns
+             :rows selected-nbs
+             :table-props {:compact "very", :selectable true}
+             :row-click-handler
+             (fn [edge]
+               (dispatch [::history-events/navigate (str "edges/" (general-utils/id->uuid (:id edge)))]))
+             :row-props {:style {:cursor :pointer}}}]
+     ]
+    ))
 
 
 (defn NuvlaboxMapPoint
@@ -881,6 +964,7 @@
         :table [NuvlaboxTable]
         :map [NuvlaboxMap]
         :cluster [views-clusters/NuvlaboxClusters])
+      [NuvlaboxTable-2]
       (when-not (= @view-type :map)
         [Pagination])]]))
 

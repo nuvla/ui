@@ -19,6 +19,7 @@
     [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.table :refer [Table]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -169,8 +170,8 @@
 
 
 (defn RowFn
-  [{:keys [id state module created-by] :as deployment}
-   {:keys [no-actions no-module-name select-all] :as _options}]
+  [{{:keys [id state module created-by] :as deployment} :deployment
+    {:keys [no-actions no-module-name select-all] :as _options} :options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url           @(subscribe [::subs/deployment-url id primary-url-pattern])
@@ -218,29 +219,25 @@
       (let [show-options? (show-options select-all no-actions)]
         (if (empty? deployments-list)
           [uix/WarningMsgNoElements empty-msg]
-          [ui/Table
-           (merge style/single-line {:stackable true})
-           [ui/TableHeader
-            [ui/TableRow
-             (when show-options?
-               [ui/TableHeaderCell
-                [ui/Checkbox
-                 {:checked  @is-all-page-selected?
-                  :on-click #(dispatch [::events/select-all-page])}]])
-             [ui/TableHeaderCell (@tr [:id])]
-             (when-not no-module-name
-               [ui/TableHeaderCell (@tr [:module])])
-             [ui/TableHeaderCell (@tr [:version])]
-             [ui/TableHeaderCell (@tr [:status])]
-             [ui/TableHeaderCell (@tr [:url])]
-             [ui/TableHeaderCell (@tr [:created])]
-             [ui/TableHeaderCell (@tr [:created-by])]
-             [ui/TableHeaderCell (@tr [:infrastructure])]
-             (when show-options? [ui/TableHeaderCell (@tr [:actions])])]]
-           [ui/TableBody
-            (for [{:keys [id] :as deployment} deployments-list]
-              ^{:key id}
-              [RowFn deployment options])]])))))
+          [Table {:columns    [(when (not show-options?)
+                                 {:header-content
+                                  [ui/Checkbox
+                                   {:checked  @is-all-page-selected?
+                                    :on-click #(dispatch [::events/select-all-page])}]})
+                               {:field-key :id}
+                               (when-not no-module-name
+                                 {:field-key :module})
+                               {:field-key :version}
+                               {:field-key :status}
+                               {:field-key :url}
+                               {:field-key :created}
+                               {:field-key :created-by}
+                               {:field-key :infrastructure}
+                               (when show-options? {:field-key :actions})]
+                  :rows       deployments-list
+                  :row-render (fn [deployment] [RowFn {:options options
+                                                       :deployment deployment}])
+                  :table-props (merge style/single-line {:stackable true})}])))))
 
 
 (defn DeploymentCard

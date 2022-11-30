@@ -37,13 +37,15 @@
 (s/def rows (s/coll-of any?))
 
 (defn Table
-  [{:keys [columns rows row-click-handler row-props] :as props}]
+  [{:keys [columns rows row-click-handler row-props row-render] :as props}]
   (let [tr @(subscribe [::i18n-subs/tr])]
     [:<>
      [ui/Table (:table-props props)
       [ui/TableHeader (:header-props props)
        [ui/TableRow
-        (for [{:keys [field-key header-content header-cell-props]} columns]
+        (for [col columns
+              :when col
+              :let [{:keys [field-key header-content header-cell-props]} col]]
           ^{:key field-key}
           [ui/TableHeaderCell
            header-cell-props
@@ -61,13 +63,16 @@
          (for [row rows
                :let [id (:id row)]]
            ^{:key id}
-           [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
-            (for [{:keys [field-key accessor cell cell-props]} columns
-                  :let [cell-data ((or accessor field-key) row)]]
-              ^{:key (str id "-" field-key)}
-              [ui/TableCell
-               cell-props
-               (cond
-                 cell (cell {:row-data row
-                             :cell-data cell-data})
-                 :else cell-data)])]))]]]))
+           (cond
+             row-render [row-render row]
+             :else
+             [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
+              (for [{:keys [field-key accessor cell cell-props]} columns
+                    :let [cell-data ((or accessor field-key) row)]]
+                ^{:key (str id "-" field-key)}
+                [ui/TableCell
+                 cell-props
+                 (cond
+                   cell (cell {:row-data row
+                               :cell-data cell-data})
+                   :else cell-data)])])))]]]))

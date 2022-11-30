@@ -727,33 +727,9 @@
     [AddModal]))
 
 (defn- LastHeartbeat [{:keys [id refresh-interval]}]
-(let [next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
-      locale                @(subscribe [::i18n-subs/locale])]
-  (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))))
-
-(defn NuvlaboxRow
-  [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox} managers]
-  (let [uuid                  (general-utils/id->uuid id)
-        locale                @(subscribe [::i18n-subs/locale])
-        engine-version        @(subscribe [::subs/engine-version id])
-        creator               (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
-                  :style    {:cursor "pointer"}}
-     [ui/TableCell {:collapsing true}
-      [OnlineStatusIcon online]]
-     [ui/TableCell {:collapsing true}
-      [ui/Icon {:class (utils/state->icon state)}]]
-     [ui/TableCell (or name uuid)]
-     [ui/TableCell description]
-     [ui/TableCell (time/parse-ago created locale)]
-     [ui/TableCell @creator]
-     [ui/TableCell [LastHeartbeat {:id id :refresh-interval refresh-interval}]]
-     [ui/TableCell (or engine-version (str version ".y.z"))]
-     [ui/TableCell [uix/Tags tags]]
-     [ui/TableCell {:collapsing true}
-      (when (some #{id} managers)
-        [ui/Icon {:name "check"}])]]))
-
+  (let [next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+        locale                @(subscribe [::i18n-subs/locale])]
+    (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))))
 
 (defn Pagination
   []
@@ -774,46 +750,6 @@
 
 
 (defn NuvlaboxTable
-  []
-  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
-        nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
-        managers          (distinct
-                           (apply concat
-                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
-        current-cluster   (subscribe [::subs/nuvlabox-cluster])
-        selected-nbs      (if @current-cluster
-                            (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                       (:nuvlabox-workers @current-cluster))]
-                              (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
-                            (:resources @nuvlaboxes))
-        maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
-        tr                (subscribe [::i18n-subs/tr])]
-    [:<>
-     [ui/Table {:compact "very", :selectable true}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
-        [ui/TableHeaderCell "state"]
-        [ui/TableHeaderCell "name"]
-        [ui/TableHeaderCell "description"]
-        [ui/TableHeaderCell (@tr [:created])]
-        [ui/TableHeaderCell (@tr [:created-by])]
-        [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
-        [ui/TableHeaderCell {:single-line true}
-         (@tr [:version])
-         (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
-        [ui/TableHeaderCell "tags"]
-        [ui/TableHeaderCell "manager"]]]
-
-      [ui/TableBody
-       (doall
-         (for [{:keys [id] :as nuvlabox} selected-nbs]
-           (when id
-             ^{:key id}
-             [NuvlaboxRow nuvlabox managers])))]]
-           ]))
-
-(defn NuvlaboxTable-2
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
@@ -851,44 +787,27 @@
           :header-cell-props {:single-line true}
           :cell (fn [data]
                   [LastHeartbeat (:row-data data)])}
-         {:field-key :version :header-cell-props {:single-line true}
+         {:field-key :version
+          :header-cell-props {:single-line true}
           :header-content [:<> (@tr [:version])
-                           (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
+                           (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
+          :cell (fn [{{id :id} :row-data
+                      version  :cell-data}]
+                  (or @(subscribe [::subs/engine-version id]) (str version ".y.z")))}
          {:field-key :tags
           :cell (fn [{tags :cell-data}] [uix/Tags tags])}
-         {:field-key :manager}]]
-    [:<>
-     [ui/Table {:compact "very", :selectable true}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
-        [ui/TableHeaderCell "state"]
-        [ui/TableHeaderCell "name"]
-        [ui/TableHeaderCell "description"]
-        [ui/TableHeaderCell (@tr [:created])]
-        [ui/TableHeaderCell (@tr [:created-by])]
-        [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
-        [ui/TableHeaderCell {:single-line true}
-         (@tr [:version])
-         (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
-        [ui/TableHeaderCell "tags"]
-        [ui/TableHeaderCell "manager"]]]
-
-      [ui/TableBody
-       (doall
-         (for [{:keys [id] :as nuvlabox} selected-nbs]
-           (when id
-             ^{:key id}
-             [NuvlaboxRow nuvlabox managers])))]]
-     [Table {:columns columns
-             :rows selected-nbs
-             :table-props {:compact "very", :selectable true}
-             :row-click-handler
-             (fn [edge]
-               (dispatch [::history-events/navigate (str "edges/" (general-utils/id->uuid (:id edge)))]))
-             :row-props {:style {:cursor :pointer}}}]
-     ]
-    ))
+         {:field-key :manager
+          :cell (fn [{{id :id} :row-data}]
+                  (when (some #{id} managers)
+                    [ui/Icon {:name "check"}]))}]]
+    [Table {:columns columns
+            :rows selected-nbs
+            :table-props {:compact "very", :selectable true}
+            :row-click-handler
+            (fn [edge]
+              (dispatch
+                [::history-events/navigate (str "edges/" (general-utils/id->uuid (:id edge)))]))
+            :row-props {:style {:cursor :pointer}}}]))
 
 
 (defn NuvlaboxMapPoint
@@ -964,7 +883,6 @@
         :table [NuvlaboxTable]
         :map [NuvlaboxMap]
         :cluster [views-clusters/NuvlaboxClusters])
-      [NuvlaboxTable-2]
       (when-not (= @view-type :map)
         [Pagination])]]))
 

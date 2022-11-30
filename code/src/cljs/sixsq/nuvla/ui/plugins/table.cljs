@@ -1,14 +1,8 @@
 (ns sixsq.nuvla.ui.plugins.table
   (:require [cljs.spec.alpha :as s]
-            [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-fx subscribe]]
-            [reagent.core :as r]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.plugins.helpers :as helpers]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (s/def ::pass-through-props (s/nilable map?))
 (s/def ::table-props ::pass-through-props)
@@ -63,15 +57,17 @@
              :else
              (or (tr [field-key]) "REMOVE ME" field-key))])]]
       [ui/TableBody (:body-props props)
-       (doall (for [row rows]
-                ^{:key (:id row)}
-                [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
-                 (for [{:keys [field-key accessor cell cell-props]} columns
-                       :let [cell-data ((or accessor field-key) row)]]
-                   ^{:key (str (:id row) "-" cell-data)}
-                   [ui/TableCell
-                    cell-props
-                    (cond
-                      cell (cell {:row-data row
-                                  :cell-data cell-data})
-                      :else cell-data)])]))]]]))
+       (doall
+         (for [row rows
+               :let [id (:id row)]]
+           ^{:key id}
+           [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
+            (for [{:keys [field-key accessor cell cell-props]} columns
+                  :let [cell-data ((or accessor field-key) row)]]
+              ^{:key (str id "-" field-key)}
+              [ui/TableCell
+               cell-props
+               (cond
+                 cell (cell {:row-data row
+                             :cell-data cell-data})
+                 :else cell-data)])]))]]]))

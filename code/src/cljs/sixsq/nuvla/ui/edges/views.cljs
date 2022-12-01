@@ -731,6 +731,30 @@
         locale                @(subscribe [::i18n-subs/locale])]
     (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))))
 
+(defn NuvlaboxRow
+  [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox} managers]
+  (let [uuid                  (general-utils/id->uuid id)
+        locale                @(subscribe [::i18n-subs/locale])
+        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+        engine-version        @(subscribe [::subs/engine-version id])
+        creator               (subscribe [::session-subs/resolve-user created-by])]
+    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
+                  :style    {:cursor "pointer"}}
+     [ui/TableCell {:collapsing true}
+      [OnlineStatusIcon online]]
+     [ui/TableCell {:collapsing true}
+      [ui/Icon {:class (utils/state->icon state)}]]
+     [ui/TableCell (or name uuid)]
+     [ui/TableCell description]
+     [ui/TableCell (time/parse-ago created locale)]
+     [ui/TableCell @creator]
+     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))]
+     [ui/TableCell (or engine-version (str version ".y.z"))]
+     [ui/TableCell [uix/Tags tags]]
+     [ui/TableCell {:collapsing true}
+      (when (some #{id} managers)
+        [ui/Icon {:name "check"}])]]))
+
 (defn Pagination
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
@@ -764,50 +788,25 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])
-        locale            @(subscribe [::i18n-subs/locale])
         columns
-        [{:field-key :online
-          :header-content [ui/Icon {:name "heartbeat"}]
-          :cell-props {:collapsing true}
-          :cell (fn [{online :cell-data}] [OnlineStatusIcon online])}
-         {:field-key :state
-          :cell (fn [{state :cell-data}]
-                  [ui/Icon {:class (utils/state->icon state)}])}
-         {:field-key :name
-          :cell (fn [{name     :cell-data
-                      {id :id} :row-data}]
-                  (or name (general-utils/id->uuid id)))}
+        [{:field-key :online :header-content [ui/Icon {:name "heartbeat"}]}
+         {:field-key :state}
+         {:field-key :name}
          {:field-key :description}
-         {:field-key :created
-          :cell (fn [{created :cell-data}] (time/parse-ago created locale))}
-         {:field-key :created-by
-          :cell (fn [{creator :cell-data}]
-                  @(subscribe [::session-subs/resolve-user creator]))}
+         {:field-key :created}
+         {:field-key :created-by}
          {:field-key :last-online
-          :header-cell-props {:single-line true}
-          :cell (fn [data]
-                  [LastHeartbeat (:row-data data)])}
+          :header-cell-props {:single-line true}}
          {:field-key :version
           :header-cell-props {:single-line true}
           :header-content [:<> (@tr [:version])
-                           (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
-          :cell (fn [{{id :id} :row-data
-                      version  :cell-data}]
-                  (or @(subscribe [::subs/engine-version id]) (str version ".y.z")))}
-         {:field-key :tags
-          :cell (fn [{tags :cell-data}] [uix/Tags tags])}
-         {:field-key :manager
-          :cell (fn [{{id :id} :row-data}]
-                  (when (some #{id} managers)
-                    [ui/Icon {:name "check"}]))}]]
+                           (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
+         {:field-key :tags}
+         {:field-key :manager}]]
     [Table {:columns columns
             :rows selected-nbs
             :table-props {:compact "very", :selectable true}
-            :row-click-handler
-            (fn [edge]
-              (dispatch
-                [::history-events/navigate (str "edges/" (general-utils/id->uuid (:id edge)))]))
-            :row-props {:style {:cursor :pointer}}}]))
+            :row-render (fn [row-data] [NuvlaboxRow row-data managers])}]))
 
 
 (defn NuvlaboxMapPoint

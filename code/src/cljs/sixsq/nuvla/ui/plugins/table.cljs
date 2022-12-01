@@ -75,4 +75,4 @@
                  (cond
                    cell (cell {:row-data row
                                :cell-data cell-data})
-                   :else cell-data)])])))]]]))
+                   :else (str cell-data))])])))]]]))

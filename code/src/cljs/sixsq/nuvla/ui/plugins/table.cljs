@@ -45,6 +45,9 @@
 
 (s/def rows (s/coll-of any?))
 
+(defn ordering->order-string [{field :field order :order}]
+  (str (name field) ":" order))
+
 (reg-event-fx
   ::sort
   (fn [{db :db} [_ {new-field    :field

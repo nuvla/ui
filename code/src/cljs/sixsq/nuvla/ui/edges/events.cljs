@@ -10,7 +10,8 @@
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.i18n.spec :as i18n]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
@@ -71,18 +72,32 @@
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
 (reg-event-fx
+  ::sort-edges
+  (fn [{{:keys [::spec/ordering] :as db} :db} [_ new-field]]
+    (let [toggle-order {"asc" "desc" "desc" "asc"}
+          order        (:order ordering)
+          current-field (:field ordering)]
+      {:db (assoc db ::spec/ordering {:field new-field
+                                      :order (if
+                                               (= current-field new-field) (toggle-order order)
+                                               order)})
+       :fx [[:dispatch [::get-nuvlaboxes]]]})))
+
+(reg-event-fx
   ::get-nuvlaboxes
-  (fn [{{:keys [::spec/state-selector] :as db} :db} _]
-    {::cimi-api-fx/search
-     [:nuvlabox
-      (->> {:orderby "created:desc"
-            :filter  (general-utils/join-and
-                       (when state-selector (utils/state-filter state-selector))
-                       (full-text-search-plugin/filter-text
-                         db [::spec/edges-search]))}
-           (pagination-plugin/first-last-params
-             db [::spec/pagination]))
-      #(dispatch [::set-nuvlaboxes %])]}))
+  (fn [{{:keys [::spec/state-selector
+                ::spec/ordering] :as db} :db} _]
+    (let [{:keys [field order]} (or ordering spec/default-ordering)]
+      {::cimi-api-fx/search
+       [:nuvlabox
+        (->> {:orderby (str (name field) ":" order)
+              :filter  (general-utils/join-and
+                         (when state-selector (utils/state-filter state-selector))
+                         (full-text-search-plugin/filter-text
+                           db [::spec/edges-search]))}
+             (pagination-plugin/first-last-params
+               db [::spec/pagination]))
+        #(dispatch [::set-nuvlaboxes %])]})))
 
 
 (reg-event-fx

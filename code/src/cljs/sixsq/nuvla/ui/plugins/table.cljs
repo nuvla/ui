@@ -2,7 +2,9 @@
   (:require [cljs.spec.alpha :as s]
             [re-frame.core :refer [dispatch reg-event-fx subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (s/def ::pass-through-props (s/nilable map?))
 (s/def ::table-props ::pass-through-props)
@@ -24,6 +26,13 @@
 (s/def ::ordering (s/nilable (s/keys :req-un [::field
                                               ::order])))
 
+(defn build-ordering
+  ([] (build-ordering {:field :created :order "desc"}))
+  ([{:keys [field order]
+     :or {field  :created
+          order "desc"}}]
+   {:field field :order order}))
+
 (s/def ::column (s/keys
                 :req-un [::field-key]
                 :opt-un [::header
@@ -36,8 +45,23 @@
 
 (s/def rows (s/coll-of any?))
 
+
+(defn Sort [{:keys [db-path field-key sortables
+                    sort-event full-sort]}]
+  (when (and db-path
+          (or full-sort (get sortables field-key)))
+    (let [field  @(subscribe [::helpers/retrieve db-path :field])
+          order @(subscribe [::helpers/retrieve db-path :order])]
+      [uix/LinkIcon {:name (str "sort " (when
+                                          (= field field-key)
+                                          ({"asc" "ascending"
+                                            "desc" "descending"} order)))
+                     :on-click #(dispatch [sort-event field-key])}])))
+
 (defn Table
-  [{:keys [columns rows row-click-handler row-props row-render] :as props}]
+  [{:keys [cell-props columns rows
+           row-click-handler row-props row-render
+           sort-config] :as props}]
   (let [tr @(subscribe [::i18n-subs/tr])]
     [:<>
      [ui/Table (:table-props props)
@@ -48,16 +72,18 @@
               :let [{:keys [field-key header-content header-cell-props]} col]]
           ^{:key field-key}
           [ui/TableHeaderCell
-           header-cell-props
-           (cond
-             (fn? header-content)
-             (header-content)
+           (merge (:header cell-props) header-cell-props)
+           [:div
+            (cond
+              (fn? header-content)
+              (header-content)
 
-             header-content
-             header-content
+              header-content
+              header-content
 
-             :else
-             (or (tr [field-key]) "REMOVE ME" field-key))])]]
+              :else
+              (or (tr [field-key]) field-key))
+            [Sort (merge sort-config {:field-key field-key})]]])]]
       [ui/TableBody (:body-props props)
        (doall
          (for [row rows

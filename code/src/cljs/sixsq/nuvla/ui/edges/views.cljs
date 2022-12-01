@@ -791,18 +791,21 @@
          {:field-key :description}
          {:field-key :created}
          {:field-key :created-by}
-         {:field-key :last-online
-          :header-cell-props {:single-line true}}
+         {:field-key :last-online}
          {:field-key :version
-          :header-cell-props {:single-line true}
           :header-content [:<> (@tr [:version])
                            (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
          {:field-key :tags}
          {:field-key :manager}]]
-    [Table {:columns columns
-            :rows selected-nbs
-            :table-props {:compact "very", :selectable true}
-            :row-render (fn [row-data] [NuvlaboxRow row-data managers])}]))
+    [Table {:sort-config  {:db-path [::spec/ordering]
+                           :sortables #{:online :name :description
+                                        :created :created-by :refresh-interval :state}
+                           :sort-event ::events/sort-edges}
+            :columns     columns
+            :rows        selected-nbs
+            :table-props {:compact "very" :selectable true}
+            :cell-props  {:header {:single-line true}}
+            :row-render  (fn [row-data] [NuvlaboxRow row-data managers])}]))
 
 
 (defn NuvlaboxMapPoint

@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
@@ -63,7 +64,8 @@
   ::get-deployments
   (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
-                ::spec/filter-external] :as db} :db} [_ filter-external-arg]]
+                ::spec/filter-external
+                ::spec/ordering] :as db} :db} [_ filter-external-arg]]
     (let [filter-external (or filter-external-arg filter-external)
           state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param
@@ -75,7 +77,7 @@
       {:db                  (assoc db ::spec/filter-external filter-external)
        ::cimi-api-fx/search [:deployment
                              (->> {:aggregation "terms:state"
-                                   :orderby     "created:desc"
+                                   :orderby     (ordering->order-string (or ordering spec/default-ordering))
                                    :filter      filter-str}
                                   (pagination-plugin/first-last-params
                                     db [::spec/pagination]))

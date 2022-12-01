@@ -236,7 +236,8 @@
                                (when show-options? {:field-key :actions})]
                   :rows       deployments-list
                   :sort-config {:full-sort true
-                                }
+                                :db-path ::spec/ordering
+                                :fetch-event ::events/get-deployments}
                   :row-render (fn [deployment] [RowFn deployment options])
                   :table-props (merge style/single-line {:stackable true})}])))))
 

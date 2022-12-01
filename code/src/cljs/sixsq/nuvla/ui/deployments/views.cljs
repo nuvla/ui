@@ -219,7 +219,7 @@
       (let [show-options? (show-options select-all no-actions)]
         (if (empty? deployments-list)
           [uix/WarningMsgNoElements empty-msg]
-          [Table {:columns    [(when (not show-options?)
+          [Table {:columns    [(when show-options?
                                  {:header-content
                                   [ui/Checkbox
                                    {:checked  @is-all-page-selected?
@@ -235,6 +235,8 @@
                                {:field-key :infrastructure}
                                (when show-options? {:field-key :actions})]
                   :rows       deployments-list
+                  :sort-config {:full-sort true
+                                }
                   :row-render (fn [deployment] [RowFn deployment options])
                   :table-props (merge style/single-line {:stackable true})}])))))
 

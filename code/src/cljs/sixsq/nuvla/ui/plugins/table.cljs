@@ -45,18 +45,34 @@
 
 (s/def rows (s/coll-of any?))
 
+(reg-event-fx
+  ::sort
+  (fn [{db :db} [_ {new-field    :field
+                    db-path     :db-path
+                    fetch-event :fetch-event}]]
+    (let [ordering     (get db db-path)
+          toggle-order {"asc" "desc" "desc" "asc"}
+          order        (:order ordering)
+          current-field (:field ordering)
+          new-order    (if (= current-field new-field) (toggle-order order) order)
+          old-value (get db db-path)]
+      {:db (assoc db db-path {:field new-field
+                              :order new-order})
+       :fx [[:dispatch [fetch-event]]]})))
 
 (defn Sort [{:keys [db-path field-key sortables
-                    sort-event full-sort]}]
+                    fetch-event full-sort]}]
   (when (and db-path
           (or full-sort (get sortables field-key)))
-    (let [field  @(subscribe [::helpers/retrieve db-path :field])
-          order @(subscribe [::helpers/retrieve db-path :order])]
-      [uix/LinkIcon {:name (str "sort " (when
+    (let [field  @(subscribe [::helpers/retrieve [db-path] :field])
+          order @(subscribe [::helpers/retrieve [db-path] :order])]
+      [uix/LinkIcon {:name (str "sort" (when
                                           (= field field-key)
-                                          ({"asc" "ascending"
-                                            "desc" "descending"} order)))
-                     :on-click #(dispatch [sort-event field-key])}])))
+                                          ({"asc" " ascending"
+                                            "desc" " descending"} order)))
+                     :on-click #(dispatch [::sort {:field        field-key
+                                                   :db-path     db-path
+                                                   :fetch-event fetch-event}])}])))
 
 (defn Table
   [{:keys [cell-props columns rows
@@ -88,10 +104,12 @@
        (doall
          (for [row rows
                :let [id (:id row)]]
-           ^{:key id}
            (cond
-             row-render [row-render row]
+             row-render
+             ^{:key id}
+             [row-render row]
              :else
+             ^{:key id}
              [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
               (for [{:keys [field-key accessor cell cell-props]} columns
                     :let [cell-data ((or accessor field-key) row)]]

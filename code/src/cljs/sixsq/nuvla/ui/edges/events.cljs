@@ -71,17 +71,6 @@
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
-(reg-event-fx
-  ::sort-edges
-  (fn [{{:keys [::spec/ordering] :as db} :db} [_ new-field]]
-    (let [toggle-order {"asc" "desc" "desc" "asc"}
-          order        (:order ordering)
-          current-field (:field ordering)]
-      {:db (assoc db ::spec/ordering {:field new-field
-                                      :order (if
-                                               (= current-field new-field) (toggle-order order)
-                                               order)})
-       :fx [[:dispatch [::get-nuvlaboxes]]]})))
 
 (reg-event-fx
   ::get-nuvlaboxes

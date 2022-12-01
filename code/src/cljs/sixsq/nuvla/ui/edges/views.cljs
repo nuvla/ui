@@ -797,10 +797,10 @@
                            (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
          {:field-key :tags}
          {:field-key :manager}]]
-    [Table {:sort-config  {:db-path [::spec/ordering]
-                           :sortables #{:online :name :description
-                                        :created :created-by :refresh-interval :state}
-                           :sort-event ::events/sort-edges}
+    [Table {:sort-config  {:db-path      ::spec/ordering
+                           :sortables   #{:online :name :description
+                                          :created :created-by :refresh-interval :state}
+                           :fetch-event ::events/get-nuvlaboxes}
             :columns     columns
             :rows        selected-nbs
             :table-props {:compact "very" :selectable true}

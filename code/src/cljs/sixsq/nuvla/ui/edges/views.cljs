@@ -726,10 +726,6 @@
     ^{:key (count @nb-release)}
     [AddModal]))
 
-(defn- LastHeartbeat [{:keys [id refresh-interval]}]
-  (let [next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
-        locale                @(subscribe [::i18n-subs/locale])]
-    (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))))
 
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox} managers]
@@ -778,12 +774,12 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                            (apply concat
-                              (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                           (apply concat
+                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                 (:nuvlabox-workers @current-cluster))]
+                                                       (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])

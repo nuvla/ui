@@ -170,8 +170,8 @@
 
 
 (defn RowFn
-  [{{:keys [id state module created-by] :as deployment} :deployment
-    {:keys [no-actions no-module-name select-all] :as _options} :options}]
+  [{:keys [id state module created-by] :as deployment}
+   {:keys [no-actions no-module-name select-all] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url           @(subscribe [::subs/deployment-url id primary-url-pattern])
@@ -235,8 +235,7 @@
                                {:field-key :infrastructure}
                                (when show-options? {:field-key :actions})]
                   :rows       deployments-list
-                  :row-render (fn [deployment] [RowFn {:options options
-                                                       :deployment deployment}])
+                  :row-render (fn [deployment] [RowFn deployment options])
                   :table-props (merge style/single-line {:stackable true})}])))))
 
 

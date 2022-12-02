@@ -441,7 +441,7 @@
                                     [module-plugin/ModuleVersions
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
-                                    :label @(tr [:select-version])
+                                    :label (@tr [:select-version])
                                     :default-open true]
                                    [uix/Accordion
                                     [module-plugin/EnvVariables
@@ -494,7 +494,7 @@
               [ui/Label {:content app-name}])]]]]]
        (when warning?
          [ui/Message {:warning true :attached :bottom}
-          [ui/Icon {:name "warning"}]
+          [ui/Icon {:name "question"}]
           (if (seq apps-names)
             (@tr [:warning-app-selected-not-compatible-targets])
             (@tr [:warning-target-selected-not-compatible-apps]))])])))
@@ -507,13 +507,14 @@
         targets-selected      (subscribe [::subs/targets-selected])
         license-not-accepted? (subscribe [::subs/some-license-not-accepted?])
         price-not-accepted?   (subscribe [::subs/some-price-not-accepted?])
-        create-name-descr     (r/atom {:start false})
-        on-change-input       (fn [key]
+        create-name           (subscribe [::subs/get ::spec/create-name])
+        create-description    (subscribe [::subs/get ::spec/create-description])
+        create-start          (subscribe [::subs/get ::spec/create-start])
+        on-change-input       (fn [k]
                                 (ui-callback/input-callback
-                                  #(swap! create-name-descr assoc key %)))]
+                                  #(dispatch [::events/set k %])))]
     (fn []
-      (let [dep-set-name                 (:name @create-name-descr)
-            resource-names-of-subtype    (fn [resources subtype]
+      (let [resource-names-of-subtype    (fn [resources subtype]
                                            (map #(or (:name %) (:id %)) (get (group-by :subtype resources)
                                                                              subtype)))
             selected-swarm-targets-names (resource-names-of-subtype @targets-selected "infrastructure-service-swarm")
@@ -523,36 +524,36 @@
         [ui/Segment (merge style/basic {:clearing true})
          [ui/Form
           [ui/FormInput
-           {:label       (str/capitalize (@tr [:name]))
-            :placeholder (@tr [:name-deployment-set])
-            :required    true
-            :value       (or dep-set-name "")
-            :on-change   (on-change-input :name)}]
+           {:label         (str/capitalize (@tr [:name]))
+            :placeholder   (@tr [:name-deployment-set])
+            :required      true
+            :default-value @create-name
+            :on-change     (on-change-input ::spec/create-name)}]
           [ui/FormInput
-           {:label       (str/capitalize (@tr [:description]))
-            :placeholder (@tr [:describe-deployment-set])
-            :value       (or (:description @create-name-descr) "")
-            :on-change   (on-change-input :description)}]
+           {:label         (str/capitalize (@tr [:description]))
+            :placeholder   (@tr [:describe-deployment-set])
+            :default-value @create-description
+            :on-change     (on-change-input ::spec/create-description)}]
           [ui/FormCheckbox
            {:label     (@tr [:start-deployment-set-after-creation])
-            :checked   (:start @create-name-descr)
+            :checked   @create-start
             :on-change (ui-callback/checked
-                         #(swap! create-name-descr update :start not))}]]
+                         #(dispatch [::events/set ::spec/create-start (not @create-start)]))}]]
          [AddSelectedTargetsApps "Kubernetes" selected-k8s-apps-names selected-k8s-targets-names]
          [AddSelectedTargetsApps "Docker" selected-swarm-apps-names selected-swarm-targets-names]
          (when @license-not-accepted?
-           [ui/Message {:warning true}
+           [ui/Message {:error true}
             [ui/Icon {:name "warning"}]
             (@tr [:accept-applications-licenses])])
          (when @price-not-accepted?
-           [ui/Message {:warning true}
+           [ui/Message {:error true}
             [ui/Icon {:name "warning"}]
             (@tr [:accept-applications-prices])])
          [ui/Button
           {:positive true
-           :on-click #(dispatch [::events/create @create-name-descr])
+           :on-click #(dispatch [::events/create])
            :disabled (or @create-disabled?
-                         (str/blank? dep-set-name))
+                         (str/blank? @create-name))
            :floated  :right} (str/capitalize (@tr [:create]))]]))))
 
 (defn AddPage

@@ -281,10 +281,10 @@
 (reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
-                ::spec/apps-selected] :as db} :db}
-       [_ {df-name  :name
-           df-descr :description
-           df-start :start}]]
+                ::spec/apps-selected
+                ::spec/create-name
+                ::spec/create-description
+                ::spec/create-start] :as db} :db}]
     {::cimi-api-fx/add
      [:deployment-set
       (cond->
@@ -305,9 +305,14 @@
                                         {:application id
                                          :code        coupon}))
                                     apps-selected)
-                :start        df-start}}
-        df-name (assoc :name df-name)
-        df-descr (assoc :description df-descr))
+                :start        create-start}}
+        (not (str/blank? create-name)) (assoc :name create-name)
+        (not (str/blank? create-description)) (assoc :description create-description))
       #(dispatch [::history-events/navigate
                   (str "deployment-sets/"
                        (general-utils/id->uuid (:resource-id %)))])]}))
+
+(reg-event-db
+  ::set
+  (fn [db [_ k v]]
+    (assoc db k v)))

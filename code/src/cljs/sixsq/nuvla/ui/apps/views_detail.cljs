@@ -1147,7 +1147,7 @@
             [ui/Table {:compact true, :definition true}
              [ui/TableBody
               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
-               :spec ::spec/license-name, :validate-form? @validate-form?,
+               :spec (if @is-custom? ::spec/license-name any?), :validate-form? @validate-form?,
                :required? true, :default-value (:license-name @license),
                :on-change (partial on-change ::events/license-name)
                :on-validation ::apps-application-events/set-license-validation-error]
@@ -1156,7 +1156,7 @@
                :required? false, :default-value (:license-description @license),
                :on-change (partial on-change ::events/license-description)]
               [uix/TableRowField (@tr [:url]), :key "license-url",
-               :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
+               :editable? is-editable?, :spec (if @is-custom? ::spec/license-url any?), :validate-form? @validate-form?,
                :required? true, :default-value (:license-url @license),
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]

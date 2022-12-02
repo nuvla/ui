@@ -19,6 +19,9 @@
 (s/def ::infrastructures (s/nilable any?))
 (s/def ::credentials (s/nilable any?))
 (s/def ::bulk-jobs any?)
+(s/def ::create-name string?)
+(s/def ::create-description string?)
+(s/def ::create-start boolean?)
 
 (def defaults
   {::deployment-set            nil
@@ -45,4 +48,7 @@
    ::edges-pagination          (pagination-plugin/build-spec
                                  :default-items-per-page 15)
    ::tab-new-apps              (tab-plugin/build-spec :active-tab :app-store)
-   ::bulk-jobs                 (bulk-progress-plugin/build-spec)})
+   ::bulk-jobs                 (bulk-progress-plugin/build-spec)
+   ::create-name               ""
+   ::create-description        ""
+   ::create-start              false})

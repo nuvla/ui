@@ -7,7 +7,7 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   await page.getByRole('link', { name: 'data' }).click();
   await expect(page).toHaveURL(dataURL);
 
-  const date = new Date(new Date().setDate(new Date().getDate() - 30));
+  const date = new Date(new Date().setDate(new Date().getDate() - 25));
   date.setDate(date.getDate() - 1);
   date.setMinutes(10);
   date.setSeconds(0);

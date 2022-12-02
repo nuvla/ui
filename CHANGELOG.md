@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+- Profile - Payment method rename Bank account to SEPA
 - Application - Bugfix license is highlighted in red even if not required nuvla/ui#1031
 - Values - remove duplicated parse-ago
 - Apps - Saving an app should move user to it #991

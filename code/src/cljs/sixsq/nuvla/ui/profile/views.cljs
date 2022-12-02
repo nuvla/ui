@@ -807,7 +807,7 @@
                                        "iban" "building"
                                        "payment")
                                :size "large"}]
-                     (str/upper-case brand)]
+                     (str/upper-case (if (= brand "iban") "SEPA" brand))]
                     [ui/TableCell "•••• " last4 " "
                      (when is-default?
                        [ui/Label {:size :tiny :circular true :color "blue"} "default"])]

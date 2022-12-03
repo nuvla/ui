@@ -220,24 +220,29 @@
         (if (empty? deployments-list)
           [uix/WarningMsgNoElements empty-msg]
           [Table {:columns    [(when show-options?
-                                 {:header-content
+                                 {:no-sort? true
+                                  :header-content
                                   [ui/Checkbox
                                    {:checked  @is-all-page-selected?
                                     :on-click #(dispatch [::events/select-all-page])}]})
                                {:field-key :id}
                                (when-not no-module-name
-                                 {:field-key :module})
-                               {:field-key :version}
-                               {:field-key :status}
-                               {:field-key :url}
+                                 {:field-key :module.name
+                                  :header-content (@tr [:module])})
+                               {:field-key :version :no-sort? true}
+                               {:field-key :status
+                                :sort-key :state}
+                               {:field-key :url
+                                :no-sort? true}
                                {:field-key :created}
                                {:field-key :created-by}
-                               {:field-key :infrastructure}
-                               (when show-options? {:field-key :actions})]
+                               {:field-key :infrastructure
+                                :no-sort? true}
+                               (when show-options? {:field-key :actions
+                                                    :no-sort? true})]
                   :rows       deployments-list
-                  :sort-config {:full-sort true
-                                :db-path ::spec/ordering
-                                :fetch-event ::events/get-deployments}
+                  :sort-config {:db-path ::spec/ordering
+                               :fetch-event ::events/get-deployments}
                   :row-render (fn [deployment] [RowFn deployment options])
                   :table-props (merge style/single-line {:stackable true})}])))))
 

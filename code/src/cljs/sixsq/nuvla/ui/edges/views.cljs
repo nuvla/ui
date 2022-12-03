@@ -791,16 +791,14 @@
          {:field-key :description}
          {:field-key :created}
          {:field-key :created-by}
-         {:field-key :last-online}
-         {:field-key :version
+         {:field-key :last-online :no-sort? true}
+         {:field-key :version :no-sort? true
           :header-content [:<> (@tr [:version])
                            (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
-         {:field-key :tags}
-         {:field-key :manager}]]
+         {:field-key :tags :no-sort? true}
+         {:field-key :manager :no-sort? true}]]
     [Table {:sort-config  {:db-path      ::spec/ordering
-                           :sortables   #{:online :name :description
-                                          :created :created-by :refresh-interval :state}
-                           :fetch-event ::events/get-nuvlaboxes}
+                          :fetch-event ::events/get-nuvlaboxes}
             :columns     columns
             :rows        selected-nbs
             :table-props {:compact "very" :selectable true}

@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.plugins.table
   (:require [cljs.spec.alpha :as s]
-            [re-frame.core :refer [dispatch reg-event-fx subscribe]]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -23,21 +24,19 @@
 (s/def ::field keyword?)
 (s/def ::order #{"asc" "desc"})
 
-(s/def ::ordering (s/nilable (s/keys :req-un [::field
+(s/def ::sort-direction (s/nilable (s/keys :req-un [::field
                                               ::order])))
 
 (defn build-ordering
-  ([] (build-ordering {:field :created :order "desc"}))
-  ([{:keys [field order]
-     :or {field  :created
-          order "desc"}}]
-   {:field field :order order}))
+  ([] (build-ordering {:created "desc"}))
+  ([ordering]
+   ordering))
 
 (s/def ::column (s/keys
-                :req-un [::field-key]
-                :opt-un [::header
-                         ::accessor
-                         ::footer]))
+                  :req-un [::field-key]
+                  :opt-un [::header
+                           ::accessor
+                           ::footer]))
 
 (s/valid? ::column {:col-key :a})
 
@@ -45,35 +44,43 @@
 
 (s/def rows (s/coll-of any?))
 
-(defn ordering->order-string [{field :field order :order}]
-  (str (name field) ":" order))
+(defn ordering->order-string [ordering]
+  (str/join "," (for [[field order] ordering]
+                  (str (name field) ":" order))))
+
+(defn- calc-new-ordering [{:keys [order sort-key]} ordering]
+  (let [cleaned-ordering (remove #(= sort-key (first %)) ordering)]
+        (js/console.error "cleaned-ordering" cleaned-ordering)
+        (js/console.error "order" order)
+        (case order
+          "asc"  cleaned-ordering
+          "desc" (cons [sort-key "asc"] cleaned-ordering)
+          (cons [sort-key "desc"] cleaned-ordering))))
 
 (reg-event-fx
   ::sort
-  (fn [{db :db} [_ {new-field    :field
-                    db-path     :db-path
-                    fetch-event :fetch-event}]]
-    (let [ordering     (get db db-path)
-          toggle-order {"asc" "desc" "desc" "asc"}
-          order        (:order ordering)
-          current-field (:field ordering)
-          new-order    (if (= current-field new-field) (toggle-order order) order)
-          old-value (get db db-path)]
-      {:db (assoc db db-path {:field new-field
-                              :order new-order})
-       :fx [[:dispatch [fetch-event]]]})))
+  (fn [{db :db} [_ {sort-key       :field
+                    sort-direction :direction
+                    db-path        :db-path
+                    fetch-event    :fetch-event}]]
+    {:db (update db db-path (partial calc-new-ordering {:sort-key sort-key :order sort-direction}))
+     :fx [[:dispatch [fetch-event]]]}))
 
-(defn Sort [{:keys [db-path field-key sortables
-                    fetch-event full-sort]}]
-  (when (and db-path
-          (or full-sort (get sortables field-key)))
-    (let [field  @(subscribe [::helpers/retrieve [db-path] :field])
-          order @(subscribe [::helpers/retrieve [db-path] :order])]
-      [uix/LinkIcon {:name (str "sort" (when
-                                          (= field field-key)
-                                          ({"asc" " ascending"
-                                            "desc" " descending"} order)))
-                     :on-click #(dispatch [::sort {:field        field-key
+(reg-sub
+  ::sort-direction
+  (fn [db [_ db-path sort-key]]
+    (let [ordering (get db db-path)]
+      (some #(when (= sort-key (first %)) (second %)) ordering))))
+
+(defn Sort [{:keys [db-path field-key sort-key fetch-event]
+             :or {sort-key field-key}}]
+  (when db-path
+    (let [direction        @(subscribe [::sort-direction db-path sort-key])
+          direction->class {"asc" " ascending"
+                            "desc" " descending"}]
+      [uix/LinkIcon {:name (str "sort" (direction->class direction))
+                     :on-click #(dispatch [::sort {:field        sort-key
+                                                   :direction   direction
                                                    :db-path     db-path
                                                    :fetch-event fetch-event}])}])))
 
@@ -88,7 +95,7 @@
        [ui/TableRow
         (for [col columns
               :when col
-              :let [{:keys [field-key header-content header-cell-props]} col]]
+              :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
           ^{:key field-key}
           [ui/TableHeaderCell
            (merge (:header cell-props) header-cell-props)
@@ -102,7 +109,12 @@
 
               :else
               (or (tr [field-key]) field-key))
-            [Sort (merge sort-config {:field-key field-key})]]])]]
+            (when (and
+                    sort-config
+                    (not no-sort?))
+              [Sort (merge
+                      sort-config
+                      (select-keys col [:field-key :disable-sort :sort-key]))])]])]]
       [ui/TableBody (:body-props props)
        (doall
          (for [row rows

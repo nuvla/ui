@@ -1,114 +1,203 @@
-
 /** General **/
-
-
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap');
 
-
-body{
-    font-family: "Poppins" !important;
-}
-body .menu .item {
-    font-family: "Poppins";
+body {
+     font-family: "Poppins" !important;
 }
 
-/** menu **/
+body .menu .item,
+.ui.header,
+h1, h2, H3, h4, h5, H6,
+.ui.button {
+     font-family: "Poppins";
+}
+
+header{
+     position: relative;
+}
+body #nuvla-ui-content {
+     padding: 0;
+}
+
+body .ui.grid {
+     margin: 0 !important;
+     padding: 2rem;
+}
+
+body p.sub {
+     font-size: 1.2rem;
+}
+body h1.ui.header {
+    font-size: 2.8rem;
+}
+
+body .ui.embed {
+    border-radius: 6px;
+    border: 1px solid #fff;
+}
+body .ui.button {
+    font-weight: 400;
+    margin: 0 0.5em 1em 0;
+    padding: 10px 20px;
+}
+body .ui.primary.button, .ui.primary.buttons .button {
+    background-color: #C10E12;
+    border-radius: 50px;
+}
+
+body .ui.primary.button:hover, .ui.primary.buttons .button:hover {
+    background-color: rgba(237, 43, 43, 1);
+}
+
+body .ui.secondary.button {
+    background-color: #ffffff;
+    border: 2px solid #C10E12;
+    color: #C10E12;
+    border-radius: 50px;
+    padding: 8px 20px;
+}
+body .ui.secondary.button:hover {
+    background-color: #C10E12;
+    color: #ffffff;
+}
+
+body i.icon.video.play::before {
+    content: "\f144";
+    font-size: 3rem;
+}
+
+@media only screen and (max-width: 767px){
+body .ui.container {
+    margin-left: 0!important;
+    margin-right: 0!important;
+}
+}
+
+/** General **/
+/** left menu **/
 body #nuvla-ui-sidebar:after {
-    background-image: none ;
-    background-color: #C10E12 ;
+     background-image: none;
+     background-color: #C10E12;
 }
+
 body .ui.inverted.menu {
-    background: #C10E12;
+     background: #C10E12;
 }
 
 body #nuvla-ui-sidebar .active {
-    color: #ffffff !important;
-    background-color: rgba(237, 43, 43, 1);
+     color: #ffffff !important;
+     background-color: rgba(237, 43, 43, 1);
 }
 
 body #nuvla-ui-sidebar .active.nuvla-apps,
 body .menu.vertical a.nuvla-apps:hover,
-body .nuvla-apps .ui.breadcrumb  {
-    color: #ffffff !important;
-    background-color: rgba(20, 86, 255, 1) !important;
+body .nuvla-apps .ui.breadcrumb {
+     color: #ffffff !important;
+     background-color: rgba(20, 86, 255, 1) !important;
 }
 
 body #nuvla-ui-sidebar .active.nuvla-deployments,
 body .menu.vertical a.nuvla-deployments:hover,
-body .nuvla-deployments .ui.breadcrumb  {
-    color: #ffffff !important;
-    background-color: rgba(114, 6, 255, 1) !important;
+body .nuvla-deployments .ui.breadcrumb {
+     color: #ffffff !important;
+     background-color: rgba(114, 6, 255, 1) !important;
 }
 
 body #nuvla-ui-sidebar .active.nuvla-edges,
 body .menu.vertical a.nuvla-edges:hover,
 body .nuvla-edges .ui.breadcrumb {
-    color: #ffffff !important;
-    background-color: rgba(22, 173, 146, 1) !important;
+     color: #ffffff !important;
+     background-color: rgba(22, 173, 146, 1) !important;
 }
 
 body .menu.vertical a:hover {
-    background-color: rgba(237, 43, 43, .6) !important;
+     background-color: rgba(237, 43, 43, .6) !important;
 }
 
+
+
+/** left menu **/
 /** top menu **/
 body .ui.menu {
-    min-height: 3.5rem;
-    border: none;
-    box-shadow: 0 1px 5px 0 rgb(0 1 5 / 8%);
+     min-height: 3.5rem;
+     border: none;
+     box-shadow: 0 1px 5px 0 rgb(0 1 5 / 8%);
 }
 
 body .ui.breadcrumb {
-    background: #C10E12;
-    padding: 0.5em 1em 0.5em 1em;
-    border-radius: 4px !important;
+     background: #C10E12;
+     padding: 0.5em 1em 0.5em 1em;
+     border-radius: 4px !important;
 }
-
 
 body .ui.breadcrumb a, body .ui.breadcrumb a:hover {
-    color: #fff;
-    font-size: 1rem;
+     color: #fff;
+     font-size: 1rem;
 }
+
 body .ui.breadcrumb a::before {
-         font-family: "Font Awesome 6 Pro";
-         padding-right: 10px;
-         font-weight: 300;
+     font-family: "Font Awesome 6 Pro";
+     padding-right: 10px;
+     font-weight: 300;
 }
 
 body .nuvla-welcome .ui.breadcrumb a::before {
      content: "\f015";
 }
+
 body .nuvla-dashboard .ui.breadcrumb a::before {
      content: "\f628";
 }
+
 body .nuvla-apps .ui.breadcrumb a::before {
      content: "\f5fd";
 }
+
 body .nuvla-deployments .ui.breadcrumb a::before {
      content: "\e027";
 }
+
 body .nuvla-edges .ui.breadcrumb a::before {
      content: "\f466";
 }
+
 body .nuvla-credentials .ui.breadcrumb a::before {
      content: "\f084";
 }
+
 body .nuvla-notifications .ui.breadcrumb a::before {
      content: "\f0f3";
 }
+
 body .nuvla-data .ui.breadcrumb a::before {
      content: "\f1c0";
 }
+
 body .nuvla-clouds .ui.breadcrumb a::before {
      content: "\f0c2";
 }
+
 body .nuvla-api .ui.breadcrumb a::before {
      content: "\f121";
 }
 
 body i.icon.chevron.right:before {
-      font-family: "Font Awesome 6 Pro";
-    content: "\f054";
-    color: #ffffff;
-    font-weight: 300;
+     font-family: "Font Awesome 6 Pro";
+     content: "\f054";
+     color: #ffffff;
+     font-weight: 300;
 }
+
+body .right.menu .nuvla-close-menu-item {
+     padding: 5px 15px !important;
+}
+
+body .ui.menu .right.menu .item>i.icon {
+     opacity: 1 !important;
+}
+
+/** top menu **/
+/**  Body content  **/
+/** homepage  **/
+/** homepage  **/
+/**  Body content  **/

@@ -44,7 +44,7 @@
      [ui/Grid {:stackable     true
                :centered      true
                :verticalAlign :middle
-               :reversed      :mobil
+               :reversed      :mobile
                :style         {:margin-top        "8px"
                                :background-image  "url(/ui/images/bg-hero-home.jpeg)"
                                :background-size   "cover"

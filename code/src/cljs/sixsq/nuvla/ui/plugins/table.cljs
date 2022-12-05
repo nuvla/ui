@@ -3,7 +3,6 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -11,47 +10,45 @@
 (s/def ::table-props ::pass-through-props)
 (s/def ::body-props ::pass-through-props)
 (s/def ::header-props ::pass-through-props)
-
-(s/def ::field-key          keyword?)
-(s/def ::accessor          (s/nilable fn?))
-(s/def ::cell              (s/nilable fn?))
-(s/def ::header-content    (s/nilable (s/or :string string? :function fn?)))
-(s/def ::header-cell-props (s/nilable map?))
-(s/def ::footer-content    (s/nilable (s/or :string string? :function fn?)))
-(s/def ::footer-cell-props (s/nilable map?))
-
+(s/def ::header-cell-props ::pass-through-props)
+(s/def ::wide? (s/nilable boolean?))
 
 (s/def ::field keyword?)
 (s/def ::order #{"asc" "desc"})
 
-(s/def ::sort-direction (s/nilable (s/keys :req-un [::field
-                                              ::order])))
+(s/def ::sort-direction (s/nilable (s/keys :req-un [::field ::order])))
 
 (defn build-ordering
   ([] (build-ordering {:created "desc"}))
   ([ordering]
    ordering))
 
-(s/def ::column (s/keys
-                  :req-un [::field-key]
-                  :opt-un [::header
-                           ::accessor
-                           ::footer]))
-
-(s/valid? ::column {:col-key :a})
-
-(s/def ::columns (s/coll-of #(s/valid? ::column %) :min-count 1))
-
-(s/def rows (s/coll-of any?))
-
 (defn ordering->order-string [ordering]
   (str/join "," (for [[field order] ordering]
                   (str (name field) ":" order))))
 
+(s/def ::field-key          keyword?)
+(s/def ::accessor          (s/nilable fn?))
+(s/def ::header-content    (s/nilable any?))
+(s/def ::sort-key          (s/nilable (s/or :keyword keyword? :string string?)))
+(s/def ::no-sort           (s/nilable boolean?))
+(s/def ::cell              (s/nilable fn?))
+
+(s/def ::column (s/keys
+                  :opt-un [::field-key
+                           ::header-content
+                           ::accessor
+                           ::sort-key
+                           ::no-sort
+                           ::cell]))
+
+(s/def ::columns (vector? #(s/valid? ::column %)))
+
+(s/def ::rows (s/coll-of map?))
+
+
 (defn- calc-new-ordering [{:keys [order sort-key]} ordering]
   (let [cleaned-ordering (remove #(= sort-key (first %)) ordering)]
-        (js/console.error "cleaned-ordering" cleaned-ordering)
-        (js/console.error "order" order)
         (case order
           "asc"  cleaned-ordering
           "desc" (cons [sort-key "asc"] cleaned-ordering)
@@ -87,9 +84,16 @@
 (defn Table
   [{:keys [cell-props columns rows
            row-click-handler row-props row-render
-           sort-config] :as props}]
-  (let [tr @(subscribe [::i18n-subs/tr])]
-    [:<>
+           sort-config wide?]
+    :as props}]
+  (let [tr @(subscribe [::i18n-subs/tr])
+        wrapper-style (if (or wide? (not columns))
+                        {:style {:display :block
+                                 :overflow-x :auto
+                                 :white-space :nowrap}}
+                        {})
+        columns (or columns (map (fn [[k _]] {:field-key k}) (first rows)))]
+    [:div wrapper-style
      [ui/Table (:table-props props)
       [ui/TableHeader (:header-props props)
        [ui/TableRow
@@ -132,6 +136,18 @@
                 [ui/TableCell
                  cell-props
                  (cond
-                   cell (cell {:row-data row
-                               :cell-data cell-data})
+                   cell [cell {:row-data row
+                               :cell-data cell-data}]
                    :else (str cell-data))])])))]]]))
+
+
+(s/fdef Table  :args (s/cat :opts (s/keys
+                                    :req-un [::rows]
+                                    :opt-un [::columns
+                                             ::table-props
+                                             ::header-cell-props
+                                             ::header-props
+                                             ::body-props
+                                             ::cell-props
+                                             ::row-render
+                                             ::wide?])))

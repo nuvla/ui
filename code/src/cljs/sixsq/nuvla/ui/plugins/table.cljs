@@ -82,6 +82,32 @@
                                                    :fetch-event fetch-event}])}])))
 
 (defn Table
+  "Expects a single config map with a required `:rows` vector of documents.
+   If no column definitions are passed through `:columns`, the first document's
+   keys are used to construct a table header and columns and horizontally
+   scrollable table is shown.
+
+   You probably want to provide `:columns` vector of column definitions:
+    - `:field-key` is used
+        1. for accessing a documents data to show in a specific column, if no `:accessor` fn is provided,
+        2. as column header translation key or label, if no `:header-content` fn or element is provided,
+        3. as the document field to sort on, if sort is enabled by providing a `:sort-config` and no
+              `:sort-key` is provided or sort is disabled with `:no-sort?` for this column,
+    - `:header-content` can be passed in for custom column header, else `:field-key` is used,
+    - `:accessor` custom fn to accessing data for this column, else `:field-key` is used,
+    - `:cell` custom render fn for row cell, specific row document and cell-data is passed, else raw data is shown,
+    - `:sort-key` custom sort key for this column, else `:field-key` is used,
+    - `:no-sort?` disables sort for this column,
+
+    To enable sort, provide a sort-config:
+     - `:db-path` tells the table where the currently applied ordering is stored,
+     - `:fetch-event` dispatch event after a new ordering is applied,
+    Enabled sort for all columns, column wise disabling via `:no-sort?` key in column definition.
+
+    A custom render function for a whole row can be provided with:
+    - `:row-render`
+    This overrides any `:cell` custom render function passed or props passed to column definitions.
+"
   [{:keys [cell-props columns rows
            row-click-handler row-props row-render
            sort-config wide?]

@@ -163,7 +163,7 @@
                                [ui/MenuItem {:className "nuvla-close-menu-item"
                                              :disabled  disabled?}
                                 n
-                                [ui/Icon {:name "bell"
+                                [ui/Icon {:name "fa-light fa-bell large"
                                           :size "large"}]])}
          [ui/PopupHeader (@tr [:notifications])]
          [ui/PopupContent [ui/Divider]]

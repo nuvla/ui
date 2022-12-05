@@ -1,10 +1,11 @@
 (ns sixsq.nuvla.ui.plugins.table
-  (:require [cljs.spec.alpha :as s]
-            [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+  (:require
+    [cljs.spec.alpha :as s]
+    [clojure.string :as str]
+    [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (s/def ::pass-through-props (s/nilable map?))
 (s/def ::table-props ::pass-through-props)

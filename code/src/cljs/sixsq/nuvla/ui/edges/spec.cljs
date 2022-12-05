@@ -1,8 +1,9 @@
 (ns sixsq.nuvla.ui.edges.spec
-  (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
+  (:require
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
 
 (s/def ::stale-count nat-int?)
 (s/def ::active-count nat-int?)

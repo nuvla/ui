@@ -44,26 +44,23 @@
      [ui/Grid {:stackable     true
                :centered      true
                :verticalAlign :middle
-               :reversed      :mobile
-               :style         {:margin-top "8px"}}
+               :reversed      :mobil
+               :style         {:margin-top        "8px"
+                               :background-image  "url(/ui/images/bg-hero-home.jpeg)"
+                               :background-size   "cover"
+                               :background-repeat "no-repeat"}}
       [ui/GridColumn {:width 6}
        [ui/Header {:as "h1"}
         (@tr [:welcome-header])]
-       [ui/HeaderSubheader {:as "h2"}
+       [:p
         (@tr [:welcome-subheader])]
-       [ui/HeaderSubheader {:as "h3"}
-        (@tr [:welcome-subsubheader])]
        [:div {:style {:padding "10px 0"}}
-        [:a {:class [:ui :primary :button] :href "#add-nuvlabox"} (@tr [:welcome-create-nuvlabox])]]
-       [:div {:style {:padding "10px 0"}}
-        [:a {:class [:ui :primary :button] :href "#launch-app"} (@tr [:welcome-launch-app])]]
-       [ui/HeaderSubheader {:as "h3"}
-        (@tr [:welcome-more-advanced])]
-       [:div {:style {:padding "10px 0"}}
-        [:a {:class [:ui :button] :href "#video-at-the-edge"} (@tr [:welcome-process-video-at-edge])]]]
+        [:a {:class [:ui :primary :button] :href "#add-nuvlabox"} (@tr [:welcome-create-nuvlabox])]
+        [:a {:class [:ui :primary :button] :href "#launch-app"} (@tr [:welcome-launch-app])]
+        [:a {:class [:ui :secondary :button] :href "#video-at-the-edge"} (@tr [:welcome-process-video-at-edge])]]]
       [ui/GridColumn {:width 6}
        [ui/Embed {:id          "yYJ6laT_6M4"
-                  :placeholder "https://img.youtube.com/vi/yYJ6laT_6M4/maxresdefault.jpg"
+                  :placeholder "/ui/images/Cover-video-edge.png"
                   :source      "youtube"}]]]
 
      [ui/Divider]

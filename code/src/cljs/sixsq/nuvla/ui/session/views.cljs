@@ -57,7 +57,7 @@
                               (reset! search ""))
             :icon          (r/as-element
                              [:<>
-                              [ui/Icon {:name "fa-light fa-user-group"}]
+                              [ui/Icon {:name "fa-light fa-user-group large"}]
                               (when-not @is-mobile?
                                 [uix/TR :switch-group])])}
            (when @open
@@ -102,8 +102,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [ui/Icon {:name     (str "fa-light" (if @is-group? " fa-user-group" " fa-user-large"))
-                 :circular true}]
+       [ui/Icon {:name     (str "fa-light large" (if @is-group? " fa-user-group" " fa-user-large"))}]
        (-> @user
            utils/remove-group-prefix
            (general-utils/truncate (if @is-mobile? 6 20)))])))

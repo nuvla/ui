@@ -101,9 +101,9 @@
                  @values (assoc :options
                                 (cond-> (map (fn [v] {:key  v, :value v,
                                                       :text (general-utils/truncate (str v) 50)})
-                                             (cond-> @values
+                                             (cond-> (sort @values)
                                                      (and value
-                                                          (not (utils/value-is-null? value)))
+                                                       (not (utils/value-is-null? value)))
                                                      (conj value)))
                                         (#{"=" "!="} operation) (conj {:key   utils/value-null
                                                                        :value utils/value-null

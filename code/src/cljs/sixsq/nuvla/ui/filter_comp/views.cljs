@@ -313,8 +313,7 @@
     (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
     (fn [{:keys [resource-name open? _default-filter on-done]}]
       (let [filter-string  (utils/data->filter-str @data)
-            error          (when (and @show-error? (not (str/blank? filter-string)))
-                             (utils/filter-syntax-error filter-string))
+            error         (utils/filter-syntax-error filter-string)
             active-filter? (boolean (some-> filter-string (utils/filter-str->data)))]
         [ui/Modal
          {:trigger    (r/as-element
@@ -337,7 +336,7 @@
            [:<>
             [ui/ModalContent
              [FilterFancy resource-name data]
-             [ui/Message {:error (some? error)}
+             [ui/Message {:error (and @show-error? (some? error))}
               [ui/MessageHeader {:style {:margin-bottom 10}}
                (str/capitalize "Result:")
                [ui/Button {:floated  "right"
@@ -347,7 +346,7 @@
                            :on-click #(swap! show-error? not)}
                 [ui/Icon {:className "fad fa-spell-check"}]]]
               [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
-               (or error filter-string)]]]
+               (or (and @show-error? error) filter-string)]]]
             [ui/ModalActions
              [ui/Button
               {:positive true

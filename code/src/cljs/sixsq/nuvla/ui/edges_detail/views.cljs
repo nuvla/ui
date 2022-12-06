@@ -1157,7 +1157,7 @@
              [ui/TableCell (time/time->format last-boot)]])
           (let [interfaces   (:interfaces network)
                 n-interfaces (count interfaces)
-                n-ips        (reduce + (map (comp count :ips) (vals interfaces)))]
+                n-ips        (reduce + (map (comp count :ips) interfaces))]
             [:<>
              (when (pos? n-ips)
                [ui/TableRow
@@ -1172,11 +1172,11 @@
                     (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
                   [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
              (when @show-ips
-               (for [[name {ips :ips}] interfaces]
+               (for [{:keys [interface ips]} interfaces]
                  (when (seq ips)
-                   ^{:key name}
+                   ^{:key interface}
                    [ui/TableRow
-                    [ui/TableCell {:style {:padding-left "8px"}} name]
+                    [ui/TableCell {:style {:padding-left "8px"}} interface]
                     [ui/TableCell (str/join ", " (map :address ips))]])))])]]))))
 
 (defn TabOverviewHost

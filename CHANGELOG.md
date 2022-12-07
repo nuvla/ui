@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Deployment modal - update button disabled when registries is added in module newer version bugfix #1038
+
 ## [2.32.10] - 2022-12-06
 
 ### Changed

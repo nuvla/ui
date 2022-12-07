@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Dev tools - Integration of portal
+
 ## [2.32.10] - 2022-12-06
 
 ### Changed

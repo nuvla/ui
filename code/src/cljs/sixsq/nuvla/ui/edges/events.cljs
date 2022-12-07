@@ -87,10 +87,10 @@
 
 (reg-event-fx
   ::set-additional-filter
-  (fn [db [_ filter]]
+  (fn [{db :db} [_ filter]]
+    (js/console.error filter)
     {:db (-> db
-             (assoc
-               ::spec/additional-filter filter)
+             (assoc ::spec/additional-filter filter)
              (assoc-in [::spec/pagination :active-page] 1))
      :fx [[:dispatch [::get-nuvlaboxes]]]}))
 

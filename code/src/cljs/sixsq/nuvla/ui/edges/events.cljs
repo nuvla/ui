@@ -86,6 +86,15 @@
 
 
 (reg-event-fx
+  ::set-additional-filter
+  (fn [db [_ filter]]
+    {:db (-> db
+             (assoc
+               ::spec/additional-filter filter)
+             (assoc-in [::spec/pagination :active-page] 1))
+     :fx [[:dispatch [::get-nuvlaboxes]]]}))
+
+(reg-event-fx
   ::set-nuvlaboxes
   (fn [{:keys [db]} [_ nuvlaboxes]]
     (if (instance? js/Error nuvlaboxes)

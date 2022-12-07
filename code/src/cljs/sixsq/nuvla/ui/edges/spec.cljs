@@ -32,6 +32,8 @@
 (s/def ::nuvlabox-not-found? boolean?)
 (s/def ::nuvlabox-playbooks-cronjob any?)
 
+(s/def ::additional-filter (s/nilable string?))
+
 (def defaults
   {::nuvlaboxes                   nil
    ::next-heartbeats-offline-edges nil
@@ -54,4 +56,5 @@
    ::nuvlabox-playbooks-cronjob   nil
    ::pagination                   (pagination-plugin/build-spec
                                     :default-items-per-page 25)
-   ::edges-search                 (full-text-search-plugin/build-spec)})
+   ::edges-search                 (full-text-search-plugin/build-spec)
+   ::additional-filter             nil})

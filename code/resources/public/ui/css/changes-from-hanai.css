@@ -9,7 +9,16 @@ body .menu .item,
 .ui.header,
 h1, h2, H3, h4, h5, H6,
 .ui.button {
-     font-family: "Poppins";
+     font-family: "Poppins" !important;
+}
+body a {
+    color: #C10E12;
+}
+body a:hover {
+    color: rgba(237, 43, 43, 1);
+}
+body #nuvla-ui-main {
+    background-color: #ffffff !important;
 }
 
 header{
@@ -23,9 +32,13 @@ body .ui.grid {
      margin: 0 !important;
      padding: 2rem;
 }
+.section{
+     padding: 4rem 2rem;
+}
 
 body p.sub {
-     font-size: 1.2rem;
+     font-size: 1rem;
+     margin: 0 0 2rem 0;
 }
 body h1.ui.header {
     font-size: 2.8rem;
@@ -64,6 +77,34 @@ body .ui.secondary.button:hover {
 body i.icon.video.play::before {
     content: "\f144";
     font-size: 3rem;
+}
+
+body .card .ui.header {
+    margin: 1rem 0;
+}
+
+body .card .content {
+    padding: 2rem !important;
+}
+
+body .card .content p {
+    margin: 0 0 1rem 0 !important;
+}
+
+body .ui.card, .ui.cards>.card {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0%), 0 0 0 1px rgb(0 0 0 / 10%);
+}
+
+body .ui.cards>.card {
+    margin: 1rem;
+}
+body .ui.divider {
+    margin: 1rem 2rem;
+    }
+
+body .divider-red {
+    border-top: 1px solid #C10E12 !important;
+    border-bottom: none;
 }
 
 @media only screen and (max-width: 767px){

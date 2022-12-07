@@ -26,7 +26,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 (def view-type (r/atom :cards))
 
@@ -191,7 +192,8 @@
 
 (defn DataSetRow
   [{:keys [id name description tags created module-filter data-record-filter] :as _data-set}]
-  (let [data-sets (subscribe [::subs/selected-data-set-ids])]
+  (let [locale    (subscribe [::i18n-subs/locale])
+        data-sets (subscribe [::subs/selected-data-set-ids])]
     (fn [_data-set]
       ^{:key id}
       (let [uuid      (utils-general/id->uuid id)
@@ -207,7 +209,7 @@
                                     (.stopPropagation event))}]]
          [ui/TableCell name]
          [ui/TableCell description]
-         [ui/TableCell (utils-values/format-created created)]
+         [ui/TableCell (time/parse-ago created @locale)]
          [ui/TableCell data-record-filter]
          [ui/TableCell module-filter]
          [ui/TableCell [uix/Tags tags]]

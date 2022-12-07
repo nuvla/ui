@@ -255,8 +255,9 @@ const nuvlaboxStatusMock = {
       vpn: '',
       local: '345.345.345.345',
     },
-    interfaces: {
-      eth0: {
+    interfaces: [
+      {
+        interface: 'eth0',
         ips: [
           {
             address: '111.111.111.111',
@@ -266,56 +267,63 @@ const nuvlaboxStatusMock = {
           },
         ],
       },
-      docker0: {
+      {
+        interface: 'docker0',
         ips: [
           {
             address: '333.333.333.333',
           },
         ],
       },
-      docker_gwbridge: {
+      {
+        interface: 'docker_gwbridge',
         ips: [
           {
             address: '444.444.444.444',
           },
         ],
       },
-      'br-63bf8b19c07c': {
+      {
+        interface: 'br-63bf8b19c07c',
         ips: [
           {
             address: '555.555.555.555',
           },
         ],
       },
-      'br-9f554fddf09f': {
+      {
+        interface: 'br-9f554fddf09f',
         ips: [
           {
             address: '666.666.666.666',
           },
         ],
       },
-      'br-00f62a45526d': {
+      {
+        interface: 'br-00f62a45526d',
         ips: [
           {
             address: '777.777.777.777',
           },
         ],
       },
-      'br-282adf02575a': {
+      {
+        interface: 'br-282adf02575a',
         ips: [
           {
             address: '888.888.888.888',
           },
         ],
       },
-      'br-d037ba84c3c8': {
+      {
+        interface: 'br-d037ba84c3c8',
         ips: [
           {
             address: '999.999.999.999',
           },
         ],
       },
-    },
+    ],
   },
   version: 2,
   resources: {

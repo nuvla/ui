@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.deployment-fleets-detail.events
+(ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
     [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
@@ -11,7 +11,7 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
-    [sixsq.nuvla.ui.plugins.module-version :as module-version-plugin]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.session.spec :as session-spec]
@@ -25,10 +25,10 @@
     {:db (merge db spec/defaults)}))
 
 (reg-event-fx
-  ::set-deployment-fleet
-  (fn [{:keys [db]} [_ deployment-fleet]]
-    {:db (assoc db ::spec/deployment-fleet-not-found? (nil? deployment-fleet)
-                   ::spec/deployment-fleet deployment-fleet
+  ::set-deployment-set
+  (fn [{:keys [db]} [_ deployment-set]]
+    {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
+                   ::spec/deployment-set deployment-set
                    ::main-spec/loading? false)}))
 
 (reg-event-fx
@@ -51,46 +51,46 @@
                                           status (str " (" status ")"))
                          :content message
                          :type    :success}]))
-           (on-success-fn (:message %))
-           (dispatch [::get-nuvlabox resource-id])))
+           (on-success-fn %)))
       data]}))
 
 (reg-event-fx
-  ::get-deployment-fleet
-  (fn [{{:keys [::spec/deployment-fleet] :as db} :db} [_ id]]
+  ::get-deployment-set
+  (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id]]
     {:db               (cond-> db
-                               (not= (:id deployment-fleet) id) (merge spec/defaults))
-     ::cimi-api-fx/get [id #(dispatch [::set-deployment-fleet %])
-                        :on-error #(dispatch [::set-deployment-fleet nil])]
+                               (not= (:id deployment-set) id) (merge spec/defaults))
+     ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
+                        :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::deployments-events/get-deployments
-                                    (str "deployment-fleet='" id "'")]]]}))
+                                    (str "deployment-set='" id "'")]]]}))
 
 (reg-event-fx
   ::edit
   (fn [_ [_ resource-id data success-msg]]
-    {::cimi-api-fx/edit [resource-id data
-                         #(if (instance? js/Error %)
-                            (let [{:keys [status message]} (response/parse-ex-info %)]
-                              (dispatch [::messages-events/add
-                                         {:header  (cond-> (str "error editing " resource-id)
-                                                           status (str " (" status ")"))
-                                          :content message
-                                          :type    :error}]))
-                            (do
-                              (when success-msg
-                                (dispatch [::messages-events/add
-                                           {:header  success-msg
-                                            :content success-msg
-                                            :type    :success}]))
-                              (dispatch [::set-deployment-fleet %])))]}))
+    {::cimi-api-fx/edit
+     [resource-id data
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error editing " resource-id)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
+         (do
+           (when success-msg
+             (dispatch [::messages-events/add
+                        {:header  success-msg
+                         :content success-msg
+                         :type    :success}]))
+           (dispatch [::set-deployment-set %])))]}))
 
 (reg-event-fx
   ::delete
-  (fn [{{:keys [::spec/deployment-fleet]} :db} _]
-    (let [id (:id deployment-fleet)]
-      {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-fleets"])]})))
+  (fn [{{:keys [::spec/deployment-set]} :db}]
+    (let [id (:id deployment-set)]
+      {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-sets"])]})))
 
 (reg-event-fx
   ::custom-action
@@ -152,16 +152,19 @@
                 (pagination/first-last-params db [::spec/apps-pagination]))
       #(dispatch [::set-apps %])]}))
 
-(reg-event-db
+(reg-event-fx
   ::toggle-select-app
-  (fn [{:keys [::spec/apps-selected] :as db} [_ id]]
-    (let [op (if (contains? apps-selected id) disj conj)]
-      (update db ::spec/apps-selected op id))))
+  (fn [{{:keys [::spec/apps-selected] :as db} :db} [_ {:keys [id] :as module}]]
+    (let [select? (nil? (apps-selected module))
+          op      (if select? conj disj)]
+      (cond-> {:db (update db ::spec/apps-selected op module)}
+              select? (assoc :fx [[:dispatch [::module-plugin/load-module [::spec/module-versions] id]]])))))
 
 (reg-event-db
   ::toggle-select-target
   (fn [{:keys [::spec/targets-selected] :as db} [_ credential credentials]]
-    (let [op (if (contains? targets-selected credential) disj conj)]
+    (let [select? (nil? (targets-selected credential))
+          op      (if select? conj disj)]
       (-> db
           (assoc ::spec/targets-selected
                  (apply disj targets-selected credentials))
@@ -265,24 +268,51 @@
            (pagination/first-last-params db [::spec/edges-pagination]))
       #(dispatch [::set-edges %])]}))
 
+(defn changed-env-vars
+  [application env-vars]
+  (keep (fn [{:keys [::module-plugin/new-value :value :name]}]
+          (when (some-> new-value (not= value))
+            {:name        name
+             :value       new-value
+             :application application})
+          ) env-vars))
+
 
 (reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
-                ::spec/apps-selected] :as db} :db}
-       [_ {df-name  :name
-           df-descr :description
-           df-start :start}]]
+                ::spec/apps-selected
+                ::spec/create-name
+                ::spec/create-description
+                ::spec/create-start] :as db} :db}]
     {::cimi-api-fx/add
-     [:deployment-fleet
+     [:deployment-set
       (cond->
-        {:spec {:applications (map #(module-version-plugin/selected-version
+        {:spec {:applications (map #(module-plugin/db-selected-version
                                       db [::spec/module-versions] (:id %))
                                    apps-selected)
                 :targets      (map :id targets-selected)
-                :start        df-start}}
-        df-name (assoc :name df-name)
-        df-descr (assoc :description df-descr))
+                :env          (mapcat (fn [{:keys [id]}]
+                                        (->> id
+                                             (module-plugin/db-environment-variables
+                                               db [::spec/module-versions])
+                                             (changed-env-vars id)))
+                                      apps-selected)
+                :coupons      (keep (fn [{:keys [id]}]
+                                      (when-let [coupon (->> id
+                                                             (module-plugin/db-coupon
+                                                               db [::spec/module-versions]))]
+                                        {:application id
+                                         :code        coupon}))
+                                    apps-selected)
+                :start        create-start}}
+        (not (str/blank? create-name)) (assoc :name create-name)
+        (not (str/blank? create-description)) (assoc :description create-description))
       #(dispatch [::history-events/navigate
-                  (str "deployment-fleets/"
+                  (str "deployment-sets/"
                        (general-utils/id->uuid (:resource-id %)))])]}))
+
+(reg-event-db
+  ::set
+  (fn [db [_ k v]]
+    (assoc db k v)))

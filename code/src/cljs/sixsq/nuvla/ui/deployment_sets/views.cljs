@@ -1,12 +1,12 @@
-(ns sixsq.nuvla.ui.deployment-fleets.views
+(ns sixsq.nuvla.ui.deployment-sets.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.deployment-fleets-detail.views :as detail]
-    [sixsq.nuvla.ui.deployment-fleets.events :as events]
-    [sixsq.nuvla.ui.deployment-fleets.spec :as spec]
-    [sixsq.nuvla.ui.deployment-fleets.subs :as subs]
+    [sixsq.nuvla.ui.deployment-sets-detail.views :as detail]
+    [sixsq.nuvla.ui.deployment-sets.events :as events]
+    [sixsq.nuvla.ui.deployment-sets.spec :as spec]
+    [sixsq.nuvla.ui.deployment-sets.subs :as subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -37,7 +37,7 @@
 
 (defn StatisticStates
   [clickable?]
-  (let [summary  (subscribe [::subs/deployment-fleets-summary])
+  (let [summary  (subscribe [::subs/deployment-sets-summary])
         terms    (general-utils/aggregate-to-map
                    (get-in @summary [:aggregations :terms:state :buckets]))
         started  (:STARTED terms 0)
@@ -75,7 +75,7 @@
      {:name     (@tr [:add])
       :icon     "add"
       :on-click #(dispatch
-                   [::history-events/navigate "deployment-fleets/New"])}]))
+                   [::history-events/navigate "deployment-sets/New"])}]))
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
@@ -94,27 +94,28 @@
           :loading?   @loading?
           :on-refresh #(dispatch [::events/refresh])}]]])))
 
-(defn DeploymentFleetRow
-  [{:keys [id name description created state tags] :as _deployment-fleet}]
-  (let [uuid (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "deployment-fleets/" uuid)])
+(defn DeploymentSetRow
+  [{:keys [id name description created state tags] :as _deployment-set}]
+  (let [locale @(subscribe [::i18n-subs/locale])
+        uuid   (general-utils/id->uuid id)]
+    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "deployment-sets/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell state]
-     [ui/TableCell (values/format-created created)]
+     [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell [uix/Tags tags]]]))
 
 (defn Pagination
   []
-  (let [deployment-fleets @(subscribe [::subs/deployment-fleets])]
-    [pagination-plugin/Pagination {:db-path [::spec/pagination]
-                            :total-items    (get deployment-fleets :count 0)
-                            :change-event   [::events/refresh]}]))
+  (let [deployment-sets @(subscribe [::subs/deployment-sets])]
+    [pagination-plugin/Pagination {:db-path      [::spec/pagination]
+                                   :total-items  (get deployment-sets :count 0)
+                                   :change-event [::events/refresh]}]))
 
-(defn DeploymentFleetTable
+(defn DeploymentSetTable
   []
-  (let [deployment-fleets (subscribe [::subs/deployment-fleets])]
+  (let [deployment-sets (subscribe [::subs/deployment-sets])]
     [:div style/center-items
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
@@ -126,15 +127,16 @@
         [ui/TableHeaderCell "tags"]]]
 
       [ui/TableBody
-       (for [{:keys [id] :as deployment-fleet} (:resources @deployment-fleets)]
+       (for [{:keys [id] :as deployment-set} (:resources @deployment-sets)]
          (when id
            ^{:key id}
-           [DeploymentFleetRow deployment-fleet]))]]]))
+           [DeploymentSetRow deployment-set]))]]]))
 
-(defn DeploymentFleetCard
-  [{:keys [id created name state description tags] :as _deployment-fleet}]
-  (let [tr   (subscribe [::i18n-subs/tr])
-        href (str "deployment-fleets/" (general-utils/id->uuid id))]
+(defn DeploymentSetCard
+  [{:keys [id created name state description tags] :as _deployment-set}]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale (subscribe [::i18n-subs/locale])
+        href   (str "deployment-sets/" (general-utils/id->uuid id))]
     ^{:key id}
     [uix/Card
      {:on-click    #(dispatch [::history-events/navigate href])
@@ -142,21 +144,21 @@
       :header      [:<>
                     [ui/Icon {:name (state->icon state)}]
                     (or name id)]
-      :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
+      :meta        (str (@tr [:created]) " " (time/parse-ago created @locale))
       :state       state
       :description (when-not (str/blank? description) description)
       :tags        tags}]))
 
-(defn DeploymentFleetCards
+(defn DeploymentSetCards
   []
-  (let [deployment-fleets (subscribe [::subs/deployment-fleets])]
+  (let [deployment-sets (subscribe [::subs/deployment-sets])]
     [:div style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4}
-      (for [{:keys [id] :as deployment-fleet} (:resources @deployment-fleets)]
+      (for [{:keys [id] :as deployment-set} (:resources @deployment-sets)]
         (when id
           ^{:key id}
-          [DeploymentFleetCard deployment-fleet]))]]))
+          [DeploymentSetCard deployment-set]))]]))
 
 (defn ControlBar []
   [ui/GridColumn {:width 4}
@@ -171,7 +173,7 @@
     [components/LoadingPage {}
      [:<>
       [uix/PageHeader "bullseye"
-       (@tr [:deployment-fleets])]
+       (@tr [:deployment-sets])]
       [MenuBar]
       [ui/Grid {:columns   3
                 :stackable true
@@ -179,12 +181,12 @@
        [ControlBar]
        [StatisticStates true]]
       (case @view-type
-        :cards [DeploymentFleetCards]
-        :table [DeploymentFleetTable])
+        :cards [DeploymentSetCards]
+        :table [DeploymentSetTable])
       [Pagination]]]))
 
 
-(defmethod panel/render :deployment-fleets
+(defmethod panel/render :deployment-sets
   [path]
   (let [[_ path1] path
         n        (count path)

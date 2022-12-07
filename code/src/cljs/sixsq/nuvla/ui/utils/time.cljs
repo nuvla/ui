@@ -12,7 +12,7 @@
                         startOfDay
                         subDays
                         subMilliseconds]]
-   ["date-fns/locale/fr$default" :as fr]))
+    ["date-fns/locale/fr$default" :as fr]))
 
 (def ^:const default-locale "en")
 (def ^:const locale-string->locale-object {"fr" fr})
@@ -72,12 +72,12 @@
   ([start end]
    (differenceInMilliseconds (parse-iso8601 end) (parse-iso8601 start))))
 
-(def units-in-ms [["year"     (* 1000 60 60 24 365)]
-                  ["month"    (* 1000 60 60 24 31)]
-                  ["day"      (* 1000 60 60 24)]
-                  ["hour"     (* 1000 60 60)]
-                  ["minute"   (* 1000 60)]
-                  ["second"   0]])
+(def units-in-ms [["year" (* 1000 60 60 24 365)]
+                  ["month" (* 1000 60 60 24 31)]
+                  ["day" (* 1000 60 60 24)]
+                  ["hour" (* 1000 60 60)]
+                  ["minute" (* 1000 60)]
+                  ["second" 0]])
 
 (defn ago
   "Returns a human-readable string on how much time is remaining before the
@@ -86,14 +86,13 @@
   ([date]
    (ago date default-locale))
   ([date locale]
-   (let [n (now)
+   (let [n    (now)
          unit (some #(when (<= (second %) (Math/abs (delta-milliseconds date n))) (first %)) units-in-ms)]
-     (or (some-> date (intlFormatDistance (now) (clj->js {:locale locale
+     (or (some-> date (intlFormatDistance (now) (clj->js {:locale  locale
                                                           :numeric "always"
-                                                          :unit unit})))
+                                                          :unit    unit})))
          (invalid locale)))))
-(ago
- (subtract-milliseconds (js/Date.) 1000000))
+
 
 (defn before-now?
   [iso8601]
@@ -165,12 +164,14 @@
    (time->format iso8601 custom-format default-locale))
   ([iso8601 custom-format locale-string]
    (let [moment->date-fns-format {"LLL" "PPP p"
-                                  "LL" "PPP"}
-         format-string (or (moment->date-fns-format custom-format) custom-format)
-         locale (clj->js (get-locale-object locale-string))]
+                                  "LL"  "PPP"}
+         format-string           (or (moment->date-fns-format custom-format) custom-format)
+         locale                  (clj->js (get-locale-object locale-string))]
      (-> (js/Date. iso8601) (format format-string locale)))))
 
 
 (defn parse-ago
-  [time-str locale]
-  (some-> time-str parse-iso8601 (ago locale)))
+  ([time-str]
+   (some-> time-str parse-iso8601 ago))
+  ([time-str locale]
+   (some-> time-str parse-iso8601 (ago locale))))

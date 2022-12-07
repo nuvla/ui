@@ -660,8 +660,15 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "enable-host-level-management" @show?)}
-      [TextActionButton resource operation show? "Enable host level management" "cog" (@tr [:enable])])))
+      [TextActionButton resource operation show? "Enable host level management (required for playbooks)" "cog" (@tr [:enable])])))
 
+(defmethod cimi-detail-views/other-button ["nuvlabox" "disable-host-level-management"]
+  [_resource _operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "disable-host-level-management" @show?)}
+      [TextActionButton resource operation show? "Disable host level management (disables playbooks)" "cog" (@tr [:disable])])))
 
 (defn MenuBar [uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])
@@ -1150,7 +1157,7 @@
              [ui/TableCell (time/time->format last-boot)]])
           (let [interfaces   (:interfaces network)
                 n-interfaces (count interfaces)
-                n-ips        (reduce + (map (comp count :ips) (vals interfaces)))]
+                n-ips        (reduce + (map (comp count :ips) interfaces))]
             [:<>
              (when (pos? n-ips)
                [ui/TableRow
@@ -1165,11 +1172,11 @@
                     (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
                   [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
              (when @show-ips
-               (for [[name {ips :ips}] interfaces]
+               (for [{:keys [interface ips]} interfaces]
                  (when (seq ips)
-                   ^{:key name}
+                   ^{:key interface}
                    [ui/TableRow
-                    [ui/TableCell {:style {:padding-left "8px"}} name]
+                    [ui/TableCell {:style {:padding-left "8px"}} interface]
                     [ui/TableCell (str/join ", " (map :address ips))]])))])]]))))
 
 (defn TabOverviewHost
@@ -1978,7 +1985,10 @@
                    :icon    "book"}
         :render   #(r/as-element [TabPlaybooks])}
        (job-views/jobs-section)
-       (acl/TabAcls nuvlabox can-edit? ::events/edit)])))
+       (acl/TabAcls {:e               nuvlabox
+                     :can-edit?       can-edit?
+                     :owner-read-only true
+                     :edit-event      ::events/edit})])))
 
 
 (defn TabsNuvlaBox

@@ -180,16 +180,18 @@
          ui-acl]
       (let [used-principals (utils/acl-get-all-principals-set @ui-acl)
             options         (subscribe [::session-subs/peers-groups-options used-principals])]
-        [ui/Dropdown {:fluid           fluid
-                      :selection       true
-                      :style           {:width "350px"}
-                      :upward          false
-                      :options         (cond-> @options @add-item (conj @add-item))
-                      :search          search
-                      :allow-additions true
-                      :addition-label  (@tr [:add-by-user-group-id])
-                      :on-add-item     on-add-item
-                      :on-change       (ui-callback/value on-change)}]))))
+        [ui/Dropdown {:fluid                fluid
+                      :selection            true
+                      :style                {:width "350px"}
+                      :upward               false
+                      :options              (cond-> @options @add-item (conj @add-item))
+                      :search               search
+                      :allow-additions      true
+                      :select-on-navigation false
+                      :select-on-blur       false
+                      :addition-label       (@tr [:add-by-user-group-id])
+                      :on-add-item          on-add-item
+                      :on-change            (ui-callback/value on-change)}]))))
 
 (defn AddRight
   [{:keys [on-change _mode] :as _opts} ui-acl]
@@ -253,7 +255,7 @@
 
              (for [owner owners]
                ^{:key owner}
-               [OwnerItem opts ui-acl (>= (count owners) 2) owner])
+               [OwnerItem opts ui-acl (and (not read-only) (>= (count owners) 2)) owner])
 
              (when-not read-only
                [ui/ListItem {:style {:vertical-align "middle"}}
@@ -302,7 +304,7 @@
 
 
 (defn AclWidget
-  [{:keys [default-value read-only mode] :as _opts} & [ui-acl]]
+  [{:keys [default-value read-only mode owner-read-only] :as _opts} & [ui-acl]]
   (let [mode       (r/atom (or mode :simple))
         ui-acl     (or ui-acl
                        (->ui-acl default-value (not read-only)))
@@ -316,14 +318,14 @@
          {:style (cond-> {:margin-bottom "10px"
                           :margin-top    "10px"}
                          @is-mobile? (assoc :overflow-x "auto"))}
-         [AclOwners opts ui-acl]
+         [AclOwners (assoc opts :read-only (or owner-read-only read-only)) ui-acl]
          (when (or (not read-only)
                    (not (utils/acl-rights-empty? @ui-acl)))
            [AclRights opts ui-acl])]))))
 
 
 (defn TabAcls
-  [e can-edit? edit-event]
+  [{:keys [e can-edit? owner-read-only edit-event]}]
   (let [tr            (subscribe [::i18n-subs/tr])
         default-value (:acl @e)
         ui-acl        (->ui-acl default-value can-edit?)]
@@ -334,12 +336,13 @@
                  (r/as-element
                    (when default-value
                      ^{:key (:updated @e)}
-                     [AclWidget {:default-value default-value
-                                 :read-only     (not can-edit?)
-                                 :on-change     #(dispatch
-                                                   [edit-event
-                                                    (:id @e) (assoc @e :acl %)
-                                                    (@tr [:acl-updated])])}
+                     [AclWidget {:default-value   default-value
+                                 :read-only       (not can-edit?)
+                                 :owner-read-only owner-read-only
+                                 :on-change       #(dispatch
+                                                     [edit-event
+                                                      (:id @e) (assoc @e :acl %)
+                                                      (@tr [:acl-updated])])}
                       ui-acl])))}))
 
 

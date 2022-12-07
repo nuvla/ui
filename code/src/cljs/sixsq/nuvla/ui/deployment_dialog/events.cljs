@@ -188,10 +188,20 @@
                                                update-registries-creds))
        :dispatch [::creds-events/check-credential credential 2]})))
 
-(reg-event-db
+(reg-event-fx
   ::set-deployment
-  (fn [db [_ deployment]]
-    (assoc db ::spec/deployment deployment)))
+  (fn [{db :db} [_ deployment]]
+    (let [content      (get-in deployment [:module :content])
+          registry-ids (:private-registries content)
+          new-db       (assoc db ::spec/deployment deployment)]
+      (if registry-ids
+        {:db new-db
+         :fx [[:dispatch
+               [::get-infra-registries registry-ids
+                (or
+                  (:registries-credentials deployment)
+                  (:registries-credentials content))]]]}
+        {:db (assoc new-db ::spec/registries-creds nil)}))))
 
 (reg-event-db
   ::set-check-dct-result
@@ -245,12 +255,7 @@
                               (dispatch [::check-dct %])
                               (dispatch [::get-module-info href])
                               (dispatch [::set-selected-version (:id content)])
-                              (dispatch [::set-original-module (:module %)])
-                              (when-let [registry-ids (:private-registries content)]
-                                (dispatch [::get-infra-registries registry-ids
-                                           (or
-                                             (:registries-credentials %)
-                                             (:registries-credentials content))])))]}))
+                              (dispatch [::set-original-module (:module %)]))]}))
 
 (reg-event-fx
   ::create-deployment

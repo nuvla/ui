@@ -12,11 +12,6 @@ export async function onRequest(context) {
   const { path } = params;
   const [firstPathPart] = path || [];
 
-  if (!firstPathPart) {
-    url.pathname = '/api/cloud-entry-point';
-    return Response.redirect(url, 302);
-  }
-
   const apiEndpoint = env.API_ENDPOINT || 'https://nuvla.io';
 
   try {
@@ -28,7 +23,8 @@ export async function onRequest(context) {
     if (firstPathPart === 'cloud-entry-point') {
       body = { ...body, 'base-uri': url.origin + '/api/' };
     }
-    if (body.location) {
+
+    if (body.location && body.status != 202) {
       let locationUrl = new URL(body.location);
       locationUrl.host = url.host;
       locationUrl.protocol = url.protocol;

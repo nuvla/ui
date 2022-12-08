@@ -9,7 +9,6 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/ui')) {
     url.pathname = '/ui' + url.pathname;
-    console.log('ROOT not starting with /ui: ' + url);
     return Response.redirect(url, 307);
   }
 

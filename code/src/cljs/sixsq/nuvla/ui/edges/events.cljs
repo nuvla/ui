@@ -72,12 +72,14 @@
 
 (reg-event-fx
   ::get-nuvlaboxes
-  (fn [{{:keys [::spec/state-selector] :as db} :db} _]
+  (fn [{{:keys [::spec/state-selector
+                ::spec/additional-filter] :as db} :db} _]
     {::cimi-api-fx/search
      [:nuvlabox
       (->> {:orderby "created:desc"
             :filter  (general-utils/join-and
                        (when state-selector (utils/state-filter state-selector))
+                       additional-filter
                        (full-text-search-plugin/filter-text
                          db [::spec/edges-search]))}
            (pagination-plugin/first-last-params
@@ -88,7 +90,6 @@
 (reg-event-fx
   ::set-additional-filter
   (fn [{db :db} [_ filter]]
-    (js/console.error filter)
     {:db (-> db
              (assoc ::spec/additional-filter filter)
              (assoc-in [::spec/pagination :active-page] 1))

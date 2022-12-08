@@ -8,14 +8,14 @@ export async function onRequest(context) {
   const url = new URL(request.url);
 
   let { path } = params;
-  let [firstPathPart, file] = path;
+  let [firstPathPart, file] = path || [];
 
   if (filesToFetchFromProd.includes(file)) {
     let productionEndpoint = 'https://nuvla.io';
     return fetch(`${productionEndpoint}${url.pathname.replace('/proxy/', '/')}`);
   }
 
-  return fetch(url.toString().replace('/ui/', '/'), request);
+  return env.ASSETS.fetch(url.toString().replace('/ui/', '/'), request);
 }
 
 const filesToFetchFromProd = [

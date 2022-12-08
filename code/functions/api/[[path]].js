@@ -10,14 +10,19 @@ export async function onRequest(context) {
   const url = new URL(request.url);
 
   const { path } = params;
-  const [firstPathPart] = path;
+  const [firstPathPart] = path || [];
+
+  if (!firstPathPart) {
+    url.pathname = '/api/cloud-entry-point';
+    return Response.redirect(url, 302);
+  }
 
   const apiEndpoint = env.API_ENDPOINT || 'https://nuvla.io';
 
-  let response = await fetch(apiEndpoint + url.pathname, request);
-
-  // override all location responses for /api/session
   try {
+    let response = await fetch(apiEndpoint + url.pathname, request);
+
+    // override all location responses for /api/session
     let body = await response.json();
     // override base-uri for /api/cloud-entry-point responses
     if (firstPathPart === 'cloud-entry-point') {
@@ -29,7 +34,8 @@ export async function onRequest(context) {
       locationUrl.protocol = url.protocol;
       body = { ...body, location: locationUrl };
     }
-    let newResponse = new Response(JSON.stringify(body), {status: response.status});
+    let newResponse = new Response(JSON.stringify(body), { status: response.status });
+    newResponse.headers.set('content-type', response.headers.get('content-type'));
     if (response.headers.has('set-cookie')) {
       newResponse.headers.set('set-cookie', response.headers.get('set-cookie'));
     }
@@ -38,5 +44,5 @@ export async function onRequest(context) {
     console.error(e);
   }
 
-  return response;
+  return env.ASSETS.fetch(request);
 }

@@ -857,18 +857,20 @@
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [full-text-search-plugin/FullTextSearch
-        {:db-path            [::spec/edges-search]
-         :change-event       [::pagination-plugin/change-page
-                              [::spec/pagination] 1]
-         :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
-         :style              {:width "100%"}}]
-       ^{:key (random-uuid)}
-       [filter-comp/ButtonFilter
-        {:resource-name  "nuvlabox"
-         :default-filter  @additional-filter
-         :open?          filter-open?
-         :on-done        #(dispatch [::events/set-additional-filter %])}]])))
+       [:div {:style {:display     :flex
+                      :align-items :baseline}}
+        [full-text-search-plugin/FullTextSearch
+         {:db-path            [::spec/edges-search]
+          :change-event       [::pagination-plugin/change-page
+                               [::spec/pagination] 1]
+          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
+          :style              {:width "100%"}}]
+        ^{:key (random-uuid)}
+        [filter-comp/ButtonFilter
+         {:resource-name  "nuvlabox"
+          :default-filter  @additional-filter
+          :open?          filter-open?
+          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
 
 
 (defn NuvlaBoxesOrClusters

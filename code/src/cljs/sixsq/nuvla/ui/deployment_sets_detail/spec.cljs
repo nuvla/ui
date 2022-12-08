@@ -36,8 +36,11 @@
    ::events                    (events-plugin/build-spec)
    ::apps-search               (full-text-search-plugin/build-spec)
    ::creds-search              (full-text-search-plugin/build-spec)
+   ;::steps                     (step-group-plugin/build-spec
+   ;                              :active-step :select-apps-targets)
+   ; FIXME sketch
    ::steps                     (step-group-plugin/build-spec
-                                 :active-step :select-apps-targets)
+                                 :active-step :select-apps-targets-new)
    ::targets-selected          #{}
    ::edges-search              (full-text-search-plugin/build-spec)
    ::clouds-pagination         (pagination-plugin/build-spec

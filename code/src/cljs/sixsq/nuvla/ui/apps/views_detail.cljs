@@ -376,7 +376,26 @@
                         :color (when-not parent :grey)}]
               [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
                          :floated "right"
-                         :style   {:width "50px"}}]]]]]]]))))
+                         :style   {:width "50px"}}]]]
+
+            ]
+           [ui/Card
+            {:on-click (when parent
+                         #(do
+                            (dispatch [::events/close-add-modal])
+                            (dispatch [::history-events/navigate
+                                       (str/join
+                                         "/" (remove str/blank?
+                                                     ["apps" parent
+                                                      "New Application set?subtype=applications_set"]))])))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Applications set"]
+             [:div]
+             [ui/Icon {:name "th large"
+                       :size :massive
+                       :color (when-not parent :grey)}]]
+
+            ]]]]))))
 
 
 (defn paste-modal

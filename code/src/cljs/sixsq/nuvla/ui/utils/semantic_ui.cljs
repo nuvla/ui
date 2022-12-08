@@ -37,6 +37,7 @@
 (def BreadcrumbSection (r/adapt-react-class semantic/BreadcrumbSection))
 
 (def Button (r/adapt-react-class semantic/Button))
+(def ButtonOr (r/adapt-react-class semantic/ButtonOr))
 (def ButtonContent (r/adapt-react-class semantic/ButtonContent))
 (def ButtonGroup (r/adapt-react-class semantic/ButtonGroup))
 ;(def ButtonOr (r/adapt-react-class semantic/ButtonOr))

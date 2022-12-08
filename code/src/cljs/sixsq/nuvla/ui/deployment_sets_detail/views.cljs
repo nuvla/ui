@@ -556,6 +556,220 @@
                          (str/blank? @create-name))
            :floated  :right} (str/capitalize (@tr [:create]))]]))))
 
+; FIXME sketch
+(defn NameIt []
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Form
+     [ui/FormInput
+      {:label         (str/capitalize (@tr [:name]))
+       :placeholder   (@tr [:name-deployment-set])
+       :required      true
+       :default-value ""
+       ;:default-value @create-name
+       ; :on-change     (on-change-input ::spec/create-name)
+       }
+      ]
+     [ui/FormInput
+      {:label         (str/capitalize (@tr [:description]))
+       :placeholder   (@tr [:describe-deployment-set])
+       :default-value ""
+       ;:default-value @create-description
+       ;:on-change     (on-change-input ::spec/create-description)
+       }]])
+  )
+
+; FIXME sketch
+(defn DropdownDemo
+  [{:keys [text read-only children]}]
+  [ui/TableCell
+   (if read-only
+     [ui/Header text]
+     [:<>
+      [ui/Dropdown {:selection true
+                    :fluid     true
+                    :text      text
+                    :value     "Hello"
+                    :clearable true}]
+      ]
+     )
+   [ui/ListSA
+    (for [{:keys [icon text]} children]
+      ^{:key (random-uuid)}
+      [ui/ListItem
+       (if (= icon "kubernetes")
+         [ui/Image {:src   "/ui/images/kubernetes-grey.svg"
+                    :style {:width   "1.18em"
+                            :margin  "0 .25rem 0 0"
+                            :display :inline-block}}]
+         [ui/ListIcon {:name icon}])
+       [ui/ListContent text]])
+    #_[ui/ListItem
+       [ui/Button {:floated        :right
+                   :icon           true
+                   :primary        true
+                   :basic          true
+                   :size           :tiny
+                   :label-position :left}
+        [ui/Icon {:name "pencil"}]
+        "Update"
+        ]
+       ]
+    ]])
+
+; FIXME sketch
+(defn RowDemo
+  [{:keys [i read-only app-text app-children fleet-text fleet-children]}]
+  [ui/TableRow {:vertical-align :top}
+   [ui/TableCell (when-not read-only {:style {:padding-top 18}}) [ui/Header i]]
+   [DropdownDemo {:read-only read-only
+                  :text      app-text
+                  :children  app-children}]
+   [ui/TableCell (when-not read-only {:style {:padding-top 15}}) "➔"]
+   [DropdownDemo {:read-only read-only
+                  :text      fleet-text
+                  :children  fleet-children}]
+   ])
+
+; FIXME sketch
+(defn AppSet
+  [{:keys [read-only]
+    :or   {read-only false}}]
+  (let [content [ui/Table {:compact true :definition true}
+                 [ui/TableHeader
+                  [ui/TableRow
+                   [ui/TableHeaderCell]
+                   [ui/TableHeaderCell "Apps set"]
+                   [ui/TableHeaderCell]
+                   [ui/TableHeaderCell "Targets set"]]]
+
+                 [ui/TableBody
+                  [RowDemo {:i              1
+                            :read-only      read-only
+                            :app-text       "Blackbox"
+                            :app-children   [
+                                             {:text "App 1" :icon "cubes"}
+                                             {:text "App 2" :icon "cubes"}
+                                             {:text "App 3" :icon "cubes"}
+                                             ]
+                            :fleet-text     "Geneva"
+                            :fleet-children [
+                                             {:text "NuvlaEdge demo 1" :icon "box"}
+                                             {:text "NuvlaEdge demo 2" :icon "box"}
+                                             {:text "NuvlaEdge demo 3" :icon "box"}
+                                             {:text "NuvlaEdge demo 4" :icon "box"}
+                                             {:text "NuvlaEdge demo 5" :icon "box"}
+                                             ]
+                            }]
+                  [RowDemo {:i              2
+                            :read-only      read-only
+                            :app-text       "Whitebox"
+                            :app-children   [
+                                             {:text "App 1" :icon "cubes"}
+                                             {:text "App 5" :icon "cubes"}
+                                             ]
+                            :fleet-text     "Zurich"
+                            :fleet-children [
+                                             {:text "NuvlaEdge demo 6" :icon "box"}
+                                             {:text "NuvlaEdge demo 7" :icon "box"}
+                                             ]
+                            }]
+                  [RowDemo {:i              3
+                            :read-only      read-only
+                            :app-text       "Monitoring"
+                            :app-children   [
+                                             {:text "App 6" :icon "kubernetes"}
+                                             {:text "App 7" :icon "kubernetes"}
+                                             ]
+                            :fleet-text     "Exoscale Cloud"
+                            :fleet-children [
+                                             {:text "Cloud demo 1" :icon "cloud"}
+                                             {:text "Cloud demo 2" :icon "cloud"}
+                                             ]
+                            }]
+                  (when-not read-only
+                    [ui/TableRow
+                     [ui/TableCell [ui/Header "4"]]
+                     [ui/TableCell
+                      [ui/Grid
+                       [ui/GridRow {:columns 2}
+                        [ui/GridColumn
+                         [ui/Dropdown {:selection   true
+                                       :fluid       true
+                                       :placeholder "Select apps set"}]]
+                        [ui/GridColumn
+                         [ui/Modal {:trigger (r/as-element
+                                               [ui/Button {:primary  true
+                                                           :circular true}
+                                                "New apps set"]
+                                               )}
+                          [ui/ModalHeader "New apps set"]
+                          [ui/ModalContent
+                           [ui/Input]
+                           [SelectApps]
+                           ]
+                          ]]
+                        ]]]
+                     [ui/TableCell "➔"]
+                     [ui/TableCell
+                      [ui/Grid
+                       [ui/GridRow {:columns 2}
+                        [ui/GridColumn
+                         [ui/Dropdown {:selection   true
+                                       :fluid       true
+                                       :placeholder "Select targets set"}]]
+                        [ui/GridColumn
+                         [ui/Button {:primary  true
+                                     :circular true}
+                          "New targets set"]]
+                        ]]]
+                     ])
+                  ]
+                 ]]
+    (if read-only
+      [ui/Segment (merge style/basic {:clearing true})
+       content
+       [ui/ButtonGroup {:floated "right" :positive true}
+        [ui/Button "Create"]
+        [ui/ButtonOr]
+        [ui/Button {:icon "play" :content "Start"}]
+        ]]
+      content))
+  )
+
+; FIXME sketch
+(defn ConfigureDemo
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [tab/Tab
+     {:db-path [::spec/x]
+      :menu    {:secondary true
+                :pointing  true}
+      :panes   (map
+                 (fn [i]
+                   {:menuItem {:content (str i)
+                               :key     (random-uuid)}
+                    :render   #(r/as-element
+                                 [tab/Tab
+                                  {:db-path [::spec/y]
+                                   :panes   (map
+                                              (fn [{:keys [text icon]}]
+                                                {:menuItem {:content text
+                                                            :icon    icon
+                                                            :key     (random-uuid)}
+                                                 :render   (fn []
+                                                             (r/as-element
+                                                               [ui/TabPane
+
+                                                                ]))}
+                                                ) [{:text "App 1" :icon "cubes"}
+                                                   {:text "App 2" :icon "cubes"}
+                                                   {:text "App 3" :icon "cubes"}])}])}
+                   ) ["1 | Blackbox ➔ Geneva"
+                      "2 | Whitebox ➔ Zurich"
+                      "3 | Monitoring ➔ Exoscale Cloud"
+                      ])}]))
+
 (defn AddPage
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
@@ -563,27 +777,54 @@
     (dispatch [::events/new])
     (fn []
       [ui/Container {:fluid true}
-       [uix/PageHeader "add" (str/capitalize (@tr [:add]))]
        [step-group/StepGroup
         {:db-path [::spec/steps]
          :size    :mini
          :fluid   true
-         :items   [{:key         :select-apps-targets
+         :items   [
+                   ; FIXME sketch
+                   {:key         :name
                     :icon        "bullseye"
-                    :content     [StepApplicationsTargets]
-                    :title       (@tr [:applications-targets])
+                    :content     [NameIt]
+                    :title       "New deployment set"
+                    :description "Give it a name"}
+                   ; FIXME sketch
+                   {:key         :select-apps-targets-new
+                    :icon        "list"
+                    :content     [AppSet]
+                    :title       "Apps / Targets"
                     :description (@tr [:select-applications-targets])}
-                   {:key         :configure
+                   ; FIXME sketch
+                   {:key         :configure-new
                     :icon        "configure"
-                    :content     [ConfigureApplications]
+                    :content     [ConfigureDemo]
                     :title       (str/capitalize (@tr [:configure]))
-                    :disabled    @configure-disabled?
                     :description (@tr [:configure-applications])}
+                   ; FIXME sketch
                    {:key         :summary
                     :icon        "info"
-                    :content     [Summary]
+                    :content     [AppSet {:read-only true}]
                     :title       (str/capitalize (@tr [:summary]))
-                    :description (@tr [:overall-summary])}]}]])))
+                    :description (@tr [:overall-summary])}
+                   ; FIXME sketch uncomment
+                   #_{:key         :select-apps-targets
+                      :icon        "list"
+                      :content     [StepApplicationsTargets]
+                      :title       (@tr [:applications-targets])
+                      :description (@tr [:select-applications-targets])}
+                   ; FIXME sketch uncomment
+                   #_{:key         :configure
+                      :icon        "configure"
+                      :content     [ConfigureApplications]
+                      :title       (str/capitalize (@tr [:configure]))
+                      :disabled    @configure-disabled?
+                      :description (@tr [:configure-applications])}
+                   ; FIXME sketch uncomment
+                   #_{:key         :summary
+                      :icon        "info"
+                      :content     [Summary]
+                      :title       (str/capitalize (@tr [:summary]))
+                      :description (@tr [:overall-summary])}]}]])))
 
 (defn DeploymentSet
   [uuid]

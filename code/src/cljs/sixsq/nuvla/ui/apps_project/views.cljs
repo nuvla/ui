@@ -164,6 +164,7 @@
                          (dispatch [::apps-events/set-active-tab :overview]))
     (dispatch [::apps-events/set-form-spec ::spec/module-project])
     (fn []
+      (tap> "View ViewEdit project")
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]

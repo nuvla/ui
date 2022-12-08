@@ -6,6 +6,7 @@
 
 - Dev tools - Integration of portal
 - Deployment modal - update button disabled when registries is added in module newer version bugfix #1038
+- Cloudflare preview deploys - Simulate behavior of nginx prod server
 
 ## [2.32.10] - 2022-12-06
 

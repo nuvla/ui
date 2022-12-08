@@ -1,4 +1,4 @@
-(ns build
+(ns cp-css
   (:require ["fs-extra$default" :as fs]))
 
 ;; This

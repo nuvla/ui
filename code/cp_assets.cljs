@@ -1,7 +1,6 @@
 (ns cp-assets
   (:require ["fs-extra$default" :as fs]))
 
-;; This
 (def
   asset-files
   [["node_modules/semantic-ui-css/semantic.min.css"

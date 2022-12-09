@@ -54,7 +54,7 @@
   :resource {:skip-stencil [#".*"]
 
 
-             ;; This should be mirrored in `cp_assets.cljs`, if you add or remove files from here, do the same in `build.cljs`
+             ;; This should be mirrored in `cp_assets.cljs`, if you add or remove files from here, do the same in `cp_assets.cljs`
              :resource-paths
              [["node_modules/semantic-ui-css/semantic.min.css"
                {:target-path "resources/public/ui/css/semantic.min.css"}]

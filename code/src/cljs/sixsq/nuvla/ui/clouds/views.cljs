@@ -555,7 +555,7 @@
     [ServiceModal]
     [AddServiceModal]]])
 
-(defmethod panel/render :clouds
+(defn clouds-view
   [path]
   (timbre/set-level! :info)
   (let [[_ uuid] path

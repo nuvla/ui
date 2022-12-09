@@ -527,6 +527,6 @@
          children]))))
 
 
-(defmethod panel/render :api
+(defn api-view
   [_path]
   [cimi-resource])

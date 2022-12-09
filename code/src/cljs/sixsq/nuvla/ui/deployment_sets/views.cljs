@@ -185,7 +185,7 @@
       [Pagination]]]))
 
 
-(defmethod panel/render :deployment-sets
+(defn deployment-sets-view
   [path]
   (let [[_ path1] path
         n        (count path)

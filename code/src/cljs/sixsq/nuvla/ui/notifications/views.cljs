@@ -1047,7 +1047,7 @@
        :panes (tabs)}]]))
 
 
-(defmethod panel/render :notifications
+(defn notifications-view
   [_path]
   (timbre/set-level! :info)
   [:<>

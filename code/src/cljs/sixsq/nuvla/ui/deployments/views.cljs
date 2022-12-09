@@ -411,7 +411,7 @@
         [DeploymentsDisplay]
         [Pagination]]])))
 
-(defmethod panel/render :deployments
+(defn deployments-view
   [path]
   (let [[_ uuid] path
         n        (count path)

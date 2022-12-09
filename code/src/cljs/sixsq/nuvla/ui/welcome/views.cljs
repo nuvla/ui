@@ -4,7 +4,6 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn navigate-link [target-page text]
@@ -26,8 +25,9 @@
       [ui/ListHeader title]
       [ui/ListDescription content]]]]])
 
-(defmethod panel/render :welcome
-  [_path]
+
+(defn home-view
+  []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
      [ui/Grid {:stackable     true

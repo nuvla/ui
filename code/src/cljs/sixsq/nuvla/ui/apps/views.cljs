@@ -77,7 +77,7 @@
           [Module nav-query-params])))))
 
 
-(defmethod panel/render :apps
+(defn apps-view
   [_path]
   [:<>
    [utils-validation/validation-error-message ::subs/form-valid?]

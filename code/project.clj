@@ -103,7 +103,8 @@
                  [instaparse :scope "provided"]
                  [com.degel/re-frame-storage-fx "0.1.1" :scope "provided"]
                  [markdown-to-hiccup "0.6.2" :scope "provided"]
-                 [clj-kondo "RELEASE" :scope "provided"]]
+                 [clj-kondo "RELEASE" :scope "provided"]
+                 [metosin/reitit "0.5.18"]]
 
   :source-paths ["src/clj" "src/cljs"]
   :test-paths ["test/cljs"]

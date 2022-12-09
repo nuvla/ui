@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
+    [sixsq.nuvla.ui.router :refer [init-routes!]]
     [sixsq.nuvla.ui.session.events :as session-events]
     [taoensso.timbre :as log]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
@@ -82,5 +83,6 @@
   (routes/routes)
   (dispatch [::history-events/initialize @config/path-prefix])
   (swap! fv/conf #(merge % {:atom r/atom}))
+  (init-routes!)
   (mount-root)
   (log/info "finished initialization"))

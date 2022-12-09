@@ -144,7 +144,7 @@
             [TabOverviewNuvlaBox]]]]]]])))
 
 
-(defmethod panel/render :dashboard
+(defn dashboard-view
   [path]
   (let [n    (count path)
         [_ uuid] path

@@ -1124,7 +1124,7 @@
        :panes   (panes)}]]))
 
 
-(defmethod panel/render :credentials
+(defn credentials-view
   [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic

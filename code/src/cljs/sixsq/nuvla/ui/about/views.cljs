@@ -6,7 +6,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
-(defmethod panel/render :about
+(defn about
   [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Container

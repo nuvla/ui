@@ -124,16 +124,8 @@
 (reg-event-fx
   ::stop-deployment
   (fn [_ [_ href]]
-    {::cimi-api-fx/operation
-     [href "stop"
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error stopping deployment " href)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-         (dispatch [::get-deployments]))]}))
+    (let [on-success #(dispatch [::get-deployments])]
+      {::cimi-api-fx/operation [href "stop" on-success]})))
 
 (reg-event-fx
   ::set-state-selector

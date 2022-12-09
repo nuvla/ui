@@ -4,9 +4,9 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.apps-application.events :as events]
-    [sixsq.nuvla.ui.apps-application.spec :as spec]
-    [sixsq.nuvla.ui.apps-application.subs :as subs]
+    [sixsq.nuvla.ui.apps-applications-set.events :as events]
+    [sixsq.nuvla.ui.apps-applications-set.spec :as spec]
+    [sixsq.nuvla.ui.apps-applications-set.subs :as subs]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -85,39 +85,45 @@
             [apps-views-detail/trash id ::events/remove-file]])]))))
 
 
-(defn FilesSection []
+(defn AppGroupSection []
   (let [tr            (subscribe [::i18n-subs/tr])
         files         (subscribe [::subs/files])
-        editable?     (subscribe [::apps-subs/editable?])
-        module-app    (subscribe [::apps-subs/module])
-        compatibility (:compatibility @module-app)]
+        editable?        (subscribe [::apps-subs/editable?])
+        validate-form?   (subscribe [::apps-subs/validate-form?])
+        on-change        (fn [update-event-kw value]
+                           (dispatch [update-event-kw value])
+                           (dispatch [::main-events/changes-protection? true])
+                           (dispatch [::apps-events/validate-form]))]
     (fn []
       [uix/Accordion
-       (if (not= compatibility "docker-compose")
-         [:<>
-          [:div (@tr [:module-files])
-           [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
-
-          (if (empty? @files)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-files]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
-                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
-                     (when @editable?
-                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
-                   [ui/TableBody
-                    (for [[id file] @files]
-                      ^{:key (str "file_" id)}
-                      [SingleFile file])]]])
-          (when @editable?
-            [:div {:style {:padding-top 10}}
-             [apps-views-detail/plus ::events/add-file]])]
-         [:div (@tr [:apps-file-config-warning])
-          [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]])
-       :label (@tr [:module-files])
+       [:<>
+        [:div (@tr [:module-files])
+         [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
+        [ui/Table {:compact    true
+                   :definition true}
+         [ui/TableBody
+          [uix/TableRowField (@tr [:name]), :key "app-group-name-", :editable? @editable?,
+           :spec ::spec/name, :validate-form? @validate-form?, :required? true,
+           :default-value name, :on-change (partial on-change ::events/name)
+           :on-validation ::events/set-details-validation-error]]]
+        (if (empty? @files)
+          [ui/Message
+           (str/capitalize (str (@tr [:no-files]) "."))]
+          [:div [ui/Table {:style {:margin-top 10}}
+                 [ui/TableHeader
+                  [ui/TableRow
+                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
+                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
+                   (when @editable?
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                 [ui/TableBody
+                  (for [[id file] @files]
+                    ^{:key (str "file_" id)}
+                    [SingleFile file])]]])
+        (when @editable?
+          [:div {:style {:padding-top 10}}
+           [apps-views-detail/plus ::events/add-file]])]
+       :label "section-name-edit"
        :count (count @files)
        :default-open true])))
 
@@ -333,11 +339,7 @@
   []
   [:<>
    [:h2 [apps-views-detail/ConfigurationTitle]]
-   [apps-views-detail/EnvVariablesSection]
-   [FilesSection]
-   [apps-views-detail/UrlsSection]
-   [apps-views-detail/OutputParametersSection]
-   [apps-views-detail/DataTypesSection]])
+   [AppGroupSection]])
 
 
 (defn TabMenuDetails

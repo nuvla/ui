@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.apps-applications-set.events
   (:require
     [re-frame.core :refer [reg-event-db]]
-    [sixsq.nuvla.ui.apps-application.spec :as spec]
+    [sixsq.nuvla.ui.apps-applications-set.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]))
 
 

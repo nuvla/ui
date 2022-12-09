@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.apps-applications-set.utils
-  (:require [sixsq.nuvla.ui.apps-application.spec :as spec]
+  (:require [sixsq.nuvla.ui.apps-applications-set.spec :as spec]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 

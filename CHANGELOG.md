@@ -3,6 +3,20 @@
 ## Unreleased
 
 ### Changed
+
+- Dev tools - Integration of portal
+- Deployment modal - update button disabled when registries is added in module newer version bugfix #1038
+- Cloudflare preview deploys - Simulate behavior of nginx prod server
+- Deployment - clone bugfix #1045
+- CIMI-API - operation on-error default handler and signature change
+- General - operation signature change alignment
+
+## [2.32.10] - 2022-12-06
+
+### Changed
+
+- Profile - Payment method rename Bank account to SEPA
+- Application - Bugfix license is highlighted in red even if not required nuvla/ui#1031
 - Values - remove duplicated parse-ago
 - Apps - Saving an app should move user to it #991
 - Deployment set - Experimental feature (hidden for prod env)

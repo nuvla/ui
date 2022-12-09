@@ -14,9 +14,11 @@
 
                                 :modules    {:nuvla-ui {:entries [sixsq.nuvla.ui.core]}}
 
+                                :build-hooks [(portal.shadow.remote/hook)]
                                 :devtools   {:after-load        sixsq.nuvla.ui.core/mount-root
                                              :preloads          [devtools.preload
-                                                                 day8.re-frame-10x.preload]
+                                                                 day8.re-frame-10x.preload
+                                                                 dev.portal]
                                              :use-document-host false}
 
                                 :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL

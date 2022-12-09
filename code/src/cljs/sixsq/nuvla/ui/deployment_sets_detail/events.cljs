@@ -34,25 +34,19 @@
 (reg-event-fx
   ::operation
   (fn [_ [_ resource-id operation data on-success-fn on-error-fn]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error executing operation " operation)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}])
-           (on-error-fn))
-         (do
-           (let [{:keys [status message]} (response/parse %)]
-             (dispatch [::messages-events/add
-                        {:header  (cond-> (str "operation " operation " will be executed soon")
-                                          status (str " (" status ")"))
-                         :content message
-                         :type    :success}]))
-           (on-success-fn %)))
-      data]}))
+    (let [on-success #(do
+                        (let [{:keys [status message]} (response/parse %)]
+                          (dispatch [::messages-events/add
+                                     {:header  (cond-> (str "operation " operation " will be executed soon")
+                                                       status (str " (" status ")"))
+                                      :content message
+                                      :type    :success}]))
+                        (on-success-fn %))
+          on-error   #(do
+                        (cimi-api-fx/default-operation-on-error resource-id operation %)
+                        (on-error-fn))]
+      {::cimi-api-fx/operation [resource-id operation on-success
+                                :on-error on-error :data data]})))
 
 (reg-event-fx
   ::get-deployment-set
@@ -91,40 +85,6 @@
   (fn [{{:keys [::spec/deployment-set]} :db}]
     (let [id (:id deployment-set)]
       {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-sets"])]})))
-
-(reg-event-fx
-  ::custom-action
-  (fn [_ [_ resource-id operation success-msg]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error on operation " operation " for " resource-id)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-
-         (when success-msg
-           (dispatch [::messages-events/add
-                      {:header  success-msg
-                       :content success-msg
-                       :type    :success}])
-           (dispatch
-             [::job-events/wait-job-to-complete
-              {:job-id              (:location %)
-               :on-complete         (fn [{:keys [status-message return-code]}]
-                                      (dispatch [::messages-events/add
-                                                 {:header  (str (str/capitalize operation)
-                                                                " on " resource-id
-                                                                (if (= return-code 0)
-                                                                  " completed."
-                                                                  " failed!"))
-                                                  :content status-message
-                                                  :type    (if (= return-code 0)
-                                                             :success
-                                                             :error)}]))
-               :refresh-interval-ms 5000}])))]}))
 
 (reg-event-db
   ::set-apps
@@ -281,10 +241,10 @@
 (reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
-                ::spec/apps-selected] :as db} :db}
-       [_ {df-name  :name
-           df-descr :description
-           df-start :start}]]
+                ::spec/apps-selected
+                ::spec/create-name
+                ::spec/create-description
+                ::spec/create-start] :as db} :db}]
     {::cimi-api-fx/add
      [:deployment-set
       (cond->
@@ -305,9 +265,14 @@
                                         {:application id
                                          :code        coupon}))
                                     apps-selected)
-                :start        df-start}}
-        df-name (assoc :name df-name)
-        df-descr (assoc :description df-descr))
+                :start        create-start}}
+        (not (str/blank? create-name)) (assoc :name create-name)
+        (not (str/blank? create-description)) (assoc :description create-description))
       #(dispatch [::history-events/navigate
                   (str "deployment-sets/"
                        (general-utils/id->uuid (:resource-id %)))])]}))
+
+(reg-event-db
+  ::set
+  (fn [db [_ k v]]
+    (assoc db k v)))

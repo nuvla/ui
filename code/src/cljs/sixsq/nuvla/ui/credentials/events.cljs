@@ -224,17 +224,15 @@
           cred        (cond-> credential
                               last-check (assoc :last-check last-check)
                               status (assoc :status status))
-          need-check? (utils/credential-need-check? cred delta-minutes-outdated)]
+          need-check? (utils/credential-need-check? cred delta-minutes-outdated)
+          on-success  (fn [response]
+                        (dispatch
+                          [::job-events/wait-job-to-complete
+                           {:job-id      (:location response)
+                            :on-complete #(dispatch [::check-credential-complete %])}]))]
       (cond-> {:db (assoc-in db [::spec/credential-check-table id]
                              {:check-in-progress? need-check?
                               :error-msg          nil
                               :status             (:status cred)
                               :last-check         (:last-check cred)})}
-              need-check? (assoc ::cimi-api-fx/operation
-                                 [id "check"
-                                  (fn [response]
-                                    (dispatch
-                                      [::job-events/wait-job-to-complete
-                                       {:job-id      (:location response)
-                                        :on-complete #(dispatch [::check-credential-complete %])}])
-                                    )])))))
+              need-check? (assoc ::cimi-api-fx/operation [id "check" on-success])))))

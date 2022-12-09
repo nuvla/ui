@@ -385,11 +385,11 @@
                          (dispatch [::history-events/navigate
                                     (str "deployment/" (general-utils/id->uuid id))])))
           on-error   (fn [response]
-                       (do (dispatch [::set-error-message
-                                      (str "Error occured during \"" operation
-                                           "\" action on deployment")
-                                      (-> response response/parse-ex-info :message)])
-                           (dispatch [::set-submit-loading? false])))]
+                       (dispatch [::set-error-message
+                                  (str "Error occured during \"" operation
+                                       "\" action on deployment")
+                                  (-> response response/parse-ex-info :message)])
+                       (dispatch [::set-submit-loading? false]))]
       {::cimi-api-fx/operation [id operation on-success :on-error on-error]})))
 
 (reg-event-fx

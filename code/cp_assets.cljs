@@ -1,9 +1,9 @@
-(ns cp-css
+(ns cp-assets
   (:require ["fs-extra$default" :as fs]))
 
 ;; This
 (def
-  css-files
+  asset-files
   [["node_modules/semantic-ui-css/semantic.min.css"
     {:target-path "resources/public/ui/css/semantic.min.css"}]
    ["node_modules/semantic-ui-css/themes"
@@ -35,4 +35,4 @@
   (println "moving " old " to " new)
   (.copySync fs old new ))
 
-(run! move-file css-files)
+(run! move-file asset-files)

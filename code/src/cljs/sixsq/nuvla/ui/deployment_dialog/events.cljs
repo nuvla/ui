@@ -262,36 +262,38 @@
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ id first-step do-not-open-modal?]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))
-    (let [body              (if (str/starts-with? id "module/")
+    (let [from-module?      (str/starts-with? id "module/")
+          body              (if (str/starts-with? id "module/")
                               {:module {:href id}}
                               {:deployment {:href id}})
           old-deployment-id (:id deployment)
-          on-success        #(dispatch [::get-deployment (:resource-id %)])]
+          on-success        #(dispatch [::get-deployment (:resource-id %)])
+          on-error          #(do
+                               (dispatch [::reset])
+                               (dispatch
+                                 [::messages-events/add
+                                  (let [{:keys [status message]} (response/parse-ex-info %)]
+                                    {:header  (cond-> "Error during creation of deployment"
+                                                      status (str " (" status ")"))
+                                     :content message
+                                     :type    :error})]))]
       (cond->
-        {:db               (assoc db ::spec/deployment nil
-                                     ::spec/selected-credential-id nil
-                                     ::spec/selected-infra-service nil
-                                     ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
-                                     ::spec/active-step (or first-step :data)
-                                     ::spec/data-step-active? (= first-step :data)
-                                     ::spec/cloud-filter nil
-                                     ::spec/selected-cloud nil
-                                     ::spec/cloud-infra-services nil
-                                     ::spec/data-clouds nil
-                                     ::spec/license-accepted? false
-                                     ::spec/module-info nil
-                                     ::spec/selected-version nil
-                                     ::spec/original-module nil)
-         ::cimi-api-fx/add [:deployment body on-success
-                            :on-error #(do
-                                         (dispatch [::reset])
-                                         (dispatch
-                                           [::messages-events/add
-                                            (let [{:keys [status message]} (response/parse-ex-info %)]
-                                              {:header  (cond-> "Error during creation of deployment"
-                                                                status (str " (" status ")"))
-                                               :content message
-                                               :type    :error})]))]}
+        {:db (assoc db ::spec/deployment nil
+                       ::spec/selected-credential-id nil
+                       ::spec/selected-infra-service nil
+                       ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
+                       ::spec/active-step (or first-step :data)
+                       ::spec/data-step-active? (= first-step :data)
+                       ::spec/cloud-filter nil
+                       ::spec/selected-cloud nil
+                       ::spec/cloud-infra-services nil
+                       ::spec/data-clouds nil
+                       ::spec/license-accepted? false
+                       ::spec/module-info nil
+                       ::spec/selected-version nil
+                       ::spec/original-module nil)}
+        from-module? (assoc ::cimi-api-fx/add [:deployment {:module {:href id}} on-success :on-error on-error])
+        (not from-module?) (assoc ::cimi-api-fx/operation [id "clone" on-success :on-error on-error])
         old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #() :on-error #()])))))
 
 (defn on-error-reselect-credential
@@ -375,13 +377,7 @@
 (reg-event-fx
   ::deployment-operation
   (fn [_ [_ id operation]]
-    (let [callback (fn [response]
-                     (if (instance? js/Error response)
-                       (do (dispatch [::set-error-message
-                                      (str "Error occured during \"" operation
-                                           "\" action on deployment")
-                                      (-> response response/parse-ex-info :message)])
-                           (dispatch [::set-submit-loading? false]))
+    (let [on-success (fn [response]
                        (let [{:keys [message]} (response/parse response)
                              success-msg {:header  (str operation " action called successfully")
                                           :content message
@@ -390,8 +386,14 @@
                          (dispatch [::messages-events/add success-msg])
                          (dispatch [::deployments-detail-events/get-deployment id])
                          (dispatch [::history-events/navigate
-                                    (str "deployment/" (general-utils/id->uuid id))]))))]
-      {::cimi-api-fx/operation [id operation callback]})))
+                                    (str "deployment/" (general-utils/id->uuid id))])))
+          on-error   (fn [response]
+                       (do (dispatch [::set-error-message
+                                      (str "Error occured during \"" operation
+                                           "\" action on deployment")
+                                      (-> response response/parse-ex-info :message)])
+                           (dispatch [::set-submit-loading? false])))]
+      {::cimi-api-fx/operation [id operation on-success :on-error on-error]})))
 
 (reg-event-fx
   ::edit-deployment

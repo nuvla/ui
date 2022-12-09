@@ -101,7 +101,7 @@
 
 (reg-event-fx
   ::fetch
-  (fn [{{:keys [::spec/id]} :db} _]
+  (fn [{{:keys [::spec/id]} :db}]
     {::cimi-api-fx/operation [id "fetch" #()]}))
 
 (reg-event-fx
@@ -109,12 +109,10 @@
   (fn [{{:keys [::spec/parent
                 ::spec/since
                 ::spec/components]} :db} _]
-    {::cimi-api-fx/operation [parent "create-log"
-                              #(if (instance? js/Error %)
-                                 (cimi-api-fx/default-error-message % "Create log action failed!")
-                                 (dispatch [::set-log-id (:resource-id %)]))
-                              {:since      since
-                               :components (or components [])}]}))
+    (let [on-success #(dispatch [::set-log-id (:resource-id %)])
+          data       {:since      since
+                      :components (or components [])}]
+      {::cimi-api-fx/operation [parent "create-log" on-success :data data]})))
 
 (reg-event-fx
   ::set-log-id

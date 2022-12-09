@@ -18,8 +18,6 @@
     {:target-path "resources/public/ui/css/dialog.css"}]
    ["node_modules/codemirror/addon/search/matchesonscrollbar.css"
     {:target-path "resources/public/ui/css/matchesonscrollbar.css"}]
-   ["target/version.css"
-    {:target-path "resources/public/ui/css/version.css"}]
    ["node_modules/leaflet/dist/leaflet.css"
     {:target-path "resources/public/ui/css/leaflet.css"}]
    ["node_modules/leaflet-draw/dist/leaflet.draw.css"

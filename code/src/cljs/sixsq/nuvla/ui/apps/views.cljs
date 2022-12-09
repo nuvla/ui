@@ -76,7 +76,6 @@
           [apps-store-views/RootView]
           [Module nav-query-params])))))
 
-
 (defn apps-view
   [_path]
   [:<>

@@ -16,7 +16,8 @@
             [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
             [sixsq.nuvla.ui.edges.views :refer [edges-view]]
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
-            [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
+            [sixsq.nuvla.ui.welcome.views :refer [home-view]]
+            [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]))
 
 ;;; Effects ;;;
 
@@ -40,6 +41,7 @@
 
 (re-frame/reg-event-db ::navigated
   (fn [db [_ new-match]]
+(js/console.error new-match)
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)]
       (assoc db :current-route (assoc new-match :controllers controllers)))))
@@ -88,7 +90,7 @@
      :controllers
      [{;; Do whatever initialization needed for home page
        ;; I.e (re-frame/dispatch [::events/load-something-with-ajax])
-       :start (fn [& params](js/console.log "Entering home page"))
+       :start (fn [& params] (js/console.log "Entering home page"))
        ;; Teardown can be done here.
        :stop  (fn [& params] (js/console.log "Leaving home page"))}]}]
    ["about"
@@ -111,6 +113,11 @@
     {:name ::deployments
      :view deployments-view
      :link-text "deployments"}]
+   ["deployment/:id"
+    {:name ::deployement
+     :view deployments-view
+     :parameters
+     {:path {:id string?}}}]
    ["deployment-sets"
     {:name ::deployment-sets
      :view deployment-sets-view
@@ -179,8 +186,6 @@
       (when (= route-name (-> current-route :data :name))
         "> ")
       ;; Create a normal links that user can click
-(tap> route-name)
-(tap> (href route-name))
       [:a {:href (href route-name)} text]])])
 
 (defn- router-component-internal [{:keys [router]}]

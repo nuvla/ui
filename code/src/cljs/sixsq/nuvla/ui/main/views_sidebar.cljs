@@ -55,7 +55,6 @@
   (let [show?      @(subscribe [::subs/sidebar-open?])
         iframe?    @(subscribe [::subs/iframe?])
         pages-list @(subscribe [::subs/pages-list])]
-(tap> pages-list)
     [ui/Menu {:id         "nuvla-ui-sidebar"
               :style      {:transition "0.5s"
                            :width      (if show? sidebar-width "0")}

@@ -70,10 +70,10 @@
     (let [ordering (get db db-path)]
       (some #(when (= sort-key (first %)) (second %)) ordering))))
 
-(defn Sort [{:keys [db-path field-key sort-key fetch-event]
-             :or {sort-key field-key}}]
+(defn Sort [{:keys [db-path field-key sort-key fetch-event]}]
   (when db-path
-    (let [direction        @(subscribe [::sort-direction db-path sort-key])
+    (let [sort-key         (or sort-key field-key)
+          direction        @(subscribe [::sort-direction db-path sort-key])
           direction->class {"asc" " ascending"
                             "desc" " descending"}]
       [uix/LinkIcon {:name (str "sort" (direction->class direction))

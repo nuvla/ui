@@ -124,8 +124,8 @@
 (reg-event-fx
   ::stop-deployment
   (fn [_ [_ href]]
-    {::cimi-api-fx/operation
-     [href "stop" #(dispatch [::get-deployments])]}))
+    (let [on-success #(dispatch [::get-deployments])]
+      {::cimi-api-fx/operation [href "stop" on-success]})))
 
 (reg-event-fx
   ::set-state-selector

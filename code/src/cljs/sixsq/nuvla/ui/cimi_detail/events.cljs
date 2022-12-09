@@ -61,12 +61,10 @@
 (reg-event-fx
   ::operation
   (fn [_ [_ resource-id operation data]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(let [{:keys [status message]} (response/parse %)]
-         (dispatch [::messages-events/add
-                    {:header  (cond-> (str "success executing operation " operation)
-                                      status (str " (" status ")"))
-                     :content message
-                     :type    :success}]))
-      :data data]}))
+    (let [on-success #(let [{:keys [status message]} (response/parse %)]
+                        (dispatch [::messages-events/add
+                                   {:header  (cond-> (str "success executing operation " operation)
+                                                     status (str " (" status ")"))
+                                    :content message
+                                    :type    :success}]))]
+      {::cimi-api-fx/operation [resource-id operation on-success :data data]})))

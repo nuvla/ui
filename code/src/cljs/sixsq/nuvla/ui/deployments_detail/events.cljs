@@ -122,7 +122,8 @@
 (reg-event-fx
   ::detach
   (fn [_ [_ href]]
-    {::cimi-api-fx/operation [href "detach" #(dispatch [::set-deployment %])]}))
+    (let [on-success #(dispatch [::set-deployment %])]
+      {::cimi-api-fx/operation [href "detach" on-success]})))
 
 (reg-event-fx
   ::check-credential

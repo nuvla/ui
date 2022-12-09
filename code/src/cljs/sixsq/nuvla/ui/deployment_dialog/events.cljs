@@ -232,13 +232,13 @@
 (reg-event-fx
   ::check-dct-later
   (fn [_ [_ job-id]]
-    {:dispatch-later
-     [{:ms 3000 :dispatch [::get-job-check-dct job-id]}]}))
+    {:dispatch-later [{:ms 3000 :dispatch [::get-job-check-dct job-id]}]}))
 
 (reg-event-fx
   ::check-dct
   (fn [_ [_ {:keys [id] :as _deployment}]]
-    {::cimi-api-fx/operation [id "check-dct" #(dispatch [::check-dct-later (:location %)])]}))
+    (let [on-success #(dispatch [::check-dct-later (:location %)])]
+      {::cimi-api-fx/operation [id "check-dct" on-success]})))
 
 ; What's the difference with the same event in deployment
 (reg-event-fx
@@ -263,9 +263,6 @@
     (when (= :data first-step)
       (dispatch [::get-data-records]))
     (let [from-module?      (str/starts-with? id "module/")
-          body              (if (str/starts-with? id "module/")
-                              {:module {:href id}}
-                              {:deployment {:href id}})
           old-deployment-id (:id deployment)
           on-success        #(dispatch [::get-deployment (:resource-id %)])
           on-error          #(do

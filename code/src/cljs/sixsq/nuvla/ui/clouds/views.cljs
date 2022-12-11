@@ -556,7 +556,7 @@
     [AddServiceModal]]])
 
 (defn clouds-view
-  [path]
+  [{path :path}]
   (timbre/set-level! :info)
   (let [[_ uuid] path
         n        (count path)

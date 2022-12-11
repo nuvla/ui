@@ -82,7 +82,7 @@
     [cloud-list-item (assoc options :on-click-fn on-click-fn)]))
 
 
-(defn data-view
+(defmethod utils/step-content :data
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         data-clouds (subscribe [::subs/data-clouds])]

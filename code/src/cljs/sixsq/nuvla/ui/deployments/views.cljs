@@ -412,10 +412,5 @@
         [Pagination]]])))
 
 (defn deployments-view
-  [{:keys [path]}]
-  (let [[_ uuid] path
-        n        (count path)
-        children (case n
-                   2 [deployments-detail-views/DeploymentDetails uuid]
-                   [DeploymentsMainContent])]
-    [ui/Segment style/basic children]))
+  []
+  [ui/Segment style/basic [DeploymentsMainContent]])

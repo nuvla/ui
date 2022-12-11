@@ -145,7 +145,7 @@
 
 
 (defn dashboard-view
-  [path]
+  [{path :path}]
   (let [n    (count path)
         [_ uuid] path
         root [DashboardMain]]

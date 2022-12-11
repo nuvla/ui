@@ -337,8 +337,8 @@
           [data-set-views/ProcessButton]
           [data-set-views/CreateDataSet]]]))))
 
-(defmethod panel/render :data
-  [path]
+(defn data-view
+  [{:keys [path]}]
   (let [[_ uuid] path
         n (count path)]
     (case n

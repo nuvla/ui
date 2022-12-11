@@ -11,12 +11,12 @@
             [sixsq.nuvla.ui.cimi.views :refer [api-view]]
             [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
             [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
-            [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]]
-            [sixsq.nuvla.ui.deployment-dialog.views-data :refer [data-view]]
+            [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]] ;; [sixsq.nuvla.ui.data.views :refer [data-view]]
+            [sixsq.nuvla.ui.data.views :refer [data-view]]
             [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
             [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
             [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
-            [sixsq.nuvla.ui.edges.views :refer [edges-view]]
+            [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
@@ -36,7 +36,7 @@
       db
       {:current-route nil})))
 
-(re-frame/reg-event-fx ::push-state
+(re-frame/reg-event-fx :push-state
   (fn [_ [_ & route]]
     {:push-state route}))
 
@@ -125,6 +125,10 @@
     {:name ::edges
      :view edges-view
      :link-text "edges"}]
+   ["edges/:id"
+    {:name ::edges-details
+     :view DetailedView
+     :link-text "edges-details"}]
    ["credentials"
     {:name ::credentials
      :view credentials-view
@@ -144,21 +148,7 @@
    ["api"
     {:name ::api
      :view api-view
-     :link-text "api"}]
-   ["sub-page1"
-    {:name      ::sub-page1
-     :view      sub-page1
-     :link-text "Sub page 1"
-     :controllers
-     [{:start (fn [& params] (js/console.log "Entering sub-page 1"))
-       :stop  (fn [& params] (js/console.log "Leaving sub-page 1"))}]}]
-   ["sub-page2"
-    {:name      ::sub-page2
-     :view      sub-page2
-     :link-text "Sub-page 2"
-     :controllers
-     [{:start (fn [& params] (js/console.log "Entering sub-page 2"))
-       :stop  (fn [& params] (js/console.log "Leaving sub-page 2"))}]}]])
+     :link-text "api"}]])
 
 (defn on-navigate [new-match]
   (when new-match

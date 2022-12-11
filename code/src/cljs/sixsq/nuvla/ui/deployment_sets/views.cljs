@@ -186,7 +186,7 @@
 
 
 (defn deployment-sets-view
-  [path]
+  [{path :path}]
   (let [[_ path1] path
         n        (count path)
         children (case n

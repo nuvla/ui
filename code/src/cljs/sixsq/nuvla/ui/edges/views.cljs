@@ -15,7 +15,6 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.plugins.table :refer [Table]]
@@ -735,7 +734,10 @@
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
+    [ui/TableRow {:on-click #(dispatch [
+                                        ::history-events/navigate (str "edges/" uuid)
+                                        ;; :push-state :edges-details
+                                        ])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
@@ -887,7 +889,7 @@
 
 
 (defn DetailedView
-  [uuid]
+  [{{uuid :id} :path-params}]
   (if (= "nuvlabox-cluster" uuid)
     (do
       (reset! view-type :cluster)

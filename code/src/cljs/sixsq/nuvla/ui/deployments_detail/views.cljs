@@ -814,7 +814,7 @@
 
 
 (defn DeploymentDetails
-  [uuid]
+  [{{uuid :id} :path-params}]
   (let [deployment (subscribe [::subs/deployment])]
     (refresh (str "deployment/" uuid))
     (fn [_]

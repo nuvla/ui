@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.router
-  (:require [re-frame.core :as re-frame]
+  (:require [clojure.string :as str]
+            [re-frame.core :as re-frame]
             [reitit.coercion.spec :as rss]
             [reitit.core :as r]
             [reitit.frontend :as rf]
@@ -13,11 +14,11 @@
             [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]]
             [sixsq.nuvla.ui.deployment-dialog.views-data :refer [data-view]]
             [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
+            [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
             [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
             [sixsq.nuvla.ui.edges.views :refer [edges-view]]
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
-            [sixsq.nuvla.ui.welcome.views :refer [home-view]]
-            [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]))
+            [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
 ;;; Effects ;;;
 
@@ -39,12 +40,12 @@
   (fn [_ [_ & route]]
     {:push-state route}))
 
-(re-frame/reg-event-db ::navigated
+(re-frame/reg-event-db
+  ::navigated
   (fn [db [_ new-match]]
-(js/console.error new-match)
-    (let [old-match   (:current-route db)
-          controllers (rfc/apply-controllers (:controllers old-match) new-match)]
-      (assoc db :current-route (assoc new-match :controllers controllers)))))
+   (let [old-match   (:current-route db)
+         controllers (rfc/apply-controllers (:controllers old-match) new-match)]
+     (assoc db :current-route (assoc new-match :controllers controllers)))))
 
 ;;; Subscriptions ;;;
 
@@ -114,10 +115,8 @@
      :view deployments-view
      :link-text "deployments"}]
    ["deployment/:id"
-    {:name ::deployement
-     :view deployments-view
-     :parameters
-     {:path {:id string?}}}]
+    {:name ::deployment
+     :view DeploymentDetails }]
    ["deployment-sets"
     {:name ::deployment-sets
      :view deployment-sets-view
@@ -189,11 +188,14 @@
       [:a {:href (href route-name)} text]])])
 
 (defn- router-component-internal [{:keys [router]}]
-  (let [current-route @(re-frame/subscribe [::current-route])]
+  (let [current-route @(re-frame/subscribe [::current-route])
+        view        (-> current-route :data :view)
+        path-string (-> current-route :path (str/replace "/ui" ""))
+        path        (->> (str/split path-string #"/") (remove str/blank?))]
     [:div
      #_[nav {:router router :current-route current-route}]
      (when current-route
-       [(-> current-route :data :view)])]))
+       [view (merge current-route {:path-string path-string :path path})]) ]))
 
 (defn router-component []
   [router-component-internal {:router router}])

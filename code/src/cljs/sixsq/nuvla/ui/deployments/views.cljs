@@ -180,8 +180,8 @@
                       :on-click (fn [event]
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
-     [ui/TableCell [values/as-link (general-utils/id->uuid id)
-                    :page "deployment" :label (general-utils/id->short-uuid id)]]
+     [ui/TableCell [:a {:href (str "/ui/deployment/" (general-utils/id->uuid id))}
+                    (general-utils/id->short-uuid id)]]
      (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
@@ -412,7 +412,7 @@
         [Pagination]]])))
 
 (defn deployments-view
-  [path]
+  [{:keys [path]}]
   (let [[_ uuid] path
         n        (count path)
         children (case n

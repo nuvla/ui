@@ -63,9 +63,9 @@
 
 
 (reg-sub
-  ::nav-path
-  (fn [db]
-    (::spec/nav-path db)))
+ ::nav-path
+ (fn [db]
+   (::spec/nav-path db)))
 
 
 (reg-sub

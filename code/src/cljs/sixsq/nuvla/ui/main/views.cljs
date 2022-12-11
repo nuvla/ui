@@ -173,8 +173,7 @@
 
 (defn contents
   []
-  (let [resource-path    (subscribe [::subs/nav-path])
-        content-key      (subscribe [::subs/content-key])
+  (let [content-key      (subscribe [::subs/content-key])
         is-small-device? (subscribe [::subs/is-small-device?])]
     (fn []
       [ui/Container

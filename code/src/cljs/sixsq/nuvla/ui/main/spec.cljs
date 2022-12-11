@@ -55,66 +55,66 @@
                                        :notify?         true}
                ::actions-interval     {}
                ::content-key          (random-uuid)
-               ::pages                {"welcome"         {:url        "welcome"
+               ::pages                {"welcome"         {:url        "/ui/welcome"
                                                           :label-kw   :home
                                                           :icon       "home"
                                                           :protected? false
                                                           :order      0}
-                                       "documentation"   {:url        "documentation"
+                                       "documentation"   {:url        "/ui/documentation"
                                                           :label-kw   :api-doc
                                                           :icon       "info"
                                                           :protected? false}
-                                       "dashboard"       {:url        "dashboard"
+                                       "dashboard"       {:url        "/ui/dashboard"
                                                           :label-kw   :dashboard
                                                           :icon       "dashboard"
                                                           :protected? true
                                                           :order      10}
-                                       "apps"            {:url        "apps"
+                                       "apps"            {:url        "/ui/apps"
                                                           :label-kw   :apps
                                                           :icon       "fas fa-store"
                                                           :protected? true
                                                           :order      20}
-                                       "deployments"     {:url        "deployments"
+                                       "deployments"     {:url        "/ui/deployments"
                                                           :label-kw   :deployments
                                                           :name       "deployments"
                                                           :icon       "rocket"
                                                           :protected? true
                                                           :order      30}
-                                       "deployment-sets" {:url        "deployment-sets"
+                                       "deployment-sets" {:url        "/ui/deployment-sets"
                                                           :label-kw   :deployment-sets
                                                           :name       "deployments-sets"
                                                           :icon       "bullseye"
                                                           :protected? true
                                                           :hidden?    (not config/debug?)
                                                           :order      31}
-                                       "edges"           {:url        "edges"
+                                       "edges"           {:url        "/ui/edges"
                                                           :label-kw   :edges
                                                           :name       "edges"
                                                           :icon       "box"
                                                           :protected? true
                                                           :order      40}
-                                       "credentials"     {:url        "credentials"
+                                       "credentials"     {:url        "/ui/credentials"
                                                           :label-kw   :credentials
                                                           :icon       "key"
                                                           :protected? true
                                                           :order      50}
-                                       "notifications"   {:url        "notifications"
+                                       "notifications"   {:url        "/ui/notifications"
                                                           :label-kw   :notifications
                                                           :icon       "bell"
                                                           :protected? true
                                                           :order      60}
-                                       "data"            {:url             "data"
+                                       "data"            {:url             "/ui/data"
                                                           :label-kw        :data
                                                           :icon            "database"
                                                           :protected?      true
                                                           :iframe-visible? true
                                                           :order           70}
-                                       "clouds"          {:url        "clouds"
+                                       "clouds"          {:url        "/ui/clouds"
                                                           :label-kw   :infra-service-short
                                                           :icon       "cloud"
                                                           :protected? true
                                                           :order      80}
-                                       "api"             {:url        "api"
+                                       "api"             {:url        "/ui/api"
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false

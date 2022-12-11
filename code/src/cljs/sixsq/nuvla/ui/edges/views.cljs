@@ -896,7 +896,7 @@
 
 
 (defn edges-view
-  [path]
+  [{:keys [path]}]
   (dispatch [::events/init])
   (let [[_ path1 path2] path
         n        (count path)

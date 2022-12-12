@@ -38,7 +38,7 @@
   (let [tr  (subscribe [::i18n-subs/tr])
         url (subscribe [::subs/config :nuvla-logo-url])]
     ^{:key "welcome"}
-    [ui/MenuItem (cond-> {:aria-label (@tr [:welcome])
+    [ui/MenuItem (cond-> {:aria-label "hello" #_(@tr [:welcome])
                           :style      {:overflow-x "hidden"
                                        :min-width  sidebar-width}}
                          @url (assoc :href @url))

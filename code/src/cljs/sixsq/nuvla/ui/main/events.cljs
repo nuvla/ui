@@ -73,27 +73,13 @@
                                            ::action-interval-pause) actions-interval]}
             visible? (assoc :dispatch [::session-events/initialize]))))
 
-(def page-alias {"nuvlabox"        "edges"
-                 "edge"            "edges"
-                 "infrastructures" "clouds"
-                 "deployment"      "deployments"})
-
-(defn split-path-alias
-  [path]
-  (let [[page :as path-vec] (vec (str/split path #"/"))
-        real-page (get page-alias page)]
-    (if (and page real-page)
-      (assoc path-vec 0 real-page)
-      path-vec)))
 
 (reg-event-fx
   ::set-navigation-info
   (fn [{{:keys [::spec/actions-interval
-                ::spec/changes-protection?] :as db} :db} [_ path query-params]]
+                ::spec/changes-protection?]} :db} _]
     (when (not changes-protection?)
-      {:db                        (assoc db ::spec/nav-path (split-path-alias path)
-                                            ::spec/nav-query-params query-params)
-       ::fx/bulk-actions-interval [::action-interval-delete
+      {::fx/bulk-actions-interval [::action-interval-delete
                                    (dissoc actions-interval
                                            notification-polling-id
                                            check-ui-version-polling-id)]})))

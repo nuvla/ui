@@ -80,7 +80,6 @@
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)
   (screen-size-watcher)
-  (routes/routes)
   (dispatch [::history-events/initialize @config/path-prefix])
   (swap! fv/conf #(merge % {:atom r/atom}))
   (init-routes!)

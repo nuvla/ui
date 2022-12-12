@@ -12,3 +12,24 @@
         name  (get-in match [:data :name])
         path-params (:path-params match)]
     [name path-params]))
+
+(defn decode-query-string [path]
+  (some->
+   (second (str/split path #"\?"))
+   (str/split #"&")
+   (->> (map (fn [s] (let [[k v] (str/split s #"=")]
+                       [k v])))
+        (into {}))))
+
+(comment
+  (into {} (-> (str/split "ui/apps?hello=world&world=ked&" #"\?")
+               second
+               (str/split #"&")
+               (->> (map #(str/split % #"=")))))
+  (into {} (-> (str/split "ui/apps?hello=world&world=fucked&ker" #"\?")
+                second
+                (str/split #"&")
+                (->> (map (fn [s] (let [[k v] (str/split s #"=")]
+                                     [k v]))))
+                ))
+    )

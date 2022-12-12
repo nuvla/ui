@@ -184,40 +184,39 @@
 (defn LeftPanel
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        first-path           (subscribe [::main-subs/nav-path-first])
+        first-path            (subscribe [::main-subs/nav-path-first])
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         eula                 (subscribe [::main-subs/config :eula])
         terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
-    [:div {:class "nuvla-ui-session-left"}
+    [:div {:class "nuvla-ui-session-left"
+           :style {:padding "4rem"
+                   :background-color "#C10E12"}}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
                 :size     "medium"
                 :centered false}]
      [:br]
 
-     [:div {:style {:line-height "normal"
-                    :font-size   "2em"}}
-      (@tr [:edge-platform-as-a-service])]
+     [:h1 (@tr [:edge-platform-as-a-service])]
      [:br]
 
-     [:p {:style {:font-size "1.4em"}} (@tr [:start-journey-to-the-edge])]
+     [:p (@tr [:start-journey-to-the-edge])]
 
-     [:br] [:br]
      [:div
       [uix/Button
-       {:text     (@tr [:sign-in])
-        :inverted true
-        :active   (= @first-path "sign-in")
+       {:class "white-button"
+        :text     (@tr [:sign-in])
+        :primary  true
         :on-click #(dispatch [::history-events/navigate "sign-in"])}]
       (when @signup-template?
         [:span
          [uix/Button
-          {:text     (@tr [:sign-up])
-           :inverted true
-           :active   (= @first-path "sign-up")
-           :on-click #(dispatch [::history-events/navigate "sign-up"])}]
-         [:br]
-         [:br]
+          {:class "white-button"
+           :text     (@tr [:sign-up])
+           :secondary true
+           :on-click #(dispatch [::history-events/navigate "sign-up"])}
+          [:br]
+          [:br]]
          (when @terms-and-conditions
            [:a {:href   @terms-and-conditions
                 :target "_blank"
@@ -273,14 +272,10 @@
     [ui/Grid {:stackable true
               :columns   2
               :style     {:margin           0
-                          :background-color "white"}}
+                          :background-color "white"
+                          :padding 0}}
 
-     [ui/GridColumn {:style {:background-image    "url(/ui/images/session.png)"
-                             :background-size     "cover"
-                             :background-position "left"
-                             :background-repeat   "no-repeat"
-                             :color               "white"
-                             :min-height          "100vh"}}
+     [ui/GridColumn {:class "login-left"}
       [LeftPanel]]
      [ui/GridColumn
       [RightPanel]]]))

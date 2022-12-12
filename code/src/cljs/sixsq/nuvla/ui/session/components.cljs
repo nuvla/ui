@@ -16,13 +16,12 @@
         loading? (subscribe [::subs/loading?])]
     [:<>
      [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
-     [:div {:style {:margin-left "10%"
-                    :margin-top  "25%"}}
+     [:div {:class "login-right"}
       [:span {:style {:font-size "1.4em"}} title [:b title-bold]]
 
 
       [ui/Form {:style {:margin-top 30
-                        :max-width  "80%"}}
+                        :max-width  "100%"}}
        (when @error-message
          [ui/Message {:negative  true
                       :size      "tiny"
@@ -41,7 +40,6 @@
 
        (when submit-fn
          [ui/Button {:primary  true
-                     :floated  "right"
                      :loading  @loading?
                      :on-click submit-fn}
           submit-text])]

@@ -4,7 +4,7 @@
             [sixsq.nuvla.ui.config :as config]))
 
 (defn url->route-path-params [router url]
-  (let [base-path (str config/context "/")
+  (let [base-path (str config/base-path "/")
         absolute-url (if (str/starts-with? url base-path)
                        url
                        (str base-path (str/replace url #"^/" "")))

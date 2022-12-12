@@ -6,7 +6,8 @@
     [reitit.frontend.controllers :as rfc]
     [reitit.frontend.easy :as rfe]
     [reitit.frontend.history :as rfh]
-    [sixsq.nuvla.ui.routing.r-routes :refer [router]]))
+    [sixsq.nuvla.ui.routing.r-routes :refer [router]]
+    [sixsq.nuvla.ui.config :as config]))
 
 ;;; Effects ;;;
 
@@ -32,10 +33,12 @@
 
 ;;; Subscriptions ;;;
 
-(re-frame/reg-sub ::current-route
-  (fn [db]
-    (:current-route db)))
-
+(re-frame/reg-sub
+  ::current-route
+  (fn [{current-route :current-route}]
+    (let [path-string (-> current-route :path (str/replace-first config/base-path ""))
+          path        (->> (str/split path-string #"/") (remove str/blank?))]
+      (merge current-route {:path-string :path-string :path path}))))
 
 
 (defn href
@@ -71,18 +74,15 @@
      [:li {:key route-name}
       (when (= route-name (-> current-route :data :name))
         "> ")
-      ;; Create a normal links that user can click
-      [:a {:href (href route-name) :on-click (fn [event] (.preventDefault event)) :data-reitit-handle-click false} text]])])
+      [:a {:href (href route-name)} text]])])
 
 (defn- router-component-internal [{:keys [router]}]
   (let [current-route @(re-frame/subscribe [::current-route])
-        view        (-> current-route :data :view)
-        path-string (-> current-route :path (str/replace "/ui" ""))
-        path        (->> (str/split path-string #"/") (remove str/blank?))]
+        view        (-> current-route :data :view)]
     [:div
     [nav {:router router :current-route current-route}]
      (when current-route
-       [view (merge current-route {:path-string path-string :path path})]) ]))
+       [view current-route])]))
 
 (defn router-component []
   [router-component-internal {:router router}])

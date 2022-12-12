@@ -5,6 +5,6 @@
 (def debug?
   ^boolean goog.DEBUG)
 
-(def context "/ui")
+(def base-path "/ui")
 
-(def path-prefix (delay (str (utils/host-url) context)))
+(def path-prefix (delay (str (utils/host-url) base-path)))

@@ -45,7 +45,7 @@
 
 (s/def ::columns (s/coll-of #(s/valid? ::column %)))
 
-(s/def ::rows (s/coll-of map?))
+(s/def ::rows (s/nilable (s/coll-of map?)))
 
 
 (defn- calc-new-ordering [{:keys [order sort-key]} ordering]

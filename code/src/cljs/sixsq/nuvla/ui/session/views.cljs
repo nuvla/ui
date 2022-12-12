@@ -206,14 +206,14 @@
       [uix/Button
        {:class "white-button"
         :text     (@tr [:sign-in])
-        :primary  true
+        (if (= @first-path "sign-in") :primary :secondary)  true
         :on-click #(dispatch [::history-events/navigate "sign-in"])}]
       (when @signup-template?
         [:span
          [uix/Button
           {:class "white-button"
            :text     (@tr [:sign-up])
-           :secondary true
+           (if (= @first-path "sign-up") :primary :secondary) true
            :on-click #(dispatch [::history-events/navigate "sign-up"])}
           [:br]
           [:br]]

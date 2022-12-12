@@ -734,10 +734,8 @@
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow {:on-click #(dispatch [
-                                        ::history-events/navigate (str "edges/" uuid)
-                                        ;; :push-state :edges-details
-                                        ])
+    [ui/TableRow {:role "link"
+                  :on-click #(dispatch [::history-events/navigate :sixsq.nuvla.ui.routing.r-routes/edges-details {:id uuid}])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]

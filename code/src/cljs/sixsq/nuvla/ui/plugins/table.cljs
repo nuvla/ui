@@ -43,7 +43,7 @@
                            ::no-sort
                            ::cell]))
 
-(s/def ::columns (vector? #(s/valid? ::column %)))
+(s/def ::columns (s/coll-of #(s/valid? ::column %)))
 
 (s/def ::rows (s/coll-of map?))
 
@@ -127,7 +127,7 @@
         (for [col columns
               :when col
               :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
-          ^{:key field-key}
+          ^{:key (or field-key (random-uuid))}
           [ui/TableHeaderCell
            (merge (:header cell-props) header-cell-props)
            [:div
@@ -168,13 +168,13 @@
                    :else (str cell-data))])])))]]]))
 
 
-(s/fdef Table  :args (s/cat :opts (s/keys
-                                    :req-un [::rows]
-                                    :opt-un [::columns
-                                             ::table-props
-                                             ::header-cell-props
-                                             ::header-props
-                                             ::body-props
-                                             ::cell-props
-                                             ::row-render
-                                             ::wide?])))
+(s/fdef Table :args (s/cat :opts (s/keys
+                                   :req-un [::rows]
+                                   :opt-un [::columns
+                                            ::table-props
+                                            ::header-cell-props
+                                            ::header-props
+                                            ::body-props
+                                            ::cell-props
+                                            ::row-render
+                                            ::wide?])))

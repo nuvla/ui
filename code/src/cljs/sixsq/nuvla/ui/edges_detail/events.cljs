@@ -129,48 +129,33 @@
 (reg-event-fx
   ::operation
   (fn [_ [_ resource-id operation data on-success-fn on-error-fn]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error executing operation " operation)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}])
-           (on-error-fn))
-         (do
-           (let [{:keys [status message]} (response/parse %)]
-             (dispatch [::messages-events/add
-                        {:header  (cond-> (str "operation " operation " will be executed soon")
-                                          status (str " (" status ")"))
-                         :content message
-                         :type    :success}]))
-           (on-success-fn (:message %))
-           (dispatch [::get-nuvlabox resource-id])))
-      data]}))
+    (let [on-success #(do
+                        (let [{:keys [status message]} (response/parse %)]
+                          (dispatch [::messages-events/add
+                                     {:header  (cond-> (str "operation " operation " will be executed soon")
+                                                       status (str " (" status ")"))
+                                      :content message
+                                      :type    :success}]))
+                        (on-success-fn (:message %))
+                        (dispatch [::get-nuvlabox resource-id]))]
+      {::cimi-api-fx/operation
+       [resource-id operation on-success :data data]})))
 
 (reg-event-fx
   ::operation-text-response
   (fn [_ [_ operation resource-id on-success-fn on-error-fn]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error executing " operation " for NuvlaEdge " resource-id)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}])
-           (on-error-fn))
-         (do
-           (dispatch [::messages-events/add
-                      {:header  (str "operation " operation " successful")
-                       :content (or (:cronjob %) %)
-                       :type    :success}])
-           (on-success-fn (:message %))
-           (dispatch [::get-nuvlabox resource-id])))
-      nil]}))
+    (let [on-success #(do
+                        (dispatch [::messages-events/add
+                                   {:header  (str "operation " operation " successful")
+                                    :content (or (:cronjob %) %)
+                                    :type    :success}])
+                        (on-success-fn (:message %))
+                        (dispatch [::get-nuvlabox resource-id]))
+          on-error   #(do
+                        (cimi-api-fx/default-operation-on-error resource-id operation %)
+                        (on-error-fn))]
+      {::cimi-api-fx/operation
+       [resource-id operation on-success :on-error on-error]})))
 
 (reg-event-fx
   ::get-nuvlabox
@@ -198,9 +183,9 @@
 (reg-event-fx
   ::decommission
   (fn [{{:keys [::spec/nuvlabox]} :db} _]
-    (let [nuvlabox-id (:id nuvlabox)]
-      {::cimi-api-fx/operation [nuvlabox-id "decommission"
-                                #(dispatch [::get-nuvlabox nuvlabox-id])]})))
+    (let [nuvlabox-id (:id nuvlabox)
+          on-success  #(dispatch [::get-nuvlabox nuvlabox-id])]
+      {::cimi-api-fx/operation [nuvlabox-id "decommission" on-success]})))
 
 (reg-event-fx
   ::edit
@@ -230,36 +215,28 @@
 (reg-event-fx
   ::custom-action
   (fn [_ [_ resource-id operation success-msg]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error on operation " operation " for " resource-id)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-
-         (when success-msg
-           (dispatch [::messages-events/add
-                      {:header  success-msg
-                       :content success-msg
-                       :type    :success}])
-           (dispatch
-             [::job-events/wait-job-to-complete
-              {:job-id              (:location %)
-               :on-complete         (fn [{:keys [status-message return-code]}]
-                                      (dispatch [::messages-events/add
-                                                 {:header  (str (str/capitalize operation)
-                                                                " on " resource-id
-                                                                (if (= return-code 0)
-                                                                  " completed."
-                                                                  " failed!"))
-                                                  :content status-message
-                                                  :type    (if (= return-code 0)
-                                                             :success
-                                                             :error)}]))
-               :refresh-interval-ms 5000}])))]}))
+    (let [on-job-complete (fn [{:keys [status-message return-code]}]
+                            (dispatch [::messages-events/add
+                                       {:header  (str (str/capitalize operation)
+                                                      " on " resource-id
+                                                      (if (= return-code 0)
+                                                        " completed."
+                                                        " failed!"))
+                                        :content status-message
+                                        :type    (if (= return-code 0)
+                                                   :success
+                                                   :error)}]))
+          on-success      #(when success-msg
+                             (dispatch [::messages-events/add
+                                        {:header  success-msg
+                                         :content success-msg
+                                         :type    :success}])
+                             (dispatch
+                               [::job-events/wait-job-to-complete
+                                {:job-id              (:location %)
+                                 :on-complete         on-job-complete
+                                 :refresh-interval-ms 5000}]))]
+      {::cimi-api-fx/operation [resource-id operation on-success]})))
 
 (reg-event-db
   ::set-nuvlabox-managers

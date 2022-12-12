@@ -203,38 +203,37 @@
 (reg-event-fx
   ::get-session-groups
   (fn [{{:keys [::spec/session]} :db}]
-    {::cimi-api-fx/operation [(:id session) "get-groups"
-                              #(dispatch [::set-session-groups %])]}))
+    (let [on-success #(dispatch [::set-session-groups %])]
+      {::cimi-api-fx/operation [(:id session) "get-groups" on-success]})))
 
 
 (reg-event-fx
   ::switch-group
   (fn [{{:keys [::spec/session]} :db} [_ claim extended]]
-    (let [claim (if (= (:identifier session) claim) (:user session) claim)]
-      {::cimi-api-fx/operation [(:id session) "switch-group"
-                                #(dispatch [::initialize])
-                                {:claim    claim
-                                 :extended extended}]})))
+    (let [claim    (if (= (:identifier session) claim) (:user session) claim)
+          data     {:claim    claim
+                    :extended extended}
+          callback #(dispatch [::initialize])]
+      {::cimi-api-fx/operation [(:id session) "switch-group" callback :on-error callback :data data]})))
 
 
 (reg-event-db
   ::set-peers
   (fn [db [_ response]]
-    (if (instance? js/Error response)
-      (let [{:keys [status message]} (response/parse-ex-info response)]
-        (js/console.error "Get peers failed (" status "): " message)
-        db)
-      (assoc db ::spec/peers
-                (->> response
-                     (map (fn [[k v]] [(str (namespace k) "/" (name k)) v]))
-                     (sort-by (juxt second first))
-                     (into {}))))))
+    (assoc db ::spec/peers
+              (->> response
+                   (map (fn [[k v]] [(str (namespace k) "/" (name k)) v]))
+                   (sort-by (juxt second first))
+                   (into {})))))
 
 
 (reg-event-fx
   ::get-peers
   (fn [{{:keys [::spec/session]} :db}]
-    {::cimi-api-fx/operation [(:id session) "get-peers" #(dispatch [::set-peers %])]}))
+    (let [on-success #(dispatch [::set-peers %])
+          on-error   #(let [{:keys [status message]} (response/parse-ex-info %)]
+                        (js/console.error "Get peers failed (" status "): " message))]
+      {::cimi-api-fx/operation [(:id session) "get-peers" on-success :on-error on-error]})))
 
 
 (reg-event-db

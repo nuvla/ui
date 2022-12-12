@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -70,19 +71,22 @@
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
+
 (reg-event-fx
   ::get-nuvlaboxes
-  (fn [{{:keys [::spec/state-selector] :as db} :db} _]
-    {::cimi-api-fx/search
-     [:nuvlabox
-      (->> {:orderby "created:desc"
-            :filter  (general-utils/join-and
-                       (when state-selector (utils/state-filter state-selector))
-                       (full-text-search-plugin/filter-text
-                         db [::spec/edges-search]))}
-           (pagination-plugin/first-last-params
-             db [::spec/pagination]))
-      #(dispatch [::set-nuvlaboxes %])]}))
+  (fn [{{:keys [::spec/state-selector
+                ::spec/ordering] :as db} :db} _]
+    (let [ordering (or ordering spec/default-ordering)]
+      {::cimi-api-fx/search
+       [:nuvlabox
+        (->> {:orderby (ordering->order-string ordering)
+              :filter  (general-utils/join-and
+                         (when state-selector (utils/state-filter state-selector))
+                         (full-text-search-plugin/filter-text
+                           db [::spec/edges-search]))}
+             (pagination-plugin/first-last-params
+               db [::spec/pagination]))
+        #(dispatch [::set-nuvlaboxes %])]})))
 
 
 (reg-event-fx
@@ -439,18 +443,8 @@
 (reg-event-fx
   ::enable-host-level-management
   (fn [_ [_ nuvlabox-id]]
-    {::cimi-api-fx/operation
-     [nuvlabox-id
-      "enable-host-level-management"
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error enabling host level management for " nuvlabox-id)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-         (dispatch [::set-nuvlabox-playbooks-cronjob %]))
-      nil]}))
+    (let [on-success #(dispatch [::set-nuvlabox-playbooks-cronjob %])]
+      {::cimi-api-fx/operation [nuvlabox-id "enable-host-level-management" on-success]})))
 
 
 (reg-event-db

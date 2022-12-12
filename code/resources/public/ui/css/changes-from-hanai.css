@@ -4,7 +4,9 @@
 body {
      font-family: "Poppins" !important;
 }
-
+main#nuvla-ui-content{
+     padding: .6rem 2rem !important;
+}
 body .menu .item,
 .ui.header,
 h1, h2, H3, h4, h5, H6,
@@ -57,9 +59,19 @@ body .ui.primary.button, .ui.primary.buttons .button {
     background-color: #C10E12;
     border-radius: 50px;
 }
-
 body .ui.primary.button:hover, .ui.primary.buttons .button:hover {
     background-color: rgba(237, 43, 43, 1);
+}
+
+body .ui.primary.white-button.button, .ui.primary.white-button.buttons .button {
+    background-color: #ffffff;
+    color: #C10E12;
+    border-radius: 50px;
+}
+
+body .ui.primary.white-button.button:hover, .ui.primary.white-button.buttons .button:hover {
+    background-color: rgba(237, 43, 43, 1);
+    color: #ffffff;
 }
 
 body .ui.secondary.button {
@@ -72,6 +84,15 @@ body .ui.secondary.button {
 body .ui.secondary.button:hover {
     background-color: #C10E12;
     color: #ffffff;
+}
+body .ui.secondary.white-button.button {
+    background-color: rgba(255, 255, 255, 0);
+    border: 2px solid #ffffff;
+    color: #ffffff;
+}
+body .ui.secondary.white-button.button:hover {
+    background-color: #ffffff;
+    color: #C10E12;
 }
 
 body i.icon.video.play::before {
@@ -99,7 +120,7 @@ body .ui.cards>.card {
     margin: 1rem;
 }
 body .ui.divider {
-    margin: 1rem 2rem;
+    margin: 1rem 0;
     }
 
 body .divider-red {
@@ -115,6 +136,34 @@ body .ui.container {
 }
 
 /** General **/
+
+
+/** Login **/
+
+.login-left{
+    background-image: url(/ui/images/bg-hero-sigin.jpg);
+    background-size: cover;
+    background-position: left center;
+    background-repeat: no-repeat;
+    color: white;
+    height: 100vh;
+}
+
+.login-right{
+     margin: 15% 10% !important;
+}
+
+@media only screen and (max-width: 767px){
+     .login-left{
+         height: auto;
+     }
+
+     .login-left .nuvla-ui-session-left
+     {
+      margin: 2rem !important;
+     }
+}
+/** Login **/
 /** left menu **/
 body #nuvla-ui-sidebar:after {
      background-image: none;
@@ -134,14 +183,14 @@ body #nuvla-ui-sidebar .active.nuvla-apps,
 body .menu.vertical a.nuvla-apps:hover,
 body .nuvla-apps .ui.breadcrumb {
      color: #ffffff !important;
-     background-color: rgba(20, 86, 255, 1) !important;
+     background-color: rgba(73, 135, 250, 1) !important;
 }
 
 body #nuvla-ui-sidebar .active.nuvla-deployments,
 body .menu.vertical a.nuvla-deployments:hover,
 body .nuvla-deployments .ui.breadcrumb {
      color: #ffffff !important;
-     background-color: rgba(114, 6, 255, 1) !important;
+     background-color: rgba(255, 134, 47, 1) !important;
 }
 
 body #nuvla-ui-sidebar .active.nuvla-edges,

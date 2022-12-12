@@ -28,12 +28,12 @@
   (str/join "," (for [[field order] ordering]
                   (str (name field) ":" order))))
 
-(s/def ::field-key          keyword?)
-(s/def ::accessor          (s/nilable fn?))
-(s/def ::header-content    (s/nilable any?))
-(s/def ::sort-key          (s/nilable (s/or :keyword keyword? :string string?)))
-(s/def ::no-sort           (s/nilable boolean?))
-(s/def ::cell              (s/nilable fn?))
+(s/def ::field-key keyword?)
+(s/def ::accessor (s/nilable fn?))
+(s/def ::header-content (s/nilable any?))
+(s/def ::sort-key (s/nilable (s/or :keyword keyword? :string string?)))
+(s/def ::no-sort (s/nilable boolean?))
+(s/def ::cell (s/nilable fn?))
 
 (s/def ::column (s/keys
                   :opt-un [::field-key
@@ -50,10 +50,10 @@
 
 (defn- calc-new-ordering [{:keys [order sort-key]} ordering]
   (let [cleaned-ordering (remove #(= sort-key (first %)) ordering)]
-        (case order
-          "asc"  cleaned-ordering
-          "desc" (cons [sort-key "asc"] cleaned-ordering)
-          (cons [sort-key "desc"] cleaned-ordering))))
+    (case order
+      "asc" cleaned-ordering
+      "desc" (cons [sort-key "asc"] cleaned-ordering)
+      (cons [sort-key "desc"] cleaned-ordering))))
 
 (reg-event-fx
   ::sort
@@ -74,10 +74,10 @@
   (when db-path
     (let [sort-key         (or sort-key field-key)
           direction        @(subscribe [::sort-direction db-path sort-key])
-          direction->class {"asc" " ascending"
+          direction->class {"asc"  " ascending"
                             "desc" " descending"}]
-      [uix/LinkIcon {:name (str "sort" (direction->class direction))
-                     :on-click #(dispatch [::sort {:field        sort-key
+      [uix/LinkIcon {:name     (str "sort" (direction->class direction))
+                     :on-click #(dispatch [::sort {:field       sort-key
                                                    :direction   direction
                                                    :db-path     db-path
                                                    :fetch-event fetch-event}])}])))
@@ -112,14 +112,14 @@
   [{:keys [cell-props columns rows
            row-click-handler row-props row-render
            sort-config wide?]
-    :as props}]
-  (let [tr @(subscribe [::i18n-subs/tr])
+    :as   props}]
+  (let [tr            @(subscribe [::i18n-subs/tr])
         wrapper-style (if (or wide? (not columns))
-                        {:style {:display :block
-                                 :overflow-x :auto
+                        {:style {:display     :block
+                                 :overflow-x  :auto
                                  :white-space :nowrap}}
                         {})
-        columns (or columns (map (fn [[k _]] {:field-key k}) (first rows)))]
+        columns       (or columns (map (fn [[k _]] {:field-key k}) (first rows)))]
     [:div wrapper-style
      [ui/Table (:table-props props)
       [ui/TableHeader (:header-props props)
@@ -163,7 +163,7 @@
                 [ui/TableCell
                  cell-props
                  (cond
-                   cell [cell {:row-data row
+                   cell [cell {:row-data  row
                                :cell-data cell-data}]
                    :else (str cell-data))])])))]]]))
 

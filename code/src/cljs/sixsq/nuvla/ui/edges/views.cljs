@@ -406,7 +406,7 @@
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (subscribe [::subs/nuvlabox-releases-by-id])
-        first-nb-release            (->> @nb-releases
+        first-nb-release           (->> @nb-releases
                                         (remove :pre-release)
                                         first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
@@ -533,8 +533,8 @@
                                    :placeholder (@tr [:none])
                                    :value       (:vpn-server-id @creation-data)
                                    :on-change   (ui-callback/callback
-                                                 :value #(swap! creation-data assoc
-                                                                :vpn-server-id %))
+                                                  :value #(swap! creation-data assoc
+                                                                 :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
 
                  [ui/Checkbox {:toggle    true
@@ -578,30 +578,30 @@
                       [ui/Message {:content (str/capitalize
                                               (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]))]
 
-                 (let [{nb-rel                                          :nb-rel
-                        nb-assets                                       :nb-assets
-                        {:keys [compose-files url]}  :nb-selected}
+                 (let [{nb-rel                      :nb-rel
+                        nb-assets                   :nb-assets
+                        {:keys [compose-files url]} :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
                     [edges-detail/DropdownReleases
-                     {:value       nb-rel
-                      :on-change   (ui-callback/value
-                                    (fn [value]
-                                      (swap! nuvlabox-release-data
-                                             assoc :nb-rel value)
-                                      (let [nb-selected (get @nb-releases-by-id value)]
-                                        (swap! creation-data assoc
-                                               :version (-> nb-selected
-                                                            :release
-                                                            utils/get-major-version
-                                                            general-utils/str->int))
-                                        (swap! nuvlabox-release-data
-                                               assoc :nb-selected nb-selected)
-                                        (swap! nuvlabox-release-data assoc :nb-assets
-                                               (set (map :scope (:compose-files nb-selected)))))
-                                      ))}]
+                     {:value     nb-rel
+                      :on-change (ui-callback/value
+                                   (fn [value]
+                                     (swap! nuvlabox-release-data
+                                            assoc :nb-rel value)
+                                     (let [nb-selected (get @nb-releases-by-id value)]
+                                       (swap! creation-data assoc
+                                              :version (-> nb-selected
+                                                           :release
+                                                           utils/get-major-version
+                                                           general-utils/str->int))
+                                       (swap! nuvlabox-release-data
+                                              assoc :nb-selected nb-selected)
+                                       (swap! nuvlabox-release-data assoc :nb-assets
+                                              (set (map :scope (:compose-files nb-selected)))))
+                                     ))}]
 
                     [:a {:href   url
                          :target "_blank"
@@ -763,9 +763,9 @@
                                  (count (:nuvlabox-managers @current-cluster)))
                               (:count @nuvlaboxes)))]
     [pagination-plugin/Pagination
-     {:db-path      [::spec/pagination]
-      :change-event [::events/refresh-root]
-      :total-items  total-elements
+     {:db-path                [::spec/pagination]
+      :change-event           [::events/refresh-root]
+      :total-items            total-elements
       :i-per-page-multipliers [1 2 4]}]))
 
 
@@ -774,8 +774,8 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                           (apply concat
-                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                            (apply concat
+                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
@@ -784,20 +784,19 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])
-        columns
-        [{:field-key :online :header-content [ui/Icon {:name "heartbeat"}]}
-         {:field-key :state}
-         {:field-key :name}
-         {:field-key :description}
-         {:field-key :created}
-         {:field-key :created-by}
-         {:field-key :last-online :no-sort? true}
-         {:field-key :version :no-sort? true
-          :header-content [:<> (@tr [:version])
-                           (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
-         {:field-key :tags :no-sort? true}
-         {:field-key :manager :no-sort? true}]]
-    [Table {:sort-config  {:db-path      ::spec/ordering
+        columns           [{:field-key :online :header-content [ui/Icon {:name "heartbeat"}]}
+                           {:field-key :state}
+                           {:field-key :name}
+                           {:field-key :description}
+                           {:field-key :created}
+                           {:field-key :created-by}
+                           {:field-key :last-online :no-sort? true}
+                           {:field-key      :version :no-sort? true
+                            :header-content [:<> (@tr [:version])
+                                             (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
+                           {:field-key :tags :no-sort? true}
+                           {:field-key :manager :no-sort? true}]]
+    [Table {:sort-config {:db-path     ::spec/ordering
                           :fetch-event ::events/get-nuvlaboxes}
             :columns     columns
             :rows        selected-nbs

@@ -1,18 +1,21 @@
 (ns sixsq.nuvla.ui.routing.r-routes
-  (:require [re-frame.core :as re-frame]
-            [sixsq.nuvla.ui.about.views :refer [about]]
-            [sixsq.nuvla.ui.apps.views :refer [apps-view]]
-            [sixsq.nuvla.ui.cimi.views :refer [api-view]]
-            [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
-            [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
-            [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]] ;; [sixsq.nuvla.ui.data.views :refer [data-view]]
-            [sixsq.nuvla.ui.data.views :refer [data-view]]
-            [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
-            [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
-            [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
-            [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
-            [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
-            [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
+  (:require
+    [re-frame.core :as re-frame]
+    [reitit.frontend :as rf]
+    [reitit.coercion.spec :as rss]
+    [sixsq.nuvla.ui.about.views :refer [about]]
+    [sixsq.nuvla.ui.apps.views :refer [apps-view]]
+    [sixsq.nuvla.ui.cimi.views :refer [api-view]]
+    [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
+    [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
+    [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]] ;; [sixsq.nuvla.ui.data.views :refer [data-view]]
+    [sixsq.nuvla.ui.data.views :refer [data-view]]
+    [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
+    [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
+    [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
+    [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
+    [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
+    [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
 ;;; Views ;;;
 
@@ -103,3 +106,8 @@
     {:name ::api
      :view api-view
      :link-text "api"}]])
+
+(def router
+  (rf/router
+    r-routes
+    {:data {:coercion rss/coercion}}))

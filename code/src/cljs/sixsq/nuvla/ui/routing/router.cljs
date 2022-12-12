@@ -2,12 +2,11 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :as re-frame]
-    [reitit.coercion.spec :as rss]
     [reitit.core :as r]
-    [reitit.frontend :as rf]
     [reitit.frontend.controllers :as rfc]
     [reitit.frontend.easy :as rfe]
-    [sixsq.nuvla.ui.routing.r-routes :refer [r-routes]]))
+    [reitit.frontend.history :as rfh]
+    [sixsq.nuvla.ui.routing.r-routes :refer [router]]))
 
 ;;; Effects ;;;
 
@@ -18,13 +17,6 @@
 (js/console.error "route in effex" route)
     (apply rfe/push-state route)))
 
-;;; Events ;;;
-
-(re-frame/reg-event-db ::initialize-db
-  (fn [db _]
-    (if db
-      db
-      {:current-route nil})))
 
 (re-frame/reg-event-fx ::push-state
   (fn [_ [_ & route]]
@@ -60,17 +52,16 @@
   (when new-match
     (re-frame/dispatch [::navigated new-match])))
 
-(def router
-  (rf/router
-    r-routes
-    {:data {:coercion rss/coercion}}))
 
 (defn init-routes! []
   (js/console.log "initializing routes")
   (rfe/start!
     router
     on-navigate
-    {:use-fragment false}))
+    {:use-fragment false
+     :ignore-anchor-click? (fn [router e el uri]
+                             (and (rfh/ignore-anchor-click? router e el uri)
+                                (not= "false" (.getAttribute el "data-reitit-handle-click"))))}))
 
 (defn nav [{:keys [router current-route]}]
   [:ul
@@ -81,7 +72,7 @@
       (when (= route-name (-> current-route :data :name))
         "> ")
       ;; Create a normal links that user can click
-      [:a {:href (href route-name)} text]])])
+      [:a {:href (href route-name) :on-click (fn [event] (.preventDefault event)) :data-reitit-handle-click false} text]])])
 
 (defn- router-component-internal [{:keys [router]}]
   (let [current-route @(re-frame/subscribe [::current-route])

@@ -25,7 +25,13 @@
       :style    {:min-width  sidebar-width
                  :overflow-x "hidden"}
       :active   @active?
-      :href     (if auth-needed? "sign-in" url)}]))
+      :href     (if auth-needed? "sign-in" url)
+      :on-click (fn [event]
+                  (.preventDefault event)
+                  (dispatch (if auth-needed?
+                              [::history-events/navigate "sign-in"]
+                              [::events/navigate url])))
+      :data-reitit-handle-click false}]))
 
 (defn logo-item
   []

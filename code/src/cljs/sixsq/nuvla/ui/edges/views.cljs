@@ -735,7 +735,7 @@
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow {:role "link"
-                  :on-click #(dispatch [::history-events/navigate :sixsq.nuvla.ui.routing.r-routes/edges-details {:id uuid}])
+                  :on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]

@@ -15,13 +15,15 @@
 
 (reg-event-fx
   ::navigate
-  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ relative-url]]
-    (let [nav-effect {::fx/navigate [relative-url]}]
+  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ route params query]]
+    (let [nav-effect {:fx [[:dispatch [:sixsq.nuvla.ui.routing.router/push-state route params query]]]}]
       (if changes-protection?
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect)}
         (do
-          (log/info "triggering navigate effect " relative-url)
-          nav-effect)))))
+          (log/info "triggering navigate effect " (str {:route route
+                                                        :query query}))
+          nav-effect
+          )))))
 
 
 #_(reg-event-fx

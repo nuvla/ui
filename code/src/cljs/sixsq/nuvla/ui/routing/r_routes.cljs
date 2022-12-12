@@ -1,11 +1,5 @@
-(ns sixsq.nuvla.ui.router
-  (:require [clojure.string :as str]
-            [re-frame.core :as re-frame]
-            [reitit.coercion.spec :as rss]
-            [reitit.core :as r]
-            [reitit.frontend :as rf]
-            [reitit.frontend.controllers :as rfc]
-            [reitit.frontend.easy :as rfe]
+(ns sixsq.nuvla.ui.routing.r-routes
+  (:require [re-frame.core :as re-frame]
             [sixsq.nuvla.ui.about.views :refer [about]]
             [sixsq.nuvla.ui.apps.views :refer [apps-view]]
             [sixsq.nuvla.ui.cimi.views :refer [api-view]]
@@ -20,39 +14,6 @@
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
-;;; Effects ;;;
-
-;; Triggering navigation from events.
-
-(re-frame/reg-fx :push-state
-  (fn [route]
-    (apply rfe/push-state route)))
-
-;;; Events ;;;
-
-(re-frame/reg-event-db ::initialize-db
-  (fn [db _]
-    (if db
-      db
-      {:current-route nil})))
-
-(re-frame/reg-event-fx :push-state
-  (fn [_ [_ & route]]
-    {:push-state route}))
-
-(re-frame/reg-event-db
-  ::navigated
-  (fn [db [_ new-match]]
-   (let [old-match   (:current-route db)
-         controllers (rfc/apply-controllers (:controllers old-match) new-match)]
-     (assoc db :current-route (assoc new-match :controllers controllers)))))
-
-;;; Subscriptions ;;;
-
-(re-frame/reg-sub ::current-route
-  (fn [db]
-    (:current-route db)))
-
 ;;; Views ;;;
 
 (defn home-page []
@@ -60,7 +21,7 @@
    [:h1 "This is home page"]
    [:button
     ;; Dispatch navigate event that triggers a (side)effect.
-    {:on-click #(re-frame/dispatch [::push-state ::sub-page2])}
+    {:on-click #(re-frame/dispatch [:sixsq.nuvla.ui.routing.router/push-state ::sub-page2])}
     "Go to sub-page 2"]])
 
 (defn sub-page1 []
@@ -71,21 +32,10 @@
   [:div
    [:h1 "This is sub-page 2"]])
 
-;;; Routes ;;;
-
-(defn href
-  "Return relative url for given route. Url can be used in HTML links."
-  ([k]
-   (href k nil nil))
-  ([k params]
-   (href k params nil))
-  ([k params query]
-   (rfe/href k params query)))
-
-(def routes
+(def r-routes
   ["/ui/"
    [""
-    {:name      ::home-from-example
+    {:name      ::home-root
      :view      home-page
      :link-text "Home"
      :controllers
@@ -94,6 +44,10 @@
        :start (fn [& params] (js/console.log "Entering home page"))
        ;; Teardown can be done here.
        :stop  (fn [& params] (js/console.log "Leaving home page"))}]}]
+   ["sub-page2"
+    {:name ::sub-page2
+     :view sub-page2
+     :link-text "About"}]
    ["about"
     {:name ::about
      :view about
@@ -116,7 +70,7 @@
      :link-text "deployments"}]
    ["deployment/:id"
     {:name ::deployment
-     :view DeploymentDetails }]
+     :view DeploymentDetails}]
    ["deployment-sets"
     {:name ::deployment-sets
      :view deployment-sets-view
@@ -149,43 +103,3 @@
     {:name ::api
      :view api-view
      :link-text "api"}]])
-
-(defn on-navigate [new-match]
-  (when new-match
-    (re-frame/dispatch [::navigated new-match])))
-
-(def router
-  (rf/router
-    routes
-    {:data {:coercion rss/coercion}}))
-
-(defn init-routes! []
-  (js/console.log "initializing routes")
-  (rfe/start!
-    router
-    on-navigate
-    {:use-fragment false}))
-
-(defn nav [{:keys [router current-route]}]
-  [:ul
-   (for [route-name (r/route-names router)
-         :let       [route (r/match-by-name router route-name)
-                     text (-> route :data :link-text)]]
-     [:li {:key route-name}
-      (when (= route-name (-> current-route :data :name))
-        "> ")
-      ;; Create a normal links that user can click
-      [:a {:href (href route-name)} text]])])
-
-(defn- router-component-internal [{:keys [router]}]
-  (let [current-route @(re-frame/subscribe [::current-route])
-        view        (-> current-route :data :view)
-        path-string (-> current-route :path (str/replace "/ui" ""))
-        path        (->> (str/split path-string #"/") (remove str/blank?))]
-    [:div
-     #_[nav {:router router :current-route current-route}]
-     (when current-route
-       [view (merge current-route {:path-string path-string :path path})]) ]))
-
-(defn router-component []
-  [router-component-internal {:router router}])

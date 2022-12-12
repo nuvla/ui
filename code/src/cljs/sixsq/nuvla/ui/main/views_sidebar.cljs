@@ -25,7 +25,7 @@
       :style    {:min-width  sidebar-width
                  :overflow-x "hidden"}
       :active   @active?
-      :href     (if auth-needed? "sign-in" url) }]))
+      :href     (if auth-needed? "sign-in" url)}]))
 
 (defn logo-item
   []

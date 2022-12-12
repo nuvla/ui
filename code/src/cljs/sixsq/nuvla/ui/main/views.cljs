@@ -33,7 +33,7 @@
             [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.profile.views]
-            [sixsq.nuvla.ui.router :refer [router-component]]
+            [sixsq.nuvla.ui.routing.router :refer [router-component]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.utils.general :as utils]

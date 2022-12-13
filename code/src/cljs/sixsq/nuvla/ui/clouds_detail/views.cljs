@@ -59,7 +59,7 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:button-text (@tr [:terminate])
-      :on-confirm  #(dispatch [::events/terminate])
+      :on-confirm  #(dispatch [::events/operation "terminate"])
       :danger-msg  (@tr [:infrastructure-terminate-warning])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "delete"}]
@@ -75,7 +75,7 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:button-text (@tr [:stop])
-      :on-confirm  #(dispatch [::events/stop])
+      :on-confirm  #(dispatch [::events/operation "stop"])
       :danger-msg  (@tr [:infrastructure-stop-warning])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "stop"}]
@@ -91,7 +91,7 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:button-text (@tr [:start])
-      :on-confirm  #(dispatch [::events/start])
+      :on-confirm  #(dispatch [::events/operation "start"])
       :danger-msg  (@tr [:infrastructure-start-warning])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "rocket"}]

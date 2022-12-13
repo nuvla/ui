@@ -7,6 +7,12 @@
 - Dev tools - Integration of portal
 - Deployment modal - update button disabled when registries is added in module newer version bugfix #1038
 - Cloudflare preview deploys - Simulate behavior of nginx prod server
+- Deployment - clone bugfix #1045
+- CIMI-API - operation on-error default handler and signature change
+- General - operation signature change alignment
+- Table widget - adds re-usable tabled widget with wort functionality #1029
+- Edges overview - Makes table sortable by column using table widget #1005
+- Deployments overview - Makes table sortable by column using table widget #1005
 
 ## [2.32.10] - 2022-12-06
 

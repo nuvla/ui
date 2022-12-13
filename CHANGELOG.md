@@ -14,6 +14,7 @@
 - Edges overview - Makes table sortable by column using table widget #1005
 - Deployments overview - Makes table sortable by column using table widget #1005
 - Deployment detail - Clone button should be disabled when operation not available
+- Profile - User should confirm deletion of coupon or payment methods #1052
 
 ## [2.32.10] - 2022-12-06
 

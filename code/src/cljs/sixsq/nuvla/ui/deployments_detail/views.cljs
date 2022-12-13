@@ -411,7 +411,7 @@
 
 
 (defn CloneButton
-  [{:keys [id data module] :as _deployment}]
+  [{:keys [id data] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
         first-step (if data :data :infra-services)
         button     (action-button
@@ -421,7 +421,7 @@
                       :popup-text  (@tr [:deployment-clone-msg])
                       :on-click    #(dispatch [::deployment-dialog-events/create-deployment
                                                id first-step])
-                      :disabled?   (nil? module)})]
+                      :disabled?   (not (general-utils/can-operation? "clone" deployment))})]
     [:<>
      [deployment-dialog-views/deploy-modal]
      button]))

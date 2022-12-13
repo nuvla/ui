@@ -13,6 +13,7 @@
 - Table widget - adds re-usable tabled widget with wort functionality #1029
 - Edges overview - Makes table sortable by column using table widget #1005
 - Deployments overview - Makes table sortable by column using table widget #1005
+- Deployment detail - Clone button should be disabled when operation not available
 
 ## [2.32.10] - 2022-12-06
 

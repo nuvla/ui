@@ -190,7 +190,14 @@
      (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
-                              :max-width     "20ch"}} (:name module)])
+                              :max-width     "20ch"}}
+        [:div {:class "app-icon-name"
+               :style {:display :flex
+                       :align-items :center}}
+         [:img {:src (or (:thumb-nail module) (:logo-url module))
+                :style {:width "42px"
+                        :height "30px"}}]
+         [:div (:name module)]]])
      [ui/TableCell (utils/deployment-version deployment)]
      [ui/TableCell state]
      [ui/TableCell (when url

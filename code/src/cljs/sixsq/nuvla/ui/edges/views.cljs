@@ -744,6 +744,7 @@
      [ui/TableCell description]
      [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell @creator]
+     [ui/TableCell (str refresh-interval "s")]
      [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
@@ -790,6 +791,7 @@
                            {:field-key :description}
                            {:field-key :created}
                            {:field-key :created-by}
+                           {:field-key :refresh-interval}
                            {:field-key :last-online :no-sort? true}
                            {:field-key      :version :no-sort? true
                             :header-content [:<> (@tr [:version])

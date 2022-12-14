@@ -3,6 +3,8 @@
 
 (def dictionary
   {:en {
+        :delete-coupon                                 "Delete coupon?"
+        :delete-payment-method                         "Delete payment method?"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -920,6 +922,8 @@
         }
 
    :fr {
+        :delete-coupon                                 "Supprimer le coupon ?"
+        :delete-payment-method                         "Supprimer le moyen de paiement ?"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"

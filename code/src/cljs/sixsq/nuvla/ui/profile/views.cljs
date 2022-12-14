@@ -834,7 +834,7 @@
                                       :trigger     (r/as-element [ui/Button
                                                                   [ui/Icon {:name "trash", :color "red"}]])
                                       :header      (@tr [:delete-payment-method])
-                                      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+                                      :content     (@tr [:are-you-sure?])
                                       :button-text (@tr [:delete])
                                       }])}]]]])))
              [ui/TableRow
@@ -1072,7 +1072,7 @@
                                                           :icon  true}
                                                [ui/Icon {:name "trash", :color "red"}]])
                                :header      (@tr [:delete-coupon])
-                               :danger-msg  (@tr [:danger-action-cannot-be-undone])
+                               :content     (@tr [:are-you-sure?])
                                :button-text (@tr [:delete])}])}]]]]]
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"

@@ -20,40 +20,37 @@
   (fn [{db :db}]
     {:db                   (assoc db ::spec/loading-session? true
                                      ::spec/error-message nil)
-     ::cimi-api-fx/session [(fn [session]
-                              (dispatch [::set-session session])
-                              (when session
-                                #_(dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
-                                (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])
-                                (dispatch [:sixsq.nuvla.ui.profile.events/search-existing-customer])
-                                (dispatch [::search-groups])
-                                (dispatch [::get-peers])))]}))
+     ::cimi-api-fx/session [#(dispatch [::set-session %])]}))
 
 
 (reg-event-fx
   ::set-session
   (fn [{{:keys [::spec/session
                 ::main-spec/nav-path
-                ::main-spec/pages] :as db} :db} [_ session-arg]]
+                ::main-spec/pages] :as db} :db} [_ new-session]]
     (let [query-str (.-search (.-location js/window))
-          redirect  (when (and (nil? session-arg)
+          redirect  (when (and (nil? new-session)
                                (->> nav-path first (get pages) :protected?))
                       (str (str/join "/" nav-path)
                            (when-not (str/blank? query-str)
                              (js/encodeURIComponent query-str))))
           navigate  (str "sign-in" (when redirect
                                      (str "?redirect=" redirect)))]
-      (cond-> {:db (assoc db ::spec/session session-arg
+      (cond-> {:db (assoc db ::spec/session new-session
                              ::spec/session-loading? false)}
-              session-arg (assoc ::fx/automatic-logout-at-session-expiry
-                                 [session-arg])
+              new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])
 
               redirect (update :fx conj [:dispatch [::history-events/navigate navigate]])
               ;; force refresh templates collection cache when not the same user (different session)
-              (not= session session-arg) (assoc :fx
+              (not= session new-session) (assoc :fx
                                                 [[:dispatch [::cimi-events/get-cloud-entry-point]]
                                                  [:dispatch [:sixsq.nuvla.ui.main.events/force-refresh-content]]
-                                                 [:dispatch [::get-session-groups]]])))))
+                                                 [:dispatch [::get-session-groups]]
+                                                 [:dispatch [:sixsq.nuvla.ui.main.events/notifications-polling]]
+                                                 [:dispatch [:sixsq.nuvla.ui.profile.events/search-existing-customer]]
+                                                 [:dispatch [:sixsq.nuvla.ui.profile.events/search-existing-vendor]]
+                                                 [:dispatch [::search-groups]]
+                                                 [:dispatch [::get-peers]]])))))
 
 
 (reg-event-fx

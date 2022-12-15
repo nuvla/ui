@@ -15,6 +15,10 @@
 - Deployments overview - Makes table sortable by column using table widget #1005
 - Deployment detail - Clone button should be disabled when operation not available
 - Profile - User should confirm deletion of coupon or payment methods #1052
+- Profile - Hide start getting paid when user is already a vendor
+- Apps - Hide pulish and unpublish when not possible for the user
+- Apps - Hide copy on menubar when application is not free and users doesn't have edit #1058
+- Initialize - Load vendor on initialize and indirectly when switching group
 
 ## [2.32.10] - 2022-12-06
 

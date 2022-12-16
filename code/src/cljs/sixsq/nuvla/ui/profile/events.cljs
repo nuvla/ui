@@ -146,7 +146,7 @@
 
 (reg-event-fx
   ::search-existing-customer
-  (fn [{{:keys [::session-spec/session]} :db} _]
+  (fn [{{:keys [::session-spec/session]} :db}]
     (if (not= (:active-claim session) "group/nuvla-admin")
       {::cimi-api-fx/search [:customer {:select "id"}
                              #(if-let [id (-> % :resources first :id)]

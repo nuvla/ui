@@ -24,7 +24,7 @@
 
 (reg-event-fx
   ::refresh
-  (fn []
+  (fn [_ [_ db-path]]
     {:fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000
@@ -63,7 +63,7 @@
   (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
                 ::spec/filter-external
-                ::spec/ordering] :as db} :db} [_ filter-external-arg]]
+                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-path] :as filter}]]
     (let [filter-external (or filter-external-arg filter-external)
           state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param
@@ -78,7 +78,7 @@
                                    :orderby     (ordering->order-string (or ordering spec/default-ordering))
                                    :filter      filter-str}
                                   (pagination-plugin/first-last-params
-                                    db [::spec/pagination]))
+                                    db [(or pagination-path ::spec/pagination)]))
                              #(dispatch [::set-deployments %])]})))
 
 (reg-event-fx

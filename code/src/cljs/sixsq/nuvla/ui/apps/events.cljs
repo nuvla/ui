@@ -44,7 +44,7 @@
                         {:id        refresh-action-get-deployment
                          :frequency 20000
                          :event     [::deployments-events/get-deployments
-                                     (str "module/id='" (:id module) "'")]}]]]})))
+                                     {:filter-external-arg (str "module/id='" (:id module) "'")}]}]]]})))
 
 
 ;; Validation
@@ -192,7 +192,7 @@
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::deployments-events/get-deployments
-                                                    (str "module/id='" (:id %) "'")]))]})))
+                                                    {:filter-external-arg (str "module/id='" (:id %) "'")}]))]})))
 
 
 (reg-event-db

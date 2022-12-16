@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.plugins.pagination
   (:require [cljs.spec.alpha :as s]
+            [clojure.edn :as edn]
             [clojure.string :as str]
+            [re-frame.cofx :refer [inject-cofx reg-cofx]]
             [re-frame.core :refer [dispatch reg-event-fx subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -20,6 +22,40 @@
   {::items-per-page         default-items-per-page
    ::default-items-per-page default-items-per-page
    ::active-page            1})
+
+(def local-storage-key-prefix "nuvla.ui.pagination.")
+
+(defn- get-local-storage-key [db-path]
+  (str local-storage-key-prefix db-path ))
+
+(reg-cofx
+ ::get-stored-paginations
+ (fn [coeffects]
+   (let [store-entries (->> (.-localStorage js/window)
+                            (js/Object.entries)
+                            (filter #(str/starts-with? (first %) local-storage-key-prefix)))]
+     (assoc coeffects :paginations
+       (reduce (fn [paginations entry]
+                 (merge paginations (edn/read-string (second entry))))
+         {}
+         store-entries)))))
+
+(reg-event-fx
+  ::init-paginations
+  [(inject-cofx ::get-stored-paginations)]
+  (fn [{db :db paginations :paginations}]
+    (tap> paginations)
+    ;; {:db db}
+    {:db (reduce-kv (fn [db k v] (if (vector? k)
+                                   (update-in db k merge v)
+                                   (update db k merge v))) db paginations)}))
+
+(reg-event-fx
+  ::store-pagination
+  (fn [_ [_ db-path items-per-page]]
+    {:storage/set {:session false
+                   :name (get-local-storage-key db-path)
+                   :value {db-path {::items-per-page items-per-page}}}}))
 
 (reg-event-fx
   ::change-page
@@ -78,11 +114,12 @@
                     :on-change (ui-callback/value
                                  #(do
                                     (dispatch [::helpers/set db-path ::items-per-page %])
+                                    (dispatch [::store-pagination db-path %])
                                     (change-page active-page)))}]]
      [ui/Pagination
       {:size          :tiny
        :total-pages   total-pages
-       :first-item    (icon "angle double left")
+       :first-item     (icon "angle double left")
        :last-item     (icon "angle double right")
        :prev-item     (icon "angle left")
        :next-item     (icon "angle right")

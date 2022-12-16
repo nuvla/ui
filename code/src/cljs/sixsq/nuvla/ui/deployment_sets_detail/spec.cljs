@@ -40,15 +40,16 @@
                                  :active-step :select-apps-targets)
    ::targets-selected          #{}
    ::edges-search              (full-text-search-plugin/build-spec)
-   ::clouds-pagination         (pagination-plugin/build-spec
-                                 :default-items-per-page 15)
    ::clouds-search             (full-text-search-plugin/build-spec)
-   ::apps-pagination           (pagination-plugin/build-spec
-                                 :default-items-per-page 15)
-   ::edges-pagination          (pagination-plugin/build-spec
-                                 :default-items-per-page 15)
    ::tab-new-apps              (tab-plugin/build-spec :active-tab :app-store)
    ::bulk-jobs                 (bulk-progress-plugin/build-spec)
    ::create-name               ""
    ::create-description        ""
    ::create-start              false})
+
+(def pagination-defaults {::clouds-pagination (pagination-plugin/build-spec
+                                                :default-items-per-page 15)
+                          ::apps-pagination   (pagination-plugin/build-spec
+                                                :default-items-per-page 15)
+                          ::edges-pagination  (pagination-plugin/build-spec
+                                                :default-items-per-page 15)})

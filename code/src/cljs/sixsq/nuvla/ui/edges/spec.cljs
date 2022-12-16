@@ -63,6 +63,7 @@
    ::nuvlaboxes-in-clusters       nil
    ::nuvlabox-playbooks-cronjob   nil
    ::ordering                     (build-ordering)
-   ::pagination                   (pagination-plugin/build-spec
-                                    :default-items-per-page 25)
    ::edges-search                 (full-text-search-plugin/build-spec)})
+
+(def pagination-default {::pagination (pagination-plugin/build-spec
+                                        :default-items-per-page 25)})

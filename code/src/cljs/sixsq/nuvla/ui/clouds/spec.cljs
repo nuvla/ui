@@ -105,6 +105,7 @@
    ::is-new?                          false
    ::infra-service                    nil
    ::multiplicity                     1
-   ::management-credentials-available nil
-   ::pagination                       (pagination-plugin/build-spec
+   ::management-credentials-available nil })
+
+(def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 8)})

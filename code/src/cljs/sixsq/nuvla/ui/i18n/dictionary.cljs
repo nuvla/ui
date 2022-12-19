@@ -1047,7 +1047,7 @@
         :create-nuvlabox-usb                           "Installation automatique de plusieurs dispositifs NuvlaEdge avec une seule clé USB. Avec cette méthode, une nouvell clé API sera généré pour vous, et inclus dans un fichier que vous devez placer dans une clé USB"
         :create-vpn-credential                         "créer un identifiant VPN"
         :created                                       "créé"
-        :created-by                                    "Créé par"
+        :created-by                                    "créé par"
         :created-from-module                           "Créé à partir de l'application : "
         :credential                                    "identifiant"
         :credential-choose-type                        "Choisissez le type d'identifiant que vous voulez ajouter ou créer."

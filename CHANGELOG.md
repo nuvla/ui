@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.32.11] - 2022-12-19
+
 ### Changed
 
 - Dev tools - Integration of portal
@@ -20,6 +22,7 @@
 - Apps - Hide copy on menubar when application is not free and users doesn't have edit #1058
 - Initialize - Load vendor on initialize and indirectly when switching group
 - Deployment modal - Inform vendors and user with edit-right that it's free for them #1063
+- Dependencies - Update to parent 6.7.12
 
 ## [2.32.10] - 2022-12-06
 

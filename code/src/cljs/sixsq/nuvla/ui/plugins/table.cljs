@@ -35,13 +35,13 @@
 (s/def ::no-sort (s/nilable boolean?))
 (s/def ::cell (s/nilable fn?))
 
-(s/def ::column (s/nilable (s/keys
-                             :opt-un [::field-key
-                                      ::header-content
-                                      ::accessor
-                                      ::sort-key
-                                      ::no-sort
-                                      ::cell])))
+(s/def ::column (s/keys
+                  :opt-un [::field-key
+                           ::header-content
+                           ::accessor
+                           ::sort-key
+                           ::no-sort
+                           ::cell]))
 
 (s/def ::columns (s/coll-of #(s/valid? ::column %)))
 

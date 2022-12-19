@@ -164,78 +164,78 @@
 
 
 (defn MenuBar []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        module        (subscribe [::subs/module])
-        module-common (subscribe [::subs/module-common])
-        is-new?       (subscribe [::subs/is-new?])
-        page-changed? (subscribe [::main-subs/changes-protection?])
-        form-valid?   (subscribe [::subs/form-valid?])
-        editable?     (subscribe [::subs/editable?])
-        module-id     (subscribe [::subs/module-id-version])
-        copy-module   (subscribe [::subs/copy-module])]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        module           (subscribe [::subs/module])
+        is-new?          (subscribe [::subs/is-new?])
+        page-changed?    (subscribe [::main-subs/changes-protection?])
+        form-valid?      (subscribe [::subs/form-valid?])
+        editable?        (subscribe [::subs/editable?])
+        module-id        (subscribe [::subs/module-id-version])
+        is-project?      (subscribe [::subs/is-project?])
+        is-app?          (subscribe [::subs/is-app?])
+        can-copy?        (subscribe [::subs/can-copy?])
+        paste-disabled?  (subscribe [::subs/paste-disabled?])
+        launch-disabled? (subscribe [::subs/launch-disabled?])
+        can-publish?     (subscribe [::subs/can-publish?])
+        can-unpublish?   (subscribe [::subs/can-unpublish?])]
     (fn []
-      (let [subtype          (::spec/subtype @module-common)
-            launchable?      (not= "project" subtype)
-            launch-disabled? (or @is-new? @page-changed?)
-            add?             (= "project" subtype)
-            add-disabled?    (or @is-new? @page-changed?)
-            published?       (utils/published? @module @module-id)]
+      [components/StickyBar
+       [ui/Menu {:borderless true}
+        (when @editable?
+          [uix/MenuItem
+           {:name     (@tr [:save])
+            :icon     "save"
+            :disabled (edit-button-disabled? @page-changed? @form-valid?)
+            :on-click save-callback}])
 
-        [components/StickyBar
-         [ui/Menu {:borderless true}
-          (when @editable?
-            [uix/MenuItem
-             {:name     (@tr [:save])
-              :icon     "save"
-              :disabled (edit-button-disabled? @page-changed? @form-valid?)
-              :on-click save-callback}])
+        (when @is-app?
+          [uix/MenuItem
+           {:name     (@tr [:launch])
+            :icon     "rocket"
+            :disabled @launch-disabled?
+            :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                  [::deployment-dialog-events/create-deployment
+                                   @module-id :infra-services]])}])
 
-          (when launchable?
-            [uix/MenuItem
-             {:name     (@tr [:launch])
-              :icon     "rocket"
-              :disabled launch-disabled?
-              :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                    [::deployment-dialog-events/create-deployment
-                                     @module-id :infra-services]])}])
+        (when @is-project?
+          [uix/MenuItem
+           {:name     (@tr [:add])
+            :icon     "add"
+            :disabled @launch-disabled?
+            :on-click #(dispatch [::events/open-add-modal])}])
+        (when @can-copy?
+          [ui/Popup
+           {:trigger        (r/as-element
+                              [ui/MenuItem
+                               {:name     (@tr [:copy])
+                                :icon     "copy"
+                                :disabled @is-new?
+                                :on-click #(dispatch [::events/copy])}])
+            :content        (@tr [:module-copied])
+            :on             "click"
+            :position       "top center"
+            :wide           true
+            :hide-on-scroll true}])
 
-          (when add?
-            [uix/MenuItem
-             {:name     (@tr [:add])
-              :icon     "add"
-              :disabled add-disabled?
-              :on-click #(dispatch [::events/open-add-modal])}])
-          (when (not= "project" subtype)
-            [ui/Popup
-             {:trigger        (r/as-element [ui/MenuItem
-                                             {:name     (@tr [:copy])
-                                              :icon     "copy"
-                                              :disabled @is-new?
-                                              :on-click #(dispatch [::events/copy])}])
-              :content        (@tr [:module-copied])
-              :on             "click"
-              :position       "top center"
-              :wide           true
-              :hide-on-scroll true}])
+        (when @is-project?
+          [uix/MenuItem
+           {:name     (@tr [:paste])
+            :icon     "paste"
+            :disabled @paste-disabled?
+            :on-click #(dispatch [::events/open-paste-modal])}])
 
-          (when (= "project" subtype)
-            [uix/MenuItem
-             {:name     (@tr [:paste])
-              :icon     "paste"
-              :disabled (when (nil? @copy-module) true)
-              :on-click #(dispatch [::events/open-paste-modal])}])
+        (when (general-utils/can-delete? @module)
+          [DeleteButton @module])
 
-          (when (general-utils/can-delete? @module)
-            [DeleteButton @module])
+        (when @can-unpublish?
+          [UnPublishButton @module])
 
-          (when (not= "project" subtype)
-            (if published?
-              [UnPublishButton @module]
-              [PublishButton @module]))
+        (when @can-publish?
+          [PublishButton @module])
 
-          [components/RefreshMenu
-           {:refresh-disabled? @is-new?
-            :on-refresh        #(dispatch [::events/refresh])}]]]))))
+        [components/RefreshMenu
+         {:refresh-disabled? @is-new?
+          :on-refresh        #(dispatch [::events/refresh])}]]])))
 
 
 (defn save-modal

@@ -1133,7 +1133,8 @@
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true}
           [ui/Icon {:className "fad fa-envelope-open-dollar"}]
-          (@tr [:vendor-getting-paid])]
+          (when-not @vendor
+            (@tr [:vendor-getting-paid]))]
          [:br]
          (if @vendor
            [DashboardVendor]

@@ -15,10 +15,7 @@ test('Marketplace shows only published apps', async ({ page }, { project, config
   for (const href of hrefs) {
     const appUrlToVisit = baseURL + '/ui/' + href;
     await page.goto(appUrlToVisit);
-    console.log('checking app url:', appUrlToVisit);
-    await page
-      .locator('a', { hasText: /\bun-publish\b/i })
-      .nth(0)
-      .waitFor({ timeout: 5000 });
+    await page.locator('a:has-text("Versions")').click();
+    expect(page.locator('tr.active > td:nth-child(2) > i')).toHaveClass('teal check icon');
   }
 });

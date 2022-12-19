@@ -791,7 +791,8 @@
                            {:field-key :description}
                            {:field-key :created}
                            {:field-key :created-by}
-                           {:field-key :refresh-interval}
+                           {:field-key      :refresh-interval
+                            :header-content (str/lower-case (@tr [:report-interval]))}
                            {:field-key :last-online :no-sort? true}
                            {:field-key      :version :no-sort? true
                             :header-content [:<> (@tr [:version])

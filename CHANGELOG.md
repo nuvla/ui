@@ -19,6 +19,7 @@
 - Apps - Hide pulish and unpublish when not possible for the user
 - Apps - Hide copy on menubar when application is not free and users doesn't have edit #1058
 - Initialize - Load vendor on initialize and indirectly when switching group
+- Deployment modal - Inform vendors and user with edit-right that it's free for them #1063
 
 ## [2.32.10] - 2022-12-06
 

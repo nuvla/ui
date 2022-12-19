@@ -3,6 +3,7 @@
 
 (def dictionary
   {:en {
+        :free-deployment-for-vendor                    "This deployment will be free for you because you have write access to the application. Nevertheless, you must accept the costs even if you will not be charged."
         :delete-coupon                                 "Delete coupon?"
         :delete-payment-method                         "Delete payment method?"
         :about                                         "about"
@@ -922,6 +923,7 @@
         }
 
    :fr {
+        :free-deployment-for-vendor                    "Ce déploiement sera gratuit pour vous, car vous avez un accès en écriture à l'application. Néanmoins, vous devez accepter les coûts même si vous ne serez pas facturé."
         :delete-coupon                                 "Supprimer le coupon ?"
         :delete-payment-method                         "Supprimer le moyen de paiement ?"
         :about                                         "à propos"

@@ -1035,7 +1035,7 @@
       (let [amount       (:cent-amount-daily @price)
             follow-trial (boolean (:follow-customer-trial @price))]
         [:<>
-         (when @editable?
+         (when (and @editable? (nil? amount))
            [ui/Message {:info true}
             (@tr [:define-price])])
          [ui/Input {:labelPosition "right", :type "text"

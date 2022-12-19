@@ -3,9 +3,6 @@
 
 (def dictionary
   {:en {
-        :free-deployment-for-vendor                    "This deployment will be free for you because you have write access to the application. Nevertheless, you must accept the costs even if you will not be charged."
-        :delete-coupon                                 "Delete coupon?"
-        :delete-payment-method                         "Delete payment method?"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -224,6 +221,7 @@
         :decommission-nuvlabox                         "Decommission NuvlaEdge?"
         :define-price                                  "Set a price for your app."
         :delete                                        "delete"
+        :delete-coupon                                 "Delete coupon?"
         :delete-credential                             "Delete credential?"
         :delete-data-set                               "Delete data-set?"
         :delete-deployment                             "Delete deployment?"
@@ -232,6 +230,7 @@
         :delete-module                                 "Delete application?"
         :delete-notification-subscription-conf         "Delete notification subscription configuration?"
         :delete-nuvlabox                               "Delete NuvlaEdge?"
+        :delete-payment-method                         "Delete payment method?"
         :delete-resource                               "delete resource"
         :delete-resource-msg                           "delete resource %1?"
         :delete-resources                              "delete resources"
@@ -317,6 +316,7 @@
         :force-delete                                  "force delete"
         :forgot-password                               "Forgot your password?"
         :free-app                                      "This is a free app. There is therefore no applicable billing information."
+        :free-deployment-for-vendor                    "This deployment will be free for you because you have write access to the application. Nevertheless, you must accept the costs even if you will not be charged."
         :free-trial-and-then                           "free trial and then "
         :from                                          "From"
         :full-name                                     "Full Name"
@@ -923,9 +923,6 @@
         }
 
    :fr {
-        :free-deployment-for-vendor                    "Ce déploiement sera gratuit pour vous, car vous avez un accès en écriture à l'application. Néanmoins, vous devez accepter les coûts même si vous ne serez pas facturé."
-        :delete-coupon                                 "Supprimer le coupon ?"
-        :delete-payment-method                         "Supprimer le moyen de paiement ?"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
@@ -1082,6 +1079,7 @@
         :decommission-nuvlabox                         "Mettre hors service la NuvlaEdge ?"
         :define-price                                  "Definir un prix pour votre logiciel. "
         :delete                                        "supprimer"
+        :delete-coupon                                 "Supprimer le coupon ?"
         :delete-credential                             "Supprimer l'identifiant ?"
         :delete-data-set                               "Supprimer le data-set ?"
         :delete-deployment                             "Supprimer le déploiement ?"
@@ -1090,6 +1088,7 @@
         :delete-notification-method                    "Supprimer la méthode de notification ?"
         :delete-notification-subscription              "Supprimer le souscription ?"
         :delete-nuvlabox                               "Supprimer la NuvlaEdge ?"
+        :delete-payment-method                         "Supprimer le moyen de paiement ?"
         :delete-resource                               "supprimer ressource"
         :delete-resource-msg                           "supprimer ressource %1 ?"
         :delete-resources                              "supprimer ressources"
@@ -1146,6 +1145,7 @@
         :force-delete                                  "suppression forcée"
         :forgot-password                               "Mot de passe oublié?"
         :free-app                                      "Application gratuite. Il n'y a donc aucune information de facturation applicable"
+        :free-deployment-for-vendor                    "Ce déploiement sera gratuit pour vous, car vous avez un accès en écriture à l'application. Néanmoins, vous devez accepter les coûts même si vous ne serez pas facturé."
         :free-trial-and-then                           "essai gratuit puis "
         :from                                          "À partir de"
         :full-name                                     "Nom complet"
@@ -1400,8 +1400,8 @@
         :payment-methods                               "Moyens de paiement"
         :per-deployment                                "par déploiement"
         :per-month-each                                "par mois, chacun"
-        :per-page                                      "par page"
         :per-nuvlabox                                  "par NuvlaEdge"
+        :per-page                                      "par page"
         :percent-off                                   "Pourcentage de réduction"
         :period                                        "période"
         :personae-desc                                 "Description des acteurs"

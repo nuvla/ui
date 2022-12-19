@@ -139,7 +139,7 @@
                         (on-success-fn (:message %))
                         (dispatch [::get-nuvlabox resource-id]))]
       {::cimi-api-fx/operation
-       [resource-id operation on-success :data data]})))
+       [resource-id operation on-success :data data :on-error on-error-fn]})))
 
 (reg-event-fx
   ::operation-text-response

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Deployment modal - Check dct error not visible fix
+- Application detail - message become vendor bugfix
+
 ## [2.32.11] - 2022-12-19
 
 ### Changed

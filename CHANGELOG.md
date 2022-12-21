@@ -6,6 +6,9 @@
 
 - Deployment modal - Check dct error not visible fix
 - Application detail - message become vendor bugfix
+- Application detail - License renamed to End-User License Agreement
+- Deployment modal - License renamed to End-User License Agreement
+- Module plugin - License renamed to End-User License Agreement
 
 ## [2.32.11] - 2022-12-19
 

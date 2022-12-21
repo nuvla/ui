@@ -75,8 +75,9 @@
                                    :icon    "list alternate outline"}
                   :files          {:step-id :files
                                    :icon    "file alternate outline"}
-                  :license        {:step-id :license
-                                   :icon    "book"}
+                  :license        {:step-id    :license
+                                   :step-title :eula
+                                   :icon       "book"}
                   :pricing        {:step-id :pricing
                                    :icon    "euro"}
                   :summary        {:step-id :summary

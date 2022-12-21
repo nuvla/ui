@@ -453,7 +453,7 @@
                                     [module-plugin/AcceptLicense
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
-                                    :label (str/capitalize (@tr [:license]))
+                                    :label (@tr [:eula-full])
                                     :default-open true]
                                    [uix/Accordion
                                     [module-plugin/AcceptPrice

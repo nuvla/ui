@@ -378,7 +378,7 @@
             :default-open false])
          [uix/Accordion
           [apps-views-detail/LicenseSection]
-          :label (str/capitalize (@tr [:license]))
+          :label (@tr [:eula-full])
           :default-open false]
          [ports-section]
          [apps-views-detail/EnvVariablesSection]

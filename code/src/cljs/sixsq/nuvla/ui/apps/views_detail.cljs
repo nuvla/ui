@@ -39,11 +39,11 @@
 (def edit-cell-left-padding 24)
 
 (defn LicenseTitle
-  []
+  [{:keys [full] :or {full false}}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "drivers license"}]
-     (str/capitalize (@tr [:license]))]))
+     [uix/Icon {:name "book"}]
+     (@tr [(if full :eula-full :eula)])]))
 
 
 (defn PricingTitle
@@ -1114,14 +1114,14 @@
             {:keys [license-name]} @license]
         [:<>
          (when (not= "component" subtype)
-           [:h2 [LicenseTitle]])
+           [:h2 [LicenseTitle {:full true}]])
          (if (or @editable? (some? @license))
            [ui/Form
             (when @editable?
               [:<>
                [ui/Message {:info true}
-                "Choose a license to protect yourself and your users/customers. This is mandatory for published and paying apps."]
-               [:div [:p {:style {:padding-bottom 10}} [:b "Choose a known open source license"]]]
+                (@tr [:choose-eula])]
+               [:div [:p {:style {:padding-bottom 10}} [:b (@tr [:choose-predefined-one])]]]
                [ui/Dropdown {:options     options
                              :placeholder "Select a license"
                              :search      true
@@ -1132,18 +1132,16 @@
                                               (dispatch [::main-events/changes-protection? true])
                                               (dispatch [::events/set-license value @licenses])
                                               (reset! is-custom? false)))}]
-               [:div [:p {:style {:padding "10px 0"}} [:b "Or provide a custom license"]]]
-               [ui/Checkbox {:label     (@tr [:custom-license])
+               [:div [:p {:style {:padding "10px 0"}} [:b (@tr [:provide-custom-one])]]]
+               [ui/Checkbox {:label     (str/capitalize (@tr [:custom]))
                              :checked   @is-custom?
                              :on-change (ui-callback/value
-                                          (fn [_]
-                                            (dispatch [::main-events/changes-protection? true])
-                                            (reset! is-custom? (not @is-custom?))
-                                            ))}]
+                                          #(do
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (reset! is-custom? (not @is-custom?))))}]
                [ui/Message {:info true}
-                (@tr [:license-generator-details])
-                ": "
-                [:a {:href "https://www.eulatemplate.com/eula-generator/"} (@tr [:license-generator])]]])
+                [:a {:href   "https://www.eulatemplate.com/eula-generator/"
+                     :target "_blank"} (@tr [:eula-generator-details])]]])
             [ui/Table {:compact true, :definition true}
              [ui/TableBody
               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
@@ -1161,7 +1159,7 @@
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]
            [ui/Message {:info true}
-            (@tr [:license-not-defined])])]))))
+            (@tr [:eula-not-defined])])]))))
 
 
 (defn AuthorVendorRow

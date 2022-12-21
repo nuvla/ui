@@ -22,24 +22,25 @@
       (if @license-completed?
         [ui/Icon {:name "book", :size "large"}]
         [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
-     [ui/TableCell {:collapsing true} (@tr [:license])]
+     [ui/TableCell {:collapsing true} (@tr [:eula])]
      [ui/TableCell [:div [:span (:name @license)]]]]))
 
 
 (defmethod utils/step-content :license
   []
   (let [tr                 (subscribe [::i18n-subs/tr])
-        license            (subscribe [::subs/license])
+        {:keys [name description url]} @(subscribe [::subs/license])
         license-completed? (subscribe [::subs/license-completed?])]
     [ui/Segment
      [ui/Container
-      [:p
-       [:b (str/capitalize (@tr [:license])) " "]
-       [:a {:href   (:url @license)
-            :target "_blank"} (:name @license)]]
-      (when (:description @license)
-        [:p (:description @license)])
-      [ui/Checkbox {:label     (@tr [:accept-license])
+      [ui/Header {:as      :h4
+                  :icon    "book"
+                  :content (@tr [:eula-full])}]
+      [:h4 [:b (str (str/capitalize (@tr [:eula])) ": ")
+            [:u [:a {:href url :target "_blank"} name]]]]
+      (when description
+        [:p [:i description]])
+      [ui/Checkbox {:label     (@tr [:accept-eula])
                     :checked   @license-completed?
                     :on-change (ui-callback/checked
                                  #(dispatch [::events/set-license-accepted? %]))}]]]))

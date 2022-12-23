@@ -4,6 +4,16 @@
 
 ### Changed
 
+- Deployment modal - Check dct error not visible fix
+- Application detail - message become vendor bugfix
+- Application detail - License renamed to End-User License Agreement
+- Deployment modal - License renamed to End-User License Agreement
+- Module plugin - License renamed to End-User License Agreement
+
+## [2.32.11] - 2022-12-19
+
+### Changed
+
 - Dev tools - Integration of portal
 - Deployment modal - update button disabled when registries is added in module newer version bugfix #1038
 - Cloudflare preview deploys - Simulate behavior of nginx prod server
@@ -13,6 +23,15 @@
 - Table widget - adds re-usable tabled widget with wort functionality #1029
 - Edges overview - Makes table sortable by column using table widget #1005
 - Deployments overview - Makes table sortable by column using table widget #1005
+- Deployment detail - Clone button should be disabled when operation not available
+- Profile - User should confirm deletion of coupon or payment methods #1052
+- Profile - Hide start getting paid when user is already a vendor
+- Apps - Hide pulish and unpublish when not possible for the user
+- Apps - Hide copy on menubar when application is not free and users doesn't have edit #1058
+- Initialize - Load vendor on initialize and indirectly when switching group
+- NuvlaEdges table view - Shows report interval #1013
+- Deployment modal - Inform vendors and user with edit-right that it's free for them #1063
+- Dependencies - Update to parent 6.7.12
 
 ## [2.32.10] - 2022-12-06
 

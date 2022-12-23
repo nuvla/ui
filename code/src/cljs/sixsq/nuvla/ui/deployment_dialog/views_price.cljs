@@ -38,10 +38,14 @@
         start?           (subscribe [::subs/deployment-start?])
         price            (subscribe [::subs/price])
         new-price        (subscribe [::subs/new-price])
+        can-edit?        (subscribe [::subs/can-edit-module-data?])
         format-price     #(if (>= (:cent-amount-daily %) 100)
                             (str (float (/ (:cent-amount-daily %) 100)) "€/" (@tr [:day]))
                             (str (:cent-amount-daily %) "ct€/" (@tr [:day])))]
     [:<>
+     (when @can-edit?
+       [ui/Message {:info    true
+                    :content (@tr [:free-deployment-for-vendor])}])
      [ui/Segment
       [:p
        (str (when @start?
@@ -59,8 +63,9 @@
        [:b (format-price (or @new-price @price))]]
       (when @new-price
         [:p [:i (str (@tr [:price-changed])
-                  (format-price @price) " " (@tr [:to]) " "
-                  (format-price @new-price))]])
+                     (format-price @price) " " (@tr [:to]) " "
+                     (format-price @new-price))]])
+
       [ui/Checkbox {:label     (@tr [:accept-costs])
                     :checked   @price-completed?
                     :on-change (ui-callback/checked

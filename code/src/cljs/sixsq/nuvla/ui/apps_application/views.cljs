@@ -391,7 +391,7 @@
          [apps-views-detail/Pricing]
          [:<>
           [ui/Message {:info true} (@tr [:no-pricing-free-app])]
-          (when editable?
+          (when @editable?
             [ui/Message {:info true} (@tr [:become-a-vendor])])])])))
 
 

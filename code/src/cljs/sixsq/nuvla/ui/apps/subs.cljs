@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
@@ -33,6 +34,70 @@
   (fn [module-common]
     (::spec/subtype module-common)))
 
+(reg-sub
+  ::is-project?
+  :<- [::module-subtype]
+  (fn [subtype]
+    (= subtype "project")))
+
+(reg-sub
+  ::is-app?
+  :<- [::is-project?]
+  :-> not)
+
+(reg-sub
+  ::can-edit?
+  :<- [::module]
+  :-> general-utils/can-edit?)
+
+(reg-sub
+  ::can-copy?
+  :<- [::is-app?]
+  :<- [::price]
+  :<- [::can-edit?]
+  (fn [[is-app? price can-edit?]]
+    (or (and is-app? (nil? price))
+        (and is-app? price can-edit?))))
+
+(reg-sub
+  ::paste-disabled?
+  :<- [::copy-module]
+  :-> nil?)
+
+(reg-sub
+  ::launch-disabled?
+  :<- [::is-new?]
+  :<- [::main-subs/changes-protection?]
+  (fn [[is-new? page-changed?]]
+    (or is-new? page-changed?)))
+
+(reg-sub
+  ::can-operation
+  :<- [::module]
+  (fn [module [_ op]]
+    (general-utils/can-operation? op module)))
+(reg-sub
+  ::is-published?
+  :<- [::module]
+  :<- [::module-id-version]
+  (fn [[module module-id]]
+    (utils/published? module module-id)))
+
+(reg-sub
+  ::can-publish?
+  :<- [::is-app?]
+  :<- [::is-published?]
+  :<- [::can-operation :publish]
+  (fn [[is-app? is-published? publish-op]]
+    (and is-app? publish-op (not is-published?))))
+
+(reg-sub
+  ::can-unpublish?
+  :<- [::is-app?]
+  :<- [::is-published?]
+  :<- [::can-operation :unpublish]
+  (fn [[is-app? is-published? unpublish-op]]
+    (and is-app? unpublish-op is-published?)))
 
 (reg-sub
   ::module-license
@@ -299,12 +364,12 @@
 
 (reg-sub
   ::copy-module
-  ::spec/copy-module)
+  :-> ::spec/copy-module)
 
 
 (reg-sub
   ::paste-modal-visible?
-  ::spec/paste-modal-visible?)
+  :-> ::spec/paste-modal-visible?)
 
 
 (reg-sub
@@ -315,4 +380,4 @@
 
 (reg-sub
   ::module-not-found?
-  ::spec/module-not-found?)
+  :-> ::spec/module-not-found?)

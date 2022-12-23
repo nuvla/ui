@@ -84,19 +84,18 @@
 
 
 (defn Statistic
-  [value icon label target]
+  [value icon class label target]
   (let [color (if (pos? value) "black" "grey")
         {:keys [resource tab-event]} target]
     [ui/Statistic {:style    {:cursor "pointer"}
                    :color    color
-                   :class    "slight-up"
+                   :class    (str "slight-up " class)
                    :on-click #(do
                                 (when tab-event
                                   (dispatch tab-event))
                                 (dispatch [::history-events/navigate resource]))}
-     [ui/StatisticValue (or value "-")
-      "\u2002"
-      [ui/Icon {:className icon}]]
+     [ui/Icon {:className icon}]
+     [ui/StatisticValue (or value "-")]
      [ui/StatisticLabel label]]))
 
 
@@ -112,13 +111,15 @@
         no-of-creds       (:count @credentials)]
     [ui/StatisticGroup (merge {:widths 10 :size "tiny"
                                :style  {:margin     "0px auto 10px auto"
-                                        :display    "block"
+                                        :display    "flex"
                                         :text-align "center"
-                                        :width      "100%"}})
-     [Statistic no-of-apps (utils/type->icon utils/type-apps) utils/type-apps utils/target-apps]
-     [Statistic no-of-deployments (utils/type->icon utils/type-deployments) utils/type-deployments utils/target-deployments]
-     [Statistic no-of-nb (utils/type->icon utils/type-nbs) utils/type-nbs utils/target-nbs]
-     [Statistic no-of-creds (utils/type->icon utils/type-creds) utils/type-creds utils/target-creds]]))
+                                        :width      "100%"
+                                        :max-width  1200
+                                        :padding    "2rem"}})
+     [Statistic no-of-apps (utils/type->icon utils/type-apps) "nuvla-apps" utils/type-apps utils/target-apps]
+     [Statistic no-of-deployments (utils/type->icon utils/type-deployments) "nuvla-deployments" utils/type-deployments utils/target-deployments]
+     [Statistic no-of-nb (utils/type->icon utils/type-nbs) "nuvla-edges" utils/type-nbs utils/target-nbs]
+     [Statistic no-of-creds (utils/type->icon utils/type-creds) "nuvla-credentials" utils/type-creds utils/target-creds]]))
 
 
 (defn DashboardMain

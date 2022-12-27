@@ -328,7 +328,8 @@
        [deployments-views/DeploymentTable
         {:no-actions     true
          :no-module-name true
-         :empty-msg      (@tr [:empty-deployment-module-msg])}])]))
+         :empty-msg      (@tr [:empty-deployment-module-msg])
+         :pagination-db-path ::spec/deployment-pagination}])]))
 
 
 (defn TabMenuVersions

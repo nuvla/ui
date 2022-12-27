@@ -32,7 +32,7 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-id
                        :frequency 20000
-                       :event     [::get-deployments]}]]]}))
+                       :event     [::get-deployments {:pagination-db-path db-path}]}]]]}))
 
 (reg-event-db
   ::set-deployments-params-map
@@ -63,7 +63,8 @@
   (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
                 ::spec/filter-external
-                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-path] :as filter}]]
+                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path]}]]
+    (js/console.error pagination-db-path)
     (let [filter-external (or filter-external-arg filter-external)
           state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param
@@ -78,7 +79,7 @@
                                    :orderby     (ordering->order-string (or ordering spec/default-ordering))
                                    :filter      filter-str}
                                   (pagination-plugin/first-last-params
-                                    db [(or pagination-path ::spec/pagination)]))
+                                    db [(or pagination-db-path ::spec/pagination)]))
                              #(dispatch [::set-deployments %])]})))
 
 (reg-event-fx

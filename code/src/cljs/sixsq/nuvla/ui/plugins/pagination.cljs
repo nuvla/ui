@@ -44,8 +44,6 @@
   ::init-paginations
   [(inject-cofx ::get-stored-paginations)]
   (fn [{db :db paginations :paginations}]
-    (tap> paginations)
-    ;; {:db db}
     {:db (reduce-kv (fn [db k v] (if (vector? k)
                                    (update-in db k merge v)
                                    (update db k merge v))) db paginations)}))

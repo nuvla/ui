@@ -23,28 +23,8 @@
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
-(def refresh-action-get-module :apps-get-module)
-(def refresh-action-get-deployment :apps-get-deployment)
 
 
-(reg-event-fx
-  ::refresh
-  (fn [{{:keys [::spec/version
-                ::spec/module] :as db} :db} [_ page-changed?]]
-    (let [get-module-fn ::get-module
-          dispatch-fn   (if page-changed?
-                          [::main-events/ignore-changes-modal get-module-fn]
-                          [get-module-fn version])]
-      {:db db
-       :fx [[:dispatch [::main-events/action-interval-start
-                        {:id        refresh-action-get-module
-                         :frequency 20000
-                         :event     dispatch-fn}]]
-            [:dispatch [::main-events/action-interval-start
-                        {:id        refresh-action-get-deployment
-                         :frequency 20000
-                         :event     [::deployments-events/get-deployments
-                                     {:filter-external-arg (str "module/id='" (:id module) "'")}]}]]]})))
 
 
 ;; Validation
@@ -192,7 +172,8 @@
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::deployments-events/get-deployments
-                                                    {:filter-external-arg (str "module/id='" (:id %) "'")}]))]})))
+                                                    {:filter-external-arg (str "module/id='" (:id %) "'")
+                                                     :pagination-db-path ::apps-application-spec/deployment-pagination}]))]})))
 
 
 (reg-event-db

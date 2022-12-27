@@ -2,7 +2,8 @@
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::nuvlabox (s/nilable any?))
 (s/def ::nuvlabox-status (s/nilable any?))
@@ -39,3 +40,8 @@
                ::events                       (events-plugin/build-spec
                                                 :default-items-per-page 15)
                ::tab                          (tab-plugin/build-spec)})
+
+(s/def ::deployment-pagination any?)
+
+(def deployments-pagination {::deployment-pagination (pagination-plugin/build-spec
+                                                           :default-items-per-page 25)})

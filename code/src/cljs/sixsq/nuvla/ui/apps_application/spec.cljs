@@ -52,5 +52,5 @@
 
 (s/def ::deployment-pagination any?)
 
-(def app-deployments-pagination {::deployment-pagination (pagination-plugin/build-spec
+(def deployments-pagination {::deployment-pagination (pagination-plugin/build-spec
                                                            :default-items-per-page 25)})

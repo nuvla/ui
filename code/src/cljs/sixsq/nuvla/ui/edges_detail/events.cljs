@@ -174,7 +174,8 @@
                                        [::spec/events] id false]]
                            [:dispatch [::job-events/get-jobs id]]
                            [:dispatch [::deployments-events/get-deployments
-                                       {:filter-external-arg (str "nuvlabox='" id "'")}]]
+                                       {:filter-external-arg (str "nuvlabox='" id "'")
+                                        :pagination-db-path ::spec/deployment-pagination}]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)

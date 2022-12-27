@@ -31,7 +31,7 @@
   (merge apps/defaults
          apps-component/defaults
          apps-application/defaults
-         apps-application/app-deployments-pagination
+         apps-application/deployments-pagination
          apps-store/defaults
          apps-store/pagination-default
          api/defaults
@@ -55,6 +55,7 @@
          edges/defaults
          edges/pagination-default
          edges-detail/defaults
+         edges-detail/deployments-pagination
          profile/defaults
          session/defaults
          job/defaults

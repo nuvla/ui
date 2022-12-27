@@ -12,5 +12,5 @@
   {::deployment-sets         nil
    ::deployment-sets-summary nil
    ::state-selector          nil
-   ::search                  (full-text-search-plugin/build-spec)
-   ::pagination              (pagination-plugin/build-spec)})
+   ::pagination              (pagination-plugin/build-spec)
+   ::search                  (full-text-search-plugin/build-spec)})

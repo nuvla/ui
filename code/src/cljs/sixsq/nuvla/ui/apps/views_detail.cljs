@@ -14,7 +14,6 @@
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
@@ -234,9 +233,9 @@
         (when @can-publish?
           [PublishButton @module])
 
-          [components/RefreshMenu
-           {:refresh-disabled? @is-new?
-            :on-refresh        #(dispatch [::events/refresh])}]]])))
+        [components/RefreshMenu
+         {:refresh-disabled? @is-new?
+          :on-refresh        #(dispatch [::events/refresh])}]]])))
 
 
 (defn save-modal

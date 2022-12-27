@@ -133,13 +133,13 @@
   ::set-module
   (fn [{{:keys [::spec/validate-docker-compose] :as db} :db} [_ {:keys [id] :as module}]]
     (let [db      (assoc db ::spec/module-path (:path module)
-                    ::spec/module (if (nil? module) {} module)
-                    ::spec/module-immutable module
-                    ::spec/validate-docker-compose (if (= id (:module-id validate-docker-compose))
-                                                     validate-docker-compose
-                                                     nil)
-                    ::spec/module-not-found? (nil? module)
-                    ::main-spec/loading? false)
+                            ::spec/module (if (nil? module) {} module)
+                            ::spec/module-immutable module
+                            ::spec/validate-docker-compose (if (= id (:module-id validate-docker-compose))
+                                                             validate-docker-compose
+                                                             nil)
+                            ::spec/module-not-found? (nil? module)
+                            ::main-spec/loading? false)
           subtype (:subtype module)]
       {:db (case subtype
              "component" (apps-component-utils/module->db db module)
@@ -159,8 +159,8 @@
   ::close-add-modal
   (fn [db _]
     (assoc db ::spec/add-modal-visible? false
-      ::spec/active-tab :details
-      ::spec/add-data nil)))
+              ::spec/active-tab :details
+              ::spec/add-data nil)))
 
 
 (reg-event-db
@@ -169,19 +169,19 @@
     (let [new-parent       (or new-parent "")
           default-logo-url (::spec/default-logo-url db)]
       (-> db
-        (assoc ::spec/module {})
-        (assoc ::spec/module-immutable {})
-        (assoc ::spec/module-common {})
-        (assoc ::main-spec/loading? false)
-        (assoc-in [::spec/module-common ::spec/name] new-name)
-        (assoc-in [::spec/module-common ::spec/description] "")
-        (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
-        (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
-        (assoc-in [::spec/module-common ::spec/subtype] new-subtype)
-        (assoc-in [::spec/module-common ::spec/env-variables] (sorted-map))
-        (assoc-in [::spec/module-common ::spec/urls] (sorted-map))
-        (assoc-in [::spec/module-common ::spec/output-parameters] (sorted-map))
-        (assoc-in [::spec/module-common ::spec/data-types] (sorted-map))))))
+          (assoc ::spec/module {})
+          (assoc ::spec/module-immutable {})
+          (assoc ::spec/module-common {})
+          (assoc ::main-spec/loading? false)
+          (assoc-in [::spec/module-common ::spec/name] new-name)
+          (assoc-in [::spec/module-common ::spec/description] "")
+          (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
+          (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
+          (assoc-in [::spec/module-common ::spec/subtype] new-subtype)
+          (assoc-in [::spec/module-common ::spec/env-variables] (sorted-map))
+          (assoc-in [::spec/module-common ::spec/urls] (sorted-map))
+          (assoc-in [::spec/module-common ::spec/output-parameters] (sorted-map))
+          (assoc-in [::spec/module-common ::spec/data-types] (sorted-map))))))
 
 
 (reg-event-fx
@@ -191,11 +191,11 @@
     (let [path (utils/nav-path->module-path nav-path)
           v    (if (nil? requested-version) version requested-version)]
       {:db                  (cond-> db
-                              requested-version (assoc ::spec/version requested-version))
+                                    requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
-                                       (dispatch [::deployments-events/get-deployments
-                                                  {:filter-external-arg (str "module/id='" (:id %) "'")
-                                                   :pagination-db-path ::apps-application-spec/deployment-pagination}]))]})))
+                                         (dispatch [::deployments-events/get-deployments
+                                                    {:filter-external-arg (str "module/id='" (:id %) "'")
+                                                     :pagination-db-path ::apps-application-spec/deployment-pagination}]))]})))
 
 
 (reg-event-db
@@ -268,8 +268,8 @@
   ::save-logo-url
   (fn [{:keys [db]} [_ logo-url]]
     {:db       (-> db
-                 (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
-                 (assoc-in [::spec/logo-url-modal-visible?] false))
+                   (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
+                   (assoc-in [::spec/logo-url-modal-visible?] false))
      :dispatch [::main-events/changes-protection? true]}))
 
 
@@ -291,8 +291,8 @@
   ::add-env-variable
   (fn [db [_ env-variable]]
     (let [id (-> db
-               (get-in [::spec/module-common ::spec/env-variables])
-               utils/sorted-map-new-idx)]
+                 (get-in [::spec/module-common ::spec/env-variables])
+                 utils/sorted-map-new-idx)]
       (assoc-in db [::spec/module-common ::spec/env-variables id] (assoc env-variable :id id)))))
 
 
@@ -332,8 +332,8 @@
   ::add-url
   (fn [db [_ url]]
     (let [id (-> db
-               (get-in [::spec/module-common ::spec/urls])
-               utils/sorted-map-new-idx)]
+                 (get-in [::spec/module-common ::spec/urls])
+                 utils/sorted-map-new-idx)]
       (assoc-in db [::spec/module-common ::spec/urls id] (assoc url :id id)))))
 
 
@@ -361,8 +361,8 @@
   ::add-output-parameter
   (fn [db [_ param]]
     (let [id (-> db
-               (get-in [::spec/module-common ::spec/output-parameters])
-               utils/sorted-map-new-idx)]
+                 (get-in [::spec/module-common ::spec/output-parameters])
+                 utils/sorted-map-new-idx)]
       (assoc-in db [::spec/module-common ::spec/output-parameters id] (assoc param :id id)))))
 
 
@@ -396,8 +396,8 @@
                               utils/sorted-map-new-idx)
           default-data-type (:key (first @utils-detail/data-type-options))]
       (assoc-in db
-        [::spec/module-common ::spec/data-types id]
-        (assoc data-type-map :id id, ::spec/data-type default-data-type)))))
+                [::spec/module-common ::spec/data-types id]
+                (assoc data-type-map :id id, ::spec/data-type default-data-type)))))
 
 
 (reg-event-db
@@ -418,11 +418,11 @@
   ::add-registry
   (fn [db [_ registry]]
     (let [id (-> db
-               (get-in [::spec/module-common ::spec/registries])
-               utils/sorted-map-new-idx)]
+                 (get-in [::spec/module-common ::spec/registries])
+                 utils/sorted-map-new-idx)]
       (assoc-in db [::spec/module-common ::spec/registries id]
-        (assoc registry :id id
-          ::spec/registry-cred-id "")))))
+                (assoc registry :id id
+                  ::spec/registry-cred-id "")))))
 
 
 (reg-event-db
@@ -435,10 +435,10 @@
   ::update-registry-id
   (fn [db [_ id registry-id]]
     (-> db
-      (assoc-in [::spec/module-common ::spec/registries
-                 id ::spec/registry-id] registry-id)
-      (assoc-in [::spec/module-common ::spec/registries
-                 id ::spec/registry-cred-id] ""))))
+        (assoc-in [::spec/module-common ::spec/registries
+                   id ::spec/registry-id] registry-id)
+        (assoc-in [::spec/module-common ::spec/registries
+                   id ::spec/registry-cred-id] ""))))
 
 
 (reg-event-db
@@ -471,9 +471,9 @@
     (let [license (find-license license-name licenses)
           {:keys [license-name license-description license-url]} license]
       (-> db
-        (assoc-in [::spec/module-common ::spec/license :license-name] license-name)
-        (assoc-in [::spec/module-common ::spec/license :license-description] license-description)
-        (assoc-in [::spec/module-common ::spec/license :license-url] license-url)))))
+          (assoc-in [::spec/module-common ::spec/license :license-name] license-name)
+          (assoc-in [::spec/module-common ::spec/license :license-description] license-description)
+          (assoc-in [::spec/module-common ::spec/license :license-url] license-url)))))
 
 
 (reg-event-db
@@ -548,11 +548,11 @@
   (fn [{:keys [::spec/module] :as db}
        [_ {:keys [return-code target-resource status-message] :as _job}]]
     (cond-> db
-      (= (:href target-resource)
-        (:id module)) (assoc ::spec/validate-docker-compose
-                        {:valid?    (= return-code 0)
-                         :loading?  false
-                         :error-msg status-message}))))
+            (= (:href target-resource)
+              (:id module)) (assoc ::spec/validate-docker-compose
+                              {:valid?    (= return-code 0)
+                               :loading?  false
+                               :error-msg status-message}))))
 
 
 (reg-event-fx
@@ -566,7 +566,7 @@
                                     :on-complete         #(dispatch [::docker-compose-validation-complete %])
                                     :refresh-interval-ms 5000}]))]
       (when (or (string? module-or-id)
-              (general-utils/can-operation? validate-op module-or-id))
+                (general-utils/can-operation? validate-op module-or-id))
         {:db                     (assoc db ::spec/validate-docker-compose {:loading?  true
                                                                            :module-id id})
          ::cimi-api-fx/operation [id validate-op on-success]}))))
@@ -603,21 +603,21 @@
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
                                   (dispatch [::messages-events/add
                                              {:header  (cond-> (str "error editing " id)
-                                                         status (str " (" status ")"))
+                                                               status (str " (" status ")"))
                                               :content message
                                               :type    :error}]))
                                 (do (dispatch [::get-module (version-id->index %)])
-                                  (when (= subtype "application")
-                                    (dispatch [::validate-docker-compose %]))
-                                  (dispatch [::main-events/changes-protection? false])))]}))))
+                                    (when (= subtype "application")
+                                      (dispatch [::validate-docker-compose %]))
+                                    (dispatch [::main-events/changes-protection? false])))]}))))
 
 
 (reg-event-fx
   ::delete-module
   (fn [{:keys [db]} [_ id]]
     {:db                  (-> db
-                            (dissoc ::spec/module)
-                            (assoc ::spec/form-valid? true))
+                              (dissoc ::spec/module)
+                              (assoc ::spec/form-valid? true))
      ::cimi-api-fx/delete [id #(do
                                  (dispatch [::main-events/changes-protection? false])
                                  (dispatch [::history-events/navigate "apps/"]))]}))
@@ -646,9 +646,9 @@
   (fn [{{:keys [::spec/copy-module ::spec/module]} :db} [_ new-module-name]]
     (let [paste-parent-path (:path module)
           paste-module      (-> copy-module
-                              (assoc :name new-module-name)
-                              (assoc :parent-path paste-parent-path)
-                              (assoc :path (utils/contruct-path paste-parent-path new-module-name)))]
+                                (assoc :name new-module-name)
+                                (assoc :parent-path paste-parent-path)
+                                (assoc :path (utils/contruct-path paste-parent-path new-module-name)))]
 
       {::cimi-api-fx/add [:module paste-module
                           #(do
@@ -679,12 +679,12 @@
                                                           "Publication successful"
                                                           "Un-publication successful")
                                                :content (str "Module version: "
-                                                          version-index
-                                                          (if publish?
-                                                            " is now published."
-                                                            " is not published anymore."))
+                                                             version-index
+                                                             (if publish?
+                                                               " is now published."
+                                                               " is not published anymore."))
                                                :type    :success}])
-                                 (dispatch [::get-module version-index]))]}))
+                                   (dispatch [::get-module version-index]))]}))
 
 
 (reg-event-fx

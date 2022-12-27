@@ -2,8 +2,7 @@
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync reg-event-fx
-                           subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [re-frame.db]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.utils :as acl-utils]
@@ -34,28 +33,6 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as utils-values]))
 
-(def refresh-action-get-module :apps-get-module)
-(def refresh-action-get-deployment :apps-get-deployment)
-
-(reg-event-fx
-  ::refresh
-  (fn [{{:keys [::spec/version
-                ::spec/module] :as db} :db} [_ page-changed?]]
-    (let [get-module-fn ::get-module
-          dispatch-fn   (if page-changed?
-                          [::main-events/ignore-changes-modal get-module-fn]
-                          [get-module-fn version])]
-      {:db db
-       :fx [[:dispatch [::main-events/action-interval-start
-                        {:id        refresh-action-get-module
-                         :frequency 20000
-                         :event     dispatch-fn}]]
-            [:dispatch [::main-events/action-interval-start
-                        {:id        refresh-action-get-deployment
-                         :frequency 20000
-                         :event     [::deployments-events/get-deployments
-                                     {:filter-external-arg (str "module/id='" (:id module) "'")
-                                      :pagination-db-path ::spec/app-deployments-pagination}]}]]]})))
 
 (def application-kubernetes-subtype "application_kubernetes")
 (def docker-compose-subtype "application")
@@ -259,7 +236,7 @@
 
           [components/RefreshMenu
            {:refresh-disabled? @is-new?
-            :on-refresh        #(dispatch [::refresh])}]]])))
+            :on-refresh        #(dispatch [::events/refresh])}]]])))
 
 
 (defn save-modal

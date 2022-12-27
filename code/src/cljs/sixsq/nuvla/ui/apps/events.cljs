@@ -23,7 +23,6 @@
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
-
 (def refresh-action-get-module :apps-get-module)
 (def refresh-action-get-deployment :apps-get-deployment)
 

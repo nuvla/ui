@@ -207,10 +207,9 @@
   ::set-check-dct-result
   (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as _job}]]
     (if (= (:href target-resource) (:id deployment))
-      (let [result (try
-                     {:dct (general-utils/json->edn status-message :keywordize-keys false)}
-                     (catch :default _
-                       {:error (str "Error: " status-message)}))]
+      (let [result (if-let [dct (general-utils/json->edn status-message :keywordize-keys false)]
+                     {:dct dct}
+                     {:error (str "Error: " status-message)})]
         (assoc db ::spec/check-dct result))
       db)))
 

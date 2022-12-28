@@ -105,7 +105,7 @@
 
 
 (defn deployment-step-state
-  [{:keys [step-id] :as step-state}]
+  [{:keys [step-id step-title] :as step-state}]
   (let [tr         (subscribe [::i18n-subs/tr])
         active?    (subscribe [::subs/step-active? step-id])
         completed? (subscribe [::subs/step-completed? step-id])]
@@ -115,7 +115,8 @@
               :active    @active?}
      [StepIcon step-state]
      [ui/StepContent
-      [ui/StepTitle {:style {:width "10ch"}} (str/capitalize (@tr [step-id])) " "]]]))
+      [ui/StepTitle {:style {:width "10ch"}} (or (@tr [step-title])
+                                                 (str/capitalize (@tr [step-id]))) " "]]]))
 
 
 (defn step-content-segment

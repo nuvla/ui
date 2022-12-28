@@ -64,7 +64,6 @@
                 ::spec/state-selector
                 ::spec/filter-external
                 ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path]}]]
-    (js/console.error pagination-db-path)
     (let [filter-external (or filter-external-arg filter-external)
           state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param

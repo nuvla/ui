@@ -45,7 +45,7 @@
                          :frequency 20000
                          :event     [::deployments-events/get-deployments
                                      {:filter-external-arg (str "module/id='" (:id module) "'")
-                                      :pagination-db-path ::spec/app-deployments-pagination}]}]]]})))
+                                      :pagination-db-path ::apps-application-spec/deployment-pagination}]}]]]})))
 
 
 

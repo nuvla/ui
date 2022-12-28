@@ -28,30 +28,25 @@
 (defn- get-local-storage-key [db-path]
   (str local-storage-key-prefix db-path ))
 
-(reg-cofx
- ::get-stored-paginations
- (fn [coeffects]
-   (let [store-entries (->> (.-localStorage js/window)
-                            (js/Object.entries)
-                            (filter #(str/starts-with? (first %) local-storage-key-prefix)))]
-     (assoc coeffects :paginations
-       (reduce (fn [paginations entry]
-                 (merge paginations (edn/read-string (second entry))))
-         {}
-         store-entries)))))
 
 (reg-event-fx
   ::init-paginations
-  [(inject-cofx ::get-stored-paginations)]
-  (fn [{db :db paginations :paginations}]
-    {:db (reduce-kv (fn [db k v] (if (vector? k)
-                                   (update-in db k merge v)
-                                   (update db k merge v))) db paginations)}))
+  [(inject-cofx :storage/all)]
+  (fn [{db :db storage :storage/all}]
+    (let [store-entries (->> storage
+                             (filter #(str/starts-with? (first %) local-storage-key-prefix)))
+          paginations     (reduce (fn [paginations entry]
+                                    (merge paginations (edn/read-string (second entry))))
+                            {}
+                            store-entries)]
+      {:db (reduce-kv (fn [db k v] (if (vector? k)
+                                     (update-in db k merge v)
+                                     (update db k merge v))) db paginations)})))
 
 (reg-event-fx
   ::store-pagination
   (fn [_ [_ db-path items-per-page]]
-    {:storage/set {:session false
+    {:storage/set {:session? false
                    :name (get-local-storage-key db-path)
                    :value {db-path {::items-per-page items-per-page}}}}))
 

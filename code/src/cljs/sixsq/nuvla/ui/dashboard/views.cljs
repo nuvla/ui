@@ -34,22 +34,21 @@
 
 (defn TabOverviewNuvlaBox
   []
-  (let [icon "box"
+  (let [icon "fa-light fa-box"
         {:keys [resource tab-index tab-index-event]} utils/target-nbs]
     [ui/Segment {:secondary true
-                 :color     "green"
                  :raised    true
+                 :class     "nuvla-edges"
                  :style     {:display         "flex"
                              :flex-direction  "column"
-                             :justify-content "space-between"}}
+                             :justify-content "space-between"
+                             :border-radius   "8px"}}
 
-     [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
+     [:h4 {:class "ui-header"} [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
 
      [edges-views/StatisticStatesEdge false]
 
-     [ui/Button {:icon     icon
-                 :color    :green
-                 :style    {:align-self "start"}
+     [ui/Button {:class    "center"
                  :content  "Show me"
                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
@@ -74,8 +73,7 @@
 
      [deployments-views/StatisticStates false ::deployments-subs/deployments-summary-all]
 
-     [ui/Button {:icon     icon
-                 :style    {:align-self "start"}
+     [ui/Button {:class    "center"
                  :content  "Show me"
                  :on-click #(do (when (and tab-event tab-key)
                                   (dispatch [tab-event tab-key]))

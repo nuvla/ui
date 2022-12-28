@@ -107,7 +107,7 @@
                               :padding-bottom 5
                               :text-align     "center"}}
         current-year (.getFullYear (time/now))]
-    [ui/Segment {:style {:border-radius 0}}
+    [ui/Segment {:class "footer" :style {:border-radius 0}}
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
       [ui/GridColumn grid-style

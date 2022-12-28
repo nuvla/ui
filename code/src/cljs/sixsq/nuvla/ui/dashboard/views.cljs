@@ -9,7 +9,7 @@
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
     [sixsq.nuvla.ui.edges.subs :as edges-subs]
-    [sixsq.nuvla.ui.edges.views :as edges-views]
+    [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -31,6 +31,54 @@
     {:action-id  events/refresh-action-deployments-id
      :on-refresh refresh}]])
 
+(defn Statistic
+  [{:keys [value icon class label target positive-color icon-color color]
+    :or {positive-color "black"}}]
+  (let [color (or color (if (pos? value) positive-color "grey"))
+        {:keys [resource tab-event]} target
+        interactive? (or tab-event resource)]
+    [ui/Statistic {:style    {:cursor (when interactive? "pointer")}
+                   :color    color
+                   :class    (conj [(when interactive? "slight-up")] class)
+                   :on-click #(do
+                                (when tab-event
+                                  (dispatch tab-event))
+                                (when resource
+                                  (dispatch [::history-events/navigate resource])))}
+     [ui/Icon (merge {:className (str "icons " icon)} (when icon-color {:color icon-color}))]
+     [ui/StatisticValue (or value "-")]
+     [ui/StatisticLabel label]]))
+
+
+(defn StatisticStatesEdge
+  []
+  (let [summary (subscribe [::edges-subs/nuvlaboxes-summary-all])
+        total           (:count @summary)
+        online-statuses (general-utils/aggregate-to-map
+                         (get-in @summary [:aggregations :terms:online :buckets]))
+        online          (:1 online-statuses)
+        offline         (:0 online-statuses)
+        unknown         (- total (+ online offline))]
+
+    [ui/StatisticGroup {:size  "tiny"
+                        :style {:padding "0.2rem"}}
+     [Statistic {:value total
+                 :icon "fa-light fa-box"
+                 :label "TOTAL"
+                 :color "black"}]
+     [Statistic {:value online
+                 :icon "fa-light fa-power-off"
+                 :label edges-utils/status-online
+                 :positive-color "green"
+                 :color "green"}]
+     [Statistic {:value offline
+                 :icon "fa-light fa-power-off"
+                 :label edges-utils/status-offline
+                 :color "red"}]
+     [Statistic {:value unknown
+                 :icon "fa-light fa-power-off"
+                 :label edges-utils/status-unknown
+                 :color "orange"}]]))
 
 (defn TabOverviewNuvlaBox
   []
@@ -46,33 +94,13 @@
 
      [:h4 {:class "ui-header"} [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
 
-     [edges-views/StatisticStatesEdge false]
+     [StatisticStatesEdge]
 
      [ui/Button {:class    "center"
                  :content  "Show me"
                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
                                 (dispatch [::history-events/navigate resource]))}]]))
-
-
-
-(defn Statistic
-  [{:keys [value icon class label target positive-color]
-    :or {positive-color "black"}}]
-  (let [color (if (pos? value) positive-color "grey")
-        {:keys [resource tab-event]} target
-        interactive? (or tab-event resource)]
-    [ui/Statistic {:style    {:cursor (when interactive? "pointer")}
-                   :color    color
-                   :class    (conj [(when interactive? "slight-up")] class)
-                   :on-click #(do
-                                (when tab-event
-                                  (dispatch tab-event))
-                                (when resource
-                                  (dispatch [::history-events/navigate resource])))}
-     [ui/Icon {:className (str "icons " icon)}]
-     [ui/StatisticValue (or value "-")]
-     [ui/StatisticLabel label]]))
 
 
 (defn StatisticStates

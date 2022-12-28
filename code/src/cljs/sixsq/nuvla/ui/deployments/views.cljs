@@ -341,7 +341,7 @@
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
-          [components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
+          [components/StatisticState total ["fa-light fa-rocket-launch"] "TOTAL" clickable?
            ::events/set-state-selector ::subs/state-selector]
           [components/StatisticState started [(utils/state->icon utils/STARTED)] utils/STARTED
            clickable? "green"

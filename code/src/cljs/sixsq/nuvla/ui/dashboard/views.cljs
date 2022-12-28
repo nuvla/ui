@@ -60,22 +60,21 @@
 (defn TabOverviewDeployments
   []
   (let [tr    (subscribe [::i18n-subs/tr])
-        icon  "rocket"
-        color "blue"
+        icon  "fa-light fa-rocket-launch"
         {:keys [resource tab-key tab-event]} utils/target-deployments]
     [ui/Segment {:secondary true
-                 :color     color
                  :raised    true
+                 :class     "nuvla-deployments"
                  :style     {:display         "flex"
                              :flex-direction  "column"
-                             :justify-content "space-between"}}
+                             :justify-content "space-between"
+                             :border-radius   "8px"}}
 
-     [:h4 [ui/Icon {:name icon}] (str/upper-case (@tr [:deployments]))]
+     [:h4 {:class "ui-header"} [ui/Icon {:name icon}] (str/upper-case (@tr [:deployments]))]
 
      [deployments-views/StatisticStates false ::deployments-subs/deployments-summary-all]
 
-     [ui/Button {:color    color
-                 :icon     icon
+     [ui/Button {:icon     icon
                  :style    {:align-self "start"}
                  :content  "Show me"
                  :on-click #(do (when (and tab-event tab-key)
@@ -84,12 +83,12 @@
 
 
 (defn Statistic
-  [value icon class label target]
+  [{:keys [value icon class label target]}]
   (let [color (if (pos? value) "black" "grey")
         {:keys [resource tab-event]} target]
     [ui/Statistic {:style    {:cursor "pointer"}
                    :color    color
-                   :class    (str "slight-up " class)
+                   :class    (conj ["slight-up"] class)
                    :on-click #(do
                                 (when tab-event
                                   (dispatch tab-event))
@@ -116,10 +115,10 @@
                                         :width      "100%"
                                         :max-width  1200
                                         :padding    "2rem"}})
-     [Statistic no-of-apps (utils/type->icon utils/type-apps) "nuvla-apps" utils/type-apps utils/target-apps]
-     [Statistic no-of-deployments (utils/type->icon utils/type-deployments) "nuvla-deployments" utils/type-deployments utils/target-deployments]
-     [Statistic no-of-nb (utils/type->icon utils/type-nbs) "nuvla-edges" utils/type-nbs utils/target-nbs]
-     [Statistic no-of-creds (utils/type->icon utils/type-creds) "nuvla-credentials" utils/type-creds utils/target-creds]]))
+     [Statistic {:value no-of-apps :icon  (utils/type->icon utils/type-apps) :class  "nuvla-apps" :label  utils/type-apps :target  utils/target-apps}]
+     [Statistic {:value no-of-deployments :icon (utils/type->icon utils/type-deployments) :class "nuvla-deployments" :label utils/type-deployments :target utils/target-deployments}]
+     [Statistic {:value no-of-nb :icon (utils/type->icon utils/type-nbs) :class "nuvla-edges" :label utils/type-nbs :target utils/target-nbs}]
+     [Statistic {:value no-of-creds :icon (utils/type->icon utils/type-creds) :class "nuvla-credentials" :label utils/type-creds :target utils/target-creds}]]))
 
 
 (defn DashboardMain

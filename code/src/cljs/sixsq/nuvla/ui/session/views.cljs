@@ -129,7 +129,6 @@
     (fn []
       (when @signup-template?
         [ui/MenuItem {:on-click on-click}
-         [ui/Icon {:name "signup"}]
          [uix/TR :sign-up]]))))
 
 
@@ -138,8 +137,8 @@
   (let [on-click #(dispatch [::history-events/navigate "sign-in"])]
     (fn []
       [ui/Button {:primary  true
-                  :on-click on-click}
-       [ui/Icon {:name "sign in"}]
+                  :on-click on-click
+                  :style {:margin "0.6rem 1.5rem 0.6rem 0.6rem"}}
        [uix/TR :login]])))
 
 

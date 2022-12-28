@@ -9,6 +9,7 @@
 - Application detail - License renamed to End-User License Agreement
 - Deployment modal - License renamed to End-User License Agreement
 - Module plugin - License renamed to End-User License Agreement
+- Paginations - Items per page is stored to and loaded from localStorage #1009
 
 ## [2.32.11] - 2022-12-19
 

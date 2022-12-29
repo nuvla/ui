@@ -21,6 +21,9 @@ h1, h2, H3, h4, h5, H6,
 .ui.button {
      font-family: "Poppins" !important;
 }
+.ui.button {
+     border-radius: 50px;
+}
 body a {
     color: #C10E12;
 }
@@ -59,6 +62,11 @@ body .ui.grid {
 .section{
      padding: 4rem 2rem;
 }
+.button.center{
+margin: 0 auto !important;
+margin-top: 10px !important;
+margin-bottom: 10px !important;
+}
 
 body p.sub {
      font-size: 1rem;
@@ -77,8 +85,9 @@ body .ui.button {
     margin: 0 0.5em 1em 0;
     padding: 10px 20px;
 }
-body .ui.primary.button, .ui.primary.buttons .button {
-    background-color: #C10E12;
+body .ui.primary.button, .ui.primary.buttons .button,
+body .ui.primary.button:visited, .ui.primary.buttons .button:visited {
+    background-color: #C10E12 !important;
     border-radius: 50px;
 }
 body .ui.primary.button:hover, .ui.primary.buttons .button:hover {
@@ -385,8 +394,113 @@ color: #ffffff !important;
          font-size: 2rem;
          margin-bottom: 0.8rem;
 }
+.ui.segment {
+    overflow: hidden;
+}
+.ui-header{
+    width: calc(100% + 2rem);
+    padding: .6rem 1rem .7rem 1rem;
+    margin: -1rem -1rem 2rem -1rem !important;
+color: #ffffff;
+}
+
+.nuvla-deployments .ui-header,
+.nuvla-deployments .button{
+    background-color: rgba(148, 130, 255, 1) !important;
+    color: #ffffff;
+}
+
+.nuvla-deployments .button:hover{
+    background-color: rgba(148, 130, 255, .9) !important;
+     color: #ffffff;
+}
+
+.nuvla-edges .ui-header,
+.nuvla-edges .button{
+    background-color: rgba(22, 173, 146, 1) !important;
+    color: #ffffff;
+}
+
+.nuvla-edges .button:hover{
+    background-color: rgba(22, 173, 146, .9) !important;
+     color: #ffffff;
+}
+
+
+.ui-header i.icon,
+.ui-header i.icons {
+    font-size: 1.5rem;
+}
+
+.nuvla-deployments .statistics .icons{
+    color: rgba(148, 130, 255, 1);
+    text-align: center;
+}
+
+.nuvla-edges .statistics .black .icons{
+    color: rgba(0,0,0,.87);
+}
+.nuvla-edges .statistics .grey .icons{
+    color: #767676;
+}
+.nuvla-edges .statistics .green .icons{
+    color: #21ba45;
+}
+.nuvla-edges .statistics .red .icons{
+    color: #db2828;
+}
+.nuvla-edges .statistics .orange .icons{
+    color: #f2711c;
+}
+
+.nuvla-edges .statistics .icons{
+    color: rgba(22, 173, 146, 1);
+    text-align: center;
+}
+
+.nuvla-deployments .statistics i.icons .icon:first-child,
+.nuvla-edges .statistics i.icons .icon:first-child {
+    margin-right: 0;
+}
+.ui.statistics {
+    margin: 0;
+}
+.ui.statistics>.statistic {
+    flex: 1 !important;
+    margin: 0 1rem 1rem 1rem !important;
+}
+@media only screen and (max-width: 767px){
+.ui.statistics>.statistic {
+    flex: 100% !important;
+}
+}
+
 /** dashboard **/
 
+
+/** footer **/
+.footer .ui.grid {
+    margin: 0 !important;
+    padding: .8rem;
+}
+
+.ui.segment.footer {
+    padding: 0;
+    border-right: none;
+    border-left: none;
+    border-bottom: none;
+    margin: 0 !important;
+    box-shadow: none;
+    position: fixed;
+bottom: 0;
+width: calc(100% - 10rem);
+}
+@media only screen and (max-width: 980px){
+.ui.segment.footer {
+width: 100%;
+}
+}
+/** footer **/
 
 /** top menu **/
 /**  Body content  **/

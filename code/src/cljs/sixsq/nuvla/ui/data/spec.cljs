@@ -41,6 +41,7 @@
    ::data-sets                   {}
    ::selected-data-set-ids       #{}
    ::add-data-set-form           {}
-   ::tab                         (tab-plugin/build-spec :active-tab :data-sets)
-   ::pagination                  (pagination-plugin/build-spec
-                                   :default-items-per-page 8)})
+   ::tab                         (tab-plugin/build-spec :active-tab :data-sets)})
+
+(def pagination-default {::pagination (pagination-plugin/build-spec
+                                        :default-items-per-page 8)})

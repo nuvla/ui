@@ -78,6 +78,8 @@
   ::set-navigation-info
   (fn [{{:keys [::spec/actions-interval
                 ::spec/changes-protection?]} :db} _]
+    (tap> {:spec/actions-interval actions-interval})
+    (tap> {:spec/actions-interval notification-polling-id})
     (when (not changes-protection?)
       {::fx/bulk-actions-interval [::action-interval-delete
                                    (dissoc actions-interval

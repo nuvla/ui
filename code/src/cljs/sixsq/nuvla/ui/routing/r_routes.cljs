@@ -15,7 +15,8 @@
     [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
     [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
     [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
-    [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
+    [sixsq.nuvla.ui.welcome.views :refer [home-view]]
+    [sixsq.nuvla.ui.session.views :as session-views]))
 
 ;;; Views ;;;
 
@@ -35,79 +36,108 @@
   [:div
    [:h1 "This is sub-page 2"]])
 
+
+(defn SessionPageWelcomeRedirect
+  []
+  [session-views/SessionPage true])
+
+(defn SessionPageWithoutWelcomeRedirect
+  []
+  [session-views/SessionPage false])
+
 (def r-routes
-  ["/ui/"
-   [""
-    {:name      ::home-root
-     :view      home-page
-     :link-text "Home"
-     :controllers
-     [{;; Do whatever initialization needed for home page
-       ;; I.e (re-frame/dispatch [::events/load-something-with-ajax])
-       :start (fn [& params] (js/console.log "Entering home page"))
-       ;; Teardown can be done here.
-       :stop  (fn [& params] (js/console.log "Leaving home page"))}]}]
-   ["sub-page2"
-    {:name ::sub-page2
-     :view sub-page2
-     :link-text "About"}]
-   ["about"
-    {:name ::about
-     :view about
-     :link-text "About"}]
-   ["welcome"
-    {:name ::home
-     :view home-view
-     :link-text "home"}]
-   ["dashboard"
-    {:name ::dashboard
-     :view dashboard-view
-     :link-text "dashboard"}]
-   ["apps"
-    {:name ::apps
-     :view apps-view
-     :link-text "Apps"}]
-   ["deployments"
-    {:name ::deployments
-     :view deployments-view
-     :link-text "deployments"}]
-   ["deployment/:id"
-    {:name ::deployment
-     :view DeploymentDetails}]
-   ["deployment-sets"
-    {:name ::deployment-sets
-     :view deployment-sets-view
-     :link-text "deployment-sets"}]
-   ["edges"
-    {:name ::edges
-     :view edges-view
-     :link-text "edges"}]
-   ["edges/:id"
-    {:name ::edges-details
-     :view DetailedView
-     :link-text "edges-details"}]
-   ["credentials"
-    {:name ::credentials
-     :view credentials-view
-     :link-text "credentials"}]
-   ["notifications"
-    {:name ::notifications
-     :view notifications-view
-     :link-text "notifications"}]
-   ["data"
-    {:name ::data
-     :view data-view
-     :link-text "data"}]
-   ["clouds"
-    {:name ::clouds
-     :view clouds-view
-     :link-text "clouds"}]
-   ["api"
-    {:name ::api
-     :view api-view
-     :link-text "api"}]])
+  [["/"
+    [""
+     {:name ::root
+      :view home-view}]]
+   ["/ui/"
+    [""
+     {:name ::home-root
+      :view home-view
+      :link-text "Home"}]
+    ["sign-up"
+     {:name ::sign-up
+      :view SessionPageWelcomeRedirect
+      :link-text "Sign up"}]
+    ["sign-in"
+     {:name ::sign-in
+      :view SessionPageWelcomeRedirect
+      :link-text "login"}]
+    ["reset-password"
+     {:name ::reset-password
+      :view SessionPageWelcomeRedirect
+      :link-text "Reset password"}]
+    ["set-password"
+     {:name ::set-password
+      :view SessionPageWithoutWelcomeRedirect
+      :link-text "Set password"}]
+    ["sign-in-token"
+     {:name ::sign-in-token
+      :view SessionPageWelcomeRedirect
+      :link-text "sign in token"}]
+    ["about"
+     {:name ::about
+      :view about
+      :link-text "About"}]
+    ["welcome"
+     {:name ::home
+      :view home-view
+      :link-text "home"}]
+    ["dashboard"
+     {:name ::dashboard
+      :view dashboard-view
+      :link-text "dashboard"}]
+    ["apps"
+     [""
+      {:name ::apps
+       :view apps-view
+       :link-text "Apps"}]
+     [":owner/*path"
+      {:name ::apps-details
+       :view apps-view}]]
+    ["deployments"
+     {:name ::deployments
+      :view deployments-view
+      :link-text "deployments"}]
+    ["deployment/:id"
+     {:name ::deployment
+      :view DeploymentDetails}]
+    ["deployment-sets"
+     {:name ::deployment-sets
+      :view deployment-sets-view
+      :link-text "deployment-sets"}]
+    ["edges"
+     {:name ::edges
+      :view edges-view
+      :link-text "edges"}]
+    ["edges/:id"
+     {:name ::edges-details
+      :view DetailedView
+      :link-text "edges-details"}]
+    ["credentials"
+     {:name ::credentials
+      :view credentials-view
+      :link-text "credentials"}]
+    ["notifications"
+     {:name ::notifications
+      :view notifications-view
+      :link-text "notifications"}]
+    ["data"
+     {:name ::data
+      :view data-view
+      :link-text "data"}]
+    ["clouds"
+     {:name ::clouds
+      :view clouds-view
+      :link-text "clouds"}]
+    ["api"
+     {:name ::api
+      :view api-view
+      :link-text "api"}]]])
 
 (def router
   (rf/router
     r-routes
-    {:data {:coercion rss/coercion}}))
+    {:data {:coercion rss/coercion}})
+  ;; => #object[reitit.core.t_reitit$core60844]
+)

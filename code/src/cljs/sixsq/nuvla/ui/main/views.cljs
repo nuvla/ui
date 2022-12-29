@@ -251,13 +251,13 @@
         subs-canceled?   (subscribe [::profile-subs/subscription-canceled?])]
     (if (and @cep (not @session-loading?))
       [:div {:id "nuvla-ui-main"}
-       (case (first @resource-path)
-         "sign-in" [session-views/SessionPage true]
-         "sign-up" [session-views/SessionPage true]
-         "reset-password" [session-views/SessionPage true]
-         "set-password" [session-views/SessionPage false]
-         "sign-in-token" [session-views/SessionPage true]
-         nil [session-views/SessionPage true]
+       (if (#{"sign-in"
+              "sign-up"
+              "reset-password"
+              "set-password"
+              "sign-in-token"
+              nil} (first @resource-path))
+         [router-component]
          [:<>
           [intercom/widget]
           [sidebar/menu]

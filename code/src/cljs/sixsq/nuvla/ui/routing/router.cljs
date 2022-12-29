@@ -41,9 +41,9 @@
     {:push-state route}))
 
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
   ::navigated
-  (fn [db [_ new-match]]
+  (fn [{db :db} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
           path (-> new-match
@@ -52,20 +52,12 @@
                    (str/replace #"^/|/$" ""))
           path-parts   (split-path-alias path)
           query-params (decode-query-string path)]
-      (-> db (assoc :current-route
-                    (assoc new-match :controllers controllers))
-          (assoc ::main-spec/nav-path path-parts)
-          (assoc ::main-spec/nav-query-params query-params))
-
-      ;; THIS BREAKS EVERYTHING ::: WHY ???
-      #_{:db
+      {:db
          (-> db (assoc :current-route
                        (assoc new-match :controllers controllers))
              (assoc ::main-spec/nav-path path-parts)
              (assoc ::main-spec/nav-query-params query-params))
-         :fx [[:dispatch [::main-events/set-navigation-info]]]
-         }
-      )))
+         :fx [[:dispatch [::main-events/set-navigation-info]]]})))
 
 ;;; Subscriptions ;;;
 
@@ -122,5 +114,4 @@
 (defn router-component []
   [router-component-internal {:router router}])
 
-(comment (re-frame/dispatch [::push-state :r-routes/deployments])
-         )
+(comment (re-frame/dispatch [::push-state :r-routes/deployments]))

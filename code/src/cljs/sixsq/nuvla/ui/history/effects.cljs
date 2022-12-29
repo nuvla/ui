@@ -7,17 +7,12 @@
 (reg-fx
   ::initialize
   (fn [[path-prefix]]
-    (utils/initialize path-prefix)
-    (utils/start path-prefix)))
+    #_(utils/initialize path-prefix)
+    #_(utils/start path-prefix)))
 
 
-(reg-fx
-  ::navigate
-  (fn [[url]]
-    (utils/navigate url)))
 
 #_(reg-fx
     ::navigate-js-location
     (fn [[url]]
       (.replace js/location url)))
-

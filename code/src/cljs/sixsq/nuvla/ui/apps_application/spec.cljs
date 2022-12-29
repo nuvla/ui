@@ -48,9 +48,9 @@
                                                    ::requires-user-rights false}
                ::license-validation-errors        #{}
                ::docker-compose-validation-errors #{}
-               ::configuration-validation-errors   #{}})
+               ::configuration-validation-errors  #{}})
 
 (s/def ::deployment-pagination any?)
 
 (def deployments-pagination {::deployment-pagination (pagination-plugin/build-spec
-                                                           :default-items-per-page 25)})
+                                                       :default-items-per-page 25)})

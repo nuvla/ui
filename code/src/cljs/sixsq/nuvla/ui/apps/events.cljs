@@ -45,7 +45,7 @@
                          :frequency 20000
                          :event     [::deployments-events/get-deployments
                                      {:filter-external-arg (str "module/id='" (:id module) "'")
-                                      :pagination-db-path ::apps-application-spec/deployment-pagination}]}]]]})))
+                                      :pagination-db-path  ::apps-application-spec/deployment-pagination}]}]]]})))
 
 
 
@@ -195,7 +195,7 @@
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::deployments-events/get-deployments
                                                     {:filter-external-arg (str "module/id='" (:id %) "'")
-                                                     :pagination-db-path ::apps-application-spec/deployment-pagination}]))]})))
+                                                     :pagination-db-path  ::apps-application-spec/deployment-pagination}]))]})))
 
 
 (reg-event-db
@@ -392,8 +392,8 @@
   ::add-data-type
   (fn [db [_ data-type-map]]
     (let [id                (-> db
-                              (get-in [::spec/module-common ::spec/data-types])
-                              utils/sorted-map-new-idx)
+                                (get-in [::spec/module-common ::spec/data-types])
+                                utils/sorted-map-new-idx)
           default-data-type (:key (first @utils-detail/data-type-options))]
       (assoc-in db
                 [::spec/module-common ::spec/data-types id]
@@ -422,7 +422,7 @@
                  utils/sorted-map-new-idx)]
       (assoc-in db [::spec/module-common ::spec/registries id]
                 (assoc registry :id id
-                  ::spec/registry-cred-id "")))))
+                                ::spec/registry-cred-id "")))))
 
 
 (reg-event-db
@@ -549,10 +549,10 @@
        [_ {:keys [return-code target-resource status-message] :as _job}]]
     (cond-> db
             (= (:href target-resource)
-              (:id module)) (assoc ::spec/validate-docker-compose
-                              {:valid?    (= return-code 0)
-                               :loading?  false
-                               :error-msg status-message}))))
+               (:id module)) (assoc ::spec/validate-docker-compose
+                                    {:valid?    (= return-code 0)
+                                     :loading?  false
+                                     :error-msg status-message}))))
 
 
 (reg-event-fx

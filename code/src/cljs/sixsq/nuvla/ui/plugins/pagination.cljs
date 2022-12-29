@@ -2,7 +2,7 @@
   (:require [cljs.spec.alpha :as s]
             [clojure.edn :as edn]
             [clojure.string :as str]
-            [re-frame.cofx :refer [inject-cofx reg-cofx]]
+            [re-frame.cofx :refer [inject-cofx]]
             [re-frame.core :refer [dispatch reg-event-fx subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -26,19 +26,19 @@
 (def local-storage-key-prefix "nuvla.ui.pagination.")
 
 (defn- get-local-storage-key [db-path]
-  (str local-storage-key-prefix db-path ))
+  (str local-storage-key-prefix db-path))
 
 
 (reg-event-fx
   ::init-paginations
   [(inject-cofx :storage/all)]
   (fn [{db :db storage :storage/all}]
-    (let [store-entries (->> storage
-                             (filter #(str/starts-with? (first %) local-storage-key-prefix)))
-          paginations     (reduce (fn [paginations entry]
-                                    (merge paginations (edn/read-string (second entry))))
-                            {}
-                            store-entries)]
+    (let [store-entries (filter #(str/starts-with? (first %) local-storage-key-prefix)
+                                storage)
+          paginations   (reduce (fn [paginations entry]
+                                  (merge paginations (edn/read-string (second entry))))
+                                {}
+                                store-entries)]
       {:db (reduce-kv (fn [db k v] (if (vector? k)
                                      (update-in db k merge v)
                                      (update db k merge v))) db paginations)})))
@@ -47,8 +47,8 @@
   ::store-pagination
   (fn [_ [_ db-path items-per-page]]
     {:storage/set {:session? false
-                   :name (get-local-storage-key db-path)
-                   :value {db-path {::items-per-page items-per-page}}}}))
+                   :name     (get-local-storage-key db-path)
+                   :value    {db-path {::items-per-page items-per-page}}}}))
 
 (reg-event-fx
   ::change-page
@@ -112,7 +112,7 @@
      [ui/Pagination
       {:size          :tiny
        :total-pages   total-pages
-       :first-item     (icon "angle double left")
+       :first-item    (icon "angle double left")
        :last-item     (icon "angle double right")
        :prev-item     (icon "angle left")
        :next-item     (icon "angle right")

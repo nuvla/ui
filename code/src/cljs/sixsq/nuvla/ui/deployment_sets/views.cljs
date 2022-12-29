@@ -52,18 +52,18 @@
                          :style {:justify-content "center"
                                  :padding-top     "20px"
                                  :padding-bottom  "20px"}}
-      [components/StatisticState total ["fas fa-bullseye"] "TOTAL" clickable?
+      [components/StatisticState total ["fal fa-bullseye"] "TOTAL" clickable?
        ::events/set-state-selector ::subs/state-selector]
-      [components/StatisticState created [(state->icon CREATED)] CREATED
+      [components/StatisticState created [(str "fal " (state->icon CREATED))] CREATED
        clickable? "blue"
        ::events/set-state-selector ::subs/state-selector]
-      [components/StatisticState started [(state->icon STARTED)] STARTED
+      [components/StatisticState started [(str "fal " (state->icon STARTED))] STARTED
        clickable? "green"
        ::events/set-state-selector ::subs/state-selector]
-      [components/StatisticState stopped [(state->icon STOPPED)] STOPPED
+      [components/StatisticState stopped [(str "fal " (state->icon STOPPED))] STOPPED
        clickable? "red"
        ::events/set-state-selector ::subs/state-selector]
-      [components/StatisticState pending [(state->icon PENDING)] PENDING
+      [components/StatisticState pending [(str "fal " (state->icon PENDING))] PENDING
        clickable? "brown"
        ::events/set-state-selector ::subs/state-selector]]]))
 

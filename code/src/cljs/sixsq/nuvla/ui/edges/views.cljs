@@ -53,13 +53,13 @@
 
         [ui/StatisticGroup {:widths (if clickable? nil 4)
                             :size   "tiny"}
-         [components/StatisticState total ["fas fa-box"] "TOTAL"
+         [components/StatisticState total ["fal fa-box"] "TOTAL"
           clickable? ::events/set-state-selector ::subs/state-selector]
-         [components/StatisticState online ["fas fa-power-off"] utils/status-online
+         [components/StatisticState online ["fal fa-power-off"] utils/status-online
           clickable? "green" ::events/set-state-selector ::subs/state-selector]
-         [components/StatisticState offline ["fas fa-power-off"]
+         [components/StatisticState offline ["fal fa-power-off"]
           utils/status-offline clickable? "red" ::events/set-state-selector ::subs/state-selector]
-         [components/StatisticState unknown ["fas fa-power-off"]
+         [components/StatisticState unknown ["fal fa-power-off"]
           utils/status-unknown clickable? "yellow" ::events/set-state-selector ::subs/state-selector]
          (when clickable?
            [:span

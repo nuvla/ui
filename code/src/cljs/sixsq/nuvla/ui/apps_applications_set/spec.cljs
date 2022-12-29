@@ -41,9 +41,15 @@
                                           ::requires-user-rights]))
 
 
+(s/def ::apps-group-name string?)
+
+(s/def ::apps-group (s/keys :req [::apps-group-name]))
+
+(s/def ::apps-groups (s/map-of any? (s/merge ::apps-group)))
+
 ; create an initial entry for new application
 
-(def defaults {::module-apps-set                  []
+(def defaults {::apps-groups                      {0 {::apps-group-name ""}}
                ::module-application               {::docker-compose       nil
                                                    ::requires-user-rights false}
                ::license-validation-errors        #{}

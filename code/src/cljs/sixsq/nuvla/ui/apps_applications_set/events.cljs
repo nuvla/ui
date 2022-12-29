@@ -75,3 +75,39 @@
   ::update-requires-user-rights
   (fn [db [_ value]]
     (assoc-in db [::spec/module-application ::spec/requires-user-rights] value)))
+
+;(reg-event-db
+;  ::add-file
+;  (fn [db [_ _]]
+;    (let [id (-> db
+;                 (get-in [::spec/module-application ::spec/files])
+;                 utils/sorted-map-new-idx)]
+;      (assoc-in db [::spec/module-application ::spec/files id] {:id id, ::spec/file-content ""}))))
+;
+;
+;(reg-event-db
+;  ::remove-file
+;  (fn [db [_ id]]
+;    (update-in db [::spec/module-application ::spec/files] dissoc id)))
+;
+
+(reg-event-db
+  ::update-apps-set-name
+  (fn [db [_ id name]]
+    (assoc-in db [::spec/apps-groups id
+                  ::spec/apps-group-name] name)))
+
+
+(reg-event-db
+  ::add-apps-set
+  (fn [db]
+    (let [id (-> db
+                 ::spec/apps-groups
+                 utils/sorted-map-new-idx)]
+      (js/console.warn id)
+      (assoc-in db [::spec/apps-groups id] {:id id, ::spec/file-content ""}))))
+
+(reg-event-db
+  ::remove-apps-set
+  (fn [db [_ id]]
+    (update db ::spec/apps-groups dissoc id)))

@@ -48,3 +48,8 @@
   ::module-requires-user-rights
   (fn [db]
     (get-in db [::spec/module-application ::spec/requires-user-rights])))
+
+(reg-sub
+  ::apps-groups
+  :-> ::spec/apps-groups)
+

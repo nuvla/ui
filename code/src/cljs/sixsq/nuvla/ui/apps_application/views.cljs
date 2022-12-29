@@ -325,7 +325,8 @@
      [:h2 [apps-views-detail/DeploymentsTitle]]
      (if @is-new?
        [uix/WarningMsgNoElements]
-       [deployments-views/DeploymentTable
+       [:div]
+       #_[deployments-views/DeploymentTable
         {:no-actions     true
          :no-module-name true
          :empty-msg      (@tr [:empty-deployment-module-msg])}])]))

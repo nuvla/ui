@@ -15,10 +15,12 @@
     [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
+    [sixsq.nuvla.ui.deployment-sets-detail.views :as deployment-sets-detail-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
@@ -85,47 +87,111 @@
             [apps-views-detail/trash id ::events/remove-file]])]))))
 
 
-(defn AppGroupSection []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        files         (subscribe [::subs/files])
-        editable?        (subscribe [::apps-subs/editable?])
-        validate-form?   (subscribe [::apps-subs/validate-form?])
-        on-change        (fn [update-event-kw value]
-                           (dispatch [update-event-kw value])
-                           (dispatch [::main-events/changes-protection? true])
-                           (dispatch [::apps-events/validate-form]))]
+(defn SelectAppsModal
+  []
+  (let [subtype (r/atom nil)]
     (fn []
-      [uix/Accordion
-       [:<>
-        [:div (@tr [:module-files])
-         [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
-        [ui/Table {:compact    true
-                   :definition true}
-         [ui/TableBody
-          [uix/TableRowField (@tr [:name]), :key "app-group-name-", :editable? @editable?,
-           :spec ::spec/name, :validate-form? @validate-form?, :required? true,
-           :default-value name, :on-change (partial on-change ::events/name)
-           :on-validation ::events/set-details-validation-error]]]
-        (if (empty? @files)
-          [ui/Message
-           (str/capitalize (str (@tr [:no-files]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}}
-                 [ui/TableHeader
-                  [ui/TableRow
-                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
-                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
-                   (when @editable?
-                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
-                 [ui/TableBody
-                  (for [[id file] @files]
-                    ^{:key (str "file_" id)}
-                    [SingleFile file])]]])
-        (when @editable?
-          [:div {:style {:padding-top 10}}
-           [apps-views-detail/plus ::events/add-file]])]
-       :label "section-name-edit"
-       :count (count @files)
-       :default-open true])))
+      [ui/Modal {:on-close #(reset! subtype nil)
+                 :close-icon true
+                 :trigger (r/as-element
+                            [ui/Icon {:name     "add"
+                                      :color    "green"}])}
+       [ui/ModalHeader "New apps set"]
+       [ui/ModalContent
+        (if (nil? @subtype)
+          [:<>
+           [:p "Targeting Docker or Kubernetes"]
+           [ui/CardGroup {:centered true}
+            [ui/Card
+             {:on-click #(reset! subtype "docker")}
+             [ui/CardContent {:text-align :center}
+              [ui/IconGroup {:size :massive}
+               [ui/Icon {:name "docker"}]]]
+             ]
+            [ui/Card
+             {:on-click #(reset! subtype "kubernetes")}
+             [ui/CardContent {:text-align :center}
+              [ui/IconGroup {:size :massive}
+               [ui/Image {:src   "/ui/images/kubernetes.svg"
+                          ;:floated "right"
+                          :style {:width "100px"}
+                          }]]]
+
+             ]]]
+          [deployment-sets-detail-views/SelectApps]
+          )
+        ]
+       (when @subtype
+         [ui/ModalActions
+         [ui/Button {:primary true}
+          "Validate"]])
+       ]
+      )
+    )
+  )
+
+(defn AppGroupSection []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        apps-groups    (subscribe [::subs/apps-groups])
+        editable?      (subscribe [::apps-subs/editable?])
+        validate-form? (subscribe [::apps-subs/validate-form?])
+        on-change      (fn [id name]
+                         (dispatch [::events/update-apps-set-name id name])
+                         (dispatch [::main-events/changes-protection? true])
+                         (dispatch [::apps-events/validate-form]))]
+    (fn []
+      [:<>
+       [:div "Applications grouping"
+        [:span ff/nbsp (ff/help-popup "Each of this applications group you will be able to deploy it on a targets")]]
+       (if (empty? @apps-groups)
+         [ui/Message "No applications group to show"]
+         [:<>
+          (for [[i [id {:keys [::spec/apps-group-name] :as apps-group}]] (map-indexed vector @apps-groups)]
+            ^{:key (str "apps-group-" (inc i))}
+            [uix/Accordion
+             [:<>
+              [ui/Table {:compact    true
+                         :definition true}
+               [ui/TableBody
+                [uix/TableRowField (@tr [:name]), :key "app-group-name-", :editable? @editable?,
+                 :spec ::spec/apps-group-name, :validate-form? @validate-form?, :required? true,
+                 :default-value apps-group-name, :on-change (partial on-change id)
+                 :on-validation ::events/set-details-validation-error]]]
+
+              [ui/ListSA
+               [ui/ListItem
+                [ui/ListIcon {:name "docker"}]
+                [ui/ListContent "App 1"]]
+               [ui/ListItem
+                [ui/ListIcon {:name "docker"}]
+                [ui/ListContent "App 2"]]
+               [ui/ListItem
+                [ui/ListIcon {:name "docker"}]
+                [ui/ListContent "App 3"]]
+               ]
+
+              (when @editable?
+                [:div {:style {:padding-top 10}}
+                 [SelectAppsModal]
+                 #_[apps-views-detail/plus ::events/add-file]])]
+             :label [:<>
+                     (str (inc i) " | " apps-group-name)
+                     [ui/Icon {:name     "trash"
+                               :color    "red"
+                               :style    {:cursor :pointer
+                                          :float "right"}
+                               :on-click #(dispatch [::events/remove-apps-set id])}]
+                     ]
+             :count 0
+             :default-open true]
+            )]
+         )
+       [ui/Button {:primary  true
+                   :on-click #(dispatch [::events/add-apps-set])}
+        "New group of applications"]
+       ]
+
+      )))
 
 
 (defn DockerComposeValidationPopup
@@ -335,10 +401,22 @@
      [apps-views-detail/ConfigurationTitle]]))
 
 
-(defn ConfigurationPane
+(defn TabMenuApplications
+  []
+  (let [error? (subscribe [::subs/configuration-error?])]
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
+     [:<>
+      [uix/Icon {:name "list layout"}]
+      "Applications"]]))
+
+
+(defn ApplicationsPane
   []
   [:<>
-   [:h2 [apps-views-detail/ConfigurationTitle]]
+   [:h2
+    [:<>
+     [uix/Icon {:name "list layout"}]
+     "Applications"]]
    [AppGroupSection]])
 
 
@@ -402,7 +480,37 @@
       [ui/GridColumn
        [OverviewModuleSummary]]]]))
 
+(defn ConfigureDemo
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [tab-plugin/Tab
+     {:db-path [::spec/x]
+      :menu    {:secondary true
+                :pointing  true}
+      :panes   (map
+                 (fn [i]
+                   {:menuItem {:content (str i)
+                               :key     (random-uuid)}
+                    :render   #(r/as-element
+                                 [tab-plugin/Tab
+                                  {:db-path [::spec/y]
+                                   :panes   (map
+                                              (fn [{:keys [text icon]}]
+                                                {:menuItem {:content text
+                                                            :icon    icon
+                                                            :key     (random-uuid)}
+                                                 :render   (fn []
+                                                             (r/as-element
+                                                               [ui/TabPane
 
+                                                                ]))}
+                                                ) [{:text "App 1" :icon "cubes"}
+                                                   {:text "App 2" :icon "cubes"}
+                                                   {:text "App 3" :icon "cubes"}])}])}
+                   ) ["1 | Blackbox"
+                      "2 | Whitebox"
+                      "3 | Monitoring"
+                      ])}]))
 (defn module-detail-panes
   []
   (let [module    (subscribe [::apps-subs/module])
@@ -417,9 +525,13 @@
                               :key     :details}
                    :pane     {:content (r/as-element [DetailsPane])
                               :key     :details-pane}}
+                  {:menuItem {:content (r/as-element [TabMenuApplications])
+                              :key     :applications}
+                   :pane     {:content (r/as-element [ApplicationsPane])
+                              :key     :applications-pane}}
                   {:menuItem {:content (r/as-element [TabMenuConfiguration])
                               :key     :configuration}
-                   :pane     {:content (r/as-element [ConfigurationPane])
+                   :pane     {:content (r/as-element [ConfigureDemo])
                               :key     :configuration-pane}}
                   {:menuItem {:content (r/as-element [TabMenuVersions])
                               :key     :versions}

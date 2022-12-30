@@ -387,9 +387,9 @@
                                        (str/join
                                          "/" (remove str/blank?
                                                      ["apps" parent
-                                                      "New Application set?subtype=applications_set"]))])))}
+                                                      "New Applications sets?subtype=applications_sets"]))])))}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Applications set"]
+             [ui/Header "Applications sets"]
              [:div]
              [ui/Icon {:name "th large"
                        :size :massive

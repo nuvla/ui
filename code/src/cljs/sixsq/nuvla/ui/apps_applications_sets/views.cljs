@@ -1,12 +1,12 @@
-(ns sixsq.nuvla.ui.apps-applications-set.views
+(ns sixsq.nuvla.ui.apps-applications-sets.views
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.apps-applications-set.events :as events]
-    [sixsq.nuvla.ui.apps-applications-set.spec :as spec]
-    [sixsq.nuvla.ui.apps-applications-set.subs :as subs]
+    [sixsq.nuvla.ui.apps-applications-sets.events :as events]
+    [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
+    [sixsq.nuvla.ui.apps-applications-sets.subs :as subs]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -17,11 +17,9 @@
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
     [sixsq.nuvla.ui.deployment-sets-detail.views :as deployment-sets-detail-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -31,60 +29,6 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
-
-(def docker-docu-link "https://docs.docker.com/compose/compose-file/compose-file-v3/#not-supported-for-docker-stack-deploy")
-
-(defn clear-module
-  []
-  (dispatch [::events/clear-module]))
-
-
-(defn SingleFile
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id ::spec/file-name ::spec/file-content]}]
-  (let [tr              (subscribe [::i18n-subs/tr])
-        validate-form?  (subscribe [::apps-subs/validate-form?])
-        editable?       (subscribe [::apps-subs/editable?])
-        form-valid?     (subscribe [::apps-subs/form-valid?])
-        local-validate? (r/atom false)]
-    (fn [{:keys [id ::spec/file-name ::spec/file-content]}]
-      (let [validate? (or @local-validate? (not @form-valid?))]
-        [ui/TableRow {:key id, :vertical-align "top"}
-         (if @editable?
-           [uix/TableRowCell {:key            (str "file-name-" id)
-                              :placeholder    (@tr [:filename])
-                              :editable?      editable?,
-                              :spec           ::spec/file-name
-                              :validate-form? @validate-form?
-                              :required?      true
-                              :default-value  (or file-name "")
-                              :on-change      #(do
-                                                 (reset! local-validate? true)
-                                                 (dispatch [::events/update-file-name id %])
-                                                 (dispatch [::main-events/changes-protection? true])
-                                                 (dispatch [::apps-events/validate-form]))
-                              :on-validation  ::events/set-configuration-validation-error}]
-           [ui/TableCell {:floated :left
-                          :width   3}
-            [:span file-name]])
-         [ui/TableCell {:floated :left
-                        :width   12
-                        :error   (and validate? (not (s/valid? ::spec/file-content file-content)))}
-          [ui/Form
-           [ui/TextArea {:rows          10
-                         :read-only     (not @editable?)
-                         :default-value file-content
-                         :on-change     (ui-callback/value
-                                          #(do
-                                             (reset! local-validate? true)
-                                             (dispatch [::events/update-file-content id %])
-                                             (dispatch [::main-events/changes-protection? true])
-                                             (dispatch [::apps-events/validate-form])))}]]]
-         (when @editable?
-           [ui/TableCell {:floated :right
-                          :width   1
-                          :align   :right}
-            [apps-views-detail/trash id ::events/remove-file]])]))))
 
 
 (defn SelectAppsModal
@@ -132,63 +76,68 @@
 
 (defn AppGroupSection []
   (let [tr             (subscribe [::i18n-subs/tr])
-        apps-groups    (subscribe [::subs/apps-groups])
+        apps-groups    (subscribe [::subs/apps-sets])
         editable?      (subscribe [::apps-subs/editable?])
         validate-form? (subscribe [::apps-subs/validate-form?])
-        on-change      (fn [id name]
-                         (dispatch [::events/update-apps-set-name id name])
+        on-change      (fn [id event-update value]
+                         (dispatch [event-update id value])
                          (dispatch [::main-events/changes-protection? true])
                          (dispatch [::apps-events/validate-form]))]
     (fn []
       [:<>
-       [:div "Applications grouping"
-        [:span ff/nbsp (ff/help-popup "Each of this applications group you will be able to deploy it on a targets")]]
+       [:div "Applications sets"
+        [:span ff/nbsp (ff/help-popup "Each set will allow you to target or/and configure application differently")]]
        (if (empty? @apps-groups)
-         [ui/Message "No applications group to show"]
+         [ui/Message "No applications sets to show"]
          [:<>
-          (for [[i [id {:keys [::spec/apps-group-name] :as apps-group}]] (map-indexed vector @apps-groups)]
-            ^{:key (str "apps-group-" (inc i))}
-            [uix/Accordion
-             [:<>
-              [ui/Table {:compact    true
-                         :definition true}
-               [ui/TableBody
-                [uix/TableRowField (@tr [:name]), :key "app-group-name-", :editable? @editable?,
-                 :spec ::spec/apps-group-name, :validate-form? @validate-form?, :required? true,
-                 :default-value apps-group-name, :on-change (partial on-change id)
-                 :on-validation ::events/set-details-validation-error]]]
+          (doall
+            (for [[i [id {:keys [::spec/apps-set-name
+                                ::spec/apps-set-description] :as apps-group}]] (map-indexed vector @apps-groups)]
+             ^{:key (str "apps-set-" (inc i))}
+             [uix/Accordion
+              [:<>
+               [ui/Table {:compact    true
+                          :definition true}
+                [ui/TableBody
+                 [uix/TableRowField (@tr [:name]), :key "app-set-name", :editable? @editable?,
+                  :spec ::spec/apps-set-name, :validate-form? @validate-form?, :required? true,
+                  :default-value apps-set-name, :on-change (partial on-change id ::events/update-apps-set-name)
+                  :on-validation ::events/set-apps-validation-error]
+                 [uix/TableRowField (@tr [:description]), :key "app-set-description", :editable? @editable?,
+                  :spec ::spec/apps-set-description, :validate-form? @validate-form?, :required? false,
+                  :default-value apps-set-description, :on-change (partial on-change id ::events/update-apps-set-description)
+                  :on-validation ::events/set-apps-validation-error]]]
 
-              [ui/ListSA
-               [ui/ListItem
-                [ui/ListIcon {:name "docker"}]
-                [ui/ListContent "App 1"]]
-               [ui/ListItem
-                [ui/ListIcon {:name "docker"}]
-                [ui/ListContent "App 2"]]
-               [ui/ListItem
-                [ui/ListIcon {:name "docker"}]
-                [ui/ListContent "App 3"]]
-               ]
+               [ui/ListSA
+                [ui/ListItem
+                 [ui/ListIcon {:name "docker"}]
+                 [ui/ListContent "App 1"]]
+                [ui/ListItem
+                 [ui/ListIcon {:name "docker"}]
+                 [ui/ListContent "App 2"]]
+                [ui/ListItem
+                 [ui/ListIcon {:name "docker"}]
+                 [ui/ListContent "App 3"]]
+                ]
 
-              (when @editable?
-                [:div {:style {:padding-top 10}}
-                 [SelectAppsModal]
-                 #_[apps-views-detail/plus ::events/add-file]])]
-             :label [:<>
-                     (str (inc i) " | " apps-group-name)
-                     [ui/Icon {:name     "trash"
-                               :color    "red"
-                               :style    {:cursor :pointer
-                                          :float "right"}
-                               :on-click #(dispatch [::events/remove-apps-set id])}]
-                     ]
-             :count 0
-             :default-open true]
-            )]
+               (when @editable?
+                 [:div {:style {:padding-top 10}}
+                  [SelectAppsModal]])]
+              :label [:<>
+                      (str (inc i) " | " apps-set-name)
+                      [ui/Icon {:name     "trash"
+                                :color    "red"
+                                :style    {:cursor :pointer
+                                           :float  "right"}
+                                :on-click #(dispatch [::events/remove-apps-set id])}]
+                      ]
+              :count 0
+              :default-open true]
+             ))]
          )
        [ui/Button {:primary  true
                    :on-click #(dispatch [::events/add-apps-set])}
-        "New group of applications"]
+        "New set of applications"]
        ]
 
       )))
@@ -215,103 +164,6 @@
     :position       "top center"
     :wide           true
     :hide-on-scroll true}])
-
-
-(defn DockerComposeCompatibility
-  [compatibility unsupp-opts]
-  (let [popup-disabled? (empty? unsupp-opts)]
-    [:div {:style {:float "right"}}
-     [:span {:style {:font-variant "small-caps"}} "compatibility: "]
-     [ui/Label {:color      "blue"
-                :horizontal true} compatibility]
-     (when-not popup-disabled?
-       [ui/Popup
-        {:trigger        (r/as-element [ui/Icon {:color "yellow"
-                                                 :name  "exclamation triangle"}])
-         :header         "Unsupported options"
-         :content        (str "Swarm doesn't support and will ignore the following options: "
-                              (str/join "; " unsupp-opts))
-
-         :on             "hover"
-         :position       "top right"
-         :wide           true
-         :hide-on-scroll true}])]))
-
-
-(defn KubernetesSection []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        docker-compose (subscribe [::subs/docker-compose])
-        module-app     (subscribe [::apps-subs/module])
-        unsupp-opts    (:unsupported-options (:content @module-app))
-        compatibility  (:compatibility @module-app)
-        validate-form? (subscribe [::apps-subs/validate-form?])
-        editable?      (subscribe [::apps-subs/editable?])
-        default-value  @docker-compose]
-    (fn []
-      (let [validate? @validate-form?
-            valid?    (s/valid? ::spec/docker-compose @docker-compose)]
-        [uix/Accordion
-         [:<>
-          [:div {:style {:margin-bottom "10px"}} "Env substitution"
-           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
-           [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml
-           default-value
-           (fn [_editor _data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form]))
-           @editable?]
-          (when validate?
-            (dispatch [::events/set-docker-validation-error
-                       apps-views-detail/application-kubernetes-subtype (not valid?)])
-            (when (not valid?)
-              (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
-                [ui/Label {:pointing "above", :basic true, :color "red"}
-                 (if (str/blank? error-msg)
-                   (@tr [:module-k8s-manifest-error])
-                   error-msg)])))]
-         :label "Manifest"
-         :default-open true]))))
-
-
-(defn DockerComposeSection []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        docker-compose (subscribe [::subs/docker-compose])
-        module-app     (subscribe [::apps-subs/module])
-        unsupp-opts    (:unsupported-options (:content @module-app))
-        compatibility  (:compatibility @module-app)
-        validate-form? (subscribe [::apps-subs/validate-form?])
-        editable?      (subscribe [::apps-subs/editable?])
-        default-value  @docker-compose]
-    (fn []
-      (let [validate-dc (subscribe [::apps-subs/validate-docker-compose])
-            validate?   @validate-form?
-            valid?      (s/valid? ::spec/docker-compose @docker-compose)]
-        [uix/Accordion
-         [:<>
-          [:div {:style {:margin-bottom "10px"}} "Env substitution"
-           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
-           [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml
-           default-value
-           (fn [_editor _data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form]))
-           @editable?]
-          (when validate?
-            (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
-            (when (not valid?)
-              (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
-                [ui/Label {:pointing "above", :basic true, :color "red"}
-                 (if (str/blank? error-msg)
-                   (@tr [:module-docker-compose-error])
-                   error-msg)])))]
-         :label [:span "Docker compose" ff/nbsp
-                 (when @validate-dc
-                   [DockerComposeValidationPopup @validate-dc])]
-         :default-open true]))))
 
 
 (defn up-to-date?
@@ -403,7 +255,7 @@
 
 (defn TabMenuApplications
   []
-  (let [error? (subscribe [::subs/configuration-error?])]
+  (let [error? (subscribe [::subs/apps-error?])]
     [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [:<>
       [uix/Icon {:name "list layout"}]
@@ -427,15 +279,6 @@
      [apps-views-detail/DeploymentsTitle]]))
 
 
-(defn subtype->pretty
-  [subtype]
-  (case subtype
-    "application" "Docker"
-    "application_kubernetes" "Kubernetes"
-    "applications_set" "Applications set"
-    "Docker"))
-
-
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
         module-subtype (subscribe [::apps-subs/module-subtype])
@@ -450,7 +293,7 @@
                                          :style      {:padding-bottom 8}} "subtype"]
                           [ui/TableCell {:style
                                          {:padding-left (when @editable? apps-views-detail/edit-cell-left-padding)}}
-                           (subtype->pretty @module-subtype)]]]
+                           "Applications sets"]]]
       :validation-event ::apps-events/set-details-validation-error}]))
 
 
@@ -552,7 +395,7 @@
     (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
                          (dispatch [::apps-events/set-active-tab :overview]))
     (dispatch [::apps-events/reset-version])
-    (dispatch [::apps-events/set-form-spec ::spec/module-application])
+    (dispatch [::apps-events/set-form-spec ::spec/apps-sets])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)

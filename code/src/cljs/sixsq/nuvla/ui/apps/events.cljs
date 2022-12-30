@@ -3,6 +3,7 @@
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
+    [sixsq.nuvla.ui.apps-applications-sets.spec :as apps-applications-sets-spec]
     [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
     [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
@@ -20,7 +21,8 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (def refresh-action-get-module :apps-get-module)
@@ -53,12 +55,15 @@
   [module-subtype db]
   (let [component   (get db ::apps-component-spec/module-component)
         project     (get db ::apps-project-spec/module-project)
-        application (get db ::apps-application-spec/module-application)]
+        application (get db ::apps-application-spec/module-application)
+        apps-sets   (get db ::apps-applications-sets-spec/apps-sets)]
+    (js/console.error "get-module " module-subtype)
     (case module-subtype
       "component" component
       "project" project
       "application" application
       "application_kubernetes" application
+      "applications_sets" apps-sets
       project)))
 
 
@@ -89,10 +94,10 @@
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
       ; Helpful to debug validation issues
-      ;(log/error "module-common validate: "
-      ;           (s/explain-str ::spec/module-common module-common))
-      ;(log/error "optional form validate: "
-      ;           (s/explain-str form-spec module))
+      (log/error "module-common validate: "
+                 (s/explain-str ::spec/module-common module-common))
+      (log/error "optional form validate: "
+                 (s/explain-str form-spec module))
       (assoc db ::spec/form-valid? valid?))))
 
 

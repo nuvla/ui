@@ -2,7 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.apps-application.views :as apps-application-views]
-    [sixsq.nuvla.ui.apps-applications-set.views :as apps-applications-set-views]
+    [sixsq.nuvla.ui.apps-applications-sets.views :as apps-applications-sets-views]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
@@ -39,7 +39,7 @@
           "component" [apps-component-views/view-edit]
           "application" [apps-application-views/ViewEdit]
           "application_kubernetes" [apps-application-views/ViewEdit]
-          "applications_set" [apps-applications-set-views/ViewEdit]
+          "applications_sets" [apps-applications-sets-views/ViewEdit]
           ^{:key (random-uuid)}
           [apps-project-views/ViewEdit])))))
 

@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.db.spec
   (:require
     [sixsq.nuvla.ui.apps-application.spec :as apps-application]
-    [sixsq.nuvla.ui.apps-applications-set.spec :as apps-applications-set]
+    [sixsq.nuvla.ui.apps-applications-sets.spec :as apps-applications-sets]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
     [sixsq.nuvla.ui.apps.spec :as apps]
@@ -32,7 +32,7 @@
   (merge apps/defaults
          apps-component/defaults
          apps-application/defaults
-         apps-applications-set/defaults
+         apps-applications-sets/defaults
          apps-store/defaults
          api/defaults
          api-detail/defaults

@@ -93,7 +93,6 @@
                  [re-frame "1.3.0" :scope "provided"]
                  [day8.re-frame/http-fx "0.2.4" :scope "provided"]
                  [cljs-ajax "0.8.4" :scope "provided"]
-                 [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre "5.2.1" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]

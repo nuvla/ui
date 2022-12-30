@@ -1,8 +1,6 @@
 (ns sixsq.nuvla.ui.history.utils
   (:require
     [clojure.string :as str]
-    [goog.events :as events]
-    [secretary.core :as secretary]
     [taoensso.timbre :as log])
   (:import
     [goog.history EventType Html5History]
@@ -47,7 +45,6 @@
 
 (def history
   (doto (Html5History. js/window (create-transformer))
-    (events/listen EventType.NAVIGATE (fn [evt] (secretary/dispatch! (.-token evt))))
     (.setUseFragment false)
     (.setEnabled false)))
 
@@ -72,7 +69,7 @@
         redirect   (when (= token "/") "/sign-in")]
     (log/info "start token: " token (when redirect (str "redirect to " redirect)))
     (.setToken history (or redirect token))
-    (secretary/dispatch! (or redirect full-token))))
+    ))
 
 
 (defn host-url

@@ -12,7 +12,6 @@
             [sixsq.nuvla.ui.i18n.events :as i18n-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.views :as main-views]
-            [sixsq.nuvla.ui.routes :as routes]
             [sixsq.nuvla.ui.routing.router :refer [init-routes!]]
             [sixsq.nuvla.ui.session.events :as session-events]
             [taoensso.timbre :as log]

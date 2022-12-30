@@ -349,7 +349,7 @@
 
 (defn clear-module
   []
-  (dispatch [::events/clear-module]))
+  (dispatch [::events/clear-apps-component]))
 
 
 (defn view-edit

@@ -34,7 +34,7 @@
 
 (defn clear-module
   []
-  (dispatch [::events/clear-module]))
+  (dispatch [::events/clear-apps-application]))
 
 
 (defn SingleFile

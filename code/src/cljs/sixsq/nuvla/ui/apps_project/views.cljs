@@ -25,7 +25,7 @@
 
 (defn clear-module
   []
-  (dispatch [::events/clear-module]))
+  (dispatch [::events/clear-apps-project]))
 
 
 (defn FormatModule

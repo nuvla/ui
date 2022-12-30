@@ -23,11 +23,6 @@
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
-(defn clear-module
-  []
-  (dispatch [::events/clear-apps-project]))
-
-
 (defn FormatModule
   [{:keys [subtype name path description] :as module}]
   (when module

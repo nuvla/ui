@@ -347,11 +347,6 @@
          [:p "Note: ensure you have a recent installation of docker."]]))))
 
 
-(defn clear-module
-  []
-  (dispatch [::events/clear-apps-component]))
-
-
 (defn view-edit
   []
   (let [tr            (subscribe [::i18n-subs/tr])

@@ -5,7 +5,7 @@
     [reitit.coercion.spec :as rss]
     [reitit.exception :as exception]
     [sixsq.nuvla.ui.about.views :refer [about]]
-    [sixsq.nuvla.ui.apps.views :refer [apps-view]]
+    [sixsq.nuvla.ui.apps.views :as app-views]
     [sixsq.nuvla.ui.cimi.views :refer [api-view]]
     [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
     [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
@@ -87,13 +87,13 @@
       :view dashboard-view
       :link-text "dashboard"}]
     ["apps"
-     [""
-      {:name ::apps
-       :view apps-view
-       :link-text "Apps"}]
+     {:name ::apps
+      :view app-views/apps-view
+      :link-text "Apps"}
+     [""]
      ["/*apps-path"
       {:name ::apps-details
-       :view apps-view}]]
+       :view app-views/AppDetails}]]
     ["deployments"
      {:name ::deployments
       :view deployments-view

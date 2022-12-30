@@ -32,11 +32,6 @@
 
 (def docker-docu-link "https://docs.docker.com/compose/compose-file/compose-file-v3/#not-supported-for-docker-stack-deploy")
 
-(defn clear-module
-  []
-  (dispatch [::events/clear-apps-application]))
-
-
 (defn SingleFile
   #_{:clj-kondo/ignore [:unused-binding]}
   [{:keys [id ::spec/file-name ::spec/file-content]}]

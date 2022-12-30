@@ -68,7 +68,7 @@
       {:db
        (-> db (assoc :current-route new-match-with-controllers))
        :fx [[:dispatch [::main-events/set-navigation-info]]]
-       ::fx/navigate [(strip-base-path (:path new-match))]})))
+       ::fx/set-window-title [(strip-base-path (:path new-match))]})))
 
 ;;; Subscriptions ;;;
 

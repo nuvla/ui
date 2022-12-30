@@ -11,9 +11,9 @@
     #_(utils/start path-prefix)))
 
 (reg-fx
-  ::navigate
+  ::set-window-title
   (fn [[url]]
-    (utils/navigate url)))
+    (utils/set-window-title! url)))
 
 #_(reg-fx
     ::navigate-js-location

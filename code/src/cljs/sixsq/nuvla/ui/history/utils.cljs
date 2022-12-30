@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [taoensso.timbre :as log]))
 
-(defn navigate
+(defn set-window-title!
   "Sets title"
   [url]
   (log/info "navigating to" url)

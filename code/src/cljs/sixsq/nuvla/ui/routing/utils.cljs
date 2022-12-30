@@ -18,7 +18,7 @@
    (second (str/split path #"\?"))
    (str/split #"&")
    (->> (map (fn [s] (let [[k v] (str/split s #"=")]
-                       [k v])))
+                       [(keyword k) v])))
         (into {}))))
 
 (comment

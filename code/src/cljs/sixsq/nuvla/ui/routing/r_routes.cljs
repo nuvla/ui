@@ -88,7 +88,7 @@
       :link-text "dashboard"}]
     ["apps"
      {:name ::apps
-      :view app-views/apps-view
+      :view app-views/AppsOverview
       :link-text "Apps"}
      [""]
      ["/*apps-path"

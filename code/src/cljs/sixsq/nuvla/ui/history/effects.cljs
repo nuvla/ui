@@ -10,7 +10,10 @@
     #_(utils/initialize path-prefix)
     #_(utils/start path-prefix)))
 
-
+(reg-fx
+  ::navigate
+  (fn [[url]]
+    (utils/navigate url)))
 
 #_(reg-fx
     ::navigate-js-location

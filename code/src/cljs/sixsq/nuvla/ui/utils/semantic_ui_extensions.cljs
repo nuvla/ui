@@ -471,11 +471,10 @@
 (defn Card
   [{:keys [header description meta image on-click href button tags content
            corner-button state left-state loading? on-select selected? extra]}]
-  [ui/Card (when on-click
-             (cond-> {:on-click (fn [event]
-                                  (on-click event)
-                                  (.preventDefault event))}
-                     href (assoc :href href)))
+  [ui/Card (-> {:href href}
+             (merge (when on-click {:on-click (fn [event]
+                                                (on-click event)
+                                                (.preventDefault event))})))
    (when on-select
      [:div {:style {:position "absolute"
                     :top      "-7px"

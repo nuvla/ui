@@ -1,20 +1,20 @@
 (ns sixsq.nuvla.ui.main.events
-  (:require
-    [ajax.core :as ajax]
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.main.effects :as fx]
-    [sixsq.nuvla.ui.main.spec :as spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.messages.spec :as messages-spec]
-    [sixsq.nuvla.ui.session.events :as session-events]
-    [sixsq.nuvla.ui.utils.general :as u]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+  (:require [ajax.core :as ajax]
+            [clojure.set :as set]
+            [clojure.string :as str]
+            [day8.re-frame.http-fx]
+            [re-frame.cofx :refer [inject-cofx]]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.main.effects :as fx]
+            [sixsq.nuvla.ui.main.spec :as spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.messages.spec :as messages-spec]
+            [sixsq.nuvla.ui.session.events :as session-events]
+            [sixsq.nuvla.ui.utils.general :as u]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [taoensso.timbre :as log]))
 
 (def notification-polling-id :notifications-polling)
 (def check-ui-version-polling-id :check-ui-version)
@@ -76,15 +76,21 @@
 
 (reg-event-fx
   ::set-navigation-info
+  [(inject-cofx :get-path-parts-and-search-map)]
   (fn [{{:keys [::spec/actions-interval
-                ::spec/changes-protection?]} :db} _]
-    (tap> {:spec/actions-interval actions-interval})
-    (tap> {:spec/actions-interval notification-polling-id})
+                ::spec/changes-protection?]
+         :as db} :db
+        path-parts :path-parts
+        query-params :query-params}]
+    (js/console.error "set-navigation-info path-parts" path-parts)
+    (js/console.error "set-navigation-info query-params" query-params)
     (when (not changes-protection?)
-      {::fx/bulk-actions-interval [::action-interval-delete
+      {:db                        (assoc db ::spec/nav-path path-parts
+                                    ::spec/nav-query-params query-params)
+       ::fx/bulk-actions-interval [::action-interval-delete
                                    (dissoc actions-interval
-                                           notification-polling-id
-                                           check-ui-version-polling-id)]})))
+                                     notification-polling-id
+                                     check-ui-version-polling-id)]})))
 
 (reg-event-fx
   ::action-interval-start

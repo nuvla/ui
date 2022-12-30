@@ -1,25 +1,32 @@
 (ns sixsq.nuvla.ui.routing.router
-  (:require [clojure.string :as str]
-            [re-frame.core :as re-frame]
-            [reitit.core :as r]
-            [reitit.frontend.controllers :as rfc]
-            [reitit.frontend.easy :as rfe]
-            [reitit.frontend.history :as rfh]
-            [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.main.spec :as main-spec]
-            [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.routing.r-routes :refer [router]]
-            [sixsq.nuvla.ui.routing.utils :refer [decode-query-string]]
-            [sixsq.nuvla.ui.main.events :as main-events]))
+  (:require
+    [clojure.string :as str]
+    [re-frame.cofx :refer [reg-cofx]]
+    [re-frame.core :as re-frame]
+    [reitit.core :as r]
+    [reitit.frontend.controllers :as rfc]
+    [reitit.frontend.easy :as rfe]
+    [reitit.frontend.history :as rfh]
+    [sixsq.nuvla.ui.config :as config]
+    [sixsq.nuvla.ui.history.effects :as fx]
+    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.routing.r-routes :refer [router]]
+    [sixsq.nuvla.ui.routing.utils :refer [decode-query-string]]))
 
 (def page-alias {"nuvlabox"        "edges"
                  "edge"            "edges"
                  "infrastructures" "clouds"
                  "deployment"      "deployments"})
 
+(defn- strip-base-path [path]
+  (-> path (str/replace-first config/base-path "")
+      (str/replace #"^/|/$" "")))
+
 (defn split-path-alias
   [path]
-  (let [[page :as path-vec] (vec (str/split path #"/"))
+  (let [path (strip-base-path path)
+        [page :as path-vec] (vec (str/split path #"/"))
         real-page (get page-alias page)]
     (if (and page real-page)
       (assoc path-vec 0 real-page)
@@ -31,7 +38,7 @@
 
 (re-frame/reg-fx :push-state
   (fn [route]
-(js/console.error "route in effex" route)
+(js/console.log "route in effex" route)
     (apply rfe/push-state route)))
 
 
@@ -40,24 +47,28 @@
 (js/console.error "route" route)
     {:push-state route}))
 
+(reg-cofx
+ :get-path-parts-and-search-map
+ (fn [coeffects]
+   (let [location (.-location js/window)
+         path-parts   (split-path-alias (.-pathname location))
+         query-params (decode-query-string (.-search location))]
+     (assoc coeffects
+       :path-parts   path-parts
+       :query-params query-params))))
+
 
 (re-frame/reg-event-fx
   ::navigated
   (fn [{db :db} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
-          path (-> new-match
-                   :path
-                   (str/replace-first config/base-path "")
-                   (str/replace #"^/|/$" ""))
-          path-parts   (split-path-alias path)
-          query-params (decode-query-string path)]
+          new-match-with-controllers (assoc new-match :controllers controllers)]
+      (js/console.log "NAVIGATING with path-raw" (:path new-match))
       {:db
-         (-> db (assoc :current-route
-                       (assoc new-match :controllers controllers))
-             (assoc ::main-spec/nav-path path-parts)
-             (assoc ::main-spec/nav-query-params query-params))
-         :fx [[:dispatch [::main-events/set-navigation-info]]]})))
+       (-> db (assoc :current-route new-match-with-controllers))
+       :fx [[:dispatch [::main-events/set-navigation-info]]]
+       ::fx/navigate [(strip-base-path (:path new-match))]})))
 
 ;;; Subscriptions ;;;
 
@@ -83,14 +94,13 @@
 
 
 (defn init-routes! []
-  (js/console.log "initializing routes")
   (rfe/start!
     router
     on-navigate
     {:use-fragment false
      :ignore-anchor-click? (fn [router e el uri]
                              (and (rfh/ignore-anchor-click? router e el uri)
-                                (not= "false" (.getAttribute el "data-reitit-handle-click"))))}))
+                               (not= "false" (.getAttribute el "data-reitit-handle-click"))))}))
 
 (defn nav [{:keys [router current-route]}]
   [:ul

@@ -27,9 +27,9 @@
                (str/split #"&")
                (->> (map #(str/split % #"=")))))
   (into {} (-> (str/split "ui/apps?hello=world&world=fucked&ker" #"\?")
-                second
-                (str/split #"&")
-                (->> (map (fn [s] (let [[k v] (str/split s #"=")]
-                                     [k v]))))
-                ))
-    )
+               second
+               (str/split #"&")
+               (->> (map (fn [s] (let [[k v] (str/split s #"=")]
+                                   [k v]))))
+               ))
+  )

@@ -3,6 +3,7 @@
     [re-frame.core :as re-frame]
     [reitit.frontend :as rf]
     [reitit.coercion.spec :as rss]
+    [reitit.exception :as exception]
     [sixsq.nuvla.ui.about.views :refer [about]]
     [sixsq.nuvla.ui.apps.views :refer [apps-view]]
     [sixsq.nuvla.ui.cimi.views :refer [api-view]]
@@ -16,7 +17,8 @@
     [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
     [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
     [sixsq.nuvla.ui.welcome.views :refer [home-view]]
-    [sixsq.nuvla.ui.session.views :as session-views]))
+    [sixsq.nuvla.ui.session.views :as session-views]
+    [reitit.core :as r]))
 
 ;;; Views ;;;
 
@@ -46,14 +48,12 @@
   [session-views/SessionPage false])
 
 (def r-routes
-  [["/"
-    [""
-     {:name ::root
-      :view home-view}]]
+  [""
+   {:name ::root
+    :view home-view}
    ["/ui/"
     [""
      {:name ::home-root
-      :view home-view
       :link-text "Home"}]
     ["sign-up"
      {:name ::sign-up
@@ -81,7 +81,6 @@
       :link-text "About"}]
     ["welcome"
      {:name ::home
-      :view home-view
       :link-text "home"}]
     ["dashboard"
      {:name ::dashboard
@@ -92,7 +91,7 @@
       {:name ::apps
        :view apps-view
        :link-text "Apps"}]
-     [":owner/*path"
+     ["/*apps-path"
       {:name ::apps-details
        :view apps-view}]]
     ["deployments"
@@ -138,6 +137,48 @@
 (def router
   (rf/router
     r-routes
-    {:data {:coercion rss/coercion}})
+    {:data {:coercion rss/coercion}}))
   ;; => #object[reitit.core.t_reitit$core60844]
-)
+
+
+
+(comment
+
+    (r/match-by-path router "/ui/apps/")
+
+  (let [router (rf/router
+                 ["apps"
+                  {:name :bla
+                   :views [:yeah]
+                   :conflicting true}
+                  ["" :dadada #_{:conflicting true}]
+                  ["/yeah" :a #_{:conflicting true}]
+                  ["/hello" :blo #_{:conflicting true}]
+                  ["/*path" #_{:conflicting true}]]
+
+                 {:router r/linear-router
+                  :conflicts (fn [conflicts]
+                               (println (exception/format-exception :path-conflicts nil conflicts)))})]
+
+    (r/match-by-path router "apps/yeah/h")
+    #_(r/router-name router))
+
+ (-> (rf/router
+       [["/ping" ::ping]
+        ["/api" ::api]
+        ["/api/fix" ::api-fix]
+        ["/api/:users" ::users]]
+       {:router r/quarantine-router})
+     r/router-name)
+
+  (r/match-by-path router "/ui/apps")
+
+
+
+  (def router-test2
+    (r/router
+      ["/api"
+       ["/ping" ::ping]
+       ["/user/:id" ::user]]))
+
+  (r/match-by-path router-test2 "/api"))

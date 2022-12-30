@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 
 

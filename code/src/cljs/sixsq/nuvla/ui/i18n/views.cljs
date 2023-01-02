@@ -21,7 +21,7 @@
                   :item            true
                   :icon            nil
                   :pointing        "top right"
-                  :trigger         (r/as-element [:span [ui/Icon {:name "globe"}] @locale])}
+                  :trigger         (r/as-element [:span [ui/Icon {:name "fa-light fa-globe"}] @locale])}
      [ui/DropdownMenu
       (for [{:keys [value] :as locale-choice} (utils/locale-choices)]
         ^{:key value}

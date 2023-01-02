@@ -31,27 +31,36 @@
   (merge apps/defaults
          apps-component/defaults
          apps-application/defaults
+         apps-application/deployments-pagination
          apps-store/defaults
+         apps-store/pagination-default
          api/defaults
          api-detail/defaults
          data/defaults
+         data/pagination-default
          data-set/defaults
+         data-set/pagination-default
          deployments/defaults
+         deployments/pagination-default
          deployment-dialog/defaults
          credential/defaults
          docs/defaults
          i18n/defaults
          infra-service/defaults
+         infra-service/pagination-default
          infra-service-detail/defaults
          intercom/defaults
          main/defaults
          messages/defaults
          edges/defaults
+         edges/pagination-default
          edges-detail/defaults
+         edges-detail/deployments-pagination
          profile/defaults
          session/defaults
          job/defaults
+         job/pagination-default
          resource-log/defaults
          deployment-sets/defaults
          deployment-sets-detail/defaults
-         ))
+         deployment-sets-detail/pagination-defaults))

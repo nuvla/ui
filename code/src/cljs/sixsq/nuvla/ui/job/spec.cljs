@@ -8,5 +8,6 @@
 (s/def ::pagination any?)
 
 (def defaults {::target-resource nil
-               ::jobs            nil
-               ::pagination      (pagination-plugin/build-spec)})
+               ::jobs            nil})
+
+(def pagination-default {::pagination (pagination-plugin/build-spec)})

@@ -405,12 +405,12 @@
                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
 (defn Pagination
-  []
+  [db-path-arg]
   (let [dep-count @(subscribe [::subs/deployments-count])]
     [pagination-plugin/Pagination
-     {:db-path                [::spec/pagination]
+     {:db-path                [(or db-path-arg ::spec/pagination)]
       :total-items            dep-count
-      :change-event           [::events/refresh]
+      :change-event           [::events/refresh db-path-arg]
       :i-per-page-multipliers [1 2 4]}]))
 
 (defn DeploymentTable
@@ -423,7 +423,7 @@
         [:div {:class "table-wrapper"}
          [VerticalDataTable
           deployments (assoc options :select-all @select-all? :show-options? show-options)]
-         [Pagination]]))))
+         [Pagination (:pagination-db-path options)]]))))
 
 (defn DeploymentsMainContent
   []

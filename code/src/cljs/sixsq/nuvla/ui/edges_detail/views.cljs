@@ -1975,7 +1975,8 @@
                      [ui/TabPane
                       [deployments-views/DeploymentTable
                        {:no-actions true
-                        :empty-msg  (tr [:empty-deployment-nuvlabox-msg])}]])}
+                        :empty-msg  (tr [:empty-deployment-nuvlabox-msg])
+                        :pagination-db-path ::spec/deployment-pagination}]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}

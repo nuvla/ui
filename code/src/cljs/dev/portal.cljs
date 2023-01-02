@@ -46,5 +46,7 @@
 
 (comment
   ;; We could also put it in a rich comment block and just eval this here
-  (p/open)
+  (def p (p/open))
+  (p/close)
+
   )

@@ -58,7 +58,7 @@
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::deployments-events/get-deployments
-                                    (str "deployment-set='" id "'")]]]}))
+                                    {:filter-external-arg (str "deployment-set='" id "'")}]]]}))
 
 (reg-event-fx
   ::edit

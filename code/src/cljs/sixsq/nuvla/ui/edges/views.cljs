@@ -42,7 +42,8 @@
   [clickable?]
   (let [summary (if clickable?
                   (subscribe [::subs/nuvlaboxes-summary])
-                  (subscribe [::subs/nuvlaboxes-summary-all]))]
+                  (subscribe [::subs/nuvlaboxes-summary-all]))
+        tr      (subscribe [::i18n-subs/tr])]
     (fn [clickable?]
       (let [total           (:count @summary)
             online-statuses (general-utils/aggregate-to-map
@@ -82,21 +83,21 @@
                                      :label utils/status-unknown,
                                      :clickable clickable?,
                                      :stacked? true,
-                                     :positive-color "yellow",
+                                     :positive-color "orange",
                                      :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
                                      :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
          (when clickable?
-           [:span
-            [ui/Statistic
-             {:size     "tiny"
-              :class    "slight-up"
-              :style    {:cursor "pointer"}
-              :on-click #(when clickable?
-                           (reset! show-state-statistics (not @show-state-statistics))
-                           (when-not @show-state-statistics
-                             (dispatch [::events/set-state-selector nil])))}
-             [ui/StatisticValue {:style {:margin "0 10px"}}
-              [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]])]))))
+           [ui/Button
+            {:icon     true
+             :style    {:margin     "0 auto"
+                        :margin-top "50px"}
+             :on-click #(when clickable?
+                          (reset! show-state-statistics (not @show-state-statistics))
+                          (when-not @show-state-statistics
+                            (dispatch [::events/set-state-selector nil])))}
+            [ui/Icon {:name "fa-light fa-arrow-down"}]
+            \u0020
+            (@tr [:commissionning-states])])]))))
 
 (defn StatisticStates
   []

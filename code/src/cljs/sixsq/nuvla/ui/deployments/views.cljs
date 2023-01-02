@@ -341,19 +341,45 @@
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
-          [components/StatisticState total ["fa-light fa-rocket-launch"] "TOTAL" clickable?
-           ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState started [(utils/state->icon utils/STARTED)] utils/STARTED
-           clickable? "green"
-           ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState starting-plus [(utils/state->icon utils/STARTING)]
-           utils/STARTING clickable? "yellow"
-           ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState stopped [(utils/state->icon utils/STOPPED)] utils/STOPPED
-           clickable? "yellow"
-           ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState error [(utils/state->icon utils/ERROR)] utils/ERROR
-           clickable? "red" ::events/set-state-selector ::subs/state-selector]]]))))
+          [components/StatisticState {:value total
+                                      :icons ["fa-light fa-rocket-launch"]
+                                      :label "TOTAL"
+                                      :stacked? true
+                                      :clickable clickable?
+                                      :set-state-selector-event ::events/set-state-selector
+                                      :state-selector-subs ::subs/state-selector}]
+          [components/StatisticState {:value started,
+                                      :icons [(utils/state->icon utils/STARTED)],
+                                      :label utils/STARTED,
+                                      :stacked? true
+                                      :clickable clickable?,
+                                      :positive-color "green",
+                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value starting-plus,
+                                      :icons [(utils/state->icon utils/STARTING)],
+                                      :label utils/STARTING,
+                                      :stacked? true
+                                      :clickable clickable?,
+                                      :positive-color "orange",
+                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value stopped,
+                                      :icons [(utils/state->icon utils/STOPPED)],
+                                      :label utils/STOPPED,
+                                      :stacked? true
+                                      :clickable clickable?,
+                                      :positive-color "orange",
+                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value error,
+                                      :icons [(utils/state->icon utils/ERROR)],
+                                      :label utils/ERROR,
+                                      :stacked? true
+                                      :clickable clickable?,
+                                      :positive-color "red",
+                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]]]))))
 
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]

@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.edges.views-clusters
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.edges.events :as events]
     [sixsq.nuvla.ui.edges.subs :as subs]
     [sixsq.nuvla.ui.edges.views-utils :as views-utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -36,8 +35,7 @@
             nb-per-id     (group-by :id (:resources @nuvlaboxes))
             name          (or name cluster-id)]
         [uix/Card
-         {:on-click    #(dispatch [::history-events/navigate href])
-          :href        href
+         {:href        href
           :header      [:<>
                         [ui/Icon {:className "fas fa-chart-network"}]
                         (if (> (count name) 21)

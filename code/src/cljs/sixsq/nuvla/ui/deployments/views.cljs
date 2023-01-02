@@ -11,11 +11,9 @@
     [sixsq.nuvla.ui.deployments.subs :as subs]
     [sixsq.nuvla.ui.deployments.utils :as utils]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
@@ -26,8 +24,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn refresh
   []
@@ -251,7 +248,6 @@
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url  (subscribe [::subs/deployment-url id primary-url-pattern])
         started?     (utils/started? state)
-        dep-href     (utils/deployment-href id)
         select-all?  (subscribe [::subs/select-all?])
         creator      (subscribe [::session-subs/resolve-user created-by])
         is-selected? (subscribe [::subs/is-selected? id])]
@@ -278,10 +274,7 @@
                                                        (.stopPropagation event))
                                            :target   "_blank"
                                            :rel      "noreferrer"}])
-              :on-click      (fn [event]
-                               (dispatch [::history-events/navigate (utils/deployment-href id)])
-                               (.preventDefault event))
-              :href          dep-href
+              :href          (utils/deployment-href id)
               :image         (or module-logo-url "")
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond

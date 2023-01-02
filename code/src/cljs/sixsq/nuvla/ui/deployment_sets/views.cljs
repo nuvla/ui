@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -138,8 +137,7 @@
         href   (str "deployment-sets/" (general-utils/id->uuid id))]
     ^{:key id}
     [uix/Card
-     {:on-click    #(dispatch [::history-events/navigate href])
-      :href        href
+     {:href        href
       :header      [:<>
                     [ui/Icon {:name (state->icon state)}]
                     (or name id)]

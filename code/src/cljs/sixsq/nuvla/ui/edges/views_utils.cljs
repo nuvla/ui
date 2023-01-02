@@ -60,8 +60,7 @@
             creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}
         [uix/Card
-         {:on-click    #(dispatch [::history-events/navigate href])
-          :href        href
+         {:href        href
           :header      [:<>
                         [:div {:style {:float "right"}}
                          [OnlineStatusIcon online :corner "top right"]]

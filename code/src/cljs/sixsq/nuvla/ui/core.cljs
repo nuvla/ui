@@ -8,7 +8,6 @@
             [sixsq.nuvla.ui.cimi.events :as api-events]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.db.events :as db-events]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.events :as i18n-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.views :as main-views]

@@ -38,13 +38,11 @@
 
 (re-frame/reg-fx :push-state
   (fn [route]
-(js/console.log "route in effex" route)
     (apply rfe/push-state route)))
 
 
 (re-frame/reg-event-fx ::push-state
   (fn [_ [_ & route]]
-(js/console.error "route" route)
     {:push-state route}))
 
 (reg-cofx

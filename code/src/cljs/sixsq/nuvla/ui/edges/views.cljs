@@ -887,12 +887,13 @@
 
 
 (defn DetailedView
-  [{{uuid :id} :path-params}]
-  (if (= "nuvlabox-cluster" uuid)
-    (do
-      (reset! view-type :cluster)
-      (dispatch [::history-events/navigate "edges/"]))
-    [edges-detail/EdgeDetails uuid]))
+  [param]
+  (let [uuid (if (string? param) param (get-in param [:path-params :id]))]
+    (if (= "nuvlabox-cluster" uuid)
+      (do
+        (reset! view-type :cluster)
+        (dispatch [::history-events/navigate "edges/"]))
+      [edges-detail/EdgeDetails uuid])))
 
 
 (defn edges-view

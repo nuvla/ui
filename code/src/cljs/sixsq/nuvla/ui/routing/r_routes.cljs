@@ -111,9 +111,9 @@
      {:name ::edges
       :view edges-view
       :link-text "edges"}]
-    ["edges/:id"
+    ["edges/*id"
      {:name ::edges-details
-      :view DetailedView
+      :view edges-view
       :link-text "edges-details"}]
     ["credentials"
      {:name ::credentials

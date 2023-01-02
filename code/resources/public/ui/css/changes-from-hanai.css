@@ -5,14 +5,14 @@ body {
      font-family: "Poppins" !important;
 }
 main#nuvla-ui-content{
-     padding: .6rem 2rem !important;
+     padding: .6rem 2rem 5rem 2rem !important;
      background-color: #efefef;
 }
 .ui.segment {
     margin: 0 0 1rem 0 !important;
 }
 .nuvla-welcome main#nuvla-ui-content{
-     padding: 2rem !important;
+     padding: 2rem 2rem 5rem 2rem !important;
 }
 
 body .menu .item,
@@ -59,6 +59,13 @@ body .ui.grid {
      margin: 0 !important;
      padding: 2rem;
 }
+
+.ui.red.statistic>.value,
+.ui.red.statistics .statistic>.value,
+.ui.statistics .red.statistic>.value,
+i.red.icon {
+    color: #ff0000 !important;
+}
 .section{
      padding: 4rem 2rem;
 }
@@ -67,7 +74,9 @@ margin: 0 auto !important;
 margin-top: 10px !important;
 margin-bottom: 10px !important;
 }
-
+.pagination {
+border: 1px solid rgb(0 0 0 / 20%) !important;
+}
 body p.sub {
      font-size: 1rem;
      margin: 0 0 2rem 0;
@@ -389,13 +398,17 @@ body .ui.menu .right.menu .item>i.icon {
 color: #ffffff !important;
 }
 
-.nuvla-dashboard .statistic .icon {
+.statistic .icon {
          margin: 0 auto;
-         font-size: 2rem;
-         margin-bottom: 0.8rem;
+         font-size: 2rem !important;
+         margin-bottom: 0.8rem !important;
 }
 .ui.segment {
     overflow: hidden;
+}
+.table-wrapper{
+    overflow: auto !important;
+    padding: 0 !important;
 }
 .ui-header{
     width: calc(100% + 2rem);
@@ -433,23 +446,27 @@ color: #ffffff;
 }
 
 .nuvla-deployments .statistics .icons{
-    color: rgba(148, 130, 255, 1);
     text-align: center;
 }
 
-.nuvla-edges .statistics .black .icons{
+.nuvla-edges .statistics .black .icons,
+.nuvla-deployments .statistics .black .icons{
     color: rgba(0,0,0,.87);
 }
-.nuvla-edges .statistics .grey .icons{
+.nuvla-edges .statistics .grey .icons,
+.nuvla-deployments .statistics .grey .icons{
     color: #767676;
 }
-.nuvla-edges .statistics .green .icons{
+.nuvla-edges .statistics .green .icons,
+.nuvla-deployments .statistics .green .icons{
     color: #21ba45;
 }
-.nuvla-edges .statistics .red .icons{
-    color: #db2828;
+.nuvla-edges .statistics .red .icons,
+.nuvla-deployments .statistics .red .icons{
+    color: #ff0000;
 }
-.nuvla-edges .statistics .orange .icons{
+.nuvla-edges .statistics .orange .icons,
+.nuvla-deployments .statistics .orange .icons{
     color: #f2711c;
 }
 
@@ -477,8 +494,23 @@ color: #ffffff;
 
 /** dashboard **/
 
+/** deployments **/
+.app-icon-name img{
+     max-width: 50px !important;
+     max-height: 40px !important;
+     margin-right: 10px;
+     height: auto !important;
+}
+/** deployments **/
+
+
+
 
 /** footer **/
+.footer a {
+  color: #C10E12 !important;
+}
+
 .footer .ui.grid {
     margin: 0 !important;
     padding: .8rem;

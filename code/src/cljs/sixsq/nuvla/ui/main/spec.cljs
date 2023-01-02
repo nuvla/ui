@@ -91,7 +91,7 @@
                                                           :name       "deployments-sets"
                                                           :icon       "fa-light fa-bullseye"
                                                           :protected? true
-                                                          :hidden?    (not config/debug?)
+                                                          :hidden?    false #_(not config/debug?)
                                                           :order      31}
                                        "edges"           {:url        "edges"
                                                           :label-kw   :edges

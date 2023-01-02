@@ -319,7 +319,7 @@
         select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment {:basic true}
+        [ui/Segment {:basic true :class "table-wrapper"}
          (if (= @view "cards")
            [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:show-options? (false? @select-all?)}])]))))
@@ -420,7 +420,7 @@
     (fn [{:keys [no-actions]}]
       (let [deployments (:resources @elements)
             show-options (and (false? @select-all?) (not (true? no-actions)))]
-        [:<>
+        [:div {:class "table-wrapper"}
          [VerticalDataTable
           deployments (assoc options :select-all @select-all? :show-options? show-options)]
          [Pagination]]))))

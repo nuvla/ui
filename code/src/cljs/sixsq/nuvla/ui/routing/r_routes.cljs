@@ -1,25 +1,25 @@
 (ns sixsq.nuvla.ui.routing.r-routes
-  (:require
-    [re-frame.core :as re-frame]
-    [reitit.coercion.spec :as rss]
-    [reitit.core :as r]
-    [reitit.exception :as exception]
-    [reitit.frontend :as rf]
-    [sixsq.nuvla.ui.about.views :refer [about]]
-    [sixsq.nuvla.ui.apps.views :as app-views]
-    [sixsq.nuvla.ui.cimi.views :refer [api-view]]
-    [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
-    [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
-    [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]] ;; [sixsq.nuvla.ui.data.views :refer [data-view]]
-    [sixsq.nuvla.ui.data.views :refer [data-view]]
-    [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
-    [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
-    [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
-    [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
-    [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
-    [sixsq.nuvla.ui.panel :refer [UnknownResource]]
-    [sixsq.nuvla.ui.session.views :as session-views]
-    [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
+  (:require [re-frame.core :as re-frame]
+            [reitit.coercion.spec :as rss]
+            [reitit.core :as r]
+            [reitit.exception :as exception]
+            [reitit.frontend :as rf]
+            [sixsq.nuvla.ui.about.views :refer [about]]
+            [sixsq.nuvla.ui.apps.views :as app-views]
+            [sixsq.nuvla.ui.cimi.views :refer [api-view]]
+            [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
+            [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
+            [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]] ;; [sixsq.nuvla.ui.data.views :refer [data-view]]
+            [sixsq.nuvla.ui.data-set.views :as data-set-views]
+            [sixsq.nuvla.ui.data.views :refer [data-view]]
+            [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
+            [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
+            [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
+            [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
+            [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
+            [sixsq.nuvla.ui.panel :refer [UnknownResource]]
+            [sixsq.nuvla.ui.session.views :as session-views]
+            [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
 ;;; Views ;;;
 
@@ -127,6 +127,9 @@
      {:name ::data
       :view data-view
       :link-text "data"}]
+    ["data/*uuid"
+     {:name ::data-details
+      :view data-set-views/DataSet}]
     ["clouds"
      {:name ::clouds
       :view clouds-view

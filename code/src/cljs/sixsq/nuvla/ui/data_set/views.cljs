@@ -621,11 +621,12 @@
 
 (defn DataSet
   [dataset-id]
-  (dispatch [::events/set-data-set-id dataset-id])
-  (refresh)
-  (let [tr       (subscribe [::i18n-subs/tr])
+  (let [dataset-id (if (string? dataset-id) dataset-id (get-in dataset-id [:path-params :uuid]))
+        tr       (subscribe [::i18n-subs/tr])
         data-set (subscribe [::subs/data-set])
         device   (subscribe [::main-subs/device])]
+  (dispatch [::events/set-data-set-id dataset-id])
+  (refresh)
     (fn [dataset-id]
       (let [name (:name @data-set)]
         [components/LoadingPage {:dimmable? true}

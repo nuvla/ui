@@ -120,11 +120,11 @@
                     :style {:padding "0.2rem"}}
      [ui/StatisticGroup {:size  "tiny"
                          :style {:justify-content "center"}}
-      [Statistic {:value total :icon "fa-light fa-rocket-launch" :label "TOTAL" :positive-color "grey"}]
-      [Statistic {:value started :icon (deployments-utils/state->icon deployments-utils/STARTED) :label deployments-utils/STARTED :positive-color "grey"}]
-      [Statistic {:value starting-plus :icon (deployments-utils/state->icon deployments-utils/STARTING) :label deployments-utils/STARTING :positive-color "grey"}]
-      [Statistic {:value stopped :icon (deployments-utils/state->icon deployments-utils/STOPPED) :label deployments-utils/STOPPED :positive-color "grey"}]
-      [Statistic {:value error :icon (deployments-utils/state->icon deployments-utils/ERROR) :label deployments-utils/ERROR :positive-color "grey"}]]]))
+      [Statistic {:value total :icon "fa-light fa-rocket-launch" :label "TOTAL" :color "black"}]
+      [Statistic {:value started :icon (deployments-utils/state->icon deployments-utils/STARTED) :label deployments-utils/STARTED :color "green"}]
+      [Statistic {:value starting-plus :icon (deployments-utils/state->icon deployments-utils/STARTING) :label deployments-utils/STARTING :color "orange"}]
+      [Statistic {:value stopped :icon (deployments-utils/state->icon deployments-utils/STOPPED) :label deployments-utils/STOPPED :color "orange"}]
+      [Statistic {:value error :icon (deployments-utils/state->icon deployments-utils/ERROR) :label deployments-utils/ERROR :positive-color "red"}]]]))
 
 ; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
 (defn TabOverviewDeployments

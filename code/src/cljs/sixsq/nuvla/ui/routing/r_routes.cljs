@@ -1,9 +1,10 @@
 (ns sixsq.nuvla.ui.routing.r-routes
   (:require
     [re-frame.core :as re-frame]
-    [reitit.frontend :as rf]
     [reitit.coercion.spec :as rss]
+    [reitit.core :as r]
     [reitit.exception :as exception]
+    [reitit.frontend :as rf]
     [sixsq.nuvla.ui.about.views :refer [about]]
     [sixsq.nuvla.ui.apps.views :as app-views]
     [sixsq.nuvla.ui.cimi.views :refer [api-view]]
@@ -16,9 +17,9 @@
     [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
     [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
     [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
-    [sixsq.nuvla.ui.welcome.views :refer [home-view]]
+    [sixsq.nuvla.ui.panel :refer [UnknownResource]]
     [sixsq.nuvla.ui.session.views :as session-views]
-    [reitit.core :as r]))
+    [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
 ;;; Views ;;;
 
@@ -51,6 +52,7 @@
   [""
    {:name ::root
     :view home-view}
+   ["/"]
    ["/ui/"
     [""
      {:name ::home-root
@@ -132,12 +134,19 @@
     ["api"
      {:name ::api
       :view api-view
-      :link-text "api"}]]])
+      :link-text "api"}]]
+   ["/*resource"
+    {:name ::catch-all
+     :view UnknownResource}]])
 
 (def router
   (rf/router
     r-routes
-    {:data {:coercion rss/coercion}}))
+    {:data {:coercion rss/coercion}
+     :router r/linear-router
+     :conflicts (fn [conflicts]
+                  (println (exception/format-exception :path-conflicts nil conflicts)))
+     }))
   ;; => #object[reitit.core.t_reitit$core60844]
 
 
@@ -151,14 +160,17 @@
                   {:name :bla
                    :views [:yeah]
                    :conflicting true}
-                  ["" :dadada #_{:conflicting true}]
-                  ["/yeah" :a #_{:conflicting true}]
-                  ["/hello" :blo #_{:conflicting true}]
-                  ["/*path" #_{:conflicting true}]]
+                  ["/" :dadada]
+                  ["/yeah" :a]
+                  ["/hello" :blo]
+                  ["/*path"]
+                  ]
 
-                 {:router r/linear-router
-                  :conflicts (fn [conflicts]
-                               (println (exception/format-exception :path-conflicts nil conflicts)))})]
+                 {
+                  ;; :router r/linear-router
+                  ;; :conflicts (fn [conflicts]
+                  ;;              (println (exception/format-exception :path-conflicts nil conflicts)))
+                  })]
 
     (r/match-by-path router "apps/yeah/h")
     #_(r/router-name router))

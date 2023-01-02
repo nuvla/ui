@@ -11,7 +11,7 @@
             (keyword (first path))))
 
 
-(defmethod render :default
+(defn UnknownResource
   [_path _query-parameters]
   (let [nav-path    (subscribe [::main-subs/nav-path])
         reason-text (str "Unknown resource: " @nav-path)]

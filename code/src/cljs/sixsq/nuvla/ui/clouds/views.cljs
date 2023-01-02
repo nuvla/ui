@@ -55,8 +55,7 @@
                  :else nil)
         href   (str "clouds/" (general-utils/id->uuid id))]
     [uix/Card
-     {:on-click    #(dispatch [::history-events/navigate href])
-      :href        href
+     {:href        href
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}

@@ -260,9 +260,7 @@
                      [:span (utils/format-bytes size)]]]
       :on-select   #(dispatch [::events/toggle-data-set-id id])
       :selected?   selected?
-      :on-click    (fn [event]
-                     (dispatch [::history-events/navigate (utils/data-record-href id)])
-                     (.preventDefault event))}]))
+      :href        (utils/data-record-href id)}]))
 
 (defn DataSetCards
   []

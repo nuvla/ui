@@ -55,7 +55,7 @@
      [documents-table]]))
 
 
-(defmethod panel/render :documentation
+(defn documentation
   [path]
   (let [loading? (subscribe [::subs/loading?])
         n        (count path)

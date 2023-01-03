@@ -15,7 +15,8 @@
             [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
             [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
             [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
-            [sixsq.nuvla.ui.edges.views :refer [DetailedView edges-view]]
+            [sixsq.nuvla.ui.docs.views :refer [documentation]]
+            [sixsq.nuvla.ui.edges.views :refer [edges-view]]
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.panel :refer [UnknownResource]]
             [sixsq.nuvla.ui.session.views :as session-views]
@@ -134,10 +135,17 @@
      {:name ::clouds
       :view clouds-view
       :link-text "clouds"}]
+    ["documentation"
+     {:name ::documentation
+      :view documentation
+      :link-text "documentation"}]
     ["api"
      {:name ::api
       :view api-view
-      :link-text "api"}]]
+      :link-text "api"}
+     [""]
+     ["/*api-path"
+      {:name ::api-sub-page}]]]
    ["/*resource"
     {:name ::catch-all
      :view UnknownResource}]])

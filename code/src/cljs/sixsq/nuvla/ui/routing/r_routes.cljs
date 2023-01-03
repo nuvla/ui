@@ -101,8 +101,16 @@
      {:name ::deployments
       :view deployments-view
       :link-text "deployments"}]
-    ["deployment/:id"
+    ["deployment"
      {:name ::deployment
+      :view deployments-view
+      :link-text "deployments"}]
+    ["deployment/"
+     {:name ::deployment-slashed
+      :view deployments-view
+      :link-text "deployments"}]
+    ["deployment/:id"
+     {:name ::deployment-details
       :view DeploymentDetails}]
     ["deployment-sets"
      {:name ::deployment-sets
@@ -164,7 +172,7 @@
 
 (comment
 
-    (r/match-by-path router "/ui/apps/")
+  (r/match-by-path router "/ui/apps/")
 
   (let [router (rf/router
                  ["apps"
@@ -174,11 +182,9 @@
                   ["/" :dadada]
                   ["/yeah" :a]
                   ["/hello" :blo]
-                  ["/*path"]
-                  ]
+                  ["/*path"]]
 
-                 {
-                  ;; :router r/linear-router
+                 {;; :router r/linear-router
                   ;; :conflicts (fn [conflicts]
                   ;;              (println (exception/format-exception :path-conflicts nil conflicts)))
                   })]
@@ -186,13 +192,13 @@
     (r/match-by-path router "apps/yeah/h")
     #_(r/router-name router))
 
- (-> (rf/router
-       [["/ping" ::ping]
-        ["/api" ::api]
-        ["/api/fix" ::api-fix]
-        ["/api/:users" ::users]]
-       {:router r/quarantine-router})
-     r/router-name)
+  (-> (rf/router
+        [["/ping" ::ping]
+         ["/api" ::api]
+         ["/api/fix" ::api-fix]
+         ["/api/:users" ::users]]
+        {:router r/quarantine-router})
+      r/router-name)
 
   (r/match-by-path router "/ui/apps")
 
@@ -204,4 +210,5 @@
        ["/ping" ::ping]
        ["/user/:id" ::user]]))
 
-  (r/match-by-path router-test2 "/api"))
+  (r/match-by-path router-test2 "/api")
+  )

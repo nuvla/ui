@@ -1,18 +1,17 @@
 (ns sixsq.nuvla.ui.routing.router
-  (:require
-    [clojure.string :as str]
-    [re-frame.cofx :refer [reg-cofx]]
-    [re-frame.core :as re-frame]
-    [reitit.core :as r]
-    [reitit.frontend.controllers :as rfc]
-    [reitit.frontend.easy :as rfe]
-    [reitit.frontend.history :as rfh]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.history.effects :as fx]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.routing.r-routes :refer [router]]
-    [sixsq.nuvla.ui.routing.utils :refer [decode-query-string]]))
+  (:require [clojure.string :as str]
+            [re-frame.cofx :refer [reg-cofx]]
+            [re-frame.core :as re-frame :refer [dispatch]]
+            [reitit.core :as r]
+            [reitit.frontend.controllers :as rfc]
+            [reitit.frontend.easy :as rfe :refer [history]]
+            [reitit.frontend.history :as rfh]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.history.effects :as fx]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.routing.r-routes :refer [router]]
+            [sixsq.nuvla.ui.routing.utils :refer [decode-query-string]]))
 
 (def page-alias {"nuvlabox"        "edges"
                  "edge"            "edges"
@@ -34,22 +33,45 @@
 
 ;;; Effects ;;;
 
-;; Triggering navigation from events.
+;; Triggering navigation from events using js/window.history.pushState
+(re-frame/reg-fx
+  :push-state
+  (fn [path]
+    (js/console.error "path" path)
+    (.pushState js/window.history nil {} path)
+    (rfh/-on-navigate @history path)))
 
-(re-frame/reg-fx :push-state
+
+;; Triggering navigation from events using reitit push state effects handler
+;; route is a vector: [route-name path-params query-params]
+;; route-name: name as configured in sixsq.nuvla.ui.routing.r-routes/r-routes
+;; path-params: map of path keys to values, e.g. a ["apps/:id"] has path-params of {:id "some"} for path "apps/some"
+;; query-params: map of path keys to values, e.g. a ["apps/:id"] has path-params of {:id "some"} for path "apps/some"
+(re-frame/reg-fx
+  :push-state-reitit
   (fn [route]
+    (js/console.error "ROUTE" route)
     (apply rfe/push-state route)))
 
 
-(re-frame/reg-event-fx ::push-state
+(re-frame/reg-event-fx
+  ::push-state-by-path
+  (fn [_ [_ new-path]]
+    {:push-state new-path}))
+
+(re-frame/reg-event-fx
+  ::push-state-reitit
   (fn [_ [_ & route]]
-    {:push-state route}))
+    {:push-state-reitit route}))
 
 (reg-cofx
  :get-path-parts-and-search-map
  (fn [coeffects]
    (let [location (.-location js/window)
-         path-parts   (split-path-alias (.-pathname location))
+         path-name (.-pathname location)
+         _ (js/console.error path-name)
+         path-parts   (->> (split-path-alias (.-pathname location))
+                           (map js/decodeURIComponent))
          query-params (decode-query-string (.-search location))]
      (assoc coeffects
        :path-parts   path-parts
@@ -69,7 +91,6 @@
        ::fx/set-window-title [(strip-base-path (:path new-match))]})))
 
 ;;; Subscriptions ;;;
-
 (re-frame/reg-sub
   ::current-route
   (fn [db]
@@ -88,6 +109,7 @@
 
 (defn on-navigate [new-match]
   (when new-match
+    (js/console.error "on-navigate" new-match)
     (re-frame/dispatch [::navigated new-match])))
 
 
@@ -110,16 +132,27 @@
         "> ")
       [:a {:href (href route-name)} text]])])
 
-(defn- router-component-internal [{:keys [router]}]
+(defn- router-component-internal []
   (let [current-route @(re-frame/subscribe [::current-route])
-        view        (-> current-route :data :view)
-        path           @(re-frame/subscribe [::main-subs/nav-path])]
+        view          (-> current-route :data :view)
+        path          @(re-frame/subscribe [::main-subs/nav-path])]
     [:div
-    [nav {:router router :current-route current-route}]
      (when current-route
        [view (assoc current-route :path path)])]))
 
 (defn router-component []
   [router-component-internal {:router router}])
 
-(comment (re-frame/dispatch [::push-state :r-routes/deployments]))
+
+(comment (re-frame/dispatch [::push-state-reitit :r-routes/deployments]))
+
+(comment
+  (rfe/push-state :sixsq.nuvla.ui.routing.r-routes/apps {} nil)
+
+  (rfe/push-state :sixsq.nuvla.ui.routing.r-routes/apps-details {:apps-path "hello/world"} {})
+
+
+  (.pushState js/window.history nil {} "/ui/apps")
+  ;; (-on-navigate history "/ui/apps/sixsq/blackbox?version=28")
+  (rfh/-on-navigate @history "/ui/apps")
+  )

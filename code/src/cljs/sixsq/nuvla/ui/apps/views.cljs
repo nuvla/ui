@@ -59,6 +59,14 @@
       [views-detail/VersionWarning]
       [ModuleDetails nav-query-params]]]))
 
+(defn- CommonComponents
+  []
+  [:<>
+   [utils-validation/validation-error-message ::subs/form-valid?]
+   [views-detail/AddModal]
+   [views-detail/save-modal]
+   [views-detail/logo-url-modal]
+   [deployment-dialog-views/deploy-modal]])
 
 (defn AppDetails
   []
@@ -71,14 +79,12 @@
         (if is-new?
           (dispatch-clear-events new-subtype)
           (dispatch [::events/get-module version]))
-        [Module nav-query-params]))))
+        [:<>
+         [CommonComponents]
+         [Module nav-query-params]]))))
 
 (defn AppsOverview
   [_path]
   [:<>
-   [utils-validation/validation-error-message ::subs/form-valid?]
-   [views-detail/AddModal]
-   [views-detail/save-modal]
-   [views-detail/logo-url-modal]
-   [deployment-dialog-views/deploy-modal]
+   [CommonComponents]
    [apps-store-views/RootView]])

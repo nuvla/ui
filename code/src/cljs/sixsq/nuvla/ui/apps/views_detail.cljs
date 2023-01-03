@@ -30,7 +30,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [sixsq.nuvla.ui.config :as config]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -315,7 +316,10 @@
         visible? (subscribe [::subs/add-modal-visible?])
         nav-path (subscribe [::main-subs/nav-path])]
     (fn []
-      (let [parent (utils/nav-path->module-path @nav-path)]
+      (let [parent    (utils/nav-path->module-path @nav-path)
+            base-path (str/join
+                        "/" (remove str/blank?
+                              [config/base-path "apps" parent]))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}
@@ -327,26 +331,19 @@
                          :itemsPerRow 3}
 
            [ui/Card
-            {:on-click #(do (dispatch [::events/close-add-modal])
-                            (dispatch [::history-events/navigate
-                                       (str/join
-                                         "/" (remove str/blank?
-                                                     ["apps" parent
-                                                      "New Project?subtype=project"]))]))}
+            {:href (str/join
+                     "/" [base-path "New Project?subtype=project"])
+             :on-click #(dispatch [::events/close-add-modal])}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [ui/Icon {:name "folder"
                        :size :massive}]]]
 
            [ui/Card
-            {:on-click (when parent
-                         #(do
-                            (dispatch [::events/close-add-modal])
-                            (dispatch [::history-events/navigate
-                                       (str/join
-                                         "/" (remove str/blank?
-                                                     ["apps" parent
-                                                      "New Application?subtype=application"]))])))}
+            {:href (str
+                     base-path "/" "New Application?subtype=application")
+             :on-click (when parent
+                         #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header (@tr [:application-docker])]
              [:div]
@@ -360,14 +357,10 @@
                               :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
-            {:on-click (when parent
-                         #(do
-                            (dispatch [::events/close-add-modal])
-                            (dispatch [::history-events/navigate
-                                       (str/join
-                                         "/" (remove str/blank?
-                                                     ["apps" parent
-                                                      "New Application?subtype=application_kubernetes"]))])))}
+            {:href (str/join
+                     "/" [base-path "New Application?subtype=application_kubernetes"])
+             :on-click (when parent
+                         #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header (@tr [:application-kubernetes])]
              [:div]

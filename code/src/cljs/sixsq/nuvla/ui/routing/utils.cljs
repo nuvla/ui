@@ -3,16 +3,6 @@
             [reitit.core :refer [match-by-path]]
             [sixsq.nuvla.ui.config :as config]))
 
-(defn url->route-path-params [router url]
-  (let [base-path (str config/base-path "/")
-        absolute-url (if (str/starts-with? url base-path)
-                       url
-                       (str base-path (str/replace url #"^/" "")))
-        match (match-by-path router absolute-url)
-        name  (get-in match [:data :name])
-        path-params (:path-params match)]
-    [name path-params]))
-
 (defn decode-query-string [path]
   (some->
    (second (str/split path #"\?"))
@@ -20,6 +10,23 @@
    (->> (map (fn [s] (let [[k v] (str/split s #"=")]
                        [(keyword k) v])))
         (into {}))))
+
+(defn add-base-path
+  [url]
+  (let [ base-path (str config/base-path "/")
+        absolute-url (if (str/starts-with? url base-path)
+                       url
+                       (str base-path (str/replace url #"^/" "")))]
+    absolute-url))
+
+(defn url->route-path-params [router url]
+  (let [absolute-url (add-base-path url)
+        [path _] (str/split absolute-url #"\?")
+        match (match-by-path router path)
+        name  (get-in match [:data :name])
+        path-params (:path-params match)
+        query-params (decode-query-string absolute-url)]
+    [name path-params query-params]))
 
 (comment
   (into {} (-> (str/split "ui/apps?hello=world&world=ked&" #"\?")

@@ -28,7 +28,7 @@
    [:h1 "This is home page"]
    [:button
     ;; Dispatch navigate event that triggers a (side)effect.
-    {:on-click #(re-frame/dispatch [:sixsq.nuvla.ui.routing.router/push-state ::sub-page2])}
+    {:on-click #(re-frame/dispatch [:sixsq.nuvla.ui.routing.router/push-state-reitit ::sub-page2])}
     "Go to sub-page 2"]])
 
 (defn sub-page1 []

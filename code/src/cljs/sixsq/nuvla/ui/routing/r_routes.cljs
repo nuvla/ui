@@ -116,6 +116,10 @@
      {:name ::deployment-sets
       :view deployment-sets-view
       :link-text "deployment-sets"}]
+    ["deployment-sets/*path"
+     {:name ::deployment-sets-sub-age
+      :view deployment-sets-view
+      :link-text "deployment-sets"}]
     ["edges"
      {:name ::edges
       :view edges-view
@@ -127,7 +131,9 @@
     ["credentials"
      {:name ::credentials
       :view credentials-view
-      :link-text "credentials"}]
+      :link-text "credentials"}
+     [""]
+     ["/" ::credentials-slash]]
     ["notifications"
      {:name ::notifications
       :view notifications-view

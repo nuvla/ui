@@ -32,7 +32,8 @@
     [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.config :as config]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -497,7 +498,7 @@
         (@tr [:deployment-run-private-ip]) ". "
         [:br]
         (@tr [:deployment-access-url]) " "
-        [:a {:on-click #(dispatch [::history-events/navigate "credentials"]) :href "#"}
+        [:a {:href (str config/base-path "/credentials/")}
          (@tr [:create-vpn-credential])] " " (@tr [:and]) " "
         [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
 

@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
+    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
     [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
@@ -31,114 +32,158 @@
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
-(defn SelectAppsModal
+(defn clear-module
   []
-  (let [subtype (r/atom nil)]
-    (fn []
-      [ui/Modal {:on-close #(reset! subtype nil)
-                 :close-icon true
-                 :trigger (r/as-element
-                            [ui/Icon {:name     "add"
-                                      :color    "green"}])}
-       [ui/ModalHeader "New apps set"]
-       [ui/ModalContent
-        (if (nil? @subtype)
-          [:<>
-           [:p "Targeting Docker or Kubernetes"]
-           [ui/CardGroup {:centered true}
-            [ui/Card
-             {:on-click #(reset! subtype "docker")}
-             [ui/CardContent {:text-align :center}
-              [ui/IconGroup {:size :massive}
-               [ui/Icon {:name "docker"}]]]
-             ]
-            [ui/Card
-             {:on-click #(reset! subtype "kubernetes")}
-             [ui/CardContent {:text-align :center}
-              [ui/IconGroup {:size :massive}
-               [ui/Image {:src   "/ui/images/kubernetes.svg"
-                          ;:floated "right"
-                          :style {:width "100px"}
-                          }]]]
+  (dispatch [::events/clear-module]))
 
-             ]]]
-          [deployment-sets-detail-views/SelectApps]
-          )
+(defn SelectAppsModal
+  [id]
+  (let [db-path       [::spec/apps-sets id ::spec/apps-selector]
+        ;subtypes (subscribe [::subs/subtypes db-path])
+        apps-selected @(subscribe [::subs/apps-selected id])
+        on-open       #(dispatch [::module-selector/restore-selected db-path (map :id apps-selected)])
+        on-done       #(dispatch [::events/set-apps-selected id db-path])]
+
+    [ui/Modal {:close-icon true
+               :trigger    (r/as-element
+                             [ui/Icon {:name     "add"
+                                       :color    "green"
+                                       :on-click on-open}])
+               :header     "New apps set"
+               :content    (r/as-element
+                             [ui/ModalContent
+                              [module-selector/AppsSelectorSection
+                               {:db-path db-path
+                                ; :subtypes @subtypes
+                                }
+                               ]])
+               :actions    [{:key "cancel", :content "Cancel"}
+                            {:key     "done", :content "Done" :positive true
+                             :onClick on-done}]}
+
+
+     #_[ui/ModalContent
+
+        #_(if (nil? @subtype)
+            [:<>
+             [:p "Targeting Docker or Kubernetes"]
+             [ui/CardGroup {:centered true}
+              [ui/Card
+               {:on-click #(reset! subtype "docker")}
+               [ui/CardContent {:text-align :center}
+                [ui/IconGroup {:size :massive}
+                 [ui/Icon {:name "docker"}]]]
+               ]
+              [ui/Card
+               {:on-click #(reset! subtype "kubernetes")}
+               [ui/CardContent {:text-align :center}
+                [ui/IconGroup {:size :massive}
+                 [ui/Image {:src   "/ui/images/kubernetes.svg"
+                            ;:floated "right"
+                            :style {:width "100px"}
+                            }]]]
+
+               ]]]
+            [deployment-sets-detail-views/SelectApps]
+            )
         ]
-       (when @subtype
-         [ui/ModalActions
-         [ui/Button {:primary true}
-          "Validate"]])
-       ]
-      )
-    )
+     #_[ui/ModalActions
+        [ui/Button {:primary true}
+         "Validate"]]
+     ])
   )
 
-(defn AppGroupSection []
+
+(defn AppsList
+  [id & {:keys [editable?]
+         :or   {editable? true} :as _opts}]
+  (let [selected        @(subscribe [::subs/apps-selected id])
+        kubernetes-icon [ui/Image {:src   "/ui/images/kubernetes-grey.svg"
+                                   :style {:width   "1.18em"
+                                           :margin  "0 .25rem 0 0"
+                                           :display :inline-block}}]
+        docker-icon     [ui/ListIcon {:name "docker"}]
+        unknown-icon    [ui/ListIcon {:name "question circle outline"}]]
+    [ui/ListSA
+     (for [{:keys [subtype name] module-id :id} selected]
+       ^{:key module-id}
+       [ui/ListItem
+        (case subtype
+          "application_kubernetes" kubernetes-icon
+          "application" docker-icon
+          "component" docker-icon
+          unknown-icon)
+        [ui/ListContent (or name module-id) " "
+         (when editable?
+           [ui/Icon {:name     "close" :color "red" :link true
+                     :on-click #(dispatch [::events/remove-app id module-id])}])]])]))
+
+(defn AddApps
+  [id]
+  [:div {:style {:padding-top 10}}
+   [SelectAppsModal id]])
+
+(defn AddAppsSet
+  []
+  [ui/Button {:primary  true
+              :on-click #(dispatch [::events/add-apps-set])}
+   "New set of applications"])
+
+(defn AccordionAppSet
+  [_opts]
   (let [tr             (subscribe [::i18n-subs/tr])
-        apps-groups    (subscribe [::subs/apps-sets])
         editable?      (subscribe [::apps-subs/editable?])
         validate-form? (subscribe [::apps-subs/validate-form?])
         on-change      (fn [id event-update value]
                          (dispatch [event-update id value])
                          (dispatch [::main-events/changes-protection? true])
                          (dispatch [::apps-events/validate-form]))]
+    (fn [{:keys [i id apps-set-name apps-set-description]}]
+      [uix/Accordion
+       [:<>
+        [ui/Table {:compact    true
+                   :definition true}
+         [ui/TableBody
+          [uix/TableRowField (@tr [:name]), :key "app-set-name", :editable? @editable?,
+           :spec ::spec/apps-set-name, :validate-form? @validate-form?, :required? true,
+           :default-value apps-set-name, :on-change (partial on-change id ::events/update-apps-set-name)
+           :on-validation ::events/set-apps-validation-error]
+          [uix/TableRowField (@tr [:description]), :key "app-set-description", :editable? @editable?,
+           :spec ::spec/apps-set-description, :validate-form? @validate-form?, :required? false,
+           :default-value apps-set-description, :on-change (partial on-change id ::events/update-apps-set-description)
+           :on-validation ::events/set-apps-validation-error]]]
+
+        [AppsList id]
+
+        (when @editable?
+          [AddApps id])]
+       :label [:<>
+               (str (inc i) " | " apps-set-name)
+               [ui/Icon {:name     "trash"
+                         :color    "red"
+                         :style    {:cursor :pointer
+                                    :float  "right"}
+                         :on-click #(dispatch [::events/remove-apps-set id])}]]
+       :count 0
+       :default-open true]
+      )))
+
+(defn AppsSetsSection
+  []
+  (let [editable?   (subscribe [::apps-subs/editable?])
+        apps-groups (subscribe [::subs/apps-sets])]
     (fn []
       [:<>
-       [:div "Applications sets"
-        [:span ff/nbsp (ff/help-popup "Each set will allow you to target or/and configure application differently")]]
-       (if (empty? @apps-groups)
-         [ui/Message "No applications sets to show"]
-         [:<>
-          (doall
-            (for [[i [id {:keys [::spec/apps-set-name
-                                ::spec/apps-set-description] :as apps-group}]] (map-indexed vector @apps-groups)]
-             ^{:key (str "apps-set-" (inc i))}
-             [uix/Accordion
-              [:<>
-               [ui/Table {:compact    true
-                          :definition true}
-                [ui/TableBody
-                 [uix/TableRowField (@tr [:name]), :key "app-set-name", :editable? @editable?,
-                  :spec ::spec/apps-set-name, :validate-form? @validate-form?, :required? true,
-                  :default-value apps-set-name, :on-change (partial on-change id ::events/update-apps-set-name)
-                  :on-validation ::events/set-apps-validation-error]
-                 [uix/TableRowField (@tr [:description]), :key "app-set-description", :editable? @editable?,
-                  :spec ::spec/apps-set-description, :validate-form? @validate-form?, :required? false,
-                  :default-value apps-set-description, :on-change (partial on-change id ::events/update-apps-set-description)
-                  :on-validation ::events/set-apps-validation-error]]]
-
-               [ui/ListSA
-                [ui/ListItem
-                 [ui/ListIcon {:name "docker"}]
-                 [ui/ListContent "App 1"]]
-                [ui/ListItem
-                 [ui/ListIcon {:name "docker"}]
-                 [ui/ListContent "App 2"]]
-                [ui/ListItem
-                 [ui/ListIcon {:name "docker"}]
-                 [ui/ListContent "App 3"]]
-                ]
-
-               (when @editable?
-                 [:div {:style {:padding-top 10}}
-                  [SelectAppsModal]])]
-              :label [:<>
-                      (str (inc i) " | " apps-set-name)
-                      [ui/Icon {:name     "trash"
-                                :color    "red"
-                                :style    {:cursor :pointer
-                                           :float  "right"}
-                                :on-click #(dispatch [::events/remove-apps-set id])}]
-                      ]
-              :count 0
-              :default-open true]
-             ))]
-         )
-       [ui/Button {:primary  true
-                   :on-click #(dispatch [::events/add-apps-set])}
-        "New set of applications"]
-       ]
+       (doall
+         (for [[i [id {:keys [::spec/apps-set-name
+                              ::spec/apps-set-description] :as apps-group}]] (map-indexed vector @apps-groups)]
+           ^{:key (str "apps-set-" (inc i))}
+           [AccordionAppSet {:i                    i
+                             :id                   id
+                             :apps-set-name        apps-set-name
+                             :apps-set-description apps-set-description}]))
+       (when @editable?
+         [AddAppsSet])]
 
       )))
 
@@ -269,7 +314,7 @@
     [:<>
      [uix/Icon {:name "list layout"}]
      "Applications"]]
-   [AppGroupSection]])
+   [AppsSetsSection]])
 
 
 (defn TabMenuDetails
@@ -280,10 +325,9 @@
 
 
 (defn DetailsPane []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        module-subtype (subscribe [::apps-subs/module-subtype])
-        active-tab     (subscribe [::apps-subs/active-tab])
-        editable?      (subscribe [::apps-subs/editable?])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        active-tab (subscribe [::apps-subs/active-tab])
+        editable?  (subscribe [::apps-subs/editable?])]
     @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
@@ -357,8 +401,7 @@
 (defn module-detail-panes
   []
   (let [module    (subscribe [::apps-subs/module])
-        editable? (subscribe [::apps-subs/editable?])
-        stripe    (subscribe [::main-subs/stripe])]
+        editable? (subscribe [::apps-subs/editable?])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
                               :icon    "info"}

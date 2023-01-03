@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :refer [reg-event-db]]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]))
+    [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]))
 
 (reg-event-db
   ::clear-module
@@ -28,8 +29,9 @@
     (let [id (-> db
                  ::spec/apps-sets
                  utils/sorted-map-new-idx)]
-      (js/console.warn id)
-      (assoc-in db [::spec/apps-sets id] {:id id}))))
+      (assoc-in db [::spec/apps-sets id] {:id                  id
+                                          ::spec/apps-set-name ""
+                                          ::spec/apps-selector (module-selector/build-spec)}))))
 
 (reg-event-db
   ::remove-apps-set
@@ -41,3 +43,16 @@
   ::set-apps-validation-error
   (fn [db [_ key error?]]
     (utils/set-reset-error db key error? ::spec/apps-validation-errors)))
+
+(reg-event-db
+  ::set-apps-selected
+  (fn [db [_ id db-path]]
+    (->> (module-selector/db-selected db db-path)
+         (map (juxt :id identity) )
+         (into {})
+         (assoc-in db [::spec/apps-sets id ::spec/apps-selected]))))
+
+(reg-event-db
+  ::remove-app
+  (fn [db [_ id module-id]]
+    (update-in db [::spec/apps-sets id ::spec/apps-selected] dissoc module-id)))

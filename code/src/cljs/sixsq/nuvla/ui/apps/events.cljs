@@ -57,7 +57,6 @@
         project     (get db ::apps-project-spec/module-project)
         application (get db ::apps-application-spec/module-application)
         apps-sets   (get db ::apps-applications-sets-spec/apps-sets)]
-    (js/console.error "get-module " module-subtype)
     (case module-subtype
       "component" component
       "project" project
@@ -94,9 +93,9 @@
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
       ; Helpful to debug validation issues
-      (log/error "module-common validate: "
+      (log/warn "module-common validate: "
                  (s/explain-str ::spec/module-common module-common))
-      (log/error "optional form validate: "
+      (log/warn "optional form validate: "
                  (s/explain-str form-spec module))
       (assoc db ::spec/form-valid? valid?))))
 

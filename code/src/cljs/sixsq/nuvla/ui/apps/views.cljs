@@ -26,7 +26,8 @@
     (dispatch [::events/clear-module new-name new-parent new-subtype])
     (apps-component-views/clear-module)
     (apps-application-views/clear-module)
-    (apps-project-views/clear-module)))
+    (apps-project-views/clear-module)
+    (apps-applications-sets-views/clear-module)))
 
 
 (defn ModuleDetails

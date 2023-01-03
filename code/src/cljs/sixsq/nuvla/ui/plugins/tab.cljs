@@ -45,10 +45,14 @@
         {:db (assoc db ::main-spec/ignore-changes-modal normal-behavior)}
         normal-behavior))))
 
+(defn active-tab
+  [db db-path]
+  (get-in db (conj db-path ::active-tab)))
+
 (reg-sub
   ::active-tab
   (fn [db [_ db-path]]
-    (get-in db (conj db-path ::active-tab))))
+    (active-tab db db-path)))
 
 
 (defn- on-tab-change

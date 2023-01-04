@@ -7,7 +7,6 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]))
@@ -56,7 +55,7 @@
 
 
 (defn documentation
-  [path]
+  [{:keys [path]}]
   (let [loading? (subscribe [::subs/loading?])
         n        (count path)
         children (case n

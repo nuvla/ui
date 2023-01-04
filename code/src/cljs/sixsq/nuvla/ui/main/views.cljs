@@ -30,7 +30,6 @@
             [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
             [sixsq.nuvla.ui.messages.views :as messages]
             [sixsq.nuvla.ui.notifications.views]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.profile.views]
             [sixsq.nuvla.ui.routing.router :refer [router-component]]

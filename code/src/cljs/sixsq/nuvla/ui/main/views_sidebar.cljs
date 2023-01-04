@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as events]
@@ -16,7 +18,8 @@
   (let [tr           (subscribe [::i18n-subs/tr])
         is-user?     (subscribe [::session-subs/is-user?])
         active?      (subscribe [::subs/nav-url-active? url])
-        auth-needed? (and protected? (not @is-user?))]
+        auth-needed? (and protected? (not @is-user?))
+        auth-url     (str/join "/" [config/base-path "sign-in"])]
 
     ^{:key (name label-kw)}
     [uix/MenuItem
@@ -25,11 +28,11 @@
       :style    {:min-width  sidebar-width
                  :overflow-x "hidden"}
       :active   @active?
-      :href     (if auth-needed? "sign-in" url)
+      :href     (if auth-needed? auth-url url)
       :on-click (fn [event]
                   (.preventDefault event)
                   (dispatch (if auth-needed?
-                              [::history-events/navigate "sign-in"]
+                              [::history-events/navigate auth-url]
                               [::events/navigate url])))
       :data-reitit-handle-click false}]))
 

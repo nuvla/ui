@@ -171,23 +171,6 @@
          [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])])]]]))
 
 
-(defn Message
-  []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        message (subscribe [::subs/message])]
-    (fn []
-      (let [[type content] @message]
-        (when content
-          [ui/Container {:text-align :center}
-           [ui/Message
-            (if (= type :success)
-              {:success true
-               :content (@tr [(keyword content)])}
-              {:error   true
-               :content content})]
-           [:br]])))))
-
-
 (defn contents
   []
   (let [resource-path    (subscribe [::subs/nav-path])
@@ -200,9 +183,6 @@
                 :id    "nuvla-ui-content"
                 :fluid true}
                @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
-
-       [Message]
-
        (panel/render @resource-path)])))
 
 

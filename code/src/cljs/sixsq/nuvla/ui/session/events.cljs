@@ -55,16 +55,15 @@
 
 (reg-event-fx
   ::logout
-  (fn [{:keys [db]} _]
-    {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
-     ::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
+  (fn []
+    {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
                                 (dispatch [::intercom-events/clear-events])
                                 (dispatch [::history-events/navigate "sign-in"]))]}))
 
 
 (reg-event-db
   ::clear-loading
-  (fn [db _]
+  (fn [db]
     (assoc db ::spec/loading? false)))
 
 

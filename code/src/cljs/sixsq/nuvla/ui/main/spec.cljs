@@ -25,10 +25,6 @@
 
 (s/def ::ui-version map?)
 
-(s/def ::bootstrap-message (s/nilable keyword?))
-
-(s/def ::message any?)
-
 (s/def ::actions-interval map?)
 
 (s/def ::content-key string?)
@@ -57,8 +53,6 @@
                                        :new-version     nil
                                        :modal-open?     false
                                        :notify?         true}
-               ::bootstrap-message    nil
-               ::message              nil
                ::actions-interval     {}
                ::content-key          (random-uuid)
                ::pages                {"welcome"         {:url        "welcome"

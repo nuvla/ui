@@ -101,18 +101,6 @@
 
 
 (reg-sub
-  ::bootstrap-message
-  (fn [db]
-    (::spec/bootstrap-message db)))
-
-
-(reg-sub
-  ::message
-  (fn [db]
-    (::spec/message db)))
-
-
-(reg-sub
   ::next-refresh
   (fn [{:keys [::spec/actions-interval]} [_ action-id]]
     (get-in actions-interval [action-id :next-refresh])))

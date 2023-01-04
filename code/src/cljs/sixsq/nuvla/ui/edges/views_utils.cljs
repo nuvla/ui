@@ -14,7 +14,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+    [sixsq.nuvla.ui.config :as config]))
 
 
 (defn NuvlaboxRow
@@ -55,7 +56,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
-      (let [href                  (str "edges/" (general-utils/id->uuid id))
+      (let [href                  (str/join "/" [config/base-path "edges" (general-utils/id->uuid id)])
             next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
             creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}

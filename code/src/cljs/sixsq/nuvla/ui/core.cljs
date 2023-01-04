@@ -78,7 +78,6 @@
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)
   (screen-size-watcher)
-  (dispatch [::main-events/set-navigation-info])
   (init-routes!)
   (swap! fv/conf #(merge % {:atom r/atom}))
   (mount-root)

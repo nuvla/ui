@@ -1,14 +1,14 @@
 (ns sixsq.nuvla.ui.routing.router
   (:require [clojure.string :as str]
             [re-frame.cofx :refer [reg-cofx]]
-            [re-frame.core :as re-frame :refer [dispatch]]
-            [reitit.core :as r]
+            [re-frame.core :as re-frame]
             [reitit.frontend.controllers :as rfc]
             [reitit.frontend.easy :as rfe :refer [history]]
             [reitit.frontend.history :as rfh]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.history.effects :as fx]
             [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.routing.r-routes :as routes :refer [router]]
             [sixsq.nuvla.ui.routing.utils :refer [decode-query-string]]))
@@ -33,13 +33,19 @@
 
 ;;; Effects ;;;
 
-;; Triggering navigation from events using js/window.history.pushState
+;; Triggering navigation from events by using js/window.history.pushState directly,
+;; expects a string as path argument
 (re-frame/reg-fx
   :push-state
   (fn [path]
     (js/console.error "path" path)
     (.pushState js/window.history nil {} path)
     (rfh/-on-navigate @history path)))
+
+(re-frame/reg-event-fx
+  ::push-state-by-path
+  (fn [_ [_ new-path]]
+    {:push-state new-path}))
 
 
 ;; Triggering navigation from events using reitit push state effects handler
@@ -53,16 +59,11 @@
     (js/console.error "ROUTE" route)
     (apply rfe/push-state route)))
 
-
-(re-frame/reg-event-fx
-  ::push-state-by-path
-  (fn [_ [_ new-path]]
-    {:push-state new-path}))
-
 (re-frame/reg-event-fx
   ::push-state-reitit
   (fn [_ [_ & route]]
     {:push-state-reitit route}))
+
 
 (reg-cofx
  :get-path-parts-and-search-map
@@ -78,6 +79,16 @@
        :path-parts   path-parts
        :query-params query-params))))
 
+(re-frame/reg-fx
+  :navigate-back!
+  (fn []
+    (.back js/window.history)))
+
+(re-frame/reg-event-fx
+  ::navigate-back
+  (fn []
+    (js/console.error "HEELOOOOO")
+    {:fx [[:navigate-back!]] }))
 
 (re-frame/reg-event-fx
   ::navigated
@@ -90,6 +101,20 @@
        (-> db (assoc :current-route new-match-with-controllers))
        :fx [[:dispatch [::main-events/set-navigation-info]]]
        ::fx/set-window-title [(strip-base-path (:path new-match))]})))
+
+(re-frame/reg-event-fx
+  ::navigated-protected
+  (fn [{{:keys [::main-spec/changes-protection?
+                ::ignore-changes-protection] :as db} :db} [_ new-match]]
+    (let [event  {:fx [[:dispatch [::navigated new-match]]]}
+          revert {:fx [[:dispatch [::navigate-back]]]}]
+      (if (and changes-protection? (not ignore-changes-protection))
+        {:db (assoc db
+               ::main-spec/ignore-changes-modal        event
+               ::main-spec/do-not-ignore-changes-modal revert
+               ::ignore-changes-protection true)}
+        (merge {:db (assoc db ::ignore-changes-protection false)}
+               event)))))
 
 ;;; Subscriptions ;;;
 (re-frame/reg-sub
@@ -111,7 +136,7 @@
 (defn on-navigate [new-match]
   (when new-match
     (js/console.error "on-navigate" new-match)
-    (re-frame/dispatch [::navigated new-match])))
+    (re-frame/dispatch [::navigated-protected new-match])))
 
 
 (defn init-routes! []
@@ -123,15 +148,6 @@
                              (and (rfh/ignore-anchor-click? router e el uri)
                                (not= "false" (.getAttribute el "data-reitit-handle-click"))))}))
 
-(defn nav [{:keys [router current-route]}]
-  [:ul
-   (for [route-name (r/route-names router)
-         :let       [route (r/match-by-name router route-name)
-                     text (-> route :data :link-text)]]
-     [:li {:key route-name}
-      (when (= route-name (-> current-route :data :name))
-        "> ")
-      [:a {:href (href route-name)} text]])])
 
 (defn- router-component-internal []
   (let [current-route @(re-frame/subscribe [::current-route])
@@ -149,11 +165,16 @@
 
 (comment
   (rfe/push-state :sixsq.nuvla.ui.routing.r-routes/apps {} nil)
+  (href :sixsq.nuvla.ui.routing.r-routes/edges-details {:id :bla})
+  (href ::routes/edges-details)
 
   (rfe/push-state :sixsq.nuvla.ui.routing.r-routes/apps-details {:apps-path "hello/world"} {})
 
-
   (.pushState js/window.history nil {} "/ui/apps")
+  (.back js/window.history nil {} "/ui/apps")
+  (.removeEventListener js/window "popstate" on-navigate)
+
+
   ;; (-on-navigate history "/ui/apps/sixsq/blackbox?version=28")
   (rfh/-on-navigate @history "/ui/apps")
   )

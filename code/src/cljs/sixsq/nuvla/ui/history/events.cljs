@@ -12,5 +12,5 @@
       (if changes-protection?
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect)}
         (do
-          (log/error "triggering navigate effect " (str {:relative-url relative-url}))
+          (log/info "triggering navigate effect " (str {:relative-url relative-url}))
           nav-effect)))))

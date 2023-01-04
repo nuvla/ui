@@ -94,7 +94,6 @@
                        :flex-direction  :column
                        :align-items     :center}}
          [StatisticStatesEdge true]
-        [:a {:href "/sub-page1"} "go to sub-page"]
          [ui/Segment {:compact true
                       :width   "auto"
                       :style   {:text-align "center"

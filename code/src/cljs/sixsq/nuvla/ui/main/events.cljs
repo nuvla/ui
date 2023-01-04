@@ -82,8 +82,6 @@
          :as db} :db
         path-parts :path-parts
         query-params :query-params}]
-    (js/console.error "set-navigation-info path-parts" path-parts)
-    (js/console.error "set-navigation-info query-params" query-params)
     (when (not changes-protection?)
       {:db                        (assoc db ::spec/nav-path path-parts
                                     ::spec/nav-query-params query-params)
@@ -146,18 +144,24 @@
 
 (reg-event-fx
   ::ignore-changes
-  (fn [{{:keys [::spec/ignore-changes-modal] :as db} :db} [_ choice]]
-    (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil)]
-      (cond
+  (fn [{{:keys [::spec/ignore-changes-modal
+                ::spec/do-not-ignore-changes-modal] :as db} :db} [_ choice]]
+    (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil
+                                   ::spec/do-not-ignore-changes-modal nil)]
+      (if choice
+        (let [new-db (assoc close-modal-db
+                       ::spec/changes-protection? false)]
+          (cond
+            (map? ignore-changes-modal)
+            (-> {:db new-db}
+                (merge ignore-changes-modal))
 
-        (map? ignore-changes-modal)
-        (cond-> {:db (cond-> close-modal-db
-                             choice (assoc ::spec/changes-protection? false))}
-                choice (merge ignore-changes-modal))
+            (fn? ignore-changes-modal)
+            (do (ignore-changes-modal)
+              {:db new-db})))
 
-        (fn? ignore-changes-modal)
-        (do (when choice (ignore-changes-modal))
-            {:db close-modal-db})))))
+        (merge {:db close-modal-db}
+               do-not-ignore-changes-modal)))))
 
 (reg-event-db
   ::ignore-changes-modal

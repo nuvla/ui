@@ -23,6 +23,8 @@
 
 (s/def ::ignore-changes-modal (s/nilable any?))
 
+(s/def ::do-not-ignore-changes-modal (s/nilable any?))
+
 (s/def ::ui-version map?)
 
 (s/def ::actions-interval map?)

@@ -23,12 +23,6 @@
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
 
-(defn module-content-id->version-url
-  [versions-indexed id module-content-id]
-  (->> module-content-id
-       (get-version-id versions-indexed)
-       (str id "_")))
-
 (defn module-db
   [db db-path href]
   (get-in db (conj db-path ::modules href)))
@@ -48,7 +42,7 @@
         versions-indexed  (-> db
                               (module-db db-path href)
                               module-versions-indexed)]
-    (module-content-id->version-url versions-indexed href module-content-id)))
+    (get-version-id versions-indexed module-content-id)))
 
 
 (defn db-environment-variables
@@ -211,8 +205,7 @@
         :selection true
         :on-change (ui-callback/value
                      #(dispatch [::load-module db-path
-                                 (module-content-id->version-url
-                                   @versions-indexed id %)]))
+                                 (str id "_" (get-version-id @versions-indexed %))]))
         :fluid     true
         :options   @options}])))
 

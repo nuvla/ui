@@ -153,9 +153,9 @@
       [ui/Container
        [ui/Header {:as      :h4
                    :icon    "book"
-                   :content (@tr [:eula-full])}]
-       [:h4 [:b (str (str/capitalize (@tr [:eula])) ": ")
-             [:u [:a {:href (:url @license) :target "_blank"} name]]]]
+                   :content (tr [:eula-full])}]
+       [:h4 [:b (str (str/capitalize (tr [:eula])) ": ")
+             [:u [:a {:href url :target "_blank"} name]]]]
        (when description
          [:p [:i description]])
        [ui/Checkbox {:label     (tr [:accept-eula])
@@ -203,19 +203,18 @@
   (let [module           (subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         options          (subscribe [::module-versions-options db-path href])]
-    (fn [{:keys [db-path] :as _opts}]
-      (let [{:keys [id content]} @module]
-        [ui/FormDropdown
-         {:value     (:id content)
-          :scrolling true
-          :upward    false
-          :selection true
-          :on-change (ui-callback/value
-                       #(dispatch [::load-module db-path
-                                   (module-content-id->version-url
-                                     @versions-indexed id %)]))
-          :fluid     true
-          :options   @options}]))))
+    (let [{:keys [id content]} @module]
+      [ui/FormDropdown
+       {:value     (:id content)
+        :scrolling true
+        :upward    false
+        :selection true
+        :on-change (ui-callback/value
+                     #(dispatch [::load-module db-path
+                                 (module-content-id->version-url
+                                   @versions-indexed id %)]))
+        :fluid     true
+        :options   @options}])))
 
 (s/def ::href string?)
 

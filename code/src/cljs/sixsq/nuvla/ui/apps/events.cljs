@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as apps-applications-sets-spec]
     [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
+    [sixsq.nuvla.ui.apps-applications-sets.utils :as apps-applications-sets-utils]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
     [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
     [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
@@ -148,6 +149,7 @@
              "project" (apps-project-utils/module->db db module)
              "application" (apps-application-utils/module->db db module)
              "application_kubernetes" (apps-application-utils/module->db db module)
+             "applications_sets" (apps-applications-sets-utils/module->db db module)
              db)})))
 
 

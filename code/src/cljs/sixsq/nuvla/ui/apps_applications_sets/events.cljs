@@ -1,8 +1,9 @@
 (ns sixsq.nuvla.ui.apps-applications-sets.events
   (:require
-    [re-frame.core :refer [reg-event-db]]
+    [re-frame.core :refer [reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]))
 
 (reg-event-db
@@ -44,13 +45,17 @@
   (fn [db [_ key error?]]
     (utils/set-reset-error db key error? ::spec/apps-validation-errors)))
 
-(reg-event-db
+(reg-event-fx
   ::set-apps-selected
-  (fn [db [_ id db-path]]
-    (->> (module-selector/db-selected db db-path)
-         (map (juxt :id identity) )
-         (into {})
-         (assoc-in db [::spec/apps-sets id ::spec/apps-selected]))))
+  (fn [{db :db} [_ id db-path]]
+    (let [selected (module-selector/db-selected db db-path)]
+      {:db (->> selected
+                (map (juxt :id identity))
+                (into {})
+                (assoc-in db [::spec/apps-sets id ::spec/apps-selected]))
+       :fx (map (fn [{module-id :id}]
+                  [:dispatch [::module-plugin/load-module [::spec/apps-sets id] module-id]])
+                selected)})))
 
 (reg-event-db
   ::remove-app

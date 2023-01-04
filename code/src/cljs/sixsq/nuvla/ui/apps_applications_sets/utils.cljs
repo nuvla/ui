@@ -7,11 +7,20 @@
 
 ;; Deserialization functions: module->db
 
+(defn apps-sets->db
+  [applications-sets]
+  (into (sorted-map)
+        (for [[id {:keys [name description]}] (map-indexed vector applications-sets)]
+          [id {:id                         id
+               ::spec/apps-set-name        name
+               ::spec/apps-set-description description
+               ::spec/apps-selected        #{}}])))
 
 (defn module->db
-  [db module]
+  [db {:keys [content] :as module}]
   (-> db
-      (apps-utils/module->db module)))
+      (apps-utils/module->db module)
+      (assoc ::spec/apps-sets (apps-sets->db (:applications-sets content)))))
 
 
 ;; Serialization functions: db->module

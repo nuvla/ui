@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
     [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
@@ -20,15 +21,12 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
@@ -158,7 +156,7 @@
         (when @editable?
           [AddApps id])]
        :label [:<>
-               (str (inc i) " | " apps-set-name)
+               (str i " | " apps-set-name)
                [ui/Icon {:name     "trash"
                          :color    "red"
                          :style    {:cursor :pointer
@@ -170,18 +168,20 @@
 
 (defn AppsSetsSection
   []
-  (let [editable?   (subscribe [::apps-subs/editable?])
-        apps-groups (subscribe [::subs/apps-sets])]
+  (let [editable? (subscribe [::apps-subs/editable?])
+        apps-sets (subscribe [::subs/apps-sets])]
     (fn []
       [:<>
        (doall
          (for [[i [id {:keys [::spec/apps-set-name
-                              ::spec/apps-set-description] :as apps-group}]] (map-indexed vector @apps-groups)]
-           ^{:key (str "apps-set-" (inc i))}
-           [AccordionAppSet {:i                    i
-                             :id                   id
-                             :apps-set-name        apps-set-name
-                             :apps-set-description apps-set-description}]))
+                              ::spec/apps-set-description] :as apps-group}]]
+               (map-indexed vector @apps-sets)]
+           (let [i (inc i)]
+             ^{:key (str "apps-set-" i)}
+             [AccordionAppSet {:i                    i
+                               :id                   id
+                               :apps-set-name        apps-set-name
+                               :apps-set-description apps-set-description}])))
        (when @editable?
          [AddAppsSet])]
 
@@ -367,37 +367,50 @@
       [ui/GridColumn
        [OverviewModuleSummary]]]]))
 
-(defn ConfigureDemo
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [tab-plugin/Tab
-     {:db-path [::spec/x]
-      :menu    {:secondary true
-                :pointing  true}
-      :panes   (map
-                 (fn [i]
-                   {:menuItem {:content (str i)
-                               :key     (random-uuid)}
+(defn ConfigureSetApplications
+  [id]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        applications (subscribe [::subs/apps-selected id])
+        db-path      [::spec/apps-sets id]]
+    (if (seq @applications)
+      [ui/Tab
+       {:panes (map
+                 (fn [{:keys [name subtype] module-id :id}]
+                   {:menuItem {:content (or name id)
+                               :icon    (apps-utils/subtype-icon subtype)
+                               :key     (str id "-" module-id)}
                     :render   #(r/as-element
-                                 [tab-plugin/Tab
-                                  {:db-path [::spec/y]
-                                   :panes   (map
-                                              (fn [{:keys [text icon]}]
-                                                {:menuItem {:content text
-                                                            :icon    icon
-                                                            :key     (random-uuid)}
-                                                 :render   (fn []
-                                                             (r/as-element
-                                                               [ui/TabPane
+                                 [ui/TabPane
+                                  [ui/TabPane
+                                   [uix/Accordion
+                                    [module-plugin/ModuleVersions
+                                     {:db-path db-path
+                                      :href    module-id}]
+                                    :label (@tr [:select-version])
+                                    :default-open true]
+                                   [uix/Accordion
+                                    [module-plugin/EnvVariables
+                                     {:db-path db-path
+                                      :href    module-id}]
+                                    :label (@tr [:env-variables])
+                                    :default-open true]]])})
+                 @applications)}]
+      [ui/Message {:info true} "No applications for this set yet"])))
 
-                                                                ]))}
-                                                ) [{:text "App 1" :icon "cubes"}
-                                                   {:text "App 2" :icon "cubes"}
-                                                   {:text "App 3" :icon "cubes"}])}])}
-                   ) ["1 | Blackbox"
-                      "2 | Whitebox"
-                      "3 | Monitoring"
-                      ])}]))
+(defn Configuration
+  []
+  (let [apps-sets (subscribe [::subs/apps-sets])]
+    (if (seq @apps-sets)
+      [ui/Tab {:menu  {:secondary true
+                       :pointing  true}
+               :panes (map-indexed
+                        (fn [i [id {:keys [::spec/apps-set-name]}]]
+                          (let [i (inc i)]
+                            {:menuItem {:content (str i " | " apps-set-name)
+                                        :key     (str apps-set-name "-" i)}
+                             :render   #(r/as-element [ConfigureSetApplications id])}))
+                        @apps-sets)}]
+      [ui/Message {:info true} "No apps sets created yet"])))
 (defn module-detail-panes
   []
   (let [module    (subscribe [::apps-subs/module])
@@ -417,7 +430,7 @@
                               :key     :applications-pane}}
                   {:menuItem {:content (r/as-element [TabMenuConfiguration])
                               :key     :configuration}
-                   :pane     {:content (r/as-element [ConfigureDemo])
+                   :pane     {:content (r/as-element [Configuration])
                               :key     :configuration-pane}}
                   {:menuItem {:content (r/as-element [TabMenuVersions])
                               :key     :versions}

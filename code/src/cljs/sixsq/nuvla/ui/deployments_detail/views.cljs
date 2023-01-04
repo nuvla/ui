@@ -5,6 +5,7 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
+    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
@@ -25,6 +26,7 @@
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.resource-log.views :as log-views]
+    [sixsq.nuvla.ui.routing.utils :refer [pathify]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -32,8 +34,7 @@
     [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.config :as config]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -50,9 +51,9 @@
 (defn sum-replicas
   [parameters ends-with]
   (->> (vals parameters)
-       (filter #(str/ends-with? (:name %) ends-with))
-       (map #(js/parseInt (:value %)))
-       (reduce +)))
+    (filter #(str/ends-with? (:name %) ends-with))
+    (map #(js/parseInt (:value %)))
+    (reduce +)))
 
 
 (defn sum-running-replicas
@@ -325,7 +326,7 @@
                 :content           popup-text
                 :mouse-enter-delay 500
                 :trigger           (r/as-element button)}
-               (and (not menu-item?) (not label?)) (assoc :position "bottom center"))]
+         (and (not menu-item?) (not label?)) (assoc :position "bottom center"))]
       button)))
 
 
@@ -468,7 +469,7 @@
                                      (@tr [:start])
                                      (@tr [:update]))
                       :popup-text  (@tr [(if start :deployment-start-msg
-                                                   :deployment-update-msg)])
+                                           :deployment-update-msg)])
                       :icon-name   (if start "play" "redo")
                       :menu-item?  true
                       :disabled?   (if start
@@ -498,7 +499,7 @@
         (@tr [:deployment-run-private-ip]) ". "
         [:br]
         (@tr [:deployment-access-url]) " "
-        [:a {:href (str config/base-path "/credentials/")}
+        [:a {:href (pathify [config/base-path "credentials"])}
          (@tr [:create-vpn-credential])] " " (@tr [:and]) " "
         [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
 
@@ -626,7 +627,7 @@
           [ui/Icon {:name "tag"}] tag])]]
 
      (when (and (deployments-utils/started? state)
-                @primary-url)
+             @primary-url)
        [ui/Button {:color    "green"
                    :icon     "external"
                    :content  primary-url-name
@@ -703,7 +704,7 @@
              [ui/Icon {:name "bullseye"}]
              [values/as-link (general-utils/id->uuid deployment-set) :label
               (or deployment-set-name
-                  (general-utils/id->uuid deployment-set))
+                (general-utils/id->uuid deployment-set))
               :page "deployment-sets"]]]])]]]
      (when-not (deployments-utils/stopped? state)
        [ui/Segment {:attached  false

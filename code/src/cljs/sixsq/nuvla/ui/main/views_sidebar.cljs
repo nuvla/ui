@@ -1,12 +1,12 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
+    [sixsq.nuvla.ui.routing.utils :refer [pathify]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
@@ -19,7 +19,7 @@
         is-user?     (subscribe [::session-subs/is-user?])
         active?      (subscribe [::subs/nav-url-active? url])
         auth-needed? (and protected? (not @is-user?))
-        auth-url     (str/join "/" [config/base-path "sign-in"])]
+        auth-url     (pathify [config/base-path "sign-in"])]
 
     ^{:key (name label-kw)}
     [uix/MenuItem
@@ -41,7 +41,7 @@
   (let [tr  (subscribe [::i18n-subs/tr])
         url (subscribe [::subs/config :nuvla-logo-url])]
     ^{:key "welcome"}
-    [ui/MenuItem (cond-> {:aria-label "hello" #_(@tr [:welcome])
+    [ui/MenuItem (cond-> {:aria-label (@tr [:welcome])
                           :style      {:overflow-x "hidden"
                                        :min-width  sidebar-width}}
                          @url (assoc :href @url))

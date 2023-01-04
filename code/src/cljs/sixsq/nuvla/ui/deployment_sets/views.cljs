@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.routing.utils :refer [to-pathname]]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -134,7 +135,7 @@
   [{:keys [id created name state description tags] :as _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
-        href   (str "deployment-sets/" (general-utils/id->uuid id))]
+        href   (to-pathname ["deployment-sets" (general-utils/id->uuid id)])]
     ^{:key id}
     [uix/Card
      {:href        href

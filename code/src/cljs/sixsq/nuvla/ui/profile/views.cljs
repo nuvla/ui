@@ -14,7 +14,6 @@
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.profile.events :as events]
     [sixsq.nuvla.ui.profile.spec :as spec]
@@ -1486,7 +1485,7 @@
         :panes   panes}])))
 
 
-(defmethod panel/render :profile
+(defn profile
   [_path]
   (let [tr               (subscribe [::i18n-subs/tr])
         is-group?        (subscribe [::session-subs/is-group?])

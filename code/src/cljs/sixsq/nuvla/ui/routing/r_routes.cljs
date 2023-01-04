@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.edges.views :refer [edges-view]]
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.panel :refer [UnknownResource]]
+            [sixsq.nuvla.ui.profile.views :refer [profile]]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
@@ -85,6 +86,9 @@
     ["welcome"
      {:name ::home
       :link-text "home"}]
+    ["welcome/"
+     {:name ::home-slash
+      :link-text "home"}]
     ["dashboard"
      {:name ::dashboard
       :view dashboard-view
@@ -148,7 +152,13 @@
     ["clouds"
      {:name ::clouds
       :view clouds-view
-      :link-text "clouds"}]
+      :link-text "clouds"}
+     [""]
+     ["/" ::clouds-slashed]
+     ["/*path"
+      {:name ::clouds-details
+       :view clouds-view
+       :link-text "clouds"}]]
     ["documentation"
      {:name ::documentation
       :view documentation
@@ -161,7 +171,10 @@
       :link-text "api"}
      [""]
      ["/*api-path"
-      {:name ::api-sub-page}]]]
+      {:name ::api-sub-page}]]
+    ["profile"
+     {:name ::profile
+      :view profile}]]
    ["/*resource"
     {:name ::catch-all
      :view UnknownResource}]])

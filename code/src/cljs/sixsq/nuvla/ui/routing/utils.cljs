@@ -28,6 +28,17 @@
         query-params (decode-query-string absolute-url)]
     [name path-params query-params]))
 
+(defn pathify
+  "Takes a list of path parts, returning a string of those parts separated by '/'."
+  [path-parts]
+  (str/join "/" path-parts))
+
+(defn to-pathname
+  "Takes a list of path parts, returning a string of those parts separated by '/'
+   and with config/base-path appended."
+  [path-parts]
+  (pathify (concat [config/base-path] path-parts)))
+
 (comment
   (into {} (-> (str/split "ui/apps?hello=world&world=ked&" #"\?")
                second

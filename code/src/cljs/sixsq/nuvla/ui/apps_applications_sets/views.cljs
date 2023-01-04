@@ -103,7 +103,7 @@
                                            :margin  "0 .25rem 0 0"
                                            :display :inline-block}}]
         docker-icon     [ui/ListIcon {:name "docker"}]
-        unknown-icon    [ui/ListIcon {:name "question circle outline"}]]
+        unknown-icon    [ui/ListIcon {:name "question circle"}]]
     [ui/ListSA
      (for [{:keys [subtype name] module-id :id} selected]
        ^{:key module-id}

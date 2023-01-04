@@ -98,6 +98,7 @@
     "component" "grid layout"
     "application" "cubes"
     "application_kubernetes" "cubes"
+    "applications_sets" "th large"
     "question circle"))
 
 (defn subtype-icon-infra

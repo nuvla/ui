@@ -569,7 +569,6 @@
         [ui/Container {:fluid true}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
-         (js/console.warn panes)
          [ui/Tab
           {:menu             {:secondary true
                               :pointing  true

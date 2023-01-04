@@ -4,7 +4,6 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
@@ -28,18 +27,8 @@
       [ui/ListDescription content]]]]])
 
 (defmethod panel/render :welcome
-  [path]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        query-params (subscribe [::main-subs/nav-query-params])
-        {:keys [message, error]} @query-params]
-    (when @query-params
-
-      (when (or message error)
-        (dispatch [:sixsq.nuvla.ui.main.events/set-message
-                   (if error :error :success) (or error message)]))
-
-      (dispatch [::history-events/navigate (str (first path) "/")]))
-
+  [_path]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
      [ui/Grid {:stackable     true
                :centered      true
@@ -116,7 +105,7 @@
        [ui/HeaderSubheader {:as "h2"}
         (@tr [:welcome-how-to-nb-header])]
        [ui/HeaderSubheader {:as "h4"}
-        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvlaedge/nuvlaedge-software/"
+        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href   "https://docs.nuvla.io/nuvlaedge/nuvlaedge-software/"
                                                       :target "_blank"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1

@@ -109,7 +109,6 @@
                               #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                    (dispatch [::close-credential-modal])
                                    (dispatch [::get-credentials])
-                                   ;(dispatch [::main-events/check-bootstrap-message])
                                    (if (utils/show-generated-cred-modal? new-credential)
                                      (dispatch [::set-generated-credential-modal %])
                                      (let [{:keys [status message resource-id]} (response/parse %)]

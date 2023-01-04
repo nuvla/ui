@@ -10,7 +10,7 @@
             [sixsq.nuvla.ui.history.effects :as fx]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.routing.r-routes :refer [router]]
+            [sixsq.nuvla.ui.routing.r-routes :as routes :refer [router]]
             [sixsq.nuvla.ui.routing.utils :refer [decode-query-string]]))
 
 (def page-alias {"nuvlabox"        "edges"
@@ -71,7 +71,8 @@
          path-name (.-pathname location)
          _ (js/console.error path-name)
          path-parts   (->> (split-path-alias (.-pathname location))
-                           (map js/decodeURIComponent))
+                           (map js/decodeURIComponent)
+                           vec)
          query-params (decode-query-string (.-search location))]
      (assoc coeffects
        :path-parts   path-parts

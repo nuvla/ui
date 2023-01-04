@@ -152,7 +152,9 @@
     ["documentation"
      {:name ::documentation
       :view documentation
-      :link-text "documentation"}]
+      :link-text "documentation"}
+     [""]
+     ["/*sub-path" ::documentation-subpage]]
     ["api"
      {:name ::api
       :view api-view
@@ -217,4 +219,38 @@
        ["/user/:id" ::user]]))
 
   (r/match-by-path router-test2 "/api")
+
+  (r/route-names router)
+  ;; => [:sixsq.nuvla.ui.routing.r-routes/root
+  ;;     :sixsq.nuvla.ui.routing.r-routes/home-root
+  ;;     :sixsq.nuvla.ui.routing.r-routes/sign-up
+  ;;     :sixsq.nuvla.ui.routing.r-routes/sign-in
+  ;;     :sixsq.nuvla.ui.routing.r-routes/reset-password
+  ;;     :sixsq.nuvla.ui.routing.r-routes/set-password
+  ;;     :sixsq.nuvla.ui.routing.r-routes/sign-in-token
+  ;;     :sixsq.nuvla.ui.routing.r-routes/about
+  ;;     :sixsq.nuvla.ui.routing.r-routes/home
+  ;;     :sixsq.nuvla.ui.routing.r-routes/dashboard
+  ;;     :sixsq.nuvla.ui.routing.r-routes/apps
+  ;;     :sixsq.nuvla.ui.routing.r-routes/apps-details
+  ;;     :sixsq.nuvla.ui.routing.r-routes/deployments
+  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment
+  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment-slashed
+  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment-details
+  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment-sets
+  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment-sets-sub-age
+  ;;     :sixsq.nuvla.ui.routing.r-routes/edges
+  ;;     :sixsq.nuvla.ui.routing.r-routes/edges-details
+  ;;     :sixsq.nuvla.ui.routing.r-routes/credentials
+  ;;     :sixsq.nuvla.ui.routing.r-routes/credentials-slash
+  ;;     :sixsq.nuvla.ui.routing.r-routes/notifications
+  ;;     :sixsq.nuvla.ui.routing.r-routes/data
+  ;;     :sixsq.nuvla.ui.routing.r-routes/data-details
+  ;;     :sixsq.nuvla.ui.routing.r-routes/clouds
+  ;;     :sixsq.nuvla.ui.routing.r-routes/documentation
+  ;;     :sixsq.nuvla.ui.routing.r-routes/documentation-subpage
+  ;;     :sixsq.nuvla.ui.routing.r-routes/api
+  ;;     :sixsq.nuvla.ui.routing.r-routes/api-sub-page
+  ;;     :sixsq.nuvla.ui.routing.r-routes/catch-all]
+
   )

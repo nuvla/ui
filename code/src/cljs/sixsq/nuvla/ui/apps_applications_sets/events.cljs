@@ -1,10 +1,12 @@
 (ns sixsq.nuvla.ui.apps-applications-sets.events
   (:require
-    [re-frame.core :refer [reg-event-db reg-event-fx]]
+    [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.plugins.module :as module-plugin]
-    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]))
+    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-db
   ::clear-module
@@ -22,6 +24,44 @@
   (fn [db [_ id description]]
     (assoc-in db [::spec/apps-sets id
                   ::spec/apps-set-description] description)))
+
+(defn restore-apps-selected
+  [modules-by-id db [id {:keys [applications]}]]
+  (->> applications
+       (map (fn [{module-id :id}]
+              [module-id (get modules-by-id module-id
+                              {:subtype "unknown" :id module-id})]))
+       (into {})
+       (assoc-in db [::spec/apps-sets id ::spec/apps-selected])))
+
+(reg-event-fx
+  ::reload-apps-sets-response
+  (fn [{{:keys [::spec/apps-sets] :as db} :db} [_ module {:keys [resources]}]]
+    (let [modules-by-id (->> resources (map (juxt :id identity)) (into {}))
+          new-db        (->> module
+                             :content
+                             :applications-sets
+                             (map-indexed vector)
+                             (reduce (partial restore-apps-selected modules-by-id) db))]
+      {:db new-db})))
+
+(reg-event-fx
+  ::reload-apps-sets
+  (fn [_ [_ module]]
+    (let [apps-urls  (->> module
+                          :content
+                          :applications-sets
+                          (mapcat :applications)
+                          (map :id)
+                          distinct)
+          filter-str (apply general-utils/join-or (map #(str "id='" % "'") apps-urls))
+          params     {:filter filter-str
+                      :last   1000}
+          callback   #(if (instance? js/Error %)
+                        (cimi-api-fx/default-error-message % "load applications sets failed")
+                        (dispatch [::reload-apps-sets-response module %]))]
+      (when (seq apps-urls)
+        {::cimi-api-fx/search [:module params callback]}))))
 
 
 (reg-event-db

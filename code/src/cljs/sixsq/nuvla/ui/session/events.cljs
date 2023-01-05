@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -58,7 +59,7 @@
   (fn []
     {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
                                 (dispatch [::intercom-events/clear-events])
-                                (dispatch [::history-events/navigate "sign-in"]))]}))
+                                (dispatch [::history-events/navigate (name->href :sign-in)]))]}))
 
 
 (reg-event-db

@@ -12,7 +12,8 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.routing.routes :as routes :refer [router]]
-            [sixsq.nuvla.ui.routing.utils :as utils]))
+            [sixsq.nuvla.ui.routing.utils :as utils :refer [name->href pathify
+                                                            to-pathname]]))
 
 (def page-alias {"nuvlabox"        "edges"
                  "edge"            "edges"
@@ -204,36 +205,36 @@
   ;;;; CONSTRUCTING PATHS
 
   ;; Static routes
-  (href ::routes/edges)
+  (name->href ::routes/edges)
   ;; => "/ui/edges"
 
   ;; - path params get ignored with static routes
-  (href ::routes/edges {:uuid "1234"})
+  (name->href ::routes/edges {:uuid "1234"})
   ;; => "/ui/edges"
 
   ;; - providing query params
-  (href ::routes/edges nil {:hello "world", :this :is-nice})
+  (name->href ::routes/edges nil {:hello "world", :this :is-nice})
   ;; => "/ui/edges?hello=world&this=is-nice"
 
   ;; Dynamic routes
-  (href ::routes/edges-details {:uuid "1234"})
+  (name->href ::routes/edges-details {:uuid "1234"})
   ;; => "/ui/edges/1234"
 
   ;; - this works, but omits :hello "world" path parameter, because it wasn't declared for ::routes/edges-details
-  (href ::routes/edges-details {:uuid "1234" :hello "world"})
+  (name->href ::routes/edges-details {:uuid "1234" :hello "world"})
   ;; => "/ui/edges/1234"
 
   ;; - providing query params
-  (href ::routes/edges-details {:uuid "1234"} {:hello "world", :this :is-nice})
+  (name->href ::routes/edges-details {:uuid "1234"} {:hello "world", :this :is-nice})
   ;; => "/ui/edges/1234?hello=world&this=is-nice"
 
   ;; without path-params map as second parameter, dynamic routes return nil
   ;; So this doesn't work:
-  (href ::routes/edges-details)
+  (name->href ::routes/edges-details)
   ;; => nil
 
   ;; ...neither does this (needs :uuid)
-  (href ::routes/edges-details {:no-match "here"})
+  (name->href ::routes/edges-details {:no-match "here"})
   ;; => nil
 
 
@@ -274,17 +275,17 @@
   ;; 2. `href` works the same, so be mindful when you use it
   ;;    This means we cannot call this with a :sub-path value comprised of multiple path segments
   ;;    e.g. to navigate to "/ui/apps/this-works/perhaps/unexpected"
-  (href ::routes/apps-details {:sub-path "this-works/perhaps/unexpected"} {:query-param "hello/world"})
+  (name->href ::routes/apps-details {:sub-path "this-works/perhaps/unexpected"} {:query-param "hello/world"})
   ;; => "/ui/apps/this-works%2Fperhaps%2Funexpected?query-param=hello%2Fworld"
-  (href ::routes/apps-details {:sub-path "sixsq/blackbox"})
+  (name->href ::routes/apps-details {:sub-path "sixsq/blackbox"})
 
   ;; so construct the path using the parent route...
-  (str (href ::routes/apps) "/" "this-works/as/expected")
+  (str (name->href ::routes/apps) "/" "this-works/as/expected")
   ;; => "/ui/apps/this-works/as/expected"
-  (str (href ::routes/apps) "/" "sixsq/blackbox")
+  (str (name->href ::routes/apps) "/" "sixsq/blackbox")
 
   ;; ...or with pathify helper
-  (pathify [(href ::routes/apps) "this-works" "as" "expected"])
+  (pathify [(name->href ::routes/apps) "this-works" "as" "expected"])
   ;; => "/ui/apps/this-works/as/expected"
 
   ;; or with to-pathname helper, which adds base-path

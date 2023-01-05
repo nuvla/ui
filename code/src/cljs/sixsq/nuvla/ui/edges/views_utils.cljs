@@ -3,14 +3,13 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.edges.events :as events]
     [sixsq.nuvla.ui.edges.subs :as subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.routing.utils :refer [pathify]]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -57,7 +56,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
-      (let [href                  (pathify [config/base-path "edges" (general-utils/id->uuid id)])
+      (let [href                  (name->href :edges-details {:uuid  (general-utils/id->uuid id)})
             next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
             creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}

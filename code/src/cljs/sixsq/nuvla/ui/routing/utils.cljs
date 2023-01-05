@@ -1,7 +1,18 @@
 (ns sixsq.nuvla.ui.routing.utils
   (:require [clojure.string :as str]
             [reitit.core :refer [match-by-path]]
+            [reitit.frontend.easy :as rfe]
             [sixsq.nuvla.ui.config :as config]))
+
+(defn href
+  "Return relative url for given route. Url can be used in HTML links."
+  ([k]
+   (href k nil nil))
+  ([k params]
+   (href k params nil))
+  ([k params query]
+   (rfe/href k params query)))
+
 
 (defn decode-query-string [path]
   (some->

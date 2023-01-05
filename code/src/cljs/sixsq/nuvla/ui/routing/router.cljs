@@ -146,15 +146,6 @@
     (:current-route db)))
 
 
-(defn href
-  "Return relative url for given route. Url can be used in HTML links."
-  ([k]
-   (href k nil nil))
-  ([k params]
-   (href k params nil))
-  ([k params query]
-   (rfe/href k params query)))
-
 
 (defn on-navigate [new-match]
   (when new-match

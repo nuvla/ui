@@ -371,7 +371,8 @@
 
 (def component-options
   [{:key "nuvlabox", :text "NuvlaEdge Telemetry", :value "nuvlabox"}
-   {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}
+   ;; FIXME: Enable creation of IS notification configurations when IS starts producing metrics.
+   #_{:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}
    {:key "data-record", :text "Data Record", :value "data-record"}])
 
 

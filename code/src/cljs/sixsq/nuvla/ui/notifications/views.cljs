@@ -267,10 +267,10 @@
     (fn []
       (let [header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
             {:keys [name description method-ids enabled category resource-id resource-kind]} @subscription]
-        [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-edit-subscription-modal])}
+
 
          [uix/ModalHeader {:header header}]
 
@@ -436,13 +436,13 @@
 
 (def metrics-with-customizable-dev-name #{utils/network-rx utils/network-tx utils/disk})
 
-(defn- DeviceNameOptions []
+(defn- DeviceNameOptions
+  [{disabled? :disabled?}]
   (let [tr (subscribe [::i18n-subs/tr])
         criteria (subscribe [::subs/criteria])
         use-other-than-default? (r/atom (or (:dev-name @criteria) false))]
     (fn []
       (let [metric-name (:metric @criteria)]
-        "hello"
         (when (metrics-with-customizable-dev-name metric-name)
           [ui/TableCell {:col-span 2
                          :class "font-weight-400"}
@@ -454,6 +454,7 @@
             [ui/Checkbox {:style {:margin-right 2}
                           :label (some->> (metric-name->use-other-translation-key metric-name) (@tr))
                           :default-checked @use-other-than-default?
+                          :read-only disabled?
                           :on-change (ui-callback/checked
                                       (fn [checked?]
                                         (when (not checked?)
@@ -463,12 +464,14 @@
               [ui/Input {:type :text
                          :placeholder (@tr [(keyword (str "subs-notif-name-of-" metric-name "-to-monitor"))])
                          :name :other-disk-name
+                         :read-only disabled?
                          :default-value (or (:dev-name @criteria) "")
                          :on-change (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
                          :style {:flex 1}}])]])))))
 
 
-(defn- ResetIntervalOptions []
+(defn- ResetIntervalOptions
+  [{disabled? :disabled?}]
   (let [tr                   (subscribe [::i18n-subs/tr])
         criteria             (subscribe [::subs/criteria])
         validate-form?       (subscribe [::subs/validate-form?])]
@@ -483,7 +486,7 @@
                          :class "font-weight-400"}
            [:div {:style {:min-height 40}
                   :class "grid-2-cols-responsive"}
-            [:div {:on-click #(dispatch [::events/choose-monthly-reset])
+            [:div {:on-click #(dispatch (when  (not disabled?) [::events/choose-monthly-reset]))
                    :style {:display :flex :align-items :center :opacity (if monthly-reset? 1 0.4)}}
              [:input {:type :radio
                       :name :reset
@@ -498,6 +501,7 @@
                                     (not (s/valid? ::spec/reset-start-date start-date-of-month)))
                         :default-value start-date-of-month
                         :disabled custom-reset?
+                        :read-only disabled?
                         :style {:justify-self :start
                                 :margin-left "0.5rem"
                                 :max-width "100px"
@@ -508,7 +512,7 @@
                                                                   :criteria
                                                                   {:reset-start-date (js/Number %)}]))}]
              [:div (ff/help-popup "min: 1, max: 31")]]
-            [:div {:on-click #(dispatch [::events/choose-custom-reset])
+            [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-custom-reset]))
                    :style {:display :flex :align-items :center :align-self "end" :opacity (if custom-reset? 1 0.4)}}
              [:input {:type :radio
                       :name :reset
@@ -521,6 +525,7 @@
                         :error (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
                         :default-value (or custom-interval-days 1)
                         :disabled monthly-reset?
+                        :read-only disabled?
                         :style {:justify-self :start
                                 :margin-left "0.5rem"
                                 :max-width "100px"
@@ -863,9 +868,9 @@
                   :value     (:value criteria)
                   :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])
               [ui/TableRow
-               [ResetIntervalOptions]]
+               [ResetIntervalOptions {:disabled? true}]]
               [ui/TableRow
-               [DeviceNameOptions]]]]
+               [DeviceNameOptions {:disabled? true}]]]]
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form
            [ui/FormGroup

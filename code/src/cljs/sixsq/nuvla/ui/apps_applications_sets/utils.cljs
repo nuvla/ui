@@ -4,7 +4,8 @@
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps-applications-sets.events :as events]
-    [sixsq.nuvla.ui.plugins.module :as module-plugin]))
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
+    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]))
 
 
 ;; Deserialization functions: module->db
@@ -15,7 +16,8 @@
         (for [[id {:keys [name description]}] (map-indexed vector applications-sets)]
           [id {:id                         id
                ::spec/apps-set-name        name
-               ::spec/apps-set-description description}])))
+               ::spec/apps-set-description description
+               ::spec/apps-selector        (module-selector/build-spec)}])))
 
 (defn module->db
   [db {:keys [content] :as module}]

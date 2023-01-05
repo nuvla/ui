@@ -40,8 +40,6 @@
 (re-frame/reg-fx
   :push-state
   (fn [path]
-    (js/console.error "path" path)
-
     ;; .pushState does not call popState, that's why we have to call rfh/-on-navigate
     ;; when navigating by raw path (from reitit source)
     (.pushState js/window.history nil {} path)
@@ -61,7 +59,6 @@
 (re-frame/reg-fx
   :push-state-reitit
   (fn [route]
-    (js/console.error "ROUTE" route)
     (apply rfe/push-state route)))
 
 (re-frame/reg-event-fx
@@ -75,7 +72,6 @@
  (fn [coeffects]
    (let [location (.-location js/window)
          path-name (.-pathname location)
-         _ (js/console.error path-name)
          path-parts   (->> (split-path-alias (.-pathname location))
                            (map js/decodeURIComponent)
                            vec)
@@ -92,7 +88,6 @@
 (re-frame/reg-event-fx
   ::navigate-back
   (fn []
-    (js/console.error "HEELOOOOO")
     {:fx [[:navigate-back!]] }))
 
 
@@ -150,7 +145,6 @@
 
 (defn on-navigate [new-match]
   (when new-match
-    (js/console.error "on-navigate" new-match)
     (re-frame/dispatch [::navigated-protected new-match])))
 
 

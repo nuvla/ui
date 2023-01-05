@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.main.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.config :as config]))
+    [sixsq.nuvla.ui.config :as config]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href]]))
 
 (s/def ::loading? boolean?)
 
@@ -57,66 +58,66 @@
                                        :notify?         true}
                ::actions-interval     {}
                ::content-key          (random-uuid)
-               ::pages                {"welcome"         {:url        "/ui/welcome"
+               ::pages                {"welcome"         {:url        (name->href :home)
                                                           :label-kw   :home
                                                           :icon       "home"
                                                           :protected? false
                                                           :order      0}
-                                       "documentation"   {:url        "/ui/documentation"
+                                       "documentation"   {:url        (name->href :documentation)
                                                           :label-kw   :api-doc
                                                           :icon       "info"
                                                           :protected? false}
-                                       "dashboard"       {:url        "/ui/dashboard"
+                                       "dashboard"       {:url        (name->href :dashboard)
                                                           :label-kw   :dashboard
                                                           :icon       "dashboard"
                                                           :protected? true
                                                           :order      10}
-                                       "apps"            {:url        "/ui/apps"
+                                       "apps"            {:url        (name->href :apps)
                                                           :label-kw   :apps
                                                           :icon       "fas fa-store"
                                                           :protected? true
                                                           :order      20}
-                                       "deployments"     {:url        "/ui/deployments"
+                                       "deployments"     {:url        (name->href :deployments)
                                                           :label-kw   :deployments
                                                           :name       "deployments"
                                                           :icon       "rocket"
                                                           :protected? true
                                                           :order      30}
-                                       "deployment-sets" {:url        "/ui/deployment-sets"
+                                       "deployment-sets" {:url        (name->href :deployment-sets)
                                                           :label-kw   :deployment-sets
                                                           :name       "deployments-sets"
                                                           :icon       "bullseye"
                                                           :protected? true
                                                           :hidden?    (not config/debug?)
                                                           :order      31}
-                                       "edges"           {:url        "/ui/edges"
+                                       "edges"           {:url        (name->href :edges)
                                                           :label-kw   :edges
                                                           :name       "edges"
                                                           :icon       "box"
                                                           :protected? true
                                                           :order      40}
-                                       "credentials"     {:url        "/ui/credentials"
+                                       "credentials"     {:url        (name->href :credentials)
                                                           :label-kw   :credentials
                                                           :icon       "key"
                                                           :protected? true
                                                           :order      50}
-                                       "notifications"   {:url        "/ui/notifications"
+                                       "notifications"   {:url         (name->href :notifications)
                                                           :label-kw   :notifications
                                                           :icon       "bell"
                                                           :protected? true
                                                           :order      60}
-                                       "data"            {:url             "/ui/data"
+                                       "data"            {:url             (name->href :data)
                                                           :label-kw        :data
                                                           :icon            "database"
                                                           :protected?      true
                                                           :iframe-visible? true
                                                           :order           70}
-                                       "clouds"          {:url        "/ui/clouds"
+                                       "clouds"          {:url        (name->href :clouds)
                                                           :label-kw   :infra-service-short
                                                           :icon       "cloud"
                                                           :protected? true
                                                           :order      80}
-                                       "api"             {:url        "/ui/api"
+                                       "api"             {:url        (name->href :api)
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false

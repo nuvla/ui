@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.notifications.events
   (:require
-    [clojure.string :refer [blank?]]
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]

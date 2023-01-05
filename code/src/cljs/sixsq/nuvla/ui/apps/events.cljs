@@ -44,7 +44,9 @@
                         {:id        refresh-action-get-deployment
                          :frequency 20000
                          :event     [::deployments-events/get-deployments
-                                     (str "module/id='" (:id module) "'")]}]]]})))
+                                     {:filter-external-arg (str "module/id='" (:id module) "'")
+                                      :pagination-db-path  ::apps-application-spec/deployment-pagination}]}]]]})))
+
 
 
 ;; Validation
@@ -192,7 +194,8 @@
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::deployments-events/get-deployments
-                                                    (str "module/id='" (:id %) "'")]))]})))
+                                                    {:filter-external-arg (str "module/id='" (:id %) "'")
+                                                     :pagination-db-path  ::apps-application-spec/deployment-pagination}]))]})))
 
 
 (reg-event-db
@@ -556,29 +559,23 @@
   ::validate-docker-compose
   (fn [{db :db} [_ module-or-id]]
     (let [validate-op "validate-docker-compose"
-          id          (if (string? module-or-id) module-or-id (:id module-or-id))]
-      (when (or
-              (string? module-or-id)
-              (general-utils/can-operation? validate-op module-or-id))
-        {:db (assoc db ::spec/validate-docker-compose {:loading?  true
-                                                       :module-id id})
-         ::cimi-api-fx/operation
-         [id validate-op
-          (fn [response]
-            (if (instance? js/Error response)
-              (let [{:keys [status message]} (response/parse-ex-info response)]
-                (dispatch [::messages-events/add
-                           {:header  (cond-> (str "error on operation "
-                                                  validate-op " for " id)
-                                             status (str " (" status ")"))
-                            :content message
-                            :type    :error}]))
-              (dispatch [::job-events/wait-job-to-complete
-                         {:job-id              (:location response)
-                          :on-complete         #(dispatch
-                                                  [::docker-compose-validation-complete %])
-                          :refresh-interval-ms 5000}])))]}))))
+          id          (if (string? module-or-id) module-or-id (:id module-or-id))
+          on-success  (fn [response]
+                        (dispatch [::job-events/wait-job-to-complete
+                                   {:job-id              (:location response)
+                                    :on-complete         #(dispatch [::docker-compose-validation-complete %])
+                                    :refresh-interval-ms 5000}]))]
+      (when (or (string? module-or-id)
+                (general-utils/can-operation? validate-op module-or-id))
+        {:db                     (assoc db ::spec/validate-docker-compose {:loading?  true
+                                                                           :module-id id})
+         ::cimi-api-fx/operation [id validate-op on-success]}))))
 
+(defn version-id->index
+  [{:keys [versions] :as module}]
+  (let [version-id   (-> module :content :id)
+        map-versions (utils/map-versions-index versions)]
+    (ffirst (filter #(-> % second :href (= version-id)) map-versions))))
 
 (reg-event-fx
   ::edit-module
@@ -609,7 +606,7 @@
                                                                status (str " (" status ")"))
                                               :content message
                                               :type    :error}]))
-                                (do (dispatch [::get-module])
+                                (do (dispatch [::get-module (version-id->index %)])
                                     (when (= subtype "application")
                                       (dispatch [::validate-docker-compose %]))
                                     (dispatch [::main-events/changes-protection? false])))]}))))
@@ -663,13 +660,6 @@
                                        (when (= status 409)
                                          (dispatch [::name nil])
                                          (dispatch [::validate-form])))]})))
-
-
-(defn version-id->index
-  [{:keys [versions] :as module}]
-  (let [version-id   (-> module :content :id)
-        map-versions (utils/map-versions-index versions)]
-    (ffirst (filter #(-> % second :href (= version-id)) map-versions))))
 
 
 (reg-event-db

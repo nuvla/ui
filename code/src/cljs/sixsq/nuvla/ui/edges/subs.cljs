@@ -40,7 +40,9 @@
   ::one-edge-with-only-major-version
   :<- [::edges-status]
   (fn [edges-status [_ ids]]
-    (some (comp nil? :nuvlabox-engine-version edges-status) ids)))
+    (if edges-status
+      (some (comp nil? :nuvlabox-engine-version edges-status) ids)
+      false)))
 
 (reg-sub
   ::nuvlabox-locations

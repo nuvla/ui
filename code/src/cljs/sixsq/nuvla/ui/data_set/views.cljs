@@ -372,7 +372,8 @@
 (defn DataRecordRow
   [{:keys [id name description tags created timestamp bucket content-type
            infrastructure-service resource:deployment] :as _data-record}]
-  (let [data-records-set (subscribe [::subs/selected-data-record-ids])]
+  (let [locale           (subscribe [::i18n-subs/locale])
+        data-records-set (subscribe [::subs/selected-data-record-ids])]
     (fn [_data-record]
       ^{:key id}
       (let [uuid            (utils-general/id->uuid id)
@@ -388,7 +389,7 @@
                         (.stopPropagation event))}]]
          [ui/TableCell name]
          [ui/TableCell description]
-         [ui/TableCell (values/format-created created)]
+         [ui/TableCell (time/parse-ago created @locale)]
          [ui/TableCell timestamp]
          [ui/TableCell bucket]
          [ui/TableCell content-type]

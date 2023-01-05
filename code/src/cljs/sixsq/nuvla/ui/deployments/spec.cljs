@@ -1,8 +1,9 @@
 (ns sixsq.nuvla.ui.deployments.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
 
 (s/def ::deployments any?)
 (s/def ::deployments-summary any?)
@@ -23,19 +24,25 @@
 (s/def ::selected-set set?)
 (s/def ::select-all? boolean?)
 (s/def ::bulk-jobs-monitored any?)
+(s/def ::bulk-jobs any?)
+
+(def default-ordering {:field :created :order "desc"})
 
 (def defaults {::deployments-search      (full-text-search-plugin/build-spec)
-               ::additional-filter       nil
+               ::additional-filter        nil
                ::deployments             nil
                ::deployments-summary     nil
                ::deployments-summary-all nil
                ::deployments-params-map  nil
-               ::filter-external         nil
-               ::view                    "cards"
+               ::filter-external          nil
+               ::view                    "table"
                ::state-selector          "all"
                ::bulk-update-modal       nil
                ::selected-set            #{}
                ::select-all?             false
                ::bulk-jobs-monitored     (sorted-map)
-               ::pagination              (pagination-plugin/build-spec
-                                           :default-items-per-page 8)})
+               ::bulk-jobs               (bulk-progress-plugin/build-spec)
+               ::ordering                (build-ordering)})
+
+(def pagination-default {::pagination (pagination-plugin/build-spec
+                                        :default-items-per-page 25)})

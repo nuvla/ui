@@ -210,13 +210,6 @@
                                           :frequency 60000
                                           :event     [::check-notifications]}]}))
 
-(reg-event-fx
-  ::set-message
-  (fn [{db :db} [_ type message]]
-    (cond-> {:db (assoc db ::spec/message [type, message])}
-            message (assoc :dispatch-later [{:ms       10000
-                                             :dispatch [::set-message nil]}]))))
-
 (reg-event-db
   ::force-refresh-content
   (fn [db]

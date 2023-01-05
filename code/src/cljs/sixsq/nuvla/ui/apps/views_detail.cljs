@@ -39,11 +39,11 @@
 (def edit-cell-left-padding 24)
 
 (defn LicenseTitle
-  []
+  [{:keys [full] :or {full false}}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "drivers license"}]
-     (str/capitalize (@tr [:license]))]))
+     [uix/Icon {:name "book"}]
+     (@tr [(if full :eula-full :eula)])]))
 
 
 (defn PricingTitle
@@ -164,78 +164,78 @@
 
 
 (defn MenuBar []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        module        (subscribe [::subs/module])
-        module-common (subscribe [::subs/module-common])
-        is-new?       (subscribe [::subs/is-new?])
-        page-changed? (subscribe [::main-subs/changes-protection?])
-        form-valid?   (subscribe [::subs/form-valid?])
-        editable?     (subscribe [::subs/editable?])
-        module-id     (subscribe [::subs/module-id-version])
-        copy-module   (subscribe [::subs/copy-module])]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        module           (subscribe [::subs/module])
+        is-new?          (subscribe [::subs/is-new?])
+        page-changed?    (subscribe [::main-subs/changes-protection?])
+        form-valid?      (subscribe [::subs/form-valid?])
+        editable?        (subscribe [::subs/editable?])
+        module-id        (subscribe [::subs/module-id-version])
+        is-project?      (subscribe [::subs/is-project?])
+        is-app?          (subscribe [::subs/is-app?])
+        can-copy?        (subscribe [::subs/can-copy?])
+        paste-disabled?  (subscribe [::subs/paste-disabled?])
+        launch-disabled? (subscribe [::subs/launch-disabled?])
+        can-publish?     (subscribe [::subs/can-publish?])
+        can-unpublish?   (subscribe [::subs/can-unpublish?])]
     (fn []
-      (let [subtype          (::spec/subtype @module-common)
-            launchable?      (not= "project" subtype)
-            launch-disabled? (or @is-new? @page-changed?)
-            add?             (= "project" subtype)
-            add-disabled?    (or @is-new? @page-changed?)
-            published?       (utils/published? @module @module-id)]
+      [components/StickyBar
+       [ui/Menu {:borderless true}
+        (when @editable?
+          [uix/MenuItem
+           {:name     (@tr [:save])
+            :icon     "save"
+            :disabled (edit-button-disabled? @page-changed? @form-valid?)
+            :on-click save-callback}])
 
-        [components/StickyBar
-         [ui/Menu {:borderless true}
-          (when @editable?
-            [uix/MenuItem
-             {:name     (@tr [:save])
-              :icon     "save"
-              :disabled (edit-button-disabled? @page-changed? @form-valid?)
-              :on-click save-callback}])
+        (when @is-app?
+          [uix/MenuItem
+           {:name     (@tr [:launch])
+            :icon     "rocket"
+            :disabled @launch-disabled?
+            :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                  [::deployment-dialog-events/create-deployment
+                                   @module-id :infra-services]])}])
 
-          (when launchable?
-            [uix/MenuItem
-             {:name     (@tr [:launch])
-              :icon     "rocket"
-              :disabled launch-disabled?
-              :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                    [::deployment-dialog-events/create-deployment
-                                     @module-id :infra-services]])}])
+        (when @is-project?
+          [uix/MenuItem
+           {:name     (@tr [:add])
+            :icon     "add"
+            :disabled @launch-disabled?
+            :on-click #(dispatch [::events/open-add-modal])}])
+        (when @can-copy?
+          [ui/Popup
+           {:trigger        (r/as-element
+                              [ui/MenuItem
+                               {:name     (@tr [:copy])
+                                :icon     "copy"
+                                :disabled @is-new?
+                                :on-click #(dispatch [::events/copy])}])
+            :content        (@tr [:module-copied])
+            :on             "click"
+            :position       "top center"
+            :wide           true
+            :hide-on-scroll true}])
 
-          (when add?
-            [uix/MenuItem
-             {:name     (@tr [:add])
-              :icon     "add"
-              :disabled add-disabled?
-              :on-click #(dispatch [::events/open-add-modal])}])
-          (when (not= "project" subtype)
-            [ui/Popup
-             {:trigger        (r/as-element [ui/MenuItem
-                                             {:name     (@tr [:copy])
-                                              :icon     "copy"
-                                              :disabled @is-new?
-                                              :on-click #(dispatch [::events/copy])}])
-              :content        (@tr [:module-copied])
-              :on             "click"
-              :position       "top center"
-              :wide           true
-              :hide-on-scroll true}])
+        (when @is-project?
+          [uix/MenuItem
+           {:name     (@tr [:paste])
+            :icon     "paste"
+            :disabled @paste-disabled?
+            :on-click #(dispatch [::events/open-paste-modal])}])
 
-          (when (= "project" subtype)
-            [uix/MenuItem
-             {:name     (@tr [:paste])
-              :icon     "paste"
-              :disabled (when (nil? @copy-module) true)
-              :on-click #(dispatch [::events/open-paste-modal])}])
+        (when (general-utils/can-delete? @module)
+          [DeleteButton @module])
 
-          (when (general-utils/can-delete? @module)
-            [DeleteButton @module])
+        (when @can-unpublish?
+          [UnPublishButton @module])
 
-          (when (not= "project" subtype)
-            (if published?
-              [UnPublishButton @module]
-              [PublishButton @module]))
+        (when @can-publish?
+          [PublishButton @module])
 
-          [components/RefreshMenu
-           {:refresh-disabled? @is-new?
-            :on-refresh        #(dispatch [::events/refresh])}]]]))))
+        [components/RefreshMenu
+         {:refresh-disabled? @is-new?
+          :on-refresh        #(dispatch [::events/refresh])}]]])))
 
 
 (defn save-modal
@@ -1035,7 +1035,7 @@
       (let [amount       (:cent-amount-daily @price)
             follow-trial (boolean (:follow-customer-trial @price))]
         [:<>
-         (when @editable?
+         (when (and @editable? (nil? amount))
            [ui/Message {:info true}
             (@tr [:define-price])])
          [ui/Input {:labelPosition "right", :type "text"
@@ -1063,17 +1063,17 @@
                 "€/" (str/capitalize (@tr [:month])))]]
          (when @editable?
            [:span
-           [ui/Checkbox {:label          (@tr [:follow-customer-trial])
-                         :defaultChecked follow-trial
-                         :toggle         true
-                         :on-change      (ui-callback/checked
-                                           #(do
-                                              (dispatch [::events/follow-customer-trial %1])
-                                              (dispatch [::main-events/changes-protection? true])
-                                              (dispatch [::events/validate-form])))}]
-           " "
-           [ui/Popup {:content (@tr [:follow-customer-trial-help])
-                      :trigger (r/as-element [ui/Icon {:name "info circle"}])}]])
+            [ui/Checkbox {:label          (@tr [:follow-customer-trial])
+                          :defaultChecked follow-trial
+                          :toggle         true
+                          :on-change      (ui-callback/checked
+                                            #(do
+                                               (dispatch [::events/follow-customer-trial %1])
+                                               (dispatch [::main-events/changes-protection? true])
+                                               (dispatch [::events/validate-form])))}]
+            " "
+            [ui/Popup {:content (@tr [:follow-customer-trial-help])
+                       :trigger (r/as-element [ui/Icon {:name "info circle"}])}]])
          ]))))
 
 
@@ -1114,14 +1114,14 @@
             {:keys [license-name]} @license]
         [:<>
          (when (not= "component" subtype)
-           [:h2 [LicenseTitle]])
+           [:h2 [LicenseTitle {:full true}]])
          (if (or @editable? (some? @license))
            [ui/Form
             (when @editable?
               [:<>
                [ui/Message {:info true}
-                "Choose a license to protect yourself and your users/customers. This is mandatory for published and paying apps."]
-               [:div [:p {:style {:padding-bottom 10}} [:b "Choose a known open source license"]]]
+                (@tr [:choose-eula])]
+               [:div [:p {:style {:padding-bottom 10}} [:b (@tr [:choose-predefined-one])]]]
                [ui/Dropdown {:options     options
                              :placeholder "Select a license"
                              :search      true
@@ -1132,22 +1132,20 @@
                                               (dispatch [::main-events/changes-protection? true])
                                               (dispatch [::events/set-license value @licenses])
                                               (reset! is-custom? false)))}]
-               [:div [:p {:style {:padding "10px 0"}} [:b "Or provide a custom license"]]]
-               [ui/Checkbox {:label     (@tr [:custom-license])
+               [:div [:p {:style {:padding "10px 0"}} [:b (@tr [:provide-custom-one])]]]
+               [ui/Checkbox {:label     (str/capitalize (@tr [:custom]))
                              :checked   @is-custom?
                              :on-change (ui-callback/value
-                                          (fn [_]
-                                            (dispatch [::main-events/changes-protection? true])
-                                            (reset! is-custom? (not @is-custom?))
-                                            ))}]
+                                          #(do
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (reset! is-custom? (not @is-custom?))))}]
                [ui/Message {:info true}
-                (@tr [:license-generator-details])
-                ": "
-                [:a {:href "https://www.eulatemplate.com/eula-generator/"} (@tr [:license-generator])]]])
+                [:a {:href   "https://www.eulatemplate.com/eula-generator/"
+                     :target "_blank"} (@tr [:eula-generator-details])]]])
             [ui/Table {:compact true, :definition true}
              [ui/TableBody
               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
-               :spec ::spec/license-name, :validate-form? @validate-form?,
+               :spec (if @is-custom? ::spec/license-name any?), :validate-form? @validate-form?,
                :required? true, :default-value (:license-name @license),
                :on-change (partial on-change ::events/license-name)
                :on-validation ::apps-application-events/set-license-validation-error]
@@ -1156,12 +1154,12 @@
                :required? false, :default-value (:license-description @license),
                :on-change (partial on-change ::events/license-description)]
               [uix/TableRowField (@tr [:url]), :key "license-url",
-               :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
+               :editable? is-editable?, :spec (if @is-custom? ::spec/license-url any?), :validate-form? @validate-form?,
                :required? true, :default-value (:license-url @license),
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]
            [ui/Message {:info true}
-            (@tr [:license-not-defined])])]))))
+            (@tr [:eula-not-defined])])]))))
 
 
 (defn AuthorVendorRow

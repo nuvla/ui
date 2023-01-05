@@ -14,7 +14,8 @@
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
     [sixsq.nuvla.ui.session.events :as session-events]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 
 (defn dev-setup []
@@ -69,6 +70,7 @@
   (patch-process)
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
+  (dispatch-sync [::pagination-plugin/init-paginations])
   (dispatch-sync [::i18n-events/set-locale])
   (dispatch-sync [::api-events/get-cloud-entry-point])
   (dispatch-sync [::main-events/get-ui-config])

@@ -6,17 +6,15 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.deployments.utils :as utils]
-    [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
-(def refresh-action-nuvlaboxes-id :dashboard-get-nuvlaboxes-summary)
 
 (reg-event-fx
   ::init
@@ -26,7 +24,7 @@
 
 (reg-event-fx
   ::refresh
-  (fn []
+  (fn [_ [_ db-path]]
     {:fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000
@@ -34,7 +32,7 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-id
                        :frequency 20000
-                       :event     [::get-deployments]}]]]}))
+                       :event     [::get-deployments {:pagination-db-path db-path}]}]]]}))
 
 (reg-event-db
   ::set-deployments-params-map
@@ -64,7 +62,8 @@
   ::get-deployments
   (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
-                ::spec/filter-external] :as db} :db} [_ filter-external-arg]]
+                ::spec/filter-external
+                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path]}]]
     (let [filter-external (or filter-external-arg filter-external)
           state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param
@@ -76,10 +75,10 @@
       {:db                  (assoc db ::spec/filter-external filter-external)
        ::cimi-api-fx/search [:deployment
                              (->> {:aggregation "terms:state"
-                                   :orderby     "created:desc"
+                                   :orderby     (ordering->order-string (or ordering spec/default-ordering))
                                    :filter      filter-str}
                                   (pagination-plugin/first-last-params
-                                    db [::spec/pagination]))
+                                    db [(or pagination-db-path ::spec/pagination)]))
                              #(dispatch [::set-deployments %])]})))
 
 (reg-event-fx
@@ -125,16 +124,8 @@
 (reg-event-fx
   ::stop-deployment
   (fn [_ [_ href]]
-    {::cimi-api-fx/operation
-     [href "stop"
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error stopping deployment " href)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-         (dispatch [::get-deployments]))]}))
+    (let [on-success #(dispatch [::get-deployments])]
+      {::cimi-api-fx/operation [href "stop" on-success]})))
 
 (reg-event-fx
   ::set-state-selector
@@ -178,14 +169,10 @@
   (fn [{db :db} [_ bulk-action data dispatch-vec]]
     (cond-> {::cimi-api-fx/operation-bulk
              [:deployment
-              (fn [response]
-                (dispatch [::job-events/wait-job-to-complete
-                           {:job-id              (:location response)
-                            :on-complete         #(do
-                                                    (dispatch [::add-bulk-job-monitored %])
-                                                    (dispatch [::reset-selected-set]))
-                            :on-refresh          #(dispatch [::add-bulk-job-monitored %])
-                            :refresh-interval-ms 10000}]))
+              (fn [{:keys [location] :as _response}]
+                (dispatch [::bulk-progress-plugin/monitor
+                           [::spec/bulk-jobs] location])
+                (dispatch [::reset-selected-set]))
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
 
@@ -222,8 +209,3 @@
   ::add-bulk-job-monitored
   (fn [db [_ {:keys [id] :as job}]]
     (update db ::spec/bulk-jobs-monitored assoc id job)))
-
-(reg-event-db
-  ::dissmiss-bulk-job-monitored
-  (fn [db [_ job-id]]
-    (update db ::spec/bulk-jobs-monitored dissoc job-id)))

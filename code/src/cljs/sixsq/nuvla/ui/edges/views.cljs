@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.table :refer [Table]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
@@ -26,13 +27,14 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
     [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
-(def view-type (r/atom :cards))
+(def view-type (r/atom :table))
 (def show-state-statistics (r/atom false))
 
 
@@ -404,7 +406,7 @@
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (subscribe [::subs/nuvlabox-releases-by-id])
-        first-nb-release            (->> @nb-releases
+        first-nb-release           (->> @nb-releases
                                         (remove :pre-release)
                                         first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
@@ -531,8 +533,8 @@
                                    :placeholder (@tr [:none])
                                    :value       (:vpn-server-id @creation-data)
                                    :on-change   (ui-callback/callback
-                                                 :value #(swap! creation-data assoc
-                                                                :vpn-server-id %))
+                                                  :value #(swap! creation-data assoc
+                                                                 :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
 
                  [ui/Checkbox {:toggle    true
@@ -576,30 +578,30 @@
                       [ui/Message {:content (str/capitalize
                                               (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]))]
 
-                 (let [{nb-rel                                          :nb-rel
-                        nb-assets                                       :nb-assets
-                        {:keys [compose-files url]}  :nb-selected}
+                 (let [{nb-rel                      :nb-rel
+                        nb-assets                   :nb-assets
+                        {:keys [compose-files url]} :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
                     [edges-detail/DropdownReleases
-                     {:value       nb-rel
-                      :on-change   (ui-callback/value
-                                    (fn [value]
-                                      (swap! nuvlabox-release-data
-                                             assoc :nb-rel value)
-                                      (let [nb-selected (get @nb-releases-by-id value)]
-                                        (swap! creation-data assoc
-                                               :version (-> nb-selected
-                                                            :release
-                                                            utils/get-major-version
-                                                            general-utils/str->int))
-                                        (swap! nuvlabox-release-data
-                                               assoc :nb-selected nb-selected)
-                                        (swap! nuvlabox-release-data assoc :nb-assets
-                                               (set (map :scope (:compose-files nb-selected)))))
-                                      ))}]
+                     {:value     nb-rel
+                      :on-change (ui-callback/value
+                                   (fn [value]
+                                     (swap! nuvlabox-release-data
+                                            assoc :nb-rel value)
+                                     (let [nb-selected (get @nb-releases-by-id value)]
+                                       (swap! creation-data assoc
+                                              :version (-> nb-selected
+                                                           :release
+                                                           utils/get-major-version
+                                                           general-utils/str->int))
+                                       (swap! nuvlabox-release-data
+                                              assoc :nb-selected nb-selected)
+                                       (swap! nuvlabox-release-data assoc :nb-assets
+                                              (set (map :scope (:compose-files nb-selected)))))
+                                     ))}]
 
                     [:a {:href   url
                          :target "_blank"
@@ -728,7 +730,7 @@
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox} managers]
   (let [uuid                  (general-utils/id->uuid id)
-        locale                (subscribe [::i18n-subs/locale])
+        locale                @(subscribe [::i18n-subs/locale])
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
@@ -740,15 +742,15 @@
       [ui/Icon {:class (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
-     [ui/TableCell (values/format-created created)]
+     [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell @creator]
-     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
+     [ui/TableCell (str refresh-interval "s")]
+     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
         [ui/Icon {:name "check"}])]]))
-
 
 (defn Pagination
   []
@@ -762,9 +764,10 @@
                                  (count (:nuvlabox-managers @current-cluster)))
                               (:count @nuvlaboxes)))]
     [pagination-plugin/Pagination
-     {:db-path      [::spec/pagination]
-      :change-event [::events/refresh-root]
-      :total-items  total-elements}]))
+     {:db-path                [::spec/pagination]
+      :change-event           [::events/refresh-root]
+      :total-items            total-elements
+      :i-per-page-multipliers [1 2 4]}]))
 
 
 (defn NuvlaboxTable
@@ -781,30 +784,28 @@
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
-        tr                (subscribe [::i18n-subs/tr])]
-    [:div style/center-items
-     [ui/Table {:compact "very", :selectable true}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
-        [ui/TableHeaderCell "state"]
-        [ui/TableHeaderCell "name"]
-        [ui/TableHeaderCell "description"]
-        [ui/TableHeaderCell (@tr [:created])]
-        [ui/TableHeaderCell (@tr [:created-by])]
-        [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
-        [ui/TableHeaderCell {:single-line true}
-         (@tr [:version])
-         (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
-        [ui/TableHeaderCell "tags"]
-        [ui/TableHeaderCell "manager"]]]
-
-      [ui/TableBody
-       (doall
-         (for [{:keys [id] :as nuvlabox} selected-nbs]
-           (when id
-             ^{:key id}
-             [NuvlaboxRow nuvlabox managers])))]]]))
+        tr                (subscribe [::i18n-subs/tr])
+        columns           [{:field-key :online :header-content [ui/Icon {:name "heartbeat"}]}
+                           {:field-key :state}
+                           {:field-key :name}
+                           {:field-key :description}
+                           {:field-key :created}
+                           {:field-key :created-by}
+                           {:field-key      :refresh-interval
+                            :header-content (str/lower-case (@tr [:report-interval]))}
+                           {:field-key :last-online :no-sort? true}
+                           {:field-key      :version :no-sort? true
+                            :header-content [:<> (@tr [:version])
+                                             (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
+                           {:field-key :tags :no-sort? true}
+                           {:field-key :manager :no-sort? true}]]
+    [Table {:sort-config {:db-path     ::spec/ordering
+                          :fetch-event ::events/get-nuvlaboxes}
+            :columns     columns
+            :rows        selected-nbs
+            :table-props {:compact "very" :selectable true}
+            :cell-props  {:header {:single-line true}}
+            :row-render  (fn [row-data] [NuvlaboxRow row-data managers])}]))
 
 
 (defn NuvlaboxMapPoint

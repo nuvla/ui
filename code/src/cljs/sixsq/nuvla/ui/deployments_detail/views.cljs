@@ -329,8 +329,7 @@
 
 
 (defn ShutdownButton
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  [_deployment & _opts]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         checked?  (r/atom false)
@@ -377,8 +376,7 @@
 
 
 (defn DeleteButton
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  [_deployment & _opts]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         icon-name "trash"]
@@ -413,7 +411,7 @@
 
 
 (defn CloneButton
-  [{:keys [id data module] :as _deployment}]
+  [{:keys [id data] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
         first-step (if data :data :infra-services)
         button     (action-button
@@ -423,11 +421,41 @@
                       :popup-text  (@tr [:deployment-clone-msg])
                       :on-click    #(dispatch [::deployment-dialog-events/create-deployment
                                                id first-step])
-                      :disabled?   (nil? module)})]
+                      :disabled?   (not (general-utils/can-operation? "clone" deployment))})]
     [:<>
      [deployment-dialog-views/deploy-modal]
      button]))
 
+(defn DetachButton
+  [_deployment]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        open? (r/atom false)]
+    (fn [{:keys [id name description] :as deployment}]
+      (when (general-utils/can-operation? :detach deployment)
+        (let [text-1 (str (or name id) (when description " - ") description)
+              button (action-button
+                       {:on-click    (fn [event]
+                                       (reset! open? true)
+                                       (.stopPropagation event)
+                                       (.preventDefault event))
+                        :button-text (@tr [:detach])
+                        :popup-text  (@tr [:deployment-detach-msg])
+                        :icon-name   "times circle outline"
+                        :menu-item?  true})]
+          [uix/ModalDanger
+           {:on-close    (fn [event]
+                           (reset! open? false)
+                           (.stopPropagation event)
+                           (.preventDefault event))
+            :on-confirm  #(do
+                            (dispatch [::events/detach id])
+                            (reset! open? false))
+            :open        @open?
+            :trigger     (r/as-element button)
+            :content     [:h3 text-1]
+            :header      (@tr [:detach-deployment])
+            :danger-msg  (@tr [:deployment-detach-msg])
+            :button-text (@tr [:detach])}])))))
 
 (defn StartUpdateButton
   [{:keys [data state] :as deployment}]
@@ -616,7 +644,7 @@
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
         {:keys [id state module tags acl owner created-by
-                deployment-fleet]} @deployment
+                deployment-set deployment-set-name]} @deployment
         owners          (:owners acl)
         resolved-owners (subscribe [::session-subs/resolve-users owners])
         urls            (get-in module [:content :urls])]
@@ -666,12 +694,16 @@
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]
-        (when deployment-fleet
+        (when deployment-set
           [ui/TableRow
-           [ui/TableCell (str/capitalize (@tr [:deployment-fleet]))]
-           [ui/TableCell [values/as-link (general-utils/id->uuid deployment-fleet) :label
-                          (general-utils/id->uuid deployment-fleet)
-                          :page "deployment-fleets"]]])]]]
+           [ui/TableCell (str/capitalize (@tr [:deployment-set]))]
+           [ui/TableCell
+            [:<>
+             [ui/Icon {:name "bullseye"}]
+             [values/as-link (general-utils/id->uuid deployment-set) :label
+              (or deployment-set-name
+                  (general-utils/id->uuid deployment-set))
+              :page "deployment-sets"]]]])]]]
      (when-not (deployments-utils/stopped? state)
        [ui/Segment {:attached  false
                     :secondary true}
@@ -710,6 +742,7 @@
       [ShutdownButton deployment :menu-item? true]
       [CloneButton deployment]
       [DeleteButton deployment :menu-item? true]
+      [DetachButton deployment]
       [components/RefreshMenu
        {:action-id  refresh-action-id
         :loading?   @loading?
@@ -732,7 +765,9 @@
      (env-vars-section)
      (billing-section)
      (job-views/jobs-section)
-     (acl/TabAcls deployment (not @read-only?) ::events/edit)]))
+     (acl/TabAcls {:e          deployment
+                   :can-edit?  (not @read-only?)
+                   :edit-event ::events/edit})]))
 
 
 (defn depl-state->status

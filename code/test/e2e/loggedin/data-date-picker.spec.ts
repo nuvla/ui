@@ -7,7 +7,7 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   await page.getByRole('link', { name: 'data' }).click();
   await expect(page).toHaveURL(dataURL);
 
-  const date = new Date(new Date().setDate(new Date().getDate() - 30));
+  const date = new Date(new Date().setDate(new Date().getDate() - 25));
   date.setDate(date.getDate() - 1);
   date.setMinutes(10);
   date.setSeconds(0);
@@ -18,7 +18,9 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   await page.route('/api/data-record', (route) => {
     const payload = route.request().postDataJSON();
     const matches = payload.filter.match(/\d{4}-\d{2}-(\d{2})/);
-    expect(Number(matches?.[1]), 'should send correct day').toBe(date.getDate() - 1);
+    expect(Number(matches?.[1]), 'should send correct day').toBe(
+      new Date(new Date(date).setDate(date.getDate() - 1)).getDate()
+    );
     route.fulfill({ status: 200 });
   });
 

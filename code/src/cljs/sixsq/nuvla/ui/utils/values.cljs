@@ -6,8 +6,7 @@
     [markdown-to-hiccup.core :as md]
     [reagent.core :as r]
     [sixsq.nuvla.ui.history.views :as history]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn href?
@@ -75,11 +74,6 @@
   (if (coll? v)
     (vec (concat [ui/ListSA] (map format-item v)))
     v))
-
-
-(defn format-created
-  [created]
-  (-> created time/parse-iso8601 time/ago))
 
 
 (defn status->color

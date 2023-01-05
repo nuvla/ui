@@ -292,14 +292,14 @@
   ::toggle-enabled
   (fn [_ [_ rid enabled]]
     (if enabled
-      {::cimi-api-fx/operation [rid "enable" #() {}]}
-      {::cimi-api-fx/operation [rid "disable" #() {}]})))
+      {::cimi-api-fx/operation [rid "enable" #()]}
+      {::cimi-api-fx/operation [rid "disable" #()]})))
 
 
 (reg-event-fx
   ::set-notif-method-ids
   (fn [_ [_ subs-conf-id method-ids]]
-    {::cimi-api-fx/operation [subs-conf-id "set-notif-method-ids" #() {:method-ids method-ids}]}))
+    {::cimi-api-fx/operation [subs-conf-id "set-notif-method-ids" #() :data {:method-ids method-ids}]}))
 
 
 ;;

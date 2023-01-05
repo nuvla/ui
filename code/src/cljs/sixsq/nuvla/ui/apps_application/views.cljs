@@ -328,7 +328,8 @@
        [deployments-views/DeploymentTable
         {:no-actions     true
          :no-module-name true
-         :empty-msg      (@tr [:empty-deployment-module-msg])}])]))
+         :empty-msg      (@tr [:empty-deployment-module-msg])
+         :pagination-db-path ::spec/deployment-pagination}])]))
 
 
 (defn TabMenuVersions
@@ -391,7 +392,7 @@
          [apps-views-detail/Pricing]
          [:<>
           [ui/Message {:info true} (@tr [:no-pricing-free-app])]
-          (when editable?
+          (when @editable?
             [ui/Message {:info true} (@tr [:become-a-vendor])])])])))
 
 

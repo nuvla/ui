@@ -203,7 +203,8 @@
                                    :key     :my-apps
                                    :icon    "user"}
                         :render   render}]
-        :change-event [::load-apps db-path]}])))
+        :change-event [::load-apps db-path]
+        :ignore-changes-protection? true}])))
 
 (s/fdef AppsSelectorSection
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]

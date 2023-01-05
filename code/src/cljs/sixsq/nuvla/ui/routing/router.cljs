@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [re-frame.cofx :refer [reg-cofx]]
             [re-frame.core :as re-frame]
+            [reitit.core :as r]
             [reitit.frontend.controllers :as rfc]
             [reitit.frontend.easy :as rfe :refer [history]]
             [reitit.frontend.history :as rfh]
@@ -10,8 +11,8 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.routing.r-routes :as routes :refer [router]]
-            [sixsq.nuvla.ui.routing.utils :refer [decode-query-string]]))
+            [sixsq.nuvla.ui.routing.routes :as routes :refer [router]]
+            [sixsq.nuvla.ui.routing.utils :as utils]))
 
 (def page-alias {"nuvlabox"        "edges"
                  "edge"            "edges"
@@ -39,6 +40,9 @@
   :push-state
   (fn [path]
     (js/console.error "path" path)
+
+    ;; .pushState does not call popState, that's why we have to call rfh/-on-navigate
+    ;; when navigating by raw path (from reitit source)
     (.pushState js/window.history nil {} path)
     (rfh/-on-navigate @history path)))
 
@@ -74,7 +78,7 @@
          path-parts   (->> (split-path-alias (.-pathname location))
                            (map js/decodeURIComponent)
                            vec)
-         query-params (decode-query-string (.-search location))]
+         query-params (utils/decode-query-string (.-search location))]
      (assoc coeffects
        :path-parts   path-parts
        :query-params query-params))))
@@ -90,31 +94,50 @@
     (js/console.error "HEELOOOOO")
     {:fx [[:navigate-back!]] }))
 
+
 (re-frame/reg-event-fx
   ::navigated
-  (fn [{db :db} [_ new-match]]
+  [(re-frame/inject-cofx :get-path-parts-and-search-map)]
+  (fn [{db :db
+        path-parts :path-parts
+        query-params :query-params} [_ new-match]]
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
           new-match-with-controllers (assoc new-match :controllers controllers)]
       (js/console.log "NAVIGATING with path-raw" (:path new-match))
       {:db
-       (-> db (assoc :current-route new-match-with-controllers))
-       :fx [[:dispatch [::main-events/set-navigation-info]]]
+       (-> db (assoc :current-route new-match-with-controllers
+                     ::main-spec/nav-path path-parts
+                     ::main-spec/nav-query-params query-params))
+       :fx [[:dispatch [::main-events/bulk-actions-interval-after-navigation]]]
        ::fx/set-window-title [(strip-base-path (:path new-match))]})))
 
 (re-frame/reg-event-fx
+  ;; In case of normal anchor tag click, we do not fire ::history-events/navigate
+  ;; but let reitit/browser handle the .pushState to the history stack,
+  ;; which then fires `on-navigate` after URL changed already.
+  ;; That's why we test here again for changes-protection? and revert by
+  ;; navigating back.
   ::navigated-protected
   (fn [{{:keys [::main-spec/changes-protection?
                 ::ignore-changes-protection] :as db} :db} [_ new-match]]
-    (let [event  {:fx [[:dispatch [::navigated new-match]]]}
-          revert {:fx [[:dispatch [::navigate-back]]]}]
+    (let [new-db (assoc db ::ignore-changes-protection false)
+          event  {:fx [[:dispatch [::navigated new-match]]]
+                  :db new-db}
+          revert {:fx [[:dispatch [::navigate-back]]]
+                  :db new-db}]
       (if (and changes-protection? (not ignore-changes-protection))
         {:db (assoc db
                ::main-spec/ignore-changes-modal        event
                ::main-spec/do-not-ignore-changes-modal revert
+
+               ;; In case of not confirming ignore-chagnes-modal,
+               ;; `revert` event navigates back, again triggering this
+               ;; protected naviation event: ::ingore-changes-protection temporarily
+               ;; disables the protection.
                ::ignore-changes-protection true)}
         (merge {:db (assoc db ::ignore-changes-protection false)}
-               event)))))
+          event)))))
 
 ;;; Subscriptions ;;;
 (re-frame/reg-sub
@@ -155,26 +178,127 @@
         path          @(re-frame/subscribe [::main-subs/nav-path])]
     [:div
      (when current-route
-       [view (assoc current-route :path path)])]))
+       [view (assoc current-route :path path
+                                  :pathname (:path current-route))])]))
 
 (defn router-component []
   [router-component-internal {:router router}])
 
 
-(comment (re-frame/dispatch [::push-state-reitit :r-routes/deployments]))
-
 (comment
-  (rfe/push-state :sixsq.nuvla.ui.routing.r-routes/apps {} nil)
-  (href :sixsq.nuvla.ui.routing.r-routes/edges-details {:id :bla})
+  ;;;; MATCHING
+
+  ;; Two kinds of routes with dynamic path segments (as opposed to static paths, e.g. "ui/welcome" or "/ui/edges"):
+  ;;  1. single segments: "/ui/edges/:uuid"
+  ;;     -> only matches "/ui/edges/1234"
+  (reitit.core/match-by-path router "/ui/edges/1234")
+  ;;     => #reitit.core.Match{:template "/ui/edges/:uuid", :data {:coercion #object[reitit.coercion.spec.t_reitit$coercion$spec64688], :name :sixsq.nuvla.ui.routing.r-routes/edges-details, :view #object[sixsq$nuvla$ui$edges$views$edges_view], :link-text "edges-details"}, :result nil, :path-params {:uuid "1234"}, :path "/ui/edges/1234"}
+  ;;         -> but not "/ui/edges/1234/5678"
+  (reitit.core/match-by-path router "/ui/edges/1234/5678")
+  ;;     => #reitit.core.Match{:template "/*sub-path", :data {:coercion #object[reitit.coercion.spec.t_reitit$coercion$spec64688], :name :sixsq.nuvla.ui.routing.r-routes/catch-all, :view #object[sixsq$nuvla$ui$unknown_resource$UnknownResource]}, :result nil, :path-params {:sub-path "ui/edges/1234/5678"}, :path "/ui/edges/1234/5678"}
+  ;;        This matches the top level catch-all route "/*sub-path", which returns UnknownResource view,
+  ;;        and not "/ui/edges/:uuid"
+
+
+  ;;  2. catch-alls "/apps/*sub-path"
+  ;;     -> matches all sub paths of apps:
+  (r/match-by-path router "/ui/apps/1234")
+  ;;     => #reitit.core.Match{:template "/ui/apps/*sub-path", :data {:coercion #object[reitit.coercion.spec.t_reitit$coercion$spec64688], :name :sixsq.nuvla.ui.routing.r-routes/apps-details, :view #object[sixsq$nuvla$ui$apps$views$AppDetails], :link-text "Apps"}, :result nil, :path-params {:sub-path "1234"}, :path "/ui/apps/1234"}
+  (r/match-by-path router "/ui/apps/1234/5678")
+  ;;     => #reitit.core.Match{:template "/ui/apps/*sub-path", :data {:coercion #object[reitit.coercion.spec.t_reitit$coercion$spec64688], :name :sixsq.nuvla.ui.routing.r-routes/apps-details, :view #object[sixsq$nuvla$ui$apps$views$AppDetails], :link-text "Apps"}, :result nil, :path-params {:sub-path "1234/5678"}, :path "/ui/apps/1234/5678"}
+
+
+
+
+  ;;;; CONSTRUCTING PATHS
+
+  ;; Static routes
+  (href ::routes/edges)
+  ;; => "/ui/edges"
+
+  ;; - path params get ignored with static routes
+  (href ::routes/edges {:uuid "1234"})
+  ;; => "/ui/edges"
+
+  ;; - providing query params
+  (href ::routes/edges nil {:hello "world", :this :is-nice})
+  ;; => "/ui/edges?hello=world&this=is-nice"
+
+  ;; Dynamic routes
+  (href ::routes/edges-details {:uuid "1234"})
+  ;; => "/ui/edges/1234"
+
+  ;; - this works, but omits :hello "world" path parameter, because it wasn't declared for ::routes/edges-details
+  (href ::routes/edges-details {:uuid "1234" :hello "world"})
+  ;; => "/ui/edges/1234"
+
+  ;; - providing query params
+  (href ::routes/edges-details {:uuid "1234"} {:hello "world", :this :is-nice})
+  ;; => "/ui/edges/1234?hello=world&this=is-nice"
+
+  ;; without path-params map as second parameter, dynamic routes return nil
+  ;; So this doesn't work:
   (href ::routes/edges-details)
+  ;; => nil
 
-  (rfe/push-state :sixsq.nuvla.ui.routing.r-routes/apps-details {:apps-path "hello/world"} {})
-
-  (.pushState js/window.history nil {} "/ui/apps")
-  (.back js/window.history nil {} "/ui/apps")
-  (.removeEventListener js/window "popstate" on-navigate)
+  ;; ...neither does this (needs :uuid)
+  (href ::routes/edges-details {:no-match "here"})
+  ;; => nil
 
 
-  ;; (-on-navigate history "/ui/apps/sixsq/blackbox?version=28")
-  (rfh/-on-navigate @history "/ui/apps")
+
+  ;; MORE ABOUT INTERNALS AND ONE WARNINGS
+
+  ;; internally `rfe/push-state` matches route by calling match-by-name,
+  ;; then calls:
+     ;; 1) js/window.pushState with found path and
+     ;; 2) provided -on-navigate handler
+
+  ;; this navigates to "/ui/apps"
+  (rfe/push-state :sixsq.nuvla.ui.routing.routes/apps {} nil)
+
+  ;; this navigates to "/ui/apps/sixsq"
+  (rfe/push-state :sixsq.nuvla.ui.routing.routes/apps-details {:sub-path "sixsq"} nil)
+
+
+  ;; ...but be warned: this call navigates to "/ui/apps/sixsq%2Fblackbox":
+  (rfe/push-state :sixsq.nuvla.ui.routing.routes/apps-details {:sub-path "sixsq/blackbox"} nil)
+  ;; ...and this to "/ui/apps/sixsq%2FNew%20Project?subtype=project":
+  (rfe/push-state :sixsq.nuvla.ui.routing.routes/apps-details {:sub-path "sixsq/New Project"} {:subtype "project"})
+
+
+  ;;;; This happens because reitit uses `js/encodeURIComponent` to turn path param values into a `path`.
+
+
+  ;; This has two implications:
+
+  ;; 1. to navigate by path, we have a
+  ;;    `::push-state` event dispatching `:push-state` effect which manually calls
+  ;;    (.pushState js/window.history nil {} path)
+  ;;    followed by
+  ;;    (rfh/-on-navigate @history path)
+  ;;    -> because pushState does not call popState, we have to call -on-navigate manually.
+  ;;    That's how it is done in reitit source and also what they recommended via Slack.
+
+  ;; 2. `href` works the same, so be mindful when you use it
+  ;;    This means we cannot call this with a :sub-path value comprised of multiple path segments
+  ;;    e.g. to navigate to "/ui/apps/this-works/perhaps/unexpected"
+  (href ::routes/apps-details {:sub-path "this-works/perhaps/unexpected"} {:query-param "hello/world"})
+  ;; => "/ui/apps/this-works%2Fperhaps%2Funexpected?query-param=hello%2Fworld"
+  (href ::routes/apps-details {:sub-path "sixsq/blackbox"})
+
+  ;; so construct the path using the parent route...
+  (str (href ::routes/apps) "/" "this-works/as/expected")
+  ;; => "/ui/apps/this-works/as/expected"
+  (str (href ::routes/apps) "/" "sixsq/blackbox")
+
+  ;; ...or with pathify helper
+  (pathify [(href ::routes/apps) "this-works" "as" "expected"])
+  ;; => "/ui/apps/this-works/as/expected"
+
+  ;; or with to-pathname helper, which adds base-path
+  (to-pathname ["apps" "this" "works" "too"])
+  ;; => "/ui/apps/this/works/too"
+  ;; this last one shouldn't be used in new code anymore, because
+  ;; we path strings directly, but it's useful in legacy code.
   )

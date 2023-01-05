@@ -26,7 +26,7 @@
     [sixsq.nuvla.ui.profile.spec :as profile]
     [sixsq.nuvla.ui.resource-log.spec :as resource-log]
     [sixsq.nuvla.ui.session.spec :as session]
-    [sixsq.nuvla.ui.routing.r-routes :as r-routes]))
+    [sixsq.nuvla.ui.routing.routes :as r-routes]))
 
 (def default-db
   (merge apps/defaults

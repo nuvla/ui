@@ -3,7 +3,6 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [day8.re-frame.http-fx]
-            [re-frame.cofx :refer [inject-cofx]]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
             [sixsq.nuvla.ui.history.events :as history-events]
@@ -18,6 +17,16 @@
 
 (def notification-polling-id :notifications-polling)
 (def check-ui-version-polling-id :check-ui-version)
+
+(reg-event-fx
+  ::bulk-actions-interval-after-navigation
+  (fn [{{:keys [::spec/actions-interval
+                ::spec/changes-protection?]} :db}]
+    (when (not changes-protection?)
+      {::fx/bulk-actions-interval [::action-interval-delete
+                                   (dissoc actions-interval
+                                     notification-polling-id
+                                     check-ui-version-polling-id)]})))
 
 (reg-event-db
   ::set-loading?
@@ -74,21 +83,6 @@
             visible? (assoc :dispatch [::session-events/initialize]))))
 
 
-(reg-event-fx
-  ::set-navigation-info
-  [(inject-cofx :get-path-parts-and-search-map)]
-  (fn [{{:keys [::spec/actions-interval
-                ::spec/changes-protection?]
-         :as db} :db
-        path-parts :path-parts
-        query-params :query-params}]
-    (when (not changes-protection?)
-      {:db                        (assoc db ::spec/nav-path path-parts
-                                    ::spec/nav-query-params query-params)
-       ::fx/bulk-actions-interval [::action-interval-delete
-                                   (dissoc actions-interval
-                                     notification-polling-id
-                                     check-ui-version-polling-id)]})))
 
 (reg-event-fx
   ::action-interval-start

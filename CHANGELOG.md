@@ -11,6 +11,7 @@
 - Module plugin - License renamed to End-User License Agreement
 - Paginations - Items per page is stored to and loaded from localStorage #1009
 - Main - Remove deprecated message and bootstrap-message
+- Readme - Update dev section to include skip verification of untrusted certificate
 
 ## [2.32.11] - 2022-12-19
 

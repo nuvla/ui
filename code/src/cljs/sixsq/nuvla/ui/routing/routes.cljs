@@ -1,6 +1,5 @@
-(ns sixsq.nuvla.ui.routing.r-routes
-  (:require [re-frame.core :as re-frame]
-            [reitit.coercion.spec :as rss]
+(ns sixsq.nuvla.ui.routing.routes
+  (:require [reitit.coercion.spec :as rss]
             [reitit.core :as r]
             [reitit.exception :as exception]
             [reitit.frontend :as rf]
@@ -8,8 +7,9 @@
             [sixsq.nuvla.ui.apps.views :as app-views]
             [sixsq.nuvla.ui.cimi.views :refer [api-view]]
             [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
+            [sixsq.nuvla.ui.config :refer [debug? base-path]]
             [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
-            [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]] ;; [sixsq.nuvla.ui.data.views :refer [data-view]]
+            [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]]
             [sixsq.nuvla.ui.data-set.views :as data-set-views]
             [sixsq.nuvla.ui.data.views :refer [data-view]]
             [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
@@ -18,29 +18,10 @@
             [sixsq.nuvla.ui.docs.views :refer [documentation]]
             [sixsq.nuvla.ui.edges.views :refer [edges-view]]
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
-            [sixsq.nuvla.ui.panel :refer [UnknownResource]]
             [sixsq.nuvla.ui.profile.views :refer [profile]]
             [sixsq.nuvla.ui.session.views :as session-views]
+            [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
             [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
-
-;;; Views ;;;
-
-(defn home-page []
-  [:div
-   [:h1 "This is home page"]
-   [:button
-    ;; Dispatch navigate event that triggers a (side)effect.
-    {:on-click #(re-frame/dispatch [:sixsq.nuvla.ui.routing.router/push-state-reitit ::sub-page2])}
-    "Go to sub-page 2"]])
-
-(defn sub-page1 []
-  [:div
-   [:h1 "This is sub-page 1"]])
-
-(defn sub-page2 []
-  [:div
-   [:h1 "This is sub-page 2"]])
-
 
 (defn SessionPageWelcomeRedirect
   []
@@ -55,7 +36,7 @@
    {:name ::root
     :view home-view}
    ["/"]
-   ["/ui/"
+   [(str base-path "/") ;; sixsq.nuvla.ui.config/base-path = "/ui" on nuvla.io
     [""
      {:name ::home-root
       :link-text "Home"}]
@@ -98,7 +79,8 @@
       :view app-views/AppsOverview
       :link-text "Apps"}
      [""]
-     ["/*apps-path"
+     ["/" ::apps-slashed]
+     ["/*sub-path"
       {:name ::apps-details
        :view app-views/AppDetails}]]
     ["deployments"
@@ -113,22 +95,24 @@
      {:name ::deployment-slashed
       :view deployments-view
       :link-text "deployments"}]
-    ["deployment/:id"
+    ["deployment/:uuid"
      {:name ::deployment-details
       :view DeploymentDetails}]
     ["deployment-sets"
      {:name ::deployment-sets
       :view deployment-sets-view
       :link-text "deployment-sets"}]
-    ["deployment-sets/*path"
+    ["deployment-sets/:uuid"
      {:name ::deployment-sets-sub-age
       :view deployment-sets-view
       :link-text "deployment-sets"}]
     ["edges"
      {:name ::edges
       :view edges-view
-      :link-text "edges"}]
-    ["edges/*id"
+      :link-text "edges"}
+     [""]
+     ["/" ::edges-slashed]]
+    ["edges/:uuid"
      {:name ::edges-details
       :view edges-view
       :link-text "edges-details"}]
@@ -155,7 +139,7 @@
       :link-text "clouds"}
      [""]
      ["/" ::clouds-slashed]
-     ["/*path"
+     ["/*sub-path"
       {:name ::clouds-details
        :view clouds-view
        :link-text "clouds"}]]
@@ -170,12 +154,12 @@
       :view api-view
       :link-text "api"}
      [""]
-     ["/*api-path"
+     ["/*sub-path"
       {:name ::api-sub-page}]]
     ["profile"
      {:name ::profile
       :view profile}]]
-   ["/*resource"
+   ["/*sub-path"
     {:name ::catch-all
      :view UnknownResource}]])
 
@@ -185,85 +169,5 @@
     {:data {:coercion rss/coercion}
      :router r/linear-router
      :conflicts (fn [conflicts]
-                  (println (exception/format-exception :path-conflicts nil conflicts)))
-     }))
-  ;; => #object[reitit.core.t_reitit$core60844]
-
-
-
-(comment
-
-  (r/match-by-path router "/ui/apps/")
-
-  (let [router (rf/router
-                 ["apps"
-                  {:name :bla
-                   :views [:yeah]
-                   :conflicting true}
-                  ["/" :dadada]
-                  ["/yeah" :a]
-                  ["/hello" :blo]
-                  ["/*path"]]
-
-                 {;; :router r/linear-router
-                  ;; :conflicts (fn [conflicts]
-                  ;;              (println (exception/format-exception :path-conflicts nil conflicts)))
-                  })]
-
-    (r/match-by-path router "apps/yeah/h")
-    #_(r/router-name router))
-
-  (-> (rf/router
-        [["/ping" ::ping]
-         ["/api" ::api]
-         ["/api/fix" ::api-fix]
-         ["/api/:users" ::users]]
-        {:router r/quarantine-router})
-      r/router-name)
-
-  (r/match-by-path router "/ui/apps")
-
-
-
-  (def router-test2
-    (r/router
-      ["/api"
-       ["/ping" ::ping]
-       ["/user/:id" ::user]]))
-
-  (r/match-by-path router-test2 "/api")
-
-  (r/route-names router)
-  ;; => [:sixsq.nuvla.ui.routing.r-routes/root
-  ;;     :sixsq.nuvla.ui.routing.r-routes/home-root
-  ;;     :sixsq.nuvla.ui.routing.r-routes/sign-up
-  ;;     :sixsq.nuvla.ui.routing.r-routes/sign-in
-  ;;     :sixsq.nuvla.ui.routing.r-routes/reset-password
-  ;;     :sixsq.nuvla.ui.routing.r-routes/set-password
-  ;;     :sixsq.nuvla.ui.routing.r-routes/sign-in-token
-  ;;     :sixsq.nuvla.ui.routing.r-routes/about
-  ;;     :sixsq.nuvla.ui.routing.r-routes/home
-  ;;     :sixsq.nuvla.ui.routing.r-routes/dashboard
-  ;;     :sixsq.nuvla.ui.routing.r-routes/apps
-  ;;     :sixsq.nuvla.ui.routing.r-routes/apps-details
-  ;;     :sixsq.nuvla.ui.routing.r-routes/deployments
-  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment
-  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment-slashed
-  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment-details
-  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment-sets
-  ;;     :sixsq.nuvla.ui.routing.r-routes/deployment-sets-sub-age
-  ;;     :sixsq.nuvla.ui.routing.r-routes/edges
-  ;;     :sixsq.nuvla.ui.routing.r-routes/edges-details
-  ;;     :sixsq.nuvla.ui.routing.r-routes/credentials
-  ;;     :sixsq.nuvla.ui.routing.r-routes/credentials-slash
-  ;;     :sixsq.nuvla.ui.routing.r-routes/notifications
-  ;;     :sixsq.nuvla.ui.routing.r-routes/data
-  ;;     :sixsq.nuvla.ui.routing.r-routes/data-details
-  ;;     :sixsq.nuvla.ui.routing.r-routes/clouds
-  ;;     :sixsq.nuvla.ui.routing.r-routes/documentation
-  ;;     :sixsq.nuvla.ui.routing.r-routes/documentation-subpage
-  ;;     :sixsq.nuvla.ui.routing.r-routes/api
-  ;;     :sixsq.nuvla.ui.routing.r-routes/api-sub-page
-  ;;     :sixsq.nuvla.ui.routing.r-routes/catch-all]
-
-  )
+                  (when debug?
+                    (println (exception/format-exception :path-conflicts nil conflicts))))}))

@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.notifications.events :as events]
     [sixsq.nuvla.ui.notifications.spec :as spec]
     [sixsq.nuvla.ui.notifications.subs :as subs]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]

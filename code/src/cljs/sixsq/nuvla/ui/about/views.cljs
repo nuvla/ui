@@ -3,7 +3,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn about

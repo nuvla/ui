@@ -8,6 +8,8 @@
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
+;; user should be told that some applications has been deleted!!
+
 (reg-event-db
   ::clear-module
   (fn [db [_]]
@@ -34,16 +36,30 @@
        (into {})
        (assoc-in db [::spec/apps-sets id ::spec/apps-selected])))
 
+(defn load-module-configurations
+  [modules-by-id fx [id {:keys [applications]}]]
+  (->> applications
+       (map (fn [{module-id :id version :version}]
+              (when (get modules-by-id module-id)
+                [:dispatch [::module-plugin/load-module
+                            [::spec/apps-sets id]
+                            (str module-id "_" version)]])))
+       (concat fx)))
+
 (reg-event-fx
   ::reload-apps-sets-response
   (fn [{{:keys [::spec/apps-sets] :as db} :db} [_ module {:keys [resources]}]]
-    (let [modules-by-id (->> resources (map (juxt :id identity)) (into {}))
-          new-db        (->> module
-                             :content
-                             :applications-sets
-                             (map-indexed vector)
-                             (reduce (partial restore-apps-selected modules-by-id) db))]
-      {:db new-db})))
+    (let [modules-by-id     (->> resources (map (juxt :id identity)) (into {}))
+          indexed-apps-sets (->> module
+                                 :content
+                                 :applications-sets
+                                 (map-indexed vector))
+          new-db            (reduce (partial restore-apps-selected modules-by-id)
+                                    db indexed-apps-sets)
+          fx                (reduce (partial load-module-configurations modules-by-id)
+                                    [] indexed-apps-sets)]
+      {:db new-db
+       :fx fx})))
 
 (reg-event-fx
   ::reload-apps-sets

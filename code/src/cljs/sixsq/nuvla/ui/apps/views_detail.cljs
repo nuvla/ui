@@ -1,37 +1,35 @@
 (ns sixsq.nuvla.ui.apps.views-detail
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [re-frame.db]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.utils :as acl-utils]
-    [sixsq.nuvla.ui.acl.views :as acl-views]
-    [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
-    [sixsq.nuvla.ui.apps.events :as events]
-    [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.apps.subs :as subs]
-    [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
-    [sixsq.nuvla.ui.routing.utils :refer [pathify]]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.collapsible-card :as cc]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.forms :as utils-forms]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+            [re-frame.db]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.utils :as acl-utils]
+            [sixsq.nuvla.ui.acl.views :as acl-views]
+            [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
+            [sixsq.nuvla.ui.apps.events :as events]
+            [sixsq.nuvla.ui.apps.spec :as spec]
+            [sixsq.nuvla.ui.apps.subs :as subs]
+            [sixsq.nuvla.ui.apps.utils :as utils]
+            [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
+            [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.profile.subs :as profile-subs]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.forms :as utils-forms]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -317,9 +315,8 @@
         nav-path (subscribe [::main-subs/nav-path])]
     (fn []
       (let [parent    (utils/nav-path->module-path @nav-path)
-            base-path (str/join
-                        "/" (remove str/blank?
-                              [config/base-path "apps" parent]))]
+            base-path (pathify (remove str/blank?
+                                 [(name->href :apps) parent]))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}

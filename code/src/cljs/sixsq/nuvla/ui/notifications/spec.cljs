@@ -43,8 +43,8 @@
 (def reset-interval-regex #"^(month|[1-9][0-9]{0,2}d)$")
 (s/def ::reset-interval #(re-matches reset-interval-regex %))
 
-(s/def ::reset-start-date #(and (integer? %)
-                                (< 0 % 32)))
+(s/def ::reset-start-date #(and (pos-int? %)
+                                (< % 32)))
 
 
 (s/def ::dev-name string?)

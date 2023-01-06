@@ -195,36 +195,36 @@
   ;;;; CONSTRUCTING PATHS ;;;;
 
   ;; Static routes
-  (name->href ::routes/edges)
+  (name->href :edges)
   ;; => "/ui/edges"
 
   ;; - path params get ignored with static routes
-  (name->href ::routes/edges {:uuid "1234"})
+  (name->href :edges {:uuid "1234"})
   ;; => "/ui/edges"
 
   ;; - providing query params
-  (name->href ::routes/edges nil {:hello "world", :this :is-nice})
+  (name->href :edges nil {:hello "world", :this :is-nice})
   ;; => "/ui/edges?hello=world&this=is-nice"
 
   ;; Dynamic routes
-  (name->href ::routes/edges-details {:uuid "1234"})
+  (name->href :edges-details {:uuid "1234"})
   ;; => "/ui/edges/1234"
 
   ;; - this works, but omits :hello "world" path parameter, because it wasn't declared for ::routes/edges-details
-  (name->href ::routes/edges-details {:uuid "1234" :hello "world"})
+  (name->href :edges-details {:uuid "1234" :hello "world"})
   ;; => "/ui/edges/1234"
 
   ;; - providing query params
-  (name->href ::routes/edges-details {:uuid "1234"} {:hello "world", :this :is-nice})
+  (name->href :edges-details {:uuid "1234"} {:hello "world", :this :is-nice})
   ;; => "/ui/edges/1234?hello=world&this=is-nice"
 
   ;; without path-params map as second parameter, dynamic routes return nil
   ;; So this doesn't work:
-  (name->href ::routes/edges-details)
+  (name->href :edges-details)
   ;; => nil
 
   ;; ...neither does this (needs :uuid)
-  (name->href ::routes/edges-details {:no-match "here"})
+  (name->href :edges-details {:no-match "here"})
   ;; => nil
 
 
@@ -237,16 +237,16 @@
      ;; 2) provided -on-navigate handler
 
   ;; this navigates to "/ui/apps"
-  (rfe/push-state :sixsq.nuvla.ui.routing.routes/apps {} nil)
+  (rfe/push-state :apps {} nil)
 
   ;; this navigates to "/ui/apps/sixsq"
-  (rfe/push-state :sixsq.nuvla.ui.routing.routes/apps-details {:sub-path "sixsq"} nil)
+  (rfe/push-state :apps-details {:sub-path "sixsq"} nil)
 
 
   ;; ...but be warned: this call navigates to "/ui/apps/sixsq%2Fblackbox":
-  (rfe/push-state :sixsq.nuvla.ui.routing.routes/apps-details {:sub-path "sixsq/blackbox"} nil)
+  (rfe/push-state :apps-details {:sub-path "sixsq/blackbox"} nil)
   ;; ...and this to "/ui/apps/sixsq%2FNew%20Project?subtype=project":
-  (rfe/push-state :sixsq.nuvla.ui.routing.routes/apps-details {:sub-path "sixsq/New Project"} {:subtype "project"})
+  (rfe/push-state :apps-details {:sub-path "sixsq/New Project"} {:subtype "project"})
 
 
   ;;;; This happens because reitit uses `js/encodeURIComponent` to turn path param values into a `path`.
@@ -265,17 +265,17 @@
   ;; 2. `href` works the same, so be mindful when you use it
   ;;    This means we cannot call this with a :sub-path value comprised of multiple path segments
   ;;    e.g. to navigate to "/ui/apps/this-works/perhaps/unexpected"
-  (name->href ::routes/apps-details {:sub-path "this-works/perhaps/unexpected"} {:query-param "hello/world"})
+  (name->href :apps-details {:sub-path "this-works/perhaps/unexpected"} {:query-param "hello/world"})
   ;; => "/ui/apps/this-works%2Fperhaps%2Funexpected?query-param=hello%2Fworld"
-  (name->href ::routes/apps-details {:sub-path "sixsq/blackbox"})
+  (name->href :apps-details {:sub-path "sixsq/blackbox"})
 
   ;; so construct the path using the parent route...
-  (str (name->href ::routes/apps) "/" "this-works/as/expected")
+  (str (name->href :apps) "/" "this-works/as/expected")
   ;; => "/ui/apps/this-works/as/expected"
-  (str (name->href ::routes/apps) "/" "sixsq/blackbox")
+  (str (name->href :apps) "/" "sixsq/blackbox")
 
   ;; ...or with pathify helper
-  (pathify [(name->href ::routes/apps) "this-works" "as" "expected"])
+  (pathify [(name->href :apps) "this-works" "as" "expected"])
   ;; => "/ui/apps/this-works/as/expected"
 
   ;; or with to-pathname helper, which adds base-path

@@ -137,7 +137,7 @@
   [{:keys [id created name state description tags] :as _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
-        href   (name->href :deployment-sets {:uuid (general-utils/id->uuid id)})]
+        href   (name->href :deployment-sets-details {:uuid (general-utils/id->uuid id)})]
     ^{:key id}
     [uix/Card
      {:href        href

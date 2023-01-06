@@ -1,7 +1,9 @@
 (ns sixsq.nuvla.ui.main.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.main.spec :as spec]))
+    [sixsq.nuvla.ui.main.spec :as spec]
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.config :as config]))
 
 
 (reg-sub
@@ -85,7 +87,9 @@
   ::nav-url-active?
   :<- [::nav-path-first]
   (fn [nav-path-first [_ url]]
-    (boolean (= nav-path-first url))))
+    (boolean (= nav-path-first (-> (str/replace-first url (str config/base-path "/") "")
+                                   (str/split "/")
+                                   first)))))
 
 
 (reg-sub

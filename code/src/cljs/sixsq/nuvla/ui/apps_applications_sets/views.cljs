@@ -40,7 +40,10 @@
         ;subtypes (subscribe [::subs/subtypes db-path])
         apps-selected @(subscribe [::subs/apps-selected id])
         on-open       #(dispatch [::module-selector/restore-selected db-path (map :id apps-selected)])
-        on-done       #(dispatch [::events/set-apps-selected id db-path])]
+        on-done       #(do
+                         (dispatch [::events/set-apps-selected id db-path])
+                         (dispatch [::main-events/changes-protection? true])
+                         (dispatch [::apps-events/validate-form]))]
 
     [ui/Modal {:close-icon true
                :trigger    (r/as-element
@@ -114,7 +117,10 @@
         [ui/ListContent (or name module-id) " "
          (when editable?
            [ui/Icon {:name     "close" :color "red" :link true
-                     :on-click #(dispatch [::events/remove-app id module-id])}])]])]))
+                     :on-click #(do
+                                  (dispatch [::events/remove-app id module-id])
+                                  (dispatch [::main-events/changes-protection? true])
+                                  (dispatch [::apps-events/validate-form]))}])]])]))
 
 (defn AddApps
   [id]
@@ -124,7 +130,10 @@
 (defn AddAppsSet
   []
   [ui/Button {:primary  true
-              :on-click #(dispatch [::events/add-apps-set])}
+              :on-click #(do
+                           (dispatch [::events/add-apps-set])
+                           (dispatch [::main-events/changes-protection? true])
+                           (dispatch [::apps-events/validate-form]))}
    "New set of applications"])
 
 (defn AccordionAppSet
@@ -161,7 +170,10 @@
                          :color    "red"
                          :style    {:cursor :pointer
                                     :float  "right"}
-                         :on-click #(dispatch [::events/remove-apps-set id])}]]
+                         :on-click #(do
+                                      (dispatch [::events/remove-apps-set id])
+                                      (dispatch [::main-events/changes-protection? true])
+                                      (dispatch [::apps-events/validate-form]))}]]
        :count 0
        :default-open true]
       )))

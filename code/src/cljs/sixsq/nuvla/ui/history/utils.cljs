@@ -6,7 +6,6 @@
   "Sets title"
   [url]
   (log/info "navigating to" url)
-  ;; (.setToken history (str "/" url))
   (set! (.-title js/document) (str "Nuvla " url)))
 
 

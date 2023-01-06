@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.32.12] - 2023-01-06
+
 ### Changed
 
 - Deployment modal - Check dct error not visible fix

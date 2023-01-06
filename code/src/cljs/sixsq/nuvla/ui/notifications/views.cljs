@@ -1087,8 +1087,6 @@
   (let [tr                    (subscribe [::i18n-subs/tr])
         subscription-configs  (subscribe [::subs/notification-subscription-configs])
         notif-methods         (subscribe [::subs/notification-methods])
-        subs-by-parent        (subscribe [::subs/subscriptions-by-parent])
-        subs-by-parent-counts (subscribe [::subs/subscriptions-by-parent-counts])
         on-change             (fn [name-kw value]
                                 (dispatch [::events/update-notification-subscription-config name-kw value]))]
     (dispatch [::events/get-notification-subscription-configs])

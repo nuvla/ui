@@ -12,10 +12,10 @@
     [sixsq.nuvla.ui.i18n.events :as i18n-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.views :as main-views]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.routes :as routes]
     [sixsq.nuvla.ui.session.events :as session-events]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+    [taoensso.timbre :as log]))
 
 
 (defn dev-setup []

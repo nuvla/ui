@@ -5,7 +5,6 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
-    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
@@ -26,7 +25,7 @@
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.resource-log.views :as log-views]
-    [sixsq.nuvla.ui.routing.utils :refer [pathify]]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -499,7 +498,7 @@
         (@tr [:deployment-run-private-ip]) ". "
         [:br]
         (@tr [:deployment-access-url]) " "
-        [:a {:href (pathify [config/base-path "credentials"])}
+        [:a {:href (name->href :credentials)}
          (@tr [:create-vpn-credential])] " " (@tr [:and]) " "
         [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
 
@@ -816,7 +815,7 @@
 
 
 (defn DeploymentDetails
-  [{{uuid :id} :path-params}]
+  [{{uuid :uuid} :path-params}]
   (let [deployment (subscribe [::subs/deployment])]
     (refresh (str "deployment/" uuid))
     (fn [_]

@@ -5,7 +5,7 @@
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.routing.utils :refer [to-pathname]]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
@@ -90,7 +90,7 @@
 
 (defn deployment-href
   [id]
-  (to-pathname ["deployment" (general-utils/id->uuid id)]))
+  (pathify [(name->href :deployment) (general-utils/id->uuid id)]))
 
 (defn state-filter
   [state]

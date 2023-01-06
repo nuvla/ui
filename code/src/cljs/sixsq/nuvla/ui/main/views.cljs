@@ -34,7 +34,7 @@
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views]
     [sixsq.nuvla.ui.routing.router :refer [router-component]]
-    [sixsq.nuvla.ui.routing.utils :refer [to-pathname]]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.session.views :as session-views]
     [sixsq.nuvla.ui.utils.general :as utils]
@@ -276,7 +276,7 @@
                             :header  [uix/TR :subscription-is-canceled]
                             :content [:span
                                       [uix/TR :to-reactivate-your-subscription]
-                                      [:a {:href (to-pathname ["profile"])} [uix/TR :go-to-profile]]
+                                      [:a {:href (name->href :profile)} [uix/TR :go-to-profile]]
                                       [uix/TR :make-sure-you-have-pm]]
                             :type    :error}])
             [contents]

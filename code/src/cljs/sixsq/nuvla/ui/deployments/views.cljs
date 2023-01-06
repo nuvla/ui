@@ -18,7 +18,7 @@
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.plugins.table :refer [Table]]
-    [sixsq.nuvla.ui.routing.utils :refer [to-pathname]]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -178,7 +178,7 @@
                       :on-click (fn [event]
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
-     [ui/TableCell [:a {:href (to-pathname ["deployment" (general-utils/id->uuid id)])}
+     [ui/TableCell [:a {:href (name->href :deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
      (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",

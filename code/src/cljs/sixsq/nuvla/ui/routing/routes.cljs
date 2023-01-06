@@ -117,6 +117,9 @@
      {:name :edges-details
       :view edges-view
       :link-text "edges-details"}]
+    ["edges/nuvlabox-cluster/:uuid"
+     {:name :edge-cluster-details
+      :view edges-view}]
     ["credentials"
      {:name :credentials
       :view credentials-view
@@ -140,7 +143,7 @@
       :link-text "clouds"}
      [""]
      ["/" :clouds-slashed]
-     ["/*sub-path"
+     ["/:uuid"
       {:name :clouds-details
        :view clouds-view
        :link-text "clouds"}]]

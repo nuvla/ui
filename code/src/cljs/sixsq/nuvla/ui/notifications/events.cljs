@@ -142,12 +142,53 @@
     (assoc db ::spec/notification-subscription-config subs-conf)))
 
 
-(reg-event-db
+(reg-event-fx
   ::update-notification-subscription-config
-  (fn [db [_ key value]]
-    (if (map? value)
-      (update-in db [::spec/notification-subscription-config key] merge value)
-      (assoc-in db [::spec/notification-subscription-config key] value))))
+  (fn [{db :db} [_ key value]]
+    {:db (if (map? value)
+           (update-in db [::spec/notification-subscription-config key] merge value)
+           (assoc-in db [::spec/notification-subscription-config key] value))
+     :fx [[:dispatch [::validate-notification-subscription-config-form]]]}))
+
+(defn- update-subscription-criteria-fx [new-values]
+  {:fx [[:dispatch [::update-notification-subscription-config
+                    :criteria
+                    new-values]]]})
+
+(reg-event-fx
+ ::choose-monthly-reset
+ (fn [{{:keys [::spec/notification-subscription-config]} :db}]
+   (let [criteria (:criteria notification-subscription-config)
+         new-reset-start-date (or (:reset-start-date criteria) 1)]
+        (update-subscription-criteria-fx {:reset-interval "month"
+                                          :reset-start-date new-reset-start-date}))))
+
+(reg-event-fx
+ ::choose-custom-reset
+ (fn [{{:keys [::spec/notification-subscription-config]} :db}]
+   (let [criteria       (:criteria notification-subscription-config)
+         reset-in-days  (or (:reset-in-days criteria) 1)]
+        (update-subscription-criteria-fx {:reset-interval (str reset-in-days "d")
+                                          :reset-in-days reset-in-days}))))
+
+(reg-event-fx
+ ::update-custom-days
+ (fn [_ [_ value]]
+   (let [new-custom-days (js/Number value)
+         custom-interval-days (str new-custom-days "d")]
+     (update-subscription-criteria-fx {:reset-interval custom-interval-days
+                                       :reset-in-days new-custom-days}))))
+
+(reg-event-fx
+ ::update-custom-device-name
+ (fn [_ [_ value]]
+   (update-subscription-criteria-fx {:dev-name value})))
+
+
+(reg-event-db
+  ::remove-custom-name
+  (fn [db]
+    (update-in db [::spec/notification-subscription-config :criteria] dissoc :dev-name)))
 
 
 (reg-event-db
@@ -300,12 +341,6 @@
   ::set-resource-tag
   (fn [db [_ resource-tag]]
     (assoc db ::spec/resource-tag resource-tag)))
-
-
-(reg-event-db
-  ::set-criteria-metric
-  (fn [db [_ metric]]
-    (assoc db ::spec/criteria-metric metric)))
 
 
 (reg-event-db

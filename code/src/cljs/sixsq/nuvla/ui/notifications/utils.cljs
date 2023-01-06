@@ -2,6 +2,16 @@
   (:require
     [sixsq.nuvla.ui.notifications.spec :as spec]))
 
+(def cpu-load "load")
+(def ram "ram")
+(def disk "disk")
+(def state "state")
+(def network-rx "network-rx")
+(def network-tx "network-tx")
+(def status "status")
+(def content-type "content-type")
+
+
 
 (defn db->new-notification-method
   [db]
@@ -10,16 +20,15 @@
         method (get-in db [::spec/notification-method :method])
         destination (get-in db [::spec/notification-method :destination])
         acl (get-in db [::spec/notification-method :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc :method method)
-        (assoc :destination destination)
-        (assoc :acl acl))))
+       {:name name
+        :description description
+        :method method
+        :destination destination
+        :acl acl}))
 
 (defn data-record-content-type
   [m]
-  (and (= "data-record" (:resource-kind m)) (= "content-type" (get-in m [:criteria :metric]))))
+  (and (= "data-record" (:resource-kind m)) (= content-type (get-in m [:criteria :metric]))))
 
 (defn view->model
   [v]
@@ -39,8 +48,21 @@
   (cond
     (event-tag m) (-> m
                       (assoc :resource-kind "data-record")
-                      (assoc-in [:criteria :metric] "content-type"))
+                      (assoc-in [:criteria :metric] content-type))
     :else m))
+
+(def metrics-with-reset-windows #{network-rx network-tx})
+
+(defn- clean-criteria
+  [criteria]
+  (let [metric-name (criteria :metric)
+        cr-cleaned (dissoc criteria :reset-in-days)]
+    (cond
+      (metrics-with-reset-windows metric-name) (if (= (:reset-interval cr-cleaned) "month")
+                                                 cr-cleaned
+                                                 (dissoc cr-cleaned :reset-start-date))
+      (= disk metric-name) (dissoc cr-cleaned :reset-interval :reset-start-date)
+      :else (dissoc cr-cleaned :dev-name :reset-interval :reset-start-date))))
 
 (defn db->new-subscription-config
   [db]
@@ -53,20 +75,17 @@
         method-ids (get-in db [::spec/notification-subscription-config :method-ids])
         enabled (get-in db [::spec/notification-subscription-config :enabled])
         criteria (get-in db [::spec/notification-subscription-config :criteria])
-        criteria (if (= "boolean" (:kind criteria))
-                   (assoc criteria :value "true")
-                   criteria)
+        criteria (clean-criteria criteria)
         acl (get-in db [::spec/notification-subscription-config :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc :enabled enabled)
-        (assoc :method-ids method-ids)
-        (assoc :resource-kind resource-kind)
-        (assoc :resource-filter resource-filter)
-        (assoc :category category)
-        (assoc :criteria criteria)
-        (assoc :acl acl))))
+       {:name name
+        :description description
+        :enabled enabled
+        :method-ids method-ids
+        :resource-kind resource-kind
+        :resource-filter resource-filter
+        :category category
+        :criteria criteria
+        :acl acl}))
 
 
 (defn db->new-subscription
@@ -80,13 +99,12 @@
         method (get-in db [::spec/subscription :method])
         status (get-in db [::spec/subscription :status])
         acl (get-in db [::spec/subscription :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc :type type)
-        (assoc :kind kind)
-        (assoc :category category)
-        (assoc :method method)
-        (assoc :resource resource)
-        (assoc :status status)
-        (assoc :acl acl))))
+       {:name name
+        :description description
+        :type type
+        :kind kind
+        :category category
+        :method method
+        :resource resource
+        :status status
+        :acl acl}))

@@ -69,7 +69,6 @@
   (init-routes!)
   (patch-process)
   (dev-setup)
-  ;; (js/console.error "re-frame.db" re-frame/db)
   (dispatch-sync [::db-events/initialize-db])
   (dispatch-sync [::pagination-plugin/init-paginations])
   (dispatch-sync [::i18n-events/set-locale])

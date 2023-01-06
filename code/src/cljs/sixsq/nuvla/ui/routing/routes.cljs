@@ -102,9 +102,11 @@
     ["deployment-sets"
      {:name :deployment-sets
       :view deployment-sets-view
-      :link-text "deployment-sets"}]
+      :link-text "deployment-sets"}
+     [""]
+     ["/" :deployment-sets-slashed]]
     ["deployment-sets/:uuid"
-     {:name :deployment-sets-sub-age
+     {:name :deployment-sets-details
       :view deployment-sets-view
       :link-text "deployment-sets"}]
     ["edges"
@@ -152,12 +154,13 @@
       :view documentation
       :link-text "documentation"}
      [""]
-     ["/*sub-path" :documentation-subpage]]
+     ["/*sub-path" :documentation-sub-page]]
     ["api"
      {:name :api
       :view api-view
       :link-text "api"}
      [""]
+     ["/" :api-slashed]
      ["/*sub-path"
       {:name :api-sub-page}]]
     ["profile"

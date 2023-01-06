@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.cimi.spec :as cimi-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
@@ -19,7 +20,7 @@
                         :on-error #(do
                                      (cimi-api-fx/default-get-on-error resource-id %)
                                      (dispatch [::history-events/navigate
-                                                (str "api/" collection-name)]))]}))
+                                                (str (name->href :api-slashed) collection-name)]))]}))
 
 
 (reg-event-db
@@ -40,7 +41,7 @@
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :success}])
-                              (dispatch [::history-events/navigate (str "api/" collection-name)])
+                              (dispatch [::history-events/navigate (str (name->href :api-slashed) collection-name)])
                               (dispatch [::cimi-events/get-results]))]}))
 
 

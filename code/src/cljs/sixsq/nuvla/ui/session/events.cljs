@@ -35,7 +35,7 @@
                       (str (str/join "/" nav-path)
                            (when-not (str/blank? query-str)
                              (js/encodeURIComponent query-str))))
-          navigate  (str "sign-in" (when redirect
+          navigate  (str (name->href :sign-in) (when redirect
                                      (str "?redirect=" redirect)))]
       (cond-> {:db (assoc db ::spec/session new-session
                              ::spec/session-loading? false)}
@@ -127,7 +127,7 @@
                                      (dispatch [::history-events/navigate navigate-to])))
                                  (do
                                    (dispatch [::set-callback-2fa %1])
-                                   (dispatch [::history-events/navigate "sign-in-token"])))))
+                                   (dispatch [::history-events/navigate (name->href :sign-in-token)])))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
@@ -150,7 +150,7 @@
     {:dispatch-n [[::clear-loading]
                   [::initialize]
                   [::set-success-message success-message]
-                  [::history-events/navigate "sign-in"]]}))
+                  [::history-events/navigate (name->href :sign-in)]]}))
 
 
 (reg-event-fx

@@ -102,6 +102,7 @@
       [breadcrumbs-links])))
 
 
+
 (defn footer
   []
   (let [grid-style   {:style {:padding-top    5
@@ -112,7 +113,7 @@
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
       [ui/GridColumn grid-style
-       [:a {:on-click #(dispatch [::history-events/navigate "about"])
+       [:a {:on-click #(dispatch [::history-events/navigate (name->href :about)])
             :style    {:cursor "pointer"}}
         [:span#release-version (str "v")]]]
       [ui/GridColumn grid-style
@@ -162,7 +163,7 @@
              (@tr [:subscription-required-content]))]
        [ui/Button {:primary  true
                    :on-click #(do
-                                (dispatch [::history-events/navigate "profile"])
+                                (dispatch [::history-events/navigate (name->href :profile)])
                                 (dispatch [::events/close-modal]))}
         (if @open-subs-unpaid?
           (@tr [:profile-page])

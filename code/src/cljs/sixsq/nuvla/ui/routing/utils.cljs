@@ -25,7 +25,7 @@
 
 (defn add-base-path
   [url]
-  (let [ base-path (str config/base-path "/")
+  (let [base-path (str config/base-path "/")
         absolute-url (if (str/starts-with? url base-path)
                        url
                        (str base-path (str/replace url #"^/" "")))]

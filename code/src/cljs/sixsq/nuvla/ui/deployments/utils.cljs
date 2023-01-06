@@ -90,7 +90,7 @@
 
 (defn deployment-href
   [id]
-  (pathify [(name->href :deployment) (general-utils/id->uuid id)]))
+  (name->href :deployment-details {:uuid (general-utils/id->uuid id)}))
 
 (defn state-filter
   [state]

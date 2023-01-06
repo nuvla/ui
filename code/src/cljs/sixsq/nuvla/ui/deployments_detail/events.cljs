@@ -1,16 +1,16 @@
 (ns sixsq.nuvla.ui.deployments-detail.events
-  (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.credentials.events :as creds-events]
-    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.credentials.events :as creds-events]
+            [sixsq.nuvla.ui.deployments-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-db
   ::set-module-versions
@@ -98,7 +98,7 @@
                                           :content message
                                           :type    :success}])
                               (dispatch [::deployments-events/get-deployments])
-                              (dispatch [::history-events/navigate "deployment"]))]}))
+                              (dispatch [::history-events/navigate (name->href :deployment)]))]}))
 
 (reg-event-fx
   ::edit

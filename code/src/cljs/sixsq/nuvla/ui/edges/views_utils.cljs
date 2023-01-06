@@ -22,7 +22,7 @@
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
   (let [locale (subscribe [::i18n-subs/locale])
         uuid   (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
+    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]

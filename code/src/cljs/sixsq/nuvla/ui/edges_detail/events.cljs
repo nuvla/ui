@@ -1,18 +1,18 @@
 (ns sixsq.nuvla.ui.edges-detail.events
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.edges-detail.spec :as spec]
-    [sixsq.nuvla.ui.edges.utils :as edges-utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.edges-detail.spec :as spec]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-db
   ::set-nuvlabox-status
@@ -211,7 +211,7 @@
   ::delete
   (fn [{{:keys [::spec/nuvlabox]} :db} _]
     (let [nuvlabox-id (:id nuvlabox)]
-      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate "edges"])]})))
+      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate (name->href :edges)])]})))
 
 (reg-event-fx
   ::custom-action

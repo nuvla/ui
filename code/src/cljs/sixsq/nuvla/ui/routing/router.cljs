@@ -100,7 +100,6 @@
     (let [old-match   (:current-route db)
           controllers (rfc/apply-controllers (:controllers old-match) new-match)
           new-match-with-controllers (assoc new-match :controllers controllers)]
-      (js/console.log "NAVIGATING with path-raw" (:path new-match))
       {:db
        (-> db (assoc :current-route new-match-with-controllers
                      ::main-spec/nav-path path-parts
@@ -112,8 +111,8 @@
   ;; In case of normal anchor tag click, we do not fire ::history-events/navigate
   ;; but let reitit/browser handle the .pushState to the history stack,
   ;; which then fires `on-navigate` after URL changed already.
-  ;; That's why we test here again for changes-protection? and revert by
-  ;; navigating back.
+  ;; That's why we test here for changes-protection? (which we also do in ::history-events/navigate)
+  ;; and revert by navigating back if changes-protection? is true.
   ::navigated-protected
   (fn [{{:keys [::main-spec/changes-protection?
                 ::ignore-changes-protection] :as db} :db} [_ new-match]]
@@ -140,7 +139,6 @@
   ::current-route
   (fn [db]
     (:current-route db)))
-
 
 
 (defn on-navigate [new-match]
@@ -172,7 +170,7 @@
 
 
 (comment
-  ;;;; MATCHING
+  ;;;; MATCHING ;;;;
 
   ;; Two kinds of routes with dynamic path segments (as opposed to static paths, e.g. "ui/welcome" or "/ui/edges"):
   ;;  1. single segments: "/ui/edges/:uuid"
@@ -194,9 +192,7 @@
   ;;     => #reitit.core.Match{:template "/ui/apps/*sub-path", :data {:coercion #object[reitit.coercion.spec.t_reitit$coercion$spec64688], :name :sixsq.nuvla.ui.routing.r-routes/apps-details, :view #object[sixsq$nuvla$ui$apps$views$AppDetails], :link-text "Apps"}, :result nil, :path-params {:sub-path "1234/5678"}, :path "/ui/apps/1234/5678"}
 
 
-
-
-  ;;;; CONSTRUCTING PATHS
+  ;;;; CONSTRUCTING PATHS ;;;;
 
   ;; Static routes
   (name->href ::routes/edges)

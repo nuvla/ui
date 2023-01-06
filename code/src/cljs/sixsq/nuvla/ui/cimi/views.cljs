@@ -87,7 +87,7 @@
             id            (:id entry)
             row-selected? (subscribe [::subs/row-selected? id])]
         [ui/TableRow {:style    {:cursor "pointer"}
-                      :on-click #(dispatch [::history-events/navigate (str "api/" id)])}
+                      :on-click #(dispatch [::history-events/navigate (str (name->href :api-slashed) id)])}
          (when @can-bulk-delete?
            [ui/TableCell
             [ui/Checkbox {:checked  @row-selected?
@@ -189,7 +189,7 @@
                           sort
                           (map (fn [k] {:value k :text k}))
                           vec)
-            callback #(dispatch [::history-events/navigate (str "api/" %)])]
+            callback #(dispatch [::history-events/navigate (str (name->href :api-slashed) %)])]
         [ui/Dropdown
          {:aria-label  (@tr [:resource-type])
           :value       @selected-id

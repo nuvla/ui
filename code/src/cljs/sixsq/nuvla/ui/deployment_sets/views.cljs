@@ -74,7 +74,7 @@
      {:name     (@tr [:add])
       :icon     "add"
       :on-click #(dispatch
-                   [::history-events/navigate "deployment-sets/New"])}]))
+                   [::history-events/navigate (str (name->href :deployment-sets-slashed) "New")])}]))
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
@@ -97,7 +97,9 @@
   [{:keys [id name description created state tags] :as _deployment-set}]
   (let [locale @(subscribe [::i18n-subs/locale])
         uuid   (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "deployment-sets/" uuid)])
+    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (name->href
+                                                                    :deployment-sets-details
+                                                                    {:uuid uuid})])
                   :style    {:cursor "pointer"}}
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]

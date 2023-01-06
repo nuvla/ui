@@ -1,36 +1,36 @@
 (ns sixsq.nuvla.ui.edges.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
-    [sixsq.nuvla.ui.edges.events :as events]
-    [sixsq.nuvla.ui.edges.spec :as spec]
-    [sixsq.nuvla.ui.edges.subs :as subs]
-    [sixsq.nuvla.ui.edges.utils :as utils]
-    [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
-    [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
-    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.table :refer [Table]]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.forms :as utils-forms]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.map :as map]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-    [sixsq.nuvla.ui.utils.zip :as zip]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+            [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+            [sixsq.nuvla.ui.edges.events :as events]
+            [sixsq.nuvla.ui.edges.spec :as spec]
+            [sixsq.nuvla.ui.edges.subs :as subs]
+            [sixsq.nuvla.ui.edges.utils :as utils]
+            [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
+            [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
+            [sixsq.nuvla.ui.edges.views-utils :as views-utils]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.forms :as utils-forms]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.map :as map]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
 (def view-type (r/atom :table))
@@ -734,7 +734,7 @@
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow {:role "link"
-                  :on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
+                  :on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
@@ -811,7 +811,7 @@
 (defn NuvlaboxMapPoint
   [{:keys [id name location inferred-location online]}]
   (let [uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])]
+        on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong (or location inferred-location))
                        :color    (utils/map-online->color online)
@@ -891,7 +891,7 @@
     (if (= "nuvlabox-cluster" uuid)
       (do
         (reset! view-type :cluster)
-        (dispatch [::history-events/navigate "edges/"]))
+        (dispatch [::history-events/navigate (name->href :edges-slashed)]))
       [edges-detail/EdgeDetails uuid])))
 
 

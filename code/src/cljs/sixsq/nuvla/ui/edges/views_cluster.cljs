@@ -128,7 +128,7 @@
 (defn NuvlaboxMapPoint
   [{:keys [id name location online]}]
   (let [uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])]
+        on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong location)
                        :color    (utils/map-online->color online)

@@ -1,26 +1,26 @@
 (ns sixsq.nuvla.ui.apps.events
-  (:require
-    [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
-    [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
-    [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
-    [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
-    [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
-    [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
-    [sixsq.nuvla.ui.apps.effects :as apps-fx]
-    [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [cljs.spec.alpha :as s]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
+            [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
+            [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
+            [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
+            [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
+            [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
+            [sixsq.nuvla.ui.apps.effects :as apps-fx]
+            [sixsq.nuvla.ui.apps.spec :as spec]
+            [sixsq.nuvla.ui.apps.utils :as utils]
+            [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (def refresh-action-get-module :apps-get-module)
@@ -590,7 +590,7 @@
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
                                (dispatch [::main-events/changes-protection? false])
                                (dispatch [::history-events/navigate
-                                          (str "apps/" (:path sanitized-module))]))
+                                          (str (name->href :apps-slashed) (:path sanitized-module))]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)
@@ -620,7 +620,7 @@
                               (assoc ::spec/form-valid? true))
      ::cimi-api-fx/delete [id #(do
                                  (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate "apps/"]))]}))
+                                 (dispatch [::history-events/navigate (name->href :apps-slashed)]))]}))
 
 
 (reg-event-db
@@ -654,7 +654,7 @@
                           #(do
                              (dispatch [::main-events/changes-protection? false])
                              (dispatch [::history-events/navigate
-                                        (str "apps/" (:path paste-module))]))
+                                        (str (name->href :apps-slashed) (:path paste-module))]))
                           :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                        (cimi-api-fx/default-add-on-error :module %)
                                        (when (= status 409)

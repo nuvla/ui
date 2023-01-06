@@ -1,20 +1,20 @@
 (ns sixsq.nuvla.ui.docs.views
-  (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.docs-detail.views :as docs-details-view]
-    [sixsq.nuvla.ui.docs.events :as events]
-    [sixsq.nuvla.ui.docs.subs :as subs]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]))
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.docs-detail.views :as docs-details-view]
+            [sixsq.nuvla.ui.docs.events :as events]
+            [sixsq.nuvla.ui.docs.subs :as subs]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn row-fn [{:keys [id] :as entry}]
   [ui/TableRow {:on-click #(dispatch [::history-events/navigate
-                                      (str "documentation/" (general-utils/id->uuid id))])}
+                                      (name->href :documentation-sub-page {:sub-path (general-utils/id->uuid id)})])}
    [ui/CopyToClipboard {:text (:name entry)} [ui/TableCell {:collapsing true} (:name entry)]]
    [ui/TableCell {:style {:max-width     "150px"
                           :overflow      "hidden"

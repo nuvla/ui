@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.data.utils
-  (:require
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.config :as config]))
+  (:require [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (defn matches-parameter-name?
   [parameter-name parameter]
@@ -51,4 +50,4 @@
 
 (defn data-record-href
   [id]
-  (str config/base-path "/data/" (general-utils/id->uuid id)))
+  (str (name->href :data) "/" (general-utils/id->uuid id)))

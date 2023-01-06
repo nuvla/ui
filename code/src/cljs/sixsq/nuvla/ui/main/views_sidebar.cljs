@@ -67,8 +67,8 @@
               :inverted   true
               :fixed      "left"}
      (when-not iframe? [logo-item])
-     (for [{:keys [url label-kw icon protected? iframe-visble? hidden?]
+     (for [{:keys [key label-kw icon protected? iframe-visble? hidden?]
             :or   {hidden? false}} pages-list]
        (when (and (or (not iframe?) iframe-visble?) (not hidden?))
-         ^{:key url}
-         [item label-kw url icon protected?]))]))
+         ^{:key key}
+         [item label-kw (name->href key) icon protected?]))]))

@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
@@ -222,7 +223,7 @@
           :on-mouse-leave #(reset! on-button false)
           :on-click       #(when @on-button
                              (dispatch [::history-events/navigate
-                                        (:url @documentation-page)]))}
+                                        (name->href (:key @documentation-page))]))}
          (not @mobile?) (assoc :floated "right"))])))
 
 

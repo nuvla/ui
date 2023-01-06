@@ -4,35 +4,6 @@
             [reitit.frontend.easy :as rfe]
             [sixsq.nuvla.ui.config :as config]))
 
-(def route-name->full-route-key
-  #_{:clj-kondo/ignore [:unresolved-namespace]}
-  (let [route-names (r/route-names sixsq.nuvla.ui.routing.routes/router)]
-    (zipmap
-      (map (comp keyword name) route-names)
-      route-names)))
-
-
-(defn- full-name->href
-  "Return relative url for given full route name. Url can be used in HTML links."
-  ([k]
-   (full-name->href k nil nil))
-  ([k params]
-   (full-name->href k params nil))
-  ([k params query]
-   (rfe/href k params query)))
-
-
-(defn name->href
-  "Return relative url for given route, unqualified key is enough.
-   Url can be used in HTML links."
-  ([k]
-   (full-name->href (k route-name->full-route-key) nil nil))
-  ([k params]
-   (full-name->href (k route-name->full-route-key) params nil))
-  ([k params query]
-   (rfe/href (k route-name->full-route-key) params query)))
-
-
 (defn decode-query-string [path]
   (some->
    (second (str/split path #"\?"))
@@ -40,6 +11,17 @@
    (->> (map (fn [s] (let [[k v] (str/split s #"=")]
                        [(keyword k) v])))
         (into {}))))
+
+
+(defn name->href
+  "Return relative url for given route. Url can be used in HTML links."
+  ([k]
+   (name->href k nil nil))
+  ([k params]
+   (name->href k params nil))
+  ([k params query]
+   (rfe/href k params query)))
+
 
 (defn add-base-path
   [url]
@@ -71,7 +53,7 @@
 
 (comment
 ;; routes is a map from unqualified key to qualified route key
-  route-name->full-route-key
+  ;; route-name->full-route-key
          ;; => {:apps :sixsq.nuvla.ui.routing.routes/apps,
          ;;     :deployment-sets-sub-age :sixsq.nuvla.ui.routing.routes/deployment-sets-sub-age,
          ;;     :home :sixsq.nuvla.ui.routing.routes/home,

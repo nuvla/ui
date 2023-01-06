@@ -72,7 +72,7 @@
  (fn [coeffects]
    (let [location (.-location js/window)
          path-name (.-pathname location)
-         path-parts   (->> (split-path-alias (.-pathname location))
+         path-parts   (->> (split-path-alias path-name)
                            (map js/decodeURIComponent)
                            vec)
          query-params (utils/decode-query-string (.-search location))]

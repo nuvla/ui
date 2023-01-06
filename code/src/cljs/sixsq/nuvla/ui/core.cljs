@@ -66,8 +66,10 @@
 
 
 (defn ^:export init []
+  (init-routes!)
   (patch-process)
   (dev-setup)
+  ;; (js/console.error "re-frame.db" re-frame/db)
   (dispatch-sync [::db-events/initialize-db])
   (dispatch-sync [::pagination-plugin/init-paginations])
   (dispatch-sync [::i18n-events/set-locale])
@@ -78,7 +80,6 @@
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)
   (screen-size-watcher)
-  (init-routes!)
   (swap! fv/conf #(merge % {:atom r/atom}))
   (mount-root)
   (log/info "finished initialization"))

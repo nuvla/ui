@@ -1,24 +1,7 @@
 (ns sixsq.nuvla.ui.main.views
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.about.views]
-            [sixsq.nuvla.ui.apps-application.views]
-            [sixsq.nuvla.ui.apps-component.views]
-            [sixsq.nuvla.ui.apps-project.views]
-            [sixsq.nuvla.ui.apps-store.views]
             [sixsq.nuvla.ui.apps.events :as apps-events]
-            [sixsq.nuvla.ui.apps.views]
             [sixsq.nuvla.ui.cimi.subs :as api-subs]
-            [sixsq.nuvla.ui.cimi.views]
-            [sixsq.nuvla.ui.clouds-detail.views]
-            [sixsq.nuvla.ui.clouds.views]
-            [sixsq.nuvla.ui.credentials.views]
-            [sixsq.nuvla.ui.dashboard.views]
-            [sixsq.nuvla.ui.data.views]
-            [sixsq.nuvla.ui.deployment-sets-detail.views]
-            [sixsq.nuvla.ui.deployment-sets.views]
-            [sixsq.nuvla.ui.deployments.views]
-            [sixsq.nuvla.ui.docs.views]
-            [sixsq.nuvla.ui.edges.views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.i18n.views :as i18n-views]
             [sixsq.nuvla.ui.intercom.views :as intercom]
@@ -27,9 +10,7 @@
             [sixsq.nuvla.ui.main.subs :as subs]
             [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
             [sixsq.nuvla.ui.messages.views :as messages]
-            [sixsq.nuvla.ui.notifications.views]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
-            [sixsq.nuvla.ui.profile.views]
             [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.routing.router :refer [router-component]]
             [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
@@ -39,8 +20,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.welcome.views]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn crumb

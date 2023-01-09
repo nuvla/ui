@@ -14,7 +14,8 @@
 - Paginations - Items per page is stored to and loaded from localStorage #1009
 - Main - Remove deprecated message and bootstrap-message
 - Readme - Update dev section to include skip verification of untrusted certificate
-- Notifications - Added params to define time window reset and device name 
+- Notifications - Added params to define time window reset and device name
+- NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
 
 ## [2.32.11] - 2022-12-19
 

@@ -12,7 +12,7 @@
             [sixsq.nuvla.ui.deployment-dialog.subs :as deployment-dialog-subs]
             [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.subs :as main-subs]

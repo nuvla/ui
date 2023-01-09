@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.history.effects
+(ns sixsq.nuvla.ui.routing.effects
   (:require [re-frame.core :refer [reg-fx]]
             [sixsq.nuvla.ui.history.utils :as utils]))
 

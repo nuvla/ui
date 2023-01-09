@@ -3,7 +3,7 @@
             [sixsq.nuvla.ui.docs-detail.views :as docs-details-view]
             [sixsq.nuvla.ui.docs.events :as events]
             [sixsq.nuvla.ui.docs.subs :as subs]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]

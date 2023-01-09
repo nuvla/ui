@@ -4,7 +4,7 @@
             [sixsq.nuvla.ui.credentials.events :as creds-events]
             [sixsq.nuvla.ui.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]

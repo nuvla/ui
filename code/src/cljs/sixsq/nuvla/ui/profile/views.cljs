@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.acl.views :as acl-views]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.events :as main-events]

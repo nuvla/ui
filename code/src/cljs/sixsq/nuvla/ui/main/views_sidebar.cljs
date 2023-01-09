@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]

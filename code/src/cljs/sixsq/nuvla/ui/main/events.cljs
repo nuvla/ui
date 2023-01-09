@@ -5,7 +5,7 @@
             [day8.re-frame.http-fx]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.main.effects :as fx]
             [sixsq.nuvla.ui.main.spec :as spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]

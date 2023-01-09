@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.history.events
+(ns sixsq.nuvla.ui.routing.events
   (:require [re-frame.core :refer [reg-event-fx]]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.utils :refer [add-base-path]]

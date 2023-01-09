@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [markdown-to-hiccup.core :as md]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.history.views :as history]
+            [sixsq.nuvla.ui.routing.views :as history]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 

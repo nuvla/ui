@@ -13,7 +13,7 @@
             [sixsq.nuvla.ui.edges.events :as edges-events]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
-            [sixsq.nuvla.ui.history.views :as history-views]
+            [sixsq.nuvla.ui.routing.views :as history-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]

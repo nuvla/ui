@@ -7,7 +7,7 @@
             [sixsq.nuvla.ui.edges.subs :as subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
             [sixsq.nuvla.ui.edges.views-utils :as views-utils]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.subs :as main-subs]

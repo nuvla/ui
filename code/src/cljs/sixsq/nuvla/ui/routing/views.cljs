@@ -1,7 +1,7 @@
-(ns sixsq.nuvla.ui.history.views
+(ns sixsq.nuvla.ui.routing.views
   (:require [re-frame.core :refer [dispatch]]
             [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.history.events :as events]
+            [sixsq.nuvla.ui.routing.events :as events]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 

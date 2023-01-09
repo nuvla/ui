@@ -4,7 +4,7 @@
             [form-validator.core :as fv]
             [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-            [sixsq.nuvla.ui.history.views :as history-views]
+            [sixsq.nuvla.ui.routing.views :as history-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.session.components :as comp]
             [sixsq.nuvla.ui.session.events :as events]

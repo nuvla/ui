@@ -6,7 +6,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi.events :as cimi-events]
             [sixsq.nuvla.ui.filter-comp.events :as fc-events]
-            [sixsq.nuvla.ui.history.views :as history]
+            [sixsq.nuvla.ui.routing.views :as history]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.notifications.events :as events]

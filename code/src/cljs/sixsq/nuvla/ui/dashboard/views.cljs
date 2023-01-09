@@ -9,7 +9,7 @@
             [sixsq.nuvla.ui.deployments.views :as deployments-views]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.edges.views :as edges-views]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]

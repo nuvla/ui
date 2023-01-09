@@ -19,7 +19,7 @@
             [sixsq.nuvla.ui.deployments.views]
             [sixsq.nuvla.ui.docs.views]
             [sixsq.nuvla.ui.edges.views]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.history.utils :as history-utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.i18n.views :as i18n-views]

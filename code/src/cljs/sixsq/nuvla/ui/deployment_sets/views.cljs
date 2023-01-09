@@ -6,7 +6,7 @@
             [sixsq.nuvla.ui.deployment-sets.events :as events]
             [sixsq.nuvla.ui.deployment-sets.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets.subs :as subs]
-            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]

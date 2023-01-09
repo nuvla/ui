@@ -7,7 +7,7 @@
             [reitit.frontend.easy :as rfe :refer [history]]
             [reitit.frontend.history :as rfh]
             [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.history.effects :as fx]
+            [sixsq.nuvla.ui.routing.effects :as fx]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.main.subs :as main-subs]

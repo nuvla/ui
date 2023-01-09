@@ -619,14 +619,13 @@
      Pagination]))
 
 (defn DataSet
-  [dataset-id]
-  (let [dataset-id (if (string? dataset-id) dataset-id (get-in dataset-id [:path-params :uuid]))
-        tr         (subscribe [::i18n-subs/tr])
+  [{{dataset-id :uuid} :path-params}]
+  (let [tr         (subscribe [::i18n-subs/tr])
         data-set   (subscribe [::subs/data-set])
         device     (subscribe [::main-subs/device])]
     (dispatch [::events/set-data-set-id dataset-id])
     (refresh)
-    (fn [dataset-id]
+    (fn []
       (let [name (:name @data-set)]
         [components/LoadingPage {:dimmable? true}
          [:<>
@@ -636,7 +635,7 @@
            :no-data-set-message-content]
           [ui/Segment style/basic
            [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
-           [MenuBar dataset-id]
+           [MenuBar]
            [Summary]
            [ui/Grid {:columns   (columns-per-device @device)
                      :stackable true

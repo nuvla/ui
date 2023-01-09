@@ -51,22 +51,6 @@
     {:push-state new-path}))
 
 
-;; Triggering navigation from events using reitit push state effects handler
-;; route is a vector: [route-name path-params query-params]
-;; route-name: name as configured in sixsq.nuvla.ui.routing.r-routes/r-routes
-;; path-params: map of path keys to values, e.g. a ["apps/:id"] has path-params of {:id "some"} for path "apps/some"
-;; query-params: map of path keys to values, e.g. a ["apps/:id"] has path-params of {:id "some"} for path "apps/some"
-(re-frame/reg-fx
-  :push-state-reitit
-  (fn [route]
-    (apply rfe/push-state route)))
-
-(re-frame/reg-event-fx
-  ::push-state-reitit
-  (fn [_ [_ & route]]
-    {:push-state-reitit route}))
-
-
 (reg-cofx
   :get-path-parts-and-search-map
   (fn [coeffects]

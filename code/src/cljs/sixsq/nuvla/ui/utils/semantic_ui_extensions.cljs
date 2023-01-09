@@ -5,6 +5,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.routing.events :as events]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
             [sixsq.nuvla.ui.utils.form-fields :as form-fields]
             [sixsq.nuvla.ui.utils.general :as utils-general]

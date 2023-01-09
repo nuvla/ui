@@ -27,7 +27,6 @@
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published-tick?]
   (let [tr             (subscribe [::i18n-subs/tr])
-        locale         @(subscribe [::i18n-subs/locale])
         map-versions   (apps-utils/map-versions-index versions)
         module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
         module-index   (apps-utils/latest-published-index map-versions)
@@ -38,7 +37,7 @@
         launch-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :launch-for)])
-                            (format-money (/ (:cent-amount-daily price) 100) {:locale locale}) "/"
+                            (format-money (/ (:cent-amount-daily price) 100)) "/"
                             (@tr [:day]))
         button-content (if price launch-price (@tr [:launch]))
         on-click       (fn [event]

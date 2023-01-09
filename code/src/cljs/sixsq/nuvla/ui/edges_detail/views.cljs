@@ -1176,9 +1176,9 @@
                   [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs")]
                   [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
              (when @show-ips
-               [IpsRow (map (fn [{:keys [interface ips]}]
-                              {:name interface
-                               :ip (str/join ", " (map :address ips))}) interfaces)])])]]))))
+               [IpsRow {:ips (map (fn [{:keys [interface ips]}]
+                                    {:name interface
+                                     :ip (str/join ", " (map :address ips))}) interfaces)}])])]]))))
 
 
 (defn TabOverviewHost

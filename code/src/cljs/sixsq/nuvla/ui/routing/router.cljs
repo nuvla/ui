@@ -140,7 +140,7 @@
                                   (not= "false" (.getAttribute el "data-reitit-handle-click"))))}))
 
 
-(defn- router-component-internal []
+(defn router-component []
   (let [current-route @(re-frame/subscribe [::current-route])
         view          (-> current-route :data :view)
         path          @(re-frame/subscribe [::main-subs/nav-path])]
@@ -148,9 +148,6 @@
      (when current-route
        [view (assoc current-route :path path
                                   :pathname (:path current-route))])]))
-
-(defn router-component []
-  [router-component-internal {:router router}])
 
 
 (comment

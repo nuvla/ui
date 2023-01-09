@@ -380,3 +380,22 @@
 (defn envsubst-str
   [envsubst s]
   (str/replace s (->> envsubst keys (map regex-escape) (str/join "|") re-pattern) envsubst))
+
+
+(defn format-number
+  ([amount]
+   (format-number amount {:locale "en-US"}))
+  ([amount {:keys [locale style currency]
+            :or {locale   "en-US"
+                 style    "decimal"
+                 currency "EUR"}}]
+   (.format (js/Intl.NumberFormat. locale
+                                   (clj->js {:style style
+                                             :currency currency}))
+            amount)))
+
+(defn format-money
+  ([amount]
+   (format-number amount {:style  "currency"}))
+  ([amount opts]
+   (format-number amount (merge opts {:style "currency"}))))

@@ -1,31 +1,33 @@
 (ns sixsq.nuvla.ui.apps-store.views
-  (:require [re-frame.core :refer [dispatch subscribe]]
-            [reagent.core :as r]
-            [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
-            [sixsq.nuvla.ui.apps-store.events :as events]
-            [sixsq.nuvla.ui.apps-store.spec :as spec]
-            [sixsq.nuvla.ui.apps-store.subs :as subs]
-            [sixsq.nuvla.ui.apps.events :as apps-events]
-            [sixsq.nuvla.ui.apps.subs :as apps-subs]
-            [sixsq.nuvla.ui.apps.utils :as apps-utils]
-            [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
-            [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-            [sixsq.nuvla.ui.history.events :as history-events]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-            [sixsq.nuvla.ui.utils.general :as utils-general]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.style :as utils-style]
-            [sixsq.nuvla.ui.utils.values :as utils-values]))
+  (:require
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
+    [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
+    [sixsq.nuvla.ui.apps-store.events :as events]
+    [sixsq.nuvla.ui.apps-store.spec :as spec]
+    [sixsq.nuvla.ui.apps-store.subs :as subs]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
+    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
+    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
+    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as components]
+    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+    [sixsq.nuvla.ui.utils.general :as utils-general :refer [format-money]]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.style :as utils-style]
+    [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published-tick?]
   (let [tr             (subscribe [::i18n-subs/tr])
+        locale         @(subscribe [::i18n-subs/locale])
         map-versions   (apps-utils/map-versions-index versions)
         module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
         module-index   (apps-utils/latest-published-index map-versions)
@@ -36,7 +38,7 @@
         launch-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :launch-for)])
-                            (/ (:cent-amount-daily price) 100) "€/"
+                            (format-money (/ (:cent-amount-daily price) 100) {:locale locale}) "/"
                             (@tr [:day]))
         button-content (if price launch-price (@tr [:launch]))
         on-click       (fn [event]

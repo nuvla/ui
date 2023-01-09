@@ -1066,6 +1066,24 @@
       children
       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])))
 
+(defn- IpsRow [{:keys [ips title]}]
+  [ui/TableRow
+   [ui/TableCell title]
+   [ui/TableCell
+    {:style {:padding-top 0 :padding-bottom 0}}
+    [ui/Table {:compact    true
+               :collapsing true
+               :style      {:background-color "#f3f4f5"
+                            :border           "none"}}
+     [ui/TableBody {:basic  "very"
+                    :padded false}
+      (for [{:keys [name ip]} ips]
+        ^{:key (str name ip)}
+        (when (seq ip)
+          [ui/TableRow
+           [ui/TableCell name]
+           [ui/TableCell ip]]))]]]])
+
 (defn HostInfo
   [_nb-status _ssh-creds]
   (let [tr       (subscribe [::i18n-subs/tr])
@@ -1099,23 +1117,11 @@
                 [ui/TableCell (values/copy-value-to-clipboard
                                 ip ip copy-to-clipboard true)]])
              (when ips-available
-               [ui/TableRow
-                [ui/TableCell "IPs"]
-                [ui/TableCell
-                 {:style {:padding-top 0 :padding-bottom 0}}
-                 [ui/Table {:compact    true
-                            :collapsing true
-                            :style      {:background-color "#f3f4f5"
-                                         :border           "none"}}
-                  [ui/TableBody {:basic  "very"
-                                 :padded false}
-                   (for [[name ip] (:ips network)]
-                     ^{:key (str name ip)}
-                     (when (seq ip)
-                       [ui/TableRow
-                        [ui/TableCell name]
-                        [ui/TableCell (values/copy-value-to-clipboard
-                                        ip ip copy-to-clipboard true)]]))]]]])])
+               [IpsRow {:title "IPs"
+                        :ips (map (fn [[name ip]]
+                                    {:name name
+                                     :ip (values/copy-value-to-clipboard
+                                          ip ip copy-to-clipboard true)}) (:ips network))}])])
           (when (pos? (count @ssh-creds))
             [ui/TableRow
              [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
@@ -1172,12 +1178,10 @@
                     (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
                   [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
              (when @show-ips
-               (for [{:keys [interface ips]} interfaces]
-                 (when (seq ips)
-                   ^{:key interface}
-                   [ui/TableRow
-                    [ui/TableCell {:style {:padding-left "8px"}} interface]
-                    [ui/TableCell (str/join ", " (map :address ips))]])))])]]))))
+               [IpsRow (map (fn [{:keys [interface ips]}]
+                              {:name interface
+                               :ip (str/join ", " (map :address ips))}) interfaces)])])]]))))
+
 
 (defn TabOverviewHost
   [nb-status ssh-creds]
@@ -2034,6 +2038,6 @@
        (when (and nb-status (not (:online nb-status)))
          [ui/Message {:warning true
                       :icon    "warning sign"
-                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])
-       [TabsNuvlaBox]
-       [AddPlaybookModal]]]]))
+                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
+      [TabsNuvlaBox]
+      [AddPlaybookModal]]]))

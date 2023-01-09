@@ -1173,9 +1173,7 @@
                 [ui/TableCell
                  [:div {:style {:display         :flex
                                 :justify-content :space-between}}
-                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs, ")
-                   [:span {:style {:text-decoration :underline}}
-                    (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
+                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs")]
                   [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
              (when @show-ips
                [IpsRow (map (fn [{:keys [interface ips]}]

@@ -486,6 +486,11 @@
 
 
 (defn Card
+  "Wrapper around Semantic UI's Card.
+   Small warning: If `:href` with valid app URL and `:on-click` handler dispatching ::events/navigate
+   are provided, app navigates 2 times. Not dangerous, but unexpected for the user
+   who would have to click back 2 times to get to previous page.
+   "
   [{:keys [header description meta image on-click href button tags content
            corner-button state left-state loading? on-select selected? extra]}]
   [ui/Card (-> {:href href}

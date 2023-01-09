@@ -2,10 +2,10 @@
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.clouds-detail.spec :as spec]
-            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.response :as response]))
 

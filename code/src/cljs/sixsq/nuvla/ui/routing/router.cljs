@@ -7,10 +7,10 @@
             [reitit.frontend.easy :as rfe :refer [history]]
             [reitit.frontend.history :as rfh]
             [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.routing.effects :as fx]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.routing.effects :as fx]
             [sixsq.nuvla.ui.routing.routes :refer [router]]
             [sixsq.nuvla.ui.routing.utils :as utils :refer [name->href pathify
                                                             to-pathname]]))

@@ -9,11 +9,10 @@
             [sixsq.nuvla.ui.cimi.subs :as subs]
             [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.views :as history]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.forms :as forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -27,7 +26,7 @@
 (defn id-selector-formatter [entry]
   (let [v     (:id entry)
         label (second (str/split v #"/"))]
-    [history/link (str "api/" v) label]))
+    [uix/Link (str "api/" v) label]))
 
 
 ;; FIXME: Provide better visualization of non-string values.

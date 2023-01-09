@@ -13,7 +13,6 @@
             [sixsq.nuvla.ui.edges.events :as edges-events]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
-            [sixsq.nuvla.ui.routing.views :as history-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
@@ -1303,7 +1302,7 @@
          [ServiceIcon subtype]
          [ui/ListContent
           [ui/ListHeader
-           [history-views/link (str "clouds/" (general-utils/id->uuid id)) (or name id)]]
+           [uix/Link (str "clouds/" (general-utils/id->uuid id)) (or name id)]]
           [ui/ListDescription description]]])]]))
 
 

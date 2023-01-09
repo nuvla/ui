@@ -3,6 +3,7 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
             [sixsq.nuvla.ui.utils.form-fields :as form-fields]
@@ -343,6 +344,22 @@
 (defn LinkIcon
   [{:keys [name on-click]}]
   [:a [ui/Icon {:name name, :link true, :on-click on-click}]])
+
+
+(defn Link
+  "Renders a link that will navigate to the given href when clicked. The href
+   value will also be used as the label, unless an explicit label is provided."
+  [href & [label]]
+  [:a {:href     (str @config/path-prefix "/" href)
+       :style    {:overflow      "hidden",
+                  :text-overflow "ellipsis",
+                  :max-width     "20ch"}
+       :target   "_blank"
+       :on-click (fn [event]
+                   (when-not (.-metaKey event)              ;;cmd key not pressed
+                     (dispatch [::events/navigate href])
+                     (.preventDefault event)))}
+   (or label href)])
 
 
 (defn ModalDanger

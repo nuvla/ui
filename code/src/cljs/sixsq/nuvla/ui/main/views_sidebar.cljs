@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]

@@ -4,7 +4,6 @@
             [form-validator.core :as fv]
             [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-            [sixsq.nuvla.ui.routing.views :as history-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.session.components :as comp]
             [sixsq.nuvla.ui.session.events :as events]
@@ -75,7 +74,7 @@
                                       :on-blur       (partial fv/event->show-message form)
                                       :error         (fv/?show-message form :password spec->msg)}]
                        [ui/FormField {:style {:position "absolute"}}
-                        [history-views/link "reset-password" (@tr [:forgot-password])]]]
+                        [uix/Link "reset-password" (@tr [:forgot-password])]]]
         :submit-text  (@tr [:sign-in])
         :submit-fn    #(when (fv/validate-form-and-show? form)
                          (dispatch [::events/submit utils/session-tmpl-password

@@ -14,8 +14,6 @@
             [sixsq.nuvla.ui.deployments-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.views :as history-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
@@ -24,6 +22,7 @@
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -604,7 +603,7 @@
                        [:span [:p {:style {:overflow      "hidden",
                                            :text-overflow "ellipsis",
                                            :max-width     "20ch"}} module-name]]
-                       [history-views/link (str "apps/" module-path) module-name])]
+                       [uix/Link (str "apps/" module-path) module-name])]
 
       [ui/CardMeta (str (@tr [:created]) " " (-> deployment :created time/parse-iso8601 time/ago))]
 

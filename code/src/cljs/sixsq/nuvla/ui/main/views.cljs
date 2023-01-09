@@ -19,8 +19,6 @@
             [sixsq.nuvla.ui.deployments.views]
             [sixsq.nuvla.ui.docs.views]
             [sixsq.nuvla.ui.edges.views]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.history.utils :as history-utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.i18n.views :as i18n-views]
             [sixsq.nuvla.ui.intercom.views :as intercom]
@@ -32,8 +30,9 @@
             [sixsq.nuvla.ui.notifications.views]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.profile.views]
+            [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.routing.router :refer [router-component]]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.utils.general :as utils]
@@ -47,7 +46,7 @@
 (defn crumb
   [index segment]
   (let [nav-path (subscribe [::subs/nav-path])
-        click-fn #(dispatch [::history-events/navigate (history-utils/trim-path @nav-path index)])]
+        click-fn #(dispatch [::history-events/navigate (trim-path @nav-path index)])]
     ^{:key (str index "_" segment)}
     [ui/BreadcrumbSection
      [:a {:on-click click-fn
@@ -86,7 +85,7 @@
   (let [path        (subscribe [::subs/nav-path])
         options     (map breadcrumb-option (range) @path)
         selected    (-> options last :value)
-        callback-fn #(dispatch [::history-events/navigate (history-utils/trim-path @path %)])]
+        callback-fn #(dispatch [::history-events/navigate (trim-path @path %)])]
     [ui/Dropdown
      {:inline    true
       :value     selected

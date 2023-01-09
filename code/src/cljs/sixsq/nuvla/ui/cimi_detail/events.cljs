@@ -1,13 +1,12 @@
 (ns sixsq.nuvla.ui.cimi-detail.events
-  (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.cimi.spec :as cimi-spec]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]
+            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.cimi.spec :as cimi-spec]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx

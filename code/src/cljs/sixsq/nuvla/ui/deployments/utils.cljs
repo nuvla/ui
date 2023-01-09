@@ -1,14 +1,13 @@
 (ns sixsq.nuvla.ui.deployments.utils
-  (:require
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.deployments.spec :as spec]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.deployments.spec :as spec]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 (def ^:const STARTED "STARTED")
 (def ^:const STARTING "STARTING")
@@ -100,7 +99,7 @@
 (defn get-filter-param
   [{:keys [full-text-search additional-filter state-selector filter-external]
     :as   _args}]
-  (let [filter-state     (when state-selector (state-filter state-selector))]
+  (let [filter-state (when state-selector (state-filter state-selector))]
     (general-utils/join-and
       "id!=null"
       filter-state
@@ -110,9 +109,9 @@
 
 (defn get-query-params-summary
   [full-text-search additional-filter]
-  (let [filter-str       (general-utils/join-and
-                           full-text-search additional-filter)
-        aggregate        "terms:state"]
+  (let [filter-str (general-utils/join-and
+                     full-text-search additional-filter)
+        aggregate  "terms:state"]
     (cond-> {:orderby     "created:desc"
              :aggregation aggregate
              :first       0

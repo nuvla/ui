@@ -1,11 +1,10 @@
 (ns sixsq.nuvla.ui.cimi.subs
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-sub subscribe]]
-    [sixsq.nuvla.ui.cimi.events :as events]
-    [sixsq.nuvla.ui.cimi.spec :as spec]
-    [sixsq.nuvla.ui.filter-comp.utils :as utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-sub subscribe]]
+            [sixsq.nuvla.ui.cimi.events :as events]
+            [sixsq.nuvla.ui.cimi.spec :as spec]
+            [sixsq.nuvla.ui.filter-comp.utils :as utils]
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub

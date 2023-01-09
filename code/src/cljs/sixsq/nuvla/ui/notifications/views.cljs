@@ -1,28 +1,27 @@
 (ns sixsq.nuvla.ui.notifications.views
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [re-frame.db]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.filter-comp.events :as fc-events]
-    [sixsq.nuvla.ui.history.views :as history]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.notifications.events :as events]
-    [sixsq.nuvla.ui.notifications.spec :as spec]
-    [sixsq.nuvla.ui.notifications.subs :as subs]
-    [sixsq.nuvla.ui.notifications.utils :as utils]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+            [re-frame.db]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.filter-comp.events :as fc-events]
+            [sixsq.nuvla.ui.history.views :as history]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.notifications.events :as events]
+            [sixsq.nuvla.ui.notifications.spec :as spec]
+            [sixsq.nuvla.ui.notifications.subs :as subs]
+            [sixsq.nuvla.ui.notifications.utils :as utils]
+            [sixsq.nuvla.ui.panel :as panel]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.validation :as utils-validation]
+            [taoensso.timbre :as timbre]))
 
 
 (defn save-callback-notification-subscription-config
@@ -326,12 +325,12 @@
 
 
 (def criteria-metric-options
-  {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value utils/cpu-load }
-                             {:key "ram usage" :text "RAM usage %" :value utils/ram }
-                             {:key "disk usage" :text "Disk usage %" :value utils/disk }
-                             {:key "state" :text "NuvlaEdge online" :value utils/state }
-                             {:key "network rx" :text "Network Rx GB" :value utils/network-rx }
-                             {:key "network tx" :text "Network Tx GB" :value utils/network-tx }
+  {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value utils/cpu-load}
+                             {:key "ram usage" :text "RAM usage %" :value utils/ram}
+                             {:key "disk usage" :text "Disk usage %" :value utils/disk}
+                             {:key "state" :text "NuvlaEdge online" :value utils/state}
+                             {:key "network rx" :text "Network Rx GB" :value utils/network-rx}
+                             {:key "network tx" :text "Network Tx GB" :value utils/network-tx}
                              ]
    "infrastructure-service" [{:key "status" :text "status" :value utils/status}]
    "data-record"            [{:key "content-type" :text "content-type" :value utils/content-type}]})
@@ -345,24 +344,24 @@
 
 
 (def criteria-condition-type
-  {"nuvlabox"               {:load  :numeric
-                             :ram   :numeric
-                             :disk  :numeric
+  {"nuvlabox"               {:load       :numeric
+                             :ram        :numeric
+                             :disk       :numeric
                              :network-rx :numeric
                              :network-tx :numeric
-                             :state :boolean}
+                             :state      :boolean}
    "infrastructure-service" {:status :set}
    "data-record"            {:content-type :string}})
 
 
 (def criteria-condition-options
-  {"nuvlabox"               {:load  (map (fn [x] {:key x :value x :text x}) [">" "<"])
-                             :ram   (map (fn [x] {:key x :value x :text x}) [">" "<"])
-                             :disk  (map (fn [x] {:key x :value x :text x}) [">" "<"])
+  {"nuvlabox"               {:load       (map (fn [x] {:key x :value x :text x}) [">" "<"])
+                             :ram        (map (fn [x] {:key x :value x :text x}) [">" "<"])
+                             :disk       (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :network-rx (map (fn [x] {:key x :value x :text x}) [">"])
                              :network-tx (map (fn [x] {:key x :value x :text x}) [">"])
-                             :state ((get-in criteria-condition-type ["nuvlabox" :state])
-                                     criteria-conditions)}
+                             :state      ((get-in criteria-condition-type ["nuvlabox" :state])
+                                          criteria-conditions)}
    "infrastructure-service" {:status ((get-in criteria-condition-type ["infrastructure-service" :status])
                                       criteria-conditions)}
    "data-record"            {:content-type ((get-in criteria-condition-type ["data-record" :content-type])
@@ -421,7 +420,7 @@
                   :style      {:padding-bottom 8}} "Condition"]
    [ui/TableCell
     [ui/Dropdown {:selection true
-                  :disabled (boolean (metric-name->default-condition metric-name))
+                  :disabled  (boolean (metric-name->default-condition metric-name))
                   :options   (vec
                                ((keyword metric-name)
                                 (get criteria-condition-options collection)))
@@ -431,7 +430,7 @@
                                #(on-change :criteria {:condition %}))}]]])
 
 (def metric-name->use-other-translation-key
-  {utils/disk [:subs-notif-disk-use-other]
+  {utils/disk       [:subs-notif-disk-use-other]
    utils/network-rx [:subs-notif-network-use-other]
    utils/network-tx [:subs-notif-network-use-other]})
 
@@ -439,101 +438,101 @@
 
 (defn- DeviceNameOptions
   [{disabled? :disabled?}]
-  (let [tr (subscribe [::i18n-subs/tr])
-        criteria (subscribe [::subs/criteria])
+  (let [tr                      (subscribe [::i18n-subs/tr])
+        criteria                (subscribe [::subs/criteria])
         use-other-than-default? (r/atom (or (:dev-name @criteria) false))]
     (fn []
       (let [metric-name (:metric @criteria)]
         (when (metrics-with-customizable-dev-name metric-name)
           [ui/TableCell {:col-span 2
-                         :class "font-weight-400"}
-           [:div {:style {:display :flex
+                         :class    "font-weight-400"}
+           [:div {:style {:display       :flex
                           :justify-items :stretch-between
-                          :align-items :center
-                          :height 40
-                          :gap 24}}
-            [ui/Checkbox {:style {:margin-right 2}
-                          :label (some->> (metric-name->use-other-translation-key metric-name) (@tr))
+                          :align-items   :center
+                          :height        40
+                          :gap           24}}
+            [ui/Checkbox {:style           {:margin-right 2}
+                          :label           (some->> (metric-name->use-other-translation-key metric-name) (@tr))
                           :default-checked @use-other-than-default?
-                          :read-only disabled?
-                          :on-change (ui-callback/checked
-                                      (fn [checked?]
-                                        (when (not checked?)
-                                          (dispatch [::events/remove-custom-name]))
-                                        (reset! use-other-than-default? checked?)))}]
+                          :read-only       disabled?
+                          :on-change       (ui-callback/checked
+                                             (fn [checked?]
+                                               (when (not checked?)
+                                                 (dispatch [::events/remove-custom-name]))
+                                               (reset! use-other-than-default? checked?)))}]
             (when @use-other-than-default?
-              [ui/Input {:type :text
-                         :placeholder (@tr [(keyword (str "subs-notif-name-of-" metric-name "-to-monitor"))])
-                         :name :other-disk-name
-                         :read-only disabled?
+              [ui/Input {:type          :text
+                         :placeholder   (@tr [(keyword (str "subs-notif-name-of-" metric-name "-to-monitor"))])
+                         :name          :other-disk-name
+                         :read-only     disabled?
                          :default-value (or (:dev-name @criteria) "")
-                         :on-change (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
-                         :style {:flex 1}}])]])))))
+                         :on-change     (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
+                         :style         {:flex 1}}])]])))))
 
 
 (defn- ResetIntervalOptions
   [{disabled? :disabled?}]
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        criteria             (subscribe [::subs/criteria])
-        validate-form?       (subscribe [::subs/validate-form?])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        criteria       (subscribe [::subs/criteria])
+        validate-form? (subscribe [::subs/validate-form?])]
     (fn []
-      (let [reset-interval (:reset-interval @criteria)
-            monthly-reset? (or (nil? reset-interval) (= reset-interval "month"))
-            custom-reset? (not monthly-reset?)
-            start-date-of-month (or (:reset-start-date @criteria) 1)
+      (let [reset-interval       (:reset-interval @criteria)
+            monthly-reset?       (or (nil? reset-interval) (= reset-interval "month"))
+            custom-reset?        (not monthly-reset?)
+            start-date-of-month  (or (:reset-start-date @criteria) 1)
             custom-interval-days @(subscribe [::subs/custom-days])]
         (when (utils/metrics-with-reset-windows (:metric @criteria))
           [ui/TableCell {:col-span 2
-                         :class "font-weight-400"}
+                         :class    "font-weight-400"}
            [:div {:style {:min-height 40}
                   :class "grid-2-cols-responsive"}
-            [:div {:on-click #(dispatch (when  (not disabled?) [::events/choose-monthly-reset]))
-                   :style {:display :flex :align-items :center :opacity (if monthly-reset? 1 0.4)}}
-             [:input {:type :radio
-                      :name :reset
-                      :checked monthly-reset?
+            [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-monthly-reset]))
+                   :style    {:display :flex :align-items :center :opacity (if monthly-reset? 1 0.4)}}
+             [:input {:type      :radio
+                      :name      :reset
+                      :checked   monthly-reset?
                       :read-only true
-                      :id :monthly}]
-             [:label {:for :monthly
-                      :style {:margin-left "0.5rem" }} (@tr [:subs-notif-reset-on-day])]
-             [ui/Input {:type :number
-                        :error (and monthly-reset?
-                                    @validate-form?
-                                    (not (s/valid? ::spec/reset-start-date start-date-of-month)))
-                        :default-value start-date-of-month
-                        :disabled custom-reset?
-                        :read-only disabled?
-                        :style {:justify-self :start
-                                :margin-left "0.5rem"
-                                :max-width "100px"
-                                :margin-right "90px"}
-                        :label (@tr [:of-month])
+                      :id        :monthly}]
+             [:label {:for   :monthly
+                      :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
+             [ui/Input {:type           :number
+                        :error          (and monthly-reset?
+                                             @validate-form?
+                                             (not (s/valid? ::spec/reset-start-date start-date-of-month)))
+                        :default-value  start-date-of-month
+                        :disabled       custom-reset?
+                        :read-only      disabled?
+                        :style          {:justify-self :start
+                                         :margin-left  "0.5rem"
+                                         :max-width    "100px"
+                                         :margin-right "90px"}
+                        :label          (@tr [:of-month])
                         :label-position :right
-                        :on-change (ui-callback/value #(dispatch [::events/update-notification-subscription-config
-                                                                  :criteria
-                                                                  {:reset-start-date (js/Number %)}]))}]
+                        :on-change      (ui-callback/value #(dispatch [::events/update-notification-subscription-config
+                                                                       :criteria
+                                                                       {:reset-start-date (js/Number %)}]))}]
              [:div (ff/help-popup "min: 1, max: 31")]]
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-custom-reset]))
-                   :style {:display :flex :align-items :center :align-self "end" :opacity (if custom-reset? 1 0.4)}}
-             [:input {:type :radio
-                      :name :reset
-                      :checked custom-reset?
+                   :style    {:display :flex :align-items :center :align-self "end" :opacity (if custom-reset? 1 0.4)}}
+             [:input {:type      :radio
+                      :name      :reset
+                      :checked   custom-reset?
                       :read-only true
-                      :id :custom}]
-             [:label {:for :custom
+                      :id        :custom}]
+             [:label {:for   :custom
                       :style {:margin-left "0.5rem"}} [:span (str/capitalize (@tr [:subs-notif-custom-reset-after]))]]
-             [ui/Input {:type :number
-                        :error (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
-                        :default-value (or custom-interval-days 1)
-                        :disabled monthly-reset?
-                        :read-only disabled?
-                        :style {:justify-self :start
-                                :margin-left "0.5rem"
-                                :max-width "100px"
-                                :margin-right "60px"}
-                        :label (@tr [:days])
+             [ui/Input {:type           :number
+                        :error          (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
+                        :default-value  (or custom-interval-days 1)
+                        :disabled       monthly-reset?
+                        :read-only      disabled?
+                        :style          {:justify-self :start
+                                         :margin-left  "0.5rem"
+                                         :max-width    "100px"
+                                         :margin-right "60px"}
+                        :label          (@tr [:days])
                         :label-position :right
-                        :on-change (ui-callback/value #(dispatch [::events/update-custom-days %]))}]
+                        :on-change      (ui-callback/value #(dispatch [::events/update-custom-days %]))}]
              [:div (ff/help-popup "min: 1, max: 999")]]]])))))
 
 (def default-start-date 1)
@@ -544,7 +543,7 @@
         reset-in-days         (or (:reset-in-days criteria) default-custom-interval)
         reset-interval-string (:reset-interval criteria)
         interface-text        (if
-                               (str/blank? (:dev-name criteria))
+                                (str/blank? (:dev-name criteria))
                                 (@tr [:subs-notif-network-info-default])
                                 (@tr [:subs-notif-network-info-specific]))
         interval-text         (if (or (str/blank? reset-interval-string) (= "month" reset-interval-string))
@@ -581,7 +580,7 @@
         metric-name         (r/atom "")
         component-option    (r/atom "")
         value-options       (r/atom "")
-        subscription-config  (subscribe [::subs/notification-subscription-config])]
+        subscription-config (subscribe [::subs/notification-subscription-config])]
 
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/reset-subscription-config-all])
@@ -658,26 +657,26 @@
              [ui/TableCell {:collapsing true
                             :style      {:padding-bottom 8}} "Metric"]
              [ui/TableCell
-              [:div {:style {:display :flex
+              [:div {:style {:display     :flex
                              :align-items :center
-                             :gap "0.3rem"}}
+                             :gap         "0.3rem"}}
                [ui/Dropdown {:selection true
                              :options   (get criteria-metric-options @collection)
                              :error     (and @validate-form? (not (seq @metric-name)))
                              :on-change (ui-callback/value
-                                         #(do
-                                            (reset! metric-name %)
-                                            (on-change
-                                              :criteria (if (utils/metrics-with-reset-windows %)
-                                                          {:metric %
-                                                           :kind   (criteria-metric-kind @collection %)
-                                                           :reset-interval "month"
-                                                           :reset-start-date 1
-                                                           :condition ">"}
-                                                          {:metric %
-                                                           :kind   (criteria-metric-kind @collection %)}))))}]
-               [:div {:style  {:white-space :normal
-                               :font-size "0.9rem"}}
+                                          #(do
+                                             (reset! metric-name %)
+                                             (on-change
+                                               :criteria (if (utils/metrics-with-reset-windows %)
+                                                           {:metric           %
+                                                            :kind             (criteria-metric-kind @collection %)
+                                                            :reset-interval   "month"
+                                                            :reset-start-date 1
+                                                            :condition        ">"}
+                                                           {:metric %
+                                                            :kind   (criteria-metric-kind @collection %)}))))}]
+               [:div {:style {:white-space :normal
+                              :font-size   "0.9rem"}}
                 (get-info-text criteria tr)]]]]
 
             (case criteria-metric
@@ -827,19 +826,19 @@
              [ui/TableCell {:collapsing true
                             :style      {:padding-bottom 8}} "Metric"]
              [ui/TableCell
-              [:div {:style {:display :flex
+              [:div {:style {:display     :flex
                              :align-items :center
-                             :gap "0.3rem"}}
+                             :gap         "0.3rem"}}
                [ui/Dropdown {:selection true
                              :disabled  true
                              :value     (:metric criteria)
                              :options   (get criteria-metric-options collection)
                              :on-change (ui-callback/value
-                                         #(on-change
-                                            :criteria {:metric %
-                                                       :kind   (criteria-metric-kind collection %)}))}]
-               [:div {:style  {:white-space :normal
-                               :font-size "0.9rem"}}
+                                          #(on-change
+                                             :criteria {:metric %
+                                                        :kind   (criteria-metric-kind collection %)}))}]
+               [:div {:style {:white-space :normal
+                              :font-size   "0.9rem"}}
                 (get-info-text criteria tr)]]]]
 
             (if-not (and (= collection "nuvlabox") (= (:metric criteria) "state"))
@@ -868,10 +867,10 @@
                   :read-only false
                   :value     (:value criteria)
                   :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])
-              [ui/TableRow
-               [ResetIntervalOptions {:disabled? true}]]
-              [ui/TableRow
-               [DeviceNameOptions {:disabled? true}]]]]
+            [ui/TableRow
+             [ResetIntervalOptions {:disabled? true}]]
+            [ui/TableRow
+             [DeviceNameOptions {:disabled? true}]]]]
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form
            [ui/FormGroup
@@ -1051,9 +1050,9 @@
   [ui/TableHeader
    {:style {:font-weight 600}}
    [ui/TableRow
-    [ui/TableCell      [:span (str/capitalize (@tr [:name]))]
+    [ui/TableCell [:span (str/capitalize (@tr [:name]))]
      [:span ff/nbsp (ff/help-popup (@tr [:subscription-name]))]]
-    [ui/TableCell      [:span (str/capitalize (@tr [:criteria]))]
+    [ui/TableCell [:span (str/capitalize (@tr [:criteria]))]
      [:span ff/nbsp (ff/help-popup (@tr [:criteria-for-notifications]))]]
     [ui/TableCell
      [:span (str/capitalize (@tr [:enable]))]
@@ -1084,11 +1083,11 @@
 
 (defn TabSubscriptions
   []
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        subscription-configs  (subscribe [::subs/notification-subscription-configs])
-        notif-methods         (subscribe [::subs/notification-methods])
-        on-change             (fn [name-kw value]
-                                (dispatch [::events/update-notification-subscription-config name-kw value]))]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        subscription-configs (subscribe [::subs/notification-subscription-configs])
+        notif-methods        (subscribe [::subs/notification-methods])
+        on-change            (fn [name-kw value]
+                               (dispatch [::events/update-notification-subscription-config name-kw value]))]
     (dispatch [::events/get-notification-subscription-configs])
     (dispatch-sync [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
@@ -1126,15 +1125,15 @@
                                             :default-checked (:enabled subs-conf)
                                             :style           {:margin "1em"}
                                             :on-change       (ui-callback/checked
-                                                              #(do
-                                                                 (dispatch-sync [::events/set-notification-subscription-config subs-conf])
-                                                                 (on-change :collection (:resource-kind subs-conf))
-                                                                 (on-change :enabled %)
-                                                                 (when (= 1 (count @notif-methods))
-                                                                   (on-change :method-id (-> @notif-methods
-                                                                                             first
-                                                                                             :id)))
-                                                                 (dispatch [::events/toggle-enabled (:id subs-conf) %])))}]]]
+                                                               #(do
+                                                                  (dispatch-sync [::events/set-notification-subscription-config subs-conf])
+                                                                  (on-change :collection (:resource-kind subs-conf))
+                                                                  (on-change :enabled %)
+                                                                  (when (= 1 (count @notif-methods))
+                                                                    (on-change :method-id (-> @notif-methods
+                                                                                              first
+                                                                                              :id)))
+                                                                  (dispatch [::events/toggle-enabled (:id subs-conf) %])))}]]]
                             [ui/TableCell {:floated :left
                                            :width   4}
                              [SubsNotifMethodDropdown

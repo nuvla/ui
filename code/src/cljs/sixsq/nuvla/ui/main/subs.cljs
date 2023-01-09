@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.main.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.main.spec :as spec]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.main.spec :as spec]))
 
 
 (reg-sub

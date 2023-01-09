@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.plugins.full-text-search
-  (:require
-    [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch reg-event-fx subscribe]]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.plugins.helpers :as helpers]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [cljs.spec.alpha :as s]
+            [re-frame.core :refer [dispatch reg-event-fx subscribe]]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (s/def ::text string?)
 (s/def ::change-event (s/nilable coll?))

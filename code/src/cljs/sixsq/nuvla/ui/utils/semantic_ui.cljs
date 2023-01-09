@@ -2,30 +2,29 @@
   "Mapping of names of Semantic UI components to the Soda Ash wrappers. This
    namespace has no real functionality; it just keeps Cursive from complaining
    about undefined symbols."
-  (:require
-    ["codemirror/addon/dialog/dialog"]
-    ["codemirror/addon/edit/closebrackets"]
-    ["codemirror/addon/edit/matchbrackets"]
-    ["codemirror/addon/fold/brace-fold"]
-    ["codemirror/addon/fold/foldcode"]
-    ["codemirror/addon/fold/foldgutter"]
-    ["codemirror/addon/fold/indent-fold"]
-    ["codemirror/addon/search/matchesonscrollbar"]
-    ["codemirror/addon/search/search"]
-    ["codemirror/addon/search/searchcursor"]
-    ["codemirror/addon/selection/active-line"]
-    ["codemirror/mode/javascript/javascript"]
-    ["codemirror/mode/markdown/markdown"]
-    ["codemirror/mode/shell/shell"]
-    ["codemirror/mode/yaml/yaml"]
-    ["qrcode.react" :as qrcode]
-    ["react-codemirror2" :as code-mirror]
-    ["react-copy-to-clipboard" :as copy-to-clipboard]
-    ["react-datepicker" :as date-picker]
-    ["react-diff-viewer" :as react-diff-viewer]
-    ["react-markdown" :as react-markdown]
-    ["semantic-ui-react" :as semantic]
-    [reagent.core :as r]))
+  (:require ["codemirror/addon/dialog/dialog"]
+            ["codemirror/addon/edit/closebrackets"]
+            ["codemirror/addon/edit/matchbrackets"]
+            ["codemirror/addon/fold/brace-fold"]
+            ["codemirror/addon/fold/foldcode"]
+            ["codemirror/addon/fold/foldgutter"]
+            ["codemirror/addon/fold/indent-fold"]
+            ["codemirror/addon/search/matchesonscrollbar"]
+            ["codemirror/addon/search/search"]
+            ["codemirror/addon/search/searchcursor"]
+            ["codemirror/addon/selection/active-line"]
+            ["codemirror/mode/javascript/javascript"]
+            ["codemirror/mode/markdown/markdown"]
+            ["codemirror/mode/shell/shell"]
+            ["codemirror/mode/yaml/yaml"]
+            ["qrcode.react" :as qrcode]
+            ["react-codemirror2" :as code-mirror]
+            ["react-copy-to-clipboard" :as copy-to-clipboard]
+            ["react-datepicker" :as date-picker]
+            ["react-diff-viewer" :as react-diff-viewer]
+            ["react-markdown" :as react-markdown]
+            ["semantic-ui-react" :as semantic]
+            [reagent.core :as r]))
 
 
 (def Accordion (r/adapt-react-class semantic/Accordion))

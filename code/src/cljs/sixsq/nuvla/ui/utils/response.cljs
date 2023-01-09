@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.utils.response
   "parses JSON responses from the CIMI API"
-  (:require
-    [cljs.pprint :refer [pprint]]
-    [sixsq.nuvla.ui.utils.general :as utils]))
+  (:require [cljs.pprint :refer [pprint]]
+            [sixsq.nuvla.ui.utils.general :as utils]))
 
 
 (defn parse

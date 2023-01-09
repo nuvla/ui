@@ -1,22 +1,21 @@
 (ns sixsq.nuvla.ui.dashboard.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
-    [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
-    [sixsq.nuvla.ui.dashboard.events :as events]
-    [sixsq.nuvla.ui.dashboard.utils :as utils]
-    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-    [sixsq.nuvla.ui.deployments.views :as deployments-views]
-    [sixsq.nuvla.ui.edges.subs :as edges-subs]
-    [sixsq.nuvla.ui.edges.views :as edges-views]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as utils-style]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
+            [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
+            [sixsq.nuvla.ui.dashboard.events :as events]
+            [sixsq.nuvla.ui.dashboard.utils :as utils]
+            [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+            [sixsq.nuvla.ui.deployments.views :as deployments-views]
+            [sixsq.nuvla.ui.edges.subs :as edges-subs]
+            [sixsq.nuvla.ui.edges.views :as edges-views]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.panel :as panel]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as utils-style]))
 
 
 (defn refresh

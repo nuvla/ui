@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.step-group :as step-group-plugin]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.plugins.step-group :as step-group-plugin]
+            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
 
 (s/def ::deployment-set (s/nilable any?))
 (s/def ::deployment-set-not-found? boolean?)

@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.main.effects
-  (:require
-    ["@stripe/stripe-js" :as stripejs]
-    [re-frame.core :refer [dispatch reg-fx]]))
+  (:require ["@stripe/stripe-js" :as stripejs]
+            [re-frame.core :refer [dispatch reg-fx]]))
 
 
 (reg-fx
@@ -40,5 +39,5 @@
   ::on-unload-protection
   (fn [protected?]
     (if protected?
-        (set-unload-protection)
-        (clear-unload-protection))))
+      (set-unload-protection)
+      (clear-unload-protection))))

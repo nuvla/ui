@@ -82,7 +82,7 @@
   [parsed]
   (->>
     parsed
-    #_ :clj-kondo/ignore
+    #_:clj-kondo/ignore
     (insta/transform                                        ;FIXME: Kondo can't find this, but it seems to exist!
       {:AndExpr           (fn [& args]
                             (if (= (count args) 1)

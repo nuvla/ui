@@ -4,9 +4,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
-
 (defn UnknownResource
-  [_path _query-parameters]
+  [_match]
   (let [nav-path    (subscribe [::main-subs/nav-path])
         reason-text (str "Unknown resource: " @nav-path)]
     [ui/Container {:textAlign "center"}

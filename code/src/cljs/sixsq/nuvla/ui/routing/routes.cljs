@@ -1,13 +1,12 @@
 (ns sixsq.nuvla.ui.routing.routes
   (:require [reitit.coercion.spec :as rss]
             [reitit.core :as r]
-            [reitit.exception :as exception]
             [reitit.frontend :as rf]
             [sixsq.nuvla.ui.about.views :refer [about]]
             [sixsq.nuvla.ui.apps.views :as app-views]
             [sixsq.nuvla.ui.cimi.views :refer [api-view]]
             [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
-            [sixsq.nuvla.ui.config :refer [base-path debug?]]
+            [sixsq.nuvla.ui.config :refer [base-path]]
             [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
             [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]]
             [sixsq.nuvla.ui.data-set.views :as data-set-views]
@@ -174,6 +173,7 @@
     r-routes
     {:data      {:coercion rss/coercion}
      :router    r/linear-router
-     :conflicts (fn [conflicts]
-                  (when debug?
-                    (println (exception/format-exception :path-conflicts nil conflicts))))}))
+     :conflicts  nil
+     #_(fn [conflicts]
+       (when debug?
+         (println (exception/format-exception :path-conflicts nil conflicts))))}))

@@ -308,7 +308,7 @@
                :icon    "file"}
     :render   #(r/as-element [DataRecords])}])
 
-(defn Data
+(defn data-view
   []
   (refresh)
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -332,11 +332,3 @@
           [deployment-dialog-views/deploy-modal true]
           [data-set-views/ProcessButton]
           [data-set-views/CreateDataSet]]]))))
-
-(defn data-view
-  [{:keys [path]}]
-  (let [[_ uuid] path
-        n (count path)]
-    (case n
-      2 [data-set-views/DataSet uuid]
-      [Data])))

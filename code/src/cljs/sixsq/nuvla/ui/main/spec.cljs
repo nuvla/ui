@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.main.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.config :as config]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.config :as config]))
 
 (s/def ::loading? boolean?)
 
@@ -100,7 +99,7 @@
                                                           :icon       "key"
                                                           :protected? true
                                                           :order      50}
-                                       "notifications"   {:key         :notifications
+                                       "notifications"   {:key        :notifications
                                                           :label-kw   :notifications
                                                           :icon       "bell"
                                                           :protected? true

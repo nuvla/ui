@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.edges-detail.subs
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.edges-detail.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.edges-detail.spec :as spec]
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
   ::loading?

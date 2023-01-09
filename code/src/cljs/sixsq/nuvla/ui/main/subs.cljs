@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.main.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.main.spec :as spec]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.config :as config]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.main.spec :as spec]))
 
 
 (reg-sub
@@ -65,9 +64,9 @@
 
 
 (reg-sub
- ::nav-path
- (fn [db]
-   (::spec/nav-path db)))
+  ::nav-path
+  (fn [db]
+    (::spec/nav-path db)))
 
 
 (reg-sub

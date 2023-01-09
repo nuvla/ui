@@ -1,39 +1,38 @@
 (ns sixsq.nuvla.ui.deployments-detail.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.apps.views-versions :as views-versions]
-    [sixsq.nuvla.ui.credentials.components :as creds-comp]
-    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
-    [sixsq.nuvla.ui.credentials.utils :as creds-utils]
-    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
-    [sixsq.nuvla.ui.deployments-detail.events :as events]
-    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployments-detail.subs :as subs]
-    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-    [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.views :as history-views]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.job.subs :as job-subs]
-    [sixsq.nuvla.ui.job.views :as job-views]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-    [sixsq.nuvla.ui.resource-log.views :as log-views]
-    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as spec-utils]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.views :as acl]
+            [sixsq.nuvla.ui.apps.views-versions :as views-versions]
+            [sixsq.nuvla.ui.credentials.components :as creds-comp]
+            [sixsq.nuvla.ui.credentials.subs :as creds-subs]
+            [sixsq.nuvla.ui.credentials.utils :as creds-utils]
+            [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
+            [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
+            [sixsq.nuvla.ui.deployments-detail.events :as events]
+            [sixsq.nuvla.ui.deployments-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployments-detail.subs :as subs]
+            [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+            [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.history.views :as history-views]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.job.subs :as job-subs]
+            [sixsq.nuvla.ui.job.views :as job-views]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.resource-log.views :as log-views]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -50,9 +49,9 @@
 (defn sum-replicas
   [parameters ends-with]
   (->> (vals parameters)
-    (filter #(str/ends-with? (:name %) ends-with))
-    (map #(js/parseInt (:value %)))
-    (reduce +)))
+       (filter #(str/ends-with? (:name %) ends-with))
+       (map #(js/parseInt (:value %)))
+       (reduce +)))
 
 
 (defn sum-running-replicas
@@ -325,7 +324,7 @@
                 :content           popup-text
                 :mouse-enter-delay 500
                 :trigger           (r/as-element button)}
-         (and (not menu-item?) (not label?)) (assoc :position "bottom center"))]
+               (and (not menu-item?) (not label?)) (assoc :position "bottom center"))]
       button)))
 
 
@@ -468,7 +467,7 @@
                                      (@tr [:start])
                                      (@tr [:update]))
                       :popup-text  (@tr [(if start :deployment-start-msg
-                                           :deployment-update-msg)])
+                                                   :deployment-update-msg)])
                       :icon-name   (if start "play" "redo")
                       :menu-item?  true
                       :disabled?   (if start
@@ -626,7 +625,7 @@
           [ui/Icon {:name "tag"}] tag])]]
 
      (when (and (deployments-utils/started? state)
-             @primary-url)
+                @primary-url)
        [ui/Button {:color    "green"
                    :icon     "external"
                    :content  primary-url-name
@@ -703,7 +702,7 @@
              [ui/Icon {:name "bullseye"}]
              [values/as-link (general-utils/id->uuid deployment-set) :label
               (or deployment-set-name
-                (general-utils/id->uuid deployment-set))
+                  (general-utils/id->uuid deployment-set))
               :page "deployment-sets"]]]])]]]
      (when-not (deployments-utils/stopped? state)
        [ui/Segment {:attached  false

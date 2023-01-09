@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.utils.spec
   "Utility from Alistair Roche on the clojure mailing list for creating a
    closed map definition."
-  (:require
-    [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]))
 
 
 (defmacro only-keys

@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.i18n.utils
-  (:require
-    [sixsq.nuvla.ui.i18n.dictionary :refer [dictionary]]
-    [taoensso.tempura :as tempura]))
+  (:require [sixsq.nuvla.ui.i18n.dictionary :refer [dictionary]]
+            [taoensso.tempura :as tempura]))
 
 
 (defn create-tr-fn

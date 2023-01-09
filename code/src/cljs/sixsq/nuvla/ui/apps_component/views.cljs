@@ -1,26 +1,25 @@
 (ns sixsq.nuvla.ui.apps-component.views
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.apps-component.events :as events]
-    [sixsq.nuvla.ui.apps-component.spec :as spec]
-    [sixsq.nuvla.ui.apps-component.subs :as subs]
-    [sixsq.nuvla.ui.apps.events :as apps-events]
-    [sixsq.nuvla.ui.apps.spec :as apps-spec]
-    [sixsq.nuvla.ui.apps.subs :as apps-subs]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
-    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as forms]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.views :as acl]
+            [sixsq.nuvla.ui.apps-component.events :as events]
+            [sixsq.nuvla.ui.apps-component.spec :as spec]
+            [sixsq.nuvla.ui.apps-component.subs :as subs]
+            [sixsq.nuvla.ui.apps.events :as apps-events]
+            [sixsq.nuvla.ui.apps.spec :as apps-spec]
+            [sixsq.nuvla.ui.apps.subs :as apps-subs]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
+            [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.utils.form-fields :as forms]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn registry-url
@@ -31,14 +30,14 @@
 (defn docker-image-view
   [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag] :as _image}]
   [:span
-   #_ :clj-kondo/ignore
+   #_:clj-kondo/ignore
    (when (not (empty? registry))
      [:span registry "/"])
-   #_ :clj-kondo/ignore
+   #_:clj-kondo/ignore
    (when (not (empty? repository))
      [:span repository "/"])
    [:span image-name]
-   #_ :clj-kondo/ignore
+   #_:clj-kondo/ignore
    (when (not (empty? tag))
      [:span ":" tag])])
 
@@ -155,7 +154,7 @@
                                    #(do (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::events/update-port-protocol id %])
                                         (dispatch [::apps-events/validate-form])))}]
-        #_ :clj-kondo/ignore
+        #_:clj-kondo/ignore
         (when (and (not (empty? protocol)) (not= "tcp" protocol))
           [:b protocol]))]
 
@@ -291,7 +290,7 @@
             (str "-p " published-port ":" target-port (when
                                                         (and
                                                           (not= "tcp" protocol)
-                                                          #_ :clj-kondo/ignore
+                                                          #_:clj-kondo/ignore
                                                           (not (empty? protocol)))
                                                         (str "/" protocol)))))]
     (str/join " " ports-args)))
@@ -301,7 +300,7 @@
   [mounts]
   (let [mounts-commands
         (for [[_id {:keys [::spec/mount-type ::spec/mount-source
-                          ::spec/mount-target ::spec/mount-read-only]}] mounts]
+                           ::spec/mount-target ::spec/mount-read-only]}] mounts]
           (str
             "--mount type=" mount-type
             ",src=" mount-source
@@ -313,14 +312,14 @@
 (defn generate-image-arg
   [{:keys [::spec/registry ::spec/repository ::spec/image-name ::spec/tag]}]
   (str
-    #_ :clj-kondo/ignore
+    #_:clj-kondo/ignore
     (when (not (empty? registry))
       (str registry "/"))
-    #_ :clj-kondo/ignore
+    #_:clj-kondo/ignore
     (when (not (empty? repository))
       (str repository "/"))
     image-name
-    #_ :clj-kondo/ignore
+    #_:clj-kondo/ignore
     (when (not (empty? tag))
       (str ":" tag))))
 

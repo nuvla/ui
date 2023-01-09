@@ -1,34 +1,33 @@
 (ns sixsq.nuvla.ui.clouds.views
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [re-frame.db]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.clouds-detail.views :as infra-detail]
-    [sixsq.nuvla.ui.clouds.events :as events]
-    [sixsq.nuvla.ui.clouds.spec :as spec]
-    [sixsq.nuvla.ui.clouds.subs :as subs]
-    [sixsq.nuvla.ui.clouds.utils :as utils]
-    [sixsq.nuvla.ui.credentials.views :as cred-views]
-    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-    [taoensso.timbre :as timbre]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+            [re-frame.db]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.views :as acl]
+            [sixsq.nuvla.ui.clouds-detail.views :as infra-detail]
+            [sixsq.nuvla.ui.clouds.events :as events]
+            [sixsq.nuvla.ui.clouds.spec :as spec]
+            [sixsq.nuvla.ui.clouds.subs :as subs]
+            [sixsq.nuvla.ui.clouds.utils :as utils]
+            [sixsq.nuvla.ui.credentials.views :as cred-views]
+            [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.validation :as utils-validation]
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            [taoensso.timbre :as timbre]))
 
 (defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -109,8 +108,8 @@
 
 (defn InfraServices
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        isgs              (subscribe [::subs/infra-service-groups])]
+  (let [tr   (subscribe [::i18n-subs/tr])
+        isgs (subscribe [::subs/infra-service-groups])]
     (fn []
       (let [infra-group-count (get @isgs :count 0)]
         [:<>
@@ -120,8 +119,8 @@
            [:<>
             [ServiceGroups @isgs]
             [pagination-plugin/Pagination
-             {:db-path [::spec/pagination]
-              :total-items infra-group-count
+             {:db-path      [::spec/pagination]
+              :total-items  infra-group-count
               :change-event [::events/get-infra-service-groups]}]])]))))
 
 (defn in?

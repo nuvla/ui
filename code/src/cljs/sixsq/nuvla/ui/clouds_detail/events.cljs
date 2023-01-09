@@ -10,10 +10,10 @@
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-db ::set-infrastructure-service
-  (fn [db [_ infrastructure-service]]
-    (assoc db ::spec/infra-service-not-found? (nil? infrastructure-service)
-              ::spec/infrastructure-service infrastructure-service
-              ::main-spec/loading? false)))
+              (fn [db [_ infrastructure-service]]
+                (assoc db ::spec/infra-service-not-found? (nil? infrastructure-service)
+                          ::spec/infrastructure-service infrastructure-service
+                          ::main-spec/loading? false)))
 
 (reg-event-fx
   ::get-infrastructure-service

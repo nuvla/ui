@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.notifications.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.notifications.spec :as spec]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.notifications.spec :as spec]))
 
 
 ;;
@@ -48,6 +47,13 @@
   ::notification-subscription-config
   (fn [db]
     (::spec/notification-subscription-config db)))
+
+
+(reg-sub
+  ::notification-subscription-custom-options
+  :<- [::notification-subscription-config]
+  (fn [{:keys [custom-options]} [_ metric-name]]
+    (get custom-options metric-name)))
 
 ;;
 ;; subscription
@@ -145,12 +151,26 @@
   (fn [db]
     (get db ::spec/components-number)))
 
+(reg-sub
+  ::criteria
+  (fn [db]
+    (get-in db [::spec/notification-subscription-config :criteria])))
+
+(reg-sub
+  ::custom-days
+  :<- [::criteria]
+  (fn [criteria]
+    (let [reset-interval (or (:reset-interval criteria) "")
+          parsed-days    (first (re-find #"^[\d{0,3}]d" reset-interval))
+          reset-in-days  ((fnil js/Number 1) parsed-days)]
+      reset-in-days)))
 
 
 (reg-sub
   ::criteria-metric
-  (fn [db]
-    (get-in db [::spec/notification-subscription-config :criteria :metric])))
+  :<- [::criteria]
+  (fn [criteria]
+    (get criteria :metric)))
 
 
 ;; Validation
@@ -173,5 +193,3 @@
 (reg-sub
   ::is-new?
   ::spec/is-new?)
-
-

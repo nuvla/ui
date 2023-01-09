@@ -23,7 +23,7 @@
 
 (def ^{:doc "Options for a Segment with vertical scroll."}
   autoscroll-y {:basic true
-                :style {:height "100%"
+                :style {:height     "100%"
                         :overflow-y "auto"
                         :padding    1}})
 

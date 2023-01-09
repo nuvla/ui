@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.utils.intercom
-  (:require
-    ["react-intercom" :as react-intercom]
-    [reagent.core :as reagent]))
+  (:require ["react-intercom" :as react-intercom]
+            [reagent.core :as reagent]))
 
 
 (def intercom-api react-intercom/IntercomAPI)

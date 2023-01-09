@@ -11,7 +11,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.routing.routes :as routes :refer [router]]
+            [sixsq.nuvla.ui.routing.routes :refer [router]]
             [sixsq.nuvla.ui.routing.utils :as utils :refer [name->href pathify
                                                             to-pathname]]))
 
@@ -26,7 +26,7 @@
 
 (defn split-path-alias
   [path]
-  (let [path (strip-base-path path)
+  (let [path      (strip-base-path path)
         [page :as path-vec] (vec (str/split path #"/"))
         real-page (get page-alias page)]
     (if (and page real-page)
@@ -36,7 +36,7 @@
 ;;; Effects ;;;
 
 ;; Triggering navigation from events by using js/window.history.pushState directly,
-;; expects a string as path argument
+;; expects a string as path argument
 (re-frame/reg-fx
   :push-state
   (fn [path]
@@ -68,17 +68,17 @@
 
 
 (reg-cofx
- :get-path-parts-and-search-map
- (fn [coeffects]
-   (let [location (.-location js/window)
-         path-name (.-pathname location)
-         path-parts   (->> (split-path-alias path-name)
-                           (map js/decodeURIComponent)
-                           vec)
-         query-params (utils/decode-query-string (.-search location))]
-     (assoc coeffects
-       :path-parts   path-parts
-       :query-params query-params))))
+  :get-path-parts-and-search-map
+  (fn [coeffects]
+    (let [location     (.-location js/window)
+          path-name    (.-pathname location)
+          path-parts   (->> (split-path-alias path-name)
+                            (map js/decodeURIComponent)
+                            vec)
+          query-params (utils/decode-query-string (.-search location))]
+      (assoc coeffects
+        :path-parts path-parts
+        :query-params query-params))))
 
 (re-frame/reg-fx
   :navigate-back!
@@ -88,23 +88,23 @@
 (re-frame/reg-event-fx
   ::navigate-back
   (fn []
-    {:fx [[:navigate-back!]] }))
+    {:fx [[:navigate-back!]]}))
 
 
 (re-frame/reg-event-fx
   ::navigated
   [(re-frame/inject-cofx :get-path-parts-and-search-map)]
-  (fn [{db :db
-        path-parts :path-parts
+  (fn [{db           :db
+        path-parts   :path-parts
         query-params :query-params} [_ new-match]]
-    (let [old-match   (:current-route db)
-          controllers (rfc/apply-controllers (:controllers old-match) new-match)
+    (let [old-match                  (:current-route db)
+          controllers                (rfc/apply-controllers (:controllers old-match) new-match)
           new-match-with-controllers (assoc new-match :controllers controllers)]
       {:db
        (-> db (assoc :current-route new-match-with-controllers
                      ::main-spec/nav-path path-parts
                      ::main-spec/nav-query-params query-params))
-       :fx [[:dispatch [::main-events/bulk-actions-interval-after-navigation]]]
+       :fx                   [[:dispatch [::main-events/bulk-actions-interval-after-navigation]]]
        ::fx/set-window-title [(strip-base-path (:path new-match))]})))
 
 (re-frame/reg-event-fx
@@ -123,7 +123,7 @@
                   :db new-db}]
       (if (and changes-protection? (not ignore-changes-protection))
         {:db (assoc db
-               ::main-spec/ignore-changes-modal        event
+               ::main-spec/ignore-changes-modal event
                ::main-spec/do-not-ignore-changes-modal revert
 
                ;; In case of not confirming ignore-chagnes-modal,
@@ -132,7 +132,7 @@
                ;; disables the protection.
                ::ignore-changes-protection true)}
         (merge {:db (assoc db ::ignore-changes-protection false)}
-          event)))))
+               event)))))
 
 ;;; Subscriptions ;;;
 (re-frame/reg-sub
@@ -150,10 +150,10 @@
   (rfe/start!
     router
     on-navigate
-    {:use-fragment false
+    {:use-fragment         false
      :ignore-anchor-click? (fn [router e el uri]
                              (and (rfh/ignore-anchor-click? router e el uri)
-                               (not= "false" (.getAttribute el "data-reitit-handle-click"))))}))
+                                  (not= "false" (.getAttribute el "data-reitit-handle-click"))))}))
 
 
 (defn- router-component-internal []
@@ -233,8 +233,8 @@
 
   ;; internally `rfe/push-state` matches route by calling match-by-name,
   ;; then calls:
-     ;; 1) js/window.pushState with found path and
-     ;; 2) provided -on-navigate handler
+  ;; 1) js/window.pushState with found path and
+  ;; 2) provided -on-navigate handler
 
   ;; this navigates to "/ui/apps"
   (rfe/push-state :apps {} nil)

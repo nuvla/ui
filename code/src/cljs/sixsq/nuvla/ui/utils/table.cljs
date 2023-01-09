@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.utils.table
-  (:require
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]))
+  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn wrapped-table

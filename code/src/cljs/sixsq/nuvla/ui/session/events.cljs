@@ -1,19 +1,18 @@
 (ns sixsq.nuvla.ui.session.events
-  (:require
-    [ajax.core :as ajax]
-    [clojure.string :as str]
-    [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.routing.utils :refer [name->href]]
-    [sixsq.nuvla.ui.session.effects :as fx]
-    [sixsq.nuvla.ui.session.spec :as spec]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [ajax.core :as ajax]
+            [clojure.string :as str]
+            [day8.re-frame.http-fx]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.session.effects :as fx]
+            [sixsq.nuvla.ui.session.spec :as spec]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -36,7 +35,7 @@
                            (when-not (str/blank? query-str)
                              (js/encodeURIComponent query-str))))
           navigate  (str (name->href :sign-in) (when redirect
-                                     (str "?redirect=" redirect)))]
+                                                 (str "?redirect=" redirect)))]
       (cond-> {:db (assoc db ::spec/session new-session
                              ::spec/session-loading? false)}
               new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])

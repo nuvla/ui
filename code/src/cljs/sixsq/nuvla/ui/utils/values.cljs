@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.utils.values
   "General functions for rendering values."
-  (:require
-    [clojure.pprint :refer [pprint]]
-    [clojure.string :as str]
-    [markdown-to-hiccup.core :as md]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.history.views :as history]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [clojure.pprint :refer [pprint]]
+            [clojure.string :as str]
+            [markdown-to-hiccup.core :as md]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.history.views :as history]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn href?

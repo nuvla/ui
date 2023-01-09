@@ -316,7 +316,7 @@
     (fn []
       (let [parent    (utils/nav-path->module-path @nav-path)
             base-path (pathify (remove str/blank?
-                                 [(name->href :apps) parent]))]
+                                       [(name->href :apps) parent]))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}
@@ -328,7 +328,7 @@
                          :itemsPerRow 3}
 
            [ui/Card
-            {:href (pathify [base-path "New Project?subtype=project"])
+            {:href     (pathify [base-path "New Project?subtype=project"])
              :on-click #(dispatch [::events/close-add-modal])}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
@@ -336,7 +336,7 @@
                        :size :massive}]]]
 
            [ui/Card
-            {:href (pathify [base-path "New Application?subtype=application"])
+            {:href     (pathify [base-path "New Application?subtype=application"])
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
@@ -352,7 +352,7 @@
                               :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
-            {:href (pathify [base-path "New Application?subtype=application_kubernetes"])
+            {:href     (pathify [base-path "New Application?subtype=application_kubernetes"])
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}

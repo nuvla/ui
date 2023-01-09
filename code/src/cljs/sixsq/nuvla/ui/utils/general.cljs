@@ -1,11 +1,10 @@
 (ns sixsq.nuvla.ui.utils.general
-  (:require
-    ["js-yaml" :as js-yaml]
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [goog.string :as gstring]
-    [goog.string.format]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require ["js-yaml" :as js-yaml]
+            [clojure.set :as set]
+            [clojure.string :as str]
+            [goog.string :as gstring]
+            [goog.string.format]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn str->int

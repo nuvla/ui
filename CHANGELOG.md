@@ -4,6 +4,12 @@
 
 ### Changed
 
+- Routing - introduces reitit frontend router for client side routing
+
+## [2.32.12] - 2023-01-06
+
+### Changed
+
 - Deployment modal - Check dct error not visible fix
 - Application detail - message become vendor bugfix
 - Application detail - License renamed to End-User License Agreement
@@ -12,7 +18,7 @@
 - Paginations - Items per page is stored to and loaded from localStorage #1009
 - Main - Remove deprecated message and bootstrap-message
 - Readme - Update dev section to include skip verification of untrusted certificate
-- Routing - introduces reitit frontend router for client side routing
+- Notifications - Added params to define time window reset and device name 
 
 ## [2.32.11] - 2022-12-19
 

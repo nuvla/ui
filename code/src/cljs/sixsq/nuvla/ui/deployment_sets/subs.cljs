@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployment-sets.spec :as spec]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.deployment-sets.spec :as spec]))
 
 (reg-sub
   ::loading?

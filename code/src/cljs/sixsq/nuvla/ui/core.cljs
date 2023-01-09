@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.core
   (:require [cljs.spec.test.alpha :as ts]
             [form-validator.core :as fv]
-            [re-frame.core :refer [clear-subscription-cache! dispatch
-                                   dispatch-sync]]
+            [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
             [reagent.core :as r]
             [reagent.dom :as rdom]
             [sixsq.nuvla.ui.cimi.events :as api-events]
@@ -11,10 +10,10 @@
             [sixsq.nuvla.ui.i18n.events :as i18n-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.views :as main-views]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.router :refer [init-routes!]]
             [sixsq.nuvla.ui.session.events :as session-events]
-            [taoensso.timbre :as log]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+            [taoensso.timbre :as log]))
 
 
 (defn dev-setup []

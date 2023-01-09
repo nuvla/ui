@@ -270,7 +270,7 @@
         (not (str/blank? create-description)) (assoc :description create-description))
       #(dispatch [::history-events/navigate
                   (str (name->href :deployment-sets-details
-                         {:uuid (general-utils/id->uuid (:resource-id %))}))])]}))
+                                   {:uuid (general-utils/id->uuid (:resource-id %))}))])]}))
 
 (reg-event-db
   ::set

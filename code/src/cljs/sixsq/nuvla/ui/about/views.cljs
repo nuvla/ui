@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.about.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [subscribe]]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [subscribe]]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn about
   [_path]

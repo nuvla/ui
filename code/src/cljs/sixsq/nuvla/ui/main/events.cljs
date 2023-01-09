@@ -25,8 +25,8 @@
     (when (not changes-protection?)
       {::fx/bulk-actions-interval [::action-interval-delete
                                    (dissoc actions-interval
-                                     notification-polling-id
-                                     check-ui-version-polling-id)]})))
+                                           notification-polling-id
+                                           check-ui-version-polling-id)]})))
 
 (reg-event-db
   ::set-loading?
@@ -132,7 +132,7 @@
 (reg-event-fx
   ::changes-protection?
   (fn [{db :db} [_ choice]]
-    {:db (assoc db ::spec/changes-protection? choice)
+    {:db                       (assoc db ::spec/changes-protection? choice)
      ::fx/on-unload-protection choice}))
 
 
@@ -152,7 +152,7 @@
 
             (fn? ignore-changes-modal)
             (do (ignore-changes-modal)
-              {:db new-db})))
+                {:db new-db})))
 
         (merge {:db close-modal-db}
                do-not-ignore-changes-modal)))))

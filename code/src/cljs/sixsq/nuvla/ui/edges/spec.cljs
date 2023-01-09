@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.edges.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
 
 (s/def ::stale-count nat-int?)
 (s/def ::active-count nat-int?)
@@ -43,27 +42,27 @@
 (def default-ordering {:field :created :order "desc"})
 
 (def defaults
-  {::nuvlaboxes                   nil
+  {::nuvlaboxes                    nil
    ::next-heartbeats-offline-edges nil
-   ::nuvlabox-cluster-summary     nil
-   ::nuvlaboxes-summary           nil
-   ::nuvlaboxes-summary-all       nil
-   ::nuvlabox-releases            nil
-   ::state-nuvlaboxes             nil
-   ::state-selector               nil
-   ::open-modal                   nil
-   ::nuvlabox-created-id          nil
-   ::nuvlabox-usb-api-key         nil
-   ::nuvlabox-ssh-key             nil
-   ::nuvlabox-private-ssh-key     nil
-   ::vpn-infra                    nil
-   ::ssh-keys-available           nil
-   ::nuvlabox-clusters            nil
-   ::nuvlabox-cluster             nil
-   ::nuvlaboxes-in-clusters       nil
-   ::nuvlabox-playbooks-cronjob   nil
-   ::ordering                     (build-ordering)
-   ::edges-search                 (full-text-search-plugin/build-spec)})
+   ::nuvlabox-cluster-summary      nil
+   ::nuvlaboxes-summary            nil
+   ::nuvlaboxes-summary-all        nil
+   ::nuvlabox-releases             nil
+   ::state-nuvlaboxes              nil
+   ::state-selector                nil
+   ::open-modal                    nil
+   ::nuvlabox-created-id           nil
+   ::nuvlabox-usb-api-key          nil
+   ::nuvlabox-ssh-key              nil
+   ::nuvlabox-private-ssh-key      nil
+   ::vpn-infra                     nil
+   ::ssh-keys-available            nil
+   ::nuvlabox-clusters             nil
+   ::nuvlabox-cluster              nil
+   ::nuvlaboxes-in-clusters        nil
+   ::nuvlabox-playbooks-cronjob    nil
+   ::ordering                      (build-ordering)
+   ::edges-search                  (full-text-search-plugin/build-spec)})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 25)})

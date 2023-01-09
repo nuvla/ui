@@ -1,16 +1,15 @@
 (ns sixsq.nuvla.ui.utils.semantic-ui-extensions
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
-    [sixsq.nuvla.ui.utils.form-fields :as form-fields]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
+            [sixsq.nuvla.ui.utils.form-fields :as form-fields]
+            [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn TR
@@ -175,9 +174,9 @@
          {:trigger (r/as-element
                      [ui/CopyToClipboard {:text value}
                       [ui/Icon {:style {:margin-left 10}
-                                :link true
-                                :size "large"
-                                :name "clone"}]])}
+                                :link  true
+                                :size  "large"
+                                :name  "clone"}]])}
          [TR :click-to-copy]])]]]])
 
 
@@ -472,9 +471,9 @@
   [{:keys [header description meta image on-click href button tags content
            corner-button state left-state loading? on-select selected? extra]}]
   [ui/Card (-> {:href href}
-             (merge (when on-click {:on-click (fn [event]
-                                                (on-click event)
-                                                (.preventDefault event))})))
+               (merge (when on-click {:on-click (fn [event]
+                                                  (on-click event)
+                                                  (.preventDefault event))})))
    (when on-select
      [:div {:style {:position "absolute"
                     :top      "-7px"
@@ -506,8 +505,8 @@
     (when meta [ui/CardMeta meta])
 
     (when (or state left-state)
-      [ui/Grid {:style {:color "initial"
-                        :padding-bottom 5}
+      [ui/Grid {:style   {:color          "initial"
+                          :padding-bottom 5}
                 :columns 2}
        [ui/GridColumn left-state]
        [ui/GridColumn {:text-align :right}

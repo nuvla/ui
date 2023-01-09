@@ -6,11 +6,11 @@
 
 (defn decode-query-string [path]
   (some->
-   (second (str/split path #"\?"))
-   (str/split #"&")
-   (->> (map (fn [s] (let [[k v] (str/split s #"=")]
-                       [(keyword k) v])))
-        (into {}))))
+    (second (str/split path #"\?"))
+    (str/split #"&")
+    (->> (map (fn [s] (let [[k v] (str/split s #"=")]
+                        [(keyword k) v])))
+         (into {}))))
 
 
 (defn name->href
@@ -25,7 +25,7 @@
 
 (defn add-base-path
   [url]
-  (let [base-path (str config/base-path "/")
+  (let [base-path    (str config/base-path "/")
         absolute-url (if (str/starts-with? url base-path)
                        url
                        (str base-path (str/replace url #"^/" "")))]
@@ -34,9 +34,9 @@
 (defn url->route-path-params [router url]
   (let [absolute-url (add-base-path url)
         [path _] (str/split absolute-url #"\?")
-        match (match-by-path router path)
-        name  (get-in match [:data :name])
-        path-params (:path-params match)
+        match        (match-by-path router path)
+        name         (get-in match [:data :name])
+        path-params  (:path-params match)
         query-params (decode-query-string absolute-url)]
     [name path-params query-params]))
 

@@ -51,15 +51,6 @@
   [path-parts]
   (pathify (concat [config/base-path] path-parts)))
 
-(defn host-url
-  "Extracts the host URL from the javascript window.location object."
-  []
-  (when-let [location (.-location js/window)]
-    (let [protocol   (.-protocol location)
-          host       (.-hostname location)
-          port       (.-port location)
-          port-field (when-not (str/blank? port) (str ":" port))]
-      (str protocol "//" host port-field))))
 
 (defn trim-path
   [path n]

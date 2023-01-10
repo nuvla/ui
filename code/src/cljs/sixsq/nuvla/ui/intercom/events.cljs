@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.intercom.events
-  (:require
-    [re-frame.core :refer [reg-event-db]]
-    [sixsq.nuvla.ui.intercom.spec :as spec]))
+  (:require [re-frame.core :refer [reg-event-db]]
+            [sixsq.nuvla.ui.intercom.spec :as spec]))
 
 
 (reg-event-db

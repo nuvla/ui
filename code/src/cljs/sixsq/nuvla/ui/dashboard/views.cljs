@@ -1,22 +1,21 @@
 (ns sixsq.nuvla.ui.dashboard.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
-    [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
-    [sixsq.nuvla.ui.dashboard.events :as events]
-    [sixsq.nuvla.ui.dashboard.utils :as utils]
-    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-    [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
-    [sixsq.nuvla.ui.edges.subs :as edges-subs]
-    [sixsq.nuvla.ui.edges.utils :as edges-utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as utils-style]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
+            [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
+            [sixsq.nuvla.ui.dashboard.events :as events]
+            [sixsq.nuvla.ui.dashboard.utils :as utils]
+            [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+            [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
+            [sixsq.nuvla.ui.edges.subs :as edges-subs]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.panel :as panel]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.style :as utils-style]))
 
 
 (defn refresh
@@ -33,8 +32,8 @@
 
 (defn Statistic
   [{:keys [value icon class label target positive-color icon-color color]
-    :or {positive-color "black"}}]
-  (let [color (or color (if (pos? value) positive-color "grey"))
+    :or   {positive-color "black"}}]
+  (let [color        (or color (if (pos? value) positive-color "grey"))
         {:keys [resource tab-event]} target
         interactive? (or tab-event resource)]
     [ui/Statistic {:style    {:cursor (when interactive? "pointer")}
@@ -52,10 +51,10 @@
 
 (defn StatisticStatesEdge
   []
-  (let [summary (subscribe [::edges-subs/nuvlaboxes-summary-all])
+  (let [summary         (subscribe [::edges-subs/nuvlaboxes-summary-all])
         total           (:count @summary)
         online-statuses (general-utils/aggregate-to-map
-                         (get-in @summary [:aggregations :terms:online :buckets]))
+                          (get-in @summary [:aggregations :terms:online :buckets]))
         online          (:1 online-statuses)
         offline         (:0 online-statuses)
         unknown         (- total (+ online offline))]
@@ -63,20 +62,20 @@
     [ui/StatisticGroup {:size  "tiny"
                         :style {:padding "0.2rem"}}
      [Statistic {:value total
-                 :icon "fa-light fa-box"
+                 :icon  "fa-light fa-box"
                  :label "TOTAL"
                  :color "black"}]
-     [Statistic {:value online
-                 :icon "fa-light fa-power-off"
-                 :label edges-utils/status-online
+     [Statistic {:value          online
+                 :icon           "fa-light fa-power-off"
+                 :label          edges-utils/status-online
                  :positive-color "green"
-                 :color "green"}]
+                 :color          "green"}]
      [Statistic {:value offline
-                 :icon "fa-light fa-power-off"
+                 :icon  "fa-light fa-power-off"
                  :label edges-utils/status-offline
                  :color "red"}]
      [Statistic {:value unknown
-                 :icon "fa-light fa-power-off"
+                 :icon  "fa-light fa-power-off"
                  :label edges-utils/status-unknown
                  :color "orange"}]]))
 
@@ -107,7 +106,7 @@
   [summary-subs]
   (let [summary       (subscribe [summary-subs])
         terms         (general-utils/aggregate-to-map
-                       (get-in @summary [:aggregations :terms:state :buckets]))
+                        (get-in @summary [:aggregations :terms:state :buckets]))
         started       (:STARTED terms 0)
         starting      (:STARTING terms 0)
         created       (:CREATED terms 0)
@@ -129,8 +128,8 @@
 ; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
 (defn TabOverviewDeployments
   []
-  (let [tr    (subscribe [::i18n-subs/tr])
-        icon  "fa-light fa-rocket-launch"
+  (let [tr   (subscribe [::i18n-subs/tr])
+        icon "fa-light fa-rocket-launch"
         {:keys [resource tab-key tab-event]} utils/target-deployments]
     [ui/Segment {:secondary true
                  :raised    true
@@ -167,7 +166,7 @@
                                         :width      "100%"
                                         :max-width  1200
                                         :padding    "2rem"}})
-     [Statistic {:value no-of-apps :icon  (utils/type->icon utils/type-apps) :class  "nuvla-apps" :label  utils/type-apps :target  utils/target-apps}]
+     [Statistic {:value no-of-apps :icon (utils/type->icon utils/type-apps) :class "nuvla-apps" :label utils/type-apps :target utils/target-apps}]
      [Statistic {:value no-of-deployments :icon (utils/type->icon utils/type-deployments) :class "nuvla-deployments" :label utils/type-deployments :target utils/target-deployments}]
      [Statistic {:value no-of-nb :icon (utils/type->icon utils/type-nbs) :class "nuvla-edges" :label utils/type-nbs :target utils/target-nbs}]
      [Statistic {:value no-of-creds :icon (utils/type->icon utils/type-creds) :class "nuvla-credentials" :label utils/type-creds :target utils/target-creds}]]))

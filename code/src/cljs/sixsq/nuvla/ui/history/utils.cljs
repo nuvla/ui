@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.history.utils
-  (:require
-    [clojure.string :as str]
-    [goog.events :as events]
-    [secretary.core :as secretary]
-    [taoensso.timbre :as log])
+  (:require [clojure.string :as str]
+            [goog.events :as events]
+            [secretary.core :as secretary]
+            [taoensso.timbre :as log])
   (:import
     [goog.history EventType Html5History]
     [goog.history.Html5History TokenTransformer]))

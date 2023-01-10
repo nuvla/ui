@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.deployments.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployments.spec :as spec]
-    [sixsq.nuvla.ui.deployments.utils :as utils]
-    [sixsq.nuvla.ui.filter-comp.utils :refer [filter-str->data]]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.deployments.spec :as spec]
+            [sixsq.nuvla.ui.deployments.utils :as utils]
+            [sixsq.nuvla.ui.filter-comp.utils :refer [filter-str->data]]))
 
 (reg-sub
   ::deployments

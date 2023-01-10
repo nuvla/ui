@@ -5,7 +5,7 @@
 (def type-nbs "NUVLAEDGES")
 (def type-creds "CREDENTIALS")
 
-(def target-apps {:resource  "apps"})
+(def target-apps {:resource "apps"})
 (def target-deployments {:resource "deployments"})
 (def target-nbs {:resource "edges"})
 (def target-creds {:resource "credentials"})

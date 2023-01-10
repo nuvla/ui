@@ -155,7 +155,7 @@
                    :icon    "book"
                    :content (@tr [:eula-full])}]
        [:h4 [:b (str (str/capitalize (@tr [:eula])) ": ")
-             [:u [:a {:href (:url @license) :target "_blank"} name]]]]
+             [:u [:a {:href url :target "_blank"} name]]]]
        (when description
          [:p [:i description]])
        [ui/Checkbox {:label     (tr [:accept-eula])

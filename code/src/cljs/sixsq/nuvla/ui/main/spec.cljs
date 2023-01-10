@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.main.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.config :as config]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.config :as config]))
 
 (s/def ::loading? boolean?)
 
@@ -24,10 +23,6 @@
 (s/def ::ignore-changes-modal (s/nilable any?))
 
 (s/def ::ui-version map?)
-
-(s/def ::bootstrap-message (s/nilable keyword?))
-
-(s/def ::message any?)
 
 (s/def ::actions-interval map?)
 
@@ -57,8 +52,6 @@
                                        :new-version     nil
                                        :modal-open?     false
                                        :notify?         true}
-               ::bootstrap-message    nil
-               ::message              nil
                ::actions-interval     {}
                ::content-key          (random-uuid)
                ::pages                {"welcome"         {:url        "welcome"

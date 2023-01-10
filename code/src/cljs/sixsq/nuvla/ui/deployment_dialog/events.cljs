@@ -1,21 +1,20 @@
 (ns sixsq.nuvla.ui.deployment-dialog.events
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.credentials.events :as creds-events]
-    [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
-    [sixsq.nuvla.ui.data.spec :as data-spec]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.deployments-detail.events :as deployments-detail-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
-    [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.time :as time]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.credentials.events :as creds-events]
+            [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
+            [sixsq.nuvla.ui.data.spec :as data-spec]
+            [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
+            [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
+            [sixsq.nuvla.ui.deployments-detail.events :as deployments-detail-events]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
+            [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (reg-event-fx
   ::reset

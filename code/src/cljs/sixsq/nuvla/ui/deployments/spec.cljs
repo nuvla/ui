@@ -29,12 +29,12 @@
 (def default-ordering {:field :created :order "desc"})
 
 (def defaults {::deployments-search      (full-text-search-plugin/build-spec)
-               ::additional-filter        nil
+               ::additional-filter       nil
                ::deployments             nil
                ::deployments-summary     nil
                ::deployments-summary-all nil
                ::deployments-params-map  nil
-               ::filter-external          nil
+               ::filter-external         nil
                ::view                    "table"
                ::state-selector          "all"
                ::bulk-update-modal       nil

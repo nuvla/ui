@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.cimi-detail.spec
-  (:require
-    [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]))
 
 (s/def ::loading? boolean?)
 

@@ -1,20 +1,19 @@
 (ns sixsq.nuvla.ui.main.events
-  (:require
-    [ajax.core :as ajax]
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.main.effects :as fx]
-    [sixsq.nuvla.ui.main.spec :as spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.messages.spec :as messages-spec]
-    [sixsq.nuvla.ui.session.events :as session-events]
-    [sixsq.nuvla.ui.utils.general :as u]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+  (:require [ajax.core :as ajax]
+            [clojure.set :as set]
+            [clojure.string :as str]
+            [day8.re-frame.http-fx]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.main.effects :as fx]
+            [sixsq.nuvla.ui.main.spec :as spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.messages.spec :as messages-spec]
+            [sixsq.nuvla.ui.session.events :as session-events]
+            [sixsq.nuvla.ui.utils.general :as u]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [taoensso.timbre :as log]))
 
 (def notification-polling-id :notifications-polling)
 (def check-ui-version-polling-id :check-ui-version)
@@ -146,7 +145,7 @@
 (reg-event-fx
   ::changes-protection?
   (fn [{db :db} [_ choice]]
-    {:db (assoc db ::spec/changes-protection? choice)
+    {:db                       (assoc db ::spec/changes-protection? choice)
      ::fx/on-unload-protection choice}))
 
 
@@ -209,13 +208,6 @@
     {:dispatch [::action-interval-start `{:id        notification-polling-id
                                           :frequency 60000
                                           :event     [::check-notifications]}]}))
-
-(reg-event-fx
-  ::set-message
-  (fn [{db :db} [_ type message]]
-    (cond-> {:db (assoc db ::spec/message [type, message])}
-            message (assoc :dispatch-later [{:ms       10000
-                                             :dispatch [::set-message nil]}]))))
 
 (reg-event-db
   ::force-refresh-content

@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.data-set.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.data-set.utils :as utils]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.utils.time :as time]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.data-set.utils :as utils]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 
 

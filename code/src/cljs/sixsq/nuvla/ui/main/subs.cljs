@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.main.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.main.spec :as spec]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.main.spec :as spec]))
 
 
 (reg-sub
@@ -98,18 +97,6 @@
   ::ignore-changes-modal
   (fn [db]
     (::spec/ignore-changes-modal db)))
-
-
-(reg-sub
-  ::bootstrap-message
-  (fn [db]
-    (::spec/bootstrap-message db)))
-
-
-(reg-sub
-  ::message
-  (fn [db]
-    (::spec/message db)))
 
 
 (reg-sub

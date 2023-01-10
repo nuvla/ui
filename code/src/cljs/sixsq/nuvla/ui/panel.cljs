@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.panel
-  (:require
-    [re-frame.core :refer [subscribe]]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [re-frame.core :refer [subscribe]]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defmulti render
           "Dispatches the rendering of a panel based on the first element of

@@ -1,18 +1,17 @@
 (ns sixsq.nuvla.ui.filter-comp.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
-    [sixsq.nuvla.ui.filter-comp.events :as events]
-    [sixsq.nuvla.ui.filter-comp.utils :as utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
+            [sixsq.nuvla.ui.filter-comp.events :as events]
+            [sixsq.nuvla.ui.filter-comp.utils :as utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn DeleteIcon
@@ -324,9 +323,9 @@
                                                   :disabled (nil? resource-name)
                                                   :on-click open-fn
                                                   :color    (when active-filter? :teal)
-                                                  :style {:z-index 100
-                                                          :margin-left "20px"
-                                                          :display :flex}}
+                                                  :style    {:z-index     100
+                                                             :margin-left "20px"
+                                                             :display     :flex}}
                                        [:i {:class "fa-light fa-filter"}]
                                        \u00A0
                                        (str/capitalize (@tr [:filter]))])

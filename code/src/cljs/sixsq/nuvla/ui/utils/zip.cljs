@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.utils.zip
-  (:require
-    ["jszip" :as jszip]))
+  (:require ["jszip" :as jszip]))
 
 (defn create
   [files callback]

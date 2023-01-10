@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.cimi.spec
   (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
-  (:require
-    [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]))
 
 (s/def ::base-uri string?)
 (s/def ::collection-key (s/map-of string? keyword?))

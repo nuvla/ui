@@ -23,6 +23,7 @@
             [sixsq.nuvla.ui.utils.style :as utils-style]
             [sixsq.nuvla.ui.utils.values :as utils-values]))
 
+
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published-tick?]
   (let [tr             (subscribe [::i18n-subs/tr])

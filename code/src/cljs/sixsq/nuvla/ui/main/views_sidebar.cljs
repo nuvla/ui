@@ -40,7 +40,8 @@
     ^{:key "welcome"}
     [ui/MenuItem (cond-> {:aria-label (@tr [:welcome])
                           :style      {:overflow-x "hidden"
-                                       :min-width  sidebar-width}}
+                                       :min-width  sidebar-width
+                                       :padding   "0.5rem 0.5rem 0.2rem 0.5rem"}}
                          @url (assoc :href @url))
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"

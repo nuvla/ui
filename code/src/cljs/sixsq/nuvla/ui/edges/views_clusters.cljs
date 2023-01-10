@@ -24,7 +24,7 @@
        [components/StatisticState  {:value (:count @clusters),
                                     :icons ["fas fa-chart-network"],
                                     :label "TOTAL",
-                                    :clickable false,
+                                    :clickable? false,
                                     :positive-color "",
                                     :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
                                     :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]])))

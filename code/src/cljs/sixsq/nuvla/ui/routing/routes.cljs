@@ -20,7 +20,8 @@
             [sixsq.nuvla.ui.profile.views :refer [profile]]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
-            [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
+            [sixsq.nuvla.ui.welcome.views :refer [home-view]]
+            [sixsq.nuvla.ui.edges-detail.views :as edges-detail]))
 
 (defn SessionPageWelcomeRedirect
   []
@@ -120,6 +121,16 @@
     ["edges/nuvlabox-cluster/:uuid"
      {:name :edge-cluster-details
       :view edges-view}]
+    ["nuvlabox"
+     {:name ::nuvlabox
+      :view edges-view}
+     [""]
+     ["/:uuid"
+      {:name ::nuvlabox-details
+       :view edges-view}]]
+    ["nuvlabox/nuvlabox-cluster/:uuid"
+     {:name :nuvlabox-cluster-details
+      :view edges-view}]
     ["credentials"
      {:name      :credentials
       :view      credentials-view
@@ -177,3 +188,8 @@
      #_(fn [conflicts]
        (when debug?
          (println (exception/format-exception :path-conflicts nil conflicts))))}))
+
+(comment
+  (r/match-by-name router ::nuvlabox)
+  (r/match-by-name router ::nuvlabox)
+  )

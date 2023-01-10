@@ -96,7 +96,7 @@ body .ui.button {
 }
 body .ui.primary.button, .ui.primary.buttons .button,
 body .ui.primary.button:visited, .ui.primary.buttons .button:visited {
-    background-color: #C10E12 !important;
+    background-color: #C10E12;
     border-radius: 50px;
 }
 body .ui.primary.button:hover, .ui.primary.buttons .button:hover {
@@ -225,6 +225,13 @@ body .ui.container {
 }
 /** Login **/
 /** left menu **/
+
+#nuvla-ui-sidebar .item{
+     padding: .7rem;
+}
+.ui.labeled.icon.menu .item>.icon:not(.dropdown) {
+    margin: 0 auto 0.4rem!important;
+}
 body #nuvla-ui-sidebar:after {
      background-image: none;
      background-color: #C10E12;

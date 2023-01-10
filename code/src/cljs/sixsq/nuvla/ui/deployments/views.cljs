@@ -328,7 +328,7 @@
   (let [summary (subscribe [summary-subs])]
     (fn [clickable? _summary-subs]
       (let [terms         (general-utils/aggregate-to-map
-                            (get-in @summary [:aggregations :terms:state :buckets]))
+                           (get-in @summary [:aggregations :terms:state :buckets]))
             started       (:STARTED terms 0)
             starting      (:STARTING terms 0)
             created       (:CREATED terms 0)
@@ -337,6 +337,7 @@
             pending       (:PENDING terms 0)
             starting-plus (+ starting created pending)
             total         (:count @summary)]
+        (js/console.error "clickable? StatisticState" clickable?)
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
@@ -344,14 +345,14 @@
                                       :icons ["fa-light fa-rocket-launch"]
                                       :label "TOTAL"
                                       :stacked? true
-                                      :clickable clickable?
+                                      :clickable? clickable?
                                       :set-state-selector-event ::events/set-state-selector
                                       :state-selector-subs ::subs/state-selector}]
           [components/StatisticState {:value started,
                                       :icons [(utils/state->icon utils/STARTED)],
                                       :label utils/STARTED,
                                       :stacked? true
-                                      :clickable clickable?,
+                                      :clickable? clickable?,
                                       :positive-color "green",
                                       :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
                                       :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
@@ -359,7 +360,7 @@
                                       :icons [(utils/state->icon utils/STARTING)],
                                       :label utils/STARTING,
                                       :stacked? true
-                                      :clickable clickable?,
+                                      :clickable? clickable?,
                                       :positive-color "orange",
                                       :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
                                       :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
@@ -367,7 +368,7 @@
                                       :icons [(utils/state->icon utils/STOPPED)],
                                       :label utils/STOPPED,
                                       :stacked? true
-                                      :clickable clickable?,
+                                      :clickable? clickable?,
                                       :positive-color "orange",
                                       :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
                                       :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
@@ -375,7 +376,7 @@
                                       :icons [(utils/state->icon utils/ERROR)],
                                       :label utils/ERROR,
                                       :stacked? true
-                                      :clickable clickable?,
+                                      :clickable? clickable?,
                                       :positive-color "red",
                                       :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
                                       :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]]]))))

@@ -337,7 +337,6 @@
             pending       (:PENDING terms 0)
             starting-plus (+ starting created pending)
             total         (:count @summary)]
-        (js/console.error "clickable? StatisticState" clickable?)
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}

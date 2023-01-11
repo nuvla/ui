@@ -3,6 +3,8 @@
 
 (def dictionary
   {:en {
+        :service-unavailable                           "Service temporarily unavailable"
+        :take-coffee-back-soon                         "Have a coffee \u2615, it will be back soon! \uD83D\uDE09"
         :eula                                          "EULA"
         :eula-full                                     "End-User License Agreement"
         :choose-eula                                   "Set an End-User License Agreement. This is mandatory for published and paying apps."
@@ -940,6 +942,8 @@
         }
 
    :fr {
+        :service-unavailable                           "Service temporairement indisponible"
+        :take-coffee-back-soon                         "Prenez un café \u2615, il sera bientôt de retour ! \uD83D\uDE09"
         :eula                                          "CLUF"
         :eula-full                                     "Contrat de Licence Utilisateur Final"
         :choose-eula                                   "Définissez un Contrat de Licence Utilisateur Final. Ceci est obligatoire pour les applications publiées et payantes."

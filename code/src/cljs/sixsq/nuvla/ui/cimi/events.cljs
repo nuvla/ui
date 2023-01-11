@@ -157,15 +157,16 @@
   (fn [{db :db} [_ {:keys [base-uri] :as cep}]]
     (if (instance? js/Error cep)
       (do (js/console.error "Communication with API server failed! Retry in 5 seconds")
-          {:dispatch-later [{:ms 5000 :dispatch [::get-cloud-entry-point]}]})
+          {:db             (assoc db ::spec/cloud-entry-point-error? true)
+           :dispatch-later [{:ms 5000 :dispatch [::get-cloud-entry-point]}]})
       (let [href-map (utils/collection-href-map cep)
             key-map  (utils/collection-key-map cep)]
-        {:db (-> db
-                 (assoc ::spec/cloud-entry-point {:base-uri        base-uri
-                                                  :collection-href href-map
-                                                  :collection-key  key-map})
-                 (assoc ::spec/collections-templates-cache
-                        (utils/collections-template-map href-map)))}))))
+        {:db (assoc db ::spec/cloud-entry-point {:base-uri        base-uri
+                                                 :collection-href href-map
+                                                 :collection-key  key-map}
+                       ::spec/collections-templates-cache
+                       (utils/collections-template-map href-map)
+                       ::spec/cloud-entry-point-error? false)}))))
 
 
 (reg-event-fx

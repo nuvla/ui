@@ -143,10 +143,13 @@
                                             (if (= label "TOTAL") nil label)]))}
       (if stacked?
         [:<> [ui/IconGroup
+              {:style     {:margin-right "auto"
+                           :margin-left  "auto"}}
               (for [i icons]
                 [ui/Icon {:key       (str "icon-" (str/join "-" i) "-id")
                           :size      (when (and clickable? selected?) "large")
                           :loading   (and (pos? value) (= "spinner" i))
+                          :style     {:margin-right 0}
                           :className i}])]
          [ui/StatisticValue
           (or value "-")]

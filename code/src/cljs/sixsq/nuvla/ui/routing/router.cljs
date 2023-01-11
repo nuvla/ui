@@ -11,8 +11,7 @@
             [sixsq.nuvla.ui.routing.effects :as fx]
             [sixsq.nuvla.ui.routing.routes :refer [alias->canonical router]]
             [sixsq.nuvla.ui.routing.subs :as subs]
-            [sixsq.nuvla.ui.routing.utils :as utils]
-            [reitit.core :as r]))
+            [sixsq.nuvla.ui.routing.utils :as utils]))
 
 
 (defn- strip-base-path [path]

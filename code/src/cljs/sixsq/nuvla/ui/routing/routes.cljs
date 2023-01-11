@@ -49,7 +49,7 @@
   ([page-alias]
    (create-route-name page-alias nil))
   ([page-alias suffix]
-   (keyword (str (some-> (namespace :edges) (str "/")) page-alias suffix))))
+   (keyword (str (some-> (namespace ::edges) (str "/")) page-alias suffix))))
 
 (def edges-routes
   (mapv (fn [page-alias]
@@ -97,105 +97,105 @@
 
 (def r-routes
   [""
-   {:name :root
+   {:name ::root
     :view home-view}
    ["/"]
    [(str base-path "/")                                     ;; sixsq.nuvla.ui.config/base-path = "/ui" on nuvla.io
     [""
-     {:name      :home-root
+     {:name      ::home-root
       :link-text "Home"}]
     edges-routes
     cloud-routes
     deployment-routes
     ["sign-up"
-     {:name      :sign-up
+     {:name      ::sign-up
       :view      SessionPageWelcomeRedirect
       :link-text "Sign up"}]
     ["sign-in"
-     {:name      :sign-in
+     {:name      ::sign-in
       :view      SessionPageWelcomeRedirect
       :link-text "login"}]
     ["reset-password"
-     {:name      :reset-password
+     {:name      ::reset-password
       :view      SessionPageWelcomeRedirect
       :link-text "Reset password"}]
     ["set-password"
-     {:name      :set-password
+     {:name      ::set-password
       :view      SessionPageWithoutWelcomeRedirect
       :link-text "Set password"}]
     ["sign-in-token"
-     {:name      :sign-in-token
+     {:name      ::sign-in-token
       :view      SessionPageWelcomeRedirect
       :link-text "sign in token"}]
     ["about"
-     {:name      :about
+     {:name      ::about
       :view      about
       :link-text "About"}]
     ["welcome"
-     {:name      :home
+     {:name      ::home
       :link-text "home"}]
     ["welcome/"
-     {:name      :home-slash
+     {:name      ::home-slash
       :link-text "home"}]
     ["dashboard"
-     {:name      :dashboard
+     {:name      ::dashboard
       :view      dashboard-view
       :link-text "dashboard"}]
     ["apps"
-     {:name      :apps
+     {:name      ::apps
       :view      app-views/AppsOverview
       :link-text "Apps"}
      [""]
-     ["/" :apps-slashed]
+     ["/" ::apps-slashed]
      ["/*sub-path"
-      {:name :apps-details
+      {:name ::apps-details
        :view app-views/AppDetails}]]
     ["credentials"
-     {:name      :credentials
+     {:name      ::credentials
       :view      credentials-view
       :link-text "credentials"}
      [""]
-     ["/" :credentials-slash]]
+     ["/" ::credentials-slash]]
     ["notifications"
-     {:name      :notifications
+     {:name      ::notifications
       :view      notifications-view
       :link-text "notifications"}]
     ["data"
-     {:name      :data
+     {:name      ::data
       :view      data-view
       :link-text "data"}]
     ["data/*uuid"
-     {:name :data-details
+     {:name ::data-details
       :view data-set-views/DataSet}]
     ["deployment-sets"
-     {:name      :deployment-sets
+     {:name      ::deployment-sets
       :view      deployment-sets-view
       :link-text "deployment-sets"}
      [""]
-     ["/" :deployment-sets-slashed]]
+     ["/" ::deployment-sets-slashed]]
     ["deployment-sets/:uuid"
-     {:name      :deployment-sets-details
+     {:name      ::deployment-sets-details
       :view      deployment-sets-view
       :link-text "deployment-sets"}]
     ["documentation"
-     {:name      :documentation
+     {:name      ::documentation
       :view      documentation
       :link-text "documentation"}
      [""]
-     ["/*sub-path" :documentation-sub-page]]
+     ["/*sub-path" ::documentation-sub-page]]
     ["api"
-     {:name      :api
+     {:name      ::api
       :view      api-view
       :link-text "api"}
      [""]
-     ["/" :api-slashed]
+     ["/" ::api-slashed]
      ["/*sub-path"
-      {:name :api-sub-page}]]
+      {:name ::api-sub-page}]]
     ["profile"
-     {:name :profile
+     {:name ::profile
       :view profile}]]
    ["/*"
-    {:name :catch-all
+    {:name ::catch-all
      :view UnknownResource}]])
 
 (def router

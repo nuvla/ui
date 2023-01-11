@@ -19,8 +19,9 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -317,7 +318,7 @@
     (fn []
       (let [parent    (utils/nav-path->module-path @nav-path)
             base-path (pathify (remove str/blank?
-                                       [(name->href :apps) parent]))]
+                                       [(name->href route-names/apps) parent]))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}

@@ -2,12 +2,16 @@
   #_(:require [reitit.core :as r]
               [sixsq.nuvla.ui.routing.routes :refer [router]]))
 
+;;;;; Ideally this file is auto generated from the current router.
+;;;;; Possible solutions:
+;;;;; 1. From a clojure file: Can't import router form .cljs file, would have to turn that into .cljc
+;;;;; 2. From a clojure script file: This would have to run in node to write to files
+;;;;; 3. From an nbb file
+
 (comment
    ;; require reitit and the router and evaled this function for initial routes
   #_(->> (r/route-names router)
-       (map #(list 'def (symbol (name %)) %))
-       (apply pr-str))
-  )
+      (map #(list 'def (symbol (name %)) %))))
 
 
 (def root :sixsq.nuvla.ui.routing.routes/root)
@@ -63,13 +67,3 @@
 (def api-sub-page :sixsq.nuvla.ui.routing.routes/api-sub-page)
 (def profile :sixsq.nuvla.ui.routing.routes/profile)
 (def catch-all :sixsq.nuvla.ui.routing.routes/catch-all)
-
-(comment
-
-  (->> (r/route-names router)
-       (map #(list 'def (symbol (name %)) %))
-       (apply print))
-
-  (->> (r/route-names router)
-       (map #(list 'def (symbol (name %)) %)))
-  )

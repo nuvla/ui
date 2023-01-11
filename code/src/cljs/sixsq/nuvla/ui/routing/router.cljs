@@ -125,7 +125,8 @@
     {:use-fragment         false
      :ignore-anchor-click? (fn [router e el uri]
                              (and (rfh/ignore-anchor-click? router e el uri)
-                                  (not= "false" (.getAttribute el "data-reitit-handle-click"))))}))
+                               (not= "false" (.getAttribute el "data-reitit-handle-click"))
+                               (not= "#" (first (.getAttribute el "href")))))}))
 
 
 (defn router-component []

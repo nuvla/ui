@@ -3,8 +3,9 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
-            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -18,7 +19,7 @@
         is-user?     (subscribe [::session-subs/is-user?])
         active?      (subscribe [::route-subs/nav-url-active? url])
         auth-needed? (and protected? (not @is-user?))
-        auth-url     (name->href :sign-in)]
+        auth-url     (name->href route-names/sign-in)]
 
     ^{:key (name label-kw)}
     [uix/MenuItem

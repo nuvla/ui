@@ -1,9 +1,7 @@
 (ns sixsq.nuvla.ui.routing.router-test
-  (:require [cljs.test :refer [is are deftest testing use-fixtures]]
-            [reitit.core :as r]
-            [reitit.frontend.easy :as rfe]
+  (:require [cljs.test :refer [are deftest is testing]]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.router :refer [init-routes!]]
-            [sixsq.nuvla.ui.routing.routes :as routes :refer [router]]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify
                                                   to-pathname]]))
 
@@ -16,35 +14,35 @@
       (are [path route-args]
         (= path
            (apply name->href route-args))
-        "/ui/edges" [::routes/edges]
-        "/ui/edges" [::routes/edges {:uuid "1234"}]
-        "/ui/edges?hello=world&this=is-nice" [::routes/edges nil {:hello "world", :this :is-nice}]))
+        "/ui/edges" [route-names/edges]
+        "/ui/edges" [route-names/edges {:uuid "1234"}]
+        "/ui/edges?hello=world&this=is-nice" [route-names/edges nil {:hello "world", :this :is-nice}]))
     (testing "for dynamic routes"
       (testing "with single dynamic path segments"
         (are [path route-args]
           (= path
              (apply name->href route-args))
-          "/ui/edges/1234" [::routes/edges-details {:uuid "1234"}]
-          "/ui/edges/1234" [::routes/edges-details {:uuid "1234" :hello "world"}]
-          "/ui/edges/1234?hello=world&this=is-nice" [::routes/edges-details {:uuid "1234"}
+          "/ui/edges/1234" [route-names/edges-details {:uuid "1234"}]
+          "/ui/edges/1234" [route-names/edges-details {:uuid "1234" :hello "world"}]
+          "/ui/edges/1234?hello=world&this=is-nice" [route-names/edges-details {:uuid "1234"}
                                                      {:hello "world", :this :is-nice}]
-          nil [::routes/edges-details]
-          nil [::routes/edges-details {:no-match "here"}]))
+          nil [route-names/edges-details]
+          nil [route-names/edges-details {:no-match "here"}]))
       (testing "that are catch-all routes where multi segment
                 paths as :sub-path values get mangled by URI encoding the '/'"
         (is (= "/ui/apps/this-works%2Fperhaps%2Funexpected?query-param=hello%2Fworld"
-               (name->href ::routes/apps-details
+               (name->href route-names/apps-details
                  {:sub-path "this-works/perhaps/unexpected"}
                  {:query-param "hello/world"})))
         (is (not=
               "/ui/apps/this-works/perhaps/unexpected?query-param=hello/world"
-              (name->href ::routes/apps-details
+              (name->href route-names/apps-details
                 {:sub-path "this-works/perhaps/unexpected"}
                 {:query-param "hello/world"}))))))
   (testing "Creating paths using `to-pathname`"
     (is "/ui/apps/this/works/too" (to-pathname ["apps" "this" "works" "too"])))
   (testing "Creating paths using `to` and route name"
-    (is "/ui/apps/this-works/as/expected" (pathify [(name->href :apps) "this-works" "as" "expected"])
+    (is "/ui/apps/this-works/as/expected" (pathify [(name->href route-names/apps) "this-works" "as" "expected"])
                                   ;; => "/ui/apps/this-works/as/expected"
 )))
 
@@ -112,12 +110,12 @@
   (name->href :apps-details {:sub-path "sixsq/blackbox"})
 
   ;; so construct the path using the parent route...
-  (str (name->href :apps) "/" "this-works/as/expected")
+  (str (name->href route-names/apps) "/" "this-works/as/expected")
   ;; => "/ui/apps/this-works/as/expected"
-  (str (name->href :apps) "/" "sixsq/blackbox")
+  (str (name->href route-names/apps) "/" "sixsq/blackbox")
 
   ;; ...or with pathify helper
-  (pathify [(name->href :apps) "this-works" "as" "expected"])
+  (pathify [(name->href route-names/apps) "this-works" "as" "expected"])
   ;; => "/ui/apps/this-works/as/expected"
 
   ;; or with to-pathname helper, which adds base-path

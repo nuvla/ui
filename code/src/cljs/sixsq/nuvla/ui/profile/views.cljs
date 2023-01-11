@@ -17,6 +17,7 @@
             [sixsq.nuvla.ui.profile.spec :as spec]
             [sixsq.nuvla.ui.profile.subs :as subs]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -637,7 +638,7 @@
                                  (and @canceled? (not @pm?)))
                    :on-click (if @session
                                #(dispatch [::events/open-modal :subscribe])
-                               #(dispatch [::history-events/navigate (name->href :sign-up)]))}
+                               #(dispatch [::history-events/navigate (name->href route-names/sign-up)]))}
         (if @customer
           (@tr [:subscribe])
           (@tr [:try-nuvla-for-14-days]))]])))

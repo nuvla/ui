@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -149,5 +150,5 @@
         [_ uuid] path
         root [DashboardMain]]
     (case n
-      2 ^{:key uuid} (dispatch [::history-events/navigate (name->href :deployment-details {:uuid uuid})])
+      2 ^{:key uuid} (dispatch [::history-events/navigate (name->href route-names/deployment-details {:uuid uuid})])
       [ui/Segment utils-style/basic root])))

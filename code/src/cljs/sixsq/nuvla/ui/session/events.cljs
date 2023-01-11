@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.effects :as fx]
             [sixsq.nuvla.ui.session.spec :as spec]
@@ -34,7 +35,7 @@
                       (str (str/join "/" nav-path)
                            (when-not (str/blank? query-str)
                              (js/encodeURIComponent query-str))))
-          navigate  (str (name->href :sign-in) (when redirect
+          navigate  (str (name->href route-names/sign-in) (when redirect
                                                  (str "?redirect=" redirect)))]
       (cond-> {:db (assoc db ::spec/session new-session
                              ::spec/session-loading? false)}
@@ -58,7 +59,7 @@
   (fn []
     {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
                                 (dispatch [::intercom-events/clear-events])
-                                (dispatch [::history-events/navigate (name->href :sign-in)]))]}))
+                                (dispatch [::history-events/navigate (name->href route-names/sign-in)]))]}))
 
 
 (reg-event-db
@@ -126,7 +127,7 @@
                                      (dispatch [::history-events/navigate navigate-to])))
                                  (do
                                    (dispatch [::set-callback-2fa %1])
-                                   (dispatch [::history-events/navigate (name->href :sign-in-token)])))))
+                                   (dispatch [::history-events/navigate (name->href route-names/sign-in-token)])))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
@@ -149,7 +150,7 @@
     {:dispatch-n [[::clear-loading]
                   [::initialize]
                   [::set-success-message success-message]
-                  [::history-events/navigate (name->href :sign-in)]]}))
+                  [::history-events/navigate (name->href route-names/sign-in)]]}))
 
 
 (reg-event-fx

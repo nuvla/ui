@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -55,7 +56,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
-      (let [href                  (name->href :edges-details {:uuid (general-utils/id->uuid id)})
+      (let [href                  (name->href route-names/edges-details {:uuid (general-utils/id->uuid id)})
             next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
             creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}

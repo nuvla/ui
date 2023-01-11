@@ -8,12 +8,13 @@
             [sixsq.nuvla.ui.main.components :as main-components]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
-            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
             [sixsq.nuvla.ui.messages.views :as messages]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.router :refer [router-component]]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.session.views :as session-views]
@@ -92,7 +93,7 @@
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
       [ui/GridColumn grid-style
-       [:a {:on-click #(dispatch [::history-events/navigate (name->href :about)])
+       [:a {:on-click #(dispatch [::history-events/navigate (name->href route-names/about)])
             :style    {:cursor "pointer"}}
         [:span#release-version (str "v")]]]
       [ui/GridColumn grid-style
@@ -142,7 +143,7 @@
              (@tr [:subscription-required-content]))]
        [ui/Button {:primary  true
                    :on-click #(do
-                                (dispatch [::history-events/navigate (name->href :profile)])
+                                (dispatch [::history-events/navigate (name->href route-names/profile)])
                                 (dispatch [::events/close-modal]))}
         (if @open-subs-unpaid?
           (@tr [:profile-page])
@@ -256,7 +257,7 @@
                             :header  [uix/TR :subscription-is-canceled]
                             :content [:span
                                       [uix/TR :to-reactivate-your-subscription]
-                                      [:a {:href (name->href :profile)} [uix/TR :go-to-profile]]
+                                      [:a {:href (name->href route-names/profile)} [uix/TR :go-to-profile]]
                                       [uix/TR :make-sure-you-have-pm]]
                             :type    :error}])
             [contents]

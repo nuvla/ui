@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -73,7 +74,7 @@
      {:name     (@tr [:add])
       :icon     "add"
       :on-click #(dispatch
-                   [::history-events/navigate (str (name->href :deployment-sets-slashed) "New")])}]))
+                   [::history-events/navigate (str (name->href route-names/deployment-sets-slashed) "New")])}]))
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]

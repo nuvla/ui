@@ -18,6 +18,7 @@
             [sixsq.nuvla.ui.edges.views :refer [edges-view]]
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.profile.views :refer [profile]]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
             [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
@@ -210,6 +211,8 @@
 
 (comment
   (r/match-by-name router ::nuvlabox)
+  (r/match-by-name router route-names/nuvlabox)
+  (r/match-by-name router route-names/home)
   (r/match-by-name router ::nuvlabox)
   (r/match-by-name router :catch-all {":" "blabla/hello"})
 

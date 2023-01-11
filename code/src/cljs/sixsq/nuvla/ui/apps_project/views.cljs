@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.route-names :as route-names]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -25,7 +26,7 @@
 (defn FormatModule
   [{:keys [subtype name path description] :as module}]
   (when module
-    (let [on-click  #(dispatch [::history-events/navigate (str (name->href :apps-slashed) path)])
+    (let [on-click  #(dispatch [::history-events/navigate (str (name->href route-names/apps-slashed) path)])
           icon-name (apps-utils/subtype-icon subtype)
           summary   (values/markdown->summary description)]
       [ui/ListItem {:on-click on-click}

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.data.utils
-  (:require [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+  (:require [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -50,4 +51,4 @@
 
 (defn data-record-href
   [id]
-  (str (name->href :data) "/" (general-utils/id->uuid id)))
+  (str (name->href route-names/data) "/" (general-utils/id->uuid id)))

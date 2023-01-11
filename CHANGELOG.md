@@ -4,10 +4,11 @@
 
 ### Changed
 
-- Apps -  App description truncated if bold text is used fix
+- Apps - App description truncated if bold text is used fix
 - Values - Markdown summary should support nested elements #1077
 - Deps - Upgrade api client v2.0.11
 - Main - Loader service unavailable message visible on error
+- NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
 
 ## [2.32.12] - 2023-01-06
 
@@ -22,7 +23,6 @@
 - Main - Remove deprecated message and bootstrap-message
 - Readme - Update dev section to include skip verification of untrusted certificate
 - Notifications - Added params to define time window reset and device name
-- NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
 
 ## [2.32.11] - 2022-12-19
 

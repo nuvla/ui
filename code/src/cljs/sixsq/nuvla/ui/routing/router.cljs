@@ -112,12 +112,6 @@
         (merge {:db (assoc db ::ignore-changes-protection false)}
                event)))))
 
-;;; Subscriptions ;;;
-(re-frame/reg-sub
-  ::current-route
-  (fn [db]
-    (:current-route db)))
-
 
 (defn on-navigate [new-match]
   (when new-match
@@ -135,7 +129,7 @@
 
 
 (defn router-component []
-  (let [current-route @(re-frame/subscribe [::current-route])
+  (let [current-route @(re-frame/subscribe [::subs/current-route])
         view          (-> current-route :data :view)
         path          @(re-frame/subscribe [::subs/nav-path])]
     [:div

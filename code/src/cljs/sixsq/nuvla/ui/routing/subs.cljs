@@ -27,3 +27,9 @@
     (boolean (= nav-path-first (-> (str/replace-first url (str config/base-path "/") "")
                                    (str/split "/")
                                    first)))))
+
+;;; Subscriptions ;;;
+(reg-sub
+  ::current-route
+  (fn [db]
+    (:current-route db)))

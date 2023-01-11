@@ -22,6 +22,21 @@
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
             [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
+
+(def alias->canonical {"nuvlabox"        "edges"
+                       "edge"            "edges"
+                       "infrastructures" "clouds"
+                       "deployment"      "deployments"})
+
+(defn- canonical->all-page-names
+  ([canonical]
+   (canonical->all-page-names canonical alias->canonical))
+  ([canonical aliases-map]
+   (->> aliases-map
+        (filter #(= canonical (val %)))
+        flatten
+        set)))
+
 (defn SessionPageWelcomeRedirect
   []
   [session-views/SessionPage true])
@@ -50,7 +65,7 @@
            [(str page-alias "/nuvlabox-cluster/:uuid")
             {:name (create-route-name page-alias "-cluster-details")
              :view edges-view}]])
-    ["edges" "nuvlabox" "edge"]))
+    (canonical->all-page-names "edges")))
 
 (def cloud-routes
   (mapv (fn [page-alias]
@@ -63,7 +78,7 @@
            ["/:uuid"
             {:name      (create-route-name page-alias "-details")
              :view      clouds-view}]])
-    ["clouds" "infrastructures"]))
+    (canonical->all-page-names "clouds")))
 
 
 (def deployment-routes
@@ -77,7 +92,7 @@
            ["/:uuid"
             {:name (create-route-name page-alias "-details")
              :view DeploymentDetails}]])
-    ["deployments" "deployment"]))
+    (canonical->all-page-names "deployments")))
 
 
 (def r-routes

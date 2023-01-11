@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.cofx :refer [reg-cofx]]
             [re-frame.core :as re-frame]
-            [reitit.core :as r]
             [reitit.frontend.controllers :as rfc]
             [reitit.frontend.easy :as rfe :refer [history]]
             [reitit.frontend.history :as rfh]
@@ -11,13 +10,9 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.routing.effects :as fx]
-            [sixsq.nuvla.ui.routing.routes :refer [router]]
+            [sixsq.nuvla.ui.routing.routes :refer [alias->canonical router]]
             [sixsq.nuvla.ui.routing.utils :as utils]))
 
-(def page-alias {"nuvlabox"        "edges"
-                 "edge"            "edges"
-                 "infrastructures" "clouds"
-                 "deployment"      "deployments"})
 
 (defn- strip-base-path [path]
   (-> path (str/replace-first config/base-path "")
@@ -27,7 +22,7 @@
   [path]
   (let [path      (strip-base-path path)
         [page :as path-vec] (vec (str/split path #"/"))
-        real-page (get page-alias page)]
+        real-page (get alias->canonical page)]
     (if (and page real-page)
       (assoc path-vec 0 real-page)
       path-vec)))

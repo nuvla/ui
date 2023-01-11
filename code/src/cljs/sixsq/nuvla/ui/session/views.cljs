@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.events :as events]
             [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
@@ -187,7 +188,7 @@
 (defn LeftPanel
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        first-path           (subscribe [::main-subs/nav-path-first])
+        first-path           (subscribe  [::route-subs/nav-path-first])
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         eula                 (subscribe [::main-subs/config :eula])
         terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
@@ -249,7 +250,7 @@
 
 (defn RightPanel
   []
-  (let [first-path (subscribe [::main-subs/nav-path-first])]
+  (let [first-path (subscribe [::route-subs/nav-path-first])]
     (case @first-path
       "sign-in" [sign-in-views/Form]
       "sign-up" [sign-up-views/Form]
@@ -262,7 +263,7 @@
 (defn SessionPage
   [navigate?]
   (let [session      (subscribe [::subs/session])
-        query-params (subscribe [::main-subs/nav-query-params])
+        query-params (subscribe [::route-subs/nav-query-params])
         tr           (subscribe [::i18n-subs/tr])]
     (when (and navigate? @session)
       (dispatch [::history-events/navigate (or (:redirect @query-params)

@@ -8,9 +8,9 @@
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
-            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.routing.effects :as fx]
             [sixsq.nuvla.ui.routing.routes :refer [alias->canonical router]]
+            [sixsq.nuvla.ui.routing.subs :as subs]
             [sixsq.nuvla.ui.routing.utils :as utils]))
 
 
@@ -137,7 +137,7 @@
 (defn router-component []
   (let [current-route @(re-frame/subscribe [::current-route])
         view          (-> current-route :data :view)
-        path          @(re-frame/subscribe [::main-subs/nav-path])]
+        path          @(re-frame/subscribe [::subs/nav-path])]
     [:div
      (when current-route
        [view (assoc current-route :path path

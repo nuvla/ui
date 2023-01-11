@@ -3,6 +3,7 @@
             [re-frame.core :refer [subscribe]]
             [sixsq.nuvla.ui.intercom.subs :as subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.intercom :as intercom]))
@@ -10,7 +11,7 @@
 (defn widget
   []
   (fn []
-    (let [_                   (subscribe [::main-subs/nav-path])
+    (let [_                   (subscribe [::route-subs/nav-path])
           app-id              (subscribe [::main-subs/config :intercom-app-id])
           email               (subscribe [::session-subs/identifier])
           active-claim        (subscribe [::session-subs/active-claim])

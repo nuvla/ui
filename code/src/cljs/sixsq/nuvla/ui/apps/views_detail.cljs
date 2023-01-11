@@ -20,6 +20,7 @@
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -106,7 +107,7 @@
   (dispatch-sync [::events/validate-form])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)
         {:keys [subtype]} (get @re-frame.db/app-db ::spec/module)
-        new-subtype (:subtype @(subscribe [::main-subs/nav-query-params]))]
+        new-subtype (:subtype @(subscribe [::route-subs/nav-query-params]))]
     (when form-valid?
       (dispatch [::events/set-validate-form? false])
       (if (= (or subtype new-subtype) "project")
@@ -312,7 +313,7 @@
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-modal-visible?])
-        nav-path (subscribe [::main-subs/nav-path])]
+        nav-path (subscribe [::route-subs/nav-path])]
     (fn []
       (let [parent    (utils/nav-path->module-path @nav-path)
             base-path (pathify (remove str/blank?

@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
@@ -504,8 +505,8 @@
 (defn cimi-resource
   []
   (let [tr           (subscribe [::i18n-subs/tr])
-        path         (subscribe [::main-subs/nav-path])
-        query-params (subscribe [::main-subs/nav-query-params])]
+        path         (subscribe [::route-subs/nav-path])
+        query-params (subscribe [::route-subs/nav-query-params])]
     (fn []
       (let [[_ resource-type _] @path]
         (dispatch [::events/set-collection-name resource-type])

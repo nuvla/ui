@@ -3,6 +3,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.events :as history-events]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -15,7 +16,7 @@
   [label-kw url icon protected?]
   (let [tr           (subscribe [::i18n-subs/tr])
         is-user?     (subscribe [::session-subs/is-user?])
-        active?      (subscribe [::subs/nav-url-active? url])
+        active?      (subscribe [::route-subs/nav-url-active? url])
         auth-needed? (and protected? (not @is-user?))
         auth-url     (name->href :sign-in)]
 

@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.main.components :as main-components]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
             [sixsq.nuvla.ui.messages.views :as messages]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
@@ -25,7 +26,7 @@
 
 (defn crumb
   [index segment]
-  (let [nav-path (subscribe [::subs/nav-path])
+  (let [nav-path (subscribe [::route-subs/nav-path])
         click-fn #(dispatch [::history-events/navigate (trim-path @nav-path index)])]
     ^{:key (str index "_" segment)}
     [ui/BreadcrumbSection
@@ -46,7 +47,7 @@
 
 
 (defn breadcrumbs-links []
-  (let [nav-path           (subscribe [::subs/nav-path])
+  (let [nav-path           (subscribe [::route-subs/nav-path])
         decorated-nav-path (decorate-breadcrumbs @nav-path)]
     (vec (concat [ui/Breadcrumb {:size :large}]
                  (->> decorated-nav-path
@@ -62,7 +63,7 @@
 
 
 (defn breadcrumbs-dropdown []
-  (let [path        (subscribe [::subs/nav-path])
+  (let [path        (subscribe [::route-subs/nav-path])
         options     (map breadcrumb-option (range) @path)
         selected    (-> options last :value)
         callback-fn #(dispatch [::history-events/navigate (trim-path @path %)])]
@@ -226,7 +227,7 @@
         cep              (subscribe [::api-subs/cloud-entry-point])
         iframe?          (subscribe [::subs/iframe?])
         is-small-device? (subscribe [::subs/is-small-device?])
-        resource-path    (subscribe [::subs/nav-path])
+        resource-path    (subscribe [::route-subs/nav-path])
         session-loading? (subscribe [::session-subs/session-loading?])
         subs-canceled?   (subscribe [::profile-subs/subscription-canceled?])]
     (if (and @cep (not @session-loading?))

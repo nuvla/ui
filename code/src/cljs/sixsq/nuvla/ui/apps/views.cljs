@@ -14,13 +14,13 @@
             [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 
 
 (defn dispatch-clear-events
   [new-subtype]
-  (let [nav-path   (subscribe [::main-subs/nav-path])
+  (let [nav-path   (subscribe [::route-subs/nav-path])
         new-parent (utils/nav-path->parent-path @nav-path)
         new-name   (utils/nav-path->module-name @nav-path)]
     (dispatch [::events/clear-module new-name new-parent new-subtype])
@@ -69,7 +69,7 @@
 
 (defn AppDetails
   []
-  (let [nav-query-params (subscribe [::main-subs/nav-query-params])]
+  (let [nav-query-params (subscribe [::route-subs/nav-query-params])]
     (fn []
       (let [version     (:version @nav-query-params)
             new-subtype (:subtype @nav-query-params)

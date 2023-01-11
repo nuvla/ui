@@ -20,8 +20,7 @@
             [sixsq.nuvla.ui.profile.views :refer [profile]]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
-            [sixsq.nuvla.ui.welcome.views :refer [home-view]]
-            [sixsq.nuvla.ui.edges-detail.views :as edges-detail]))
+            [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
 (defn SessionPageWelcomeRedirect
   []
@@ -30,6 +29,56 @@
 (defn SessionPageWithoutWelcomeRedirect
   []
   [session-views/SessionPage false])
+
+(defn- create-route-name
+  ([page-alias]
+   (create-route-name page-alias nil))
+  ([page-alias suffix]
+   (keyword (str (some-> (namespace :edges) (str "/")) page-alias suffix))))
+
+(def edges-routes
+  (mapv (fn [page-alias]
+          [[page-alias
+            {:name      (create-route-name page-alias)
+             :view      edges-view
+             :dict-key  :edges}
+            [""]
+            ["/" (create-route-name page-alias "-slashed")]]
+           [(str page-alias "/:uuid")
+            {:name      (create-route-name page-alias "-details")
+             :view      edges-view}]
+           [(str page-alias "/nuvlabox-cluster/:uuid")
+            {:name (create-route-name page-alias "-cluster-details")
+             :view edges-view}]])
+    ["edges" "nuvlabox" "edge"]))
+
+(def cloud-routes
+  (mapv (fn [page-alias]
+          [page-alias
+           {:name      (create-route-name page-alias)
+            :view      clouds-view
+            :dict-key  :clouds}
+           [""]
+           ["/" (create-route-name page-alias "-slashed")]
+           ["/:uuid"
+            {:name      (create-route-name page-alias "-details")
+             :view      clouds-view}]])
+    ["clouds" "infrastructures"]))
+
+
+(def deployment-routes
+  (mapv (fn [page-alias]
+          [page-alias
+           {:name      (create-route-name page-alias)
+            :view      deployments-view
+            :dict-key  :deployments}
+           [""]
+           ["/" (create-route-name page-alias "-slashed")]
+           ["/:uuid"
+            {:name (create-route-name page-alias "-details")
+             :view DeploymentDetails}]])
+    ["deployments" "deployment"]))
+
 
 (def r-routes
   [""
@@ -40,6 +89,9 @@
     [""
      {:name      :home-root
       :link-text "Home"}]
+    edges-routes
+    cloud-routes
+    deployment-routes
     ["sign-up"
      {:name      :sign-up
       :view      SessionPageWelcomeRedirect
@@ -83,54 +135,6 @@
      ["/*sub-path"
       {:name :apps-details
        :view app-views/AppDetails}]]
-    ["deployments"
-     {:name      :deployments
-      :view      deployments-view
-      :link-text "deployments"}]
-    ["deployment"
-     {:name      :deployment
-      :view      deployments-view
-      :link-text "deployments"}]
-    ["deployment/"
-     {:name      :deployment-slashed
-      :view      deployments-view
-      :link-text "deployments"}]
-    ["deployment/:uuid"
-     {:name :deployment-details
-      :view DeploymentDetails}]
-    ["deployment-sets"
-     {:name      :deployment-sets
-      :view      deployment-sets-view
-      :link-text "deployment-sets"}
-     [""]
-     ["/" :deployment-sets-slashed]]
-    ["deployment-sets/:uuid"
-     {:name      :deployment-sets-details
-      :view      deployment-sets-view
-      :link-text "deployment-sets"}]
-    ["edges"
-     {:name      :edges
-      :view      edges-view
-      :link-text "edges"}
-     [""]
-     ["/" :edges-slashed]]
-    ["edges/:uuid"
-     {:name      :edges-details
-      :view      edges-view
-      :link-text "edges-details"}]
-    ["edges/nuvlabox-cluster/:uuid"
-     {:name :edge-cluster-details
-      :view edges-view}]
-    ["nuvlabox"
-     {:name ::nuvlabox
-      :view edges-view}
-     [""]
-     ["/:uuid"
-      {:name ::nuvlabox-details
-       :view edges-view}]]
-    ["nuvlabox/nuvlabox-cluster/:uuid"
-     {:name :nuvlabox-cluster-details
-      :view edges-view}]
     ["credentials"
      {:name      :credentials
       :view      credentials-view
@@ -148,16 +152,16 @@
     ["data/*uuid"
      {:name :data-details
       :view data-set-views/DataSet}]
-    ["clouds"
-     {:name      :clouds
-      :view      clouds-view
-      :link-text "clouds"}
+    ["deployment-sets"
+     {:name      :deployment-sets
+      :view      deployment-sets-view
+      :link-text "deployment-sets"}
      [""]
-     ["/" :clouds-slashed]
-     ["/:uuid"
-      {:name      :clouds-details
-       :view      clouds-view
-       :link-text "clouds"}]]
+     ["/" :deployment-sets-slashed]]
+    ["deployment-sets/:uuid"
+     {:name      :deployment-sets-details
+      :view      deployment-sets-view
+      :link-text "deployment-sets"}]
     ["documentation"
      {:name      :documentation
       :view      documentation
@@ -175,7 +179,7 @@
     ["profile"
      {:name :profile
       :view profile}]]
-   ["/*sub-path"
+   ["/*"
     {:name :catch-all
      :view UnknownResource}]])
 
@@ -192,4 +196,11 @@
 (comment
   (r/match-by-name router ::nuvlabox)
   (r/match-by-name router ::nuvlabox)
+  (r/match-by-name router :catch-all {":" "blabla/hello"})
+
+  (->> (r/match-by-path router "/ui/blabla")
+       :path-params
+       keys
+       first
+       type)
   )

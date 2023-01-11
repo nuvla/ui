@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.history.events
-  (:require
-    [re-frame.core :refer [reg-event-fx]]
-    [sixsq.nuvla.ui.history.effects :as fx]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [taoensso.timbre :as log]))
+  (:require [re-frame.core :refer [reg-event-fx]]
+            [sixsq.nuvla.ui.history.effects :as fx]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [taoensso.timbre :as log]))
 
 
 (reg-event-fx

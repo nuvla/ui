@@ -93,7 +93,7 @@
         on-dissmiss   #(dispatch [::dissmiss db-path id])
         {:keys [FAILED SUCCESS]
          :as   status-message} (when (not= state "FAILED")
-                                         (general-utils/json->edn status-message))
+                                 (general-utils/json->edn status-message))
         some-fail?    (pos? (count FAILED))
         some-success? (pos? (count SUCCESS))
         completed?    (= progress 100)

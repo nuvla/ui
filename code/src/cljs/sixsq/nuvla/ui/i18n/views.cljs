@@ -1,11 +1,10 @@
 (ns sixsq.nuvla.ui.i18n.views
-  (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.i18n.events :as i18n-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.i18n.utils :as utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.i18n.events :as i18n-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.i18n.utils :as utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn LocaleDropdownItem

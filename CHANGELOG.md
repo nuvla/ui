@@ -2,12 +2,19 @@
 
 ## Unreleased
 
+### Changed
+
+- Apps -  App description truncated if bold text is used fix
+- Values - Markdown summary should support nested elements #1077
+- Deps - Upgrade api client v2.0.11
+- Main - Loader service unavailable message visible on error
+
 ## [2.32.12] - 2023-01-06
 
 ### Changed
 
 - Deployment modal - Check dct error not visible fix
-- Application detail - message become vendor bugfix
+- Application detail - Message become vendor bugfix
 - Application detail - License renamed to End-User License Agreement
 - Deployment modal - License renamed to End-User License Agreement
 - Module plugin - License renamed to End-User License Agreement

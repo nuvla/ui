@@ -1,19 +1,18 @@
 (ns sixsq.nuvla.ui.session.sign-in-views
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [form-validator.core :as fv]
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.history.views :as history-views]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.session.components :as comp]
-    [sixsq.nuvla.ui.session.events :as events]
-    [sixsq.nuvla.ui.session.subs :as subs]
-    [sixsq.nuvla.ui.session.utils :as utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [form-validator.core :as fv]
+            [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+            [sixsq.nuvla.ui.history.views :as history-views]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.session.components :as comp]
+            [sixsq.nuvla.ui.session.events :as events]
+            [sixsq.nuvla.ui.session.subs :as subs]
+            [sixsq.nuvla.ui.session.utils :as utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as us]))
 
 ;; VALIDATION SPEC
 (s/def ::username us/nonblank-string)
@@ -26,7 +25,7 @@
 
 (defn FormTokenValidation
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr        (subscribe [::i18n-subs/tr])
         on-submit #(dispatch [::events/validate-2fa-activation %1])]
     (fn []
       [comp/RightPanel
@@ -41,21 +40,21 @@
 
 (defn Form
   []
-  (let [form-conf {:form-spec    ::session-template-password
-                   :names->value {:username ""
-                                  :password ""}}
-        form (fv/init-form form-conf)
-        tr (subscribe [::i18n-subs/tr])
-        spec->msg {::username (@tr [:should-not-be-empty])
-                   ::password (@tr [:should-not-be-empty])}
+  (let [form-conf           {:form-spec    ::session-template-password
+                             :names->value {:username ""
+                                            :password ""}}
+        form                (fv/init-form form-conf)
+        tr                  (subscribe [::i18n-subs/tr])
+        spec->msg           {::username (@tr [:should-not-be-empty])
+                             ::password (@tr [:should-not-be-empty])}
         server-redirect-uri (subscribe [::subs/server-redirect-uri])
-        resource-url (str @cimi-fx/NUVLA_URL "/api/session")
+        resource-url        (str @cimi-fx/NUVLA_URL "/api/session")
         github-session-tmpl "session-template/github-nuvla"
-        geant-session-tmpl "session-template/oidc-geant"
-        icrc-session-tmpl "session-template/oidc-icrc"
-        github-template? (subscribe [::subs/session-template-exist? github-session-tmpl])
-        geant-template? (subscribe [::subs/session-template-exist? geant-session-tmpl])
-        icrc-template? (subscribe [::subs/session-template-exist? icrc-session-tmpl])]
+        geant-session-tmpl  "session-template/oidc-geant"
+        icrc-session-tmpl   "session-template/oidc-icrc"
+        github-template?    (subscribe [::subs/session-template-exist? github-session-tmpl])
+        geant-template?     (subscribe [::subs/session-template-exist? geant-session-tmpl])
+        icrc-template?      (subscribe [::subs/session-template-exist? icrc-session-tmpl])]
     (fn []
       [comp/RightPanel
        {:title        (@tr [:login-to])

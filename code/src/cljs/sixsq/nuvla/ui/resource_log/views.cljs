@@ -1,14 +1,13 @@
 (ns sixsq.nuvla.ui.resource-log.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.resource-log.events :as events]
-    [sixsq.nuvla.ui.resource-log.subs :as subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.resource-log.events :as events]
+            [sixsq.nuvla.ui.resource-log.subs :as subs]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn log-controller
   [_go-live? _current-log]
@@ -41,17 +40,17 @@
                              @avail-components)}])
 
        [ui/MenuItem
-        [:div {:style {:display         "flex"
-                       :gap             "10px"
-                       :align-items     "center"
-                       :padding-left    "1rem"}}
+        [:div {:style {:display      "flex"
+                       :gap          "10px"
+                       :align-items  "center"
+                       :padding-left "1rem"}}
          [:div
           "Since:"]
          [:div
           [ui/DatePicker
            {:custom-input     (r/as-element
-                               [ui/Input {:transparent true
-                                          :style       {:width "17em"}}])
+                                [ui/Input {:transparent true
+                                           :style       {:width "17em"}}])
             :locale           (or (time/locale-string->locale-object @locale) @locale)
             :date-format      "MMMM d, yyyy hh:mm aa"
             :time-format      "HH:mm"

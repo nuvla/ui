@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.notifications.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.notifications.spec :as spec]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.notifications.spec :as spec]))
 
 
 ;;
@@ -158,13 +157,13 @@
     (get-in db [::spec/notification-subscription-config :criteria])))
 
 (reg-sub
- ::custom-days
- :<- [::criteria]
- (fn [criteria]
-   (let [reset-interval (or (:reset-interval criteria) "")
-         parsed-days    (first (re-find #"^[\d{0,3}]d" reset-interval))
-         reset-in-days  ((fnil js/Number 1) parsed-days)]
-     reset-in-days)))
+  ::custom-days
+  :<- [::criteria]
+  (fn [criteria]
+    (let [reset-interval (or (:reset-interval criteria) "")
+          parsed-days    (first (re-find #"^[\d{0,3}]d" reset-interval))
+          reset-in-days  ((fnil js/Number 1) parsed-days)]
+      reset-in-days)))
 
 
 (reg-sub

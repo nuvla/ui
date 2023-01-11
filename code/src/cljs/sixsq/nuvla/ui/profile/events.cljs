@@ -1,23 +1,22 @@
 (ns sixsq.nuvla.ui.profile.events
-  (:require
-    ["@stripe/react-stripe-js" :as react-stripe]
-    [ajax.core :as ajax]
-    [clojure.string :as str]
-    [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.profile.effects :as fx]
-    [sixsq.nuvla.ui.profile.spec :as spec]
-    [sixsq.nuvla.ui.session.events :as session-events]
-    [sixsq.nuvla.ui.session.spec :as session-spec]
-    [sixsq.nuvla.ui.session.utils :as session-utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require ["@stripe/react-stripe-js" :as react-stripe]
+            [ajax.core :as ajax]
+            [clojure.string :as str]
+            [day8.re-frame.http-fx]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.profile.effects :as fx]
+            [sixsq.nuvla.ui.profile.spec :as spec]
+            [sixsq.nuvla.ui.session.events :as session-events]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-fx
   ::init

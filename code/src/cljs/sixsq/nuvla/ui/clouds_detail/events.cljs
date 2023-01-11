@@ -1,19 +1,18 @@
 (ns sixsq.nuvla.ui.clouds-detail.events
-  (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.clouds-detail.spec :as spec]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.clouds-detail.spec :as spec]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-db ::set-infrastructure-service
-  (fn [db [_ infrastructure-service]]
-    (assoc db ::spec/infra-service-not-found? (nil? infrastructure-service)
-              ::spec/infrastructure-service infrastructure-service
-              ::main-spec/loading? false)))
+              (fn [db [_ infrastructure-service]]
+                (assoc db ::spec/infra-service-not-found? (nil? infrastructure-service)
+                          ::spec/infrastructure-service infrastructure-service
+                          ::main-spec/loading? false)))
 
 (reg-event-fx
   ::get-infrastructure-service

@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.utils.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [clojure.string :as str]))
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]))
 
 
 (defn nonblank-string [s]

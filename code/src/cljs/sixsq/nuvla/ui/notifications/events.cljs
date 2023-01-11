@@ -1,14 +1,13 @@
 (ns sixsq.nuvla.ui.notifications.events
-  (:require
-    [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.notifications.spec :as spec]
-    [sixsq.nuvla.ui.notifications.utils :as utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [cljs.spec.alpha :as s]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.notifications.spec :as spec]
+            [sixsq.nuvla.ui.notifications.utils :as utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 ;;
 ;; notification-methods
@@ -71,7 +70,7 @@
 (reg-event-db
   ::validate-notification-method-form
   (fn [db]
-    (let [form-spec ::spec/notification-method
+    (let [form-spec      ::spec/notification-method
           notif-method   (get db ::spec/notification-method)
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form?
@@ -86,7 +85,7 @@
 (reg-event-fx
   ::edit-notification-method
   (fn [{{:keys [::spec/notification-method] :as db} :db} [_]]
-    (let [id             (:id notification-method)
+    (let [id               (:id notification-method)
           new-notif-method (utils/db->new-notification-method db)]
       (if (nil? id)
         {:db               db
@@ -156,33 +155,33 @@
                     new-values]]]})
 
 (reg-event-fx
- ::choose-monthly-reset
- (fn [{{:keys [::spec/notification-subscription-config]} :db}]
-   (let [criteria (:criteria notification-subscription-config)
-         new-reset-start-date (or (:reset-start-date criteria) 1)]
-        (update-subscription-criteria-fx {:reset-interval "month"
-                                          :reset-start-date new-reset-start-date}))))
+  ::choose-monthly-reset
+  (fn [{{:keys [::spec/notification-subscription-config]} :db}]
+    (let [criteria             (:criteria notification-subscription-config)
+          new-reset-start-date (or (:reset-start-date criteria) 1)]
+      (update-subscription-criteria-fx {:reset-interval   "month"
+                                        :reset-start-date new-reset-start-date}))))
 
 (reg-event-fx
- ::choose-custom-reset
- (fn [{{:keys [::spec/notification-subscription-config]} :db}]
-   (let [criteria       (:criteria notification-subscription-config)
-         reset-in-days  (or (:reset-in-days criteria) 1)]
-        (update-subscription-criteria-fx {:reset-interval (str reset-in-days "d")
-                                          :reset-in-days reset-in-days}))))
+  ::choose-custom-reset
+  (fn [{{:keys [::spec/notification-subscription-config]} :db}]
+    (let [criteria      (:criteria notification-subscription-config)
+          reset-in-days (or (:reset-in-days criteria) 1)]
+      (update-subscription-criteria-fx {:reset-interval (str reset-in-days "d")
+                                        :reset-in-days  reset-in-days}))))
 
 (reg-event-fx
- ::update-custom-days
- (fn [_ [_ value]]
-   (let [new-custom-days (js/Number value)
-         custom-interval-days (str new-custom-days "d")]
-     (update-subscription-criteria-fx {:reset-interval custom-interval-days
-                                       :reset-in-days new-custom-days}))))
+  ::update-custom-days
+  (fn [_ [_ value]]
+    (let [new-custom-days      (js/Number value)
+          custom-interval-days (str new-custom-days "d")]
+      (update-subscription-criteria-fx {:reset-interval custom-interval-days
+                                        :reset-in-days  new-custom-days}))))
 
 (reg-event-fx
- ::update-custom-device-name
- (fn [_ [_ value]]
-   (update-subscription-criteria-fx {:dev-name value})))
+  ::update-custom-device-name
+  (fn [_ [_ value]]
+    (update-subscription-criteria-fx {:dev-name value})))
 
 
 (reg-event-db
@@ -222,7 +221,7 @@
 (reg-event-fx
   ::edit-subscription-config
   (fn [{{:keys [::spec/notification-subscription-config] :as db} :db} [_]]
-    (let [id             (:id notification-subscription-config)
+    (let [id              (:id notification-subscription-config)
           new-subs-config (utils/view->model (utils/db->new-subscription-config db))]
       (if (nil? id)
         {:db               db
@@ -373,9 +372,9 @@
 (reg-event-fx
   ::get-notification-subscriptions
   (fn [_ [_ parent]]
-    (let [flt (if parent
-                (str "category='notification' and parent='" parent "'")
-                "category='notification'")
+    (let [flt      (if parent
+                     (str "category='notification' and parent='" parent "'")
+                     "category='notification'")
           callback (fn
                      [{:keys [resources]}]
                      (if parent
@@ -384,7 +383,7 @@
                                                       (assoc m k (conj (get m k []) v)))
                                                     {}
                                                     (apply concat (map (fn [v] {(get v :parent) v}) resources)))
-                             counts (reduce into {} (map (fn [[k v]] {k (count v)}) subs-by-parent))]
+                             counts         (reduce into {} (map (fn [[k v]] {k (count v)}) subs-by-parent))]
                          (dispatch [::set-subscriptions-by-parent subs-by-parent])
                          (dispatch [::set-subscriptions-by-parent-counts counts])
                          (dispatch [::set-subscriptions resources]))))]
@@ -424,8 +423,8 @@
   (fn [db [_ subs-conf]]
     (let [sc (assoc subs-conf :collection (:resource-kind subs-conf))]
       (-> db
-        (assoc ::spec/notification-subscription-config sc)
-        (assoc ::spec/edit-subscription-config-modal-visible? true)))))
+          (assoc ::spec/notification-subscription-config sc)
+          (assoc ::spec/edit-subscription-config-modal-visible? true)))))
 
 
 (reg-event-db
@@ -485,7 +484,7 @@
 (reg-event-db
   ::validate-subscription-form
   (fn [db]
-    (let [form-spec ::spec/subscription
+    (let [form-spec      ::spec/subscription
           subscription   (get db ::spec/subscription)
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec subscription)) true)]
@@ -496,7 +495,7 @@
 (reg-event-fx
   ::edit-subscription
   (fn [{{:keys [::spec/subscription] :as db} :db} [_]]
-    (let [id             (:id subscription)
+    (let [id       (:id subscription)
           new-subs (utils/db->new-subscription db)]
       (if (nil? id)
         {:db               db

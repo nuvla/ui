@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.cimi.events
-  (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi.spec :as spec]
-    [sixsq.nuvla.ui.cimi.utils :as utils]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.cimi.spec :as spec]
+            [sixsq.nuvla.ui.cimi.utils :as utils]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
@@ -158,15 +157,16 @@
   (fn [{db :db} [_ {:keys [base-uri] :as cep}]]
     (if (instance? js/Error cep)
       (do (js/console.error "Communication with API server failed! Retry in 5 seconds")
-          {:dispatch-later [{:ms 5000 :dispatch [::get-cloud-entry-point]}]})
+          {:db             (assoc db ::spec/cloud-entry-point-error? true)
+           :dispatch-later [{:ms 5000 :dispatch [::get-cloud-entry-point]}]})
       (let [href-map (utils/collection-href-map cep)
             key-map  (utils/collection-key-map cep)]
-        {:db (-> db
-                 (assoc ::spec/cloud-entry-point {:base-uri        base-uri
-                                                  :collection-href href-map
-                                                  :collection-key  key-map})
-                 (assoc ::spec/collections-templates-cache
-                        (utils/collections-template-map href-map)))}))))
+        {:db (assoc db ::spec/cloud-entry-point {:base-uri        base-uri
+                                                 :collection-href href-map
+                                                 :collection-key  key-map}
+                       ::spec/collections-templates-cache
+                       (utils/collections-template-map href-map)
+                       ::spec/cloud-entry-point-error? false)}))))
 
 
 (reg-event-fx

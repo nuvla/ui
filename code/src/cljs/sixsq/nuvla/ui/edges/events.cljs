@@ -1,17 +1,16 @@
 (ns sixsq.nuvla.ui.edges.events
-  (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.edges.spec :as spec]
-    [sixsq.nuvla.ui.edges.utils :as utils]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.edges.spec :as spec]
+            [sixsq.nuvla.ui.edges.utils :as utils]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
@@ -121,15 +120,15 @@
   (fn [{:keys [db]} [_ {:keys [resources] :as nuvlaboxes-status}]]
     (if (instance? js/Error nuvlaboxes-status)
       {:fx [[:dispatch [::messages-events/add
-                                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes-status)]
-                                   {:header  (cond-> (str "failure getting status for nuvla edges")
-                                               status (str " (" status ")"))
-                                    :content message
-                                    :type    :error})]]]}
+                        (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes-status)]
+                          {:header  (cond-> (str "failure getting status for nuvla edges")
+                                            status (str " (" status ")"))
+                           :content message
+                           :type    :error})]]]}
       {:db (assoc db ::spec/nuvlaedges-select-status (zipmap
-                                                      (map :parent resources)
-                                                      resources)
-                  ::main-spec/loading? false)})))
+                                                       (map :parent resources)
+                                                       resources)
+                     ::main-spec/loading? false)})))
 
 (reg-event-fx
   ::get-nuvlabox-locations

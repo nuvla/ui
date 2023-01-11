@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.apps.subs
-  (:require
-    [clojure.set :as set]
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+  (:require [clojure.set :as set]
+            [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.apps.spec :as spec]
+            [sixsq.nuvla.ui.apps.utils :as utils]
+            [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub

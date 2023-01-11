@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment-dialog.spec
-  (:require
-    [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]))
 
 
 (s/def ::deploy-modal-visible? boolean?)

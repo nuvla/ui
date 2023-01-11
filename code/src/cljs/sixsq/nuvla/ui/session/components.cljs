@@ -1,19 +1,18 @@
 (ns sixsq.nuvla.ui.session.components
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.i18n.views :as i18n-views]
-    [sixsq.nuvla.ui.session.events :as events]
-    [sixsq.nuvla.ui.session.subs :as subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.i18n.views :as i18n-views]
+            [sixsq.nuvla.ui.session.events :as events]
+            [sixsq.nuvla.ui.session.subs :as subs]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (defn RightPanel
   [{:keys [title title-bold FormFields submit-text submit-fn ExtraContent]}]
-  (let [error-message (subscribe [::subs/error-message])
+  (let [error-message   (subscribe [::subs/error-message])
         success-message (subscribe [::subs/success-message])
-        loading? (subscribe [::subs/loading?])]
+        loading?        (subscribe [::subs/loading?])]
     [:<>
      [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
      [:div {:style {:margin-left "10%"

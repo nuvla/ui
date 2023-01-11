@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.cimi-detail.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]))
 
 
 (reg-sub

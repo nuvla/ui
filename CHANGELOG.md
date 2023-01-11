@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+Apps -  App description truncated if bold text is used fix
+Values - markdown summary should support nested elements #1077
+
 ## [2.32.12] - 2023-01-06
 
 ### Changed

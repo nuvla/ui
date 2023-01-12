@@ -4,7 +4,12 @@
 
 ### Changed
 
-- Routing - introduces reitit frontend router for client side routing
+- Apps - App description truncated if bold text is used fix
+- Values - Markdown summary should support nested elements #1077
+- Deps - Upgrade api client v2.0.11
+- Main - Loader service unavailable message visible on error
+- NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
+- Routing - Introduces reitit frontend router for client side routing
 
 ## [2.32.12] - 2023-01-06
 

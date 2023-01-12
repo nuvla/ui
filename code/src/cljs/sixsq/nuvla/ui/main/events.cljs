@@ -22,7 +22,7 @@
   ::bulk-actions-interval-after-navigation
   (fn [{{:keys [::spec/actions-interval
                 ::spec/changes-protection?]} :db}]
-    (when (not changes-protection?)
+    (when-not changes-protection?
       {::fx/bulk-actions-interval [::action-interval-delete
                                    (dissoc actions-interval
                                            notification-polling-id
@@ -147,8 +147,7 @@
                        ::spec/changes-protection? false)]
           (cond
             (map? ignore-changes-modal)
-            (-> {:db new-db}
-                (merge ignore-changes-modal))
+            (merge {:db new-db} ignore-changes-modal)
 
             (fn? ignore-changes-modal)
             (do (ignore-changes-modal)

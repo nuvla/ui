@@ -97,14 +97,17 @@ Run `npm install` inside `code` folder of the cloned repository. This only needs
 then whenever dependencies change.
 When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui at https://nui.localhost.
 
-## Testing with playwright
+
+## Testing
+
+### End to end testing
 
 We use [`playwright`](https://playwright.dev/) for e2e-testing.
 To run playwright locally, inside the code directory, you `cp .env.e2e.TEMPLATE .env.e2e` and set the environment
 variables specified in that file.
 Tests are located in the `code/test/e2e/` directory.
 
-### Create tests
+#### Create tests
 
 1. Run
 
@@ -124,7 +127,7 @@ those interactions.
 3. Put new tests inside the `code/test/e2e/loggedin` directory.
    The file has to end with `.spec.js` (`.ts` for typescript files is possible).
 
-### Run tests
+#### Run tests
 
 Four additional commands are configured in `package.json` to run the tests (all starting with `test:e2e`).
 
@@ -161,7 +164,7 @@ You do not have to provide a path regex: the path is provided by the watching pr
 npm run test:e2e:headed:watch
 ```
 
-### Run in parallel
+#### Run in parallel
 
 It is possible to run the tests in parallel.
 Because they share the same logged in session (through `global-setup.js`), it could be that tests fail if
@@ -172,7 +175,7 @@ To prevent this, only run tests inside the loggedin folder.
 npm run test:e2e loggedin -- --workers 5
 ```
 
-### Debug tests
+#### Debug tests
 
 By adding a `page.pause()` inside a test file and running in `headed` mode, you can stop and open an inspector view.
 
@@ -183,7 +186,7 @@ open it by
 npx playwright show-trace test-results/<path-to-test-file>-<test-name>-retry<retrynumber>/trace.zip
 ```
 
-### Find additional playwright settings
+#### Find additional playwright settings
 
 ```bash
 npx playwright --help
@@ -194,6 +197,13 @@ and
 ```bash
 npx playwright test --help
 ```
+
+### Unit tests
+
+```bash
+npm run test:unit
+```
+
 
 ## Bundle size analyze
 

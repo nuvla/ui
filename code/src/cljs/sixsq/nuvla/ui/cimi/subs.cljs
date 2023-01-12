@@ -6,12 +6,9 @@
             [sixsq.nuvla.ui.filter-comp.utils :as utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
-
 (reg-sub
   ::query-params
-  (fn [db]
-    (::spec/query-params db)))
-
+  :-> ::spec/query-params)
 
 (reg-sub
   ::orderby-map
@@ -22,7 +19,6 @@
       (remove str/blank?)
       (map #(let [[label sort-direction] (str/split % #":")] [label (or sort-direction "asc")]))
       (into {}))))
-
 
 (reg-sub
   ::orderby-label-icon
@@ -35,63 +31,51 @@
                            "")]
       (str "sort" direction))))
 
-
-
 (reg-sub
   ::aggregations
-  ::spec/aggregations)
-
+  :-> ::spec/aggregations)
 
 (reg-sub
   ::collection
-  (fn [db]
-    (::spec/collection db)))
-
+  :-> ::spec/collection)
 
 (reg-sub
   ::can-bulk-delete?
   :<- [::collection]
-  (fn [collection]
-    (general-utils/can-bulk-delete? collection)))
-
+  :-> general-utils/can-bulk-delete?)
 
 (reg-sub
   ::collection-name
-  ::spec/collection-name)
-
+  :-> ::spec/collection-name)
 
 (reg-sub
   ::selected-fields
-  ::spec/selected-fields)
-
+  :-> ::spec/selected-fields)
 
 (reg-sub
   ::available-fields
-  ::spec/available-fields)
-
+  :-> ::spec/available-fields)
 
 (reg-sub
   ::cloud-entry-point
-  (fn [db]
-    (::spec/cloud-entry-point db)))
+  :-> ::spec/cloud-entry-point)
 
+(reg-sub
+  ::cloud-entry-point-error?
+  :-> ::spec/cloud-entry-point-error?)
 
 (reg-sub
   ::base-uri
   :<- [::cloud-entry-point]
-  (fn [cloud-entry-point]
-    (:base-uri cloud-entry-point)))
-
+  :-> :base-uri)
 
 (reg-sub
   ::show-add-modal?
   ::spec/show-add-modal?)
 
-
 (reg-sub
   ::collections-templates-cache
-  ::spec/collections-templates-cache)
-
+  :-> ::spec/collections-templates-cache)
 
 (reg-sub
   ::collection-templates
@@ -102,16 +86,13 @@
         templates-info
         (dispatch [::events/get-templates template-href])))))
 
-
 (reg-sub
   ::loading?
-  ::spec/loading?)
-
+  :-> ::spec/loading?)
 
 (reg-sub
   ::selected-rows
-  (fn [{:keys [::spec/selected-rows]}]
-    selected-rows))
+  :-> ::spec/selected-rows)
 
 (reg-sub
   ::row-selected?
@@ -119,12 +100,9 @@
   (fn [selected-rows [_ id]]
     (contains? selected-rows id)))
 
-
 (reg-sub
   ::resources-metadata-map
-  (fn [db]
-    (::spec/resource-metadata db)))
-
+  :-> ::spec/resource-metadata)
 
 (reg-sub
   ::resource-metadata
@@ -132,13 +110,10 @@
   (fn [resources-metadata-map [_ resource-name]]
     (get resources-metadata-map resource-name)))
 
-
 (reg-sub
   ::resource-metadata-attributes
   (fn [[_ resource-name]] (subscribe [::resource-metadata resource-name]))
-  (fn [resource-metadata]
-    (utils/cimi-metadata-simplifier resource-metadata)))
-
+  :-> utils/cimi-metadata-simplifier)
 
 (reg-sub
   ::resource-metadata-input-parameters
@@ -150,7 +125,6 @@
              (some #(when (= (:name %) operation) %))
              :input-parameters
              (remove #(= (:type %) "map")))))
-
 
 (reg-sub
   ::resource-metadata-attributes-options

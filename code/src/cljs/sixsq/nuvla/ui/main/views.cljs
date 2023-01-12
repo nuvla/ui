@@ -16,7 +16,6 @@
             [sixsq.nuvla.ui.routing.router :refer [router-component]]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
-            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.utils.general :as utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -80,7 +79,6 @@
     (if @is-mobile?
       [breadcrumbs-dropdown]
       [breadcrumbs-links])))
-
 
 
 (defn footer
@@ -165,9 +163,7 @@
                 :fluid true}
                @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
 
-       [router-component]
-
-       #_(panel/render @resource-path)])))
+       [router-component]])))
 
 
 (defn UpdateUIVersion
@@ -222,16 +218,27 @@
    [messages/alert-slider]
    [messages/alert-modal]])
 
+(defn AppLoader
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        error? (subscribe [::api-subs/cloud-entry-point-error?])]
+    [ui/Container
+     [ui/Loader {:active true :size "massive"}
+      (when @error?
+        [ui/Header {:text-align :center
+                    :as         :h2
+                    :content    (@tr [:service-unavailable])
+                    :subheader  (@tr [:take-coffee-back-soon])}])]]))
 
 (defn app []
   (let [show?            (subscribe [::subs/sidebar-open?])
-        cep              (subscribe [::api-subs/cloud-entry-point])
         iframe?          (subscribe [::subs/iframe?])
         is-small-device? (subscribe [::subs/is-small-device?])
         resource-path    (subscribe [::route-subs/nav-path])
-        session-loading? (subscribe [::session-subs/session-loading?])
+        app-loading?     (subscribe [::subs/app-loading?])
         subs-canceled?   (subscribe [::profile-subs/subscription-canceled?])]
-    (if (and @cep (not @session-loading?))
+    (if @app-loading?
+      [AppLoader]
       [:div {:id "nuvla-ui-main"}
        (if (#{"sign-in"
               "sign-up"
@@ -263,6 +270,4 @@
             [contents]
             [ignore-changes-modal]
             [subscription-required-modal]
-            (when-not @iframe? [footer])]]])]
-      [ui/Container
-       [ui/Loader {:active true :size "massive"}]])))
+            (when-not @iframe? [footer])]]])])))

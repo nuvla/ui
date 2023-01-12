@@ -7,9 +7,8 @@
   (some->
     (second (str/split path #"\?"))
     (str/split #"&")
-    (->> (map (fn [s] (let [[k v] (str/split s #"=")]
-                        [(keyword k) v])))
-         (into {}))))
+    (into {} (map (fn [s] (let [[k v] (str/split s #"=")]
+                            [(keyword k) v]))))))
 
 
 (defn name->href

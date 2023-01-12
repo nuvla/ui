@@ -18,7 +18,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -198,7 +198,7 @@
             selected? (boolean (@data-sets id))]
         [ui/TableRow {:style    {:cursor "pointer"}
                       :on-click (fn [event]
-                                  (dispatch [::history-events/navigate (utils/data-record-href id)])
+                                  (dispatch [::routing-events/navigate (utils/data-record-href id)])
                                   (.preventDefault event))}
          [ui/TableCell
           [ui/Checkbox {:checked  selected?

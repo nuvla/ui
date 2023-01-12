@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -39,7 +39,7 @@
                                 (dispatch [::main-events/changes-protection? false])
                                 (dispatch [::set-infrastructure-service %])))]})))
 
-(def on-success #(dispatch [::history-events/navigate (name->href routes/clouds)]))
+(def on-success #(dispatch [::routing-events/navigate (name->href routes/clouds)]))
 
 (reg-event-fx
   ::delete

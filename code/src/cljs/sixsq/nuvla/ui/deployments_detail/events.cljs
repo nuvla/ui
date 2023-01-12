@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -99,7 +99,7 @@
                                           :content message
                                           :type    :success}])
                               (dispatch [::deployments-events/get-deployments])
-                              (dispatch [::history-events/navigate (name->href routes/deployment)]))]}))
+                              (dispatch [::routing-events/navigate (name->href routes/deployment)]))]}))
 
 (reg-event-fx
   ::edit

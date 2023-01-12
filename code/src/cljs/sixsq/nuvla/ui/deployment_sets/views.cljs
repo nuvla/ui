@@ -10,7 +10,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -74,7 +74,7 @@
      {:name     (@tr [:add])
       :icon     "add"
       :on-click #(dispatch
-                   [::history-events/navigate (str (name->href routes/deployment-sets-slashed) "New")])}]))
+                   [::routing-events/navigate (str (name->href routes/deployment-sets-slashed) "New")])}]))
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
@@ -97,7 +97,7 @@
   [{:keys [id name description created state tags] :as _deployment-set}]
   (let [locale @(subscribe [::i18n-subs/locale])
         uuid   (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (name->href
+    [ui/TableRow {:on-click #(dispatch [::routing-events/navigate (name->href
                                                                     :deployment-sets-details
                                                                     {:uuid uuid})])
                   :style    {:cursor "pointer"}}

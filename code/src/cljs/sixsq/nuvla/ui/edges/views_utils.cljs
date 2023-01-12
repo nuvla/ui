@@ -7,7 +7,7 @@
             [sixsq.nuvla.ui.edges.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -22,7 +22,7 @@
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
   (let [locale (subscribe [::i18n-subs/locale])
         uuid   (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])
+    [ui/TableRow {:on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]

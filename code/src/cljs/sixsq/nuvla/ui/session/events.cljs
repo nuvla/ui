@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.effects :as fx]
@@ -41,7 +41,7 @@
                              ::spec/session-loading? false)}
               new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])
 
-              redirect (update :fx conj [:dispatch [::history-events/navigate navigate]])
+              redirect (update :fx conj [:dispatch [::routing-events/navigate navigate]])
               ;; force refresh templates collection cache when not the same user (different session)
               (not= session new-session) (assoc :fx
                                                 [[:dispatch [::cimi-events/get-cloud-entry-point]]
@@ -59,7 +59,7 @@
   (fn []
     {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
                                 (dispatch [::intercom-events/clear-events])
-                                (dispatch [::history-events/navigate (name->href routes/sign-in)]))]}))
+                                (dispatch [::routing-events/navigate (name->href routes/sign-in)]))]}))
 
 
 (reg-event-db
@@ -124,10 +124,10 @@
                                    (when success-msg
                                      (dispatch [::set-success-message success-msg]))
                                    (when navigate-to
-                                     (dispatch [::history-events/navigate navigate-to])))
+                                     (dispatch [::routing-events/navigate navigate-to])))
                                  (do
                                    (dispatch [::set-callback-2fa %1])
-                                   (dispatch [::history-events/navigate (name->href routes/sign-in-token)])))))
+                                   (dispatch [::routing-events/navigate (name->href routes/sign-in-token)])))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
@@ -150,7 +150,7 @@
     {:dispatch-n [[::clear-loading]
                   [::initialize]
                   [::set-success-message success-message]
-                  [::history-events/navigate (name->href routes/sign-in)]]}))
+                  [::routing-events/navigate (name->href routes/sign-in)]]}))
 
 
 (reg-event-fx

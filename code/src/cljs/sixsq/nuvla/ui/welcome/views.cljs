@@ -2,13 +2,13 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn navigate-link [target-page text]
-  [:a {:on-click #(dispatch [::history-events/navigate target-page])
+  [:a {:on-click #(dispatch [::routing-events/navigate target-page])
        :style    {:cursor "pointer"}}
    text])
 

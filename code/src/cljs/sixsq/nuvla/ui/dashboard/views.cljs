@@ -11,7 +11,7 @@
             [sixsq.nuvla.ui.edges.views :as edges-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -53,7 +53,7 @@
                  :content  "Show me"
                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
-                                (dispatch [::history-events/navigate resource]))}]]))
+                                (dispatch [::routing-events/navigate resource]))}]]))
 
 
 ; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
@@ -80,7 +80,7 @@
                  :content  "Show me"
                  :on-click #(do (when (and tab-event tab-key)
                                   (dispatch [tab-event tab-key]))
-                                (dispatch [::history-events/navigate resource]))}]]))
+                                (dispatch [::routing-events/navigate resource]))}]]))
 
 
 (defn Statistic
@@ -93,7 +93,7 @@
                    :on-click #(do
                                 (when tab-event
                                   (dispatch tab-event))
-                                (dispatch [::history-events/navigate resource]))}
+                                (dispatch [::routing-events/navigate resource]))}
      [ui/StatisticValue (or value "-")
       "\u2002"
       [ui/Icon {:className icon}]]
@@ -150,5 +150,5 @@
         [_ uuid] path
         root [DashboardMain]]
     (case n
-      2 ^{:key uuid} (dispatch [::history-events/navigate (name->href routes/deployment-details {:uuid uuid})])
+      2 ^{:key uuid} (dispatch [::routing-events/navigate (name->href routes/deployment-details {:uuid uuid})])
       [ui/Segment utils-style/basic root])))

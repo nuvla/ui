@@ -22,7 +22,7 @@
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -579,7 +579,7 @@
                {:as       :div
                 :link     true
                 :on-click (fn [event]
-                            (dispatch [::history-events/navigate (deployments-utils/deployment-href id)])
+                            (dispatch [::routing-events/navigate (deployments-utils/deployment-href id)])
                             (.preventDefault event))})
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true

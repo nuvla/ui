@@ -10,7 +10,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.map :as map]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -127,7 +127,7 @@
 (defn NuvlaboxMapPoint
   [{:keys [id name location online]}]
   (let [uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])]
+        on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong location)
                        :color    (utils/map-online->color online)

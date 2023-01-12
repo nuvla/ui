@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.docs.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -14,7 +14,7 @@
 
 
 (defn row-fn [{:keys [id] :as entry}]
-  [ui/TableRow {:on-click #(dispatch [::history-events/navigate
+  [ui/TableRow {:on-click #(dispatch [::routing-events/navigate
                                       (name->href routes/documentation-sub-page {:sub-path (general-utils/id->uuid id)})])}
    [ui/CopyToClipboard {:text (:name entry)} [ui/TableCell {:collapsing true} (:name entry)]]
    [ui/TableCell {:style {:max-width     "150px"

@@ -3,7 +3,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
@@ -32,7 +32,7 @@
       :on-click                 (fn [event]
                                   (.preventDefault event)
                                   (dispatch (if auth-needed?
-                                              [::history-events/navigate auth-url]
+                                              [::routing-events/navigate auth-url]
                                               [::events/navigate url])))
       :data-reitit-handle-click false}]))
 

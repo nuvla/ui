@@ -11,7 +11,7 @@
             [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.messages.events :as messages-events]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -382,7 +382,7 @@
                          (dispatch [::reset])
                          (dispatch [::messages-events/add success-msg])
                          (dispatch [::deployments-detail-events/get-deployment id])
-                         (dispatch [::history-events/navigate
+                         (dispatch [::routing-events/navigate
                                     (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})])))
           on-error   (fn [response]
                        (dispatch [::set-error-message

@@ -485,7 +485,7 @@
            [uix/TableRowField "username", :placeholder "OpenStack username", :editable? editable?, :required? true,
             :default-value openstack-username, :spec ::spec/openstack-username, :validate-form? @validate-form?,
             :on-change (partial on-change :openstack-username)]
-           [uix/TableRowField "password", :placeholder "OpenStack password", :editable? editable?, :required? true,
+           [uix/TableRowField "password", :type :password :placeholder "OpenStack password", :editable? editable?, :required? true,
             :default-value openstack-password, :spec ::spec/openstack-password, :validate-form? @validate-form?,
             :on-change (partial on-change :openstack-password)]]]
          [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]

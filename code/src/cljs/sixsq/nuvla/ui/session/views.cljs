@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.events :as events]
@@ -101,7 +101,7 @@
   []
   (let [user       (subscribe [::subs/user])
         is-group?  (subscribe [::subs/is-group?])
-        on-click   #(dispatch [::history-events/navigate (name->href route-names/profile)])
+        on-click   #(dispatch [::history-events/navigate (name->href routes/profile)])
         is-mobile? (subscribe [::main-subs/is-mobile-device?])]
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
@@ -130,7 +130,7 @@
   []
   (let [signup-template? (subscribe [::subs/user-template-exist?
                                      utils/user-tmpl-email-password])
-        on-click         #(dispatch [::history-events/navigate (name->href route-names/sign-up)])]
+        on-click         #(dispatch [::history-events/navigate (name->href routes/sign-up)])]
     (fn []
       (when @signup-template?
         [ui/MenuItem {:on-click on-click}
@@ -140,7 +140,7 @@
 
 (defn SignInButton
   []
-  (let [on-click #(dispatch [::history-events/navigate (name->href route-names/sign-in)])]
+  (let [on-click #(dispatch [::history-events/navigate (name->href routes/sign-in)])]
     (fn []
       [ui/Button {:primary  true
                   :on-click on-click}
@@ -213,14 +213,14 @@
        {:text     (@tr [:sign-in])
         :inverted true
         :active   (= @first-path "sign-in")
-        :on-click #(dispatch [::history-events/navigate (name->href route-names/sign-in)])}]
+        :on-click #(dispatch [::history-events/navigate (name->href routes/sign-in)])}]
       (when @signup-template?
         [:span
          [uix/Button
           {:text     (@tr [:sign-up])
            :inverted true
            :active   (= @first-path "sign-up")
-           :on-click #(dispatch [::history-events/navigate (name->href route-names/sign-up)])}]
+           :on-click #(dispatch [::history-events/navigate (name->href routes/sign-up)])}]
          [:br]
          [:br]
          (when @terms-and-conditions
@@ -268,7 +268,7 @@
         tr           (subscribe [::i18n-subs/tr])]
     (when (and navigate? @session)
       (dispatch [::history-events/navigate (or (:redirect @query-params)
-                                               (name->href route-names/home))]))
+                                               (name->href routes/home))]))
     (when-let [error (:error @query-params)]
       (dispatch [::events/set-error-message
                  (or (@tr [(keyword error)]) error)]))

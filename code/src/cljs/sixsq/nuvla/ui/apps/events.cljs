@@ -18,7 +18,7 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -591,7 +591,7 @@
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
                                (dispatch [::main-events/changes-protection? false])
                                (dispatch [::history-events/navigate
-                                          (str (name->href route-names/apps-slashed) (:path sanitized-module))]))
+                                          (str (name->href routes/apps-slashed) (:path sanitized-module))]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)
@@ -621,7 +621,7 @@
                               (assoc ::spec/form-valid? true))
      ::cimi-api-fx/delete [id #(do
                                  (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate (name->href route-names/apps-slashed)]))]}))
+                                 (dispatch [::history-events/navigate (name->href routes/apps-slashed)]))]}))
 
 
 (reg-event-db
@@ -655,7 +655,7 @@
                           #(do
                              (dispatch [::main-events/changes-protection? false])
                              (dispatch [::history-events/navigate
-                                        (str (name->href route-names/apps-slashed) (:path paste-module))]))
+                                        (str (name->href routes/apps-slashed) (:path paste-module))]))
                           :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                        (cimi-api-fx/default-add-on-error :module %)
                                        (when (= status 409)

@@ -12,7 +12,7 @@
             [sixsq.nuvla.ui.profile.effects :as fx]
             [sixsq.nuvla.ui.profile.spec :as spec]
             [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.events :as session-events]
             [sixsq.nuvla.ui.session.spec :as session-spec]
@@ -276,7 +276,7 @@
                         #(do
                            (dispatch [::get-customer (:resource-id %)])
                            (dispatch [::close-modal])
-                           (dispatch [::history-events/navigate (name->href route-names/profile)]))
+                           (dispatch [::history-events/navigate (name->href routes/profile)]))
                         :on-error #(dispatch [::set-error (-> % response/parse-ex-info :message)
                                               :create-customer])]}))
 
@@ -289,7 +289,7 @@
           on-success #(do
                         (dispatch [::get-customer (:id customer)])
                         (dispatch [::close-modal])
-                        (dispatch [::history-events/navigate (name->href route-names/profile)]))]
+                        (dispatch [::history-events/navigate (name->href routes/profile)]))]
       {:db                     (update db ::spec/loading conj :create-customer)
        ::cimi-api-fx/operation [(:id customer) "create-subscription" on-success :on-error on-error]})))
 

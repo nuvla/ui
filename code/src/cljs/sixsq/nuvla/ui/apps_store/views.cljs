@@ -16,7 +16,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -31,7 +31,7 @@
         map-versions   (apps-utils/map-versions-index versions)
         module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
         module-index   (apps-utils/latest-published-index map-versions)
-        detail-href    (pathify [(name->href route-names/apps) path (when (true? published) (str "?version=" module-index))])
+        detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
         follow-trial?  (get price :follow-customer-trial false)
         button-icon    (if (and price (not follow-trial?)) :cart :rocket)
         button-color   (if follow-trial? "green" "blue")

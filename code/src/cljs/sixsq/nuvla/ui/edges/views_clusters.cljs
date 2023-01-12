@@ -7,7 +7,7 @@
             [sixsq.nuvla.ui.edges.views-utils :as views-utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -31,7 +31,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id cluster-id created managers workers nuvlabox-managers
                  nuvlabox-workers name description orchestrator status-notes] :as _nuvlabox-cluster}]
-      (let [href          (name->href route-names/edge-cluster-details {:uuid (general-utils/id->uuid id)})
+      (let [href          (name->href routes/edge-cluster-details {:uuid (general-utils/id->uuid id)})
             cluster-nodes (+ (count managers) (count workers))
             nb-per-id     (group-by :id (:resources @nuvlaboxes))
             name          (or name cluster-id)]

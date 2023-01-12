@@ -7,7 +7,7 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -119,7 +119,7 @@
 (reg-event-fx
   ::delete
   (fn [{{:keys [::spec/data-set]} :db}]
-    {::cimi-api-fx/delete [(:id data-set) #(dispatch [::history-events/navigate (name->href route-names/data)])]}))
+    {::cimi-api-fx/delete [(:id data-set) #(dispatch [::history-events/navigate (name->href routes/data)])]}))
 
 (reg-event-db
   ::toggle-data-record-id

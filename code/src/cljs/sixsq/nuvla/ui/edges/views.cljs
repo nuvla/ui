@@ -17,7 +17,7 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -892,7 +892,7 @@
     (if (= "nuvlabox-cluster" uuid)
       (do
         (reset! view-type :cluster)
-        (dispatch [::history-events/navigate (name->href route-names/edges-slashed)]))
+        (dispatch [::history-events/navigate (name->href routes/edges-slashed)]))
       [edges-detail/EdgeDetails uuid])))
 
 

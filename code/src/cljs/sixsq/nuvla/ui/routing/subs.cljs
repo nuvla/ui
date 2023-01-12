@@ -6,30 +6,27 @@
 
 (reg-sub
   ::nav-path
-  (fn [db]
-    (::spec/nav-path db)))
+  :-> ::spec/nav-path)
 
 (reg-sub
   ::nav-query-params
-  (fn [db]
-    (::spec/nav-query-params db)))
+  :-> ::spec/nav-query-params)
 
 (reg-sub
   ::nav-path-first
   :<- [::nav-path]
-  (fn [nav-path]
-    (first nav-path)))
+  :-> first)
 
 (reg-sub
   ::nav-url-active?
   :<- [::nav-path-first]
   (fn [nav-path-first [_ url]]
-    (boolean (= nav-path-first (-> (str/replace-first url (str config/base-path "/") "")
-                                   (str/split "/")
-                                   first)))))
+    (-> (str/replace-first url (str config/base-path "/") "")
+        (str/split "/")
+        first
+        (= nav-path-first)
+        boolean)))
 
-;;; Subscriptions ;;;
 (reg-sub
   ::current-route
-  (fn [db]
-    (:current-route db)))
+  :-> :current-route)

@@ -16,7 +16,7 @@
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -52,7 +52,7 @@
                  (true? online) true
                  (false? online) false
                  :else nil)
-        href   (name->href route-names/clouds-details {:uuid (general-utils/id->uuid id)})]
+        href   (name->href routes/clouds-details {:uuid (general-utils/id->uuid id)})]
     [uix/Card
      {:href        href
       :image       logo-url

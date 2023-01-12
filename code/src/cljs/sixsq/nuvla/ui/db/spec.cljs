@@ -24,7 +24,7 @@
             [sixsq.nuvla.ui.messages.spec :as messages]
             [sixsq.nuvla.ui.profile.spec :as profile]
             [sixsq.nuvla.ui.resource-log.spec :as resource-log]
-            [sixsq.nuvla.ui.routing.routes :as r-routes]
+            [sixsq.nuvla.ui.routing.router :refer [router]]
             [sixsq.nuvla.ui.session.spec :as session]))
 
 (def default-db
@@ -64,4 +64,4 @@
          deployment-sets/defaults
          deployment-sets-detail/defaults
          deployment-sets-detail/pagination-defaults
-         {:router r-routes/router}))
+         {:router router}))

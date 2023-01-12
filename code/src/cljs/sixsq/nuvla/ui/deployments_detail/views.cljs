@@ -23,7 +23,7 @@
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
             [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -497,7 +497,7 @@
         (@tr [:deployment-run-private-ip]) ". "
         [:br]
         (@tr [:deployment-access-url]) " "
-        [:a {:href (name->href route-names/credentials)}
+        [:a {:href (name->href routes/credentials)}
          (@tr [:create-vpn-credential])] " " (@tr [:and]) " "
         [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
 

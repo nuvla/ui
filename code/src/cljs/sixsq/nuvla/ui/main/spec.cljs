@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.main.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]))
+            [sixsq.nuvla.ui.routing.routes :as routes]))
 
 (s/def ::loading? boolean?)
 
@@ -57,66 +57,66 @@
                                        :notify?         true}
                ::actions-interval     {}
                ::content-key          (random-uuid)
-               ::pages                {"welcome"         {:key        route-names/home
+               ::pages                {"welcome"         {:key        routes/home
                                                           :label-kw   :home
                                                           :icon       "home"
                                                           :protected? false
                                                           :order      0}
-                                       "documentation"   {:key        route-names/documentation
+                                       "documentation"   {:key        routes/documentation
                                                           :label-kw   :api-doc
                                                           :icon       "info"
                                                           :protected? false}
-                                       "dashboard"       {:key        route-names/dashboard
+                                       "dashboard"       {:key        routes/dashboard
                                                           :label-kw   :dashboard
                                                           :icon       "dashboard"
                                                           :protected? true
                                                           :order      10}
-                                       "apps"            {:key        route-names/apps
+                                       "apps"            {:key        routes/apps
                                                           :label-kw   :apps
                                                           :icon       "fas fa-store"
                                                           :protected? true
                                                           :order      20}
-                                       "deployments"     {:key        route-names/deployments
+                                       "deployments"     {:key        routes/deployments
                                                           :label-kw   :deployments
                                                           :name       "deployments"
                                                           :icon       "rocket"
                                                           :protected? true
                                                           :order      30}
-                                       "deployment-sets" {:key        route-names/deployment-sets
+                                       "deployment-sets" {:key        routes/deployment-sets
                                                           :label-kw   :deployment-sets
                                                           :name       "deployments-sets"
                                                           :icon       "bullseye"
                                                           :protected? true
                                                           :hidden?    (not config/debug?)
                                                           :order      31}
-                                       "edges"           {:key        route-names/edges
+                                       "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"
                                                           :icon       "box"
                                                           :protected? true
                                                           :order      40}
-                                       "credentials"     {:key        route-names/credentials
+                                       "credentials"     {:key        routes/credentials
                                                           :label-kw   :credentials
                                                           :icon       "key"
                                                           :protected? true
                                                           :order      50}
-                                       "notifications"   {:key        route-names/notifications
+                                       "notifications"   {:key        routes/notifications
                                                           :label-kw   :notifications
                                                           :icon       "bell"
                                                           :protected? true
                                                           :order      60}
-                                       "data"            {:key             route-names/data
+                                       "data"            {:key             routes/data
                                                           :label-kw        :data
                                                           :icon            "database"
                                                           :protected?      true
                                                           :iframe-visible? true
                                                           :order           70}
-                                       "clouds"          {:key        route-names/clouds
+                                       "clouds"          {:key        routes/clouds
                                                           :label-kw   :infra-service-short
                                                           :icon       "cloud"
                                                           :protected? true
                                                           :order      80}
-                                       "api"             {:key        route-names/api
+                                       "api"             {:key        routes/api
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false

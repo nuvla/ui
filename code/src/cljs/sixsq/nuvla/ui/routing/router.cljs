@@ -1,122 +1,208 @@
 (ns sixsq.nuvla.ui.routing.router
-  (:require [clojure.string :as str]
-            [re-frame.cofx :refer [reg-cofx]]
-            [re-frame.core :as re-frame]
-            [reitit.frontend.controllers :as rfc]
-            [reitit.frontend.easy :as rfe :refer [history]]
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [reitit.coercion.spec :as rss]
+            [reitit.core :as r]
+            [reitit.frontend :as rf]
+            [reitit.frontend.easy :as rfe]
             [reitit.frontend.history :as rfh]
-            [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.main.spec :as main-spec]
-            [sixsq.nuvla.ui.routing.effects :as fx]
-            [sixsq.nuvla.ui.routing.routes :refer [alias->canonical router]]
+            [sixsq.nuvla.ui.about.views :refer [about]]
+            [sixsq.nuvla.ui.apps.views :as app-views]
+            [sixsq.nuvla.ui.cimi.views :refer [api-view]]
+            [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
+            [sixsq.nuvla.ui.config :refer [base-path]]
+            [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
+            [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]]
+            [sixsq.nuvla.ui.data-set.views :as data-set-views]
+            [sixsq.nuvla.ui.data.views :refer [data-view]]
+            [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
+            [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
+            [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
+            [sixsq.nuvla.ui.docs.views :refer [documentation]]
+            [sixsq.nuvla.ui.edges.views :refer [edges-view]]
+            [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
+            [sixsq.nuvla.ui.profile.views :refer [profile]]
+            [sixsq.nuvla.ui.routing.events :as events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as subs]
-            [sixsq.nuvla.ui.routing.utils :as utils]))
+            [sixsq.nuvla.ui.routing.utils :as utils]
+            [sixsq.nuvla.ui.session.views :as session-views]
+            [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
+            [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
+
+(defn SessionPageWelcomeRedirect
+  []
+  [session-views/SessionPage true])
+
+(defn SessionPageWithoutWelcomeRedirect
+  []
+  [session-views/SessionPage false])
+
+(defn- create-route-name
+  ([page-alias]
+   (create-route-name page-alias nil))
+  ([page-alias suffix]
+   (keyword (str (some-> (namespace ::routes/edges) (str "/")) page-alias suffix))))
+
+(def edges-routes
+  (mapv (fn [page-alias]
+          [[page-alias
+            {:name      (create-route-name page-alias)
+             :view      edges-view
+             :dict-key  :edges}
+            [""]
+            ["/" (create-route-name page-alias "-slashed")]]
+           [(str page-alias "/:uuid")
+            {:name      (create-route-name page-alias "-details")
+             :view      edges-view}]
+           [(str page-alias "/nuvlabox-cluster/:uuid")
+            {:name (create-route-name page-alias "-cluster-details")
+             :view edges-view}]])
+        (utils/canonical->all-page-names "edges")))
+
+(def cloud-routes
+  (mapv (fn [page-alias]
+          [page-alias
+           {:name      (create-route-name page-alias)
+            :view      clouds-view
+            :dict-key  :clouds}
+           [""]
+           ["/" (create-route-name page-alias "-slashed")]
+           ["/:uuid"
+            {:name      (create-route-name page-alias "-details")
+             :view      clouds-view}]])
+        (utils/canonical->all-page-names "clouds")))
 
 
-(defn- strip-base-path [path]
-  (-> path (str/replace-first config/base-path "")
-      (str/replace #"^/|/$" "")))
-
-(defn split-path-alias
-  [path]
-  (let [path      (strip-base-path path)
-        [page :as path-vec] (vec (str/split path #"/"))
-        real-page (get alias->canonical page)]
-    (if (and page real-page)
-      (assoc path-vec 0 real-page)
-      path-vec)))
-
-;;; Effects ;;;
-
-;; Triggering navigation from events by using js/window.history.pushState directly,
-;; expects a string as path argument
-(re-frame/reg-fx
-  :push-state
-  (fn [path]
-    ;; .pushState does not call popState, that's why we have to call rfh/-on-navigate
-    ;; when navigating by raw path (from reitit source)
-    (.pushState js/window.history nil {} path)
-    (rfh/-on-navigate @history path)))
-
-(re-frame/reg-event-fx
-  ::push-state-by-path
-  (fn [_ [_ new-path]]
-    {:push-state new-path}))
+(def deployment-routes
+  (mapv (fn [page-alias]
+          [page-alias
+           {:name      (create-route-name page-alias)
+            :view      deployments-view
+            :dict-key  :deployments}
+           [""]
+           ["/" (create-route-name page-alias "-slashed")]
+           ["/:uuid"
+            {:name (create-route-name page-alias "-details")
+             :view DeploymentDetails}]])
+        (utils/canonical->all-page-names "deployments")))
 
 
-(reg-cofx
-  :get-path-parts-and-search-map
-  (fn [coeffects]
-    (let [location     (.-location js/window)
-          path-name    (.-pathname location)
-          path-parts   (->> (split-path-alias path-name)
-                            (map js/decodeURIComponent)
-                            vec)
-          query-params (utils/decode-query-string (.-search location))]
-      (assoc coeffects
-        :path-parts path-parts
-        :query-params query-params))))
+(def r-routes
+  [""
+   {:name ::routes/root
+    :view home-view}
+   ["/"]
+   [(str base-path "/")                                     ;; sixsq.nuvla.ui.config/base-path = "/ui" on nuvla.io
+    [""
+     {:name      ::routes/home-root
+      :link-text "Home"}]
+    edges-routes
+    cloud-routes
+    deployment-routes
+    ["sign-up"
+     {:name      ::routes/sign-up
+      :view      SessionPageWelcomeRedirect
+      :link-text "Sign up"}]
+    ["sign-in"
+     {:name      ::routes/sign-in
+      :view      SessionPageWelcomeRedirect
+      :link-text "login"}]
+    ["reset-password"
+     {:name      ::routes/reset-password
+      :view      SessionPageWelcomeRedirect
+      :link-text "Reset password"}]
+    ["set-password"
+     {:name      ::routes/set-password
+      :view      SessionPageWithoutWelcomeRedirect
+      :link-text "Set password"}]
+    ["sign-in-token"
+     {:name      ::routes/sign-in-token
+      :view      SessionPageWelcomeRedirect
+      :link-text "sign in token"}]
+    ["about"
+     {:name      ::routes/about
+      :view      about
+      :link-text "About"}]
+    ["welcome"
+     {:name      ::routes/home
+      :link-text "home"}]
+    ["welcome/"
+     {:name      ::routes/home-slash
+      :link-text "home"}]
+    ["dashboard"
+     {:name      ::routes/dashboard
+      :view      dashboard-view
+      :link-text "dashboard"}]
+    ["apps"
+     {:name      ::routes/apps
+      :view      app-views/AppsOverview
+      :link-text "Apps"}
+     [""]
+     ["/" ::routes/apps-slashed]
+     ["/*sub-path"
+      {:name ::routes/apps-details
+       :view app-views/AppDetails}]]
+    ["credentials"
+     {:name      ::routes/credentials
+      :view      credentials-view
+      :link-text "credentials"}
+     [""]
+     ["/" ::routes/credentials-slash]]
+    ["notifications"
+     {:name      ::routes/notifications
+      :view      notifications-view
+      :link-text "notifications"}]
+    ["data"
+     {:name      ::routes/data
+      :view      data-view
+      :link-text "data"}]
+    ["data/*uuid"
+     {:name ::routes/data-details
+      :view data-set-views/DataSet}]
+    ["deployment-sets"
+     {:name      ::routes/deployment-sets
+      :view      deployment-sets-view
+      :link-text "deployment-sets"}
+     [""]
+     ["/" ::routes/deployment-sets-slashed]]
+    ["deployment-sets/:uuid"
+     {:name      ::routes/deployment-sets-details
+      :view      deployment-sets-view
+      :link-text "deployment-sets"}]
+    ["documentation"
+     {:name      ::routes/documentation
+      :view      documentation
+      :link-text "documentation"}
+     [""]
+     ["/*sub-path" ::routes/documentation-sub-page]]
+    ["api"
+     {:name      ::routes/api
+      :view      api-view
+      :link-text "api"}
+     [""]
+     ["/" ::routes/api-slashed]
+     ["/*sub-path"
+      {:name ::routes/api-sub-page}]]
+    ["profile"
+     {:name ::routes/profile
+      :view profile}]]
+   ["/*"
+    {:name ::routes/catch-all
+     :view UnknownResource}]])
 
-(re-frame/reg-fx
-  :navigate-back!
-  (fn []
-    (.back js/window.history)))
-
-(re-frame/reg-event-fx
-  ::navigate-back
-  (fn []
-    {:fx [[:navigate-back!]]}))
-
-
-(re-frame/reg-event-fx
-  ::navigated
-  [(re-frame/inject-cofx :get-path-parts-and-search-map)]
-  (fn [{db           :db
-        path-parts   :path-parts
-        query-params :query-params} [_ new-match]]
-    (let [old-match                  (:current-route db)
-          controllers                (rfc/apply-controllers (:controllers old-match) new-match)
-          new-match-with-controllers (assoc new-match :controllers controllers)]
-      {:db
-       (-> db (assoc :current-route new-match-with-controllers
-                     ::main-spec/nav-path path-parts
-                     ::main-spec/nav-query-params query-params))
-       :fx                   [[:dispatch [::main-events/bulk-actions-interval-after-navigation]]]
-       ::fx/set-window-title [(strip-base-path (:path new-match))]})))
-
-(re-frame/reg-event-fx
-  ;; In case of normal anchor tag click, we do not fire ::history-events/navigate
-  ;; but let reitit/browser handle the .pushState to the history stack,
-  ;; which then fires `on-navigate` after URL changed already.
-  ;; That's why we test here for changes-protection? (which we also do in ::history-events/navigate)
-  ;; and revert by navigating back if changes-protection? is true.
-  ::navigated-protected
-  (fn [{{:keys [::main-spec/changes-protection?
-                ::ignore-changes-protection] :as db} :db} [_ new-match]]
-    (let [new-db (assoc db ::ignore-changes-protection false)
-          event  {:fx [[:dispatch [::navigated new-match]]]
-                  :db new-db}
-          revert {:fx [[:dispatch [::navigate-back]]]
-                  :db new-db}]
-      (if (and changes-protection? (not ignore-changes-protection))
-        {:db (assoc db
-               ::main-spec/ignore-changes-modal event
-               ::main-spec/do-not-ignore-changes-modal revert
-
-               ;; In case of not confirming ignore-chagnes-modal,
-               ;; `revert` event navigates back, again triggering this
-               ;; protected naviation event: ::ingore-changes-protection temporarily
-               ;; disables the protection.
-               ::ignore-changes-protection true)}
-        (merge {:db (assoc db ::ignore-changes-protection false)}
-               event)))))
-
+(def router
+  (rf/router
+    r-routes
+    {:data      {:coercion rss/coercion}
+     :router    r/linear-router
+     :conflicts nil
+     #_(fn [conflicts]
+         (when debug?
+           (println (exception/format-exception :path-conflicts nil conflicts))))}))
 
 (defn on-navigate [new-match]
   (when new-match
-    (re-frame/dispatch [::navigated-protected new-match])))
-
+    (dispatch [::events/navigated-protected new-match])))
 
 (defn init-routes! []
   (rfe/start!
@@ -128,12 +214,25 @@
                                   (not= "false" (.getAttribute el "data-reitit-handle-click"))
                                   (not= "#" (first (.getAttribute el "href")))))}))
 
-
 (defn router-component []
-  (let [current-route @(re-frame/subscribe [::subs/current-route])
-        view          (-> current-route :data :view)
-        path          @(re-frame/subscribe [::subs/nav-path])]
+  (let [current-route @(subscribe [::subs/current-route])
+        path          @(subscribe [::subs/nav-path])
+        view          (-> current-route :data :view)]
     [:div
      (when current-route
        [view (assoc current-route :path path
                                   :pathname (:path current-route))])]))
+
+(comment
+  (r/match-by-name router ::routes/nuvlabox)
+  (r/match-by-name router routes/nuvlabox)
+  (r/match-by-name router routes/home)
+  (r/match-by-name router ::routes/nuvlabox)
+  (r/match-by-name router :catch-all {":" "blabla/hello"})
+
+  (->> (r/match-by-path router "/ui/blabla")
+       :path-params
+       keys
+       first
+       type)
+  )

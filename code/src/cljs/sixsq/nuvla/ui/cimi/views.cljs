@@ -13,7 +13,7 @@
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.forms :as forms]
@@ -87,7 +87,7 @@
             id            (:id entry)
             row-selected? (subscribe [::subs/row-selected? id])]
         [ui/TableRow {:style    {:cursor "pointer"}
-                      :on-click #(dispatch [::history-events/navigate (str (name->href route-names/api-slashed) id)])}
+                      :on-click #(dispatch [::history-events/navigate (str (name->href routes/api-slashed) id)])}
          (when @can-bulk-delete?
            [ui/TableCell
             [ui/Checkbox {:checked  @row-selected?
@@ -189,7 +189,7 @@
                           sort
                           (map (fn [k] {:value k :text k}))
                           vec)
-            callback #(dispatch [::history-events/navigate (str (name->href route-names/api-slashed) %)])]
+            callback #(dispatch [::history-events/navigate (str (name->href routes/api-slashed) %)])]
         [ui/Dropdown
          {:aria-label  (@tr [:resource-type])
           :value       @selected-id

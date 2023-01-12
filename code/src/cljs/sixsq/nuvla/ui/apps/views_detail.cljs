@@ -19,7 +19,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -318,7 +318,7 @@
     (fn []
       (let [parent    (utils/nav-path->module-path @nav-path)
             base-path (pathify (remove str/blank?
-                                       [(name->href route-names/apps) parent]))]
+                                       [(name->href routes/apps) parent]))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}

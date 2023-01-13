@@ -9,20 +9,21 @@
 - Deps - Upgrade api client v2.0.11
 - Main - Loader service unavailable message visible on error
 - NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
+- Routing - Introduces reitit frontend router for client side routing
 
 ## [2.32.12] - 2023-01-06
 
 ### Changed
 
 - Deployment modal - Check dct error not visible fix
-- Application detail - Message become vendor bugfix
+- Application detail - message become vendor bugfix
 - Application detail - License renamed to End-User License Agreement
 - Deployment modal - License renamed to End-User License Agreement
 - Module plugin - License renamed to End-User License Agreement
 - Paginations - Items per page is stored to and loaded from localStorage #1009
 - Main - Remove deprecated message and bootstrap-message
 - Readme - Update dev section to include skip verification of untrusted certificate
-- Notifications - Added params to define time window reset and device name
+- Notifications - Added params to define time window reset and device name 
 
 ## [2.32.11] - 2022-12-19
 

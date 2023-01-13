@@ -64,32 +64,6 @@
 
 
 (reg-sub
-  ::nav-path
-  (fn [db]
-    (::spec/nav-path db)))
-
-
-(reg-sub
-  ::nav-query-params
-  (fn [db]
-    (::spec/nav-query-params db)))
-
-
-(reg-sub
-  ::nav-path-first
-  :<- [::nav-path]
-  (fn [nav-path]
-    (first nav-path)))
-
-
-(reg-sub
-  ::nav-url-active?
-  :<- [::nav-path-first]
-  (fn [nav-path-first [_ url]]
-    (boolean (= nav-path-first url))))
-
-
-(reg-sub
   ::changes-protection?
   (fn [db]
     (::spec/changes-protection? db)))

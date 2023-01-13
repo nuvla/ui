@@ -13,11 +13,13 @@
             [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -588,8 +590,8 @@
                                (when (= subtype "application")
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
                                (dispatch [::main-events/changes-protection? false])
-                               (dispatch [::history-events/navigate
-                                          (str "apps/" (:path sanitized-module))]))
+                               (dispatch [::routing-events/navigate
+                                          (str-pathify (name->href routes/apps) (:path sanitized-module))]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)
@@ -619,7 +621,7 @@
                               (assoc ::spec/form-valid? true))
      ::cimi-api-fx/delete [id #(do
                                  (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate "apps/"]))]}))
+                                 (dispatch [::routing-events/navigate routes/apps]))]}))
 
 
 (reg-event-db
@@ -652,8 +654,8 @@
       {::cimi-api-fx/add [:module paste-module
                           #(do
                              (dispatch [::main-events/changes-protection? false])
-                             (dispatch [::history-events/navigate
-                                        (str "apps/" (:path paste-module))]))
+                             (dispatch [::routing-events/navigate
+                                        (str-pathify (name->href routes/apps) (:path paste-module))]))
                           :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                        (cimi-api-fx/default-add-on-error :module %)
                                        (when (= status 409)

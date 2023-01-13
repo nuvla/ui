@@ -8,10 +8,11 @@
             [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.deployments-detail.events :as deployments-detail-events]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.utils.time :as time]))
@@ -380,8 +381,8 @@
                          (dispatch [::reset])
                          (dispatch [::messages-events/add success-msg])
                          (dispatch [::deployments-detail-events/get-deployment id])
-                         (dispatch [::history-events/navigate
-                                    (str "deployment/" (general-utils/id->uuid id))])))
+                         (dispatch [::routing-events/navigate
+                                    routes/deployment-details {:uuid (general-utils/id->uuid id)}])))
           on-error   (fn [response]
                        (dispatch [::set-error-message
                                   (str "Error occured during \"" operation

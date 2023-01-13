@@ -6,7 +6,7 @@
 
 
 (reg-event-db
-  ::clear-module
+  ::clear-apps-component
   (fn [db [_]]
     (merge db spec/defaults)))
 

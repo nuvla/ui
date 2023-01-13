@@ -3,6 +3,6 @@
             [sixsq.nuvla.ui.apps-component.spec :as spec]))
 
 (reg-event-db
-  ::clear-module
+  ::clear-apps-project
   (fn [db [_]]
     (merge db spec/defaults)))

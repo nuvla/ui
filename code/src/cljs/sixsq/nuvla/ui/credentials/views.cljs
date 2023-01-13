@@ -11,7 +11,6 @@
             [sixsq.nuvla.ui.credentials.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -1123,7 +1122,7 @@
        :panes   (panes)}]]))
 
 
-(defmethod panel/render :credentials
+(defn credentials-view
   [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic

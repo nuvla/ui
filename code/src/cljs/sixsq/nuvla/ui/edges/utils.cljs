@@ -1,5 +1,7 @@
 (ns sixsq.nuvla.ui.edges.utils
   (:require [clojure.string :as str]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -218,3 +220,7 @@
          (* 1000)
          (time/subtract-milliseconds next-heartbeat-moment)
          ) locale))
+
+(defn edges-details-url
+  [id]
+  (name->href routes/edges-details {:uuid id}))

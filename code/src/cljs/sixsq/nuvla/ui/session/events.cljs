@@ -10,7 +10,6 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.effects :as fx]
             [sixsq.nuvla.ui.session.spec :as spec]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -34,14 +33,12 @@
                                (->> nav-path first (get pages) :protected?))
                       (str (str/join "/" nav-path)
                            (when-not (str/blank? query-str)
-                             (js/encodeURIComponent query-str))))
-          navigate  (str (name->href routes/sign-in) (when redirect
-                                                 (str "?redirect=" redirect)))]
+                             (js/encodeURIComponent query-str))))]
       (cond-> {:db (assoc db ::spec/session new-session
                              ::spec/session-loading? false)}
               new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])
 
-              redirect (update :fx conj [:dispatch [::routing-events/navigate navigate]])
+              redirect (update :fx conj [:dispatch [::routing-events/navigate routes/sign-in nil (when redirect {:redirect redirect})]])
               ;; force refresh templates collection cache when not the same user (different session)
               (not= session new-session) (assoc :fx
                                                 [[:dispatch [::cimi-events/get-cloud-entry-point]]

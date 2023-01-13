@@ -16,8 +16,8 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -735,7 +735,7 @@
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow {:role     "link"
-                  :on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])
+                  :on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
@@ -812,7 +812,7 @@
 (defn NuvlaboxMapPoint
   [{:keys [id name location inferred-location online]}]
   (let [uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])]
+        on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong (or location inferred-location))
                        :color    (utils/map-online->color online)
@@ -892,7 +892,7 @@
     (if (= "nuvlabox-cluster" uuid)
       (do
         (reset! view-type :cluster)
-        (dispatch [::history-events/navigate (name->href route-names/edges-slashed)]))
+        (dispatch [::routing-events/navigate (name->href routes/edges-slashed)]))
       [edges-detail/EdgeDetails uuid])))
 
 

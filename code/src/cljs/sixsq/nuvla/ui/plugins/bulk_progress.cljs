@@ -9,7 +9,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -144,7 +144,7 @@
                   :href     (pathify [config/base-path failed-id])
                   :target   "_blank"
                   :on-click (fn [event]
-                              (dispatch [::history-events/navigate failed-id])
+                              (dispatch [::routing-events/navigate failed-id])
                               (.preventDefault event))} failed-id]
                 [ui/ListDescription
                  (get-in status-message

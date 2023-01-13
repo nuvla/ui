@@ -9,7 +9,7 @@
             [sixsq.nuvla.ui.main.spec :as spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.messages.spec :as messages-spec]
-            [sixsq.nuvla.ui.routing.events :as history-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.events :as session-events]
             [sixsq.nuvla.ui.utils.general :as u]
             [sixsq.nuvla.ui.utils.time :as time]
@@ -326,4 +326,4 @@
   (fn [{{:keys [::spec/device]} :db} [_ url]]
     {:fx [(when (#{:mobile :tablet} device)
             [:dispatch [::close-sidebar]])
-          [:dispatch [::history-events/navigate url]]]}))
+          [:dispatch [::routing-events/navigate url]]]}))

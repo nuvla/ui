@@ -9,8 +9,8 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -212,7 +212,7 @@
   ::delete
   (fn [{{:keys [::spec/nuvlabox]} :db} _]
     (let [nuvlabox-id (:id nuvlabox)]
-      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate (name->href route-names/edges)])]})))
+      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::routing-events/navigate (name->href routes/edges)])]})))
 
 (reg-event-fx
   ::custom-action

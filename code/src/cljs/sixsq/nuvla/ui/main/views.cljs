@@ -11,9 +11,9 @@
             [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
             [sixsq.nuvla.ui.messages.views :as messages]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.router :refer [router-component]]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
             [sixsq.nuvla.ui.session.views :as session-views]
@@ -27,7 +27,7 @@
 (defn crumb
   [index segment]
   (let [nav-path (subscribe [::route-subs/nav-path])
-        click-fn #(dispatch [::history-events/navigate (trim-path @nav-path index)])]
+        click-fn #(dispatch [::routing-events/navigate (trim-path @nav-path index)])]
     ^{:key (str index "_" segment)}
     [ui/BreadcrumbSection
      [:a {:on-click click-fn
@@ -66,7 +66,7 @@
   (let [path        (subscribe [::route-subs/nav-path])
         options     (map breadcrumb-option (range) @path)
         selected    (-> options last :value)
-        callback-fn #(dispatch [::history-events/navigate (trim-path @path %)])]
+        callback-fn #(dispatch [::routing-events/navigate (trim-path @path %)])]
     [ui/Dropdown
      {:inline    true
       :value     selected
@@ -91,7 +91,7 @@
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
       [ui/GridColumn grid-style
-       [:a {:on-click #(dispatch [::history-events/navigate (name->href route-names/about)])
+       [:a {:on-click #(dispatch [::routing-events/navigate (name->href routes/about)])
             :style    {:cursor "pointer"}}
         [:span#release-version (str "v")]]]
       [ui/GridColumn grid-style
@@ -141,7 +141,7 @@
              (@tr [:subscription-required-content]))]
        [ui/Button {:primary  true
                    :on-click #(do
-                                (dispatch [::history-events/navigate (name->href route-names/profile)])
+                                (dispatch [::routing-events/navigate (name->href routes/profile)])
                                 (dispatch [::events/close-modal]))}
         (if @open-subs-unpaid?
           (@tr [:profile-page])
@@ -264,7 +264,7 @@
                             :header  [uix/TR :subscription-is-canceled]
                             :content [:span
                                       [uix/TR :to-reactivate-your-subscription]
-                                      [:a {:href (name->href route-names/profile)} [uix/TR :go-to-profile]]
+                                      [:a {:href (name->href routes/profile)} [uix/TR :go-to-profile]]
                                       [uix/TR :make-sure-you-have-pm]]
                             :type    :error}])
             [contents]

@@ -5,7 +5,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.routing.events :as events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
             [sixsq.nuvla.ui.utils.form-fields :as form-fields]
             [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -358,7 +358,7 @@
        :target   "_blank"
        :on-click (fn [event]
                    (when-not (.-metaKey event)              ;;cmd key not pressed
-                     (dispatch [::events/navigate href])
+                     (dispatch [::routing-events/navigate href])
                      (.preventDefault event)))}
    (or label href)])
 

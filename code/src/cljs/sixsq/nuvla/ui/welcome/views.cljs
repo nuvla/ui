@@ -2,13 +2,13 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn navigate-link [target-page text]
-  [:a {:on-click #(dispatch [::history-events/navigate target-page])
+  [:a {:on-click #(dispatch [::routing-events/navigate target-page])
        :style    {:cursor "pointer"}}
    text])
 
@@ -125,7 +125,7 @@
               (@tr [:welcome-how-to-nb-2-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-nb-2-subheader-mid])}
-              [navigate-link (name->href route-names/edges) (@tr [:welcome-how-to-nb-2-subheader-mid])]
+              [navigate-link (name->href routes/edges) (@tr [:welcome-how-to-nb-2-subheader-mid])]
               " "
               (@tr [:welcome-how-to-nb-2-subheader-post])
               ".")
@@ -145,7 +145,7 @@
               (@tr [:welcome-how-to-nb-4-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-nb-4-subheader-mid])}
-              [navigate-link (name->href route-names/edges) (@tr [:welcome-how-to-nb-4-subheader-mid])]
+              [navigate-link (name->href routes/edges) (@tr [:welcome-how-to-nb-4-subheader-mid])]
               ". "
               (@tr [:welcome-how-to-nb-4-subheader-post])
               ".")
@@ -176,7 +176,7 @@
               (@tr [:welcome-how-to-launch-1-subheader-pre])
               " "
               ^{:key (@tr [:appstore])}
-              [navigate-link (name->href route-names/apps) (@tr [:appstore])]
+              [navigate-link (name->href routes/apps) (@tr [:appstore])]
               " "
               (@tr [:welcome-how-to-launch-1-subheader-post])
               ".")
@@ -192,7 +192,7 @@
               (@tr [:welcome-how-to-launch-4-subheader-pre])
               " "
               ^{:key (@tr [:dashboard])}
-              [navigate-link (name->href route-names/dashboard) (@tr [:dashboard])]
+              [navigate-link (name->href routes/dashboard) (@tr [:dashboard])]
               ", "
               (@tr [:welcome-how-to-launch-4-subheader-post])
               ".")]]
@@ -232,7 +232,7 @@
               (@tr [:welcome-how-to-video-2-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-video-2-subheader-post])}
-              [navigate-link (name->href route-names/edges) (@tr [:welcome-how-to-video-2-subheader-post])] ".")
+              [navigate-link (name->href routes/edges) (@tr [:welcome-how-to-video-2-subheader-post])] ".")
         (step 3
               (@tr [:welcome-how-to-video-3-header])
               (@tr [:welcome-how-to-video-3-subheader-pre]))]]]]))

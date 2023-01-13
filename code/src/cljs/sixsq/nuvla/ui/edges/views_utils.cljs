@@ -7,8 +7,8 @@
             [sixsq.nuvla.ui.edges.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -22,7 +22,7 @@
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
   (let [locale (subscribe [::i18n-subs/locale])
         uuid   (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (utils/edges-details-url uuid)])
+    [ui/TableRow {:on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
@@ -56,7 +56,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
-      (let [href                  (name->href route-names/edges-details {:uuid (general-utils/id->uuid id)})
+      (let [href                  (name->href routes/edges-details {:uuid (general-utils/id->uuid id)})
             next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
             creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}

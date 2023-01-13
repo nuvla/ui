@@ -12,8 +12,8 @@
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.plugins.tab :as tab]
-            [sixsq.nuvla.ui.routing.events :as history-events]
-            [sixsq.nuvla.ui.routing.route-names :as route-names]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -85,7 +85,7 @@
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db}]
     (let [id (:id deployment-set)]
-      {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate (name->href route-names/deployment-sets)])]})))
+      {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate (name->href routes/deployment-sets)])]})))
 
 (reg-event-db
   ::set-apps
@@ -269,7 +269,7 @@
                 :start        create-start}}
         (not (str/blank? create-name)) (assoc :name create-name)
         (not (str/blank? create-description)) (assoc :description create-description))
-      #(dispatch [::history-events/navigate
+      #(dispatch [::routing-events/navigate
                   (str (name->href :deployment-sets-details
                                    {:uuid (general-utils/id->uuid (:resource-id %))}))])]}))
 

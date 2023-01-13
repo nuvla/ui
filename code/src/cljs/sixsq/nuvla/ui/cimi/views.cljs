@@ -87,7 +87,8 @@
             id            (:id entry)
             row-selected? (subscribe [::subs/row-selected? id])]
         [ui/TableRow {:style    {:cursor "pointer"}
-                      :on-click #(dispatch [::routing-events/navigate (str-pathify routes/api id)])}
+                      :on-click #(dispatch [::routing-events/navigate
+                                            (str-pathify (name->href routes/api) id)])}
          (when @can-bulk-delete?
            [ui/TableCell
             [ui/Checkbox {:checked  @row-selected?
@@ -189,7 +190,8 @@
                           sort
                           (map (fn [k] {:value k :text k}))
                           vec)
-            callback #(dispatch [::routing-events/navigate (str-pathify routes/api %)])]
+            callback #(dispatch [::routing-events/navigate
+                                 routes/api-sub-page {:sub-path %}])]
         [ui/Dropdown
          {:aria-label  (@tr [:resource-type])
           :value       @selected-id
@@ -201,7 +203,6 @@
           :upward      false
           :options     options
           :on-change   (ui-callback/value callback)}]))))
-
 
 (defn DocumentationButton
   []
@@ -222,10 +223,8 @@
           :on-mouse-enter #(reset! on-button true)
           :on-mouse-leave #(reset! on-button false)
           :on-click       #(when @on-button
-                             (dispatch [::routing-events/navigate
-                                        (name->href (:key @documentation-page))]))}
+                             (dispatch [::routing-events/navigate (:key @documentation-page)]))}
          (not @mobile?) (assoc :floated "right"))])))
-
 
 (defn search-header []
   (let [tr           (subscribe [::i18n-subs/tr])

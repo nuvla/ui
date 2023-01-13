@@ -26,7 +26,8 @@
 (defn FormatModule
   [{:keys [subtype name path description] :as module}]
   (when module
-    (let [on-click  #(dispatch [::routing-events/navigate (str-pathify routes/apps path)])
+    (let [on-click  #(dispatch [::routing-events/navigate
+                                (str-pathify (name->href routes/apps) path)])
           icon-name (apps-utils/subtype-icon subtype)
           summary   (values/markdown->summary description)]
       [ui/ListItem {:on-click on-click}

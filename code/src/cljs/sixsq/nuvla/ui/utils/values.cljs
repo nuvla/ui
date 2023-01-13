@@ -104,7 +104,13 @@
 
 (defn hiccup->first-p
   [hiccup]
-  (some #(when (= :p (first %)) (nth % 2)) (drop 2 hiccup)))
+  (->> hiccup
+       (drop 2)
+       (some (fn [[html-tag :as html-element]]
+               (when (= :p html-tag) html-element)))
+       flatten
+       (filter string?)
+       str/join))
 
 
 (defn markdown->summary

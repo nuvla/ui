@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.main.subs
   (:require [re-frame.core :refer [reg-sub]]
-            [sixsq.nuvla.ui.main.spec :as spec]))
+            [sixsq.nuvla.ui.cimi.subs :as api-subs]
+            [sixsq.nuvla.ui.main.spec :as spec]
+            [sixsq.nuvla.ui.session.subs :as session-subs]))
 
 
 (reg-sub
@@ -178,3 +180,10 @@
   :<- [::ui-version]
   (fn [{:keys [new-version]}]
     new-version))
+
+(reg-sub
+  ::app-loading?
+  :<- [::api-subs/cloud-entry-point]
+  :<- [::session-subs/session-loading?]
+  (fn [[cep session-loading?]]
+    (or (nil? cep) session-loading?)))

@@ -33,7 +33,6 @@
             [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.profile.views]
-            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.utils.general :as utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -237,16 +236,27 @@
    [messages/alert-slider]
    [messages/alert-modal]])
 
+(defn AppLoader
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        error? (subscribe [::api-subs/cloud-entry-point-error?])]
+    [ui/Container
+     [ui/Loader {:active true :size "massive"}
+      (when @error?
+        [ui/Header {:text-align :center
+                    :as         :h2
+                    :content    (@tr [:service-unavailable])
+                    :subheader  (@tr [:take-coffee-back-soon])}])]]))
 
 (defn app []
   (let [show?            (subscribe [::subs/sidebar-open?])
-        cep              (subscribe [::api-subs/cloud-entry-point])
         iframe?          (subscribe [::subs/iframe?])
         is-small-device? (subscribe [::subs/is-small-device?])
         resource-path    (subscribe [::subs/nav-path])
-        session-loading? (subscribe [::session-subs/session-loading?])
+        app-loading?     (subscribe [::subs/app-loading?])
         subs-canceled?   (subscribe [::profile-subs/subscription-canceled?])]
-    (if (and @cep (not @session-loading?))
+    (if @app-loading?
+      [AppLoader]
       [:div {:id "nuvla-ui-main"}
        (case (first @resource-path)
          "sign-in" [session-views/SessionPage true]
@@ -278,6 +288,4 @@
             [contents]
             [ignore-changes-modal]
             [subscription-required-modal]
-            (when-not @iframe? [footer])]]])]
-      [ui/Container
-       [ui/Loader {:active true :size "massive"}]])))
+            (when-not @iframe? [footer])]]])])))

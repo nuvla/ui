@@ -11,6 +11,7 @@
 - NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
+- NuvlaEdge - Add and edit modals can handle nuvlabox-release endpoint sending back published flag #1053
 
 ## [2.32.12] - 2023-01-06
 

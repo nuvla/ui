@@ -7,12 +7,11 @@
             [sixsq.nuvla.ui.cimi.events :as api-events]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.db.events :as db-events]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.events :as i18n-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.views :as main-views]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.routes :as routes]
+            [sixsq.nuvla.ui.routing.router :refer [init-routes!]]
             [sixsq.nuvla.ui.session.events :as session-events]
             [taoensso.timbre :as log]))
 
@@ -66,6 +65,7 @@
 
 
 (defn ^:export init []
+  (init-routes!)
   (patch-process)
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
@@ -78,8 +78,6 @@
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)
   (screen-size-watcher)
-  (routes/routes)
-  (dispatch [::history-events/initialize @config/path-prefix])
   (swap! fv/conf #(merge % {:atom r/atom}))
   (mount-root)
   (log/info "finished initialization"))

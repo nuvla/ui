@@ -2,17 +2,18 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.apps-project.events :as events]
             [sixsq.nuvla.ui.apps-project.spec :as spec]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.apps.subs :as apps-subs]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -22,15 +23,11 @@
             [sixsq.nuvla.ui.utils.values :as values]))
 
 
-(defn clear-module
-  []
-  (dispatch [::events/clear-module]))
-
-
 (defn FormatModule
   [{:keys [subtype name path description] :as module}]
   (when module
-    (let [on-click  #(dispatch [::history-events/navigate (str "apps/" path)])
+    (let [on-click  #(dispatch [::routing-events/navigate
+                                (str-pathify (name->href routes/apps) path)])
           icon-name (apps-utils/subtype-icon subtype)
           summary   (values/markdown->summary description)]
       [ui/ListItem {:on-click on-click}

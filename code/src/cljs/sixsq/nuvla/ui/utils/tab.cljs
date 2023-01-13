@@ -4,7 +4,7 @@
 
 (defn key->index
   [panes k]
-  (loop [i 0
+  (loop [i          0
          next-panes panes]
     (if (seq next-panes)
       (if (= ((comp :key :menuItem) (first next-panes)) k)

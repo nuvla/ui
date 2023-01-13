@@ -1,10 +1,9 @@
 (ns
   sixsq.nuvla.ui.apps.utils
-  (:require
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [clojure.string :as str]
+            [sixsq.nuvla.ui.apps.spec :as spec]
+            [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (def publish-icon

@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.utils.forms
-  (:require
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn on-key

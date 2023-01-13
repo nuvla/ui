@@ -1,18 +1,17 @@
 (ns sixsq.nuvla.ui.session.events
-  (:require
-    [ajax.core :as ajax]
-    [clojure.string :as str]
-    [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.session.effects :as fx]
-    [sixsq.nuvla.ui.session.spec :as spec]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [ajax.core :as ajax]
+            [clojure.string :as str]
+            [day8.re-frame.http-fx]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.session.effects :as fx]
+            [sixsq.nuvla.ui.session.spec :as spec]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -20,54 +19,50 @@
   (fn [{db :db}]
     {:db                   (assoc db ::spec/loading-session? true
                                      ::spec/error-message nil)
-     ::cimi-api-fx/session [(fn [session]
-                              (dispatch [::set-session session])
-                              (when session
-                                #_(dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
-                                (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])
-                                (dispatch [:sixsq.nuvla.ui.profile.events/search-existing-customer])
-                                (dispatch [::search-groups])
-                                (dispatch [::get-peers])))]}))
+     ::cimi-api-fx/session [#(dispatch [::set-session %])]}))
 
 
 (reg-event-fx
   ::set-session
   (fn [{{:keys [::spec/session
                 ::main-spec/nav-path
-                ::main-spec/pages] :as db} :db} [_ session-arg]]
+                ::main-spec/pages] :as db} :db} [_ new-session]]
     (let [query-str (.-search (.-location js/window))
-          redirect  (when (and (nil? session-arg)
+          redirect  (when (and (nil? new-session)
                                (->> nav-path first (get pages) :protected?))
                       (str (str/join "/" nav-path)
                            (when-not (str/blank? query-str)
                              (js/encodeURIComponent query-str))))
           navigate  (str "sign-in" (when redirect
                                      (str "?redirect=" redirect)))]
-      (cond-> {:db (assoc db ::spec/session session-arg
+      (cond-> {:db (assoc db ::spec/session new-session
                              ::spec/session-loading? false)}
-              session-arg (assoc ::fx/automatic-logout-at-session-expiry
-                                 [session-arg])
+              new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])
 
               redirect (update :fx conj [:dispatch [::history-events/navigate navigate]])
               ;; force refresh templates collection cache when not the same user (different session)
-              (not= session session-arg) (assoc :fx
+              (not= session new-session) (assoc :fx
                                                 [[:dispatch [::cimi-events/get-cloud-entry-point]]
                                                  [:dispatch [:sixsq.nuvla.ui.main.events/force-refresh-content]]
-                                                 [:dispatch [::get-session-groups]]])))))
+                                                 [:dispatch [::get-session-groups]]
+                                                 [:dispatch [:sixsq.nuvla.ui.main.events/notifications-polling]]
+                                                 [:dispatch [:sixsq.nuvla.ui.profile.events/search-existing-customer]]
+                                                 [:dispatch [:sixsq.nuvla.ui.profile.events/search-existing-vendor]]
+                                                 [:dispatch [::search-groups]]
+                                                 [:dispatch [::get-peers]]])))))
 
 
 (reg-event-fx
   ::logout
-  (fn [{:keys [db]} _]
-    {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
-     ::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
+  (fn []
+    {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
                                 (dispatch [::intercom-events/clear-events])
                                 (dispatch [::history-events/navigate "sign-in"]))]}))
 
 
 (reg-event-db
   ::clear-loading
-  (fn [db _]
+  (fn [db]
     (assoc db ::spec/loading? false)))
 
 
@@ -203,38 +198,37 @@
 (reg-event-fx
   ::get-session-groups
   (fn [{{:keys [::spec/session]} :db}]
-    {::cimi-api-fx/operation [(:id session) "get-groups"
-                              #(dispatch [::set-session-groups %])]}))
+    (let [on-success #(dispatch [::set-session-groups %])]
+      {::cimi-api-fx/operation [(:id session) "get-groups" on-success]})))
 
 
 (reg-event-fx
   ::switch-group
   (fn [{{:keys [::spec/session]} :db} [_ claim extended]]
-    (let [claim (if (= (:identifier session) claim) (:user session) claim)]
-      {::cimi-api-fx/operation [(:id session) "switch-group"
-                                #(dispatch [::initialize])
-                                {:claim    claim
-                                 :extended extended}]})))
+    (let [claim    (if (= (:identifier session) claim) (:user session) claim)
+          data     {:claim    claim
+                    :extended extended}
+          callback #(dispatch [::initialize])]
+      {::cimi-api-fx/operation [(:id session) "switch-group" callback :on-error callback :data data]})))
 
 
 (reg-event-db
   ::set-peers
   (fn [db [_ response]]
-    (if (instance? js/Error response)
-      (let [{:keys [status message]} (response/parse-ex-info response)]
-        (js/console.error "Get peers failed (" status "): " message)
-        db)
-      (assoc db ::spec/peers
-                (->> response
-                     (map (fn [[k v]] [(str (namespace k) "/" (name k)) v]))
-                     (sort-by (juxt second first))
-                     (into {}))))))
+    (assoc db ::spec/peers
+              (->> response
+                   (map (fn [[k v]] [(str (namespace k) "/" (name k)) v]))
+                   (sort-by (juxt second first))
+                   (into {})))))
 
 
 (reg-event-fx
   ::get-peers
   (fn [{{:keys [::spec/session]} :db}]
-    {::cimi-api-fx/operation [(:id session) "get-peers" #(dispatch [::set-peers %])]}))
+    (let [on-success #(dispatch [::set-peers %])
+          on-error   #(let [{:keys [status message]} (response/parse-ex-info %)]
+                        (js/console.error "Get peers failed (" status "): " message))]
+      {::cimi-api-fx/operation [(:id session) "get-peers" on-success :on-error on-error]})))
 
 
 (reg-event-db

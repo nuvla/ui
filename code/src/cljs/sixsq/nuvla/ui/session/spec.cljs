@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.session.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.config :as config]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.config :as config]))
 
 (s/def ::session-loading? boolean?)
 

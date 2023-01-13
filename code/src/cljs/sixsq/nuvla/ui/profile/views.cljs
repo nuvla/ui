@@ -1,33 +1,32 @@
 (ns sixsq.nuvla.ui.profile.views
-  (:require
-    ["@stripe/react-stripe-js" :as react-stripe]
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [form-validator.core :as fv]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl-views]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-    [sixsq.nuvla.ui.profile.events :as events]
-    [sixsq.nuvla.ui.profile.spec :as spec]
-    [sixsq.nuvla.ui.profile.subs :as subs]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require ["@stripe/react-stripe-js" :as react-stripe]
+            [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [form-validator.core :as fv]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.views :as acl-views]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.panel :as panel]
+            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.profile.events :as events]
+            [sixsq.nuvla.ui.profile.spec :as spec]
+            [sixsq.nuvla.ui.profile.subs :as subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as us]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 
 ;;; VALIDATION SPEC
@@ -262,7 +261,7 @@
 
 (defn TwoFactorTokenInputEnable
   [{:keys [show-confirmation]
-    :or {show-confirmation true}}]
+    :or   {show-confirmation true}}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [TwoFactorTokenInput
      {:on-change #(dispatch [::events/clear-error-message])
@@ -828,11 +827,15 @@
                       [ui/Popup
                        {:position "top center"
                         :content  delete-str
-                        :trigger  (r/as-element [ui/Button
-                                                 {:on-click #(dispatch
-                                                               [::events/detach-payment-method
-                                                                payment-method])}
-                                                 [ui/Icon {:name "trash", :color "red"}]])}]]]])))
+                        :trigger  (r/as-element
+                                    [uix/ModalDanger
+                                     {:on-confirm  #(dispatch [::events/detach-payment-method payment-method])
+                                      :trigger     (r/as-element [ui/Button
+                                                                  [ui/Icon {:name "trash", :color "red"}]])
+                                      :header      (@tr [:delete-payment-method])
+                                      :content     (@tr [:are-you-sure?])
+                                      :button-text (@tr [:delete])
+                                      }])}]]]])))
              [ui/TableRow
               [ui/TableCell {:col-span 4}
                ^{:key (random-uuid)}
@@ -1059,11 +1062,17 @@
                [ui/Popup
                 {:position "top center"
                  :content  (str/capitalize (@tr [:delete]))
-                 :trigger  (r/as-element [ui/Button {:basic    true
-                                                     :size     "small"
-                                                     :icon     true
-                                                     :on-click #(dispatch [::events/remove-coupon])}
-                                          [ui/Icon {:name "trash", :color "red"}]])}]]]]]
+                 :trigger  (r/as-element
+                             [uix/ModalDanger
+                              {:on-confirm  #(dispatch [::events/remove-coupon])
+                               :trigger     (r/as-element
+                                              [ui/Button {:basic true
+                                                          :size  "small"
+                                                          :icon  true}
+                                               [ui/Icon {:name "trash", :color "red"}]])
+                               :header      (@tr [:delete-coupon])
+                               :content     (@tr [:are-you-sure?])
+                               :button-text (@tr [:delete])}])}]]]]]
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"
                      :style          {:height "100%"}}
@@ -1123,7 +1132,8 @@
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true}
           [ui/Icon {:className "fad fa-envelope-open-dollar"}]
-          (@tr [:vendor-getting-paid])]
+          (when-not @vendor
+            (@tr [:vendor-getting-paid]))]
          [:br]
          (if @vendor
            [DashboardVendor]

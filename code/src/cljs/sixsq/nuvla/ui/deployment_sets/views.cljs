@@ -1,24 +1,22 @@
 (ns sixsq.nuvla.ui.deployment-sets.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.deployment-sets-detail.views :as detail]
-    [sixsq.nuvla.ui.deployment-sets.events :as events]
-    [sixsq.nuvla.ui.deployment-sets.spec :as spec]
-    [sixsq.nuvla.ui.deployment-sets.subs :as subs]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.deployment-sets-detail.views :as detail]
+            [sixsq.nuvla.ui.deployment-sets.events :as events]
+            [sixsq.nuvla.ui.deployment-sets.spec :as spec]
+            [sixsq.nuvla.ui.deployment-sets.subs :as subs]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.panel :as panel]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (def view-type (r/atom :cards))
 

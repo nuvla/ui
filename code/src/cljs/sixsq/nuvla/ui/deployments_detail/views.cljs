@@ -1,38 +1,37 @@
 (ns sixsq.nuvla.ui.deployments-detail.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.apps.views-versions :as views-versions]
-    [sixsq.nuvla.ui.credentials.components :as creds-comp]
-    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
-    [sixsq.nuvla.ui.credentials.utils :as creds-utils]
-    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
-    [sixsq.nuvla.ui.deployments-detail.events :as events]
-    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployments-detail.subs :as subs]
-    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-    [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.views :as history-views]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.job.subs :as job-subs]
-    [sixsq.nuvla.ui.job.views :as job-views]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-    [sixsq.nuvla.ui.resource-log.views :as log-views]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as spec-utils]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.views :as acl]
+            [sixsq.nuvla.ui.apps.views-versions :as views-versions]
+            [sixsq.nuvla.ui.credentials.components :as creds-comp]
+            [sixsq.nuvla.ui.credentials.subs :as creds-subs]
+            [sixsq.nuvla.ui.credentials.utils :as creds-utils]
+            [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
+            [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
+            [sixsq.nuvla.ui.deployments-detail.events :as events]
+            [sixsq.nuvla.ui.deployments-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployments-detail.subs :as subs]
+            [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+            [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.history.views :as history-views]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.job.subs :as job-subs]
+            [sixsq.nuvla.ui.job.views :as job-views]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.resource-log.views :as log-views]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -329,7 +328,7 @@
 
 
 (defn ShutdownButton
-  [_deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  [_deployment & _opts]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         checked?  (r/atom false)
@@ -376,7 +375,7 @@
 
 
 (defn DeleteButton
-  [_deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  [_deployment & _opts]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         icon-name "trash"]
@@ -411,7 +410,7 @@
 
 
 (defn CloneButton
-  [{:keys [id data module] :as _deployment}]
+  [{:keys [id data] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
         first-step (if data :data :infra-services)
         button     (action-button
@@ -421,7 +420,7 @@
                       :popup-text  (@tr [:deployment-clone-msg])
                       :on-click    #(dispatch [::deployment-dialog-events/create-deployment
                                                id first-step])
-                      :disabled?   (nil? module)})]
+                      :disabled?   (not (general-utils/can-operation? "clone" deployment))})]
     [:<>
      [deployment-dialog-views/deploy-modal]
      button]))

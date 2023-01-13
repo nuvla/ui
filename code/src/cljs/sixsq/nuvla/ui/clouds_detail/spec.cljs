@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.clouds-detail.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as spec-utils]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 
 (s/def ::name spec-utils/nonblank-string)

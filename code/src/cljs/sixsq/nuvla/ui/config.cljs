@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.config
-  (:require
-    [sixsq.nuvla.ui.history.utils :as utils]))
+  (:require [sixsq.nuvla.ui.history.utils :as utils]))
 
 (def debug?
   ^boolean goog.DEBUG)

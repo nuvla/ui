@@ -1,47 +1,45 @@
 (ns sixsq.nuvla.ui.main.views
-  (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.about.views]
-    [sixsq.nuvla.ui.apps-application.views]
-    [sixsq.nuvla.ui.apps-component.views]
-    [sixsq.nuvla.ui.apps-project.views]
-    [sixsq.nuvla.ui.apps-store.views]
-    [sixsq.nuvla.ui.apps.events :as apps-events]
-    [sixsq.nuvla.ui.apps.views]
-    [sixsq.nuvla.ui.cimi.subs :as api-subs]
-    [sixsq.nuvla.ui.cimi.views]
-    [sixsq.nuvla.ui.clouds-detail.views]
-    [sixsq.nuvla.ui.clouds.views]
-    [sixsq.nuvla.ui.credentials.views]
-    [sixsq.nuvla.ui.dashboard.views]
-    [sixsq.nuvla.ui.data.views]
-    [sixsq.nuvla.ui.deployment-sets-detail.views]
-    [sixsq.nuvla.ui.deployment-sets.views]
-    [sixsq.nuvla.ui.deployments.views]
-    [sixsq.nuvla.ui.docs.views]
-    [sixsq.nuvla.ui.edges.views]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.utils :as history-utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.i18n.views :as i18n-views]
-    [sixsq.nuvla.ui.intercom.views :as intercom]
-    [sixsq.nuvla.ui.main.components :as main-components]
-    [sixsq.nuvla.ui.main.events :as events]
-    [sixsq.nuvla.ui.main.subs :as subs]
-    [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
-    [sixsq.nuvla.ui.messages.views :as messages]
-    [sixsq.nuvla.ui.notifications.views]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
-    [sixsq.nuvla.ui.profile.views]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.session.views :as session-views]
-    [sixsq.nuvla.ui.utils.general :as utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.welcome.views]))
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.about.views]
+            [sixsq.nuvla.ui.apps-application.views]
+            [sixsq.nuvla.ui.apps-component.views]
+            [sixsq.nuvla.ui.apps-project.views]
+            [sixsq.nuvla.ui.apps-store.views]
+            [sixsq.nuvla.ui.apps.events :as apps-events]
+            [sixsq.nuvla.ui.apps.views]
+            [sixsq.nuvla.ui.cimi.subs :as api-subs]
+            [sixsq.nuvla.ui.cimi.views]
+            [sixsq.nuvla.ui.clouds-detail.views]
+            [sixsq.nuvla.ui.clouds.views]
+            [sixsq.nuvla.ui.credentials.views]
+            [sixsq.nuvla.ui.dashboard.views]
+            [sixsq.nuvla.ui.data.views]
+            [sixsq.nuvla.ui.deployment-sets-detail.views]
+            [sixsq.nuvla.ui.deployment-sets.views]
+            [sixsq.nuvla.ui.deployments.views]
+            [sixsq.nuvla.ui.docs.views]
+            [sixsq.nuvla.ui.edges.views]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.history.utils :as history-utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.i18n.views :as i18n-views]
+            [sixsq.nuvla.ui.intercom.views :as intercom]
+            [sixsq.nuvla.ui.main.components :as main-components]
+            [sixsq.nuvla.ui.main.events :as events]
+            [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
+            [sixsq.nuvla.ui.messages.views :as messages]
+            [sixsq.nuvla.ui.notifications.views]
+            [sixsq.nuvla.ui.panel :as panel]
+            [sixsq.nuvla.ui.profile.subs :as profile-subs]
+            [sixsq.nuvla.ui.profile.views]
+            [sixsq.nuvla.ui.session.views :as session-views]
+            [sixsq.nuvla.ui.utils.general :as utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.welcome.views]))
 
 
 (defn crumb
@@ -171,23 +169,6 @@
          [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])])]]]))
 
 
-(defn Message
-  []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        message (subscribe [::subs/message])]
-    (fn []
-      (let [[type content] @message]
-        (when content
-          [ui/Container {:text-align :center}
-           [ui/Message
-            (if (= type :success)
-              {:success true
-               :content (@tr [(keyword content)])}
-              {:error   true
-               :content content})]
-           [:br]])))))
-
-
 (defn contents
   []
   (let [resource-path    (subscribe [::subs/nav-path])
@@ -200,9 +181,6 @@
                 :id    "nuvla-ui-content"
                 :fluid true}
                @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
-
-       [Message]
-
        (panel/render @resource-path)])))
 
 
@@ -215,10 +193,10 @@
         close-modal #(dispatch [::events/new-version-open-modal? false])
         reload      #(.reload js/location true)]
     [:<>
-     [ui/Modal {:open @open?
-                :size :small
+     [ui/Modal {:open  @open?
+                :size  :small
                 :basic true}
-      [uix/ModalHeader {:icon "refresh"
+      [uix/ModalHeader {:icon   "refresh"
                         :header (@tr [:new-ui-version])}]
       [ui/ModalContent (@tr [:new-ui-version-content])]
       [ui/ModalActions
@@ -258,16 +236,27 @@
    [messages/alert-slider]
    [messages/alert-modal]])
 
+(defn AppLoader
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        error? (subscribe [::api-subs/cloud-entry-point-error?])]
+    [ui/Container
+     [ui/Loader {:active true :size "massive"}
+      (when @error?
+        [ui/Header {:text-align :center
+                    :as         :h2
+                    :content    (@tr [:service-unavailable])
+                    :subheader  (@tr [:take-coffee-back-soon])}])]]))
 
 (defn app []
   (let [show?            (subscribe [::subs/sidebar-open?])
-        cep              (subscribe [::api-subs/cloud-entry-point])
         iframe?          (subscribe [::subs/iframe?])
         is-small-device? (subscribe [::subs/is-small-device?])
         resource-path    (subscribe [::subs/nav-path])
-        session-loading? (subscribe [::session-subs/session-loading?])
+        app-loading?     (subscribe [::subs/app-loading?])
         subs-canceled?   (subscribe [::profile-subs/subscription-canceled?])]
-    (if (and @cep (not @session-loading?))
+    (if @app-loading?
+      [AppLoader]
       [:div {:id "nuvla-ui-main"}
        (case (first @resource-path)
          "sign-in" [session-views/SessionPage true]
@@ -299,6 +288,4 @@
             [contents]
             [ignore-changes-modal]
             [subscription-required-modal]
-            (when-not @iframe? [footer])]]])]
-      [ui/Container
-       [ui/Loader {:active true :size "massive"}]])))
+            (when-not @iframe? [footer])]]])])))

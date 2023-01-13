@@ -1,23 +1,22 @@
 (ns sixsq.nuvla.ui.session.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.session.events :as events]
-    [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
-    [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
-    [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
-    [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
-    [sixsq.nuvla.ui.session.subs :as subs]
-    [sixsq.nuvla.ui.session.utils :as utils]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.session.events :as events]
+            [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
+            [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
+            [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
+            [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
+            [sixsq.nuvla.ui.session.subs :as subs]
+            [sixsq.nuvla.ui.session.utils :as utils]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn SwitchGroupMenuItem

@@ -1,38 +1,37 @@
 (ns sixsq.nuvla.ui.edges-detail.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-    [sixsq.nuvla.ui.deployments.views :as deployments-views]
-    [sixsq.nuvla.ui.edges-detail.events :as events]
-    [sixsq.nuvla.ui.edges-detail.spec :as spec]
-    [sixsq.nuvla.ui.edges-detail.subs :as subs]
-    [sixsq.nuvla.ui.edges.events :as edges-events]
-    [sixsq.nuvla.ui.edges.subs :as edges-subs]
-    [sixsq.nuvla.ui.edges.utils :as utils]
-    [sixsq.nuvla.ui.history.views :as history-views]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.job.subs :as job-subs]
-    [sixsq.nuvla.ui.job.views :as job-views]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-    [sixsq.nuvla.ui.resource-log.views :as log-views]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.map :as map]
-    [sixsq.nuvla.ui.utils.plot :as plot]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.views :as acl]
+            [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+            [sixsq.nuvla.ui.deployments.views :as deployments-views]
+            [sixsq.nuvla.ui.edges-detail.events :as events]
+            [sixsq.nuvla.ui.edges-detail.spec :as spec]
+            [sixsq.nuvla.ui.edges-detail.subs :as subs]
+            [sixsq.nuvla.ui.edges.events :as edges-events]
+            [sixsq.nuvla.ui.edges.subs :as edges-subs]
+            [sixsq.nuvla.ui.edges.utils :as utils]
+            [sixsq.nuvla.ui.history.views :as history-views]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.job.subs :as job-subs]
+            [sixsq.nuvla.ui.job.views :as job-views]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.resource-log.views :as log-views]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.map :as map]
+            [sixsq.nuvla.ui.utils.plot :as plot]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -1066,6 +1065,24 @@
       children
       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])))
 
+(defn- IpsRow [{:keys [ips title]}]
+  [ui/TableRow
+   [ui/TableCell title]
+   [ui/TableCell
+    {:style {:padding-top 0 :padding-bottom 0}}
+    [ui/Table {:compact    true
+               :collapsing true
+               :style      {:background-color "#f3f4f5"
+                            :border           "none"}}
+     [ui/TableBody {:basic  "very"
+                    :padded false}
+      (for [{:keys [name ip]} ips]
+        ^{:key (str name ip)}
+        (when (seq ip)
+          [ui/TableRow
+           [ui/TableCell name]
+           [ui/TableCell ip]]))]]]])
+
 (defn HostInfo
   [_nb-status _ssh-creds]
   (let [tr       (subscribe [::i18n-subs/tr])
@@ -1099,23 +1116,11 @@
                 [ui/TableCell (values/copy-value-to-clipboard
                                 ip ip copy-to-clipboard true)]])
              (when ips-available
-               [ui/TableRow
-                [ui/TableCell "IPs"]
-                [ui/TableCell
-                 {:style {:padding-top 0 :padding-bottom 0}}
-                 [ui/Table {:compact    true
-                            :collapsing true
-                            :style      {:background-color "#f3f4f5"
-                                         :border           "none"}}
-                  [ui/TableBody {:basic  "very"
-                                 :padded false}
-                   (for [[name ip] (:ips network)]
-                     ^{:key (str name ip)}
-                     (when (seq ip)
-                       [ui/TableRow
-                        [ui/TableCell name]
-                        [ui/TableCell (values/copy-value-to-clipboard
-                                        ip ip copy-to-clipboard true)]]))]]]])])
+               [IpsRow {:title "IPs"
+                        :ips (map (fn [[name ip]]
+                                    {:name name
+                                     :ip (values/copy-value-to-clipboard
+                                          ip ip copy-to-clipboard true)}) (:ips network))}])])
           (when (pos? (count @ssh-creds))
             [ui/TableRow
              [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
@@ -1167,17 +1172,13 @@
                 [ui/TableCell
                  [:div {:style {:display         :flex
                                 :justify-content :space-between}}
-                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs, ")
-                   [:span {:style {:text-decoration :underline}}
-                    (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
+                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs")]
                   [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
              (when @show-ips
-               (for [{:keys [interface ips]} interfaces]
-                 (when (seq ips)
-                   ^{:key interface}
-                   [ui/TableRow
-                    [ui/TableCell {:style {:padding-left "8px"}} interface]
-                    [ui/TableCell (str/join ", " (map :address ips))]])))])]]))))
+               [IpsRow {:ips (map (fn [{:keys [interface ips]}]
+                                    {:name interface
+                                     :ip (str/join ", " (map :address ips))}) interfaces)}])])]]))))
+
 
 (defn TabOverviewHost
   [nb-status ssh-creds]
@@ -1974,8 +1975,9 @@
         :render   #(r/as-element
                      [ui/TabPane
                       [deployments-views/DeploymentTable
-                       {:no-actions true
-                        :empty-msg  (tr [:empty-deployment-nuvlabox-msg])}]])}
+                       {:no-actions         true
+                        :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
+                        :pagination-db-path ::spec/deployment-pagination}]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}
@@ -2033,6 +2035,6 @@
        (when (and nb-status (not (:online nb-status)))
          [ui/Message {:warning true
                       :icon    "warning sign"
-                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])
-       [TabsNuvlaBox]
-       [AddPlaybookModal]]]]))
+                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
+      [TabsNuvlaBox]
+      [AddPlaybookModal]]]))

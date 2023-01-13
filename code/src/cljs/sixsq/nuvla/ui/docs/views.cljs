@@ -1,16 +1,15 @@
 (ns sixsq.nuvla.ui.docs.views
-  (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.docs-detail.views :as docs-details-view]
-    [sixsq.nuvla.ui.docs.events :as events]
-    [sixsq.nuvla.ui.docs.subs :as subs]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]))
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.docs-detail.views :as docs-details-view]
+            [sixsq.nuvla.ui.docs.events :as events]
+            [sixsq.nuvla.ui.docs.subs :as subs]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.panel :as panel]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn row-fn [{:keys [id] :as entry}]

@@ -1,11 +1,12 @@
 (ns sixsq.nuvla.ui.cimi.spec
   (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
-  (:require
-    [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]))
 
 (s/def ::base-uri string?)
 (s/def ::collection-key (s/map-of string? keyword?))
 (s/def ::collection-href (s/map-of keyword? string?))
+
+(s/def ::cloud-entry-point-error? boolean?)
 
 (s/def ::cloud-entry-point (s/nilable (only-keys :req-un [::base-uri
                                                           ::collection-key
@@ -48,6 +49,7 @@
 (s/def ::resource-metadata any?)
 
 (def defaults {::cloud-entry-point           nil
+               ::cloud-entry-point-error?    false
                ::query-params                {:first       0
                                               :last        20
                                               :filter      nil

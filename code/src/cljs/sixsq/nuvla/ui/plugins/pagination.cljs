@@ -1,11 +1,12 @@
 (ns sixsq.nuvla.ui.plugins.pagination
   (:require [cljs.spec.alpha :as s]
+            [clojure.edn :as edn]
             [clojure.string :as str]
+            [re-frame.cofx :refer [inject-cofx]]
             [re-frame.core :refer [dispatch reg-event-fx subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -21,6 +22,33 @@
   {::items-per-page         default-items-per-page
    ::default-items-per-page default-items-per-page
    ::active-page            1})
+
+(def local-storage-key-prefix "nuvla.ui.pagination.")
+
+(defn- get-local-storage-key [db-path]
+  (str local-storage-key-prefix db-path))
+
+
+(reg-event-fx
+  ::init-paginations
+  [(inject-cofx :storage/all)]
+  (fn [{db :db storage :storage/all}]
+    (let [store-entries (filter #(str/starts-with? (first %) local-storage-key-prefix)
+                                storage)
+          paginations   (reduce (fn [paginations entry]
+                                  (merge paginations (edn/read-string (second entry))))
+                                {}
+                                store-entries)]
+      {:db (reduce-kv (fn [db k v] (if (vector? k)
+                                     (update-in db k merge v)
+                                     (update db k merge v))) db paginations)})))
+
+(reg-event-fx
+  ::store-pagination
+  (fn [_ [_ db-path items-per-page]]
+    {:storage/set {:session? false
+                   :name     (get-local-storage-key db-path)
+                   :value    {db-path {::items-per-page items-per-page}}}}))
 
 (reg-event-fx
   ::change-page
@@ -79,6 +107,7 @@
                     :on-change (ui-callback/value
                                  #(do
                                     (dispatch [::helpers/set db-path ::items-per-page %])
+                                    (dispatch [::store-pagination db-path %])
                                     (change-page active-page)))}]]
      [ui/Pagination
       {:size          :tiny

@@ -1,12 +1,12 @@
 (ns sixsq.nuvla.ui.deployment-dialog.subs
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub subscribe]]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.credentials.subs :as creds-subs]
+            [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
+            [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]))
 
 
 (reg-sub
@@ -180,6 +180,15 @@
   :<- [::deployment]
   (fn [deployment]
     (:module deployment)))
+
+(reg-sub
+  ::can-edit-module-data?
+  :<- [::module]
+  :<- [::session-subs/active-claim]
+  (fn [[{{:keys [edit-acl edit-data owners]} :acl} active-claim]]
+    (-> (concat edit-acl edit-data owners)
+        set
+        (contains? active-claim))))
 
 
 (reg-sub
@@ -616,15 +625,15 @@
         selected-credential-id]]
     (let [cred-invalid? @(subscribe [::creds-subs/credential-check-status-invalid? selected-credential-id])]
       (or (not deployment)
-        (and (not data-completed?) data-step-active?)
-        (not credentials-completed?)
-        (not env-variables-completed?)
-        (not registries-completed?)
-        (and price (not price-completed?))
-        (and license (not license-completed?))
-        (not registries-completed?)
-        (not version-completed?)
-        cred-invalid?))))
+          (and (not data-completed?) data-step-active?)
+          (not credentials-completed?)
+          (not env-variables-completed?)
+          (not registries-completed?)
+          (and price (not price-completed?))
+          (and license (not license-completed?))
+          (not registries-completed?)
+          (not version-completed?)
+          cred-invalid?))))
 
 
 (reg-sub

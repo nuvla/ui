@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.job.events
-  (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.job.spec :as spec]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.job.spec :as spec]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (reg-event-db
   ::set-jobs

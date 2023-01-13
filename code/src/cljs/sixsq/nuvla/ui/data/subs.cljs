@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.data.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.data.spec :as spec]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.data.spec :as spec]))
 
 (reg-sub
   ::credentials

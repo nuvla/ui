@@ -1,13 +1,12 @@
 (ns sixsq.nuvla.ui.cimi-detail.events
-  (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.cimi.spec :as cimi-spec]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]
+            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.cimi.spec :as cimi-spec]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -61,20 +60,10 @@
 (reg-event-fx
   ::operation
   (fn [_ [_ resource-id operation data]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error executing operation " operation)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-         (let [{:keys [status message]} (response/parse %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "success executing operation " operation)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :success}])))
-      data]}))
-
+    (let [on-success #(let [{:keys [status message]} (response/parse %)]
+                        (dispatch [::messages-events/add
+                                   {:header  (cond-> (str "success executing operation " operation)
+                                                     status (str " (" status ")"))
+                                    :content message
+                                    :type    :success}]))]
+      {::cimi-api-fx/operation [resource-id operation on-success :data data]})))

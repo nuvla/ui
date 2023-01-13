@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.clouds.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 (s/def ::infra-service-groups any?)
 (s/def ::infra-services any?)
@@ -105,6 +104,7 @@
    ::is-new?                          false
    ::infra-service                    nil
    ::multiplicity                     1
-   ::management-credentials-available nil
-   ::pagination                       (pagination-plugin/build-spec
+   ::management-credentials-available nil})
+
+(def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 8)})

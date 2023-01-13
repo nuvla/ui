@@ -1,26 +1,25 @@
 (ns sixsq.nuvla.ui.apps.events
-  (:require
-    [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
-    [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
-    [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
-    [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
-    [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
-    [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
-    [sixsq.nuvla.ui.apps.effects :as apps-fx]
-    [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [cljs.spec.alpha :as s]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
+            [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
+            [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
+            [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
+            [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
+            [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
+            [sixsq.nuvla.ui.apps.effects :as apps-fx]
+            [sixsq.nuvla.ui.apps.spec :as spec]
+            [sixsq.nuvla.ui.apps.utils :as utils]
+            [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (def refresh-action-get-module :apps-get-module)
@@ -44,7 +43,9 @@
                         {:id        refresh-action-get-deployment
                          :frequency 20000
                          :event     [::deployments-events/get-deployments
-                                     (str "module/id='" (:id module) "'")]}]]]})))
+                                     {:filter-external-arg (str "module/id='" (:id module) "'")
+                                      :pagination-db-path  ::apps-application-spec/deployment-pagination}]}]]]})))
+
 
 
 ;; Validation
@@ -192,7 +193,8 @@
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::deployments-events/get-deployments
-                                                    (str "module/id='" (:id %) "'")]))]})))
+                                                    {:filter-external-arg (str "module/id='" (:id %) "'")
+                                                     :pagination-db-path  ::apps-application-spec/deployment-pagination}]))]})))
 
 
 (reg-event-db
@@ -556,28 +558,17 @@
   ::validate-docker-compose
   (fn [{db :db} [_ module-or-id]]
     (let [validate-op "validate-docker-compose"
-          id          (if (string? module-or-id) module-or-id (:id module-or-id))]
-      (when (or
-              (string? module-or-id)
-              (general-utils/can-operation? validate-op module-or-id))
-        {:db (assoc db ::spec/validate-docker-compose {:loading?  true
-                                                       :module-id id})
-         ::cimi-api-fx/operation
-         [id validate-op
-          (fn [response]
-            (if (instance? js/Error response)
-              (let [{:keys [status message]} (response/parse-ex-info response)]
-                (dispatch [::messages-events/add
-                           {:header  (cond-> (str "error on operation "
-                                                  validate-op " for " id)
-                                             status (str " (" status ")"))
-                            :content message
-                            :type    :error}]))
-              (dispatch [::job-events/wait-job-to-complete
-                         {:job-id              (:location response)
-                          :on-complete         #(dispatch
-                                                  [::docker-compose-validation-complete %])
-                          :refresh-interval-ms 5000}])))]}))))
+          id          (if (string? module-or-id) module-or-id (:id module-or-id))
+          on-success  (fn [response]
+                        (dispatch [::job-events/wait-job-to-complete
+                                   {:job-id              (:location response)
+                                    :on-complete         #(dispatch [::docker-compose-validation-complete %])
+                                    :refresh-interval-ms 5000}]))]
+      (when (or (string? module-or-id)
+                (general-utils/can-operation? validate-op module-or-id))
+        {:db                     (assoc db ::spec/validate-docker-compose {:loading?  true
+                                                                           :module-id id})
+         ::cimi-api-fx/operation [id validate-op on-success]}))))
 
 (defn version-id->index
   [{:keys [versions] :as module}]

@@ -150,28 +150,29 @@
         module @(subscribe [::module db-path href])
         {:keys [name description url] :as license} (:license module)]
     (if license
-      [ui/Form
-       [:p
-        [:b (str/capitalize (tr [:license])) " "]
-        [:a {:href   url
-             :target "_blank"} name]]
+      [ui/Container
+       [ui/Header {:as      :h4
+                   :icon    "book"
+                   :content (@tr [:eula-full])}]
+       [:h4 [:b (str (str/capitalize (@tr [:eula])) ": ")
+             [:u [:a {:href url :target "_blank"} name]]]]
        (when description
-         [:p description])
-       [ui/Checkbox {:label     (tr [:accept-license])
+         [:p [:i description]])
+       [ui/Checkbox {:label     (tr [:accept-eula])
                      :checked   (get license ::accepted? false)
                      :on-change (ui-callback/checked
                                   #(dispatch [::helpers/set (conj db-path ::modules href :license)
                                               ::accepted? %]))}]]
-      [ui/Message (tr [:no-license-defined])])))
+      [ui/Message (tr [:eula-not-defined])])))
 
 (defn AcceptPrice
   [{:keys [db-path href] :as _opts}]
-  (let [tr     @(subscribe [::i18n-subs/tr])
-        module @(subscribe [::module db-path href])
-        price (:price module)
-        format-price     #(if (>= (:cent-amount-daily %) 100)
-                            (str (float (/ (:cent-amount-daily %) 100)) "€/" (tr [:day]))
-                            (str (:cent-amount-daily %) "ct€/" (tr [:day])))]
+  (let [tr           @(subscribe [::i18n-subs/tr])
+        module       @(subscribe [::module db-path href])
+        price        (:price module)
+        format-price #(if (>= (:cent-amount-daily %) 100)
+                        (str (float (/ (:cent-amount-daily %) 100)) "€/" (tr [:day]))
+                        (str (:cent-amount-daily %) "ct€/" (tr [:day])))]
     (if price
       [:<>
        [ui/Segment

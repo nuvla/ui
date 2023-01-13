@@ -1,21 +1,19 @@
 (ns sixsq.nuvla.ui.edges.views-utils
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.edges.events :as events]
-    [sixsq.nuvla.ui.edges.subs :as subs]
-    [sixsq.nuvla.ui.edges.utils :as utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as utils-values]
-    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.edges.events :as events]
+            [sixsq.nuvla.ui.edges.subs :as subs]
+            [sixsq.nuvla.ui.edges.utils :as utils]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (defn NuvlaboxRow

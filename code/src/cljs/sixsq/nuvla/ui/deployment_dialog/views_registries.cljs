@@ -1,15 +1,14 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-registries
-  (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.credentials.components :as creds-comp]
-    [sixsq.nuvla.ui.deployment-dialog.events :as events]
-    [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.credentials.components :as creds-comp]
+            [sixsq.nuvla.ui.deployment-dialog.events :as events]
+            [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+            [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn summary-row

@@ -1,23 +1,22 @@
 (ns sixsq.nuvla.ui.profile.events
-  (:require
-    ["@stripe/react-stripe-js" :as react-stripe]
-    [ajax.core :as ajax]
-    [clojure.string :as str]
-    [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.profile.effects :as fx]
-    [sixsq.nuvla.ui.profile.spec :as spec]
-    [sixsq.nuvla.ui.session.events :as session-events]
-    [sixsq.nuvla.ui.session.spec :as session-spec]
-    [sixsq.nuvla.ui.session.utils :as session-utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require ["@stripe/react-stripe-js" :as react-stripe]
+            [ajax.core :as ajax]
+            [clojure.string :as str]
+            [day8.re-frame.http-fx]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.profile.effects :as fx]
+            [sixsq.nuvla.ui.profile.spec :as spec]
+            [sixsq.nuvla.ui.session.events :as session-events]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-fx
   ::init
@@ -103,23 +102,22 @@
 (reg-event-fx
   ::invite-to-group
   (fn [{db :db} [_ group-id username]]
-    {::cimi-api-fx/operation
-     [group-id "invite"
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "Invitation to " group-id " for " username "failed!")
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-         (dispatch [::messages-events/add
-                    {:header  "Invitation successfully sent to user"
-                     :content (str "User will appear in " group-id
-                                   " when he accept the invitation sent to his email address.")
-                     :type    :info}]))
-      {:username         username
-       :redirect-url     (str (::session-spec/server-redirect-uri db) "?message=join-group-accepted")
-       :set-password-url (str @config/path-prefix "/set-password")}]}))
+    (let [on-error   #(let [{:keys [status message]} (response/parse-ex-info %)]
+                        (dispatch [::messages-events/add
+                                   {:header  (cond-> (str "Invitation to " group-id " for " username "failed!")
+                                                     status (str " (" status ")"))
+                                    :content message
+                                    :type    :error}]))
+          on-success #(dispatch [::messages-events/add
+                                 {:header  "Invitation successfully sent to user"
+                                  :content (str "User will appear in " group-id
+                                                " when he accept the invitation sent to his email address.")
+                                  :type    :info}])
+          data       {:username         username
+                      :redirect-url     (str (::session-spec/server-redirect-uri db)
+                                             "?message=join-group-accepted")
+                      :set-password-url (str @config/path-prefix "/set-password")}]
+      {::cimi-api-fx/operation [group-id "invite" on-success :on-error on-error :data data]})))
 
 (reg-event-fx
   ::get-customer
@@ -147,7 +145,7 @@
 
 (reg-event-fx
   ::search-existing-customer
-  (fn [{{:keys [::session-spec/session]} :db} _]
+  (fn [{{:keys [::session-spec/session]} :db}]
     (if (not= (:active-claim session) "group/nuvla-admin")
       {::cimi-api-fx/search [:customer {:select "id"}
                              #(if-let [id (-> % :resources first :id)]
@@ -161,9 +159,9 @@
 (reg-event-fx
   ::get-subscription
   (fn [{{:keys [::spec/customer] :as db} :db}]
-    {:db                     (update db ::spec/loading conj :subscription)
-     ::cimi-api-fx/operation [(:id customer) "get-subscription"
-                              #(dispatch [::set-subscription %])]}))
+    (let [on-success #(dispatch [::set-subscription %])]
+      {:db                     (update db ::spec/loading conj :subscription)
+       ::cimi-api-fx/operation [(:id customer) "get-subscription" on-success]})))
 
 (reg-event-db
   ::set-subscription
@@ -174,9 +172,9 @@
 (reg-event-fx
   ::customer-info
   (fn [{{:keys [::spec/customer] :as db} :db} _]
-    {:db                     (update db ::spec/loading conj :customer-info)
-     ::cimi-api-fx/operation [(:id customer) "customer-info"
-                              #(dispatch [::set-customer-info %])]}))
+    (let [on-success #(dispatch [::set-customer-info %])]
+      {:db                     (update db ::spec/loading conj :customer-info)
+       ::cimi-api-fx/operation [(:id customer) "customer-info" on-success]})))
 
 (reg-event-db
   ::set-customer-info
@@ -186,10 +184,10 @@
 
 (reg-event-fx
   ::list-payment-methods
-  (fn [{{:keys [::spec/customer] :as db} :db} _]
-    {:db                     (update db ::spec/loading conj :payment-methods)
-     ::cimi-api-fx/operation [(:id customer) "list-payment-methods"
-                              #(dispatch [::set-payment-methods %])]}))
+  (fn [{{:keys [::spec/customer] :as db} :db}]
+    (let [on-success #(dispatch [::set-payment-methods %])]
+      {:db                     (update db ::spec/loading conj :payment-methods)
+       ::cimi-api-fx/operation [(:id customer) "list-payment-methods" on-success]})))
 
 (reg-event-db
   ::set-payment-methods
@@ -200,9 +198,9 @@
 (reg-event-fx
   ::upcoming-invoice
   (fn [{{:keys [::spec/customer] :as db} :db} _]
-    {:db                     (update db ::spec/loading conj :upcoming-invoice)
-     ::cimi-api-fx/operation [(:id customer) "upcoming-invoice"
-                              #(dispatch [::set-upcoming-invoice %])]}))
+    (let [on-success #(dispatch [::set-upcoming-invoice %])]
+      {:db                     (update db ::spec/loading conj :upcoming-invoice)
+       ::cimi-api-fx/operation [(:id customer) "upcoming-invoice" on-success]})))
 
 (reg-event-db
   ::set-upcoming-invoice
@@ -213,15 +211,14 @@
 (reg-event-fx
   ::list-invoices
   (fn [{{:keys [::spec/customer] :as db} :db} _]
-    {:db                     (update db ::spec/loading conj :invoices)
-     ::cimi-api-fx/operation [(:id customer) "list-invoices"
-                              #(if (instance? js/Error %)
-                                 (do (dispatch [::messages-events/add
-                                                {:header  "List invoices failed"
-                                                 :content "Wasn't able to load invoices"
-                                                 :type    :error}])
-                                     (dispatch [::set-invoices nil]))
-                                 (dispatch [::set-invoices %]))]}))
+    (let [on-error   #(do (dispatch [::messages-events/add
+                                     {:header  "List invoices failed"
+                                      :content "Wasn't able to load invoices"
+                                      :type    :error}])
+                          (dispatch [::set-invoices nil]))
+          on-success #(dispatch [::set-invoices %])]
+      {:db                     (update db ::spec/loading conj :invoices)
+       ::cimi-api-fx/operation [(:id customer) "list-invoices" on-success :on-error on-error]})))
 
 (reg-event-db
   ::set-invoices
@@ -255,18 +252,18 @@
   ::change-password
   (fn [{{:keys [::spec/user
                 ::i18n-spec/tr]} :db} [_ body]]
-    (let [callback-fn #(if (instance? js/Error %)
-                         (dispatch [::set-error (-> % response/parse-ex-info :message)])
-                         (let [{:keys [status message]} %]
-                           (if (= status 200)
-                             (do
-                               (dispatch [::close-modal])
-                               (dispatch [::messages-events/add
-                                          {:header  (str/capitalize (tr [:success]))
-                                           :content (str/capitalize (tr [:password-updated]))
-                                           :type    :success}]))
-                             (dispatch [::set-error (str message " (" status ")")]))))]
-      {::cimi-api-fx/operation [(:credential-password user) "change-password" callback-fn body]})))
+    (let [on-success #(let [{:keys [status message]} %]
+                        (if (= status 200)
+                          (do
+                            (dispatch [::close-modal])
+                            (dispatch [::messages-events/add
+                                       {:header  (str/capitalize (tr [:success]))
+                                        :content (str/capitalize (tr [:password-updated]))
+                                        :type    :success}]))
+                          (dispatch [::set-error (str message " (" status ")")])))
+          on-error   #(dispatch [::set-error (-> % response/parse-ex-info :message)])]
+      {::cimi-api-fx/operation [(:credential-password user) "change-password" on-success
+                                :on-error on-error :data body]})))
 
 (reg-event-fx
   ::create-customer
@@ -284,17 +281,14 @@
 (reg-event-fx
   ::create-subscription
   (fn [{{:keys [::spec/customer] :as db} :db} _]
-    {:db                     (update db ::spec/loading conj :create-customer)
-     ::cimi-api-fx/operation [(:id customer)
-                              "create-subscription"
-                              #(if (instance? js/Error %)
-                                 (dispatch [::set-error (-> % response/parse-ex-info :message)
-                                            :create-customer])
-                                 (do
-                                   (dispatch [::get-customer (:id customer)])
-                                   (dispatch [::close-modal])
-                                   (dispatch [::history-events/navigate "profile"])))
-                              nil]}))
+    (let [on-error   #(dispatch [::set-error (-> % response/parse-ex-info :message)
+                                 :create-customer])
+          on-success #(do
+                        (dispatch [::get-customer (:id customer)])
+                        (dispatch [::close-modal])
+                        (dispatch [::history-events/navigate "profile"]))]
+      {:db                     (update db ::spec/loading conj :create-customer)
+       ::cimi-api-fx/operation [(:id customer) "create-subscription" on-success :on-error on-error]})))
 
 (reg-event-fx
   ::confirm-card-setup
@@ -341,31 +335,31 @@
 (reg-event-fx
   ::create-setup-intent
   (fn [{{:keys [::spec/customer] :as db} :db} _]
-    {:db                     (update db ::spec/loading conj :create-setup-intent)
-     ::cimi-api-fx/operation [(:id customer) "create-setup-intent"
-                              #(dispatch [::set-setup-intent %])]}))
+    (let [on-success #(dispatch [::set-setup-intent %])]
+      {:db                     (update db ::spec/loading conj :create-setup-intent)
+       ::cimi-api-fx/operation [(:id customer) "create-setup-intent" on-success]})))
 
 (reg-event-fx
   ::detach-payment-method
   (fn [{{:keys [::spec/customer]} :db} [_ payment-method]]
-    {::cimi-api-fx/operation [(:id customer) "detach-payment-method"
-                              #(dispatch [::list-payment-methods])
-                              {:payment-method payment-method}]}))
+    (let [on-success #(dispatch [::list-payment-methods])
+          data       {:payment-method payment-method}]
+      {::cimi-api-fx/operation [(:id customer) "detach-payment-method" on-success :data data]})))
 
 (reg-event-fx
   ::set-default-payment-method
   (fn [{{:keys [::spec/customer]} :db} [_ payment-method]]
-    {::cimi-api-fx/operation [(:id customer) "set-default-payment-method"
-                              #(dispatch [::list-payment-methods])
-                              {:payment-method payment-method}]}))
+    (let [on-success #(dispatch [::list-payment-methods])
+          data       {:payment-method payment-method}]
+      {::cimi-api-fx/operation [(:id customer) "set-default-payment-method" on-success :data data]})))
 
 (reg-event-fx
   ::add-coupon
   (fn [{{:keys [::spec/customer] :as db} :db} [_ coupon]]
-    {::cimi-api-fx/operation [(:id customer) "add-coupon"
-                              #(dispatch [::add-coupon-result %])
-                              {:coupon coupon}]
-     :db                     (update db ::spec/loading conj :add-coupon)}))
+    (let [on-success #(dispatch [::add-coupon-result %])
+          data       {:coupon coupon}]
+      {::cimi-api-fx/operation [(:id customer) "add-coupon" on-success :data data]
+       :db                     (update db ::spec/loading conj :add-coupon)})))
 
 (reg-event-fx
   ::add-coupon-result
@@ -379,9 +373,9 @@
 (reg-event-fx
   ::remove-coupon
   (fn [{{:keys [::spec/customer] :as db} :db}]
-    {::cimi-api-fx/operation [(:id customer) "remove-coupon"
-                              #(dispatch [::remove-coupon-result %])]
-     :db                     (update db ::spec/loading conj :remove-coupon)}))
+    (let [on-success #(dispatch [::remove-coupon-result %])]
+      {::cimi-api-fx/operation [(:id customer) "remove-coupon" on-success]
+       :db                     (update db ::spec/loading conj :remove-coupon)})))
 
 (reg-event-fx
   ::remove-coupon-result
@@ -438,8 +432,8 @@
                        :type    :success}]]
           [:dispatch [::get-user]]
           [:dispatch (if show-confirmation
-                         [::set-two-factor-step :save-secret]
-                         [::close-modal])]]}))
+                       [::set-two-factor-step :save-secret]
+                       [::close-modal])]]}))
 
 (reg-event-fx
   ::two-factor-disabled
@@ -484,21 +478,19 @@
                 ::spec/two-factor-enable?
                 ::spec/two-factor-method] :as db} :db}]
     (let [op             (if two-factor-enable? "enable-2fa" "disable-2fa")
-          enable-disable (if two-factor-enable? "Enable" "Disable")]
-      {:db (update db ::spec/loading conj :two-factor-auth)
-       ::cimi-api-fx/operation
-       [(:id user) op
-        #(if (instance? js/Error %)
-           (let [{:keys [status message]} (response/parse-ex-info %)]
-             (dispatch [::set-two-factor-op-response nil])
-             (dispatch [::close-modal])
-             (dispatch [::messages-events/add
-                        {:header  (cond-> (str enable-disable " 2FA failed!")
-                                          status (str " (" status ")"))
-                         :content message
-                         :type    :error}]))
-           (dispatch [::set-two-factor-op-response %1]))
-        {:method two-factor-method}]})))
+          enable-disable (if two-factor-enable? "Enable" "Disable")
+          on-error       #(let [{:keys [status message]} (response/parse-ex-info %)]
+                            (dispatch [::set-two-factor-op-response nil])
+                            (dispatch [::close-modal])
+                            (dispatch [::messages-events/add
+                                       {:header  (cond-> (str enable-disable " 2FA failed!")
+                                                         status (str " (" status ")"))
+                                        :content message
+                                        :type    :error}]))
+          on-success     #(dispatch [::set-two-factor-op-response %1])
+          data           {:method two-factor-method}]
+      {:db                     (update db ::spec/loading conj :two-factor-auth)
+       ::cimi-api-fx/operation [(:id user) op on-success :on-error on-error :data data]})))
 
 (reg-event-fx
   ::select-method

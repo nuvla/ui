@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.edges.utils
-  (:require
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+  (:require [clojure.string :as str]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
 (def state-activated "ACTIVATED")

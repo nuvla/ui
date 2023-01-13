@@ -1,18 +1,17 @@
 (ns sixsq.nuvla.ui.utils.time
-  (:require
-    ["date-fns" :refer [addMilliseconds
-                        differenceInMilliseconds
-                        differenceInMinutes
-                        format
-                        formatDistance
-                        intlFormatDistance
-                        isAfter
-                        isBefore
-                        parseISO
-                        startOfDay
-                        subDays
-                        subMilliseconds]]
-    ["date-fns/locale/fr$default" :as fr]))
+  (:require ["date-fns" :refer [addMilliseconds
+                                differenceInMilliseconds
+                                differenceInMinutes
+                                format
+                                formatDistance
+                                intlFormatDistance
+                                isAfter
+                                isBefore
+                                parseISO
+                                startOfDay
+                                subDays
+                                subMilliseconds]]
+            ["date-fns/locale/fr$default" :as fr]))
 
 (def ^:const default-locale "en")
 (def ^:const locale-string->locale-object {"fr" fr})

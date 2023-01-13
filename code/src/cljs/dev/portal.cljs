@@ -9,13 +9,13 @@
 
 (defn- error->data [ex]
   (merge
-   (when-let [data (.-data ex)]
-     {:data data})
-   {:runtime :portal
-    :cause   (.-message ex)
-    :via     [{:type    (symbol (.-name (type ex)))
-               :message (.-message ex)}]
-    :stack   (.-stack ex)}))
+    (when-let [data (.-data ex)]
+      {:data data})
+    {:runtime :portal
+     :cause   (.-message ex)
+     :via     [{:type    (symbol (.-name (type ex)))
+                :message (.-message ex)}]
+     :stack   (.-stack ex)}))
 
 (defn- async-submit [value]
   (cond

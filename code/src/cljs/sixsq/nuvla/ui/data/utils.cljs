@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.data.utils
-  (:require
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+  (:require [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (defn matches-parameter-name?
   [parameter-name parameter]

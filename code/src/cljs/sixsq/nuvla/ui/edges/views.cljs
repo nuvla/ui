@@ -892,7 +892,7 @@
     (if (= "nuvlabox-cluster" uuid)
       (do
         (reset! view-type :cluster)
-        (dispatch [::routing-events/navigate (name->href routes/edges-slashed)]))
+        (dispatch [::routing-events/navigate routes/edges-slashed]))
       [edges-detail/EdgeDetails uuid])))
 
 

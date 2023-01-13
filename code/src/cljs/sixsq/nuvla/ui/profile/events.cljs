@@ -276,7 +276,7 @@
                         #(do
                            (dispatch [::get-customer (:resource-id %)])
                            (dispatch [::close-modal])
-                           (dispatch [::routing-events/navigate (name->href routes/profile)]))
+                           (dispatch [::routing-events/navigate routes/profile]))
                         :on-error #(dispatch [::set-error (-> % response/parse-ex-info :message)
                                               :create-customer])]}))
 
@@ -289,7 +289,7 @@
           on-success #(do
                         (dispatch [::get-customer (:id customer)])
                         (dispatch [::close-modal])
-                        (dispatch [::routing-events/navigate (name->href routes/profile)]))]
+                        (dispatch [::routing-events/navigate routes/profile]))]
       {:db                     (update db ::spec/loading conj :create-customer)
        ::cimi-api-fx/operation [(:id customer) "create-subscription" on-success :on-error on-error]})))
 

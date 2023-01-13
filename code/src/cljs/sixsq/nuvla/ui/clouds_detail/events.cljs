@@ -39,7 +39,7 @@
                                 (dispatch [::main-events/changes-protection? false])
                                 (dispatch [::set-infrastructure-service %])))]})))
 
-(def on-success #(dispatch [::routing-events/navigate (name->href routes/clouds)]))
+(def on-success #(dispatch [::routing-events/navigate routes/clouds]))
 
 (reg-event-fx
   ::delete

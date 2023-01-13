@@ -59,7 +59,7 @@
   (fn []
     {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
                                 (dispatch [::intercom-events/clear-events])
-                                (dispatch [::routing-events/navigate (name->href routes/sign-in)]))]}))
+                                (dispatch [::routing-events/navigate routes/sign-in]))]}))
 
 
 (reg-event-db
@@ -127,7 +127,7 @@
                                      (dispatch [::routing-events/navigate navigate-to])))
                                  (do
                                    (dispatch [::set-callback-2fa %1])
-                                   (dispatch [::routing-events/navigate (name->href routes/sign-in-token)])))))
+                                   (dispatch [::routing-events/navigate routes/sign-in-token])))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
@@ -150,7 +150,7 @@
     {:dispatch-n [[::clear-loading]
                   [::initialize]
                   [::set-success-message success-message]
-                  [::routing-events/navigate (name->href routes/sign-in)]]}))
+                  [::routing-events/navigate routes/sign-in]]}))
 
 
 (reg-event-fx

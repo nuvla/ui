@@ -48,12 +48,17 @@
         set)))
 
 (defn pathify
-  "Takes a list of path parts, returning a string of those parts separated by '/'."
+  "Takes a seq of path parts, returning a string of those parts separated by '/'."
   [path-parts]
   (str/join "/" path-parts))
 
+(defn str-pathify
+  "Takes a variable length of path parts arguments, returning a string of those parts separated by '/'."
+  [& path-parts]
+  (pathify path-parts))
+
 (defn to-pathname
-  "Takes a list of path parts, returning a string of those parts separated by '/'
+  "Takes a seq of path parts, returning a string of those parts separated by '/'
    and with config/base-path appended."
   [path-parts]
   (pathify (cons config/base-path path-parts)))

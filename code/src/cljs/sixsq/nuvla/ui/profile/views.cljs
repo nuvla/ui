@@ -638,7 +638,7 @@
                                  (and @canceled? (not @pm?)))
                    :on-click (if @session
                                #(dispatch [::events/open-modal :subscribe])
-                               #(dispatch [::routing-events/navigate (name->href routes/sign-up)]))}
+                               #(dispatch [::routing-events/navigate routes/sign-up]))}
         (if @customer
           (@tr [:subscribe])
           (@tr [:try-nuvla-for-14-days]))]])))

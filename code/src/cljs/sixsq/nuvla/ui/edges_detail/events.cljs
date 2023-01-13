@@ -212,7 +212,7 @@
   ::delete
   (fn [{{:keys [::spec/nuvlabox]} :db} _]
     (let [nuvlabox-id (:id nuvlabox)]
-      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::routing-events/navigate (name->href routes/edges)])]})))
+      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::routing-events/navigate routes/edges])]})))
 
 (reg-event-fx
   ::custom-action

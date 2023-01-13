@@ -19,7 +19,7 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -591,7 +591,7 @@
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
                                (dispatch [::main-events/changes-protection? false])
                                (dispatch [::routing-events/navigate
-                                          (str (name->href routes/apps-slashed) (:path sanitized-module))]))
+                                          (str-pathify (name->href routes/apps) (:path sanitized-module))]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)
@@ -621,7 +621,7 @@
                               (assoc ::spec/form-valid? true))
      ::cimi-api-fx/delete [id #(do
                                  (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::routing-events/navigate (name->href routes/apps-slashed)]))]}))
+                                 (dispatch [::routing-events/navigate routes/apps]))]}))
 
 
 (reg-event-db
@@ -655,7 +655,7 @@
                           #(do
                              (dispatch [::main-events/changes-protection? false])
                              (dispatch [::routing-events/navigate
-                                        (str (name->href routes/apps-slashed) (:path paste-module))]))
+                                        (str-pathify (name->href routes/apps) (:path paste-module))]))
                           :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                        (cimi-api-fx/default-add-on-error :module %)
                                        (when (= status 409)

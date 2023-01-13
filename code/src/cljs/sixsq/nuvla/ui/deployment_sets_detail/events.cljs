@@ -85,7 +85,7 @@
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db}]
     (let [id (:id deployment-set)]
-      {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate (name->href routes/deployment-sets)])]})))
+      {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate routes/deployment-sets])]})))
 
 (reg-event-db
   ::set-apps
@@ -269,9 +269,7 @@
                 :start        create-start}}
         (not (str/blank? create-name)) (assoc :name create-name)
         (not (str/blank? create-description)) (assoc :description create-description))
-      #(dispatch [::routing-events/navigate
-                  (str (name->href :deployment-sets-details
-                                   {:uuid (general-utils/id->uuid (:resource-id %))}))])]}))
+      #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
 
 (reg-event-db
   ::set

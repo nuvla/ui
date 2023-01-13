@@ -383,7 +383,7 @@
                          (dispatch [::messages-events/add success-msg])
                          (dispatch [::deployments-detail-events/get-deployment id])
                          (dispatch [::routing-events/navigate
-                                    (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})])))
+                                    routes/deployment-details {:uuid (general-utils/id->uuid id)}])))
           on-error   (fn [response]
                        (dispatch [::set-error-message
                                   (str "Error occured during \"" operation

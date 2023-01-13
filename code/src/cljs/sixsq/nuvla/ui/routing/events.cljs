@@ -3,7 +3,7 @@
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.effects :as fx]
-            [sixsq.nuvla.ui.routing.utils :as utils]
+            [sixsq.nuvla.ui.routing.utils :as utils :refer [name->href]]
             [taoensso.timbre :as log]))
 
 (reg-event-fx
@@ -57,10 +57,12 @@
 
 (reg-event-fx
   ::navigate
-  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ relative-url]]
-    (let [nav-effect {:fx [[:dispatch [::push-state-by-path (utils/add-base-path relative-url)]]]}]
+  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params]]
+    (let [nav-effect {:fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
+                                                                (utils/add-base-path navigate-to)
+                                                                (name->href navigate-to path-params query-params))]]]}]
       (if changes-protection?
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect)}
         (do
-          (log/info "triggering navigate effect " (str {:relative-url relative-url}))
+          (log/info "triggering navigate effect " (str {:relative-url navigate-to}))
           nav-effect)))))

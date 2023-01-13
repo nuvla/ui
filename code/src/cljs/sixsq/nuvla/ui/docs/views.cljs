@@ -14,8 +14,7 @@
 
 
 (defn row-fn [{:keys [id] :as entry}]
-  [ui/TableRow {:on-click #(dispatch [::routing-events/navigate
-                                      (name->href routes/documentation-sub-page {:sub-path (general-utils/id->uuid id)})])}
+  [ui/TableRow {:on-click #(dispatch [::routing-events/navigate routes/documentation-sub-page {:sub-path (general-utils/id->uuid id)}])}
    [ui/CopyToClipboard {:text (:name entry)} [ui/TableCell {:collapsing true} (:name entry)]]
    [ui/TableCell {:style {:max-width     "150px"
                           :overflow      "hidden"

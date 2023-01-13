@@ -91,7 +91,7 @@
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
       [ui/GridColumn grid-style
-       [:a {:on-click #(dispatch [::routing-events/navigate (name->href routes/about)])
+       [:a {:on-click #(dispatch [::routing-events/navigate routes/about])
             :style    {:cursor "pointer"}}
         [:span#release-version (str "v")]]]
       [ui/GridColumn grid-style
@@ -141,7 +141,7 @@
              (@tr [:subscription-required-content]))]
        [ui/Button {:primary  true
                    :on-click #(do
-                                (dispatch [::routing-events/navigate (name->href routes/profile)])
+                                (dispatch [::routing-events/navigate routes/profile])
                                 (dispatch [::events/close-modal]))}
         (if @open-subs-unpaid?
           (@tr [:profile-page])

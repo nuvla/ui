@@ -150,5 +150,5 @@
         [_ uuid] path
         root [DashboardMain]]
     (case n
-      2 ^{:key uuid} (dispatch [::routing-events/navigate (name->href routes/deployment-details {:uuid uuid})])
+      2 ^{:key uuid} (dispatch [::routing-events/navigate routes/deployment-details {:uuid uuid}])
       [ui/Segment utils-style/basic root])))

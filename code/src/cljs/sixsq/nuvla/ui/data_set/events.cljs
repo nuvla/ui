@@ -119,7 +119,7 @@
 (reg-event-fx
   ::delete
   (fn [{{:keys [::spec/data-set]} :db}]
-    {::cimi-api-fx/delete [(:id data-set) #(dispatch [::routing-events/navigate (name->href routes/data)])]}))
+    {::cimi-api-fx/delete [(:id data-set) #(dispatch [::routing-events/navigate routes/data])]}))
 
 (reg-event-db
   ::toggle-data-record-id

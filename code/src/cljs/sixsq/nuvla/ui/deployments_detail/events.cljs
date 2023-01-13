@@ -99,7 +99,7 @@
                                           :content message
                                           :type    :success}])
                               (dispatch [::deployments-events/get-deployments])
-                              (dispatch [::routing-events/navigate (name->href routes/deployment)]))]}))
+                              (dispatch [::routing-events/navigate routes/deployment]))]}))
 
 (reg-event-fx
   ::edit

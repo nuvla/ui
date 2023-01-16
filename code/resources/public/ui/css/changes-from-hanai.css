@@ -59,7 +59,14 @@ body .ui.grid {
      margin: 0 !important;
      padding: 2rem;
 }
-
+i.icon .circular {
+     font-family: "Poppins" !important;
+}
+.ui.red.label, .ui.red.labels .label {
+    background-color: #C10E12!important;
+    border-color: #C10E12!important;
+    color: #fff!important;
+}
 .ui.red.statistic>.value,
 .ui.red.statistics .statistic>.value,
 .ui.statistics .red.statistic>.value,
@@ -411,7 +418,7 @@ color: #ffffff !important;
          margin-bottom: 0.8rem !important;
 }
 .ui.segment {
-    overflow: hidden;
+    overflow: visible;
 }
 .table-wrapper{
     overflow: auto !important;
@@ -468,6 +475,15 @@ color: #ffffff;
 .nuvla-deployments .statistics .green .icons{
     color: #21ba45;
 }
+.nuvla-edges .statistics .icons .icon.large,
+.nuvla-deployments .statistics .icons .icon.large{
+     border: 2px solid rgba(148, 130, 255, .5) !important;
+     background-color: #ffffff;
+border-radius: 8px;
+padding: 0.5rem;
+margin-top: -0.5rem;
+margin-bottom: 0.1rem !important;
+}
 .nuvla-edges .statistics .red .icons,
 .nuvla-deployments .statistics .red .icons{
     color: #ff0000;
@@ -493,8 +509,17 @@ color: #ffffff;
     flex: 1 !important;
     margin: 0 1rem 1rem 1rem !important;
 }
+.compact .ui.statistics>.statistic {
+    flex: 1 !important;
+    margin: 0 .5rem 1rem .5rem !important;
+}
+
+.compact .ui.statistic>.label,
+.compact .ui.statistics .statistic>.label{
+    font-size: .7rem;
+}
 @media only screen and (max-width: 767px){
-.ui.statistics>.statistic {
+.nuvla-dashboard .ui.statistics>.statistic {
     flex: 100% !important;
 }
 }
@@ -522,7 +547,9 @@ color: #ffffff;
     margin: 0 !important;
     padding: .8rem;
 }
-
+.modal .ui.segment{
+   height: auto !important;
+}
 .ui.segment.footer {
     padding: 0;
     border-right: none;
@@ -531,6 +558,7 @@ color: #ffffff;
     margin: 0 !important;
     box-shadow: none;
     position: fixed;
+    overflow: visible;
 bottom: 0;
 width: calc(100% - 10rem);
 }

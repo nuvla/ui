@@ -37,8 +37,7 @@
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [:div {:style {:display     :flex
-                      :align-items :baseline}}
+       [:div
         [:div [full-text-search-plugin/FullTextSearch
                {:db-path            [::spec/deployments-search]
                 :change-event       [::pagination-plugin/change-page

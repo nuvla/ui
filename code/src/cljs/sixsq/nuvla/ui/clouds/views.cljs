@@ -12,12 +12,12 @@
             [sixsq.nuvla.ui.clouds.utils :as utils]
             [sixsq.nuvla.ui.credentials.views :as cred-views]
             [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -52,10 +52,9 @@
                  (true? online) true
                  (false? online) false
                  :else nil)
-        href   (str "clouds/" (general-utils/id->uuid id))]
+        href   (name->href routes/clouds-details {:uuid (general-utils/id->uuid id)})]
     [uix/Card
-     {:on-click    #(dispatch [::history-events/navigate href])
-      :href        href
+     {:href        href
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}
@@ -553,8 +552,8 @@
     [ServiceModal]
     [AddServiceModal]]])
 
-(defmethod panel/render :clouds
-  [path]
+(defn clouds-view
+  [{path :path}]
   (timbre/set-level! :info)
   (let [[_ uuid] path
         n        (count path)

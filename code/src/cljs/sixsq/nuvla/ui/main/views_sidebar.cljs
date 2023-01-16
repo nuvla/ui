@@ -1,9 +1,12 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
@@ -14,23 +17,25 @@
   [label-kw url icon protected?]
   (let [tr           (subscribe [::i18n-subs/tr])
         is-user?     (subscribe [::session-subs/is-user?])
-        active?      (subscribe [::subs/nav-url-active? url])
-        auth-needed? (and protected? (not @is-user?))]
+        active?      (subscribe [::route-subs/nav-url-active? url])
+        auth-needed? (and protected? (not @is-user?))
+        auth-url     (name->href routes/sign-in)]
 
     ^{:key (name label-kw)}
     [uix/MenuItem
-     {:name     (or (@tr [label-kw]) (name label-kw))
-      :icon     icon
-      :style    {:min-width  sidebar-width
-                 :overflow-x "hidden"}
-      :active   @active?
-      :href     (if auth-needed? "sign-in" url)
-      :class    (str "nuvla-" url)
-      :on-click (fn [event]
-                  (dispatch (if auth-needed?
-                              [::history-events/navigate "sign-in"]
-                              [::events/navigate url]))
-                  (.preventDefault event))}]))
+     {:name                     (or (@tr [label-kw]) (name label-kw))
+      :icon                     icon
+      :class                    (str "nuvla-" url)
+      :style                    {:min-width  sidebar-width
+                                 :overflow-x "hidden"}
+      :active                   @active?
+      :href                     (if auth-needed? auth-url url)
+      :on-click                 (fn [event]
+                                  (.preventDefault event)
+                                  (dispatch (if auth-needed?
+                                              [::routing-events/navigate auth-url]
+                                              [::events/navigate url])))
+      :data-reitit-handle-click false}]))
 
 (defn logo-item
   []
@@ -65,8 +70,8 @@
               :inverted   true
               :fixed      "left"}
      (when-not iframe? [logo-item])
-     (for [{:keys [url label-kw icon protected? iframe-visble? hidden?]
+     (for [{:keys [key label-kw icon protected? iframe-visble? hidden?]
             :or   {hidden? false}} pages-list]
        (when (and (or (not iframe?) iframe-visble?) (not hidden?))
-         ^{:key url}
-         [item label-kw url icon protected?]))]))
+         ^{:key key}
+         [item label-kw (name->href key) icon protected?]))]))

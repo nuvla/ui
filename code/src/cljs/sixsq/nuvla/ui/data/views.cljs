@@ -12,14 +12,13 @@
             [sixsq.nuvla.ui.deployment-dialog.subs :as deployment-dialog-subs]
             [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -199,7 +198,7 @@
             selected? (boolean (@data-sets id))]
         [ui/TableRow {:style    {:cursor "pointer"}
                       :on-click (fn [event]
-                                  (dispatch [::history-events/navigate (utils/data-record-href id)])
+                                  (dispatch [::routing-events/navigate (utils/data-record-href id)])
                                   (.preventDefault event))}
          [ui/TableCell
           [ui/Checkbox {:checked  selected?
@@ -259,9 +258,7 @@
                      [:span (utils/format-bytes size)]]]
       :on-select   #(dispatch [::events/toggle-data-set-id id])
       :selected?   selected?
-      :on-click    (fn [event]
-                     (dispatch [::history-events/navigate (utils/data-record-href id)])
-                     (.preventDefault event))}]))
+      :href        (utils/data-record-href id)}]))
 
 (defn DataSetCards
   []
@@ -311,7 +308,7 @@
                :icon    "file"}
     :render   #(r/as-element [DataRecords])}])
 
-(defn Data
+(defn data-view
   []
   (refresh)
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -334,11 +331,3 @@
           [deployment-dialog-views/deploy-modal true]
           [data-set-views/ProcessButton]
           [data-set-views/CreateDataSet]]]))))
-
-(defmethod panel/render :data
-  [path]
-  (let [[_ uuid] path
-        n (count path)]
-    (case n
-      2 [data-set-views/DataSet uuid]
-      [Data])))

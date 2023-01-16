@@ -10,18 +10,20 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
             [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]
             [sixsq.nuvla.ui.utils.values :as utils-values]))
+
 
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published-tick?]
@@ -29,7 +31,7 @@
         map-versions   (apps-utils/map-versions-index versions)
         module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
         module-index   (apps-utils/latest-published-index map-versions)
-        detail-href    (str "apps/" path (when (true? published) (str "?version=" module-index)))
+        detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
         follow-trial?  (get price :follow-customer-trial false)
         button-icon    (if (and price (not follow-trial?)) :cart :rocket)
         button-color   (if follow-trial? "green" "blue")
@@ -61,7 +63,6 @@
       :corner-button (when (and published show-published-tick?)
                        [ui/Label {:corner true} [uix/Icon {:name apps-utils/publish-icon}]])
       :href          detail-href
-      :on-click      #(dispatch [::history-events/navigate detail-href])
       :button        [ui/Button button-ops]}]))
 
 (defn ModulesCardsGroup

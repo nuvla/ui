@@ -10,23 +10,22 @@
             [sixsq.nuvla.ui.deployments.subs :as subs]
             [sixsq.nuvla.ui.deployments.utils :as utils]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn refresh
   []
@@ -178,8 +177,8 @@
                       :on-click (fn [event]
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
-     [ui/TableCell [values/as-link (general-utils/id->uuid id)
-                    :page "deployment" :label (general-utils/id->short-uuid id)]]
+     [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
+                    (general-utils/id->short-uuid id)]]
      (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
@@ -256,7 +255,6 @@
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url  (subscribe [::subs/deployment-url id primary-url-pattern])
         started?     (utils/started? state)
-        dep-href     (utils/deployment-href id)
         select-all?  (subscribe [::subs/select-all?])
         creator      (subscribe [::session-subs/resolve-user created-by])
         is-selected? (subscribe [::subs/is-selected? id])]
@@ -283,10 +281,7 @@
                                                        (.stopPropagation event))
                                            :target   "_blank"
                                            :rel      "noreferrer"}])
-              :on-click      (fn [event]
-                               (dispatch [::history-events/navigate (utils/deployment-href id)])
-                               (.preventDefault event))
-              :href          dep-href
+              :href          (utils/deployment-href id)
               :image         (or module-logo-url "")
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond
@@ -440,11 +435,6 @@
         [DeploymentsDisplay]
         [Pagination]]])))
 
-(defmethod panel/render :deployments
-  [path]
-  (let [[_ uuid] path
-        n        (count path)
-        children (case n
-                   2 [deployments-detail-views/DeploymentDetails uuid]
-                   [DeploymentsMainContent])]
-    [ui/Segment style/basic children]))
+(defn deployments-view
+  []
+  [ui/Segment style/basic [DeploymentsMainContent]])

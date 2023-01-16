@@ -13,7 +13,6 @@
             [sixsq.nuvla.ui.edges.events :as edges-events]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
-            [sixsq.nuvla.ui.history.views :as history-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
@@ -1065,6 +1064,24 @@
       children
       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])))
 
+(defn- IpsRow [{:keys [ips title]}]
+  [ui/TableRow
+   [ui/TableCell title]
+   [ui/TableCell
+    {:style {:padding-top 0 :padding-bottom 0}}
+    [ui/Table {:compact    true
+               :collapsing true
+               :style      {:background-color "#f3f4f5"
+                            :border           "none"}}
+     [ui/TableBody {:basic  "very"
+                    :padded false}
+      (for [{:keys [name ip]} ips]
+        ^{:key (str name ip)}
+        (when (seq ip)
+          [ui/TableRow
+           [ui/TableCell name]
+           [ui/TableCell ip]]))]]]])
+
 (defn HostInfo
   [_nb-status _ssh-creds]
   (let [tr       (subscribe [::i18n-subs/tr])
@@ -1098,23 +1115,11 @@
                 [ui/TableCell (values/copy-value-to-clipboard
                                 ip ip copy-to-clipboard true)]])
              (when ips-available
-               [ui/TableRow
-                [ui/TableCell "IPs"]
-                [ui/TableCell
-                 {:style {:padding-top 0 :padding-bottom 0}}
-                 [ui/Table {:compact    true
-                            :collapsing true
-                            :style      {:background-color "#f3f4f5"
-                                         :border           "none"}}
-                  [ui/TableBody {:basic  "very"
-                                 :padded false}
-                   (for [[name ip] (:ips network)]
-                     ^{:key (str name ip)}
-                     (when (seq ip)
-                       [ui/TableRow
-                        [ui/TableCell name]
-                        [ui/TableCell (values/copy-value-to-clipboard
-                                        ip ip copy-to-clipboard true)]]))]]]])])
+               [IpsRow {:title "IPs"
+                        :ips (map (fn [[name ip]]
+                                    {:name name
+                                     :ip (values/copy-value-to-clipboard
+                                          ip ip copy-to-clipboard true)}) (:ips network))}])])
           (when (pos? (count @ssh-creds))
             [ui/TableRow
              [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
@@ -1166,17 +1171,13 @@
                 [ui/TableCell
                  [:div {:style {:display         :flex
                                 :justify-content :space-between}}
-                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs, ")
-                   [:span {:style {:text-decoration :underline}}
-                    (@tr [(if @show-ips :click-to-hide :click-to-show)])]]
+                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs")]
                   [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
              (when @show-ips
-               (for [{:keys [interface ips]} interfaces]
-                 (when (seq ips)
-                   ^{:key interface}
-                   [ui/TableRow
-                    [ui/TableCell {:style {:padding-left "8px"}} interface]
-                    [ui/TableCell (str/join ", " (map :address ips))]])))])]]))))
+               [IpsRow {:ips (map (fn [{:keys [interface ips]}]
+                                    {:name interface
+                                     :ip (str/join ", " (map :address ips))}) interfaces)}])])]]))))
+
 
 (defn TabOverviewHost
   [nb-status ssh-creds]
@@ -1303,7 +1304,7 @@
          [ServiceIcon subtype]
          [ui/ListContent
           [ui/ListHeader
-           [history-views/link (str "clouds/" (general-utils/id->uuid id)) (or name id)]]
+           [uix/Link (str "clouds/" (general-utils/id->uuid id)) (or name id)]]
           [ui/ListDescription description]]])]]))
 
 
@@ -2033,6 +2034,6 @@
        (when (and nb-status (not (:online nb-status)))
          [ui/Message {:warning true
                       :icon    "warning sign"
-                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])
-       [TabsNuvlaBox]
-       [AddPlaybookModal]]]]))
+                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
+      [TabsNuvlaBox]
+      [AddPlaybookModal]]]))

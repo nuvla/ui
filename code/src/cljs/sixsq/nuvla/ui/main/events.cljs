@@ -5,11 +5,11 @@
             [day8.re-frame.http-fx]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.main.effects :as fx]
             [sixsq.nuvla.ui.main.spec :as spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.messages.spec :as messages-spec]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.events :as session-events]
             [sixsq.nuvla.ui.utils.general :as u]
             [sixsq.nuvla.ui.utils.time :as time]
@@ -17,6 +17,16 @@
 
 (def notification-polling-id :notifications-polling)
 (def check-ui-version-polling-id :check-ui-version)
+
+(reg-event-fx
+  ::bulk-actions-interval-after-navigation
+  (fn [{{:keys [::spec/actions-interval
+                ::spec/changes-protection?]} :db}]
+    (when-not changes-protection?
+      {::fx/bulk-actions-interval [::action-interval-delete
+                                   (dissoc actions-interval
+                                           notification-polling-id
+                                           check-ui-version-polling-id)]})))
 
 (reg-event-db
   ::set-loading?
@@ -72,30 +82,7 @@
                                            ::action-interval-pause) actions-interval]}
             visible? (assoc :dispatch [::session-events/initialize]))))
 
-(def page-alias {"nuvlabox"        "edges"
-                 "edge"            "edges"
-                 "infrastructures" "clouds"
-                 "deployment"      "deployments"})
 
-(defn split-path-alias
-  [path]
-  (let [[page :as path-vec] (vec (str/split path #"/"))
-        real-page (get page-alias page)]
-    (if (and page real-page)
-      (assoc path-vec 0 real-page)
-      path-vec)))
-
-(reg-event-fx
-  ::set-navigation-info
-  (fn [{{:keys [::spec/actions-interval
-                ::spec/changes-protection?] :as db} :db} [_ path query-params]]
-    (when (not changes-protection?)
-      {:db                        (assoc db ::spec/nav-path (split-path-alias path)
-                                            ::spec/nav-query-params query-params)
-       ::fx/bulk-actions-interval [::action-interval-delete
-                                   (dissoc actions-interval
-                                           notification-polling-id
-                                           check-ui-version-polling-id)]})))
 
 (reg-event-fx
   ::action-interval-start
@@ -151,18 +138,23 @@
 
 (reg-event-fx
   ::ignore-changes
-  (fn [{{:keys [::spec/ignore-changes-modal] :as db} :db} [_ choice]]
-    (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil)]
-      (cond
+  (fn [{{:keys [::spec/ignore-changes-modal
+                ::spec/do-not-ignore-changes-modal] :as db} :db} [_ choice]]
+    (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil
+                                   ::spec/do-not-ignore-changes-modal nil)]
+      (if choice
+        (let [new-db (assoc close-modal-db
+                       ::spec/changes-protection? false)]
+          (cond
+            (map? ignore-changes-modal)
+            (merge {:db new-db} ignore-changes-modal)
 
-        (map? ignore-changes-modal)
-        (cond-> {:db (cond-> close-modal-db
-                             choice (assoc ::spec/changes-protection? false))}
-                choice (merge ignore-changes-modal))
+            (fn? ignore-changes-modal)
+            (do (ignore-changes-modal)
+                {:db new-db})))
 
-        (fn? ignore-changes-modal)
-        (do (when choice (ignore-changes-modal))
-            {:db close-modal-db})))))
+        (merge {:db close-modal-db}
+               do-not-ignore-changes-modal)))))
 
 (reg-event-db
   ::ignore-changes-modal
@@ -334,4 +326,4 @@
   (fn [{{:keys [::spec/device]} :db} [_ url]]
     {:fx [(when (#{:mobile :tablet} device)
             [:dispatch [::close-sidebar]])
-          [:dispatch [::history-events/navigate url]]]}))
+          [:dispatch [::routing-events/navigate url]]]}))

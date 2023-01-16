@@ -9,11 +9,11 @@
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.style :as utils-style]))
 
@@ -43,7 +43,7 @@
                                 (when tab-event
                                   (dispatch tab-event))
                                 (when resource
-                                  (dispatch [::history-events/navigate resource])))}
+                                  (dispatch [::routing-events/navigate resource])))}
      [ui/Icon (merge {:className (str "icons " icon)} (when icon-color {:color icon-color}))]
      [ui/StatisticValue (or value "-")]
      [ui/StatisticLabel label]]))
@@ -100,7 +100,7 @@
                  :content  "Show me"
                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
-                                (dispatch [::history-events/navigate resource]))}]]))
+                                (dispatch [::routing-events/navigate resource]))}]]))
 
 
 (defn StatisticStates
@@ -149,7 +149,8 @@
                  :content  "Show me"
                  :on-click #(do (when (and tab-event tab-key)
                                   (dispatch [tab-event tab-key]))
-                                (dispatch [::history-events/navigate resource]))}]]))
+                                (dispatch [::routing-events/navigate resource]))}]]))
+
 
 (defn Statistics
   []
@@ -196,11 +197,11 @@
             [TabOverviewNuvlaBox]]]]]]])))
 
 
-(defmethod panel/render :dashboard
-  [path]
+(defn dashboard-view
+  [{path :path}]
   (let [n    (count path)
         [_ uuid] path
         root [DashboardMain]]
     (case n
-      2 ^{:key uuid} (dispatch [::history-events/navigate (str "deployment/" uuid)])
+      2 ^{:key uuid} (dispatch [::routing-events/navigate routes/deployment-details {:uuid uuid}])
       [ui/Segment utils-style/basic root])))

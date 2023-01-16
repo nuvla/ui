@@ -88,8 +88,7 @@
          (when clickable?
            [ui/Button
             {:icon     true
-             :style    {:margin     "0 auto"
-                        :margin-top "50px"}
+             :style    {:margin     "50px auto 15px"}
              :on-click #(when clickable?
                           (reset! show-state-statistics (not @show-state-statistics))
                           (when-not @show-state-statistics

@@ -89,7 +89,8 @@
                  :style     {:display         "flex"
                              :flex-direction  "column"
                              :justify-content "space-between"
-                             :border-radius   "8px"}}
+                             :border-radius   "8px"
+                             :overflow         :hidden}}
 
      [:h4 {:class "ui-header"} [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
 
@@ -137,7 +138,8 @@
                  :style     {:display         "flex"
                              :flex-direction  "column"
                              :justify-content "space-between"
-                             :border-radius   "8px"}}
+                             :border-radius   "8px"
+                             :overflow         :hidden}}
 
      [:h4 {:class "ui-header"} [ui/Icon {:name icon}] (str/upper-case (@tr [:deployments]))]
 

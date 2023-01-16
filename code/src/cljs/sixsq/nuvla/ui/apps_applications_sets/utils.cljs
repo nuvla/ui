@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.apps-applications-sets.utils
   (:require
     [clojure.string :as str]
+    [sixsq.nuvla.ui.apps-applications-sets.events :as events]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.apps-applications-sets.events :as events]
     [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]))
 

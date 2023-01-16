@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.plugins.tab
-  (:require
-    [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.plugins.helpers :as helpers]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]))
+  (:require [cljs.spec.alpha :as s]
+            [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [taoensso.timbre :as log]))
 
 (s/def ::active-tab keyword?)
 (s/def ::change-event (s/nilable coll?))

@@ -197,17 +197,18 @@
   (let [module           (subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         options          (subscribe [::module-versions-options db-path href])]
-    (let [{:keys [id content]} @module]
-      [ui/FormDropdown
-       {:value     (:id content)
-        :scrolling true
-        :upward    false
-        :selection true
-        :on-change (ui-callback/value
-                     #(dispatch [::load-module db-path
-                                 (str id "_" (get-version-id @versions-indexed %))]))
-        :fluid     true
-        :options   @options}])))
+    (fn [{:keys [db-path] :as _opts}]
+      (let [{:keys [id content]} @module]
+        [ui/FormDropdown
+         {:value     (:id content)
+          :scrolling true
+          :upward    false
+          :selection true
+          :on-change (ui-callback/value
+                       #(dispatch [::load-module db-path
+                                   (str id "_" (get-version-id @versions-indexed %))]))
+          :fluid     true
+          :options   @options}]))))
 
 (s/def ::href string?)
 

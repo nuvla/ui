@@ -1,15 +1,14 @@
 (ns sixsq.nuvla.ui.welcome.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn navigate-link [target-page text]
-  [:a {:on-click #(dispatch [::history-events/navigate target-page])
+  [:a {:on-click #(dispatch [::routing-events/navigate target-page])
        :style    {:cursor "pointer"}}
    text])
 
@@ -27,19 +26,10 @@
       [ui/ListHeader title]
       [ui/ListDescription content]]]]])
 
-(defmethod panel/render :welcome
-  [path]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        query-params (subscribe [::main-subs/nav-query-params])
-        {:keys [message, error]} @query-params]
-    (when @query-params
 
-      (when (or message error)
-        (dispatch [:sixsq.nuvla.ui.main.events/set-message
-                   (if error :error :success) (or error message)]))
-
-      (dispatch [::history-events/navigate (str (first path) "/")]))
-
+(defn home-view
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
      [ui/Grid {:stackable     true
                :centered      true
@@ -116,7 +106,7 @@
        [ui/HeaderSubheader {:as "h2"}
         (@tr [:welcome-how-to-nb-header])]
        [ui/HeaderSubheader {:as "h4"}
-        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvlaedge/nuvlaedge-software/"
+        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href   "https://docs.nuvla.io/nuvlaedge/nuvlaedge-software/"
                                                       :target "_blank"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1
@@ -135,7 +125,7 @@
               (@tr [:welcome-how-to-nb-2-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-nb-2-subheader-mid])}
-              [navigate-link "edges" (@tr [:welcome-how-to-nb-2-subheader-mid])]
+              [navigate-link (name->href routes/edges) (@tr [:welcome-how-to-nb-2-subheader-mid])]
               " "
               (@tr [:welcome-how-to-nb-2-subheader-post])
               ".")
@@ -155,7 +145,7 @@
               (@tr [:welcome-how-to-nb-4-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-nb-4-subheader-mid])}
-              [navigate-link "edges" (@tr [:welcome-how-to-nb-4-subheader-mid])]
+              [navigate-link (name->href routes/edges) (@tr [:welcome-how-to-nb-4-subheader-mid])]
               ". "
               (@tr [:welcome-how-to-nb-4-subheader-post])
               ".")
@@ -186,7 +176,7 @@
               (@tr [:welcome-how-to-launch-1-subheader-pre])
               " "
               ^{:key (@tr [:appstore])}
-              [navigate-link "apps" (@tr [:appstore])]
+              [navigate-link (name->href routes/apps) (@tr [:appstore])]
               " "
               (@tr [:welcome-how-to-launch-1-subheader-post])
               ".")
@@ -202,7 +192,7 @@
               (@tr [:welcome-how-to-launch-4-subheader-pre])
               " "
               ^{:key (@tr [:dashboard])}
-              [navigate-link "dashboard" (@tr [:dashboard])]
+              [navigate-link (name->href routes/dashboard) (@tr [:dashboard])]
               ", "
               (@tr [:welcome-how-to-launch-4-subheader-post])
               ".")]]
@@ -242,7 +232,7 @@
               (@tr [:welcome-how-to-video-2-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-video-2-subheader-post])}
-              [navigate-link "edges" (@tr [:welcome-how-to-video-2-subheader-post])] ".")
+              [navigate-link (name->href routes/edges) (@tr [:welcome-how-to-video-2-subheader-post])] ".")
         (step 3
               (@tr [:welcome-how-to-video-3-header])
               (@tr [:welcome-how-to-video-3-subheader-pre]))]]]]))

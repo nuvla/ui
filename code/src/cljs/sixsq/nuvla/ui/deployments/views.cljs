@@ -1,33 +1,31 @@
 (ns sixsq.nuvla.ui.deployments.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
-    [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
-    [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
-    [sixsq.nuvla.ui.deployments.events :as events]
-    [sixsq.nuvla.ui.deployments.spec :as spec]
-    [sixsq.nuvla.ui.deployments.subs :as subs]
-    [sixsq.nuvla.ui.deployments.utils :as utils]
-    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.table :refer [Table]]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
+            [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
+            [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
+            [sixsq.nuvla.ui.deployments.events :as events]
+            [sixsq.nuvla.ui.deployments.spec :as spec]
+            [sixsq.nuvla.ui.deployments.subs :as subs]
+            [sixsq.nuvla.ui.deployments.utils :as utils]
+            [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn refresh
   []
@@ -170,9 +168,9 @@
    {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
-        url           @(subscribe [::subs/deployment-url id primary-url-pattern])
-        selected?     (subscribe [::subs/is-selected? id])
-        creator       (subscribe [::session-subs/resolve-user created-by])]
+        url       @(subscribe [::subs/deployment-url id primary-url-pattern])
+        selected? (subscribe [::subs/is-selected? id])
+        creator   (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow
      (when show-options?
        [ui/TableCell
@@ -180,8 +178,8 @@
                       :on-click (fn [event]
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
-     [ui/TableCell [values/as-link (general-utils/id->uuid id)
-                    :page "deployment" :label (general-utils/id->short-uuid id)]]
+     [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
+                    (general-utils/id->short-uuid id)]]
      (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
@@ -233,7 +231,7 @@
                               {:field-key :infrastructure
                                :no-sort?  true}
                               (when show-options? {:field-key :actions
-                                                  :no-sort?  true})]
+                                                   :no-sort?  true})]
                 :rows        deployments-list
                 :sort-config {:db-path     ::spec/ordering
                               :fetch-event ::events/get-deployments}
@@ -251,7 +249,6 @@
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url  (subscribe [::subs/deployment-url id primary-url-pattern])
         started?     (utils/started? state)
-        dep-href     (utils/deployment-href id)
         select-all?  (subscribe [::subs/select-all?])
         creator      (subscribe [::session-subs/resolve-user created-by])
         is-selected? (subscribe [::subs/is-selected? id])]
@@ -278,10 +275,7 @@
                                                        (.stopPropagation event))
                                            :target   "_blank"
                                            :rel      "noreferrer"}])
-              :on-click      (fn [event]
-                               (dispatch [::history-events/navigate (utils/deployment-href id)])
-                               (.preventDefault event))
-              :href          dep-href
+              :href          (utils/deployment-href id)
               :image         (or module-logo-url "")
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond
@@ -372,12 +366,12 @@
                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
 (defn Pagination
-  []
+  [db-path-arg]
   (let [dep-count @(subscribe [::subs/deployments-count])]
     [pagination-plugin/Pagination
-     {:db-path                [::spec/pagination]
+     {:db-path                [(or db-path-arg ::spec/pagination)]
       :total-items            dep-count
-      :change-event           [::events/refresh]
+      :change-event           [::events/refresh db-path-arg]
       :i-per-page-multipliers [1 2 4]}]))
 
 (defn DeploymentTable
@@ -385,12 +379,12 @@
   (let [elements    (subscribe [::subs/deployments])
         select-all? (subscribe [::subs/select-all?])]
     (fn [{:keys [no-actions]}]
-      (let [deployments (:resources @elements)
+      (let [deployments  (:resources @elements)
             show-options (and (false? @select-all?) (not (true? no-actions)))]
         [:<>
          [VerticalDataTable
           deployments (assoc options :select-all @select-all? :show-options? show-options)]
-         [Pagination]]))))
+         [Pagination (:pagination-db-path options)]]))))
 
 (defn DeploymentsMainContent
   []
@@ -411,11 +405,6 @@
         [DeploymentsDisplay]
         [Pagination]]])))
 
-(defmethod panel/render :deployments
-  [path]
-  (let [[_ uuid] path
-        n        (count path)
-        children (case n
-                   2 [deployments-detail-views/DeploymentDetails uuid]
-                   [DeploymentsMainContent])]
-    [ui/Segment style/basic children]))
+(defn deployments-view
+  []
+  [ui/Segment style/basic [DeploymentsMainContent]])

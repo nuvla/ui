@@ -1,18 +1,18 @@
 (ns sixsq.nuvla.ui.session.events
-  (:require
-    [ajax.core :as ajax]
-    [clojure.string :as str]
-    [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.session.effects :as fx]
-    [sixsq.nuvla.ui.session.spec :as spec]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [ajax.core :as ajax]
+            [clojure.string :as str]
+            [day8.re-frame.http-fx]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.session.effects :as fx]
+            [sixsq.nuvla.ui.session.spec :as spec]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -33,14 +33,12 @@
                                (->> nav-path first (get pages) :protected?))
                       (str (str/join "/" nav-path)
                            (when-not (str/blank? query-str)
-                             (js/encodeURIComponent query-str))))
-          navigate  (str "sign-in" (when redirect
-                                     (str "?redirect=" redirect)))]
+                             (js/encodeURIComponent query-str))))]
       (cond-> {:db (assoc db ::spec/session new-session
                              ::spec/session-loading? false)}
               new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])
 
-              redirect (update :fx conj [:dispatch [::history-events/navigate navigate]])
+              redirect (update :fx conj [:dispatch [::routing-events/navigate routes/sign-in nil (when redirect {:redirect redirect})]])
               ;; force refresh templates collection cache when not the same user (different session)
               (not= session new-session) (assoc :fx
                                                 [[:dispatch [::cimi-events/get-cloud-entry-point]]
@@ -55,16 +53,15 @@
 
 (reg-event-fx
   ::logout
-  (fn [{:keys [db]} _]
-    {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
-     ::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
+  (fn []
+    {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
                                 (dispatch [::intercom-events/clear-events])
-                                (dispatch [::history-events/navigate "sign-in"]))]}))
+                                (dispatch [::routing-events/navigate routes/sign-in]))]}))
 
 
 (reg-event-db
   ::clear-loading
-  (fn [db _]
+  (fn [db]
     (assoc db ::spec/loading? false)))
 
 
@@ -124,10 +121,10 @@
                                    (when success-msg
                                      (dispatch [::set-success-message success-msg]))
                                    (when navigate-to
-                                     (dispatch [::history-events/navigate navigate-to])))
+                                     (dispatch [::routing-events/navigate navigate-to])))
                                  (do
                                    (dispatch [::set-callback-2fa %1])
-                                   (dispatch [::history-events/navigate "sign-in-token"])))))
+                                   (dispatch [::routing-events/navigate routes/sign-in-token])))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
@@ -150,7 +147,7 @@
     {:dispatch-n [[::clear-loading]
                   [::initialize]
                   [::set-success-message success-message]
-                  [::history-events/navigate "sign-in"]]}))
+                  [::routing-events/navigate routes/sign-in]]}))
 
 
 (reg-event-fx

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.apps-application.spec
   (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
@@ -48,3 +49,8 @@
                ::license-validation-errors        #{}
                ::docker-compose-validation-errors #{}
                ::configuration-validation-errors  #{}})
+
+(s/def ::deployment-pagination any?)
+
+(def deployments-pagination {::deployment-pagination (pagination-plugin/build-spec
+                                                       :default-items-per-page 25)})

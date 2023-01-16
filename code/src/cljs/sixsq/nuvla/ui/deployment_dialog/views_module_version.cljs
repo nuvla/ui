@@ -1,14 +1,13 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-module-version
-  (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.deployment-dialog.events :as events]
-    [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.deployment-dialog.events :as events]
+            [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+            [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn get-version-id
   [module-versions version]

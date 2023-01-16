@@ -12,15 +12,15 @@
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
-    [sixsq.nuvla.ui.plugins.module :as module-plugin]
-    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
     [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
+    [sixsq.nuvla.ui.deployment-sets-detail.views :as deployment-sets-detail-views]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
-    [sixsq.nuvla.ui.deployment-sets-detail.views :as deployment-sets-detail-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.plugins.module :as module-plugin]
+    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -28,11 +28,6 @@
     [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]))
-
-
-(defn clear-module
-  []
-  (dispatch [::events/clear-module]))
 
 (defn SelectAppsModal
   [id]

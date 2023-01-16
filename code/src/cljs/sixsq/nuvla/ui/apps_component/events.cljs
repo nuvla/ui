@@ -1,13 +1,12 @@
 (ns sixsq.nuvla.ui.apps-component.events
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [reg-event-db]]
-    [sixsq.nuvla.ui.apps-component.spec :as spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-event-db]]
+            [sixsq.nuvla.ui.apps-component.spec :as spec]
+            [sixsq.nuvla.ui.apps.utils :as utils]))
 
 
 (reg-event-db
-  ::clear-module
+  ::clear-apps-component
   (fn [db [_]]
     (merge db spec/defaults)))
 

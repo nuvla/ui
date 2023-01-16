@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.utils.form-fields
-  (:require
-    [re-frame.core :refer [subscribe]]
-    [reagent.core :as reagent]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.general :as utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [re-frame.core :refer [subscribe]]
+            [reagent.core :as reagent]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.general :as utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def nbsp "\u00a0")
@@ -37,7 +36,7 @@
     (when default-value
       (update-fn form-id name default-value))
     (fn [_update-fn _form-id {:keys [name _display-name help hidden sensitive _value-scope
-                                   required _editable] :as _attribute}]
+                                     required _editable] :as _attribute}]
       ^{:key name}
       [ui/FormField {:required required}
        (when-not hidden [:label label nbsp (help-popup help)])

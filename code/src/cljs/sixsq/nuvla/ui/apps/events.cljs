@@ -1,29 +1,29 @@
 (ns sixsq.nuvla.ui.apps.events
-  (:require
-    [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
-    [sixsq.nuvla.ui.apps-applications-sets.spec :as apps-applications-sets-spec]
-    [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
-    [sixsq.nuvla.ui.apps-applications-sets.utils :as apps-applications-sets-utils]
-    [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
-    [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
-    [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
-    [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
-    [sixsq.nuvla.ui.apps.effects :as apps-fx]
-    [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+  (:require [cljs.spec.alpha :as s]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
+            [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
+            [sixsq.nuvla.ui.apps-applications-sets.spec :as apps-applications-sets-spec]
+            [sixsq.nuvla.ui.apps-applications-sets.utils :as apps-applications-sets-utils]
+            [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
+            [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
+            [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
+            [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
+            [sixsq.nuvla.ui.apps.effects :as apps-fx]
+            [sixsq.nuvla.ui.apps.spec :as spec]
+            [sixsq.nuvla.ui.apps.utils :as utils]
+            [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (def refresh-action-get-module :apps-get-module)
@@ -47,7 +47,9 @@
                         {:id        refresh-action-get-deployment
                          :frequency 20000
                          :event     [::deployments-events/get-deployments
-                                     (str "module/id='" (:id module) "'")]}]]]})))
+                                     {:filter-external-arg (str "module/id='" (:id module) "'")
+                                      :pagination-db-path  ::apps-application-spec/deployment-pagination}]}]]]})))
+
 
 
 ;; Validation
@@ -94,10 +96,10 @@
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
       ; Helpful to debug validation issues
-      (log/warn "module-common validate: "
-                (s/explain-str ::spec/module-common module-common))
-      (log/warn "optional form validate: "
-                (s/explain-str form-spec module))
+      ;(log/error "module-common validate: "
+      ;           (s/explain-str ::spec/module-common module-common))
+      ;(log/error "optional form validate: "
+      ;           (s/explain-str form-spec module))
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -144,16 +146,12 @@
                             ::spec/module-not-found? (nil? module)
                             ::main-spec/loading? false)
           subtype (:subtype module)]
-      (cond-> {:db (case subtype
-                     "component" (apps-component-utils/module->db db module)
-                     "project" (apps-project-utils/module->db db module)
-                     "application" (apps-application-utils/module->db db module)
-                     "application_kubernetes" (apps-application-utils/module->db db module)
-                     "applications_sets" (apps-applications-sets-utils/module->db db module)
-                     db)}
-
-              (= subtype "applications_sets")
-              (assoc :fx (apps-applications-sets-utils/module->fx module))))))
+      {:db (case subtype
+             "component" (apps-component-utils/module->db db module)
+             "project" (apps-project-utils/module->db db module)
+             "application" (apps-application-utils/module->db db module)
+             "application_kubernetes" (apps-application-utils/module->db db module)
+             db)})))
 
 
 (reg-event-db
@@ -201,7 +199,8 @@
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::deployments-events/get-deployments
-                                                    (str "module/id='" (:id %) "'")]))]})))
+                                                    {:filter-external-arg (str "module/id='" (:id %) "'")
+                                                     :pagination-db-path  ::apps-application-spec/deployment-pagination}]))]})))
 
 
 (reg-event-db
@@ -595,8 +594,8 @@
                                (when (= subtype "application")
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
                                (dispatch [::main-events/changes-protection? false])
-                               (dispatch [::history-events/navigate
-                                          (str "apps/" (:path sanitized-module))]))
+                               (dispatch [::routing-events/navigate
+                                          (str-pathify (name->href routes/apps) (:path sanitized-module))]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)
@@ -626,7 +625,7 @@
                               (assoc ::spec/form-valid? true))
      ::cimi-api-fx/delete [id #(do
                                  (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate "apps/"]))]}))
+                                 (dispatch [::routing-events/navigate routes/apps]))]}))
 
 
 (reg-event-db
@@ -659,8 +658,8 @@
       {::cimi-api-fx/add [:module paste-module
                           #(do
                              (dispatch [::main-events/changes-protection? false])
-                             (dispatch [::history-events/navigate
-                                        (str "apps/" (:path paste-module))]))
+                             (dispatch [::routing-events/navigate
+                                        (str-pathify (name->href routes/apps) (:path paste-module))]))
                           :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                        (cimi-api-fx/default-add-on-error :module %)
                                        (when (= status 409)

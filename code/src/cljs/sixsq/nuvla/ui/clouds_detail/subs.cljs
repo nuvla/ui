@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.clouds-detail.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.clouds-detail.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.clouds-detail.spec :as spec]
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub

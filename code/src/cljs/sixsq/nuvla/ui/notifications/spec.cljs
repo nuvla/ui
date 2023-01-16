@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.notifications.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 (s/def ::name utils-spec/nonblank-string)
 (s/def ::description utils-spec/nonblank-string)
@@ -40,13 +39,26 @@
 (s/def ::window integer?)
 (s/def ::value-type utils-spec/nonblank-string)
 
+(def reset-interval-regex #"^(month|[1-9][0-9]{0,2}d)$")
+(s/def ::reset-interval #(re-matches reset-interval-regex %))
+
+(s/def ::reset-start-date #(and (pos-int? %)
+                                (< % 32)))
+
+
+(s/def ::dev-name string?)
+
 (s/def ::criteria
   (s/keys :req-un [::kind
                    ::metric
                    ::condition]
           :opt-un [::window
                    ::value
+                   ::reset-interval
+                   ::reset-start-date
+                   ::dev-name
                    ::value-type]))
+
 (s/def ::method-ids
   (s/and (s/coll-of utils-spec/nonblank-string :distinct true :kind vector?)
          not-empty))
@@ -57,6 +69,8 @@
 (s/def ::collection utils-spec/nonblank-string)
 (s/def ::enabled boolean?)
 (s/def ::notification-subscription-config-id utils-spec/nonblank-string)
+
+
 (s/def ::notification-subscription-config
   (s/keys :req-un [::name
                    ::description

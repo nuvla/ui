@@ -1,34 +1,34 @@
 (ns sixsq.nuvla.ui.cimi.views
-  (:require
-    [cljs.pprint :refer [pprint]]
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-    [sixsq.nuvla.ui.cimi.events :as events]
-    [sixsq.nuvla.ui.cimi.subs :as subs]
-    [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
-    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.views :as history]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.forms :as forms]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [cljs.pprint :refer [pprint]]
+            [clojure.set :as set]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
+            [sixsq.nuvla.ui.cimi.events :as events]
+            [sixsq.nuvla.ui.cimi.subs :as subs]
+            [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
+            [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
+            [sixsq.nuvla.ui.utils.forms :as forms]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn id-selector-formatter [entry]
   (let [v     (:id entry)
         label (second (str/split v #"/"))]
-    [history/link (str "api/" v) label]))
+    [uix/Link (str "api/" v) label]))
 
 
 ;; FIXME: Provide better visualization of non-string values.
@@ -87,7 +87,8 @@
             id            (:id entry)
             row-selected? (subscribe [::subs/row-selected? id])]
         [ui/TableRow {:style    {:cursor "pointer"}
-                      :on-click #(dispatch [::history-events/navigate (str "api/" id)])}
+                      :on-click #(dispatch [::routing-events/navigate
+                                            (str-pathify (name->href routes/api) id)])}
          (when @can-bulk-delete?
            [ui/TableCell
             [ui/Checkbox {:checked  @row-selected?
@@ -189,7 +190,8 @@
                           sort
                           (map (fn [k] {:value k :text k}))
                           vec)
-            callback #(dispatch [::history-events/navigate (str "api/" %)])]
+            callback #(dispatch [::routing-events/navigate
+                                 routes/api-sub-page {:sub-path %}])]
         [ui/Dropdown
          {:aria-label  (@tr [:resource-type])
           :value       @selected-id
@@ -201,7 +203,6 @@
           :upward      false
           :options     options
           :on-change   (ui-callback/value callback)}]))))
-
 
 (defn DocumentationButton
   []
@@ -222,10 +223,8 @@
           :on-mouse-enter #(reset! on-button true)
           :on-mouse-leave #(reset! on-button false)
           :on-click       #(when @on-button
-                             (dispatch [::history-events/navigate
-                                        (:url @documentation-page)]))}
+                             (dispatch [::routing-events/navigate (:key @documentation-page)]))}
          (not @mobile?) (assoc :floated "right"))])))
-
 
 (defn search-header []
   (let [tr           (subscribe [::i18n-subs/tr])
@@ -506,8 +505,8 @@
 (defn cimi-resource
   []
   (let [tr           (subscribe [::i18n-subs/tr])
-        path         (subscribe [::main-subs/nav-path])
-        query-params (subscribe [::main-subs/nav-query-params])]
+        path         (subscribe [::route-subs/nav-path])
+        query-params (subscribe [::route-subs/nav-query-params])]
     (fn []
       (let [[_ resource-type _] @path]
         (dispatch [::events/set-collection-name resource-type])
@@ -527,6 +526,6 @@
          children]))))
 
 
-(defmethod panel/render :api
+(defn api-view
   [_path]
   [cimi-resource])

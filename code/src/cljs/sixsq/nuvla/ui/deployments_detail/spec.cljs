@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.deployments-detail.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
 
 (s/def ::deployment any?)
 (s/def ::loading? boolean?)

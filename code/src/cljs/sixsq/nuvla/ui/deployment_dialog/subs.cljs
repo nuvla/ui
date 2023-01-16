@@ -1,13 +1,12 @@
 (ns sixsq.nuvla.ui.deployment-dialog.subs
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.session.subs :as session-subs]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub subscribe]]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.credentials.subs :as creds-subs]
+            [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
+            [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]))
 
 
 (reg-sub

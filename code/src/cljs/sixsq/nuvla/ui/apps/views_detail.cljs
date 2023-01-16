@@ -1,36 +1,37 @@
 (ns sixsq.nuvla.ui.apps.views-detail
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [re-frame.db]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.utils :as acl-utils]
-    [sixsq.nuvla.ui.acl.views :as acl-views]
-    [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
-    [sixsq.nuvla.ui.apps.events :as events]
-    [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.apps.subs :as subs]
-    [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.collapsible-card :as cc]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.forms :as utils-forms]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+            [re-frame.db]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.utils :as acl-utils]
+            [sixsq.nuvla.ui.acl.views :as acl-views]
+            [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
+            [sixsq.nuvla.ui.apps.events :as events]
+            [sixsq.nuvla.ui.apps.spec :as spec]
+            [sixsq.nuvla.ui.apps.subs :as subs]
+            [sixsq.nuvla.ui.apps.utils :as utils]
+            [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
+            [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.profile.subs :as profile-subs]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.forms :as utils-forms]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -107,7 +108,7 @@
   (dispatch-sync [::events/validate-form])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)
         {:keys [subtype]} (get @re-frame.db/app-db ::spec/module)
-        new-subtype (:subtype @(subscribe [::main-subs/nav-query-params]))]
+        new-subtype (:subtype @(subscribe [::route-subs/nav-query-params]))]
     (when form-valid?
       (dispatch [::events/set-validate-form? false])
       (if (= (or subtype new-subtype) "project")
@@ -313,9 +314,11 @@
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-modal-visible?])
-        nav-path (subscribe [::main-subs/nav-path])]
+        nav-path (subscribe [::route-subs/nav-path])]
     (fn []
-      (let [parent (utils/nav-path->module-path @nav-path)]
+      (let [parent    (utils/nav-path->module-path @nav-path)
+            base-path (pathify (remove str/blank?
+                                       [(name->href routes/apps) parent]))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}
@@ -327,26 +330,17 @@
                          :itemsPerRow 3}
 
            [ui/Card
-            {:on-click #(do (dispatch [::events/close-add-modal])
-                            (dispatch [::history-events/navigate
-                                       (str/join
-                                         "/" (remove str/blank?
-                                                     ["apps" parent
-                                                      "New Project?subtype=project"]))]))}
+            {:href     (pathify [base-path "New Project?subtype=project"])
+             :on-click #(dispatch [::events/close-add-modal])}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [ui/Icon {:name "folder"
                        :size :massive}]]]
 
            [ui/Card
-            {:on-click (when parent
-                         #(do
-                            (dispatch [::events/close-add-modal])
-                            (dispatch [::history-events/navigate
-                                       (str/join
-                                         "/" (remove str/blank?
-                                                     ["apps" parent
-                                                      "New Application?subtype=application"]))])))}
+            {:href     (pathify [base-path "New Application?subtype=application"])
+             :on-click (when parent
+                         #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header (@tr [:application-docker])]
              [:div]
@@ -360,14 +354,9 @@
                               :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
-            {:on-click (when parent
-                         #(do
-                            (dispatch [::events/close-add-modal])
-                            (dispatch [::history-events/navigate
-                                       (str/join
-                                         "/" (remove str/blank?
-                                                     ["apps" parent
-                                                      "New Application?subtype=application_kubernetes"]))])))}
+            {:href     (pathify [base-path "New Application?subtype=application_kubernetes"])
+             :on-click (when parent
+                         #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header (@tr [:application-kubernetes])]
              [:div]
@@ -380,14 +369,9 @@
 
             ]
            [ui/Card
-            {:on-click (when parent
-                         #(do
-                            (dispatch [::events/close-add-modal])
-                            (dispatch [::history-events/navigate
-                                       (str/join
-                                         "/" (remove str/blank?
-                                                     ["apps" parent
-                                                      "New Applications sets?subtype=applications_sets"]))])))}
+            {:href     (pathify [base-path "New Applications Sets?subtype=applications_sets"])
+             :on-click (when parent
+                         #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Applications sets"]
              [:div]

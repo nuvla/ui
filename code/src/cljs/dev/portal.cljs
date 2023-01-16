@@ -9,13 +9,13 @@
 
 (defn- error->data [ex]
   (merge
-   (when-let [data (.-data ex)]
-     {:data data})
-   {:runtime :portal
-    :cause   (.-message ex)
-    :via     [{:type    (symbol (.-name (type ex)))
-               :message (.-message ex)}]
-    :stack   (.-stack ex)}))
+    (when-let [data (.-data ex)]
+      {:data data})
+    {:runtime :portal
+     :cause   (.-message ex)
+     :via     [{:type    (symbol (.-name (type ex)))
+                :message (.-message ex)}]
+     :stack   (.-stack ex)}))
 
 (defn- async-submit [value]
   (cond
@@ -46,5 +46,11 @@
 
 (comment
   ;; We could also put it in a rich comment block and just eval this here
-  (p/open)
+
+  (def p (p/open))
+  ;; To close it
+  (p/close)
+
+  ;; Diffing two maps:
+  #_(tap> (with-meta [{:a :b} {:b :c}] {:portal.viewer/default :portal.viewer/diff}))
   )

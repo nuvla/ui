@@ -1,17 +1,16 @@
 (ns sixsq.nuvla.ui.deployments.events
-  (:require
-    [clojure.set :as set]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployments.spec :as spec]
-    [sixsq.nuvla.ui.deployments.utils :as utils]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]))
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.deployments.spec :as spec]
+            [sixsq.nuvla.ui.deployments.utils :as utils]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
@@ -24,7 +23,7 @@
 
 (reg-event-fx
   ::refresh
-  (fn []
+  (fn [_ [_ db-path]]
     {:fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000
@@ -32,7 +31,7 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-id
                        :frequency 20000
-                       :event     [::get-deployments]}]]]}))
+                       :event     [::get-deployments {:pagination-db-path db-path}]}]]]}))
 
 (reg-event-db
   ::set-deployments-params-map
@@ -63,7 +62,7 @@
   (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
                 ::spec/filter-external
-                ::spec/ordering] :as db} :db} [_ filter-external-arg]]
+                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path]}]]
     (let [filter-external (or filter-external-arg filter-external)
           state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param
@@ -78,7 +77,7 @@
                                    :orderby     (ordering->order-string (or ordering spec/default-ordering))
                                    :filter      filter-str}
                                   (pagination-plugin/first-last-params
-                                    db [::spec/pagination]))
+                                    db [(or pagination-db-path ::spec/pagination)]))
                              #(dispatch [::set-deployments %])]})))
 
 (reg-event-fx

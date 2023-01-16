@@ -1,22 +1,20 @@
 (ns sixsq.nuvla.ui.cimi-api.effects
   "Provides effects that use the CIMI client to interact asynchronously with
    the server."
-  (:require-macros
-    [cljs.core.async.macros :refer [go]])
-  (:require
-    [cljs.core.async :refer [<!]]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.client.async :as async-client]
-    [sixsq.nuvla.client.authn :as authn]
-    [sixsq.nuvla.ui.history.utils :as utils]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.defines :as defines]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require [cljs.core.async :refer [<!]]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-fx]]
+            [sixsq.nuvla.client.api :as api]
+            [sixsq.nuvla.client.async :as async-client]
+            [sixsq.nuvla.client.authn :as authn]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.effects :refer [host-url]]
+            [sixsq.nuvla.ui.utils.defines :as defines]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
-(def NUVLA_URL (delay (if (str/blank? defines/HOST_URL) (utils/host-url) defines/HOST_URL)))
+(def NUVLA_URL (delay (if (str/blank? defines/HOST_URL) (host-url) defines/HOST_URL)))
 
 (def CLIENT (delay (async-client/instance (str @NUVLA_URL "/api/cloud-entry-point"))))
 

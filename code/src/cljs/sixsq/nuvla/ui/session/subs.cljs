@@ -1,11 +1,10 @@
 (ns sixsq.nuvla.ui.session.subs
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
-    [sixsq.nuvla.ui.session.spec :as spec]
-    [sixsq.nuvla.ui.session.utils :as utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
+            [sixsq.nuvla.ui.session.spec :as spec]
+            [sixsq.nuvla.ui.session.utils :as utils]
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
   ::session-loading?
@@ -33,10 +32,10 @@
   :<- [::session]
   :<- [::groups-hierarchies]
   (fn [[{:keys [user identifier active-claim]} groups-hierarchies]]
-    (loop [acc [{:text  identifier
-                 :value user
-                 :level 0
-                 :icon  "user"
+    (loop [acc [{:text     identifier
+                 :value    user
+                 :level    0
+                 :icon     "user"
                  :selected (= active-claim user)}]
            h   groups-hierarchies]
       (if (nil? (seq h))

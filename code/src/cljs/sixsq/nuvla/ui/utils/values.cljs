@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.utils.values
   "General functions for rendering values."
-  (:require
-    [clojure.pprint :refer [pprint]]
-    [clojure.string :as str]
-    [markdown-to-hiccup.core :as md]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.history.views :as history]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [clojure.pprint :refer [pprint]]
+            [clojure.string :as str]
+            [markdown-to-hiccup.core :as md]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (defn href?
@@ -19,13 +18,13 @@
   "Renders a link to the API detail page associated with the href. Ignores
    other values of the map (if any)."
   [{:keys [href]}]
-  [history/link (str "api/" href) (str href)])
+  [uix/Link (str "api/" href) (str href)])
 
 
 (defn as-link
   "Renders a link to the API detail page associated with the href."
   [href & {:keys [label page]}]
-  [history/link (str (or page "api") "/" href) (or label href)])
+  [uix/Link (str (or page "api") "/" href) (or label href)])
 
 
 (defn href-coll?
@@ -105,7 +104,13 @@
 
 (defn hiccup->first-p
   [hiccup]
-  (some #(when (= :p (first %)) (nth % 2)) (drop 2 hiccup)))
+  (->> hiccup
+       (drop 2)
+       (some (fn [[html-tag :as html-element]]
+               (when (= :p html-tag) html-element)))
+       flatten
+       (filter string?)
+       str/join))
 
 
 (defn markdown->summary

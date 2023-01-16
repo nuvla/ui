@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-sets.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::deployment-sets any?)
 (s/def ::deployment-sets-summary any?)

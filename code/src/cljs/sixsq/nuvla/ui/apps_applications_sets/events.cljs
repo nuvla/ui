@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.apps-applications-sets.events
   (:require
-    [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -11,7 +11,7 @@
 ;; user should be told that some applications has been deleted!!
 
 (reg-event-db
-  ::clear-module
+  ::clear-apps-applications-sets
   (fn [db [_]]
     (merge db spec/defaults)))
 

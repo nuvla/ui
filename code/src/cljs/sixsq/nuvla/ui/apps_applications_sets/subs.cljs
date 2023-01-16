@@ -2,8 +2,8 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
-    [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]))
+    [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
+    [sixsq.nuvla.ui.plugins.module-selector :as module-selector]))
 
 
 (reg-sub

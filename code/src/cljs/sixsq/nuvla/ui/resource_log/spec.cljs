@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.resource-log.spec
-  (:require
-    [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]))
 
 (s/def ::resource-log any?)
 (s/def ::id (s/nilable string?))

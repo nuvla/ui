@@ -13,6 +13,10 @@ module.exports = function (config) {
       args: ['shadow.test.karma.init'],
       singleRun: true,
     },
+    // browserConsoleLogOptions: {
+    //   terminal: true,
+    //   level: '',
+    // },
   });
   process.env.TZ = 'Europe/Zurich';
 };

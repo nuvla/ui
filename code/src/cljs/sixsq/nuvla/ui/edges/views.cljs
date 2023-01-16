@@ -12,13 +12,13 @@
             [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
             [sixsq.nuvla.ui.edges.views-utils :as views-utils]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
@@ -734,7 +734,8 @@
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
+    [ui/TableRow {:role     "link"
+                  :on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
@@ -811,7 +812,7 @@
 (defn NuvlaboxMapPoint
   [{:keys [id name location inferred-location online]}]
   (let [uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])]
+        on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong (or location inferred-location))
                        :color    (utils/map-online->color online)
@@ -902,16 +903,17 @@
 
 
 (defn DetailedView
-  [uuid]
-  (if (= "nuvlabox-cluster" uuid)
-    (do
-      (reset! view-type :cluster)
-      (dispatch [::history-events/navigate "edges/"]))
-    [edges-detail/EdgeDetails uuid]))
+  [param]
+  (let [uuid (if (string? param) param (get-in param [:path-params :id]))]
+    (if (= "nuvlabox-cluster" uuid)
+      (do
+        (reset! view-type :cluster)
+        (dispatch [::routing-events/navigate routes/edges-slashed]))
+      [edges-detail/EdgeDetails uuid])))
 
 
-(defmethod panel/render :edges
-  [path]
+(defn edges-view
+  [{:keys [path]}]
   (dispatch [::events/init])
   (let [[_ path1 path2] path
         n        (count path)

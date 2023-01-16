@@ -1,5 +1,7 @@
 (ns sixsq.nuvla.ui.data.utils
-  (:require [sixsq.nuvla.ui.utils.general :as general-utils]
+  (:require [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 
 (defn matches-parameter-name?
@@ -49,4 +51,4 @@
 
 (defn data-record-href
   [id]
-  (str "data/" (general-utils/id->uuid id)))
+  (str-pathify (name->href routes/data) (general-utils/id->uuid id)))

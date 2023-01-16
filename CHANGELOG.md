@@ -10,6 +10,8 @@
 - Main - Loader service unavailable message visible on error
 - NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
 - Edges overview - Adds more advanced filtering similar to e.g. deployments tab #1010
+- Routing - Introduces reitit frontend router for client side routing
+- Credentials - Add modal obfuscating password input fields #1084
 
 ## [2.32.12] - 2023-01-06
 

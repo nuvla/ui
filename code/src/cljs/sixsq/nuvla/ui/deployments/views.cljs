@@ -1,32 +1,31 @@
 (ns sixsq.nuvla.ui.deployments.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
-    [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
-    [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
-    [sixsq.nuvla.ui.deployments.events :as events]
-    [sixsq.nuvla.ui.deployments.spec :as spec]
-    [sixsq.nuvla.ui.deployments.subs :as subs]
-    [sixsq.nuvla.ui.deployments.utils :as utils]
-    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
+            [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
+            [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
+            [sixsq.nuvla.ui.deployments.events :as events]
+            [sixsq.nuvla.ui.deployments.spec :as spec]
+            [sixsq.nuvla.ui.deployments.subs :as subs]
+            [sixsq.nuvla.ui.deployments.utils :as utils]
+            [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn refresh
   []
@@ -163,20 +162,15 @@
            :on-refresh refresh}]]]
        [BulkUpdateModal]])))
 
-(defn show-options
-  [select-all? no-actions]
-  (not (or select-all? (true? no-actions))))
-
 
 (defn RowFn
   [{:keys [id state module created-by] :as deployment}
-   {:keys [no-actions no-module-name select-all] :as _options}]
+   {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
-        url           @(subscribe [::subs/deployment-url id primary-url-pattern])
-        selected?     (subscribe [::subs/is-selected? id])
-        show-options? (show-options select-all no-actions)
-        creator       (subscribe [::session-subs/resolve-user created-by])]
+        url       @(subscribe [::subs/deployment-url id primary-url-pattern])
+        selected? (subscribe [::subs/is-selected? id])
+        creator   (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow
      (when show-options?
        [ui/TableCell
@@ -184,8 +178,8 @@
                       :on-click (fn [event]
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
-     [ui/TableCell [values/as-link (general-utils/id->uuid id)
-                    :page "deployment" :label (general-utils/id->short-uuid id)]]
+     [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
+                    (general-utils/id->short-uuid id)]]
      (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
@@ -214,33 +208,35 @@
   [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
-    (fn [deployments-list {:keys [no-actions no-module-name select-all empty-msg] :as options}]
-      (let [show-options? (show-options select-all no-actions)]
-        (if (empty? deployments-list)
-          [uix/WarningMsgNoElements empty-msg]
-          [ui/Table
-           (merge style/single-line {:stackable true})
-           [ui/TableHeader
-            [ui/TableRow
-             (when show-options?
-               [ui/TableHeaderCell
-                [ui/Checkbox
-                 {:checked  @is-all-page-selected?
-                  :on-click #(dispatch [::events/select-all-page])}]])
-             [ui/TableHeaderCell (@tr [:id])]
-             (when-not no-module-name
-               [ui/TableHeaderCell (@tr [:module])])
-             [ui/TableHeaderCell (@tr [:version])]
-             [ui/TableHeaderCell (@tr [:status])]
-             [ui/TableHeaderCell (@tr [:url])]
-             [ui/TableHeaderCell (@tr [:created])]
-             [ui/TableHeaderCell (@tr [:created-by])]
-             [ui/TableHeaderCell (@tr [:infrastructure])]
-             (when show-options? [ui/TableHeaderCell (@tr [:actions])])]]
-           [ui/TableBody
-            (for [{:keys [id] :as deployment} deployments-list]
-              ^{:key id}
-              [RowFn deployment options])]])))))
+    (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
+      (if (empty? deployments-list)
+        [uix/WarningMsgNoElements empty-msg]
+        [Table {:columns     [(when show-options?
+                                {:no-sort? true
+                                 :header-content
+                                 [ui/Checkbox
+                                  {:checked  @is-all-page-selected?
+                                   :on-click #(dispatch [::events/select-all-page])}]})
+                              {:field-key :id}
+                              (when-not no-module-name
+                                {:field-key      :module.name
+                                 :header-content (@tr [:module])})
+                              {:field-key :version :no-sort? true}
+                              {:field-key :status
+                               :sort-key  :state}
+                              {:field-key :url
+                               :no-sort?  true}
+                              {:field-key :created}
+                              {:field-key :created-by}
+                              {:field-key :infrastructure
+                               :no-sort?  true}
+                              (when show-options? {:field-key :actions
+                                                   :no-sort?  true})]
+                :rows        deployments-list
+                :sort-config {:db-path     ::spec/ordering
+                              :fetch-event ::events/get-deployments}
+                :row-render  (fn [deployment] [RowFn deployment options])
+                :table-props (merge style/single-line {:stackable true})}]))))
 
 
 (defn DeploymentCard
@@ -253,7 +249,6 @@
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url  (subscribe [::subs/deployment-url id primary-url-pattern])
         started?     (utils/started? state)
-        dep-href     (utils/deployment-href id)
         select-all?  (subscribe [::subs/select-all?])
         creator      (subscribe [::session-subs/resolve-user created-by])
         is-selected? (subscribe [::subs/is-selected? id])]
@@ -280,10 +275,7 @@
                                                        (.stopPropagation event))
                                            :target   "_blank"
                                            :rel      "noreferrer"}])
-              :on-click      (fn [event]
-                               (dispatch [::history-events/navigate (utils/deployment-href id)])
-                               (.preventDefault event))
-              :href          dep-href
+              :href          (utils/deployment-href id)
               :image         (or module-logo-url "")
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond
@@ -317,7 +309,7 @@
         [ui/Segment {:basic true}
          (if (= @view "cards")
            [CardsDataTable deployments-list]
-           [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
+           [VerticalDataTable deployments-list {:show-options? (false? @select-all?)}])]))))
 
 (defn StatisticStates
   [_clickable? summary-subs]
@@ -374,24 +366,25 @@
                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
 (defn Pagination
-  []
+  [db-path-arg]
   (let [dep-count @(subscribe [::subs/deployments-count])]
     [pagination-plugin/Pagination
-     {:db-path                [::spec/pagination]
+     {:db-path                [(or db-path-arg ::spec/pagination)]
       :total-items            dep-count
-      :change-event           [::events/refresh]
+      :change-event           [::events/refresh db-path-arg]
       :i-per-page-multipliers [1 2 4]}]))
 
 (defn DeploymentTable
   [options]
   (let [elements    (subscribe [::subs/deployments])
         select-all? (subscribe [::subs/select-all?])]
-    (fn []
-      (let [deployments (:resources @elements)]
+    (fn [{:keys [no-actions]}]
+      (let [deployments  (:resources @elements)
+            show-options (and (false? @select-all?) (not (true? no-actions)))]
         [:<>
          [VerticalDataTable
-          deployments (assoc options :select-all @select-all?)]
-         [Pagination]]))))
+          deployments (assoc options :select-all @select-all? :show-options? show-options)]
+         [Pagination (:pagination-db-path options)]]))))
 
 (defn DeploymentsMainContent
   []
@@ -412,11 +405,6 @@
         [DeploymentsDisplay]
         [Pagination]]])))
 
-(defmethod panel/render :deployments
-  [path]
-  (let [[_ uuid] path
-        n        (count path)
-        children (case n
-                   2 [deployments-detail-views/DeploymentDetails uuid]
-                   [DeploymentsMainContent])]
-    [ui/Segment style/basic children]))
+(defn deployments-view
+  []
+  [ui/Segment style/basic [DeploymentsMainContent]])

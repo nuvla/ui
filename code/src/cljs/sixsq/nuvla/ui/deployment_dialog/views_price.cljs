@@ -1,14 +1,13 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-price
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.deployment-dialog.events :as events]
-    [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.deployment-dialog.events :as events]
+            [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+            [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn summary-row
@@ -38,10 +37,14 @@
         start?           (subscribe [::subs/deployment-start?])
         price            (subscribe [::subs/price])
         new-price        (subscribe [::subs/new-price])
+        can-edit?        (subscribe [::subs/can-edit-module-data?])
         format-price     #(if (>= (:cent-amount-daily %) 100)
                             (str (float (/ (:cent-amount-daily %) 100)) "€/" (@tr [:day]))
                             (str (:cent-amount-daily %) "ct€/" (@tr [:day])))]
     [:<>
+     (when @can-edit?
+       [ui/Message {:info    true
+                    :content (@tr [:free-deployment-for-vendor])}])
      [ui/Segment
       [:p
        (str (when @start?
@@ -59,8 +62,9 @@
        [:b (format-price (or @new-price @price))]]
       (when @new-price
         [:p [:i (str (@tr [:price-changed])
-                  (format-price @price) " " (@tr [:to]) " "
-                  (format-price @new-price))]])
+                     (format-price @price) " " (@tr [:to]) " "
+                     (format-price @new-price))]])
+
       [ui/Checkbox {:label     (@tr [:accept-costs])
                     :checked   @price-completed?
                     :on-change (ui-callback/checked

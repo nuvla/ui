@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.docs.subs
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.docs.spec :as spec]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.docs.spec :as spec]))
 
 
 (reg-sub

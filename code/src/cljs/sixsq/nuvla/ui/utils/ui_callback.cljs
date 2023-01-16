@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.utils.ui-callback
-  (:require
-    [re-frame.core :refer [dispatch]]))
+  (:require [re-frame.core :refer [dispatch]]))
 
 
 (defn input-callback

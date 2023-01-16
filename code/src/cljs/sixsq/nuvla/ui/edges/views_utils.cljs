@@ -1,28 +1,28 @@
 (ns sixsq.nuvla.ui.edges.views-utils
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.edges.events :as events]
-    [sixsq.nuvla.ui.edges.subs :as subs]
-    [sixsq.nuvla.ui.edges.utils :as utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as utils-values]
-    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.edges.events :as events]
+            [sixsq.nuvla.ui.edges.subs :as subs]
+            [sixsq.nuvla.ui.edges.utils :as utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
   (let [locale (subscribe [::i18n-subs/locale])
         uuid   (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
+    [ui/TableRow {:on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
@@ -56,13 +56,12 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
-      (let [href                  (str "edges/" (general-utils/id->uuid id))
+      (let [href                  (name->href routes/edges-details {:uuid (general-utils/id->uuid id)})
             next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
             creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}
         [uix/Card
-         {:on-click    #(dispatch [::history-events/navigate href])
-          :href        href
+         {:href        href
           :header      [:<>
                         [:div {:style {:float "right"}}
                          [OnlineStatusIcon online :corner "top right"]]

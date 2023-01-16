@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.apps.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as spec-utils]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 
 ;; Utils

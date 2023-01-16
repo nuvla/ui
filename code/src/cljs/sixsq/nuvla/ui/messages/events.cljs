@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.messages.events
-  (:require
-    [re-frame.core :refer [reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.messages.spec :as spec]
-    [sixsq.nuvla.ui.utils.time :as time]))
+  (:require [re-frame.core :refer [reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.messages.spec :as spec]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-event-db

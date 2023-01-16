@@ -1,53 +1,33 @@
 (ns sixsq.nuvla.ui.main.views
-  (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.about.views]
-    [sixsq.nuvla.ui.apps-application.views]
-    [sixsq.nuvla.ui.apps-component.views]
-    [sixsq.nuvla.ui.apps-project.views]
-    [sixsq.nuvla.ui.apps-store.views]
-    [sixsq.nuvla.ui.apps.events :as apps-events]
-    [sixsq.nuvla.ui.apps.views]
-    [sixsq.nuvla.ui.cimi.subs :as api-subs]
-    [sixsq.nuvla.ui.cimi.views]
-    [sixsq.nuvla.ui.clouds-detail.views]
-    [sixsq.nuvla.ui.clouds.views]
-    [sixsq.nuvla.ui.credentials.views]
-    [sixsq.nuvla.ui.dashboard.views]
-    [sixsq.nuvla.ui.data.views]
-    [sixsq.nuvla.ui.deployment-sets-detail.views]
-    [sixsq.nuvla.ui.deployment-sets.views]
-    [sixsq.nuvla.ui.deployments.views]
-    [sixsq.nuvla.ui.docs.views]
-    [sixsq.nuvla.ui.edges.views]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.utils :as history-utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.i18n.views :as i18n-views]
-    [sixsq.nuvla.ui.intercom.views :as intercom]
-    [sixsq.nuvla.ui.main.components :as main-components]
-    [sixsq.nuvla.ui.main.events :as events]
-    [sixsq.nuvla.ui.main.subs :as subs]
-    [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
-    [sixsq.nuvla.ui.messages.views :as messages]
-    [sixsq.nuvla.ui.notifications.views]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
-    [sixsq.nuvla.ui.profile.views]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.session.views :as session-views]
-    [sixsq.nuvla.ui.utils.general :as utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.welcome.views]))
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.apps.events :as apps-events]
+            [sixsq.nuvla.ui.cimi.subs :as api-subs]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.i18n.views :as i18n-views]
+            [sixsq.nuvla.ui.intercom.views :as intercom]
+            [sixsq.nuvla.ui.main.components :as main-components]
+            [sixsq.nuvla.ui.main.events :as events]
+            [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
+            [sixsq.nuvla.ui.messages.views :as messages]
+            [sixsq.nuvla.ui.profile.subs :as profile-subs]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.router :refer [router-component]]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
+            [sixsq.nuvla.ui.session.views :as session-views]
+            [sixsq.nuvla.ui.utils.general :as utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn crumb
   [index segment]
-  (let [nav-path (subscribe [::subs/nav-path])
-        click-fn #(dispatch [::history-events/navigate (history-utils/trim-path @nav-path index)])]
+  (let [nav-path (subscribe [::route-subs/nav-path])
+        click-fn #(dispatch [::routing-events/navigate (trim-path @nav-path index)])]
     ^{:key (str index "_" segment)}
     [ui/BreadcrumbSection
      [:a {:on-click click-fn
@@ -67,7 +47,7 @@
 
 
 (defn breadcrumbs-links []
-  (let [nav-path           (subscribe [::subs/nav-path])
+  (let [nav-path           (subscribe [::route-subs/nav-path])
         decorated-nav-path (decorate-breadcrumbs @nav-path)]
     (vec (concat [ui/Breadcrumb {:size :large}]
                  (->> decorated-nav-path
@@ -83,10 +63,10 @@
 
 
 (defn breadcrumbs-dropdown []
-  (let [path        (subscribe [::subs/nav-path])
+  (let [path        (subscribe [::route-subs/nav-path])
         options     (map breadcrumb-option (range) @path)
         selected    (-> options last :value)
-        callback-fn #(dispatch [::history-events/navigate (history-utils/trim-path @path %)])]
+        callback-fn #(dispatch [::routing-events/navigate (trim-path @path %)])]
     [ui/Dropdown
      {:inline    true
       :value     selected
@@ -111,7 +91,7 @@
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
       [ui/GridColumn grid-style
-       [:a {:on-click #(dispatch [::history-events/navigate "about"])
+       [:a {:on-click #(dispatch [::routing-events/navigate routes/about])
             :style    {:cursor "pointer"}}
         [:span#release-version (str "v")]]]
       [ui/GridColumn grid-style
@@ -161,7 +141,7 @@
              (@tr [:subscription-required-content]))]
        [ui/Button {:primary  true
                    :on-click #(do
-                                (dispatch [::history-events/navigate "profile"])
+                                (dispatch [::routing-events/navigate routes/profile])
                                 (dispatch [::events/close-modal]))}
         (if @open-subs-unpaid?
           (@tr [:profile-page])
@@ -171,27 +151,9 @@
          [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])])]]]))
 
 
-(defn Message
-  []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        message (subscribe [::subs/message])]
-    (fn []
-      (let [[type content] @message]
-        (when content
-          [ui/Container {:text-align :center}
-           [ui/Message
-            (if (= type :success)
-              {:success true
-               :content (@tr [(keyword content)])}
-              {:error   true
-               :content content})]
-           [:br]])))))
-
-
 (defn contents
   []
-  (let [resource-path    (subscribe [::subs/nav-path])
-        content-key      (subscribe [::subs/content-key])
+  (let [content-key      (subscribe [::subs/content-key])
         is-small-device? (subscribe [::subs/is-small-device?])]
     (fn []
       [ui/Container
@@ -201,9 +163,7 @@
                 :fluid true}
                @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
 
-       [Message]
-
-       (panel/render @resource-path)])))
+       [router-component]])))
 
 
 (defn UpdateUIVersion
@@ -215,10 +175,10 @@
         close-modal #(dispatch [::events/new-version-open-modal? false])
         reload      #(.reload js/location true)]
     [:<>
-     [ui/Modal {:open @open?
-                :size :small
+     [ui/Modal {:open  @open?
+                :size  :small
                 :basic true}
-      [uix/ModalHeader {:icon "refresh"
+      [uix/ModalHeader {:icon   "refresh"
                         :header (@tr [:new-ui-version])}]
       [ui/ModalContent (@tr [:new-ui-version-content])]
       [ui/ModalActions
@@ -258,24 +218,35 @@
    [messages/alert-slider]
    [messages/alert-modal]])
 
+(defn AppLoader
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        error? (subscribe [::api-subs/cloud-entry-point-error?])]
+    [ui/Container
+     [ui/Loader {:active true :size "massive"}
+      (when @error?
+        [ui/Header {:text-align :center
+                    :as         :h2
+                    :content    (@tr [:service-unavailable])
+                    :subheader  (@tr [:take-coffee-back-soon])}])]]))
 
 (defn app []
   (let [show?            (subscribe [::subs/sidebar-open?])
-        cep              (subscribe [::api-subs/cloud-entry-point])
         iframe?          (subscribe [::subs/iframe?])
         is-small-device? (subscribe [::subs/is-small-device?])
-        resource-path    (subscribe [::subs/nav-path])
-        session-loading? (subscribe [::session-subs/session-loading?])
+        resource-path    (subscribe [::route-subs/nav-path])
+        app-loading?     (subscribe [::subs/app-loading?])
         subs-canceled?   (subscribe [::profile-subs/subscription-canceled?])]
-    (if (and @cep (not @session-loading?))
+    (if @app-loading?
+      [AppLoader]
       [:div {:id "nuvla-ui-main"}
-       (case (first @resource-path)
-         "sign-in" [session-views/SessionPage true]
-         "sign-up" [session-views/SessionPage true]
-         "reset-password" [session-views/SessionPage true]
-         "set-password" [session-views/SessionPage false]
-         "sign-in-token" [session-views/SessionPage true]
-         nil [session-views/SessionPage true]
+       (if (#{"sign-in"
+              "sign-up"
+              "reset-password"
+              "set-password"
+              "sign-in-token"
+              nil} (first @resource-path))
+         [router-component]
          [:<>
           [intercom/widget]
           [sidebar/menu]
@@ -293,12 +264,10 @@
                             :header  [uix/TR :subscription-is-canceled]
                             :content [:span
                                       [uix/TR :to-reactivate-your-subscription]
-                                      [:a {:href "profile"} [uix/TR :go-to-profile]]
+                                      [:a {:href (name->href routes/profile)} [uix/TR :go-to-profile]]
                                       [uix/TR :make-sure-you-have-pm]]
                             :type    :error}])
             [contents]
             [ignore-changes-modal]
             [subscription-required-modal]
-            (when-not @iframe? [footer])]]])]
-      [ui/Container
-       [ui/Loader {:active true :size "massive"}]])))
+            (when-not @iframe? [footer])]]])])))

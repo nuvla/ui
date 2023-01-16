@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.data-set.spec
-  (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.data-set.utils :as utils]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.utils.time :as time]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.data-set.utils :as utils]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 
 
@@ -36,6 +35,7 @@
                ::data-records             nil
                ::data-objects             {}
                ::content-type-filter      nil
-               ::selected-data-record-ids #{}
-               ::pagination               (pagination-plugin/build-spec
-                                            :default-items-per-page 8)})
+               ::selected-data-record-ids #{}})
+
+(def pagination-default {::pagination (pagination-plugin/build-spec
+                                        :default-items-per-page 8)})

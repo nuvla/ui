@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.credentials.subs
-  (:require
-    [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.credentials.spec :as spec]))
+  (:require [re-frame.core :refer [reg-sub subscribe]]
+            [sixsq.nuvla.ui.credentials.spec :as spec]))
 
 (reg-sub
   ::is-new?

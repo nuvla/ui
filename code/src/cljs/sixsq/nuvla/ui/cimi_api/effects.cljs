@@ -1,27 +1,22 @@
 (ns sixsq.nuvla.ui.cimi-api.effects
   "Provides effects that use the CIMI client to interact asynchronously with
    the server."
-  (:require-macros
-    [cljs.core.async.macros :refer [go]])
-  (:require
-    [cljs.core.async :refer [<!]]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.client.async :as async-client]
-    [sixsq.nuvla.client.authn :as authn]
-    [sixsq.nuvla.ui.history.utils :as utils]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.defines :as defines]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require [cljs.core.async :refer [<!]]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-fx]]
+            [sixsq.nuvla.client.api :as api]
+            [sixsq.nuvla.client.async :as async-client]
+            [sixsq.nuvla.client.authn :as authn]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.routing.effects :refer [host-url]]
+            [sixsq.nuvla.ui.utils.defines :as defines]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
-
-(def NUVLA_URL (delay (if (str/blank? defines/HOST_URL) (utils/host-url) defines/HOST_URL)))
-
+(def NUVLA_URL (delay (if (str/blank? defines/HOST_URL) (host-url) defines/HOST_URL)))
 
 (def CLIENT (delay (async-client/instance (str @NUVLA_URL "/api/cloud-entry-point"))))
-
 
 (defn get-current-session
   []
@@ -29,7 +24,6 @@
     (let [session-collection (<! (api/search @CLIENT :session))]
       (when-not (instance? js/Error session-collection)
         (-> session-collection :resources first)))))
-
 
 (defn default-error-message
   [response error-msg]
@@ -49,11 +43,6 @@
   [resource-id response]
   (default-error-message response (str "error getting " resource-id)))
 
-
-(defn default-terminate-on-error
-  [resource-id response]
-  (default-error-message response (str "error terminating" resource-id)))
-
 (defn default-delete-on-error
   [resource-id response]
   (default-error-message response (str "error deleting " resource-id)))
@@ -66,6 +55,10 @@
   [resource-type response]
   (default-error-message response (str "error bulk operation on " resource-type)))
 
+(defn default-operation-on-error
+  [resource-id operation response]
+  (default-error-message response (str "error during " operation " action on " resource-id)))
+
 (defn api-call-error-check
   [api-call on-success on-error]
   (go
@@ -74,13 +67,10 @@
         (on-error response)
         (on-success response)))))
 
-
-(reg-fx
-  ::cloud-entry-point
-  (fn [[callback]]
-    (go
-      (callback (<! (api/cloud-entry-point @CLIENT {:no-cache true}))))))
-
+(reg-fx ::cloud-entry-point
+        (fn [[callback]]
+          (go
+            (callback (<! (api/cloud-entry-point @CLIENT {:no-cache true}))))))
 
 (reg-fx
   ::get
@@ -90,14 +80,12 @@
             on-error (or on-error (partial default-get-on-error resource-id))]
         (api-call-error-check api-call on-success on-error)))))
 
-
 (reg-fx
   ::search
   (fn [[resource-type params callback]]
     (when resource-type
       (go
         (callback (<! (api/search @CLIENT resource-type (general-utils/prepare-params params))))))))
-
 
 (reg-fx
   ::delete
@@ -108,7 +96,6 @@
             on-error (or on-error (partial default-delete-on-error resource-id))]
         (api-call-error-check api-call on-success on-error)))))
 
-
 (reg-fx
   ::delete-bulk
   (fn [[resource-type on-success filter & {:keys [on-error]}]]
@@ -116,7 +103,6 @@
       (let [api-call #(api/delete-bulk @CLIENT resource-type filter)
             on-error (or on-error (partial default-delete-bulk-on-error resource-type))]
         (api-call-error-check api-call on-success on-error)))))
-
 
 (reg-fx
   ::edit
@@ -131,7 +117,6 @@
             ;; not updated.
             (callback (<! (api/get @CLIENT resource-id)))))))))
 
-
 (reg-fx
   ::add
   (fn [[resource-type data on-success & {:keys [on-error]}]]
@@ -140,21 +125,19 @@
             on-error (or on-error (partial default-add-on-error resource-type))]
         (api-call-error-check api-call on-success on-error)))))
 
-
 (reg-fx
   ::operation
-  (fn [[resource-id operation callback data]]
-    (when resource-id
-      (go
-        (callback (<! (api/operation @CLIENT resource-id operation data)))))))
-
+  (fn [[resource-id operation on-success & {:keys [on-error data]}]]
+    (when (and resource-id operation)
+      (let [api-call #(api/operation @CLIENT resource-id operation data)
+            on-error (or on-error (partial default-operation-on-error resource-id operation))]
+        (api-call-error-check api-call on-success on-error)))))
 
 (reg-fx
   ::logout
   (fn [[callback]]
     (go
       (callback (<! (authn/logout @CLIENT))))))
-
 
 (reg-fx
   ::login
@@ -163,7 +146,6 @@
       (let [resp    (<! (authn/login @CLIENT creds))
             session (<! (get-current-session))]
         (callback resp session)))))
-
 
 (reg-fx
   ::session

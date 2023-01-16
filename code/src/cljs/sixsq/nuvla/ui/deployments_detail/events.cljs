@@ -1,16 +1,17 @@
 (ns sixsq.nuvla.ui.deployments-detail.events
-  (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.credentials.events :as creds-events]
-    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.credentials.events :as creds-events]
+            [sixsq.nuvla.ui.deployments-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-db
   ::set-module-versions
@@ -27,7 +28,8 @@
   (fn [{{:keys [::spec/module-versions
                 ::spec/upcoming-invoice] :as db} :db}
        [_ {:keys [id module subscription-id] :as resource}]]
-    (let [module-href (:href module)]
+    (let [module-href (:href module)
+          on-success  #(dispatch [::set-upcoming-invoice %])]
       (cond-> {:db (assoc db ::spec/not-found? (nil? resource)
                              ::main-spec/loading? false
                              ::spec/loading? false
@@ -37,8 +39,7 @@
                                        [module-href #(dispatch [::set-module-versions %])])
               (and (nil? upcoming-invoice)
                    subscription-id) (assoc ::cimi-api-fx/operation
-                                           [id "upcoming-invoice"
-                                            #(dispatch [::set-upcoming-invoice %])])))))
+                                           [id "upcoming-invoice" on-success])))))
 
 (reg-event-db
   ::set-deployment-parameters
@@ -71,17 +72,10 @@
 (reg-event-fx
   ::stop-deployment
   (fn [_ [_ href]]
-    {::cimi-api-fx/operation [href "stop"
-                              #(if (instance? js/Error %)
-                                 (let [{:keys [status message]} (response/parse-ex-info %)]
-                                   (dispatch [::messages-events/add
-                                              {:header  (cond-> (str "error stopping deployment " href)
-                                                                status (str " (" status ")"))
-                                               :content message
-                                               :type    :error}]))
-                                 (do
-                                   (dispatch [::get-deployment href])
-                                   (dispatch [::deployments-events/get-deployments])))]}))
+    (let [on-success #(do
+                        (dispatch [::get-deployment href])
+                        (dispatch [::deployments-events/get-deployments]))]
+      {::cimi-api-fx/operation [href "stop" on-success]})))
 
 (reg-event-db
   ::set-node-parameters
@@ -105,7 +99,7 @@
                                           :content message
                                           :type    :success}])
                               (dispatch [::deployments-events/get-deployments])
-                              (dispatch [::history-events/navigate "deployment"]))]}))
+                              (dispatch [::routing-events/navigate routes/deployment]))]}))
 
 (reg-event-fx
   ::edit
@@ -129,15 +123,8 @@
 (reg-event-fx
   ::detach
   (fn [_ [_ href]]
-    {::cimi-api-fx/operation [href "detach"
-                              #(if (instance? js/Error %)
-                                 (let [{:keys [status message]} (response/parse-ex-info %)]
-                                   (dispatch [::messages-events/add
-                                              {:header  (cond-> (str "error detaching deployment " href)
-                                                                status (str " (" status ")"))
-                                               :content message
-                                               :type    :error}]))
-                                 (dispatch [::set-deployment %]))]}))
+    (let [on-success #(dispatch [::set-deployment %])]
+      {::cimi-api-fx/operation [href "detach" on-success]})))
 
 (reg-event-fx
   ::check-credential

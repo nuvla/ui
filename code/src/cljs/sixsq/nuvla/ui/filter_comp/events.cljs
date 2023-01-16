@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.filter-comp.events
-  (:require
-    [re-frame.core :refer [reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]))
+  (:require [re-frame.core :refer [reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]))
 
 
 (reg-event-fx

@@ -1,26 +1,25 @@
 (ns sixsq.nuvla.ui.cimi-detail.views
-  (:require
-    [cljs.pprint :refer [pprint]]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl-views]
-    [sixsq.nuvla.ui.cimi-detail.events :as events]
-    [sixsq.nuvla.ui.cimi-detail.subs :as subs]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.collapsible-card :as cc]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.forms :as forms]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.table :as table]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require [cljs.pprint :refer [pprint]]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.views :as acl-views]
+            [sixsq.nuvla.ui.cimi-detail.events :as events]
+            [sixsq.nuvla.ui.cimi-detail.subs :as subs]
+            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.forms :as forms]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.table :as table]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn path->resource-id
@@ -247,7 +246,7 @@
 
 (defn cimi-detail
   []
-  (let [path               (subscribe [::main-subs/nav-path])
+  (let [path               (subscribe [::route-subs/nav-path])
         loading?           (subscribe [::subs/loading?])
         cached-resource-id (subscribe [::subs/resource-id])
         resource           (subscribe [::subs/resource])]

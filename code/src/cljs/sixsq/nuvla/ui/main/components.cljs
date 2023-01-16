@@ -1,18 +1,17 @@
 (ns sixsq.nuvla.ui.main.components
-  (:require
-    ["react" :as react]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.events :as events]
-    [sixsq.nuvla.ui.main.subs :as subs]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.forms :as forms]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require ["react" :as react]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.events :as events]
+            [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.forms :as forms]
+            [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def ref (react/createRef))
@@ -122,7 +121,7 @@
               [ui/MessageHeader
                {:style    {:cursor "pointer"}
                 :on-click (or on-click
-                            #(dispatch [set-active-tab-event job-tab]))}
+                              #(dispatch [set-active-tab-event job-tab]))}
                (str (str/capitalize (@tr [:job])) " " action " " (@tr [:failed]))]
               [ui/MessageContent (last (str/split-lines (or status-message "")))]]))]))))
 

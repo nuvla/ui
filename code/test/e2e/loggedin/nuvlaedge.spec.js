@@ -41,7 +41,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await page.locator('.close').click();
 
-  await page.getByText(newEdgeName).click();
+  await page.getByRole('link', { name: new RegExp(newEdgeName) }).click();
 
   await page.getByText(/^delete$/i).click();
   await page.getByRole('button', { name: 'delete' }).click();

@@ -1,26 +1,24 @@
 (ns sixsq.nuvla.ui.credentials.views
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [re-frame.db]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.credentials.events :as events]
-    [sixsq.nuvla.ui.credentials.spec :as spec]
-    [sixsq.nuvla.ui.credentials.subs :as subs]
-    [sixsq.nuvla.ui.credentials.utils :as utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+            [re-frame.db]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.acl.views :as acl]
+            [sixsq.nuvla.ui.credentials.events :as events]
+            [sixsq.nuvla.ui.credentials.spec :as spec]
+            [sixsq.nuvla.ui.credentials.subs :as subs]
+            [sixsq.nuvla.ui.credentials.utils :as utils]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 
 
 (defn in?
@@ -486,7 +484,7 @@
            [uix/TableRowField "username", :placeholder "OpenStack username", :editable? editable?, :required? true,
             :default-value openstack-username, :spec ::spec/openstack-username, :validate-form? @validate-form?,
             :on-change (partial on-change :openstack-username)]
-           [uix/TableRowField "password", :placeholder "OpenStack password", :editable? editable?, :required? true,
+           [uix/TableRowField "password", :type :password :placeholder "OpenStack password", :editable? editable?, :required? true,
             :default-value openstack-password, :spec ::spec/openstack-password, :validate-form? @validate-form?,
             :on-change (partial on-change :openstack-password)]]]
          [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
@@ -1124,7 +1122,7 @@
        :panes   (panes)}]]))
 
 
-(defmethod panel/render :credentials
+(defn credentials-view
   [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic

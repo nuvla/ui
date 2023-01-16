@@ -1,23 +1,25 @@
 (ns sixsq.nuvla.ui.session.views
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.session.events :as events]
-    [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
-    [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
-    [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
-    [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
-    [sixsq.nuvla.ui.session.subs :as subs]
-    [sixsq.nuvla.ui.session.utils :as utils]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.session.events :as events]
+            [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
+            [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
+            [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
+            [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
+            [sixsq.nuvla.ui.session.subs :as subs]
+            [sixsq.nuvla.ui.session.utils :as utils]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn SwitchGroupMenuItem
@@ -99,7 +101,7 @@
   []
   (let [user       (subscribe [::subs/user])
         is-group?  (subscribe [::subs/is-group?])
-        on-click   #(dispatch [::history-events/navigate "profile"])
+        on-click   #(dispatch [::routing-events/navigate routes/profile])
         is-mobile? (subscribe [::main-subs/is-mobile-device?])]
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
@@ -128,7 +130,7 @@
   []
   (let [signup-template? (subscribe [::subs/user-template-exist?
                                      utils/user-tmpl-email-password])
-        on-click         #(dispatch [::history-events/navigate "sign-up"])]
+        on-click         #(dispatch [::routing-events/navigate routes/sign-up])]
     (fn []
       (when @signup-template?
         [ui/MenuItem {:on-click on-click}
@@ -138,7 +140,7 @@
 
 (defn SignInButton
   []
-  (let [on-click #(dispatch [::history-events/navigate "sign-in"])]
+  (let [on-click #(dispatch [::routing-events/navigate routes/sign-in])]
     (fn []
       [ui/Button {:primary  true
                   :on-click on-click}
@@ -187,7 +189,7 @@
 (defn LeftPanel
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        first-path           (subscribe [::main-subs/nav-path-first])
+        first-path           (subscribe  [::route-subs/nav-path-first])
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         eula                 (subscribe [::main-subs/config :eula])
         terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
@@ -211,14 +213,14 @@
        {:text     (@tr [:sign-in])
         :inverted true
         :active   (= @first-path "sign-in")
-        :on-click #(dispatch [::history-events/navigate "sign-in"])}]
+        :on-click #(dispatch [::routing-events/navigate routes/sign-in])}]
       (when @signup-template?
         [:span
          [uix/Button
           {:text     (@tr [:sign-up])
            :inverted true
            :active   (= @first-path "sign-up")
-           :on-click #(dispatch [::history-events/navigate "sign-up"])}]
+           :on-click #(dispatch [::routing-events/navigate routes/sign-up])}]
          [:br]
          [:br]
          (when @terms-and-conditions
@@ -249,7 +251,7 @@
 
 (defn RightPanel
   []
-  (let [first-path (subscribe [::main-subs/nav-path-first])]
+  (let [first-path (subscribe [::route-subs/nav-path-first])]
     (case @first-path
       "sign-in" [sign-in-views/Form]
       "sign-up" [sign-up-views/Form]
@@ -262,11 +264,11 @@
 (defn SessionPage
   [navigate?]
   (let [session      (subscribe [::subs/session])
-        query-params (subscribe [::main-subs/nav-query-params])
+        query-params (subscribe [::route-subs/nav-query-params])
         tr           (subscribe [::i18n-subs/tr])]
     (when (and navigate? @session)
-      (dispatch [::history-events/navigate (or (:redirect @query-params)
-                                               "welcome")]))
+      (dispatch [::routing-events/navigate (or (:redirect @query-params)
+                                               (name->href routes/home))]))
     (when-let [error (:error @query-params)]
       (dispatch [::events/set-error-message
                  (or (@tr [(keyword error)]) error)]))

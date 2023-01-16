@@ -1,41 +1,35 @@
 (ns sixsq.nuvla.ui.apps-application.views
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.apps-application.events :as events]
-    [sixsq.nuvla.ui.apps-application.spec :as spec]
-    [sixsq.nuvla.ui.apps-application.subs :as subs]
-    [sixsq.nuvla.ui.apps.events :as apps-events]
-    [sixsq.nuvla.ui.apps.spec :as apps-spec]
-    [sixsq.nuvla.ui.apps.subs :as apps-subs]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
-    [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
-    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-    [sixsq.nuvla.ui.deployments.views :as deployments-views]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.forms :as utils-forms]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.tab :as tab]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.apps-application.events :as events]
+            [sixsq.nuvla.ui.apps-application.spec :as spec]
+            [sixsq.nuvla.ui.apps-application.subs :as subs]
+            [sixsq.nuvla.ui.apps.events :as apps-events]
+            [sixsq.nuvla.ui.apps.spec :as apps-spec]
+            [sixsq.nuvla.ui.apps.subs :as apps-subs]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
+            [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
+            [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+            [sixsq.nuvla.ui.deployments.views :as deployments-views]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.profile.subs :as profile-subs]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.forms :as utils-forms]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.tab :as tab]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 (def docker-docu-link "https://docs.docker.com/compose/compose-file/compose-file-v3/#not-supported-for-docker-stack-deploy")
-
-(defn clear-module
-  []
-  (dispatch [::events/clear-module]))
-
 
 (defn SingleFile
   #_{:clj-kondo/ignore [:unused-binding]}
@@ -326,9 +320,10 @@
      (if @is-new?
        [uix/WarningMsgNoElements]
        [deployments-views/DeploymentTable
-        {:no-actions     true
-         :no-module-name true
-         :empty-msg      (@tr [:empty-deployment-module-msg])}])]))
+        {:no-actions         true
+         :no-module-name     true
+         :empty-msg          (@tr [:empty-deployment-module-msg])
+         :pagination-db-path ::spec/deployment-pagination}])]))
 
 
 (defn TabMenuVersions
@@ -391,7 +386,7 @@
          [apps-views-detail/Pricing]
          [:<>
           [ui/Message {:info true} (@tr [:no-pricing-free-app])]
-          (when editable?
+          (when @editable?
             [ui/Message {:info true} (@tr [:become-a-vendor])])])])))
 
 

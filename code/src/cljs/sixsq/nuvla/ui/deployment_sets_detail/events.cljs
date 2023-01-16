@@ -1,22 +1,23 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
-    [sixsq.nuvla.ui.plugins.module :as module-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]
-    [sixsq.nuvla.ui.plugins.tab :as tab]
-    [sixsq.nuvla.ui.session.spec :as session-spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination]
+            [sixsq.nuvla.ui.plugins.tab :as tab]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -34,25 +35,19 @@
 (reg-event-fx
   ::operation
   (fn [_ [_ resource-id operation data on-success-fn on-error-fn]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error executing operation " operation)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}])
-           (on-error-fn))
-         (do
-           (let [{:keys [status message]} (response/parse %)]
-             (dispatch [::messages-events/add
-                        {:header  (cond-> (str "operation " operation " will be executed soon")
-                                          status (str " (" status ")"))
-                         :content message
-                         :type    :success}]))
-           (on-success-fn %)))
-      data]}))
+    (let [on-success #(do
+                        (let [{:keys [status message]} (response/parse %)]
+                          (dispatch [::messages-events/add
+                                     {:header  (cond-> (str "operation " operation " will be executed soon")
+                                                       status (str " (" status ")"))
+                                      :content message
+                                      :type    :success}]))
+                        (on-success-fn %))
+          on-error   #(do
+                        (cimi-api-fx/default-operation-on-error resource-id operation %)
+                        (on-error-fn))]
+      {::cimi-api-fx/operation [resource-id operation on-success
+                                :on-error on-error :data data]})))
 
 (reg-event-fx
   ::get-deployment-set
@@ -64,7 +59,7 @@
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::deployments-events/get-deployments
-                                    (str "deployment-set='" id "'")]]]}))
+                                    {:filter-external-arg (str "deployment-set='" id "'")}]]]}))
 
 (reg-event-fx
   ::edit
@@ -90,41 +85,7 @@
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db}]
     (let [id (:id deployment-set)]
-      {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-sets"])]})))
-
-(reg-event-fx
-  ::custom-action
-  (fn [_ [_ resource-id operation success-msg]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error on operation " operation " for " resource-id)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-
-         (when success-msg
-           (dispatch [::messages-events/add
-                      {:header  success-msg
-                       :content success-msg
-                       :type    :success}])
-           (dispatch
-             [::job-events/wait-job-to-complete
-              {:job-id              (:location %)
-               :on-complete         (fn [{:keys [status-message return-code]}]
-                                      (dispatch [::messages-events/add
-                                                 {:header  (str (str/capitalize operation)
-                                                                " on " resource-id
-                                                                (if (= return-code 0)
-                                                                  " completed."
-                                                                  " failed!"))
-                                                  :content status-message
-                                                  :type    (if (= return-code 0)
-                                                             :success
-                                                             :error)}]))
-               :refresh-interval-ms 5000}])))]}))
+      {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate routes/deployment-sets])]})))
 
 (reg-event-db
   ::set-apps
@@ -308,9 +269,7 @@
                 :start        create-start}}
         (not (str/blank? create-name)) (assoc :name create-name)
         (not (str/blank? create-description)) (assoc :description create-description))
-      #(dispatch [::history-events/navigate
-                  (str "deployment-sets/"
-                       (general-utils/id->uuid (:resource-id %)))])]}))
+      #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
 
 (reg-event-db
   ::set

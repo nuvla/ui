@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment-dialog.spec
-  (:require
-    [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]))
 
 
 (s/def ::deploy-modal-visible? boolean?)
@@ -75,8 +74,9 @@
                                    :icon    "list alternate outline"}
                   :files          {:step-id :files
                                    :icon    "file alternate outline"}
-                  :license        {:step-id :license
-                                   :icon    "book"}
+                  :license        {:step-id    :license
+                                   :step-title :eula
+                                   :icon       "book"}
                   :pricing        {:step-id :pricing
                                    :icon    "euro"}
                   :summary        {:step-id :summary

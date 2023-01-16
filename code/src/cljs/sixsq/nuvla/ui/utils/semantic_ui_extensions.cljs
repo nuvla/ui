@@ -1,16 +1,17 @@
 (ns sixsq.nuvla.ui.utils.semantic-ui-extensions
-  (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
-    [sixsq.nuvla.ui.utils.form-fields :as form-fields]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
+            [sixsq.nuvla.ui.utils.form-fields :as form-fields]
+            [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn TR
@@ -175,9 +176,9 @@
          {:trigger (r/as-element
                      [ui/CopyToClipboard {:text value}
                       [ui/Icon {:style {:margin-left 10}
-                                :link true
-                                :size "large"
-                                :name "clone"}]])}
+                                :link  true
+                                :size  "large"
+                                :name  "clone"}]])}
          [TR :click-to-copy]])]]]])
 
 
@@ -346,6 +347,22 @@
   [:a [ui/Icon {:name name, :link true, :on-click on-click}]])
 
 
+(defn Link
+  "Renders a link that will navigate to the given href when clicked. The href
+   value will also be used as the label, unless an explicit label is provided."
+  [href & [label]]
+  [:a {:href     (str @config/path-prefix "/" href)
+       :style    {:overflow      "hidden",
+                  :text-overflow "ellipsis",
+                  :max-width     "20ch"}
+       :target   "_blank"
+       :on-click (fn [event]
+                   (when-not (.-metaKey event)              ;;cmd key not pressed
+                     (dispatch [::routing-events/navigate href])
+                     (.preventDefault event)))}
+   (or label href)])
+
+
 (defn ModalDanger
   [{:keys [_button-text _on-confirm danger-msg _header _content _trigger _open _on-close _modal-action
            control-confirmed?]}]
@@ -469,13 +486,17 @@
 
 
 (defn Card
+  "Wrapper around Semantic UI's Card.
+   Small warning: If `:href` with valid app URL and `:on-click` handler dispatching ::events/navigate
+   are provided, app navigates 2 times. Not dangerous, but unexpected for the user
+   who would have to click back 2 times to get to previous page.
+   "
   [{:keys [header description meta image on-click href button tags content
            corner-button state left-state loading? on-select selected? extra]}]
-  [ui/Card (when on-click
-             (cond-> {:on-click (fn [event]
-                                  (on-click event)
-                                  (.preventDefault event))}
-                     href (assoc :href href)))
+  [ui/Card (-> {:href href}
+               (merge (when on-click {:on-click (fn [event]
+                                                  (on-click event)
+                                                  (.preventDefault event))})))
    (when on-select
      [:div {:style {:position "absolute"
                     :top      "-7px"
@@ -507,8 +528,8 @@
     (when meta [ui/CardMeta meta])
 
     (when (or state left-state)
-      [ui/Grid {:style {:color "initial"
-                        :padding-bottom 5}
+      [ui/Grid {:style   {:color          "initial"
+                          :padding-bottom 5}
                 :columns 2}
        [ui/GridColumn left-state]
        [ui/GridColumn {:text-align :right}

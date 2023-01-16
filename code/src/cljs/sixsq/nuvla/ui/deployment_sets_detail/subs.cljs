@@ -1,10 +1,9 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
-    [sixsq.nuvla.ui.plugins.module :as module-plugin]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
   ::loading?
@@ -96,11 +95,11 @@
                                     (into {}))]
       (->> resources
            (map #(let [{:keys [id parent name description]} %
-                   {edge-name  :name
-                    edge-descr :description} (get edges-by-infra-group parent)]
-               (assoc % :credentials (get creds-by-parent id)
-                        :name (or edge-name name)
-                        :description (or edge-descr description))))
+                       {edge-name  :name
+                        edge-descr :description} (get edges-by-infra-group parent)]
+                   (assoc % :credentials (get creds-by-parent id)
+                            :name (or edge-name name)
+                            :description (or edge-descr description))))
            (sort-by (juxt :name :id))))))
 
 (reg-sub

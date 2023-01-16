@@ -133,43 +133,50 @@
                                        :label utils/state-new,
                                        :clickable? true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
+                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked? true}]
            [components/StatisticState {:value activated,
                                        :icons [(utils/state->icon utils/state-activated)],
                                        :label utils/state-activated,
                                        :clickable? true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
+                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked? true}]
            [components/StatisticState {:value commissioned,
                                        :icons [(utils/state->icon utils/state-commissioned)],
                                        :label utils/state-commissioned,
                                        :clickable? true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
+                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked? true}]
            [components/StatisticState {:value decommissioning,
                                        :icons [(utils/state->icon utils/state-decommissioning)],
                                        :label utils/state-decommissioning,
                                        :clickable? true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
+                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked? true}]
            [components/StatisticState {:value decommissioned,
                                        :icons [(utils/state->icon utils/state-decommissioned)],
                                        :label utils/state-decommissioned,
                                        :clickable? true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
+                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked? true}]
            [components/StatisticState {:value suspended,
                                        :icons [(utils/state->icon utils/state-suspended)],
                                        :label utils/state-suspended,
                                        :clickable? true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
+                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked? true}]
            [components/StatisticState {:value error,
                                        :icons [(utils/state->icon utils/state-error)],
                                        :label utils/state-error,
                                        :clickable? true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]]]]))))
+                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked? true}]]]]))))
 
 (defn switch-from-cluster-view?
   [current-view new-view]

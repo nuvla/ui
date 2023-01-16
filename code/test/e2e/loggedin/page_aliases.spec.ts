@@ -6,10 +6,6 @@ test('test', async ({ page, context }, { project, config }) => {
 
   await page.getByText('We enable your edge, as a ServiceDeploy any containerised app, to the edge, Kube').click();
 
-  await page
-    .locator('body:has-text("HomeDashboardAppsDeploymentsDeployment setsEdgesCredentialsNotificationsDataClou")')
-    .press('Control+h');
-
   // Deployments aliases
   await page.getByRole('link').getByText('Deployments').click();
   await expect(page).toHaveURL(`${baseURL}/ui/deployments`);

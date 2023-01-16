@@ -93,7 +93,6 @@
                  [re-frame "1.3.0" :scope "provided"]
                  [day8.re-frame/http-fx "0.2.4" :scope "provided"]
                  [cljs-ajax "0.8.4" :scope "provided"]
-                 [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre "5.2.1" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
@@ -103,7 +102,8 @@
                  [instaparse :scope "provided"]
                  [com.degel/re-frame-storage-fx "0.1.1" :scope "provided"]
                  [markdown-to-hiccup "0.6.2" :scope "provided"]
-                 [clj-kondo "RELEASE" :scope "provided"]]
+                 [clj-kondo "RELEASE" :scope "provided"]
+                 [metosin/reitit "0.5.18"]]
 
   :source-paths ["src/clj" "src/cljs"]
   :test-paths ["test/cljs"]

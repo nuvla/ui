@@ -11,7 +11,6 @@
             [sixsq.nuvla.ui.credentials.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -485,7 +484,7 @@
            [uix/TableRowField "username", :placeholder "OpenStack username", :editable? editable?, :required? true,
             :default-value openstack-username, :spec ::spec/openstack-username, :validate-form? @validate-form?,
             :on-change (partial on-change :openstack-username)]
-           [uix/TableRowField "password", :placeholder "OpenStack password", :editable? editable?, :required? true,
+           [uix/TableRowField "password", :type :password :placeholder "OpenStack password", :editable? editable?, :required? true,
             :default-value openstack-password, :spec ::spec/openstack-password, :validate-form? @validate-form?,
             :on-change (partial on-change :openstack-password)]]]
          [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
@@ -1123,7 +1122,7 @@
        :panes   (panes)}]]))
 
 
-(defmethod panel/render :credentials
+(defn credentials-view
   [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic

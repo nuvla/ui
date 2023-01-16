@@ -6,14 +6,12 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi.events :as cimi-events]
             [sixsq.nuvla.ui.filter-comp.events :as fc-events]
-            [sixsq.nuvla.ui.history.views :as history]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.notifications.events :as events]
             [sixsq.nuvla.ui.notifications.spec :as spec]
             [sixsq.nuvla.ui.notifications.subs :as subs]
             [sixsq.nuvla.ui.notifications.utils :as utils]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -163,7 +161,7 @@
       [:span method-names]]
      [ui/TableCell {:floated :left
                     :width   9}
-      [:span [history/link (str "api/" resource-id) resource-id]]]
+      [:span [uix/Link (str "api/" resource-id) resource-id]]]
      [ui/TableCell {:floated :right
                     :width   1
                     :align   :right}
@@ -293,7 +291,7 @@
            [uix/TableRowField "category", :editable? false, :default-value category, :required? false]
            [uix/TableRowField "resource"
             :editable? false
-            :default-value [history/link (str "api/" resource-id) resource-id]
+            :default-value [uix/Link (str "api/" resource-id) resource-id]
             :required? false]]]
 
          [ui/ModalActions
@@ -1205,7 +1203,7 @@
        :panes (tabs)}]]))
 
 
-(defmethod panel/render :notifications
+(defn notifications-view
   [_path]
   (timbre/set-level! :info)
   [:<>

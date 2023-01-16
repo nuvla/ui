@@ -8,16 +8,16 @@
             [sixsq.nuvla.ui.acl.views :as acl-views]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.profile.events :as events]
             [sixsq.nuvla.ui.profile.spec :as spec]
             [sixsq.nuvla.ui.profile.subs :as subs]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -637,7 +637,7 @@
                                  (and @canceled? (not @pm?)))
                    :on-click (if @session
                                #(dispatch [::events/open-modal :subscribe])
-                               #(dispatch [::history-events/navigate "sign-up"]))}
+                               #(dispatch [::routing-events/navigate routes/sign-up]))}
         (if @customer
           (@tr [:subscribe])
           (@tr [:try-nuvla-for-14-days]))]])))
@@ -1485,7 +1485,7 @@
         :panes   panes}])))
 
 
-(defmethod panel/render :profile
+(defn profile
   [_path]
   (let [tr               (subscribe [::i18n-subs/tr])
         is-group?        (subscribe [::session-subs/is-group?])

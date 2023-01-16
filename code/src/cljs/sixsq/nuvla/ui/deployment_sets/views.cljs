@@ -6,12 +6,13 @@
             [sixsq.nuvla.ui.deployment-sets.events :as events]
             [sixsq.nuvla.ui.deployment-sets.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets.subs :as subs]
-            [sixsq.nuvla.ui.history.events :as history-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.panel :as panel]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -73,7 +74,7 @@
      {:name     (@tr [:add])
       :icon     "add"
       :on-click #(dispatch
-                   [::history-events/navigate "deployment-sets/New"])}]))
+                   [::routing-events/navigate (str-pathify (name->href routes/deployment-sets) "New")])}]))
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
@@ -96,7 +97,7 @@
   [{:keys [id name description created state tags] :as _deployment-set}]
   (let [locale @(subscribe [::i18n-subs/locale])
         uuid   (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "deployment-sets/" uuid)])
+    [ui/TableRow {:on-click #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid uuid}])
                   :style    {:cursor "pointer"}}
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
@@ -134,11 +135,10 @@
   [{:keys [id created name state description tags] :as _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
-        href   (str "deployment-sets/" (general-utils/id->uuid id))]
+        href   (name->href :deployment-sets-details {:uuid (general-utils/id->uuid id)})]
     ^{:key id}
     [uix/Card
-     {:on-click    #(dispatch [::history-events/navigate href])
-      :href        href
+     {:href        href
       :header      [:<>
                     [ui/Icon {:name (state->icon state)}]
                     (or name id)]
@@ -184,8 +184,8 @@
       [Pagination]]]))
 
 
-(defmethod panel/render :deployment-sets
-  [path]
+(defn deployment-sets-view
+  [{path :path}]
   (let [[_ path1] path
         n        (count path)
         children (case n

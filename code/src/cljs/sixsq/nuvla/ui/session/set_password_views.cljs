@@ -3,7 +3,7 @@
             [form-validator.core :as fv]
             [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.session.components :as comp]
             [sixsq.nuvla.ui.session.events :as events]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -32,7 +32,7 @@
 (defn Form
   []
   (let [tr           (subscribe [::i18n-subs/tr])
-        query-params (subscribe [::main-subs/nav-query-params])
+        query-params (subscribe [::route-subs/nav-query-params])
         {:keys [username callback type]} @query-params
         invitation?  (= type "invitation")
         form-conf    {:form-spec         ::password-set

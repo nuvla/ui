@@ -380,3 +380,32 @@
 (defn envsubst-str
   [envsubst s]
   (str/replace s (->> envsubst keys (map regex-escape) (str/join "|") re-pattern) envsubst))
+
+(defn- read-fav-language!
+  "Reads js/window.navigator.languages and returns first element or 'en-US'."
+  []
+  (-> js/window
+      .-navigator
+      .-languages
+      first
+      (or "en-US")))
+
+(def browser-fav-language (read-fav-language!))
+
+(defn format-number
+  ([amount]
+   (format-number amount {:locale browser-fav-language}))
+  ([amount {:keys [locale style currency]
+            :or {locale   browser-fav-language
+                 style    "decimal"
+                 currency "EUR"}}]
+   (.format (js/Intl.NumberFormat. locale
+                                   (clj->js {:style style
+                                             :currency currency}))
+            amount)))
+
+(defn format-money
+  ([amount]
+   (format-number amount {:style  "currency"}))
+  ([amount opts]
+   (format-number amount (merge opts {:style "currency"}))))

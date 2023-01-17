@@ -27,6 +27,7 @@
 - Main - Remove deprecated message and bootstrap-message
 - Readme - Update dev section to include skip verification of untrusted certificate
 - Notifications - Added params to define time window reset and device name
+- App store - Format price according to standards and locales #1048
 
 ## [2.32.11] - 2022-12-19
 

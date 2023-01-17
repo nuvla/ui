@@ -1008,7 +1008,8 @@
 
 (defn TabOverviewNuvlaBox
   [{:keys [id created updated refresh-interval owner created-by state]}
-   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
+   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}
+   {pre-release? :pre-release}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
@@ -1016,10 +1017,13 @@
                  :raised    true}
      [:h4 "NuvlaEdge "
       (when nuvlabox-engine-version
-        [ui/Label {:circular true
-                   :color    "blue"
-                   :size     "tiny"}
-         nuvlabox-engine-version])]
+        [:<> [ui/Label {:circular true
+                        :color    "blue"
+                        :size     "tiny"}
+              nuvlabox-engine-version]
+         (when pre-release?
+           [:span {:style {:background-color :black :color :white :padding "0.1rem 0.5rem 0.2rem 0.5rem"
+                           :font-size "10px" :border-radius "0.2rem"}} (@tr [:pre-release])])])]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -1387,6 +1391,7 @@
   []
   (let [nuvlabox       (subscribe [::subs/nuvlabox])
         nb-status      (subscribe [::subs/nuvlabox-status])
+        nb-release     (subscribe [::subs/nuvlaedge-release])
         ssh-creds      (subscribe [::subs/nuvlabox-associated-ssh-keys])
         {:keys [state]} @(subscribe [::subs/nuvlabox])
         infra-services (subscribe [::subs/infra-services])]
@@ -1401,7 +1406,7 @@
                    :padded    true}
           [ui/GridRow
            [ui/GridColumn {:stretched true}
-            [TabOverviewNuvlaBox @nuvlabox @nb-status]]
+            [TabOverviewNuvlaBox @nuvlabox @nb-status @nb-release]]
 
            (when-not suspended?
              [ui/GridColumn {:stretched true}

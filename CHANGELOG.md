@@ -13,6 +13,7 @@
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
 - Tables - Enables horizontal scroll on tables, bugfix #1089
+- NuvlaEdge details - Shows pre-release flag behine version number #1054
 
 ## [2.32.12] - 2023-01-06
 

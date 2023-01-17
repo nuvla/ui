@@ -21,6 +21,13 @@
 (s/def ::nuvlabox-emergency-playbooks (s/nilable any?))
 (s/def ::nuvlabox-current-playbook (s/nilable any?))
 
+
+(s/def ::id string?)
+(s/def ::pre-release boolean?)
+(s/def ::nuvlaedge-release (s/nilable (s/keys :req-un [::id
+                                              ::pre-release])))
+
+
 (def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
                ::nuvlabox-associated-ssh-keys nil
@@ -38,7 +45,8 @@
                ::nuvlabox-current-playbook    nil
                ::events                       (events-plugin/build-spec
                                                 :default-items-per-page 15)
-               ::tab                          (tab-plugin/build-spec)})
+               ::tab                          (tab-plugin/build-spec)
+               ::nuvlaedge-release            nil})
 
 (s/def ::deployment-pagination any?)
 

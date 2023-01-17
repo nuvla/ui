@@ -74,10 +74,11 @@
                         infra-srv-grp-id :infrastructure-service-group
                         :as              nuvlabox}]]
     {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
-                                 ::spec/nuvlabox nuvlabox
-                                 ::main-spec/loading? false)
+                         ::spec/nuvlabox nuvlabox
+                         ::main-spec/loading? false)
      ::cimi-api-fx/get [nb-status-id #(do
                                         (dispatch [::set-nuvlabox-status %])
+                                        (dispatch [::get-nuvlaedge-release %])
                                         (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)])
                                         (dispatch [::get-matching-vulns-from-db (map :vulnerability-id
                                                                                      (:items (:vulnerabilities %)))]))
@@ -399,3 +400,22 @@
   ::set-nuvlabox-current-playbook
   (fn [db [_ nuvlabox-playbook]]
     (assoc db ::spec/nuvlabox-current-playbook nuvlabox-playbook)))
+
+
+(reg-event-db
+  ::set-nuvlaedge-release
+  (fn [db [_ nuvlaedge-release]]
+    (assoc db ::spec/nuvlaedge-release nuvlaedge-release)))
+
+
+(reg-event-fx
+  ::get-nuvlaedge-release
+  (fn [{:keys [db]} [_ {:keys [nuvlabox-engine-version]}]]
+    (when nuvlabox-engine-version
+      {:db                  (assoc db ::spec/nuvlaedge-release nil)
+       ::cimi-api-fx/search [:nuvlabox-release
+                             {:filter   (str "release='" nuvlabox-engine-version "'")
+                              :select  "id, pre-release"
+                              :orderby "release-date:desc"
+                              :last    10000}
+                             #(dispatch [::set-nuvlaedge-release (first (:resources %))])]})))

@@ -146,12 +146,15 @@
                             ::spec/module-not-found? (nil? module)
                             ::main-spec/loading? false)
           subtype (:subtype module)]
-      {:db (case subtype
-             "component" (apps-component-utils/module->db db module)
-             "project" (apps-project-utils/module->db db module)
-             "application" (apps-application-utils/module->db db module)
-             "application_kubernetes" (apps-application-utils/module->db db module)
-             db)})))
+      (cond-> {:db (case subtype
+                     "component" (apps-component-utils/module->db db module)
+                     "project" (apps-project-utils/module->db db module)
+                     "application" (apps-application-utils/module->db db module)
+                     "application_kubernetes" (apps-application-utils/module->db db module)
+                     "applications_sets" (apps-applications-sets-utils/module->db db module)
+                     db)}
+              (= subtype "applications_sets")
+              (assoc :fx (apps-applications-sets-utils/module->fx module))))))
 
 
 (reg-event-db

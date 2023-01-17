@@ -167,3 +167,8 @@
   ::nuvlaboxes-in-clusters
   (fn [db]
     (::spec/nuvlaboxes-in-clusters db)))
+
+(reg-sub
+  ::additional-filter
+  (fn [db]
+    (::spec/additional-filter db)))

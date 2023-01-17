@@ -9,8 +9,10 @@
 - Deps - Upgrade api client v2.0.11
 - Main - Loader service unavailable message visible on error
 - NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
+- Edges overview - Adds more advanced filtering similar to e.g. deployments tab #1010
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
+- Tables - Enables horizontal scroll on tables, bugfix #1089
 
 ## [2.32.12] - 2023-01-06
 
@@ -73,6 +75,8 @@
 - NuvlaEdges and Deployments - Sets default items per page to 25 with increasing items-per-page multiplier #1004
 - NuvlaEdges table view - Makes pagination details more readable #1008
 - NuvlaEdge details - Changes wording of menu item "Enable host level management" to show relation to playbooks #874
+- Global filter wizard - Always validate input and disable Done button if invalid #982
+- Global filter wizard - Sort values in filter wizard dropdown #981
 
 ## [2.32.9] - 2022-11-17
 

@@ -399,7 +399,8 @@
                                    [uix/Accordion
                                     [module-plugin/EnvVariables
                                      {:db-path db-path
-                                      :href    module-id}]
+                                      :href    module-id
+                                      :change-event [::main-events/changes-protection? true]}]
                                     :label (@tr [:env-variables])
                                     :default-open true]]])})
                  @applications)}]

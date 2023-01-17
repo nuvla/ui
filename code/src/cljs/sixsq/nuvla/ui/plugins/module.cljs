@@ -27,6 +27,15 @@
             (when change-event
               [:dispatch change-event])]})))
 
+(reg-event-fx
+  ::update-env
+  (fn [{db :db} [_ db-path href index new-value]]
+    (let [change-event (get-in db (conj db-path ::change-event))]
+      {:db (assoc-in db (conj db-path
+                              ::modules href :content :environmental-variables
+                              index ::new-value) new-value)
+       :fx [(when change-event [:dispatch change-event])]})))
+
 (defn get-version-id
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
@@ -129,14 +138,13 @@
        :read-only false
        :fluid     true
        :on-change (ui-callback/input-callback
-                    #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index)
-                                ::new-value %])
-                    )}]]))
+                    #(dispatch [::update-env db-path href index %]))}]]))
 
 (defn EnvVariables
-  [{:keys [db-path href] :as _opts}]
+  [{:keys [db-path href change-event] :as _opts}]
   (let [module        @(subscribe [::module db-path href])
         env-variables (get-in module [:content :environmental-variables])]
+    (dispatch [::helpers/set db-path ::change-event change-event])
     (if (seq env-variables)
       [ui/Form
        (map-indexed

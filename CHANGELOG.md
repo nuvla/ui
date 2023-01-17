@@ -12,6 +12,7 @@
 - Edges overview - Adds more advanced filtering similar to e.g. deployments tab #1010
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
+- Tables - Enables horizontal scroll on tables, bugfix #1089
 
 ## [2.32.12] - 2023-01-06
 

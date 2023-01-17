@@ -19,6 +19,14 @@
        [href #(dispatch [::helpers/set (conj db-path ::modules)
                          module-id %])]})))
 
+(reg-event-fx
+  ::change-version
+  (fn [{db :db} [_ db-path href]]
+    (let [change-event (get-in db (conj db-path ::change-event))]
+      {:fx [[:dispatch [::load-module db-path href]]
+            (when change-event
+              [:dispatch change-event])]})))
+
 (defn get-version-id
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
@@ -193,19 +201,19 @@
       [ui/Message (tr [:free-app])])))
 
 (defn ModuleVersions
-  [{:keys [db-path href] :as _opts}]
+  [{:keys [db-path href change-event] :as _opts}]
   (let [module           (subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         options          (subscribe [::module-versions-options db-path href])]
+    (dispatch [::helpers/set db-path ::change-event change-event])
     (let [{:keys [id content]} @module]
       [ui/FormDropdown
        {:value     (:id content)
         :scrolling true
         :upward    false
         :selection true
-        :on-change (ui-callback/value
-                     #(dispatch [::load-module db-path
-                                 (str id "_" (get-version-id @versions-indexed %))]))
+        :on-change #(dispatch [::change-version db-path
+                               (str id "_" (get-version-id @versions-indexed %))])
         :fluid     true
         :options   @options}])))
 
@@ -213,4 +221,5 @@
 
 (s/fdef ModuleVersions
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
-                                            ::href])))
+                                            ::href]
+                                   :opt-un [::helpers/change-event])))

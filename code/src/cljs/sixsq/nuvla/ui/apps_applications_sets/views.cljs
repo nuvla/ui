@@ -392,7 +392,8 @@
                                    [uix/Accordion
                                     [module-plugin/ModuleVersions
                                      {:db-path db-path
-                                      :href    module-id}]
+                                      :href    module-id
+                                      :change-event [::main-events/changes-protection? true]}]
                                     :label (@tr [:select-version])
                                     :default-open true]
                                    [uix/Accordion

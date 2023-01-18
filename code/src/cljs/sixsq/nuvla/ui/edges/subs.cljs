@@ -127,15 +127,11 @@
   ::nuvlabox-releases-options
   :<- [::nuvlabox-releases]
   (fn [nuvlabox-releases]
-    (let [published-flags-exists? (some :published nuvlabox-releases)
-          nuvlabox-releases         (if published-flags-exists?
-                                      (filter :published nuvlabox-releases)
-                                      nuvlabox-releases)]
-      (map
-        (fn [{:keys [id release pre-release]}]
-          {:key release, :text (str release (when pre-release " - pre-release")),
-           :value id, :pre-release pre-release})
-        nuvlabox-releases))))
+    (map
+     (fn [{:keys [id release pre-release]}]
+       {:key release, :text (str release (when pre-release " - pre-release")),
+        :value id, :pre-release pre-release})
+     nuvlabox-releases)))
 
 (reg-sub
   ::ssh-keys-available

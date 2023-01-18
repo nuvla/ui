@@ -9,9 +9,10 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]
-            [sixsq.nuvla.ui.session.spec :as session-spec]))
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
@@ -368,12 +369,12 @@
 (reg-event-fx
   ::get-nuvlabox-releases
   (fn [{:keys [db]} _]
-    (let [view-data (get-in db [::session-spec/session :acl :view-data])]
+    (let [session (::session-spec/session db)]
       {:db                  (assoc db ::spec/nuvlabox-releases nil)
        ::cimi-api-fx/search [:nuvlabox-release
                              {:select  "id, release, pre-release, release-notes, url, compose-files, published"
-                              :filter   (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" view-data "'"))
-                              :orderby "release-date:desc"
+                              :filter   (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" (get-active-claim session) "'"))
+                              :orderby "release:desc"
                               :last    10000}
                              #(dispatch [::set-nuvlabox-releases %])]})))
 

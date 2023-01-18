@@ -272,3 +272,7 @@
               (:name @cluster))]
         [MenuBar cluster-id]
         [TabsCluster]]])))
+
+(defn ClusterViewPage
+  [{{:keys [uuid]} :path-params}]
+  [ClusterView uuid])

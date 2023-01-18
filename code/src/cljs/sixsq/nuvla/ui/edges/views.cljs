@@ -902,25 +902,18 @@
         [Pagination])]]))
 
 
-(defn DetailedView
-  [param]
-  (let [uuid (if (string? param) param (get-in param [:path-params :id]))]
-    (if (= "nuvlabox-cluster" uuid)
-      (do
-        (reset! view-type :cluster)
-        (dispatch [::routing-events/navigate routes/edges-slashed]))
-      [edges-detail/EdgeDetails uuid])))
+(defn DetailedViewPage
+  [{{:keys [uuid]} :path-params}]
+  (if (= "nuvlabox-cluster" uuid)
+    (do
+      (reset! view-type :cluster)
+      (dispatch [::routing-events/navigate routes/edges]))
+    [edges-detail/EdgeDetails uuid]))
 
 
 (defn edges-view
-  [{:keys [path]}]
+  []
   (dispatch [::events/init])
-  (let [[_ path1 path2] path
-        n        (count path)
-        children (case n
-                   3 [views-cluster/ClusterView path2]
-                   2 [DetailedView path1]
-                   [NuvlaBoxesOrClusters])]
-    [:<>
-     [ui/Segment style/basic children]
-     [AddModalWrapper]]))
+  [:<>
+   [ui/Segment style/basic [NuvlaBoxesOrClusters]]
+   [AddModalWrapper]])

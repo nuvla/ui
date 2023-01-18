@@ -195,29 +195,6 @@
       )))
 
 
-(defn DockerComposeValidationPopup
-  [{:keys [loading? valid? error-msg]}]
-  [ui/Popup
-   {:trigger        (r/as-element [ui/Icon {:name    (cond
-                                                       loading? "circle notched"
-                                                       (not valid?) "bug"
-                                                       valid? "checkmark")
-                                            :color   (cond
-                                                       loading? "black"
-                                                       (not valid?) "red"
-                                                       valid? "green")
-                                            :loading loading?}])
-    :header         "Validation of docker-compose"
-    :content        (cond
-                      loading? "Validation of docker-compose in progress..."
-                      (not valid?) (some-> error-msg (str/replace #"^.*is invalid because:" ""))
-                      valid? "Docker-compose is valid :)")
-    :on             "hover"
-    :position       "top center"
-    :wide           true
-    :hide-on-scroll true}])
-
-
 (defn up-to-date?
   [v versions published?]
   (when v

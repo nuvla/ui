@@ -30,3 +30,9 @@
 (reg-sub
   ::current-route
   :-> :current-route)
+
+(reg-sub
+  ::query-param
+  :<- [::current-route]
+  (fn [current-route [_ query-param-key]]
+    (get-in current-route [:query-params query-param-key])))

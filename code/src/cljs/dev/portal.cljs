@@ -48,10 +48,7 @@
   ;; We could also put it in a rich comment block and just eval this here
 
   (def p (p/open))
-  (tap> {:a :B :c {:nested/stuff {:hello "world"}}})
-  (tap> {:a :C})
-
-
+  ;; To close it
   (p/close)
 
   ;; Diffing two maps:

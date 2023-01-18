@@ -59,7 +59,6 @@
 (reg-event-fx
   ::navigate
   (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params {change-event :change-event}]]
-(js/console.error "navigate-to path-params query-params" navigate-to path-params query-params)
     (let [nav-effect {:fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
                                                               (utils/add-base-path navigate-to)
                                                               (name->href navigate-to path-params query-params))]]

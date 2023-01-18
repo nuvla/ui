@@ -19,10 +19,8 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.tab-new :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
-            [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.map :as map]
@@ -32,8 +30,7 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            [sixsq.nuvla.ui.routing.routes :as routes]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -1994,37 +1991,17 @@
                      :owner-read-only true
                      :edit-event      ::events/edit})])))
 
-
-;; TODO: Extract the view logic to use on other pages, e.g. deployments details
-(defn TabsNuvlaEdge
+(defn TabsNuvlaBox
   []
-  (let [tab-views      (tabs)
-        menu-items     (map :menuItem tab-views)
-        content-by-key (zipmap (map #(get-in % [:menuItem :key]) tab-views)
-                               (map :render tab-views))
-        route          @(subscribe [::route-subs/current-route])
-        path-params    (:path-params route)
-        query-params   (:query-params route)
-        cur-view       (keyword (:view query-params))]
-                         ;; FIXME: extract the relevant CSS here from Semantic UI.
-    [:div [:div {:class ["ui pointing secondary menu"]
-                 :style {:display       "flex"
-                         :flex-direction "row"
-                         :flex-wrap      "wrap"}}
-           (for [menu-item menu-items
-                 :let [{:keys [content icon key]} menu-item]]
-             ^{:key key}
-             (let [href (if (= key cur-view)
-                          nil
-                          (name->href routes/edges-details
-                            path-params
-                            (assoc query-params :view key)))]
-               [:a {:class ["item" (when (= key cur-view) "active")]
-                    :href href}
-                [ui/Icon {:name icon}]
-                content]))]
-     [:div {:class ["ui bottom attached segment active tab"]}
-      [(get content-by-key cur-view (:overview content-by-key))]]]))
+  [tab-plugin/Tab
+   {:db-path [::spec/tab]
+    :menu    {:secondary true
+              :pointing  true
+              :style     {:display        "flex"
+                          :flex-direction "row"
+                          :flex-wrap      "wrap"}}
+    :panes   (tabs)}])
+
 
 (defn PageHeader
   []
@@ -2039,7 +2016,6 @@
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
-(js/console.error "uuid" uuid)
   (let [tr        @(subscribe [::i18n-subs/tr])
         nb-status @(subscribe [::subs/nuvlabox-status])]
     [components/LoadingPage {:dimmable? true}
@@ -2058,5 +2034,5 @@
          [ui/Message {:warning true
                       :icon    "warning sign"
                       :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
-      [TabsNuvlaEdge]
+      [TabsNuvlaBox]
       [AddPlaybookModal]]]))

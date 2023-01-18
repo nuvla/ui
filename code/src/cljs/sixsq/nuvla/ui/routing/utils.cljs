@@ -12,6 +12,24 @@
   ([k params query]
    (rfe/href k params query)))
 
+(defn get-route-name
+  [route]
+  (get-in route [:data :name]))
+
+(defn new-route-data
+  [current-route-data {:keys [route-name path-params full-query-params partial-query-params]}]
+  {:route-name   (or route-name (get-route-name current-route-data))
+   :path-params  (or path-params (:path-params current-route-data))
+   :query-params (merge (or full-query-params (:query-params current-route-data))
+                            partial-query-params)})
+
+(defn gen-href
+  [route-data new-partial-route-data]
+  (let [{:keys [route-name
+                path-params
+                query-params]} (new-route-data route-data new-partial-route-data)]
+    (name->href route-name path-params query-params)))
+
 (defn add-base-path
   [url]
   (let [base-path    (str config/base-path "/")

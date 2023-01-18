@@ -11,13 +11,30 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
+
+(defn- overwrite-env
+  [environment-variables env]
+  (mapv (fn [{env-name :name env-value :value :as environment-variable}]
+          (assoc environment-variable :value (get env env-name env-value)))
+        environment-variables))
+
+(defn- overwrite-module
+  [module {:keys [env] :as _overwrite}]
+  (cond-> module
+          (seq env) (update-in [:content :environmental-variables] overwrite-env env)))
+
 (reg-event-fx
   ::load-module
-  (fn [_ [_ db-path href]]
-    (let [module-id (some-> href (str/split "_") first)]
-      {::cimi-api-fx/get
-       [href #(dispatch [::helpers/set (conj db-path ::modules)
-                         module-id %])]})))
+  (fn [{db :db} [_ db-path href overwrite]]
+    (let [path-overwrite (conj db-path ::overwrite)
+          overwrite-map  (or overwrite (get-in db path-overwrite))
+          module-id      (some-> href (str/split "_") first)]
+      (cond-> {::cimi-api-fx/get
+               [href #(dispatch [::helpers/set (conj db-path ::modules)
+                                 module-id (if overwrite-map
+                                             (overwrite-module % overwrite-map)
+                                             %)])]}
+              overwrite (assoc :db (assoc-in db path-overwrite overwrite))))))
 
 (reg-event-fx
   ::change-version
@@ -40,11 +57,11 @@
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
 
-(defn module-db
+(defn- module-db
   [db db-path href]
   (get-in db (conj db-path ::modules href)))
 
-(defn module-versions-indexed
+(defn- module-versions-indexed
   [module]
   (-> module :versions apps-utils/map-versions-index))
 

@@ -39,11 +39,15 @@
 (defn load-module-configurations
   [modules-by-id fx [id {:keys [applications]}]]
   (->> applications
-       (map (fn [{module-id :id version :version}]
+       (map (fn [{module-id :id :keys [version environmental-variables]}]
               (when (get modules-by-id module-id)
                 [:dispatch [::module-plugin/load-module
                             [::spec/apps-sets id]
-                            (str module-id "_" version)]])))
+                            (str module-id "_" version)
+                            (when (seq environmental-variables)
+                              {:env (->> environmental-variables
+                                         (map (juxt :name :value))
+                                         (into {}))})]])))
        (concat fx)))
 
 (reg-event-fx

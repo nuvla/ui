@@ -13,6 +13,7 @@
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
 - Tables - Enables horizontal scroll on tables, bugfix #1089
+- e2e tests - marketplace tests checks for param in request body #1095
 
 ## [2.32.12] - 2023-01-06
 

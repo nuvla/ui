@@ -17,13 +17,38 @@
   (get-in route [:data :name]))
 
 (defn new-route-data
-  [current-route-data {:keys [route-name path-params full-query-params partial-query-params]}]
+  "Takes current route data and merges it with partial new route data, returning new
+  route data map with :route-name, :path-params, :query-params
+  usable to create new path or to pass to reitit/match-by-name.
+
+  Parameters:
+  - route-data       Map with route-name at [:data :name] plus maps of
+                     :path-params and :query-params.
+  - new-route-data   Map with :route-name, :path-params, :query-params, :partial-query-params."
+
+  [current-route-data {:keys [route-name path-params query-params partial-query-params]}]
   {:route-name   (or route-name (get-route-name current-route-data))
    :path-params  (or path-params (:path-params current-route-data))
-   :query-params (merge (or full-query-params (:query-params current-route-data))
+   :query-params (merge (or query-params (:query-params current-route-data))
                             partial-query-params)})
 
 (defn gen-href
+  "Takes current route data and merges it with partial new route data, returning new path.
+  Useful to only change parts of current path:
+
+  Examples:
+  - changing one query param:  (gen-href route-data
+                                         {:partial-query-params {:search 'hello'}})
+  - removing all query params: (gen-href route-data
+                                         {:query-params {}})
+  - changing path segments:    (gen-href route-data
+                                         {:path-params {:uuid 'new-id'}})
+
+  Parameters:
+  - route-data       Map with route-name at [:data :name] plus maps of
+                     :path-params and :query-params.
+  - new-route-data   Map with :route-name, :path-params, :query-params, :partial-query-params."
+
   [route-data new-partial-route-data]
   (let [{:keys [route-name
                 path-params

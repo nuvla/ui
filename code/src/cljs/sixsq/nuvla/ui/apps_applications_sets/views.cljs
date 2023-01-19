@@ -161,14 +161,15 @@
           [AddApps id])]
        :label [:<>
                (str i " | " apps-set-name)
-               [ui/Icon {:name     "trash"
-                         :color    "red"
-                         :style    {:cursor :pointer
-                                    :float  "right"}
-                         :on-click #(do
-                                      (dispatch [::events/remove-apps-set id])
-                                      (dispatch [::main-events/changes-protection? true])
-                                      (dispatch [::apps-events/validate-form]))}]]
+               (when @editable?
+                 [ui/Icon {:name     "trash"
+                           :color    "red"
+                           :style    {:cursor :pointer
+                                      :float  "right"}
+                           :on-click #(do
+                                        (dispatch [::events/remove-apps-set id])
+                                        (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::apps-events/validate-form]))}])]
        :default-open true]
       )))
 

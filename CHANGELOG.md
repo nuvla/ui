@@ -16,6 +16,8 @@
 - Tables - Enables horizontal scroll on tables, bugfix #1089
 - e2e tests - Marketplace tests checks for param in request body #1095
 - NuvlaEdge details - Shows pre-release flag behind version number #1054
+- NuvlaEdge details - Optimize vulnerabilty
+- NuvlaEdge details - Fix warnings in console
 
 ## [2.32.12] - 2023-01-06
 

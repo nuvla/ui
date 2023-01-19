@@ -4,7 +4,6 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.edges-detail.spec :as spec]
-            [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -18,39 +17,16 @@
   ::set-nuvlabox-status
   (fn [{db :db} [_ {:keys [vulnerabilities] :as nuvlabox-status}]]
     {:db (assoc db ::spec/nuvlabox-status nuvlabox-status)
-     :fx (concat
-           (when nuvlabox-status
-             [[:dispatch [::get-matching-vulns-from-db
-                          (map :vulnerability-id (:items vulnerabilities))]]])
-           [[:dispatch [::get-nuvlaedge-release nuvlabox-status]]
-            [:dispatch [::set-nuvlabox-vulns vulnerabilities]]])}))
+     :fx [[:dispatch [::get-nuvlaedge-release nuvlabox-status]]
+          [:dispatch [::set-nuvlabox-vulns vulnerabilities]]]}))
 
-(reg-event-db
+(reg-event-fx
   ::set-nuvlabox-vulns
-  (fn [db [_ nuvlabox-vulns]]
-    (assoc db ::spec/nuvlabox-vulns
-              {:summary (:summary nuvlabox-vulns)
-               :items   (into []
-                              (map
-                                (fn [{:keys [vulnerability-score] :as item}]
-                                  (if vulnerability-score
-                                    (cond
-                                      (>= vulnerability-score 9.0) (assoc item
-                                                                     :severity "CRITICAL"
-                                                                     :color edges-utils/vuln-critical-color)
-                                      (and (< vulnerability-score 9.0)
-                                           (>= vulnerability-score 7.0)) (assoc item
-                                                                           :severity "HIGH"
-                                                                           :color edges-utils/vuln-high-color)
-                                      (and (< vulnerability-score 7.0)
-                                           (>= vulnerability-score 4.0)) (assoc item
-                                                                           :severity "MEDIUM"
-                                                                           :color edges-utils/vuln-medium-color)
-                                      (< vulnerability-score 4.0) (assoc item
-                                                                    :severity "LOW"
-                                                                    :color edges-utils/vuln-low-color))
-                                    (assoc item :severity "UNKNOWN" :color edges-utils/vuln-unknown-color)))
-                                (:items nuvlabox-vulns)))})))
+  (fn [{{:keys [::spec/nuvlabox-vulns] :as db} :db} [_ vulnerabilities]]
+    {:db (assoc db ::spec/nuvlabox-vulns vulnerabilities)
+     :fx [(when (not= nuvlabox-vulns vulnerabilities)
+            [:dispatch [::get-matching-vulns-from-db
+                        (map :vulnerability-id (:items vulnerabilities))]])]}))
 
 (reg-event-db
   ::set-nuvlabox-associated-ssh-keys
@@ -116,15 +92,15 @@
 (reg-event-fx
   ::get-matching-vulns-from-db
   (fn [_ [_ vuln-ids]]
-    (if (empty? vuln-ids)
-      (dispatch [::set-matching-vulns-from-db {}])
+    (if (seq vuln-ids)
       {::cimi-api-fx/search
        [:vulnerability
         {:filter (->> vuln-ids
                       (map #(str "name='" % "'"))
                       (apply general-utils/join-or))
          :last   110}
-        #(dispatch [::set-matching-vulns-from-db (:resources %)])]})))
+        #(dispatch [::set-matching-vulns-from-db (:resources %)])]}
+      {:fx [[:dispatch [::set-matching-vulns-from-db {}]]]})))
 
 (reg-event-fx
   ::operation

@@ -734,8 +734,7 @@
           (reset! last-updated p-updated))
         [uix/Accordion
          [ui/Segment {:basic true}
-          [ui/Table {:basic  "very"
-                     :padded false}
+          [ui/Table {:basic "very"}
            [ui/TableBody
             (when p-name
               [ui/TableRow
@@ -1024,8 +1023,7 @@
          (when pre-release
            [:span {:style {:background-color :black :color :white :padding "0.1rem 0.5rem 0.2rem 0.5rem"
                            :font-size        "10px" :border-radius "0.2rem"}} (@tr [:pre-release])])])]
-     [ui/Table {:basic  "very"
-                :padded false}
+     [ui/Table {:basic "very"}
       [ui/TableBody
        [ui/TableRow
         [ui/TableCell "Id"]
@@ -1077,11 +1075,10 @@
                :collapsing true
                :style      {:background-color "#f3f4f5"
                             :border           "none"}}
-     [ui/TableBody {:basic  "very"
-                    :padded false}
+     [ui/TableBody {:basic "very"}
       (for [{:keys [name ip]} ips]
-        ^{:key (str name ip)}
         (when (seq ip)
+          ^{:key (str name ip)}
           [ui/TableRow
            [ui/TableCell name]
            [ui/TableCell ip]]))]]]])
@@ -1095,8 +1092,7 @@
           :as   _nb-status}
          ssh-creds]
       (let [copy-to-clipboard (@tr [:copy-to-clipboard])]
-        [ui/Table {:basic  "very"
-                   :padded false}
+        [ui/Table {:basic "very"}
          [ui/TableBody
           (when hostname
             [ui/TableRow
@@ -1329,8 +1325,7 @@
                    :horizontal true
                    :style      {:float "right"}}
          [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
-     [ui/Table {:basic  "very"
-                :padded false}
+     [ui/Table {:basic "very"}
       [ui/TableBody
        [ui/TableRow
         [ui/TableCell "Node ID"]
@@ -1629,8 +1624,7 @@
             [ui/Segment {:secondary true
                          :color     "brown"
                          :raised    true}
-             [ui/StatisticGroup {:width (count items-severity)
-                                 :size  "mini"
+             [ui/StatisticGroup {:size  "mini"
                                  :style {:display    "inline-block"
                                          :text-align "center"
                                          :width      "100%"
@@ -1692,7 +1686,6 @@
                   (for [{:keys [vulnerability-id product vulnerability-score color]} items-extended]
                     ^{:key vulnerability-id}
                     [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)]))]]]]]
-
            [ui/Message {:content (@tr [:nuvlabox-vuln-unavailable])}])]))))
 
 
@@ -1841,8 +1834,7 @@
                  [ui/GridRow {:vertical-align "middle"
                               :stretched      true}
                   [ui/GridColumn
-                   [ui/Table {:basic  "very"
-                              :padded false}
+                   [ui/Table {:basic "very"}
                     [ui/TableBody
                      [ui/TableRow
                       [ui/TableCell "ID"]

@@ -12,6 +12,7 @@
 - Edges overview - Adds more advanced filtering similar to e.g. deployments tab #1010
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
+- NuvlaEdge - Add and edit modals can handle nuvlabox-release endpoint sending back published flag #1053
 - Tables - Enables horizontal scroll on tables, bugfix #1089
 - e2e tests - marketplace tests checks for param in request body #1095
 

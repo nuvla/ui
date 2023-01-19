@@ -128,9 +128,10 @@
   :<- [::nuvlabox-releases]
   (fn [nuvlabox-releases]
     (map
-      (fn [{:keys [id release pre-release]}]
-        {:key release, :text (str release (when pre-release " - pre-release")), :value id, :pre-release pre-release})
-      nuvlabox-releases)))
+     (fn [{:keys [id release pre-release]}]
+       {:key release, :text (str release (when pre-release " - pre-release")),
+        :value id, :pre-release pre-release})
+     nuvlabox-releases)))
 
 (reg-sub
   ::ssh-keys-available

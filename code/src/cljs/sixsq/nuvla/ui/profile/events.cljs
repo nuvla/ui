@@ -15,7 +15,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.events :as session-events]
             [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.session.utils :as session-utils]
+            [sixsq.nuvla.ui.session.utils :as session-utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -404,8 +404,7 @@
 (reg-event-fx
   ::search-existing-vendor
   (fn [{{:keys [::session-spec/session]} :db}]
-    {::cimi-api-fx/search [:vendor {:filter (str "parent='" (or (:active-claim session)
-                                                                (:user session)) "'")}
+    {::cimi-api-fx/search [:vendor {:filter (str "parent='" (get-active-claim session) "'")}
                            #(if-let [id (-> % :resources first :id)]
                               (dispatch [::get-vendor id])
                               (dispatch [::set-vendor nil]))]}))

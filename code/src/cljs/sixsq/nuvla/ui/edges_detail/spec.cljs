@@ -25,7 +25,7 @@
 (s/def ::id string?)
 (s/def ::pre-release boolean?)
 (s/def ::nuvlaedge-release (s/nilable (s/keys :req-un [::id
-                                              ::pre-release])))
+                                                       ::pre-release])))
 
 
 (def defaults {::nuvlabox                     nil

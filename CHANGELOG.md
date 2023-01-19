@@ -13,7 +13,8 @@
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
 - Tables - Enables horizontal scroll on tables, bugfix #1089
-- NuvlaEdge details - Shows pre-release flag behine version number #1054
+- e2e tests - Marketplace tests checks for param in request body #1095
+- NuvlaEdge details - Shows pre-release flag behind version number #1054
 
 ## [2.32.12] - 2023-01-06
 
@@ -28,6 +29,7 @@
 - Main - Remove deprecated message and bootstrap-message
 - Readme - Update dev section to include skip verification of untrusted certificate
 - Notifications - Added params to define time window reset and device name
+- App store - Format price according to standards and locales #1048
 
 ## [2.32.11] - 2022-12-19
 

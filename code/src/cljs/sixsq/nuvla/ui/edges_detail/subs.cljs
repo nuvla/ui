@@ -16,8 +16,7 @@
 
 (reg-sub
   ::nuvlaedge-release
-  (fn [db]
-    (::spec/nuvlaedge-release db)))
+  :-> ::spec/nuvlaedge-release)
 
 
 (defn- version-string->number-vec [version]

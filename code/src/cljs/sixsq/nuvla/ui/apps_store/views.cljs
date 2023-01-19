@@ -15,7 +15,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.tab-new :as tab-plugin]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.utils.general :as utils-general :refer [format-money]]
@@ -153,7 +153,7 @@
 
 (defn RootView
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr         (subscribe [::i18n-subs/tr])]
     (dispatch [::events/init])
     (fn []
       [ui/Container {:fluid true}

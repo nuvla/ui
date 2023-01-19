@@ -33,6 +33,7 @@
   [{:keys [db-path panes change-event] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [route      (subscribe [::route-subs/current-route])
+        panes      (remove nil? panes)
         key->index (zipmap (map (comp :key :menuItem) panes)
                      (range (count panes)))
         query-param-key (construct-query-param-key db-path)

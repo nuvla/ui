@@ -165,7 +165,6 @@
 
 (s/def ::infrastructure-services-available any?)
 
-(s/def ::active-tab keyword?)
 (s/def ::tab any?)
 
 (def defaults {::add-credential-modal-visible?     false
@@ -182,6 +181,4 @@
                ::error-message                     nil
                ::state-selector                    nil
                ::infrastructure-services-available nil
-               ::credential-check-table            nil
-               ::tab                               (tab-plugin/build-spec)})
-
+               ::credential-check-table            nil})

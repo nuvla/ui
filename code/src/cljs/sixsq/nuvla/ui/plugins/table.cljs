@@ -110,16 +110,12 @@
 "
   [{:keys [cell-props columns rows
            row-click-handler row-props row-render
-           sort-config wide?]
+           sort-config]
     :as   props}]
   (let [tr            @(subscribe [::i18n-subs/tr])
-        wrapper-style (if (or wide? (not columns))
-                        {:style {:display     :block
-                                 :overflow-x  :auto
-                                 :white-space :nowrap}}
-                        {})
         columns       (or columns (map (fn [[k _]] {:field-key k}) (first rows)))]
-    [:div wrapper-style
+    [:div {:style {:overflow :auto
+                   :padding 0}}
      [ui/Table (:table-props props)
       [ui/TableHeader (:header-props props)
        [ui/TableRow

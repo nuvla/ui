@@ -18,7 +18,7 @@
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
-            [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.general :as utils-general :refer [format-money]]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]
@@ -38,7 +38,7 @@
         launch-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :launch-for)])
-                            (/ (:cent-amount-daily price) 100) "€/"
+                            (format-money (/ (:cent-amount-daily price) 100)) "/"
                             (@tr [:day]))
         button-content (if price launch-price (@tr [:launch]))
         on-click       (fn [event]

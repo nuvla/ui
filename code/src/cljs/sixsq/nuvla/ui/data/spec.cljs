@@ -23,8 +23,6 @@
 (s/def ::modal-open? boolean?)
 (s/def ::add-data-set-form any?)
 
-(def default-time-period [(time/days-before 30) (time/now)])
-
 (def defaults
   {::modal-open?                 false
    ::data-records                nil

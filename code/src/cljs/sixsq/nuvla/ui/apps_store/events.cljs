@@ -27,27 +27,27 @@
 
 (reg-event-fx
   ::get-modules
-  (fn [{{:keys [::session-spec/session
-                ::spec/tab] :as db} :db}]
-    (-> {:db (assoc db ::apps-spec/module nil)
-         ::cimi-api-fx/search
-         [:module
-          (->> {:orderby "created:desc"
-                :filter  (general-utils/join-and
-                           (general-utils/join-or
-                             "subtype='component'"
-                             "subtype='application'"
-                             "subtype='application_kubernetes'")
-                           (case (::tab-plugin/active-tab tab)
-                             :appstore (general-utils/published-query-string)
-                             :myapps (general-utils/owner-like-query-string
-                                       (or (:active-claim session)
+  (fn [{{:keys [::session-spec/session] :as db} :db}]
+    (let [active-tab (keyword (tab-plugin/get-active-tab db [::spec/tab]))]
+      (-> {:db (assoc db ::apps-spec/module nil)
+           ::cimi-api-fx/search
+           [:module
+            (->> {:orderby "created:desc"
+                  :filter  (general-utils/join-and
+                             (general-utils/join-or
+                               "subtype='component'"
+                               "subtype='application'"
+                               "subtype='application_kubernetes'")
+                             (case active-tab
+                               :appstore (general-utils/published-query-string)
+                               :myapps (general-utils/owner-like-query-string
+                                         (or (:active-claim session)
                                            (:user session)))
-                             nil)
-                           (full-text-search-plugin/filter-text
-                             db [::spec/modules-search]))}
-               (pagination-plugin/first-last-params db [::spec/pagination]))
-          #(dispatch [::set-modules %])]})))
+                               nil)
+                             (full-text-search-plugin/filter-text
+                               db [::spec/modules-search]))}
+                 (pagination-plugin/first-last-params db [::spec/pagination]))
+            #(dispatch [::set-modules %])]}))))
 
 (reg-event-fx
   ::get-modules-summary

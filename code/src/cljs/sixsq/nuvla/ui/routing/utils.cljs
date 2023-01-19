@@ -55,6 +55,10 @@
                 query-params]} (new-route-data route-data new-partial-route-data)]
     (name->href route-name path-params query-params)))
 
+(defn get-query-param
+  [route key]
+  (get-in route [:query-params key]))
+
 (defn add-base-path
   [url]
   (let [base-path    (str config/base-path "/")

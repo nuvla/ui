@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.main.spec :as spec]))
+            [sixsq.nuvla.ui.main.spec :as spec]
+            [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]))
 
 (reg-sub
   ::nav-path
@@ -35,4 +36,4 @@
   ::query-param
   :<- [::current-route]
   (fn [current-route [_ query-param-key]]
-    (get-in current-route [:query-params query-param-key])))
+    (get-query-param current-route query-param-key)))

@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.plugins.tab-new
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub
-                                   subscribe]]
+            [re-frame.core :refer [dispatch reg-event-fx
+                                   reg-sub subscribe]]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
@@ -16,7 +16,7 @@
   [& {:keys [active-tab]}]
   {::active-tab active-tab})
 
-(defn- db-path->query-param-key
+(defn db-path->query-param-key
   [[qualified-key]]
   (let [ns-path     (str/split (namespace qualified-key) #"\.")
         last-two-ns (drop (- (count ns-path) 2) ns-path)
@@ -25,6 +25,12 @@
          name
          (str k-prefix)
          keyword)))
+
+(defn get-active-tab
+  [db db-path]
+  (get-in (:current-route db)
+          [:query-params (db-path->query-param-key db-path)]
+          (get-in db (conj db-path ::active-tab))))
 
 (reg-sub
   ::default-tab
@@ -39,24 +45,19 @@
   (fn [[query-param default-tab]]
     (keyword (or query-param default-tab))))
 
-(reg-event-db
-  ::set-active-tab
-  (fn [db [_ db-path tab-key]]
-    (assoc-in db (conj db-path ::active-tab) tab-key)))
 
 (reg-event-fx
   ::change-tab
   (fn [{db :db} [_ db-path tab-key]]
     (let [change-event (get-in db (conj db-path ::change-event))]
-      {:fx [[:dispatch [::set-active-tab db-path tab-key]]
-            [:dispatch [::route-events/navigate-partial
+      {:fx [[:dispatch [::route-events/navigate-partial
                         {:change-event change-event
                          :partial-query-params {(db-path->query-param-key db-path) tab-key}}]]]})))
 
 (defn Tab
   [{:keys [db-path panes change-event] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
-  (let [active-tab (subscribe [::helpers/retrieve db-path ::active-tab])
+  (let [active-tab      (subscribe [::helpers/retrieve db-path ::active-tab])
         route           (subscribe [::route-subs/current-route])
         panes           (remove nil? panes)
         key->index      (zipmap (map (comp :key :menuItem) panes)
@@ -81,7 +82,6 @@
            (dissoc :db-path :change-event :default-active-tab)
            (assoc :active-index
              (get key->index (keyword @cur-view) 0)))])))
-
 
 (s/fdef Tab
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]

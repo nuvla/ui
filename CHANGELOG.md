@@ -14,7 +14,8 @@
 - Credentials - Add modal obfuscating password input fields #1084
 - NuvlaEdge - Add and edit modals can handle nuvlabox-release endpoint sending back published flag #1053
 - Tables - Enables horizontal scroll on tables, bugfix #1089
-- e2e tests - marketplace tests checks for param in request body #1095
+- e2e tests - Marketplace tests checks for param in request body #1095
+- NuvlaEdge details - Shows pre-release flag behind version number #1054
 
 ## [2.32.12] - 2023-01-06
 

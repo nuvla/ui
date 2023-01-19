@@ -14,10 +14,16 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
-(reg-event-db
+(reg-event-fx
   ::set-nuvlabox-status
-  (fn [db [_ nuvlabox-status]]
-    (assoc db ::spec/nuvlabox-status nuvlabox-status)))
+  (fn [{db :db} [_ {:keys [vulnerabilities] :as nuvlabox-status}]]
+    {:db (assoc db ::spec/nuvlabox-status nuvlabox-status)
+     :fx (concat
+           (when nuvlabox-status
+             [[:dispatch [::get-matching-vulns-from-db
+                          (map :vulnerability-id (:items vulnerabilities))]]])
+           [[:dispatch [::get-nuvlaedge-release nuvlabox-status]]
+            [:dispatch [::set-nuvlabox-vulns vulnerabilities]]])}))
 
 (reg-event-db
   ::set-nuvlabox-vulns
@@ -76,14 +82,8 @@
     {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
                                  ::spec/nuvlabox nuvlabox
                                  ::main-spec/loading? false)
-     ::cimi-api-fx/get [nb-status-id #(do
-                                        (dispatch [::set-nuvlabox-status %])
-                                        (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)])
-                                        (dispatch [::get-matching-vulns-from-db (map :vulnerability-id
-                                                                                     (:items (:vulnerabilities %)))]))
-                        :on-error #(do
-                                     (dispatch [::set-nuvlabox-status nil])
-                                     (dispatch [::set-nuvlabox-vulns nil]))]
+     ::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
+                        :on-error #(dispatch [::set-nuvlabox-status nil])]
      :fx               [(when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
 
 (reg-event-fx
@@ -399,3 +399,23 @@
   ::set-nuvlabox-current-playbook
   (fn [db [_ nuvlabox-playbook]]
     (assoc db ::spec/nuvlabox-current-playbook nuvlabox-playbook)))
+
+
+(reg-event-db
+  ::set-nuvlaedge-release
+  (fn [db [_ nuvlaedge-release]]
+    (assoc db ::spec/nuvlaedge-release nuvlaedge-release)))
+
+
+(reg-event-fx
+  ::get-nuvlaedge-release
+  (fn [{{:keys [::spec/nuvlaedge-release] :as db} :db} [_ {:keys [nuvlabox-engine-version]}]]
+    (cond-> {:db (assoc db ::spec/nuvlaedge-release nil)}
+            (and nuvlabox-engine-version
+                 (not= (:release nuvlaedge-release) nuvlabox-engine-version))
+            (assoc ::cimi-api-fx/search [:nuvlabox-release
+                                         {:filter  (str "release='" nuvlabox-engine-version "'")
+                                          :select  "id, release, pre-release"
+                                          :orderby "release-date:desc"
+                                          :last    10000}
+                                         #(dispatch [::set-nuvlaedge-release (first (:resources %))])]))))

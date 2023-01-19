@@ -14,6 +14,10 @@
   (fn [db]
     (::spec/nuvlabox-status db)))
 
+(reg-sub
+  ::nuvlaedge-release
+  :-> ::spec/nuvlaedge-release)
+
 
 (defn- version-string->number-vec [version]
   (map js/Number (str/split version ".")))

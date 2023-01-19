@@ -1010,16 +1010,20 @@
   [{:keys [id created updated refresh-interval owner created-by state]}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
   (let [tr     (subscribe [::i18n-subs/tr])
-        locale (subscribe [::i18n-subs/locale])]
+        locale (subscribe [::i18n-subs/locale])
+        {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
      [:h4 "NuvlaEdge "
       (when nuvlabox-engine-version
-        [ui/Label {:circular true
-                   :color    "blue"
-                   :size     "tiny"}
-         nuvlabox-engine-version])]
+        [:<> [ui/Label {:circular true
+                        :color    "blue"
+                        :size     "tiny"}
+              nuvlabox-engine-version]
+         (when pre-release
+           [:span {:style {:background-color :black :color :white :padding "0.1rem 0.5rem 0.2rem 0.5rem"
+                           :font-size        "10px" :border-radius "0.2rem"}} (@tr [:pre-release])])])]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -1116,10 +1120,10 @@
                                 ip ip copy-to-clipboard true)]])
              (when ips-available
                [IpsRow {:title "IPs"
-                        :ips (map (fn [[name ip]]
-                                    {:name name
-                                     :ip (values/copy-value-to-clipboard
-                                          ip ip copy-to-clipboard true)}) (:ips network))}])])
+                        :ips   (map (fn [[name ip]]
+                                      {:name name
+                                       :ip   (values/copy-value-to-clipboard
+                                               ip ip copy-to-clipboard true)}) (:ips network))}])])
           (when (pos? (count @ssh-creds))
             [ui/TableRow
              [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
@@ -1176,7 +1180,7 @@
              (when @show-ips
                [IpsRow {:ips (map (fn [{:keys [interface ips]}]
                                     {:name interface
-                                     :ip (str/join ", " (map :address ips))}) interfaces)}])])]]))))
+                                     :ip   (str/join ", " (map :address ips))}) interfaces)}])])]]))))
 
 
 (defn TabOverviewHost

@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
+    [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.plugins.module :as module-plugin]
@@ -52,7 +53,7 @@
 
 (reg-event-fx
   ::reload-apps-sets-response
-  (fn [{{:keys [::spec/apps-sets] :as db} :db} [_ module {:keys [resources]}]]
+  (fn [{{:keys [::spec/apps-sets] :as db} :db} [_ module apps-count {:keys [resources]}]]
     (let [modules-by-id     (->> resources (map (juxt :id identity)) (into {}))
           indexed-apps-sets (->> module
                                  :content
@@ -61,9 +62,12 @@
           new-db            (reduce (partial restore-apps-selected modules-by-id)
                                     db indexed-apps-sets)
           fx                (reduce (partial load-module-configurations modules-by-id)
-                                    [] indexed-apps-sets)]
-      {:db new-db
-       :fx fx})))
+                                    [] indexed-apps-sets)
+          all-apps-visible? (= apps-count (count resources))]
+      (if all-apps-visible?
+        {:db new-db
+         :fx fx}
+        {:db (assoc db ::apps-spec/module-not-found? true)}))))
 
 (reg-event-fx
   ::reload-apps-sets
@@ -79,7 +83,7 @@
                       :last   1000}
           callback   #(if (instance? js/Error %)
                         (cimi-api-fx/default-error-message % "load applications sets failed")
-                        (dispatch [::reload-apps-sets-response module %]))]
+                        (dispatch [::reload-apps-sets-response module (count apps-urls) %]))]
       (when (seq apps-urls)
         {::cimi-api-fx/search [:module params callback]}))))
 

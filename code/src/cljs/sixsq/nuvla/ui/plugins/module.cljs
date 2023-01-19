@@ -140,7 +140,7 @@
     (filter #(when (= (get cred-env-var-map env-name) (:subtype %)) %) creds)))
 
 (defn AsFormInput
-  [db-path href
+  [db-path href read-only?
    index {env-name        :name
           env-description :description
           env-value       :value
@@ -152,13 +152,15 @@
       {:type      "text"
        :name      env-name
        :value     (or updated-env-value env-value "")
-       :read-only false
+       :read-only read-only?
        :fluid     true
        :on-change (ui-callback/input-callback
                     #(dispatch [::update-env db-path href index %]))}]]))
 
 (defn EnvVariables
-  [{:keys [db-path href change-event] :as _opts}]
+  [{:keys [db-path href change-event read-only?]
+    :or   {read-only? false}
+    :as   _opts}]
   (let [module        @(subscribe [::module db-path href])
         env-variables (get-in module [:content :environmental-variables])]
     (dispatch [::helpers/set db-path ::change-event change-event])
@@ -167,7 +169,7 @@
        (map-indexed
          (fn [i env-variable]
            ^{:key (str (:name env-variable) "_" i)}
-           [AsFormInput db-path href i env-variable])
+           [AsFormInput db-path href read-only? i env-variable])
          env-variables)]
       [ui/Message "No environment variables defined"])))
 
@@ -226,7 +228,9 @@
       [ui/Message (tr [:free-app])])))
 
 (defn ModuleVersions
-  [{:keys [db-path href change-event] :as _opts}]
+  [{:keys [db-path href change-event read-only?]
+    :or   {read-only? false}
+    :as   _opts}]
   (let [module           (subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         options          (subscribe [::module-versions-options db-path href])]
@@ -240,11 +244,12 @@
         :on-change #(dispatch [::change-version db-path
                                (str id "_" (get-version-id @versions-indexed %))])
         :fluid     true
-        :options   @options}])))
+        :options   @options
+        :disabled  read-only?}])))
 
 (s/def ::href string?)
 
 (s/fdef ModuleVersions
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
                                             ::href]
-                                   :opt-un [::helpers/change-event])))
+                                   :opt-un [::helpers/read-only?])))

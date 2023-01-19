@@ -155,7 +155,7 @@
            :default-value apps-set-description, :on-change (partial on-change id ::events/update-apps-set-description)
            :on-validation ::events/set-apps-validation-error]]]
 
-        [AppsList id]
+        [AppsList id :editable? @editable?]
 
         (when @editable?
           [AddApps id])]
@@ -169,7 +169,6 @@
                                       (dispatch [::events/remove-apps-set id])
                                       (dispatch [::main-events/changes-protection? true])
                                       (dispatch [::apps-events/validate-form]))}]]
-       :count 0
        :default-open true]
       )))
 
@@ -355,7 +354,9 @@
   [id]
   (let [tr           (subscribe [::i18n-subs/tr])
         applications (subscribe [::subs/apps-selected id])
-        db-path      [::spec/apps-sets id]]
+        editable?    (subscribe [::apps-subs/editable?])
+        db-path      [::spec/apps-sets id]
+        read-only?   (not @editable?)]
     (if (seq @applications)
       [ui/Tab
        {:panes (map
@@ -368,16 +369,18 @@
                                   [ui/TabPane
                                    [uix/Accordion
                                     [module-plugin/ModuleVersions
-                                     {:db-path db-path
-                                      :href    module-id
-                                      :change-event [::main-events/changes-protection? true]}]
+                                     {:db-path      db-path
+                                      :href         module-id
+                                      :change-event [::main-events/changes-protection? true]
+                                      :read-only?   (not @editable?)}]
                                     :label (@tr [:select-version])
                                     :default-open true]
                                    [uix/Accordion
                                     [module-plugin/EnvVariables
-                                     {:db-path db-path
-                                      :href    module-id
-                                      :change-event [::main-events/changes-protection? true]}]
+                                     {:db-path      db-path
+                                      :href         module-id
+                                      :change-event [::main-events/changes-protection? true]
+                                      :read-only?   read-only?}]
                                     :label (@tr [:env-variables])
                                     :default-open true]]])})
                  @applications)}]

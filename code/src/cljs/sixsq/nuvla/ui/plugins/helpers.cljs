@@ -4,6 +4,7 @@
 
 (s/def ::db-path (s/* any?))
 (s/def ::change-event (s/cat :dispatch-key keyword? :data (s/* any?)))
+(s/def ::read-only? boolean?)
 
 (reg-sub
   ::retrieve

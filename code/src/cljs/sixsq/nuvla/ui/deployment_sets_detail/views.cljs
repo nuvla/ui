@@ -21,7 +21,7 @@
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
-            [sixsq.nuvla.ui.plugins.tab :as tab]
+            [sixsq.nuvla.ui.plugins.tab-new :as tab]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]

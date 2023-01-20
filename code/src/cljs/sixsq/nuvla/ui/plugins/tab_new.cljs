@@ -20,7 +20,7 @@
   [[qualified-key]]
   (let [ns-path     (str/split (namespace qualified-key) #"\.")
         last-two-ns (drop (- (count ns-path) 2) ns-path)
-        k-prefix     (str/join last-two-ns)]
+        k-prefix     (str/replace (str/join last-two-ns) "spec" "")]
     (->> qualified-key
          name
          (str k-prefix)

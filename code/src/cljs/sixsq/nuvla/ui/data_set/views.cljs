@@ -17,7 +17,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.tab-new :as tab-plugin]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.map :as map]

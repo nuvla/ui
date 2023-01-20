@@ -2,7 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
+            [sixsq.nuvla.ui.plugins.tab-new :as tab-plugin]))
 
 (s/def ::nuvlabox (s/nilable any?))
 (s/def ::nuvlabox-status (s/nilable any?))

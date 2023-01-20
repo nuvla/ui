@@ -10,7 +10,7 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.tab-new :as tab-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-fx
@@ -191,7 +191,7 @@
   ::tab-changed
   (fn [{{:keys [::tab-plugin/active-tab]} ::spec/tab :as db}]
     (cond-> db
-            (= active-tab :data-records)
+            (= (keyword (tab-plugin/get-active-tab db [::spec/tab]) active-tab) :data-records)
             (assoc ::data-set-spec/data-set-id nil
                    ::data-set-spec/data-record-filter nil
                    ::data-set-spec/map-selection nil

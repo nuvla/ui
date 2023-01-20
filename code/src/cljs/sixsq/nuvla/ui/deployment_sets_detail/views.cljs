@@ -21,7 +21,7 @@
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
-            [sixsq.nuvla.ui.plugins.tab-new :as tab]
+            [sixsq.nuvla.ui.plugins.tab :as tab-old]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -183,7 +183,7 @@
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
-             #(dispatch [::tab/change-tab [::spec/tab] :deployments])]]]
+             #(dispatch [::tab-old/change-tab [::spec/tab] :deployments])]]]
 
           (when (seq tags)
             [ui/GridColumn
@@ -194,7 +194,7 @@
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set (subscribe [::subs/deployment-set])
         can-edit?      @(subscribe [::subs/can-edit?])]
-    [tab/Tab
+    [tab-old/Tab
      {:db-path [::spec/tab]
       :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
                             :key     :overview
@@ -285,7 +285,7 @@
                          {:db-path      [::spec/apps-pagination]
                           :total-items  count
                           :change-event [::events/search-apps]}]]))]
-      [tab/Tab
+      [tab-old/Tab
        {:db-path      [::spec/tab-new-apps]
         :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
                                    :key     :app-store
@@ -393,7 +393,7 @@
 
 (defn SelectTargets
   []
-  [tab/Tab
+  [tab-old/Tab
    {:db-path [::spec/tab-new-targets]
     :panes   [{:menuItem {:content "Edges"
                           :key     :edges
@@ -424,7 +424,7 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         apps-selected (subscribe [::subs/apps-selected])]
     [:div
-     [tab/Tab
+     [tab-old/Tab
       {:db-path [::spec/config-apps-tab]
        :panes   (map
                   (fn [{:keys [id name subtype]}]
@@ -602,7 +602,7 @@
         {:db-path [::spec/bulk-jobs]}]
        [components/ErrorJobsMessage
         ::job-subs/jobs nil nil
-        #(dispatch [::tab/change-tab [::spec/tab] :jobs])]
+        #(dispatch [::tab-old/change-tab [::spec/tab] :jobs])]
        [TabsDeploymentSet]]]]))
 
 

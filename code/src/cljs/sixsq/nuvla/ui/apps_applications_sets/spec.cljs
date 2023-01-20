@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.apps-applications-sets.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 
@@ -18,13 +17,16 @@
 (s/def ::id string?)
 (s/def ::version nat-int?)
 
+(s/def ::apps-set-subtypes (s/nilable set?))
+
 (s/def ::apps-application (s/keys :req-un [::id]
                                   :opt-un [::version]))
 (s/def ::apps-selected (s/map-of string? ::apps-application))
 
 (s/def ::apps-set (s/keys :req [::apps-set-name
                                 ::apps-selected]
-                          :opt [::apps-set-description]))
+                          :opt [::apps-set-description
+                                ::apps-set-subtypes]))
 
 (s/def ::apps-sets (s/map-of any? ::apps-set))
 

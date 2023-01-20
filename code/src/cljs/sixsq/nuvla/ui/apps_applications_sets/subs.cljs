@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.apps-applications-sets.subs
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]))
@@ -26,9 +25,23 @@
   ::apps-selected
   :<- [::apps-sets]
   (fn [apps-sets [_ id]]
-    (->> (get-in apps-sets [id ::spec/apps-selected])
-         vals
-         (sort-by :name))))
+    (vals (get-in apps-sets [id ::spec/apps-selected]))))
+
+(def docker-subtypes #{"component" "application"})
+(def k8s-subtypes #{"application_kubernetes"})
+(defn get-subtypes
+  [subtype]
+  (condp contains? subtype
+    k8s-subtypes k8s-subtypes
+    docker-subtypes docker-subtypes
+    nil))
+
+(reg-sub
+  ::apps-selected-subtypes
+  (fn [[_ id]]
+    (subscribe [::apps-selected id]))
+  (fn [apps-selected]
+    (some #(get-subtypes (:subtype %)) apps-selected)))
 
 
 (reg-sub
@@ -43,4 +56,3 @@
                 (docker-subtypes subtype) docker-subtypes
                 (kubernetes-subtypes subtype) kubernetes-subtypes
                 :else nil))) selected)))
-

@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.apps-applications-sets.views
   (:require
-    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -13,7 +12,6 @@
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
     [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
-    [sixsq.nuvla.ui.deployment-sets-detail.views :as deployment-sets-detail-views]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -29,65 +27,58 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]))
 
+(defn SelectSubtype
+  [choosed-subtypes]
+  (let [on-click #(reset! choosed-subtypes %)]
+    [:<>
+     [:p "Targeting Docker or Kubernetes"]
+     [ui/CardGroup {:centered true}
+      [ui/Card
+       {:on-click (partial on-click subs/docker-subtypes)}
+       [ui/CardContent {:text-align :center}
+        [ui/IconGroup {:size :massive}
+         [ui/Icon {:name "docker"}]]]]
+      [ui/Card
+       {:on-click (partial on-click subs/k8s-subtypes)}
+       [ui/CardContent {:text-align :center}
+        [ui/IconGroup {:size :massive}
+         [ui/Image {:src   "/ui/images/kubernetes.svg"
+                    :style {:width "100px"}}]]]]]]))
+
 (defn SelectAppsModal
-  [id]
-  (let [db-path       [::spec/apps-sets id ::spec/apps-selector]
-        ;subtypes (subscribe [::subs/subtypes db-path])
-        apps-selected @(subscribe [::subs/apps-selected id])
-        on-open       #(dispatch [::module-selector/restore-selected db-path (map :id apps-selected)])
-        on-done       #(do
-                         (dispatch [::events/set-apps-selected id db-path])
-                         (dispatch [::main-events/changes-protection? true])
-                         (dispatch [::apps-events/validate-form]))]
-
-    [ui/Modal {:close-icon true
-               :trigger    (r/as-element
-                             [ui/Icon {:name     "add"
-                                       :color    "green"
-                                       :on-click on-open}])
-               :header     "New apps set"
-               :content    (r/as-element
-                             [ui/ModalContent
-                              [module-selector/AppsSelectorSection
-                               {:db-path db-path
-                                ; :subtypes @subtypes
-                                }
-                               ]])
-               :actions    [{:key "cancel", :content "Cancel"}
-                            {:key     "done", :content "Done" :positive true
-                             :onClick on-done}]}
-
-
-     #_[ui/ModalContent
-
-        #_(if (nil? @subtype)
-            [:<>
-             [:p "Targeting Docker or Kubernetes"]
-             [ui/CardGroup {:centered true}
-              [ui/Card
-               {:on-click #(reset! subtype "docker")}
-               [ui/CardContent {:text-align :center}
-                [ui/IconGroup {:size :massive}
-                 [ui/Icon {:name "docker"}]]]
-               ]
-              [ui/Card
-               {:on-click #(reset! subtype "kubernetes")}
-               [ui/CardContent {:text-align :center}
-                [ui/IconGroup {:size :massive}
-                 [ui/Image {:src   "/ui/images/kubernetes.svg"
-                            ;:floated "right"
-                            :style {:width "100px"}
-                            }]]]
-
-               ]]]
-            [deployment-sets-detail-views/SelectApps]
-            )
-        ]
-     #_[ui/ModalActions
-        [ui/Button {:primary true}
-         "Validate"]]
-     ])
-  )
+  [_id]
+  (let [choosed-subtypes (r/atom nil)
+        reset-subtypes   #(reset! choosed-subtypes nil)]
+    (fn [id]
+      (let [apps-subtypes @(subscribe [::subs/apps-selected-subtypes id])
+            apps-selected @(subscribe [::subs/apps-selected id])
+            db-path       [::spec/apps-sets id ::spec/apps-selector]
+            on-open       #(dispatch [::module-selector/restore-selected
+                                      db-path (map :id apps-selected)])
+            on-done       #(do
+                             (dispatch [::events/set-apps-selected id db-path])
+                             (dispatch [::main-events/changes-protection? true])
+                             (dispatch [::apps-events/validate-form])
+                             (reset-subtypes))
+            subtypes      (or apps-subtypes @choosed-subtypes)]
+        [ui/Modal {:close-icon true
+                   :trigger    (r/as-element
+                                 [ui/Icon {:name     "add"
+                                           :color    "green"
+                                           :on-click on-open}])
+                   :on-close   reset-subtypes
+                   :header     "New apps set"
+                   :content    (r/as-element
+                                 [ui/ModalContent
+                                  (if subtypes
+                                    [module-selector/AppsSelectorSection
+                                     {:db-path  db-path
+                                      :subtypes subtypes}]
+                                    [SelectSubtype choosed-subtypes])])
+                   :actions    [{:key     "cancel", :content "Cancel"
+                                 :onClick reset-subtypes}
+                                {:key     "done", :content "Done" :positive true
+                                 :onClick on-done}]}]))))
 
 
 (defn AppsList

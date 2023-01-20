@@ -17,9 +17,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
-(s/def ::db-path (s/* (s/and string? #{"application" "component"
-                                       "application_kubernetes"
-                                       "applications_sets"})))
+(s/def ::subtypes (s/nilable set?))
 (defn build-spec
   [& {:keys [default-items-per-page]
       :or   {default-items-per-page 10}}]
@@ -190,20 +188,20 @@
                           :total-items  count
                           :change-event [::load-apps db-path]}]]))]
       [tab/Tab
-       {:db-path      (conj db-path ::tab)
-        :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
-                                   :key     :app-store
-                                   :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-                        :render   render}
-                       {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
-                                   :key     :all-apps
-                                   :icon    "grid layout"}
-                        :render   render}
-                       {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
-                                   :key     :my-apps
-                                   :icon    "user"}
-                        :render   render}]
-        :change-event [::load-apps db-path]
+       {:db-path                    (conj db-path ::tab)
+        :panes                      [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
+                                                 :key     :app-store
+                                                 :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+                                      :render   render}
+                                     {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
+                                                 :key     :all-apps
+                                                 :icon    "grid layout"}
+                                      :render   render}
+                                     {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
+                                                 :key     :my-apps
+                                                 :icon    "user"}
+                                      :render   render}]
+        :change-event               [::load-apps db-path]
         :ignore-changes-protection? true}])))
 
 (s/fdef AppsSelectorSection

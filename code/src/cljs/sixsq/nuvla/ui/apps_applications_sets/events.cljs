@@ -3,13 +3,11 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
-
-;; user should be told that some applications has been deleted!!
 
 (reg-event-db
   ::clear-apps-applications-sets
@@ -93,7 +91,7 @@
   (fn [db]
     (let [id (-> db
                  ::spec/apps-sets
-                 utils/sorted-map-new-idx)]
+                 apps-utils/sorted-map-new-idx)]
       (assoc-in db [::spec/apps-sets id] {:id                  id
                                           ::spec/apps-set-name ""
                                           ::spec/apps-selector (module-selector/build-spec)}))))
@@ -107,7 +105,7 @@
 (reg-event-db
   ::set-apps-validation-error
   (fn [db [_ key error?]]
-    (utils/set-reset-error db key error? ::spec/apps-validation-errors)))
+    (apps-utils/set-reset-error db key error? ::spec/apps-validation-errors)))
 
 (reg-event-fx
   ::set-apps-selected

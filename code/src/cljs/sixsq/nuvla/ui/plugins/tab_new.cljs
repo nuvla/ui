@@ -9,12 +9,12 @@
             [sixsq.nuvla.ui.routing.utils :refer [gen-href]]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
-(s/def ::active-tab keyword?)
+(s/def ::default-tab keyword?)
 (s/def ::change-event (s/nilable coll?))
 
 (defn build-spec
   [& {:keys [active-tab]}]
-  {::active-tab active-tab})
+  {::default-tab active-tab})
 
 (defn db-path->query-param-key
   [[qualified-key]]
@@ -30,12 +30,12 @@
   [db db-path]
   (get-in (:current-route db)
           [:query-params (db-path->query-param-key db-path)]
-          (get-in db (conj db-path ::active-tab))))
+          (get-in db (conj db-path ::default-tab))))
 
 (reg-sub
   ::default-tab
   (fn [db [_ db-path]]
-    (get-in db (conj db-path ::active-tab))))
+    (get-in db (conj db-path ::default-tab))))
 
 (reg-sub
   ::active-tab
@@ -57,7 +57,7 @@
 (defn Tab
   [{:keys [db-path panes change-event] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
-  (let [active-tab      (subscribe [::helpers/retrieve db-path ::active-tab])
+  (let [active-tab      (subscribe [::helpers/retrieve db-path ::default-tab])
         route           (subscribe [::route-subs/current-route])
         panes           (remove nil? panes)
         key->index      (zipmap (map (comp :key :menuItem) panes)
@@ -75,7 +75,7 @@
                                 (update :menuItem merge {:href href :onClick on-click
                                                          :data-reitit-handle-click false}))))]
     (when (nil? @active-tab)
-      (dispatch [::helpers/set db-path ::active-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
+      (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [opts]
       [ui/Tab
        (-> (update opts :panes #(map add-hrefs %))

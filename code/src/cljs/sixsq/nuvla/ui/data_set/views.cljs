@@ -272,7 +272,7 @@
   (let [tr                    (subscribe [::i18n-subs/tr])
         selected-data-sets    (subscribe [::data-subs/selected-data-set-ids])
         selected-data-records (subscribe [::subs/selected-data-record-ids])
-        active-tab            (subscribe [::tab-plugin/active-tab [::data-spec/tab]])
+        active-tab            (subscribe [::tab-plugin/default-tab [::data-spec/tab]])
         on-click              #(dispatch [::main-events/subscription-required-dispatch
                                           [::data-events/open-application-select-modal]])]
     (fn [button-type]
@@ -298,7 +298,7 @@
 (defn CreateDataSet
   []
   (let [tr                       (subscribe [::i18n-subs/tr])
-        active-tab               (subscribe [::tab-plugin/active-tab
+        active-tab               (subscribe [::tab-plugin/default-tab
                                              [::data-spec/tab]])
         selected-data-record-ids (subscribe [::subs/selected-data-record-ids])
         data-record-filter       (subscribe [::subs/data-record-filter])

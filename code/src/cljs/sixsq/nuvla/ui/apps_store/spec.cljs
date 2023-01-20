@@ -13,7 +13,7 @@
 
 (def defaults
   {::modules        nil
-   ::tab            (tab-plugin/build-spec :active-tab :appstore)
+   ::tab            (tab-plugin/build-spec :default-tab :appstore)
    ::modules-search (full-text-search-plugin/build-spec)})
 
 (def appstore-key :appstore)

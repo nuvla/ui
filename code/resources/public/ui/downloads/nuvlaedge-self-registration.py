@@ -38,11 +38,14 @@ The expected JSON schema is:
 import argparse
 import datetime
 import json
-import platform
-import time
-import uuid
 import os
+import platform
+import socket
+import time
+import traceback
+import uuid
 
+from contextlib import contextmanager
 from subprocess import run, PIPE, STDOUT, TimeoutExpired
 
 import requests
@@ -71,12 +74,12 @@ def arguments():
     parser.add_argument('--nuvlaedge-installation-dir',
                         '--nuvlabox-installation-dir',
                         dest='nuvlaedge_workdir', default=workdir, metavar='PATH',
-                        help="Location on the filesystem where to keep the NuvlaEdge Engine installation files")
+                        help="Location on the filesystem where to keep the NuvlaEdge installation files")
 
     parser.add_argument('--nuvlaedge-old-installation-dir',
                         '--nuvlabox-old-installation-dir',
                         dest='nuvlaedge_old_workdir', default=workdir_old, metavar='PATH',
-                        help="Location on the filesystem where the previous NuvlaEdge Engine installation files were located")
+                        help="Location on the filesystem where the previous NuvlaEdge installation files were located")
 
     return parser.parse_args()
 
@@ -105,24 +108,69 @@ def is_true(s, **kwargs):
             return kwargs['default']
 
 
-def prepare_nuvlaedge_installation(version, compose_files, workdir, keep_files=[]):
-    """ Prepares the working environment for installing the NuvlaEdge Engine
+def run_command(cmd, env=os.environ.copy(), timeout=600,
+                raise_on_return_code=True,
+                print_output=True,
+                print_command=False):
+    """ Runs a command
+
+    :param cmd: command to be executed
+    :param env: environment to be passed
+    :param timeout: time after which the command will abruptly be terminated
+    :param raise_on_return_code: raise an exception if return code != 0 (default True)
+    :param print_output: if True (the default) print stdout and stderr to stdout
+    :param print_command: if True print the command to stdout (default False)
+    """
+    if print_command:
+        print('Executing: ' + ' '.join(cmd))
+
+    try:
+        result = run(cmd, stdout=PIPE, stderr=STDOUT, env=env, input=None,
+                     timeout=timeout, universal_newlines=True)
+
+    except TimeoutExpired:
+        raise Exception('Command execution timed out after {} seconds'.format(timeout))
+
+    if raise_on_return_code and result.returncode != 0:
+        raise Exception(result.stdout)
+
+    if print_output:
+        print(result.stdout)
+
+    return result.returncode, result.stdout
+
+
+@contextmanager
+def ignore_exception(print_exception=True, print_stacktrace=False):
+    try:
+        yield
+    except Exception as e:
+        if print_exception:
+            print('Ignored exception: {}'.format(e))
+        if print_stacktrace:
+            traceback.print_exc()
+
+
+def download_compose_files(version, compose_filenames, workdir, keep_files=[],
+                           nuvla_api_endpoint='https://nuvla.io/api', api=None):
+    """ Prepares the working environment for installing NuvlaEdge
 
     :param version: version number of NuvlaEdge to install
-    :param compose_files: list of release assets to download
+    :param compose_filenames: list of release assets to download
     :param workdir: path where the compose files are to be saved
     :param keep_files: list of files that are not supposed to be modified during this preparation
+    :param nuvla_api_endpoint: Nuvla API endpoint (default: https://nuvla.io/api)
+    :param api: authenticated requests session. do not use session if not provided
 
-    :returns absolute path to the NuvlaEdge Engine installer script
+    :returns list of paths to compose files
     """
-    github_release = 'https://github.com/nuvlaedge/deployment/releases/download/{}'.format(version)
+
+    if not api:
+        api = requests.Session()
 
     # Double check that the workdir is created
-    try:
-        # Create working directory
+    with ignore_exception(False):
         os.makedirs(workdir)
-    except FileExistsError:
-        pass
 
     # Backup the previous installation files
     existing_files = os.listdir(workdir)
@@ -133,49 +181,31 @@ def prepare_nuvlaedge_installation(version, compose_files, workdir, keep_files=[
             new_file = "{}.backup".format(filename, now)
             os.rename(filename, new_file)
 
-    final_compose_files = []
-    for file in compose_files:
-        gh_url = "{}/{}".format(github_release, file)
+    params = {
+        'filter': "release='{}'".format(version),
+        'select': 'compose-files',
+        'last': 1
+    }
+    r = api.get('{}/nuvlabox-release'.format(nuvla_api_endpoint), params=params).json()['resources']
 
-        r = requests.get(gh_url)
-        r.raise_for_status()
-        save_compose_file_at = "{}/{}".format(workdir, file)
-        with open(save_compose_file_at, 'wb') as f:
-            f.write(r.content)
+    if not len(r):
+        raise Exception('Error: NuvlaEdge release "{}" not found on "{}"'.format(version, nuvla_api_endpoint))
 
-        final_compose_files.append(save_compose_file_at)
+    ne_release = r[0]
+    compose_files = {r['name']: r['file'] for r in ne_release['compose-files']}
 
-    # also download install file
-    installer_file_name = "install.sh"
-    installer_file = "{}/{}".format(workdir, installer_file_name)
-    installer_file_gh = "{}/{}".format(github_release, installer_file_name)
+    final_compose_filepaths = []
+    for filename in compose_filenames:
+        filepath = "{}/{}".format(workdir, filename)
 
-    r = requests.get(installer_file_gh)
-    r.raise_for_status()
-    with open(installer_file, 'wb') as f:
-        f.write(r.content)
+        if filename not in compose_files:
+            raise Exception('Error: compose file "{}" not found in "{}"'.format(filename, compose_files.keys()))
 
-    return installer_file, final_compose_files
+        with open(filepath, 'w') as f:
+            f.write(compose_files[filename])
+        final_compose_filepaths.append(filepath)
 
-
-def install_nuvlaedge(cmd, env=os.environ.copy(), timeout=600):
-    """ Runs a command
-
-    :param cmd: command to be executed
-    :param env: environment to be passed
-    :param timeout: time after which the command will abruptly be terminated
-    """
-    try:
-        result = run(cmd, stdout=PIPE, stderr=STDOUT, env=env, input=None,
-                     timeout=timeout, universal_newlines=True)
-
-    except TimeoutExpired:
-        raise Exception('Command execution timed out after {} seconds'.format(timeout))
-
-    if result.returncode != 0:
-        raise Exception(result.stdout)
-
-    print(result.stdout)
+    return final_compose_filepaths
 
 
 def nuvla_login(api_endpoint, api_key, api_secret, insecure=False):
@@ -196,7 +226,7 @@ def nuvla_login(api_endpoint, api_key, api_secret, insecure=False):
 
 
 def read_env_file(env_file):
-    env_vars = []
+    env_vars = {}
     with open(env_file) as f:
         for line in f.read().splitlines():
             if line and "=" in line:
@@ -207,20 +237,16 @@ def read_env_file(env_file):
 
 def generate_nuvlaedge_name_description(name_prefix, description_prefix):
     name_suffix = ''
-
     mac = ''
-    try:
+    isotime = ''
+
+    with ignore_exception():
         mac = get_mac()
         name_suffix = '{} {}'.format(name_suffix, mac).strip()
-    except:
-        pass
 
-    isotime = ''
-    try:
+    with ignore_exception():
         isotime = datetime.datetime.now().isoformat(' ')[:19]
         name_suffix = '{} {}'.format(name_suffix, isotime).strip()
-    except:
-        pass
 
     hostname = platform.node()
     name_suffix = '{} {}'.format(name_suffix, hostname).strip()
@@ -231,13 +257,49 @@ def generate_nuvlaedge_name_description(name_prefix, description_prefix):
     return name, description
 
 
+def get_command_compose_files(compose_filepaths):
+    command_compose_files = []
+    for f in compose_filepaths:
+        command_compose_files += ['-f', f]
+    return command_compose_files
+
+
+def get_docker_compose_cmd():
+    compose_cmd = ['docker', 'compose']
+    try:
+        run_command(compose_cmd, print_output=False)
+    except Exception:
+        compose_cmd = ['docker-compose']
+    return compose_cmd
+
+
+def get_previous_project_name():
+    project_name = 'nuvlaedge'
+    docker_compose_cmd = get_docker_compose_cmd()
+
+    def cmd(project):
+        return docker_compose_cmd + ['-p', project, 'ps', '-a', '-q']
+
+    with ignore_exception(True, True):
+        kwargs = dict(raise_on_return_code=False, print_output=False)
+        _, ne_out = run_command(cmd('nuvlaedge'), **kwargs)
+        if not ne_out:
+            _, nb_out = run_command(cmd('nuvlabox'), **kwargs)
+            if nb_out:
+                project_name = 'nuvlabox'
+
+    return project_name
+
+
 if __name__ == "__main__":
+    socket.setdefaulttimeout(30)
+
     args = arguments()
 
     ne_trigger_json = json.loads(args.nuvlaedge_trigger_content)
-    nuvlaedge_workdir = args.nuvlaedge_workdir.rstrip('/')
+    nuvlaedge_workdir     = args.nuvlaedge_workdir.rstrip('/')
     nuvlaedge_old_workdir = args.nuvlaedge_old_workdir.rstrip('/')
-    env_file = "{}/.env".format(nuvlaedge_workdir)
+    env_file     = "{}/.env".format(nuvlaedge_workdir)
     old_env_file = "{}/.env".format(nuvlaedge_old_workdir)
 
     installation_strategy = "OVERWRITE" # default
@@ -295,11 +357,11 @@ if __name__ == "__main__":
                 else:
                     new_conf['NUVLABOX_UUID'] = previous_uuid
                     new_conf['NUVLAEDGE_UUID'] = previous_uuid
-                    if new_conf == previous_conf:
-                        print("NuvlaEdge environment hasn't changed, performing an UPDATE")
-                        installation_strategy = "UPDATE"
-                    else:
-                        print("NuvlaEdge environment different from existing installation, performing an OVERWRITE")
+                    #if new_conf == previous_conf:
+                    print("NuvlaEdge environment hasn't changed, performing an UPDATE")
+                    installation_strategy = "UPDATE"
+                    #else:
+                    #    print("NuvlaEdge environment different from existing installation, performing an OVERWRITE")
             elif response.status_code == 404:
                 # doesn't exist, so let's just OVERWRITE this local installation
                 print("Previous NuvlaEdge {} doesn't exist anymore...creating new one".format(previous_uuid))
@@ -345,22 +407,54 @@ if __name__ == "__main__":
             f.write("{}={}\n".format(varname, varvalue))
 
     try:
-        installer_file, compose_files = prepare_nuvlaedge_installation(nuvlaedge_release,
-                                                                              nuvlaedge_assets,
-                                                                              nuvlaedge_workdir,
-                                                                              keep_files=[env_file])
+        compose_filepaths = download_compose_files(nuvlaedge_release,
+                                                   nuvlaedge_assets,
+                                                   nuvlaedge_workdir,
+                                                   [env_file],
+                                                   nuvla_api_endpoint,
+                                                   api)
+        docker_compose_cmd    = get_docker_compose_cmd()
+        command_compose_files = get_command_compose_files(compose_filepaths)
+        project_name          = get_previous_project_name()
 
-        install_command = ["sh", installer_file,
-                           "--env-file={}".format(env_file),
-                           "--compose-files={}".format(",".join(compose_files)),
-                           "--installation-strategy={}".format(installation_strategy),
-                           "--action=INSTALL"]
+        def docker_compose_base_cmd():
+            return (
+                docker_compose_cmd
+                + ['-p', project_name]
+                + ['--env-file', env_file]
+                + command_compose_files
+            )
 
-        print("Installing NuvlaEdge Engine - this can take a few minutes...")
-        install_nuvlaedge(install_command)
+        if installation_strategy == 'UPDATE':
+            ps_cmd = docker_compose_base_cmd() + ['ps', '-a', '-q']
+            _, output = run_command(ps_cmd,
+                                    raise_on_return_code=False,
+                                    print_output=False)
+            if output:
+                print('Found an active NuvlaEdge installation. Updating it')
+            else:
+                print('No active NuvlaEdge installations found. Installing from scratch')
+
+        elif installation_strategy == 'OVERWRITE':
+            down_cmd = docker_compose_base_cmd() + ['down', '-v', '--remove-orphans']
+            run_command(down_cmd, raise_on_return_code=False, print_command=True)
+            # If previous installation is removed, project name will always be "nuvlaedge"
+            project_name = 'nuvlaedge'
+
+        else:
+            raise ValueError('Installation strategy "{}" not recognized'.format(installation_strategy))
+
+        print("Pulling docker images - this can take a few minutes...")
+        pull_cmd = docker_compose_base_cmd() + ['pull', '--ignore-pull-failures']
+        run_command(pull_cmd, raise_on_return_code=False, print_command=True)
+
+        print("Installing NuvlaEdge - this can take a few minutes...")
+        up_cmd = docker_compose_base_cmd() + ['up', '-d']
+        run_command(up_cmd, print_command=True)
+
     except:
         # On any error, cleanup the resource in Nuvla
-        print("NuvlaEdge Engine installation failed")
+        print("NuvlaEdge installation failed")
         if nuvlaedge_id:
             print("removing {} from Nuvla".format(nuvlaedge_id))
             api.delete(nuvla_api_endpoint + "/" + nuvlaedge_id)

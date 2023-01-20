@@ -7,7 +7,6 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab-new :as tab-plugin]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
@@ -16,8 +15,7 @@
   (fn [{db :db}]
     {:db (merge db spec/defaults)
      :fx [[:dispatch [::apps-events/reset-version]]
-          [:dispatch [::apps-events/module-not-found false]]
-          [:dispatch [::get-modules]]]}))
+          [:dispatch [::apps-events/module-not-found false]]]}))
 
 (reg-event-db
   ::set-modules
@@ -27,8 +25,7 @@
 
 (reg-event-fx
   ::get-modules
-  (fn [{{:keys [::session-spec/session] :as db} :db}]
-    (let [active-tab (keyword (tab-plugin/get-active-tab db [::spec/tab]))]
+  (fn [{{:keys [::session-spec/session] :as db} :db} [_ active-tab]]
       (-> {:db (assoc db ::apps-spec/module nil)
            ::cimi-api-fx/search
            [:module
@@ -46,8 +43,8 @@
                                nil)
                              (full-text-search-plugin/filter-text
                                db [::spec/modules-search]))}
-                 (pagination-plugin/first-last-params db [::spec/pagination]))
-            #(dispatch [::set-modules %])]}))))
+                 (pagination-plugin/first-last-params db [(spec/page-keys->pagination-db-path active-tab)]))
+            #(dispatch [::set-modules %])]})))
 
 (reg-event-fx
   ::get-modules-summary

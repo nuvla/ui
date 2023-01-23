@@ -299,6 +299,17 @@ body .ui.breadcrumb a, body .ui.breadcrumb a:hover {
      font-size: 1rem;
 }
 
+
+/*
+ * Hi Hanhai! 
+ * I disabled the breadcrumb css for the icons,
+ * because it showed the icon on every breadcrum element,
+ * not just the first one.
+ * 
+ * Rendering of the icon is now controlled by the app code.
+ * Thanks for the work!
+ * Mario
+ *
 body .ui.breadcrumb a::before {
      font-family: "Font Awesome 6 Pro";
      padding-right: 10px;
@@ -344,6 +355,7 @@ body .nuvla-clouds .ui.breadcrumb a::before {
 body .nuvla-api .ui.breadcrumb a::before {
      content: "\f121";
 }
+*/
 
 body i.icon.chevron.right:before {
      font-family: "Font Awesome 6 Pro";

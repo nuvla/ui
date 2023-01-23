@@ -194,27 +194,28 @@
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set (subscribe [::subs/deployment-set])
         can-edit?      @(subscribe [::subs/can-edit?])]
-    [tab/Tab
-     {:db-path [::spec/tab]
-      :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
-                            :key     :overview
-                            :icon    "info"}
-                 :render   #(r/as-element [TabOverview])}
-                (events-plugin/events-section
-                  {:db-path [::spec/events]
-                   :href    (:id @deployment-set)})
-                {:menuItem {:content (str/capitalize (tr [:deployments]))
-                            :key     :deployments
-                            :icon    "rocket"}
-                 :render   #(r/as-element [deployments-views/DeploymentTable
-                                           {:no-actions true
-                                            :empty-msg  (tr [:empty-deployemnt-msg])}])}
-                (job-views/jobs-section)
-                (acl/TabAcls {:e          deployment-set
-                              :can-edit?  can-edit?
-                              :edit-event ::events/edit})]
-      :menu    {:secondary true
-                :pointing  true}}]))
+    (when @deployment-set
+      [tab/Tab
+      {:db-path [::spec/tab]
+       :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
+                             :key     :overview
+                             :icon    "info"}
+                  :render   #(r/as-element [TabOverview])}
+                 (events-plugin/events-section
+                   {:db-path [::spec/events]
+                    :href    (:id @deployment-set)})
+                 {:menuItem {:content (str/capitalize (tr [:deployments]))
+                             :key     :deployments
+                             :icon    "rocket"}
+                  :render   #(r/as-element [deployments-views/DeploymentTable
+                                            {:no-actions true
+                                             :empty-msg  (tr [:empty-deployemnt-msg])}])}
+                 (job-views/jobs-section)
+                 (acl/TabAcls {:e          deployment-set
+                               :can-edit?  can-edit?
+                               :edit-event ::events/edit})]
+       :menu    {:secondary true
+                 :pointing  true}}])))
 
 (defn Application
   [{:keys [id name subtype description] :as module}]

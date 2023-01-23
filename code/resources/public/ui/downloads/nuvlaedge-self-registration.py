@@ -237,22 +237,21 @@ def read_env_file(env_file):
 
 def generate_nuvlaedge_name_description(name_prefix, description_prefix):
     name_suffix = ''
-    mac = ''
-    isotime = ''
+    name_suffixes = {}
 
     with ignore_exception():
-        mac = get_mac()
-        name_suffix = '{} {}'.format(name_suffix, mac).strip()
+        name_suffixes['mac'] = get_mac()
 
     with ignore_exception():
-        isotime = datetime.datetime.now().isoformat(' ')[:19]
-        name_suffix = '{} {}'.format(name_suffix, isotime).strip()
+        name_suffixes['time'] = datetime.datetime.now().isoformat(' ')[:19]
 
-    hostname = platform.node()
-    name_suffix = '{} {}'.format(name_suffix, hostname).strip()
+    with ignore_exception():
+        name_suffixes['hostname'] = platform.node()
 
-    name = "{} - {}".format(name_prefix, name_suffix) if name_prefix else name_suffix
-    description = "{} - MAC address: {} - Installation time: {} - Hostname: {}".format(description_prefix, mac, isotime, hostname)
+    name_suffix = ' | '.join(name_suffixes.values())
+
+    name = "{} | {}".format(name_prefix, name_suffix) if name_prefix else name_suffix
+    description = "{} - MAC address: {mac} - Installation time: {time} - Hostname: {hostname}".format(description_prefix, **name_suffixes)
 
     return name, description
 

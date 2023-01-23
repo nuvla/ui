@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
             [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
             [sixsq.nuvla.ui.edges.views-utils :as views-utils]
+            [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
@@ -908,6 +909,28 @@
          [NuvlaboxMapPoint nuvlabox]))]))
 
 
+(defn- ControlBar
+  []
+  (let [additional-filter (subscribe [::subs/additional-filter])
+        filter-open?      (r/atom false)]
+    (fn []
+      [ui/GridColumn {:width 4}
+       [:div {:style {:display     :flex
+                      :align-items :baseline}}
+        [full-text-search-plugin/FullTextSearch
+         {:db-path            [::spec/edges-search]
+          :change-event       [::pagination-plugin/change-page
+                               [::spec/pagination] 1]
+          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
+          :style              {:width "100%"}}]
+        ^{:key (random-uuid)}
+        [filter-comp/ButtonFilter
+         {:resource-name  "nuvlabox"
+          :default-filter  @additional-filter
+          :open?          filter-open?
+          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
+
+
 (defn NuvlaBoxesOrClusters
   []
   (dispatch [::events/refresh-root])
@@ -919,13 +942,7 @@
       [ui/Grid {:stackable true
                 :reversed  "mobile"
                 :style     {:padding-bottom 10}}
-       [ui/GridColumn {:width 4}
-        [full-text-search-plugin/FullTextSearch
-         {:db-path            [::spec/edges-search]
-          :change-event       [::pagination-plugin/change-page
-                               [::spec/pagination] 1]
-          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
-          :style              {:width "100%"}}]]
+       [ControlBar]
        [ui/GridColumn {:width 10}
         (if (= @view-type :cluster)
           [views-clusters/StatisticStates]

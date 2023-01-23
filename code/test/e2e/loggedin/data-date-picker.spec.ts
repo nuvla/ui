@@ -24,7 +24,6 @@ test('Datepicker test', async ({ page }, { project, config }) => {
     route.fulfill({ status: 200 });
   });
 
-  await page.pause();
   await Promise.all([
     // Format of updated react-datepicker
     page.getByRole('option', { name: new RegExp(format(date)) }).click(),

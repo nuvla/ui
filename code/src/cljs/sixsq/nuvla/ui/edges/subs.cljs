@@ -128,9 +128,10 @@
   :<- [::nuvlabox-releases]
   (fn [nuvlabox-releases]
     (map
-      (fn [{:keys [id release pre-release]}]
-        {:key release, :text (str release (when pre-release " - pre-release")), :value id, :pre-release pre-release})
-      nuvlabox-releases)))
+     (fn [{:keys [id release pre-release]}]
+       {:key release, :text (str release (when pre-release " - pre-release")),
+        :value id, :pre-release pre-release})
+     nuvlabox-releases)))
 
 (reg-sub
   ::ssh-keys-available
@@ -167,3 +168,8 @@
   ::nuvlaboxes-in-clusters
   (fn [db]
     (::spec/nuvlaboxes-in-clusters db)))
+
+(reg-sub
+  ::additional-filter
+  (fn [db]
+    (::spec/additional-filter db)))

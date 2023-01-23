@@ -9,6 +9,8 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -74,19 +76,29 @@
 (reg-event-fx
   ::get-nuvlaboxes
   (fn [{{:keys [::spec/state-selector
-                ::spec/ordering] :as db} :db} _]
+                ::spec/ordering
+                ::spec/additional-filter] :as db} :db} _]
     (let [ordering (or ordering spec/default-ordering)]
       {::cimi-api-fx/search
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)
               :filter  (general-utils/join-and
                          (when state-selector (utils/state-filter state-selector))
+                         additional-filter
                          (full-text-search-plugin/filter-text
                            db [::spec/edges-search]))}
              (pagination-plugin/first-last-params
                db [::spec/pagination]))
         #(dispatch [::set-nuvlaboxes %])]})))
 
+
+(reg-event-fx
+  ::set-additional-filter
+  (fn [{db :db} [_ filter]]
+    {:db (-> db
+             (assoc ::spec/additional-filter filter)
+             (assoc-in [::spec/pagination :active-page] 1))
+     :fx [[:dispatch [::get-nuvlaboxes]]]}))
 
 (reg-event-fx
   ::set-nuvlaboxes
@@ -367,12 +379,14 @@
 (reg-event-fx
   ::get-nuvlabox-releases
   (fn [{:keys [db]} _]
-    {:db                  (assoc db ::spec/nuvlabox-releases nil)
-     ::cimi-api-fx/search [:nuvlabox-release
-                           {:select  "id, release, pre-release, release-notes, url, compose-files"
-                            :orderby "release-date:desc"
-                            :last    10000}
-                           #(dispatch [::set-nuvlabox-releases %])]}))
+    (let [session (::session-spec/session db)]
+      {:db                  (assoc db ::spec/nuvlabox-releases nil)
+       ::cimi-api-fx/search [:nuvlabox-release
+                             {:select  "id, release, pre-release, release-notes, url, compose-files, published"
+                              :filter   (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" (get-active-claim session) "'"))
+                              :orderby "release:desc"
+                              :last    10000}
+                             #(dispatch [::set-nuvlabox-releases %])]})))
 
 
 (reg-event-fx

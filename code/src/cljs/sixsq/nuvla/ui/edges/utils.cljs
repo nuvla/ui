@@ -23,6 +23,18 @@
 (def vuln-low-color "#21b802")
 (def vuln-unknown-color "#949494")
 
+(defn score-vulnerability
+  [{:keys [vulnerability-score] :as item}]
+  (let [set-fn #(assoc item :severity %1 :color %2)]
+    (cond
+      (nil? vulnerability-score) (set-fn "UNKNOWN" vuln-unknown-color)
+      (>= vulnerability-score 9.0) (set-fn "CRITICAL" vuln-critical-color)
+      (and (< vulnerability-score 9.0)
+           (>= vulnerability-score 7.0)) (set-fn "HIGH" vuln-high-color)
+      (and (< vulnerability-score 7.0)
+           (>= vulnerability-score 4.0)) (set-fn "MEDIUM" vuln-medium-color)
+      (< vulnerability-score 4.0) (set-fn "LOW" vuln-low-color))))
+
 (def orchestration-icons
   {:swarm      "docker"
    :kubernetes "/ui/images/kubernetes.svg"})

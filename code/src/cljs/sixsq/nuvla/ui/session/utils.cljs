@@ -12,3 +12,8 @@
 (defn remove-group-prefix
   [account]
   (str/replace-first account #"^group/" ""))
+
+(defn get-active-claim
+  [session]
+  (or (:active-claim session)
+      (:user session)))

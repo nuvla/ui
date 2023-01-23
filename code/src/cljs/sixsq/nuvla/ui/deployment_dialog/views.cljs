@@ -120,9 +120,12 @@
 
 (defn step-content-segment
   [active-step]
-  [ui/Segment style/autoscroll-y
-   ^{:key active-step}
-   [utils/step-content active-step]])
+  (let [style (cond-> style/autoscroll-y
+                (= active-step :module-version)
+                (update-in [:style] dissoc :overflow-y))]
+    [ui/Segment style
+     ^{:key active-step}
+     [utils/step-content active-step]]))
 
 
 (defn deploy-modal

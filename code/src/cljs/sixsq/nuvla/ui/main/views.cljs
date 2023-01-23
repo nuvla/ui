@@ -34,11 +34,17 @@
           :style    {:cursor "pointer"}}
       (utils/truncate (str segment))]]))
 
+(defn- format-path-segment [tr first-segment]
+  (utils/capitalize-first-letter (@tr [(keyword first-segment)])))
+
 
 (defn format-first-crumb
   [nav-path]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (utils/capitalize-first-letter (@tr [(keyword (first nav-path))]))))
+  (let [tr (subscribe [::i18n-subs/tr])
+        first-segment (first nav-path)]
+    (if (seq first-segment)
+      (format-path-segment tr first-segment)
+      (format-path-segment tr "welcome"))))
 
 
 (defn decorate-breadcrumbs

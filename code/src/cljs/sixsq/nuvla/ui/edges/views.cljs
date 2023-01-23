@@ -126,7 +126,7 @@
           [ui/StatisticGroup
            {:size  "tiny"
             :style {:margin     "10px auto 10px auto"
-                    :display    "block"
+                    :display    "flex"
                     :text-align "center"
                     :width      "100%"}}
            [components/StatisticState {:value new,
@@ -915,8 +915,7 @@
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [:div {:style {:display     :flex
-                      :align-items :baseline}}
+       [:div
         [full-text-search-plugin/FullTextSearch
          {:db-path            [::spec/edges-search]
           :change-event       [::pagination-plugin/change-page

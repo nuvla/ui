@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-fx
@@ -22,6 +23,7 @@
   (fn [db [_ modules]]
     (assoc db ::spec/modules modules
               ::main-spec/loading? false)))
+
 
 (reg-event-fx
   ::get-modules

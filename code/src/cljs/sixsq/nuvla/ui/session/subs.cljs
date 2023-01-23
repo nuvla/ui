@@ -19,8 +19,7 @@
 (reg-sub
   ::active-claim
   :<- [::session]
-  (fn [{:keys [active-claim user]}]
-    (or active-claim user)))
+  :-> utils/get-active-claim)
 
 (reg-sub
   ::groups-hierarchies

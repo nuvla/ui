@@ -12,8 +12,17 @@
 - Edges overview - Adds more advanced filtering similar to e.g. deployments tab #1010
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
+- NuvlaEdge - Add and edit modals can handle nuvlabox-release endpoint sending back published flag #1053
 - Tables - Enables horizontal scroll on tables, bugfix #1089
-- Edges Details - Makes changing tab a navigation via query params #1092
+- NuvlaEdge Details - Makes changing tab a navigation via query params #1092
+- Deployment Details - Makes changing tab a navigation via query params #1094
+- Data page - Makes changing tab a navigation via query params #1099
+- Credentials page - Makes changing tab a navigation via query params #1098
+- Apps page - Makes changing tab a navigation via query params #1097
+- e2e tests - Marketplace tests checks for param in request body #1095
+- NuvlaEdge details - Shows pre-release flag behind version number #1054
+- NuvlaEdge details - Optimize vulnerabilty
+- NuvlaEdge details - Fix warnings in console
 
 ## [2.32.12] - 2023-01-06
 

@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.edges-detail.spec :as spec]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
@@ -13,6 +14,10 @@
   ::nuvlabox-status
   (fn [db]
     (::spec/nuvlabox-status db)))
+
+(reg-sub
+  ::nuvlaedge-release
+  :-> ::spec/nuvlaedge-release)
 
 
 (defn- version-string->number-vec [version]
@@ -52,8 +57,8 @@
 
 (reg-sub
   ::nuvlabox-vulns
-  (fn [db]
-    (::spec/nuvlabox-vulns db)))
+  (fn [{{:keys [items] :as vulns} ::spec/nuvlabox-vulns}]
+    (assoc vulns :items (map edges-utils/score-vulnerability items))))
 
 (reg-sub
   ::nuvlabox-associated-ssh-keys

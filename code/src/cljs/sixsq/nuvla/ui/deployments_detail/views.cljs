@@ -163,7 +163,7 @@
                 :icon    "linkify"}
      :render   #(r/as-element
                   [ui/TabPane [views-versions/versions-table
-                               @module-versions @module-content-id]])}))
+                               module-versions module-content-id]])}))
 
 
 (defn item-to-row

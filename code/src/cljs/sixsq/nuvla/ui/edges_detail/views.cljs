@@ -1267,7 +1267,7 @@
     [ui/Segment {:secondary true
                  :color     "teal"
                  :raised    true}
-     [:h4 "Tags"]
+     [:h4 (str/capitalize (@tr [:tags]))]
      [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
                                                    (@tr [:updated-successfully])])]]))
 

@@ -1420,7 +1420,7 @@
             [ui/GridColumn {:stretched true}
              [TabOverviewCluster @nb-status]])
 
-          (when (and (seq tags) (not suspended?))
+          (when-not suspended?
             [ui/GridColumn
              [TabOverviewTags @nuvlabox]])
 

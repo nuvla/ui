@@ -78,7 +78,7 @@
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [opts]
       [ui/Tab
-       (-> (update opts :panes #(map add-hrefs %))
+       (-> (assoc opts :panes (map add-hrefs panes))
            (dissoc :db-path :change-event :default-active-tab)
            (assoc :active-index
              (get key->index (keyword @cur-view) 0)))])))

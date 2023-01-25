@@ -1,12 +1,113 @@
+/** General **/
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap');
+
+body,
+body .menu .item,
+.ui.header,
+h1,
+h2,
+H3,
+h4,
+h5,
+h6,
+.ui.button {
+  font-family: 'Poppins' !important;
+}
+
+body a {
+  color: #c10e12;
+}
+
+header {
+  position: relative;
+}
+
+.ui.segment {
+  overflow: visible;
+  margin: 0 0 1rem 0 !important;
+}
+
+.ui.button {
+  border-radius: 50px;
+}
+
+/* Overriding semantic UI fonts when fa is used */
+i.icon.fa-classic,
+i.icon.fa-light,
+i.icon.fa-regular,
+i.icon.fa-solid,
+i.icon.fa-thin,
+i.icon.fal,
+i.icon.far,
+i.icon.fas,
+i.icon.fat {
+  font-family: 'Font Awesome 6 Pro';
+}
+
+i.icon.fad {
+  font-family: 'Font Awesome 6 Duotone';
+}
+
+i.icon.fa-thin,
+i.icon.fat {
+  font-weight: 100;
+}
+
+i.icon.fa-light,
+i.icon.fal {
+  font-weight: 300;
+}
+
+i.icon.fa-regular,
+i.icon.far {
+  font-weight: 400;
+}
+
+i.icon.fa-solid,
+i.icon.fas {
+  font-weight: 900;
+}
+
+.font-weight-400 {
+  font-weight: 400 !important;
+}
+
+.ui.labeled.icon.menu .item > .icon:not(.dropdown) {
+  margin: 0 auto 0.4rem !important;
+}
+
+.ui.dropdown .menu.transition.visible {
+  z-index: 1001;
+}
+
+.ui.message a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+tr.active td:first-child {
+  padding-left: 5px !important;
+}
+
+tr.active td {
+  font-weight: bold !important;
+}
+
+/** General End **/
+
+/** Sidebar **/
+
 #nuvla-ui-sidebar {
   z-index: 1000;
   overflow: hidden;
   overflow-y: auto;
+  background: #c10e12;
 }
 
 #nuvla-ui-sidebar:after {
-  background-image: url(/ui/images/mountains.jpg);
-  background-color: black;
+  background-image: none;
+  background-color: #c10e12;
   background-repeat: no-repeat;
   z-index: -1;
   opacity: 0.5;
@@ -21,22 +122,84 @@
 }
 
 #nuvla-ui-sidebar .active {
-  color: black !important;
-  background-color: rgba(255, 255, 255, 0.65);
+  color: #ffffff !important;
+  background-color: rgba(237, 43, 43, 1);
 }
 
-.nuvla-close-menu-item {
-  padding: 5px !important;
+#nuvla-ui-sidebar a:hover {
+  background-color: rgba(237, 43, 43, 0.6) !important;
 }
 
-/*
-  Allows the container to scroll with overview in the x-direction.  Usually
-  put on a Container to take advantage of the automatic width calculation of
-  the Semantic UI Container.
-*/
-.nuvla-ui-x-autoscroll {
-  overflow-x: auto;
+#nuvla-ui-sidebar .item {
+  padding: 0.7rem;
 }
+
+#nuvla-ui-sidebar .active.nuvla-apps,
+#nuvla-ui-sidebar a.nuvla-apps:hover,
+body .nuvla-apps .ui.breadcrumb {
+  color: #ffffff !important;
+  background-color: rgba(73, 135, 250, 1) !important;
+}
+
+#nuvla-ui-sidebar .active.nuvla-deployments,
+#nuvla-ui-sidebar a.nuvla-deployments:hover,
+body .nuvla-deployments .ui.breadcrumb {
+  color: #ffffff !important;
+  background-color: rgba(148, 130, 255, 1) !important;
+}
+
+#nuvla-ui-sidebar .active.nuvla-edges,
+#nuvla-ui-sidebar a.nuvla-edges:hover,
+body .nuvla-edges .ui.breadcrumb {
+  color: #ffffff !important;
+  background-color: rgba(22, 173, 146, 1) !important;
+}
+
+/** Sidebar End **/
+
+/** Header **/
+
+.nuvla-ui-header {
+  height: 30px;
+  border-radius: unset !important;
+}
+
+header .ui.menu {
+  min-height: 3.5rem;
+  border: none;
+  box-shadow: 0 1px 5px 0 rgb(0 1 5 / 8%);
+}
+
+#nuvla-ui-header-breadcrumb {
+  background: #c10e12;
+  padding: 0.5em 1em 0.5em 1em;
+  border-radius: 4px !important;
+}
+
+#nuvla-ui-header-breadcrumb a,
+#nuvla-ui-header-breadcrumb a:hover {
+  color: #fff;
+  font-size: 1rem;
+}
+
+#nuvla-ui-header-breadcrumb i.icon.chevron.right:before {
+  font-family: 'Font Awesome 6 Pro';
+  content: '\f054';
+  color: #ffffff;
+  font-weight: 300;
+}
+
+body .right.menu .nuvla-close-menu-item {
+  padding: 5px 15px !important;
+}
+
+body .ui.menu .right.menu .item > i.icon {
+  opacity: 1 !important;
+}
+
+/** Header End **/
+
+/** Main Content **/
 
 #nuvla-ui-main {
   display: flex !important; /* will be block without !important */
@@ -50,28 +213,45 @@
 */
 
 #nuvla-ui-content {
-  padding: 1ex;
   min-height: calc(100vh - 85px);
+  padding: 0.6rem 2rem 5rem 2rem !important;
+  background-color: #efefef;
 }
 
-@media only screen and (max-width: 768px) {
-  #nuvla-username {
-    display: none;
+/** Main Content End **/
+
+/** Footer **/
+
+.footer a {
+  color: #c10e12 !important;
+}
+
+.footer .ui.grid {
+  margin: 0 !important;
+  padding: 0.8rem;
+}
+.modal .ui.segment {
+  height: auto !important;
+}
+.ui.segment.footer {
+  padding: 0;
+  border-right: none;
+  border-left: none;
+  border-bottom: none;
+  margin: 0 !important;
+  box-shadow: none;
+  position: fixed;
+  overflow: visible;
+  bottom: 0;
+  width: calc(100% - 10rem);
+}
+@media only screen and (max-width: 980px) {
+  .ui.segment.footer {
+    width: 100%;
   }
-  #nuvla-username-button {
-    padding-left: 15px;
-    padding-right: 5px;
-  }
 }
 
-.nuvla-ui-header {
-  height: 30px;
-  border-radius: unset !important;
-}
-
-.nuvla-ui-section-header {
-  background-color: Gainsboro !important;
-}
+/** Footer End **/
 
 .nuvla-ui-session-left {
   margin-left: 10%;
@@ -108,9 +288,7 @@ div.search.dropdown > input {
   background-color: lightgrey;
 }
 
-/*
- * Misc
- */
+/** Misc **/
 
 .nuvla-command {
   font-family: 'Courier New', Courier, monospace;
@@ -155,30 +333,17 @@ div.search.dropdown > input {
   border-color: #85b7d9;
 }
 
-.fad {
-  font-family: 'Font Awesome 5 Duotone' !important;
+/*
+  Allows the container to scroll with overview in the x-direction.  Usually
+  put on a Container to take advantage of the automatic width calculation of
+  the Semantic UI Container.
+*/
+.nuvla-ui-x-autoscroll {
+  overflow-x: auto;
 }
 
-.fas {
-  font-family: 'Font Awesome 5 Pro' !important;
-  font-weight: 900 !important;
-}
-
-.ui.dropdown .menu.transition.visible {
-  z-index: 1001;
-}
-
-.ui.message a {
-  color: inherit;
-  text-decoration: underline;
-}
-
-tr.active td:first-child {
-  padding-left: 5px !important;
-}
-
-tr.active td {
-  font-weight: bold !important;
+.nuvla-ui-section-header {
+  background-color: Gainsboro !important;
 }
 
 /* Show clipboard on hover of value */
@@ -212,19 +377,6 @@ tr.active td {
 .leaflet-top,
 .leaflet-bottom {
   z-index: 998 !important;
-}
-
-.font-weight-400 {
-  font-weight: 400 !important;
-}
-
-@media only screen and (min-width: 600px) {
-  .grid-2-cols-responsive {
-    display: grid;
-    grid-template-columns: 45% 45%;
-    justify-content: space-between;
-    align-items: center;
-  }
 }
 
 .ellipsing {
@@ -264,3 +416,422 @@ tr.active td {
     max-width: 750px;
   }
 }
+
+/** Misc End **/
+
+@media only screen and (min-width: 600px) {
+  .grid-2-cols-responsive {
+    display: grid;
+    grid-template-columns: 45% 45%;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.nuvla-welcome main#nuvla-ui-content {
+  padding: 2rem 2rem 5rem 2rem !important;
+}
+
+a.card i.docker,
+a.card i.database {
+  color: #4283c4;
+}
+
+a.card:hover i.docker,
+a.card:hover i.database {
+  color: #1e70bf;
+}
+
+body .nuvla-deployments a {
+  color: rgba(122, 101, 255, 1);
+}
+
+body .nuvla-edges a {
+  color: rgba(22, 173, 146, 1);
+}
+
+body .nuvla-apps a {
+  color: rgba(73, 135, 250, 1);
+}
+
+i.icon.sort:before {
+  color: rgb(0 0 0 / 40%) !important;
+}
+
+body #nuvla-ui-main {
+  background-color: #ffffff !important;
+}
+
+.nuvla-welcome > .ui.grid {
+  margin: 0 !important;
+  padding: 2rem;
+}
+
+i.icon .circular {
+  font-family: 'Poppins' !important;
+}
+.ui.red.label,
+.ui.red.labels .label {
+  background-color: #c10e12 !important;
+  border-color: #c10e12 !important;
+  color: #fff !important;
+}
+.ui.red.statistic > .value,
+.ui.red.statistics .statistic > .value,
+.ui.statistics .red.statistic > .value,
+i.red.icon {
+  color: #ff0000 !important;
+}
+.section {
+  padding: 4rem 2rem;
+}
+.button.center {
+  margin: 0 auto !important;
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
+}
+.pagination {
+  border: 1px solid rgb(0 0 0 / 20%) !important;
+}
+body p.sub {
+  font-size: 1rem;
+  margin: 0 0 2rem 0;
+}
+body h1.ui.header {
+  font-size: 2.8rem;
+}
+
+body .ui.embed {
+  border-radius: 6px;
+  border: 1px solid #fff;
+}
+
+body .ui.button {
+  font-weight: 400;
+}
+
+.nuvla-welcome .ui.button {
+  margin: 0 0.5em 1em 0;
+  padding: 10px 20px;
+}
+body .ui.primary.button,
+.ui.primary.buttons .button,
+body .ui.primary.button:visited,
+.ui.primary.buttons .button:visited {
+  background-color: #c10e12;
+  border-radius: 50px;
+}
+body .ui.primary.button:hover,
+.ui.primary.buttons .button:hover {
+  background-color: rgba(237, 43, 43, 1);
+}
+
+body .ui.primary.white-button.button,
+.ui.primary.white-button.buttons .button {
+  background-color: #ffffff;
+  color: #c10e12;
+  border-radius: 50px;
+}
+
+body .ui.primary.white-button.button:hover,
+.ui.primary.white-button.buttons .button:hover {
+  background-color: rgba(237, 43, 43, 1);
+  color: #ffffff;
+}
+
+body .ui.secondary.button {
+  background-color: #ffffff;
+  border: 2px solid #c10e12;
+  color: #c10e12;
+  border-radius: 50px;
+  padding: 8px 20px;
+}
+body .ui.secondary.button:hover {
+  background-color: #c10e12;
+  color: #ffffff;
+}
+body .ui.secondary.white-button.button {
+  background-color: rgba(255, 255, 255, 0);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+}
+body .ui.secondary.white-button.button:hover {
+  background-color: #ffffff;
+  color: #c10e12;
+}
+
+body i.icon.video.play::before {
+  content: '\f144';
+  font-size: 3rem;
+}
+
+body .card .ui.header {
+  margin: 1rem 0;
+}
+
+.nuvla-welcome .card .content,
+.nuvla-apps .card .content {
+  padding: 2rem !important;
+}
+
+body .card .content p {
+  margin: 0 0 1rem 0 !important;
+}
+
+body .ui.card,
+.ui.cards > .card {
+  box-shadow: 5px 5px 15px 0 rgb(0 0 0 / 15%), 0 0 0 1px rgb(0 0 0 / 20%);
+}
+body .ui.card:hover,
+.ui.cards > .card:hover {
+  box-shadow: 5px 5px 20px 0 rgb(0 0 0 / 25%), 0 0 0 1px rgb(0 0 0 / 20%) !important;
+}
+
+@media only screen and (max-width: 767px) {
+  .card-image-centered {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.ui.card .ui.bordered.image img,
+.ui.card .ui.bordered.image svg,
+.ui.card .ui.bordered.images .image,
+.ui.card .ui.bordered.images img,
+.ui.card .ui.bordered.images svg,
+img.ui.bordered.image {
+  border: 1px solid rgb(0 0 0 / 10%);
+  border-left: none;
+  border-top: none;
+  border-right: none;
+}
+
+.ui.card > .content,
+.ui.cards > .card > .content {
+  margin-top: -1px;
+}
+
+body .ui.cards > .card {
+  margin: 1rem;
+}
+body .ui.divider {
+  margin: 1rem 0;
+}
+
+body .divider-red {
+  border-top: 1px solid #c10e12 !important;
+  border-bottom: none;
+}
+
+@media only screen and (max-width: 767px) {
+  body .ui.container {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+.statistic .icon {
+  margin: 0 auto;
+  font-size: 2rem !important;
+  margin-bottom: 0.8rem !important;
+}
+
+.ui.statistics {
+  margin: 0;
+}
+.ui.statistics > .statistic {
+  flex: 1 !important;
+  margin: 0 1rem 1rem 1rem !important;
+}
+.compact .ui.statistics > .statistic {
+  flex: 1 !important;
+  margin: 0 0.5rem 1rem 0.5rem !important;
+}
+
+.compact .ui.statistic > .label,
+.compact .ui.statistics .statistic > .label {
+  font-size: 0.7rem;
+}
+
+/** General **/
+
+/** Login **/
+
+.login-left {
+  background-image: url(/ui/images/bg-hero-sigin.jpg);
+  background-size: cover;
+  background-position: left center;
+  background-repeat: no-repeat;
+  color: white;
+  height: 100vh;
+}
+
+.login-right {
+  margin: 15% 10% !important;
+}
+
+@media only screen and (max-width: 767px) {
+  .login-left {
+    height: auto;
+  }
+
+  .login-left .nuvla-ui-session-left {
+    margin: 2rem !important;
+  }
+}
+/** Login End **/
+
+/** Dashboard Page **/
+
+.ui.statistic > .label,
+.ui.statistics .statistic > .label {
+  font-family: 'Poppins' !important;
+}
+.nuvla-dashboard .statistic.nuvla-apps,
+.nuvla-dashboard .statistic.nuvla-deployments,
+.nuvla-dashboard .statistic.nuvla-edges,
+.nuvla-dashboard .statistic.nuvla-credentials {
+  padding: 1.5rem 2rem;
+  border-radius: 8px;
+  margin: 1rem !important;
+  flex: 1;
+}
+@media only screen and (max-width: 767px) {
+  .nuvla-dashboard .statistic.nuvla-apps,
+  .nuvla-dashboard .statistic.nuvla-deployments,
+  .nuvla-dashboard .statistic.nuvla-edges,
+  .nuvla-dashboard .statistic.nuvla-credentials {
+    flex: 100%;
+  }
+}
+.nuvla-dashboard .statistic.nuvla-apps {
+  background-color: rgba(73, 135, 250, 1);
+}
+
+.nuvla-dashboard .statistic.nuvla-deployments {
+  background-color: rgba(148, 130, 255, 1);
+}
+
+.nuvla-dashboard .statistic.nuvla-edges {
+  background-color: rgba(22, 173, 146, 1);
+}
+
+.nuvla-dashboard .statistic.nuvla-credentials {
+  background-color: #c10e12;
+}
+.nuvla-dashboard .statistic.nuvla-apps .value,
+.nuvla-dashboard .statistic.nuvla-apps .label,
+.nuvla-dashboard .statistic.nuvla-apps .icon,
+.nuvla-dashboard .statistic.nuvla-deployments .value,
+.nuvla-dashboard .statistic.nuvla-deployments .label,
+.nuvla-dashboard .statistic.nuvla-deployments .icon,
+.nuvla-dashboard .statistic.nuvla-edges .value,
+.nuvla-dashboard .statistic.nuvla-edges .label,
+.nuvla-dashboard .statistic.nuvla-edges .icon,
+.nuvla-dashboard .statistic.nuvla-credentials .value,
+.nuvla-dashboard .statistic.nuvla-credentials .label,
+.nuvla-dashboard .statistic.nuvla-credentials .icon {
+  color: #ffffff !important;
+}
+
+.ui-header i.icon,
+.ui-header i.icons {
+  font-size: 1.5rem;
+}
+
+.ui-header {
+  width: calc(100% + 2rem);
+  padding: 0.6rem 1rem 0.7rem 1rem;
+  margin: -1rem -1rem 2rem -1rem !important;
+  color: #ffffff;
+}
+
+.nuvla-edges .statistics .black .icons,
+.nuvla-deployments .statistics .black .icons {
+  color: rgba(0, 0, 0, 0.87);
+}
+.nuvla-edges .statistics .grey .icons,
+.nuvla-deployments .statistics .grey .icons {
+  color: #767676;
+}
+.nuvla-edges .statistics .green .icons,
+.nuvla-deployments .statistics .green .icons {
+  color: #21ba45;
+}
+.nuvla-edges .statistics .icons .icon.large,
+.nuvla-deployments .statistics .icons .icon.large {
+  border: 2px solid rgba(148, 130, 255, 0.5) !important;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.1rem !important;
+}
+.nuvla-edges .statistics .red .icons,
+.nuvla-deployments .statistics .red .icons {
+  color: #ff0000;
+}
+.nuvla-edges .statistics .orange .icons,
+.nuvla-deployments .statistics .orange .icons {
+  color: #f2711c;
+}
+
+.nuvla-edges .statistics .icons {
+  color: rgba(22, 173, 146, 1);
+  text-align: center;
+}
+
+.nuvla-deployments .statistics i.icons .icon:first-child,
+.nuvla-edges .statistics i.icons .icon:first-child {
+  margin-right: 0;
+}
+
+.nuvla-edges .ui-header,
+.nuvla-edges .button {
+  background-color: rgba(22, 173, 146, 1) !important;
+  color: #ffffff;
+}
+
+.nuvla-edges .button:hover {
+  background-color: rgba(22, 173, 146, 0.9) !important;
+  color: #ffffff;
+}
+
+.nuvla-deployments .ui-header,
+.nuvla-deployments .button {
+  background-color: rgba(148, 130, 255, 1) !important;
+  color: #ffffff;
+}
+
+.nuvla-deployments .button:hover {
+  background-color: rgba(148, 130, 255, 0.9) !important;
+  color: #ffffff;
+}
+
+.nuvla-deployments .statistics .icons {
+  text-align: center;
+}
+
+@media only screen and (max-width: 767px) {
+  .nuvla-dashboard .ui.statistics > .statistic {
+    flex: 100% !important;
+  }
+}
+
+/** Dashboard Page End **/
+
+/** Deployments Page **/
+
+.app-icon-name img {
+  max-width: 50px !important;
+  max-height: 40px !important;
+  margin-right: 10px;
+  height: auto !important;
+}
+
+.table-wrapper {
+  overflow: auto !important;
+  padding: 0 !important;
+}
+
+/** Deployments Page End**/

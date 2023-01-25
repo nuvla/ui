@@ -35,12 +35,12 @@
         follow-trial?  (get price :follow-customer-trial false)
         button-icon    (if (and price (not follow-trial?)) :cart :rocket)
         button-color   (if follow-trial? "green" "blue")
-        launch-price   (str (@tr [(if follow-trial?
+        deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
-                                    :launch-for)])
+                                    :deploy-for)])
                             (format-money (/ (:cent-amount-daily price) 100)) "/"
                             (@tr [:day]))
-        button-content (if price launch-price (@tr [:launch]))
+        button-content (if price deploy-price (@tr [:deploy]))
         on-click       (fn [event]
                          (dispatch [::main-events/subscription-required-dispatch
                                     [::deployment-dialog-events/create-deployment
@@ -153,18 +153,15 @@
 
 (defn RootView
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/init])
-    (fn []
-      [ui/Container {:fluid true}
-       [uix/PageHeader "fas fa-store"
-        (utils-general/capitalize-first-letter (@tr [:apps]))]
-       [tab-plugin/Tab
-        {:db-path      [::spec/tab]
-         :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
-         :menu         {:secondary true
-                        :pointing  true
-                        :style     {:display        "flex"
-                                    :flex-direction "row"
-                                    :flex-wrap      "wrap"}}
-         :panes        (tabs)}]])))
+  (dispatch [::events/init])
+  (fn []
+    [ui/Container {:fluid true}
+     [tab-plugin/Tab
+      {:db-path      [::spec/tab]
+       :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
+       :menu         {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+       :panes        (tabs)}]]))

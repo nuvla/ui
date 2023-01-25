@@ -517,7 +517,9 @@
        :style    {:width      "auto"
                   :height     "200px"
                   :object-fit "cover"
-                  :background "white"}}])
+                  :background "white"
+                  :margin-left "auto"
+                  :margin-right "auto"}}])
 
    (when corner-button corner-button)
 

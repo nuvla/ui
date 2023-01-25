@@ -335,6 +335,16 @@ body a {
   color: #c10e12;
 }
 
+a.card i.docker,
+a.card i.database {
+  color: #4283c4;
+}
+
+a.card:hover i.docker,
+a.card:hover i.database {
+  color: #1e70bf;
+}
+
 body .nuvla-deployments a {
   color: rgba(122, 101, 255, 1);
 }
@@ -599,7 +609,7 @@ body .menu.vertical a:hover {
 
 /** left menu **/
 /** top menu **/
-body .ui.menu {
+header .ui.menu {
   min-height: 3.5rem;
   border: none;
   box-shadow: 0 1px 5px 0 rgb(0 1 5 / 8%);

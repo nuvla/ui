@@ -1390,7 +1390,7 @@
         {:keys [state]} @(subscribe [::subs/nuvlabox])
         infra-services (subscribe [::subs/infra-services])]
     (fn []
-      (let [{:keys [tags ssh-keys]} @nuvlabox
+      (let [{:keys [ssh-keys]} @nuvlabox
             suspended? (= state "SUSPENDED")]
         (when (not= (count ssh-keys) (count @ssh-creds))
           (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))

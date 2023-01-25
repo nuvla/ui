@@ -311,23 +311,22 @@
 (defn data-view
   []
   (refresh)
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      (let [panes (data-panes)]
-        [components/LoadingPage {}
-         [ui/Segment style/basic
-          [MenuBar]
-          [NewDatasetModal]
-          [tab-plugin/Tab
-           {:db-path      [::spec/tab]
-            :menu         {:secondary true
-                           :pointing  true
-                           :style     {:display        "flex"
-                                       :flex-direction "row"
-                                       :flex-wrap      "wrap"}}
-            :change-event [::events/tab-changed]
-            :panes        panes}]
-          [ApplicationSelectModal]
-          [deployment-dialog-views/deploy-modal true]
-          [data-set-views/ProcessButton]
-          [data-set-views/CreateDataSet]]]))))
+  (fn []
+    (let [panes (data-panes)]
+      [components/LoadingPage {}
+       [ui/Segment style/basic
+        [MenuBar]
+        [NewDatasetModal]
+        [tab-plugin/Tab
+         {:db-path      [::spec/tab]
+          :menu         {:secondary true
+                         :pointing  true
+                         :style     {:display        "flex"
+                                     :flex-direction "row"
+                                     :flex-wrap      "wrap"}}
+          :change-event [::events/tab-changed]
+          :panes        panes}]
+        [ApplicationSelectModal]
+        [deployment-dialog-views/deploy-modal true]
+        [data-set-views/ProcessButton]
+        [data-set-views/CreateDataSet]]])))

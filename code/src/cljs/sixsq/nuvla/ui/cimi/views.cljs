@@ -504,8 +504,7 @@
 
 (defn cimi-resource
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        path         (subscribe [::route-subs/nav-path])
+  (let [path         (subscribe [::route-subs/nav-path])
         query-params (subscribe [::route-subs/nav-query-params])]
     (fn []
       (let [[_ resource-type _] @path]
@@ -513,7 +512,6 @@
         (when @query-params
           (dispatch [::events/set-query-params @query-params])))
       (let [n        (count @path)
-            inline   (= n 3)
             children (case n
                        1 [menu-bar]
                        2 [:<>

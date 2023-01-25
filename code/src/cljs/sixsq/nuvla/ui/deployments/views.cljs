@@ -421,21 +421,20 @@
 
 (defn DeploymentsMainContent
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/init])
-    (fn []
-      [components/LoadingPage {}
-       [:<>
-        [MenuBar]
-        [ui/Grid {:stackable true
-                  :reversed  "mobile"
-                  :style {:margin "0"}}
-         [ControlBar]
-         [StatisticStates true ::subs/deployments-summary]]
-        [bulk-progress-plugin/MonitoredJobs
-         {:db-path [::spec/bulk-jobs]}]
-        [DeploymentsDisplay]
-        [Pagination]]])))
+  (dispatch [::events/init])
+  (fn []
+    [components/LoadingPage {}
+     [:<>
+      [MenuBar]
+      [ui/Grid {:stackable true
+                :reversed  "mobile"
+                :style     {:margin "0"}}
+       [ControlBar]
+       [StatisticStates true ::subs/deployments-summary]]
+      [bulk-progress-plugin/MonitoredJobs
+       {:db-path [::spec/bulk-jobs]}]
+      [DeploymentsDisplay]
+      [Pagination]]]))
 
 (defn deployments-view
   []

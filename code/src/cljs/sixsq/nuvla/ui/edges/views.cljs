@@ -935,26 +935,25 @@
   []
   (dispatch [::events/refresh-root])
   (dispatch [::events/set-nuvlabox-cluster nil])
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [components/LoadingPage {}
-     [:<>
-      [MenuBar]
-      [ui/Grid {:stackable true
-                :reversed  "mobile"
-                :style     {:padding-bottom 10
-                            :margin 0}}
-       [ControlBar]
-       [ui/GridColumn {:width 10}
-        (if (= @view-type :cluster)
-          [views-clusters/StatisticStates]
-          [StatisticStates])]]
-      (case @view-type
-        :cards [NuvlaboxCards]
-        :table [NuvlaboxTable]
-        :map [NuvlaboxMap]
-        :cluster [views-clusters/NuvlaboxClusters])
-      (when-not (= @view-type :map)
-        [Pagination])]]))
+  [components/LoadingPage {}
+   [:<>
+    [MenuBar]
+    [ui/Grid {:stackable true
+              :reversed  "mobile"
+              :style     {:padding-bottom 10
+                          :margin         0}}
+     [ControlBar]
+     [ui/GridColumn {:width 10}
+      (if (= @view-type :cluster)
+        [views-clusters/StatisticStates]
+        [StatisticStates])]]
+    (case @view-type
+      :cards [NuvlaboxCards]
+      :table [NuvlaboxTable]
+      :map [NuvlaboxMap]
+      :cluster [views-clusters/NuvlaboxClusters])
+    (when-not (= @view-type :map)
+      [Pagination])]])
 
 
 (defn DetailedView

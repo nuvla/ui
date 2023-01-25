@@ -1152,10 +1152,9 @@
 
 (defn credentials-view
   [_path]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment style/basic
-     [MenuBar]
-     [TabsCredentials]
-     [AddCredentialModal]
-     [CredentialModal]
-     [GeneratedCredentialModal]]))
+  [ui/Segment style/basic
+   [MenuBar]
+   [TabsCredentials]
+   [AddCredentialModal]
+   [CredentialModal]
+   [GeneratedCredentialModal]])

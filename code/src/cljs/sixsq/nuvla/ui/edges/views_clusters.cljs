@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.edges.events :as events]
             [sixsq.nuvla.ui.edges.subs :as subs]
             [sixsq.nuvla.ui.edges.views-utils :as views-utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]

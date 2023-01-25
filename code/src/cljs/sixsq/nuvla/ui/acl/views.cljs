@@ -236,7 +236,7 @@
         [ui/Table {:unstackable true
                    :attached    "top"}
          [ui/TableHeader
-          [ui/TableRow {:class "WHATJ"}
+          [ui/TableRow
            [ui/TableHeaderCell
             (str/capitalize (@tr [:owners]))
             [InfoIcon :acl-owners]

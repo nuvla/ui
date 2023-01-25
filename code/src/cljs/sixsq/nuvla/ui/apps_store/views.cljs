@@ -153,18 +153,15 @@
 
 (defn RootView
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/init])
-    (fn []
-      [ui/Container {:fluid true}
-       [uix/PageHeader "fas fa-store"
-        (utils-general/capitalize-first-letter (@tr [:apps]))]
-       [tab-plugin/Tab
-        {:db-path      [::spec/tab]
-         :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
-         :menu         {:secondary true
-                        :pointing  true
-                        :style     {:display        "flex"
-                                    :flex-direction "row"
-                                    :flex-wrap      "wrap"}}
-         :panes        (tabs)}]])))
+  (dispatch [::events/init])
+  (fn []
+    [ui/Container {:fluid true}
+     [tab-plugin/Tab
+      {:db-path      [::spec/tab]
+       :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
+       :menu         {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+       :panes        (tabs)}]]))

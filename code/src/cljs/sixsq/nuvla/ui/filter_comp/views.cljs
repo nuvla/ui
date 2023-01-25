@@ -318,11 +318,16 @@
          {:trigger    (r/as-element
                         [ui/Popup
                          {:trigger  (r/as-element
-                                      [ui/Button {:icon     "magic"
+                                      [ui/Button {:icon     true
                                                   :disabled (nil? resource-name)
                                                   :on-click open-fn
                                                   :color    (when active-filter? :teal)
-                                                  :style    {:z-index 100}}])
+                                                  :style    {:z-index       100
+                                                             :display       :flex
+                                                             :border-radius "50px"}}
+                                       [uix/Icon {:name "fa-light fa-filter"}]
+                                       \u00A0
+                                       (str/capitalize (@tr [:filter]))])
                           :disabled (not active-filter?)}
                          [FilterSummary {:additional-filters-applied default-filter}]])
           :open       @open?

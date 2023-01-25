@@ -18,10 +18,10 @@
 
 (defn state->icon
   [state]
-  (let [icons-map {STARTED  "fas fa-play"
-                   STARTING "fas fa-spinner"
-                   STOPPED  "fas fa-stop"
-                   ERROR    "fas fa-exclamation"}]
+  (let [icons-map {STARTED  "fa-light fa-circle-play"
+                   STARTING "fa-light fa-loader"
+                   STOPPED  "fa-light fa-circle-stop"
+                   ERROR    "fa-light fa-triangle-exclamation"}]
     (get icons-map state)))
 
 (defn resolve-url-pattern

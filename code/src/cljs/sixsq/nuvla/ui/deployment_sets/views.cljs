@@ -52,20 +52,42 @@
                          :style {:justify-content "center"
                                  :padding-top     "20px"
                                  :padding-bottom  "20px"}}
-      [components/StatisticState total ["fas fa-bullseye"] "TOTAL" clickable?
-       ::events/set-state-selector ::subs/state-selector]
-      [components/StatisticState created [(state->icon CREATED)] CREATED
-       clickable? "blue"
-       ::events/set-state-selector ::subs/state-selector]
-      [components/StatisticState started [(state->icon STARTED)] STARTED
-       clickable? "green"
-       ::events/set-state-selector ::subs/state-selector]
-      [components/StatisticState stopped [(state->icon STOPPED)] STOPPED
-       clickable? "red"
-       ::events/set-state-selector ::subs/state-selector]
-      [components/StatisticState pending [(state->icon PENDING)] PENDING
-       clickable? "brown"
-       ::events/set-state-selector ::subs/state-selector]]]))
+      [components/StatisticState {:value total,
+                                  :icons ["fal fa-bullseye"],
+                                  :label "TOTAL",
+                                  :clickable? clickable?,
+                                  :positive-color nil,
+                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
+                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]
+      [components/StatisticState {:value created,
+                                  :icons [(str "fal " (state->icon CREATED))],
+                                  :label CREATED,
+                                  :clickable? clickable?,
+                                  :positive-color "blue",
+                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
+                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]
+      [components/StatisticState {:value started,
+                                  :icons [(str "fal " (state->icon STARTED))],
+                                  :label STARTED,
+                                  :clickable? clickable?,
+                                  :positive-color "green",
+                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
+                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]
+      [components/StatisticState {:value stopped,
+                                  :icons [(str "fal " (state->icon STOPPED))],
+                                  :label STOPPED,
+                                  :clickable? clickable?,
+                                  :positive-color "red",
+                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
+                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]
+      [components/StatisticState {:value pending,
+                                  :icons [(str "fal " (state->icon PENDING))],
+                                  :label PENDING,
+                                  :clickable? clickable?,
+                                  :positive-color "brown",
+                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
+                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]]]))
+
 
 (defn AddButton
   []

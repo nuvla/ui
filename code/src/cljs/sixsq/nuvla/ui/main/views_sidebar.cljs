@@ -14,7 +14,7 @@
 (def sidebar-width "10rem")
 
 (defn item
-  [label-kw url icon protected?]
+  [{:keys [label-kw url icon protected? key] }]
   (let [tr           (subscribe [::i18n-subs/tr])
         is-user?     (subscribe [::session-subs/is-user?])
         active?      (subscribe [::route-subs/nav-url-active? url])
@@ -25,6 +25,7 @@
     [uix/MenuItem
      {:name                     (or (@tr [label-kw]) (name label-kw))
       :icon                     icon
+      :class                    (str "nuvla-" (name key))
       :style                    {:min-width  sidebar-width
                                  :overflow-x "hidden"}
       :active                   @active?
@@ -43,7 +44,8 @@
     ^{:key "welcome"}
     [ui/MenuItem (cond-> {:aria-label (@tr [:welcome])
                           :style      {:overflow-x "hidden"
-                                       :min-width  sidebar-width}}
+                                       :min-width  sidebar-width
+                                       :padding   "0.5rem 0.5rem 0.2rem 0.5rem"}}
                          @url (assoc :href @url))
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
@@ -72,4 +74,5 @@
             :or   {hidden? false}} pages-list]
        (when (and (or (not iframe?) iframe-visble?) (not hidden?))
          ^{:key key}
-         [item label-kw (name->href key) icon protected?]))]))
+         [item {:label-kw label-kw :url (name->href key) :key key
+                :icon icon :protected? protected? }]))]))

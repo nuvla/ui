@@ -748,9 +748,6 @@
                        :active   true
                        :on-click #(save-callback-add-subscription-config ::spec/notification-subscription-config)}]]]))))
 
-(comment
-  (re-find #"'(.*)'" "tags='nuvlabox=True'")
-  )
 (defn EditSubscriptionConfigModal
   []
   (let [tr                  (subscribe [::i18n-subs/tr])

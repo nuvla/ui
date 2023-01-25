@@ -1510,6 +1510,7 @@
         :set-password                                  "Définir mot de passe"
         :set-password-success                          "Le mot de passe a bien été défini."
         :settings                                      "paramètres"
+        :share                                         "Partage"
         :should-not-be-empty                           "Ne doit pas être vide."
         :show-me                                       "montrez-moi"
         :show-versions                                 "montrer les versions"

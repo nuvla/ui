@@ -18,6 +18,7 @@
 - NuvlaEdge details - Shows pre-release flag behind version number #1054
 - NuvlaEdge details - Optimize vulnerabilty
 - NuvlaEdge details - Fix warnings in console
+- NuvlaEdge overview - Changes decommissioned state icon to "ban" from "trash"
 
 ## [2.32.12] - 2023-01-06
 

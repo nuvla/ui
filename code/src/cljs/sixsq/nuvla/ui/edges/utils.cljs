@@ -46,7 +46,7 @@
                    state-new             "fas fa-dolly"
                    state-commissioned    "fas fa-check"
                    state-decommissioning "fas fa-eraser"
-                   state-decommissioned  "fas fa-trash"
+                   state-decommissioned  "fas fa-ban"
                    state-suspended       "fas fa-pause"
                    state-error           "fas fa-exclamation"}]
     (get icons-map state)))

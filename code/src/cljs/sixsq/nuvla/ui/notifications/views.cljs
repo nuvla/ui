@@ -448,7 +448,8 @@
                           :justify-items :stretch-between
                           :align-items   :center
                           :height        40
-                          :gap           24}}
+                          :gap           24
+                          :opacity (if disabled? 0.5 1)}}
             [ui/Checkbox {:style           {:margin-right 2}
                           :label           (some->> (metric-name->use-other-translation-key metric-name) (@tr))
                           :default-checked @use-other-than-default?
@@ -482,7 +483,8 @@
         (when (utils/metrics-with-reset-windows (:metric @criteria))
           [ui/TableCell {:col-span 2
                          :class    "font-weight-400"}
-           [:div {:style {:min-height 40}
+           [:div {:style {:min-height 40
+                          :opacity (if disabled? 0.5 1)}
                   :class "grid-2-cols-responsive"}
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-monthly-reset]))
                    :style    {:display :flex :align-items :center}}
@@ -495,8 +497,8 @@
                       :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
              [ui/Input {:type           :number
                         :error          (and monthly-reset?
-                                             @validate-form?
-                                             (not (s/valid? ::spec/reset-start-date start-date-of-month)))
+                                          @validate-form?
+                                          (not (s/valid? ::spec/reset-start-date start-date-of-month)))
                         :default-value  start-date-of-month
                         :disabled       custom-reset?
                         :read-only      disabled?
@@ -514,7 +516,7 @@
                                                                        {:reset-start-date (js/Number %)}]))}]
              [:div (ff/help-popup "min: 1, max: 31")]]
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-custom-reset]))
-                   :style    {:display :flex :align-items :center :align-self "end" }}
+                   :style    {:display :flex :align-items :center :align-self "end"}}
              [:input {:type      :radio
                       :name      :reset
                       :checked   custom-reset?

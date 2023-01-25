@@ -191,7 +191,7 @@
 
         (when @is-app?
           [uix/MenuItem
-           {:name     (@tr [:launch])
+           {:name     (@tr [:deploy])
             :icon     "rocket"
             :disabled @launch-disabled?
             :on-click #(dispatch [::main-events/subscription-required-dispatch

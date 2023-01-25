@@ -115,7 +115,7 @@
              (and start? execution-mode-pull?) :schedule-launch
              (and (not start?) execution-mode-pull?) :schedule-update
              (and start? launch-status-ok?) :launch
-             (and start? (not launch-status-ok?)) :launch-force
+             (and start? (not launch-status-ok?)) :deploy-force
              (and (not start?) launch-status-ok?) :update
              :else :update-force)]))))
 

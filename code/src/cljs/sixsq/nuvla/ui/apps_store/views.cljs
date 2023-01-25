@@ -40,7 +40,7 @@
                                     :launch-for)])
                             (format-money (/ (:cent-amount-daily price) 100)) "/"
                             (@tr [:day]))
-        button-content (if price launch-price (@tr [:launch]))
+        button-content (if price launch-price (@tr [:deploy]))
         on-click       (fn [event]
                          (dispatch [::main-events/subscription-required-dispatch
                                     [::deployment-dialog-events/create-deployment

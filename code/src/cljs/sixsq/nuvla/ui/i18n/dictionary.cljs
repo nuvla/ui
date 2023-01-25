@@ -1164,7 +1164,7 @@
         :email-invalid-format                          "Le format de courriel est invalide."
         :enable                                        "activer"
         :end-date                                      "Date de fin"
-        :endpoint                                      "points d'accès"
+        :endpoint                                      "point de terminaison"
         :env-variables                                 "Variables d'environnement"
         :env-variables-info                            "Chaque pair ENV=VALUE doit être sur une ligne séparée."
         :error                                         "erreur"

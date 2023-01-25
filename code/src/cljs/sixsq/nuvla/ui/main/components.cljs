@@ -276,14 +276,14 @@
         (if @editing?
           [:div {:style {:display "flex"}}
            [ui/Dropdown {:selection        true
-                         :placeholder      "Type to add tags"
+                         :placeholder      (@tr [:type-to-add-tags])
                          :default-value    @new-tags
                          :name             "tag"
                          :fluid            true
                          :allowAdditions   true
                          :additionLabel    (str (@tr [:add-dropdown]) " ")
                          :search           true
-                         :noResultsMessage "Type to add a new tag"
+                         :noResultsMessage (@tr [:type-to-add-new-tag])
                          :multiple         true
                          :on-change        (ui-callback/value #(do
                                                                  (reset! new-tags %)
@@ -299,13 +299,13 @@
                                                           :content (.-value label)
                                                           :style   {:margin-top 10
                                                                     :max-height 150
-                                                                    :overflow   "auto"}}]))
-                         }]
+                                                                    :overflow   "auto"}}]))}]
            [ui/Button {:icon     "check"
                        :on-click #(reset! editing? false)}]]
           [ui/LabelGroup {:size  "tiny"
                           :color "teal"
-                          :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+                          :style {:margin-top 10, :max-height 150,
+                                  :overflow   "auto"}}
            (for [tag tags]
              ^{:key (str uuid "_" tag)}
              [ui/Popup
@@ -316,7 +316,10 @@
                :on             "hover"
                :size           "tiny"
                :hide-on-scroll true}])
+           (when-not (seq tags)
+             (if editable?
+               (@tr [:add-first-tag])
+               [ui/Message (@tr [:no-items-to-show])]))
+           ff/nbsp
            (when editable?
-             [:<>
-              ff/nbsp
-              [Pencil editing?]])])))))
+             [Pencil editing?])])))))

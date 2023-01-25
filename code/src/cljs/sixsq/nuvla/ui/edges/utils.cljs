@@ -46,7 +46,7 @@
                    state-new             "fal fa-dolly"
                    state-commissioned    "fal fa-check"
                    state-decommissioning "fal fa-eraser"
-                   state-decommissioned  "fal fa-trash"
+                   state-decommissioned  "fal fa-ban"
                    state-suspended       "fal fa-pause"
                    state-error           "fal fa-exclamation"}]
     (get icons-map state)))

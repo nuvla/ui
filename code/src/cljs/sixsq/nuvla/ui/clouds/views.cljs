@@ -109,12 +109,10 @@
 
 (defn InfraServices
   []
-  (let [tr   (subscribe [::i18n-subs/tr])
-        isgs (subscribe [::subs/infra-service-groups])]
+  (let [isgs (subscribe [::subs/infra-service-groups])]
     (fn []
       (let [infra-group-count (get @isgs :count 0)]
         [:<>
-         [uix/PageHeader "cloud" (@tr [:clouds])]
          [MenuBar]
          (when (pos-int? infra-group-count)
            [:<>

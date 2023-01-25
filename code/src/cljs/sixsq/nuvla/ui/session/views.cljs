@@ -59,7 +59,7 @@
                               (reset! search ""))
             :icon          (r/as-element
                              [:<>
-                              [ui/Icon {:name "fa-light fa-user-group large"}]
+                              [uix/Icon {:name "fa-light fa-user-group large"}]
                               (when-not @is-mobile?
                                 [uix/TR :switch-group])])}
            (when @open
@@ -104,7 +104,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [ui/Icon {:name     (str "fa-light large" (if @is-group? " fa-user-group" " fa-user-large"))}]
+       [uix/Icon {:name (str "fa-light large" (if @is-group? " fa-user-group" " fa-user-large"))}]
        (-> @user
            utils/remove-group-prefix
            (general-utils/truncate (if @is-mobile? 6 20)))])))
@@ -117,8 +117,8 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [ui/Icon {:name "fa-light fa-arrow-right-from-bracket"
-                 :size "large"}]
+       [uix/Icon {:name "fa-light fa-arrow-right-from-bracket"
+                  :size "large"}]
        (when-not @is-mobile?
          [uix/TR :logout])])))
 
@@ -140,7 +140,7 @@
     (fn []
       [ui/Button {:primary  true
                   :on-click on-click
-                  :style {:margin "0.6rem 1.5rem 0.6rem 0.6rem"}}
+                  :style    {:margin "0.6rem 1.5rem 0.6rem 0.6rem"}}
        [uix/TR :login]])))
 
 
@@ -185,12 +185,12 @@
 (defn LeftPanel
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        first-path            (subscribe  [::route-subs/nav-path-first])
+        first-path           (subscribe [::route-subs/nav-path-first])
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         eula                 (subscribe [::main-subs/config :eula])
         terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
     [:div {:class "nuvla-ui-session-left"
-           :style {:padding "4rem"
+           :style {:padding          "4rem"
                    :background-color "#C10E12"}}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
@@ -205,21 +205,21 @@
 
      [:div
       [uix/Button
-       {:class "white-button"
-        (if (= @first-path "sign-in") :primary :secondary)  true
-        :text     (@tr [:sign-in])
-        :inverted true
-        :active   (= @first-path "sign-in")
-        :on-click #(dispatch [::routing-events/navigate routes/sign-in])}]
+       {:class                                             "white-button"
+        (if (= @first-path "sign-in") :primary :secondary) true
+        :text                                              (@tr [:sign-in])
+        :inverted                                          true
+        :active                                            (= @first-path "sign-in")
+        :on-click                                          #(dispatch [::routing-events/navigate routes/sign-in])}]
       (when @signup-template?
         [:span
          [uix/Button
-          {:class "white-button"
+          {:class                                             "white-button"
            (if (= @first-path "sign-up") :primary :secondary) true
-           :text     (@tr [:sign-up])
-           :inverted true
-           :active   (= @first-path "sign-up")
-           :on-click #(dispatch [::routing-events/navigate routes/sign-up])}]
+           :text                                              (@tr [:sign-up])
+           :inverted                                          true
+           :active                                            (= @first-path "sign-up")
+           :on-click                                          #(dispatch [::routing-events/navigate routes/sign-up])}]
          [:br]
          [:br]
          (when @terms-and-conditions
@@ -278,7 +278,7 @@
               :columns   2
               :style     {:margin           0
                           :background-color "white"
-                          :padding 0}}
+                          :padding          0}}
 
      [ui/GridColumn {:class "login-left"}
       [LeftPanel]]

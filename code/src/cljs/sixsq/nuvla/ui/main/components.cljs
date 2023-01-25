@@ -128,12 +128,12 @@
 
 (defn StatisticState
   ([{:keys [value icons label clickable? positive-color set-state-selector-event state-selector-subs stacked?]
-     :or {positive-color "black"}}]
+     :or   {positive-color "black"}}]
    (let [state-selector (subscribe [state-selector-subs])
          selected?      (or
-                         (= label @state-selector)
-                         (and (= label "TOTAL")
-                              (nil? @state-selector)))
+                          (= label @state-selector)
+                          (and (= label "TOTAL")
+                               (nil? @state-selector)))
          color          (if (pos? value) positive-color "grey")]
      [ui/Statistic {:style    (when clickable? {:cursor "pointer"})
                     :color    color
@@ -143,26 +143,27 @@
                                             (if (= label "TOTAL") nil label)]))}
       (if stacked?
         [:<> [ui/IconGroup
-              {:style     {:margin-right "auto"
-                           :margin-left  "auto"}}
+              {:style {:margin-right "auto"
+                       :margin-left  "auto"}}
               (for [i icons]
-                [ui/Icon {:key       (str "icon-" (str/join "-" i) "-id")
-                          :size      (when (and clickable? selected?) "large")
-                          :loading   (and (pos? value) (= "spinner" i))
-                          :style     {:margin-right 0}
-                          :className i}])]
+                [uix/Icon {:key     (str "icon-" (str/join "-" i) "-id")
+                           :size    (when (and clickable? selected?) "large")
+                           :loading (and (pos? value) (= "spinner" i))
+                           :style   {:margin-right 0}
+                           :name    i}])]
          [ui/StatisticValue
           (or value "-")]
          [ui/StatisticLabel label]]
-        [:<> [ui/StatisticValue
-              (or value "-")
-              "\u2002"
-              [ui/IconGroup
-               (for [i icons]
-                 [ui/Icon {:key       (str "icon-" (str/join "-" i) "-id")
-                           :size      (when (and clickable? selected?) "large")
-                           :loading   (and (pos? value) (= "spinner" i))
-                           :className i}])]]
+        [:<>
+         [ui/StatisticValue
+          (or value "-")
+          "\u2002"
+          [ui/IconGroup
+           (for [i icons]
+             [uix/Icon {:key     (str "icon-" (str/join "-" i) "-id")
+                        :size    (when (and clickable? selected?) "large")
+                        :loading (and (pos? value) (= "spinner" i))
+                        :name    i}])]]
          [ui/StatisticLabel label]])])))
 
 

@@ -324,7 +324,7 @@
                                                   :color    (when active-filter? :teal)
                                                   :style    {:z-index     100
                                                              :display     :flex}}
-                                       [:i {:class "fa-light fa-filter"}]
+                                       [uix/Icon {:name "fa-light fa-filter"}]
                                        \u00A0
                                        (str/capitalize (@tr [:filter]))])
                           :disabled (not active-filter?)}

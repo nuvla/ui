@@ -15,6 +15,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]))
 
 
@@ -44,7 +45,7 @@
                                   (dispatch tab-event))
                                 (when resource
                                   (dispatch [::routing-events/navigate resource])))}
-     [ui/Icon (merge {:className (str "icons " icon)} (when icon-color {:color icon-color}))]
+     [uix/Icon (merge {:name icon} (when icon-color {:color icon-color}))]
      [ui/StatisticValue (or value "-")]
      [ui/StatisticLabel label]]))
 
@@ -81,8 +82,7 @@
 
 (defn TabOverviewNuvlaBox
   []
-  (let [icon "fa-light fa-box"
-        {:keys [resource tab-index tab-index-event]} utils/target-nbs]
+  (let [{:keys [resource tab-index tab-index-event]} utils/target-nbs]
     [ui/Segment {:secondary true
                  :raised    true
                  :class     "nuvla-edges"
@@ -90,9 +90,11 @@
                              :flex-direction  "column"
                              :justify-content "space-between"
                              :border-radius   "8px"
-                             :overflow         :hidden}}
+                             :overflow        :hidden}}
 
-     [:h4 {:class "ui-header"} [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
+     [:h4 {:class "ui-header"}
+      [uix/Icon {:name "fa-light fa-box"}]
+      (str/upper-case "NuvlaEdges")]
 
      [StatisticStatesEdge]
 
@@ -130,7 +132,6 @@
 (defn TabOverviewDeployments
   []
   (let [tr   (subscribe [::i18n-subs/tr])
-        icon "fa-light fa-rocket-launch"
         {:keys [resource tab-key tab-event]} utils/target-deployments]
     [ui/Segment {:secondary true
                  :raised    true
@@ -139,9 +140,10 @@
                              :flex-direction  "column"
                              :justify-content "space-between"
                              :border-radius   "8px"
-                             :overflow         :hidden}}
+                             :overflow        :hidden}}
 
-     [:h4 {:class "ui-header"} [ui/Icon {:name icon}] (str/upper-case (@tr [:deployments]))]
+     [:h4 {:class "ui-header"} [uix/Icon {:name "fa-light fa-rocket-launch"}]
+      (str/upper-case (@tr [:deployments]))]
 
      [StatisticStates ::deployments-subs/deployments-summary-all]
 

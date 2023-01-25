@@ -27,9 +27,11 @@
 (defn Icon
   [{:keys [name] :as opts}]
   [ui/Icon (cond-> opts
-                   (or (str/starts-with? name "fad ")
-                       (str/starts-with? name "fas ")) (-> (dissoc :name)
-                                                           (assoc :className name)))])
+                   (or
+                     (str/starts-with? name "fa-")
+                     (str/starts-with? name "fad ")
+                     (str/starts-with? name "fas ")) (-> (dissoc :name)
+                                                         (assoc :class name)))])
 
 
 (defn Button

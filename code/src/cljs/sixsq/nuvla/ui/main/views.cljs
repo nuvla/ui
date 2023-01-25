@@ -33,9 +33,9 @@
     [ui/BreadcrumbSection
      [:a {:on-click click-fn
           :style    {:cursor "pointer"}
-          :class (when (zero? index) :parent)}
-      (when page-icon [ui/Icon {:name page-icon :style {:padding-right "10px"
-                                                        :font-weight   400}}])
+          :class    (when (zero? index) :parent)}
+      (when page-icon [uix/Icon {:name page-icon :style {:padding-right "10px"
+                                                         :font-weight   400}}])
       (utils/truncate (str (or (:text segment) segment)))]]))
 
 (defn- format-path-segment [tr first-segment]
@@ -44,12 +44,12 @@
 
 (defn format-first-crumb
   [nav-path]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr            (subscribe [::i18n-subs/tr])
         first-segment (first nav-path)
-        page-info (subscribe [::subs/page-info first-segment])]
-    {:text (if (seq first-segment)
-                     (format-path-segment tr first-segment)
-                     (format-path-segment tr "welcome"))
+        page-info     (subscribe [::subs/page-info first-segment])]
+    {:text       (if (seq first-segment)
+                   (format-path-segment tr first-segment)
+                   (format-path-segment tr "welcome"))
      :icon-class (:icon @page-info)}))
 
 
@@ -61,7 +61,8 @@
 (defn breadcrumbs-links []
   (let [nav-path           (subscribe [::route-subs/nav-path])
         decorated-nav-path (decorate-breadcrumbs @nav-path)]
-    (vec (concat [ui/Breadcrumb {:size :large}]
+    (vec (concat [ui/Breadcrumb {:id   "nuvla-ui-header-breadcrumb"
+                                 :size :large}]
                  (->> decorated-nav-path
                       (map crumb (range))
                       (interpose [ui/BreadcrumbDivider {:icon "chevron right"}]))))))
@@ -212,13 +213,13 @@
 (defn header
   []
   [:header
-   [ui/Menu {:className  "nuvla-ui-header"
+   [ui/Menu {:class      "nuvla-ui-header"
              :borderless true}
 
     [ui/MenuItem {:aria-label "toggle sidebar"
                   :link       true
                   :on-click   #(dispatch [::events/toggle-sidebar])}
-     [ui/Icon {:name "fa-light fa-bars"}]]
+     [uix/Icon {:name "fa-light fa-bars"}]]
 
     [ui/MenuItem [breadcrumbs]]
 

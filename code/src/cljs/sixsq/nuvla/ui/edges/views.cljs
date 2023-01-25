@@ -94,7 +94,7 @@
                           (reset! show-state-statistics (not @show-state-statistics))
                           (when-not @show-state-statistics
                             (dispatch [::events/set-state-selector nil])))}
-            [ui/Icon {:name "fa-light fa-arrow-down"}]
+            [uix/Icon {:name "fa-light fa-arrow-down"}]
             \u0020
             (@tr [:commissionning-states])])]))))
 

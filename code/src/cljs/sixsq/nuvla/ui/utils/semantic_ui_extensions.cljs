@@ -514,12 +514,11 @@
      [ui/Image
       {:src      image
        :bordered true
+       :class    :card-image-centered
        :style    {:width      "auto"
                   :height     "200px"
                   :object-fit "cover"
-                  :background "white"
-                  :margin-left "auto"
-                  :margin-right "auto"}}])
+                  :background "white"}}])
 
    (when corner-button corner-button)
 

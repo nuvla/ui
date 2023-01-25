@@ -419,8 +419,6 @@ div.search.dropdown > input {
 
 /** Misc End **/
 
-
-
 @media only screen and (min-width: 600px) {
   .grid-2-cols-responsive {
     display: grid;
@@ -430,13 +428,9 @@ div.search.dropdown > input {
   }
 }
 
-
 .nuvla-welcome main#nuvla-ui-content {
   padding: 2rem 2rem 5rem 2rem !important;
 }
-
-
-
 
 a.card i.docker,
 a.card i.database {
@@ -467,7 +461,6 @@ i.icon.sort:before {
 body #nuvla-ui-main {
   background-color: #ffffff !important;
 }
-
 
 .nuvla-welcome > .ui.grid {
   margin: 0 !important;
@@ -592,6 +585,13 @@ body .ui.card,
 body .ui.card:hover,
 .ui.cards > .card:hover {
   box-shadow: 5px 5px 20px 0 rgb(0 0 0 / 25%), 0 0 0 1px rgb(0 0 0 / 20%) !important;
+}
+
+@media only screen and (max-width: 767px) {
+  .card-image-centered {
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .ui.card .ui.bordered.image img,

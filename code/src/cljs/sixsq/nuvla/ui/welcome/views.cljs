@@ -30,7 +30,7 @@
 (defn home-view
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [:<>
+    [:div {:class "nuvla-welcome"}
      [ui/Grid {:stackable     true
                :centered      true
                :verticalAlign :middle

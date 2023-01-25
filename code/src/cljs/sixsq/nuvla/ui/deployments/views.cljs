@@ -44,11 +44,12 @@
                 :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))}]]
         " "
         ^{:key (random-uuid)}
-        [filter-comp/ButtonFilter
-         {:resource-name  "deployment"
-          :default-filter @additional-filter
-          :open?          filter-open?
-          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
+        [:div {:style {:margin-top "10px"}}
+         [filter-comp/ButtonFilter
+          {:resource-name  "deployment"
+           :default-filter @additional-filter
+           :open?          filter-open?
+           :on-done        #(dispatch [::events/set-additional-filter %])}]]]])))
 
 (defn BulkUpdateModal
   []
@@ -427,7 +428,8 @@
        [:<>
         [MenuBar]
         [ui/Grid {:stackable true
-                  :reversed  "mobile"}
+                  :reversed  "mobile"
+                  :style {:margin "0"}}
          [ControlBar]
          [StatisticStates true ::subs/deployments-summary]]
         [bulk-progress-plugin/MonitoredJobs

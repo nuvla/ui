@@ -923,11 +923,12 @@
           :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
           :style              {:width "100%"}}]
         ^{:key (random-uuid)}
-        [filter-comp/ButtonFilter
-         {:resource-name  "nuvlabox"
-          :default-filter  @additional-filter
-          :open?          filter-open?
-          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
+        [:div {:style {:margin-top "10px"}}
+         [filter-comp/ButtonFilter
+          {:resource-name  "nuvlabox"
+           :default-filter  @additional-filter
+           :open?          filter-open?
+           :on-done        #(dispatch [::events/set-additional-filter %])}]]]])))
 
 
 (defn NuvlaBoxesOrClusters
@@ -940,7 +941,8 @@
       [MenuBar]
       [ui/Grid {:stackable true
                 :reversed  "mobile"
-                :style     {:padding-bottom 10}}
+                :style     {:padding-bottom 10
+                            :margin 0}}
        [ControlBar]
        [ui/GridColumn {:width 10}
         (if (= @view-type :cluster)

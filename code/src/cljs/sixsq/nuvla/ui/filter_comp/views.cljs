@@ -323,7 +323,6 @@
                                                   :on-click open-fn
                                                   :color    (when active-filter? :teal)
                                                   :style    {:z-index     100
-                                                             :margin-top  "10px"
                                                              :display     :flex}}
                                        [:i {:class "fa-light fa-filter"}]
                                        \u00A0

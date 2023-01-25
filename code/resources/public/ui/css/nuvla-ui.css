@@ -362,10 +362,11 @@ body #nuvla-ui-content {
   padding: 0;
 }
 
-body .ui.grid {
+.nuvla-welcome > .ui.grid {
   margin: 0 !important;
   padding: 2rem;
 }
+
 i.icon .circular {
   font-family: 'Poppins' !important;
 }
@@ -404,8 +405,12 @@ body .ui.embed {
   border-radius: 6px;
   border: 1px solid #fff;
 }
+
 body .ui.button {
   font-weight: 400;
+}
+
+.nuvla-welcome .ui.button {
   margin: 0 0.5em 1em 0;
   padding: 10px 20px;
 }
@@ -464,7 +469,8 @@ body .card .ui.header {
   margin: 1rem 0;
 }
 
-body .card .content {
+.nuvla-welcome .card .content,
+.nuvla-apps .card .content {
   padding: 2rem !important;
 }
 

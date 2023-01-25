@@ -2,12 +2,34 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap');
 
-body {
+body,
+body .menu .item,
+.ui.header,
+h1,
+h2,
+H3,
+h4,
+h5,
+h6,
+.ui.button {
   font-family: 'Poppins' !important;
 }
 
 body a {
   color: #c10e12;
+}
+
+header {
+  position: relative;
+}
+
+.ui.segment {
+  overflow: visible;
+  margin: 0 0 1rem 0 !important;
+}
+
+.ui.button {
+  border-radius: 50px;
 }
 
 /* Overriding semantic UI fonts when fa is used */
@@ -49,6 +71,27 @@ i.icon.fas {
 
 .font-weight-400 {
   font-weight: 400 !important;
+}
+
+.ui.labeled.icon.menu .item > .icon:not(.dropdown) {
+  margin: 0 auto 0.4rem !important;
+}
+
+.ui.dropdown .menu.transition.visible {
+  z-index: 1001;
+}
+
+.ui.message a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+tr.active td:first-child {
+  padding-left: 5px !important;
+}
+
+tr.active td {
+  font-weight: bold !important;
 }
 
 /** General End **/
@@ -170,8 +213,9 @@ body .ui.menu .right.menu .item > i.icon {
 */
 
 #nuvla-ui-content {
-  padding: 0;
   min-height: calc(100vh - 85px);
+  padding: 0.6rem 2rem 5rem 2rem !important;
+  background-color: #efefef;
 }
 
 /** Main Content End **/
@@ -302,23 +346,6 @@ div.search.dropdown > input {
   background-color: Gainsboro !important;
 }
 
-.ui.dropdown .menu.transition.visible {
-  z-index: 1001;
-}
-
-.ui.message a {
-  color: inherit;
-  text-decoration: underline;
-}
-
-tr.active td:first-child {
-  padding-left: 5px !important;
-}
-
-tr.active td {
-  font-weight: bold !important;
-}
-
 /* Show clipboard on hover of value */
 .show-on-hover-value:hover .hide {
   display: inline !important;
@@ -404,32 +431,11 @@ tr.active td {
 }
 
 
-
-main#nuvla-ui-content {
-  padding: 0.6rem 2rem 5rem 2rem !important;
-  background-color: #efefef;
-}
-.ui.segment {
-  margin: 0 0 1rem 0 !important;
-}
 .nuvla-welcome main#nuvla-ui-content {
   padding: 2rem 2rem 5rem 2rem !important;
 }
 
-body .menu .item,
-.ui.header,
-h1,
-h2,
-H3,
-h4,
-h5,
-H6,
-.ui.button {
-  font-family: 'Poppins' !important;
-}
-.ui.button {
-  border-radius: 50px;
-}
+
 
 
 a.card i.docker,
@@ -460,10 +466,6 @@ i.icon.sort:before {
 
 body #nuvla-ui-main {
   background-color: #ffffff !important;
-}
-
-header {
-  position: relative;
 }
 
 
@@ -628,6 +630,29 @@ body .divider-red {
   }
 }
 
+.statistic .icon {
+  margin: 0 auto;
+  font-size: 2rem !important;
+  margin-bottom: 0.8rem !important;
+}
+
+.ui.statistics {
+  margin: 0;
+}
+.ui.statistics > .statistic {
+  flex: 1 !important;
+  margin: 0 1rem 1rem 1rem !important;
+}
+.compact .ui.statistics > .statistic {
+  flex: 1 !important;
+  margin: 0 0.5rem 1rem 0.5rem !important;
+}
+
+.compact .ui.statistic > .label,
+.compact .ui.statistics .statistic > .label {
+  font-size: 0.7rem;
+}
+
 /** General **/
 
 /** Login **/
@@ -656,13 +681,7 @@ body .divider-red {
 }
 /** Login End **/
 
-.ui.labeled.icon.menu .item > .icon:not(.dropdown) {
-  margin: 0 auto 0.4rem !important;
-}
-
-
-
-/** dashboard **/
+/** Dashboard Page **/
 
 .ui.statistic > .label,
 .ui.statistics .statistic > .label {
@@ -715,54 +734,16 @@ body .divider-red {
   color: #ffffff !important;
 }
 
-.statistic .icon {
-  margin: 0 auto;
-  font-size: 2rem !important;
-  margin-bottom: 0.8rem !important;
-}
-.ui.segment {
-  overflow: visible;
-}
-.table-wrapper {
-  overflow: auto !important;
-  padding: 0 !important;
-}
-.ui-header {
-  width: calc(100% + 2rem);
-  padding: 0.6rem 1rem 0.7rem 1rem;
-  margin: -1rem -1rem 2rem -1rem !important;
-  color: #ffffff;
-}
-
-.nuvla-deployments .ui-header,
-.nuvla-deployments .button {
-  background-color: rgba(148, 130, 255, 1) !important;
-  color: #ffffff;
-}
-
-.nuvla-deployments .button:hover {
-  background-color: rgba(148, 130, 255, 0.9) !important;
-  color: #ffffff;
-}
-
-.nuvla-edges .ui-header,
-.nuvla-edges .button {
-  background-color: rgba(22, 173, 146, 1) !important;
-  color: #ffffff;
-}
-
-.nuvla-edges .button:hover {
-  background-color: rgba(22, 173, 146, 0.9) !important;
-  color: #ffffff;
-}
-
 .ui-header i.icon,
 .ui-header i.icons {
   font-size: 1.5rem;
 }
 
-.nuvla-deployments .statistics .icons {
-  text-align: center;
+.ui-header {
+  width: calc(100% + 2rem);
+  padding: 0.6rem 1rem 0.7rem 1rem;
+  margin: -1rem -1rem 2rem -1rem !important;
+  color: #ffffff;
 }
 
 .nuvla-edges .statistics .black .icons,
@@ -804,35 +785,53 @@ body .divider-red {
 .nuvla-edges .statistics i.icons .icon:first-child {
   margin-right: 0;
 }
-.ui.statistics {
-  margin: 0;
-}
-.ui.statistics > .statistic {
-  flex: 1 !important;
-  margin: 0 1rem 1rem 1rem !important;
-}
-.compact .ui.statistics > .statistic {
-  flex: 1 !important;
-  margin: 0 0.5rem 1rem 0.5rem !important;
+
+.nuvla-edges .ui-header,
+.nuvla-edges .button {
+  background-color: rgba(22, 173, 146, 1) !important;
+  color: #ffffff;
 }
 
-.compact .ui.statistic > .label,
-.compact .ui.statistics .statistic > .label {
-  font-size: 0.7rem;
+.nuvla-edges .button:hover {
+  background-color: rgba(22, 173, 146, 0.9) !important;
+  color: #ffffff;
 }
+
+.nuvla-deployments .ui-header,
+.nuvla-deployments .button {
+  background-color: rgba(148, 130, 255, 1) !important;
+  color: #ffffff;
+}
+
+.nuvla-deployments .button:hover {
+  background-color: rgba(148, 130, 255, 0.9) !important;
+  color: #ffffff;
+}
+
+.nuvla-deployments .statistics .icons {
+  text-align: center;
+}
+
 @media only screen and (max-width: 767px) {
   .nuvla-dashboard .ui.statistics > .statistic {
     flex: 100% !important;
   }
 }
 
-/** dashboard **/
+/** Dashboard Page End **/
 
-/** deployments **/
+/** Deployments Page **/
+
 .app-icon-name img {
   max-width: 50px !important;
   max-height: 40px !important;
   margin-right: 10px;
   height: auto !important;
 }
-/** deployments **/
+
+.table-wrapper {
+  overflow: auto !important;
+  padding: 0 !important;
+}
+
+/** Deployments Page End**/

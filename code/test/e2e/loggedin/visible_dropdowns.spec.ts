@@ -10,13 +10,13 @@ test('Language modal not behind main content', async ({ page, context }, { proje
   const url = `${baseURL}/ui/apps`;
 
   await page.getByRole('link', { name: 'apps' }).click();
-  await page.waitForURL(baseURL);
+  await page.waitForURL(url);
 
   for (let i of [0, 1, 2, 3, 4, 5, 6, 7]) {
     await page.pause();
     console.log('testing app no', i);
     await page
-      .getByText(/(free trial)|(launch)/)
+      .getByRole('button', { name: /(free trial)|(deploy)/ })
       .nth(i)
       .click();
     await page.locator('a:has-text("Application version")').click();
@@ -27,6 +27,6 @@ test('Language modal not behind main content', async ({ page, context }, { proje
     await page.getByRole('option').nth(1).isVisible();
     await page.locator('.close').click();
     await page.getByRole('link', { name: 'apps' }).click();
-    await page.waitForURL(baseURL);
+    await page.waitForURL(url);
   }
 });

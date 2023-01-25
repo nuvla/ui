@@ -322,8 +322,9 @@
                                                   :disabled (nil? resource-name)
                                                   :on-click open-fn
                                                   :color    (when active-filter? :teal)
-                                                  :style    {:z-index     100
-                                                             :display     :flex}}
+                                                  :style    {:z-index       100
+                                                             :display       :flex
+                                                             :border-radius "50px"}}
                                        [uix/Icon {:name "fa-light fa-filter"}]
                                        \u00A0
                                        (str/capitalize (@tr [:filter]))])

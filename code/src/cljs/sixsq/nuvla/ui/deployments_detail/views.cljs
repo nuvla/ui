@@ -464,7 +464,7 @@
         first-step (if data :data :infra-services)
         button     (action-button
                      {:button-text (if start
-                                     (@tr [:start])
+                                     (@tr [:start-deployment])
                                      (@tr [:update]))
                       :popup-text  (@tr [(if start :deployment-start-msg
                                                    :deployment-update-msg)])

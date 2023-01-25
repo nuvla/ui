@@ -46,7 +46,7 @@
         (@tr [:welcome-subheader])]
        [:div {:style {:padding "10px 0"}}
         [:a {:class [:ui :primary :button] :href "#add-nuvlabox"} (@tr [:welcome-create-nuvlabox])]
-        [:a {:class [:ui :primary :button] :href "#launch-app"} (@tr [:welcome-launch-app])]
+        [:a {:class [:ui :primary :button] :href "#deploy-app"} (@tr [:welcome-deploy-app])]
         [:a {:class [:ui :secondary :button] :href "#video-at-the-edge"} (@tr [:welcome-process-video-at-edge])]]]
       [ui/GridColumn {:width 6}
        [ui/Embed {:id          "yYJ6laT_6M4"
@@ -65,7 +65,7 @@
 
        [ui/Card
         [ui/CardContent {:text-align :center}
-         [:img {:src "/ui/images/icon-documentation.svg"
+         [:img {:src   "/ui/images/icon-documentation.svg"
                 :style {:width "80px" :height "80px"}}]
          [ui/HeaderSubheader {:as :h3} (str/capitalize (@tr [:documentation]))]
 
@@ -76,7 +76,7 @@
        [ui/Card
         [ui/CardContent {:text-align :center}
          [ui/HeaderSubheader {:as :h3} (str/capitalize (@tr [:videos]))]
-         [:img {:src "/ui/images/icon-video.svg"
+         [:img {:src   "/ui/images/icon-video.svg"
                 :style {:width "80px" :height "80px"}}]
 
          [:p
@@ -106,16 +106,16 @@
                                                       :target "_blank"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1
-          (@tr [:welcome-how-to-nb-1-header])
-          (@tr [:welcome-how-to-nb-1-subheader-pre])
-          " "
-          [:a {:target "_blank"
-               :key    "nuvlabox-engine-requirements"
-               :href   "https://docs.nuvla.io/nuvlaedge/installation/requirements/"}
-           (@tr [:welcome-how-to-nb-1-subheader-mid])]
-          " "
-          (@tr [:welcome-how-to-nb-1-subheader-post])
-          ".")
+              (@tr [:welcome-how-to-nb-1-header])
+              (@tr [:welcome-how-to-nb-1-subheader-pre])
+              " "
+              [:a {:target "_blank"
+                   :key    "nuvlabox-engine-requirements"
+                   :href   "https://docs.nuvla.io/nuvlaedge/installation/requirements/"}
+               (@tr [:welcome-how-to-nb-1-subheader-mid])]
+              " "
+              (@tr [:welcome-how-to-nb-1-subheader-post])
+              ".")
         (step 2
               (@tr [:welcome-how-to-nb-2-header])
               (@tr [:welcome-how-to-nb-2-subheader-pre])
@@ -126,16 +126,16 @@
               (@tr [:welcome-how-to-nb-2-subheader-post])
               ".")
         (step 3
-          (@tr [:welcome-how-to-nb-3-header])
-          (@tr [:welcome-how-to-nb-3-subheader-pre])
-          " "
-          [:a {:target "_blank"
-               :key    "nuvlabox-engine-quickstart"
-               :href   "https://docs.nuvla.io/nuvlaedge/installation/"}
-           (@tr [:documentation])]
-          " "
-          (@tr [:welcome-how-to-nb-3-subheader-post])
-          ".")
+              (@tr [:welcome-how-to-nb-3-header])
+              (@tr [:welcome-how-to-nb-3-subheader-pre])
+              " "
+              [:a {:target "_blank"
+                   :key    "nuvlabox-engine-quickstart"
+                   :href   "https://docs.nuvla.io/nuvlaedge/installation/"}
+               (@tr [:documentation])]
+              " "
+              (@tr [:welcome-how-to-nb-3-subheader-post])
+              ".")
         (step 4
               (@tr [:welcome-how-to-nb-4-header])
               (@tr [:welcome-how-to-nb-4-subheader-pre])
@@ -147,50 +147,50 @@
               ".")
 
         (step 5
-          (@tr [:welcome-how-to-nb-5-header])
-          (@tr [:welcome-how-to-nb-5-subheader-pre])
-          ". "
-          ^{:key (@tr [:show-me])}
-          [:a {:href "#deploy-app"} (str/capitalize (@tr [:show-me]))]
-          ".")]]]
+              (@tr [:welcome-how-to-nb-5-header])
+              (@tr [:welcome-how-to-nb-5-subheader-pre])
+              ". "
+              ^{:key (@tr [:show-me])}
+              [:a {:href "#deploy-app"} (str/capitalize (@tr [:show-me]))]
+              ".")]]]
 
      [ui/Divider]
 
-     [ui/Grid {:id            :launch-app
+     [ui/Grid {:id            :deploy-app
                :centered      true
                :stackable     true
                :verticalAlign :middle
                :reversed      "mobile"}
       [ui/GridColumn {:width 9}
        [ui/HeaderSubheader {:as "h2", :id "deploy-app"}
-        (@tr [:welcome-how-to-launch-header])]
+        (@tr [:welcome-how-to-deploy-header])]
        [ui/HeaderSubheader {:as "h4"}
-        (@tr [:welcome-how-to-launch-subheader]) " " [:a {:href "https://docs.nuvla.io/tutorials/deploying-apps/first-app/"} (@tr [:here])] "."]
+        (@tr [:welcome-how-to-deploy-subheader]) " " [:a {:href "https://docs.nuvla.io/tutorials/deploying-apps/first-app/"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1
-              (@tr [:welcome-how-to-launch-1-header-])
-              (@tr [:welcome-how-to-launch-1-subheader-pre])
+              (@tr [:welcome-how-to-deploy-1-header])
+              (@tr [:welcome-how-to-deploy-1-subheader-pre])
               " "
               ^{:key (@tr [:appstore])}
               [navigate-link (name->href routes/apps) (@tr [:appstore])]
               " "
-              (@tr [:welcome-how-to-launch-1-subheader-post])
+              (@tr [:welcome-how-to-deploy-1-subheader-post])
               ".")
         (step 2
-          (@tr [:welcome-how-to-launch-2-header])
-          (@tr [:welcome-how-to-launch-2-subheader-pre]))
+              (@tr [:welcome-how-to-deploy-2-header])
+              (@tr [:welcome-how-to-deploy-2-subheader-pre]))
         (step 3
-          (@tr [:welcome-how-to-launch-3-header])
-          (@tr [:welcome-how-to-launch-3-subheader-pre])
-          " ")
+              (@tr [:welcome-how-to-deploy-3-header])
+              (@tr [:welcome-how-to-deploy-3-subheader-pre])
+              " ")
         (step 4
-              (@tr [:welcome-how-to-launch-4-header])
-              (@tr [:welcome-how-to-launch-4-subheader-pre])
+              (@tr [:welcome-how-to-deploy-4-header])
+              (@tr [:welcome-how-to-deploy-4-subheader-pre])
               " "
               ^{:key (@tr [:dashboard])}
               [navigate-link (name->href routes/dashboard) (@tr [:dashboard])]
               ", "
-              (@tr [:welcome-how-to-launch-4-subheader-post])
+              (@tr [:welcome-how-to-deploy-4-subheader-post])
               ".")]]
       [ui/GridColumn {:width 6}
        [ui/Image {:floated "right" :src "/ui/images/welcome-appstore.png" :fluid true}]]]
@@ -212,17 +212,17 @@
         (@tr [:welcome-how-to-video-subheader])]
        [ui/StepGroup {:vertical true}
         (step 1
-          (@tr [:welcome-how-to-video-1-header])
-          (@tr [:welcome-how-to-video-1-subheader-pre])
-          " "
-          ^{:key (@tr [:welcome-how-to-video-1-subheader-mid])}
-          [:a {:target "_blank"
-               :key    "video-nuvlabox-engine-quickstart"
-               :href   "https://docs.nuvla.io/nuvlaedge/installation/"}
-           (@tr [:welcome-how-to-video-1-subheader-mid])]
-          " "
-          (@tr [:welcome-how-to-video-1-subheader-post])
-          ".")
+              (@tr [:welcome-how-to-video-1-header])
+              (@tr [:welcome-how-to-video-1-subheader-pre])
+              " "
+              ^{:key (@tr [:welcome-how-to-video-1-subheader-mid])}
+              [:a {:target "_blank"
+                   :key    "video-nuvlabox-engine-quickstart"
+                   :href   "https://docs.nuvla.io/nuvlaedge/installation/"}
+               (@tr [:welcome-how-to-video-1-subheader-mid])]
+              " "
+              (@tr [:welcome-how-to-video-1-subheader-post])
+              ".")
         (step 2
               (@tr [:welcome-how-to-video-2-header])
               (@tr [:welcome-how-to-video-2-subheader-pre])
@@ -230,5 +230,5 @@
               ^{:key (@tr [:welcome-how-to-video-2-subheader-post])}
               [navigate-link (name->href routes/edges) (@tr [:welcome-how-to-video-2-subheader-post])] ".")
         (step 3
-          (@tr [:welcome-how-to-video-3-header])
-          (@tr [:welcome-how-to-video-3-subheader-pre]))]]]]))
+              (@tr [:welcome-how-to-video-3-header])
+              (@tr [:welcome-how-to-video-3-subheader-pre]))]]]]))

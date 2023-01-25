@@ -1155,7 +1155,7 @@
                                          :style    {:cursor :pointer}
                                          :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]])]]
                        :title-size :h4
-                       :default-open (= 0 idx)
+                       :default-open true
                        :count (count resource-subs-confs)
                        :label (beautify-name resource-kind)]))))]))))
 

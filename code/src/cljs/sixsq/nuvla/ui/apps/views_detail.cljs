@@ -176,7 +176,7 @@
         is-app?          (subscribe [::subs/is-app?])
         can-copy?        (subscribe [::subs/can-copy?])
         paste-disabled?  (subscribe [::subs/paste-disabled?])
-        launch-disabled? (subscribe [::subs/launch-disabled?])
+        deploy-disabled? (subscribe [::subs/deploy-disabled?])
         can-publish?     (subscribe [::subs/can-publish?])
         can-unpublish?   (subscribe [::subs/can-unpublish?])]
     (fn []
@@ -193,7 +193,7 @@
           [uix/MenuItem
            {:name     (@tr [:deploy])
             :icon     "rocket"
-            :disabled @launch-disabled?
+            :disabled @deploy-disabled?
             :on-click #(dispatch [::main-events/subscription-required-dispatch
                                   [::deployment-dialog-events/create-deployment
                                    @module-id :infra-services]])}])
@@ -202,7 +202,7 @@
           [uix/MenuItem
            {:name     (@tr [:add])
             :icon     "add"
-            :disabled @launch-disabled?
+            :disabled @deploy-disabled?
             :on-click #(dispatch [::events/open-add-modal])}])
         (when @can-copy?
           [ui/Popup

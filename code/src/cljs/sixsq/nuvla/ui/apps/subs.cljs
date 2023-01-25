@@ -64,7 +64,7 @@
   :-> nil?)
 
 (reg-sub
-  ::launch-disabled?
+  ::deploy-disabled?
   :<- [::is-new?]
   :<- [::main-subs/changes-protection?]
   (fn [[is-new? page-changed?]]

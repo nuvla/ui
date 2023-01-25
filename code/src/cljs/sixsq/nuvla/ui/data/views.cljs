@@ -149,11 +149,11 @@
                                  (dispatch [::events/close-application-select-modal])
                                  (dispatch [::deployment-dialog-events/create-deployment id :data]))
 
-        launch-fn              #(do
+        deploy-fn              #(do
                                   (dispatch [::events/close-application-select-modal])
                                   (dispatch [::deployment-dialog-events/edit-deployment]))]
     (fn []
-      (let [launch-disabled? (or (not @deployment)
+      (let [deploy-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
                                  (not @env-completed?))]
@@ -174,11 +174,11 @@
            [ui/Icon {:name "settings"}]
            (@tr [:configure])]
           [ui/Button {:disabled (or (nil? @selected-app-id)
-                                    launch-disabled?)
+                                    deploy-disabled?)
                       :primary  true
-                      :on-click launch-fn}
+                      :on-click deploy-fn}
            [ui/Icon {:name "rocket"}]
-           (@tr [:launch])]]]))))
+           (@tr [:deploy])]]]))))
 
 (defn Pagination
   []

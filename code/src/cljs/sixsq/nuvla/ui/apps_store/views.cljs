@@ -35,12 +35,12 @@
         follow-trial?  (get price :follow-customer-trial false)
         button-icon    (if (and price (not follow-trial?)) :cart :rocket)
         button-color   (if follow-trial? "green" "blue")
-        launch-price   (str (@tr [(if follow-trial?
+        deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
-                                    :launch-for)])
+                                    :deploy-for)])
                             (format-money (/ (:cent-amount-daily price) 100)) "/"
                             (@tr [:day]))
-        button-content (if price launch-price (@tr [:deploy]))
+        button-content (if price deploy-price (@tr [:deploy]))
         on-click       (fn [event]
                          (dispatch [::main-events/subscription-required-dispatch
                                     [::deployment-dialog-events/create-deployment

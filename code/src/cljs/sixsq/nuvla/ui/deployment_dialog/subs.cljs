@@ -107,24 +107,24 @@
   ::modal-action-button-text
   :<- [::i18n-subs/tr]
   :<- [::deployment-start?]
-  :<- [::is-launch-status? :ok]
+  :<- [::is-deploy-status? :ok]
   :<- [::execution-mode]
-  (fn [[tr start? launch-status-ok? execution-mode]]
+  (fn [[tr start? deploy-status-ok? execution-mode]]
     (let [execution-mode-pull? (= execution-mode "pull")]
       (tr [(cond
-             (and start? execution-mode-pull?) :schedule-launch
+             (and start? execution-mode-pull?) :schedule-deploy
              (and (not start?) execution-mode-pull?) :schedule-update
-             (and start? launch-status-ok?) :launch
-             (and start? (not launch-status-ok?)) :deploy-force
-             (and (not start?) launch-status-ok?) :update
+             (and start? deploy-status-ok?) :deploy
+             (and start? (not deploy-status-ok?)) :deploy-force
+             (and (not start?) deploy-status-ok?) :update
              :else :update-force)]))))
 
 
 (reg-sub
   ::modal-action-button-color
-  :<- [::is-launch-status? :warning]
-  (fn [launch-status-warning?]
-    (if launch-status-warning? "yellow" "blue")))
+  :<- [::is-deploy-status? :warning]
+  (fn [launch-deploy-warning?]
+    (if launch-deploy-warning? "yellow" "blue")))
 
 
 (reg-sub
@@ -137,7 +137,7 @@
      (subscribe [::license-completed?])
      (subscribe [::registries-completed?])
      (subscribe [::credentials-completed?])
-     (subscribe [::launch-status-registries :registries])])
+     (subscribe [::deploy-status-registries :registries])])
   (fn [[cred-id data-completed? env-variables-completed? price-completed? license-completed?
         registries-completed? credentials-completed? registries-status]
        [_ step-id]]
@@ -405,7 +405,7 @@
 
 
 (reg-sub
-  ::launch-status-registries
+  ::deploy-status-registries
   (fn [db [_ step-id]]
     (get-in db [::spec/step-states step-id :status])))
 
@@ -541,7 +541,7 @@
         (and is-latest? (nil? selected-version)))))
 
 (reg-sub
-  ::launch-status
+  ::deploy-status
   (fn [db]
     (let [steps-status (->> (::spec/step-states db)
                             vals
@@ -554,10 +554,10 @@
 
 
 (reg-sub
-  ::is-launch-status?
-  :<- [::launch-status]
-  (fn [launch-status [_ v]]
-    (= launch-status v)))
+  ::is-deploy-status?
+  :<- [::deploy-status]
+  (fn [deploy-status [_ v]]
+    (= deploy-status v)))
 
 (reg-sub
   ::license-completed?

@@ -1090,7 +1090,7 @@
 (defn TabSubscriptions
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        subscription-configs (subscribe [::subs/notification-subscription-configs])
+        subscription-configs  (subscribe [::subs/notification-subscription-configs-grouped])
         notif-methods        (subscribe [::subs/notification-methods])
         on-change            (fn [name-kw value]
                                (dispatch [::events/update-notification-subscription-config name-kw value]))]
@@ -1098,7 +1098,7 @@
     (dispatch-sync [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
     (fn []
-      (let [grouped-subscriptions (group-by :resource-kind @subscription-configs)]
+      (let [grouped-subscriptions @subscription-configs]
         [ui/TabPane
          [MenuBarSubscription]
          (if (empty? @subscription-configs)

@@ -748,7 +748,9 @@
                        :active   true
                        :on-click #(save-callback-add-subscription-config ::spec/notification-subscription-config)}]]]))))
 
-
+(comment
+  (re-find #"'(.*)'" "tags='nuvlabox=True'")
+  )
 (defn EditSubscriptionConfigModal
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
@@ -766,7 +768,7 @@
     (fn []
       (let [header     (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
             {:keys [name description method-ids collection resource-filter criteria]} @subscription-config
-            filter-tag (last (str/split (str/replace (or resource-filter "") #"'" "") #"="))]
+            filter-tag (-> (re-find #"'(.*)'" (or resource-filter "")) last)]
         (dispatch [::events/fetch-tags-available collection])
         (dispatch [::events/set-components-tagged-number filter-tag])
         [:div]
@@ -812,18 +814,8 @@
              [ui/TableCell {:collapsing true
                             :style      {:padding-bottom 8}} "Tag"]
              [ui/TableCell
-              [ui/Dropdown {:selection true
-                            :name      "tag"
-                            :clearable true
-                            :on-change (ui-callback/value
-                                         #(do
-                                            (dispatch [::events/set-components-tagged-number %])
-                                            (on-change :resource-filter (if (empty? %)
-                                                                          ""
-                                                                          (str "tags='" % "'")))))
-                            :value     filter-tag
-                            :disabled  true
-                            :options   (resource-tag-options)}]]]]]
+              [ui/Input    {:value       filter-tag
+                            :disabled    true}]]]]]
 
           [ui/Header {:as "h3"} "Criteria"]
           [ui/Table style/definition

@@ -485,7 +485,7 @@
            [:div {:style {:min-height 40}
                   :class "grid-2-cols-responsive"}
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-monthly-reset]))
-                   :style    {:display :flex :align-items :center :opacity (if monthly-reset? 1 0.4)}}
+                   :style    {:display :flex :align-items :center}}
              [:input {:type      :radio
                       :name      :reset
                       :checked   monthly-reset?
@@ -500,10 +500,13 @@
                         :default-value  start-date-of-month
                         :disabled       custom-reset?
                         :read-only      disabled?
+                        :min            1
+                        :max            31
                         :style          {:justify-self :start
                                          :margin-left  "0.5rem"
                                          :max-width    "100px"
-                                         :margin-right "90px"}
+                                         :margin-right "90px"
+                                         :opacity (if monthly-reset? 1 0.4)}
                         :label          (@tr [:of-month])
                         :label-position :right
                         :on-change      (ui-callback/value #(dispatch [::events/update-notification-subscription-config
@@ -511,23 +514,26 @@
                                                                        {:reset-start-date (js/Number %)}]))}]
              [:div (ff/help-popup "min: 1, max: 31")]]
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-custom-reset]))
-                   :style    {:display :flex :align-items :center :align-self "end" :opacity (if custom-reset? 1 0.4)}}
+                   :style    {:display :flex :align-items :center :align-self "end" }}
              [:input {:type      :radio
                       :name      :reset
                       :checked   custom-reset?
                       :read-only true
                       :id        :custom}]
              [:label {:for   :custom
-                      :style {:margin-left "0.5rem"}} [:span (str/capitalize (@tr [:subs-notif-custom-reset-after]))]]
+                      :style {:margin-left "0.5rem"}} [:span (@tr [:subs-notif-custom-reset-after])]]
              [ui/Input {:type           :number
                         :error          (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
                         :default-value  (or custom-interval-days 1)
                         :disabled       monthly-reset?
                         :read-only      disabled?
+                        :min            1
+                        :max            999
                         :style          {:justify-self :start
                                          :margin-left  "0.5rem"
                                          :max-width    "100px"
-                                         :margin-right "60px"}
+                                         :margin-right "60px"
+                                         :opacity (if custom-reset? 1 0.4)}
                         :label          (@tr [:days])
                         :label-position :right
                         :on-change      (ui-callback/value #(dispatch [::events/update-custom-days %]))}]

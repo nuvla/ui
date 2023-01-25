@@ -18,6 +18,7 @@
 - NuvlaEdge details - Shows pre-release flag behind version number #1054
 - NuvlaEdge details - Optimize vulnerabilty
 - NuvlaEdge details - Fix warnings in console
+- NuvlaEdge details - Always shows tags card in nuvlaedge details overview, bugfix #1101
 
 ## [2.32.12] - 2023-01-06
 

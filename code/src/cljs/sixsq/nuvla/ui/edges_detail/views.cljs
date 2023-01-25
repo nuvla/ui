@@ -1267,7 +1267,7 @@
     [ui/Segment {:secondary true
                  :color     "teal"
                  :raised    true}
-     [:h4 "Tags"]
+     [:h4 (str/capitalize (@tr [:tags]))]
      [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
                                                    (@tr [:updated-successfully])])]]))
 
@@ -1420,7 +1420,7 @@
             [ui/GridColumn {:stretched true}
              [TabOverviewCluster @nb-status]])
 
-          (when-not (and (seq tags) (not suspended?))
+          (when-not suspended?
             [ui/GridColumn
              [TabOverviewTags @nuvlabox]])
 

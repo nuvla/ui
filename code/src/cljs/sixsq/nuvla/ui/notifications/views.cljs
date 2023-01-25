@@ -448,7 +448,8 @@
                           :justify-items :stretch-between
                           :align-items   :center
                           :height        40
-                          :gap           24}}
+                          :gap           24
+                          :opacity (if disabled? 0.5 1)}}
             [ui/Checkbox {:style           {:margin-right 2}
                           :label           (some->> (metric-name->use-other-translation-key metric-name) (@tr))
                           :default-checked @use-other-than-default?
@@ -482,10 +483,11 @@
         (when (utils/metrics-with-reset-windows (:metric @criteria))
           [ui/TableCell {:col-span 2
                          :class    "font-weight-400"}
-           [:div {:style {:min-height 40}
+           [:div {:style {:min-height 40
+                          :opacity (if disabled? 0.5 1)}
                   :class "grid-2-cols-responsive"}
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-monthly-reset]))
-                   :style    {:display :flex :align-items :center :opacity (if monthly-reset? 1 0.4)}}
+                   :style    {:display :flex :align-items :center}}
              [:input {:type      :radio
                       :name      :reset
                       :checked   monthly-reset?
@@ -495,15 +497,18 @@
                       :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
              [ui/Input {:type           :number
                         :error          (and monthly-reset?
-                                             @validate-form?
-                                             (not (s/valid? ::spec/reset-start-date start-date-of-month)))
+                                          @validate-form?
+                                          (not (s/valid? ::spec/reset-start-date start-date-of-month)))
                         :default-value  start-date-of-month
                         :disabled       custom-reset?
                         :read-only      disabled?
+                        :min            1
+                        :max            31
                         :style          {:justify-self :start
                                          :margin-left  "0.5rem"
                                          :max-width    "100px"
-                                         :margin-right "90px"}
+                                         :margin-right "90px"
+                                         :opacity (if monthly-reset? 1 0.4)}
                         :label          (@tr [:of-month])
                         :label-position :right
                         :on-change      (ui-callback/value #(dispatch [::events/update-notification-subscription-config
@@ -511,23 +516,26 @@
                                                                        {:reset-start-date (js/Number %)}]))}]
              [:div (ff/help-popup "min: 1, max: 31")]]
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-custom-reset]))
-                   :style    {:display :flex :align-items :center :align-self "end" :opacity (if custom-reset? 1 0.4)}}
+                   :style    {:display :flex :align-items :center :align-self "end"}}
              [:input {:type      :radio
                       :name      :reset
                       :checked   custom-reset?
                       :read-only true
                       :id        :custom}]
              [:label {:for   :custom
-                      :style {:margin-left "0.5rem"}} [:span (str/capitalize (@tr [:subs-notif-custom-reset-after]))]]
+                      :style {:margin-left "0.5rem"}} [:span (@tr [:subs-notif-custom-reset-after])]]
              [ui/Input {:type           :number
                         :error          (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
                         :default-value  (or custom-interval-days 1)
                         :disabled       monthly-reset?
                         :read-only      disabled?
+                        :min            1
+                        :max            999
                         :style          {:justify-self :start
                                          :margin-left  "0.5rem"
                                          :max-width    "100px"
-                                         :margin-right "60px"}
+                                         :margin-right "60px"
+                                         :opacity (if custom-reset? 1 0.4)}
                         :label          (@tr [:days])
                         :label-position :right
                         :on-change      (ui-callback/value #(dispatch [::events/update-custom-days %]))}]
@@ -740,7 +748,6 @@
                        :active   true
                        :on-click #(save-callback-add-subscription-config ::spec/notification-subscription-config)}]]]))))
 
-
 (defn EditSubscriptionConfigModal
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
@@ -758,7 +765,7 @@
     (fn []
       (let [header     (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
             {:keys [name description method-ids collection resource-filter criteria]} @subscription-config
-            filter-tag (last (str/split (str/replace (or resource-filter "") #"'" "") #"="))]
+            filter-tag (-> (re-find #"'(.*)'" (or resource-filter "")) last)]
         (dispatch [::events/fetch-tags-available collection])
         (dispatch [::events/set-components-tagged-number filter-tag])
         [:div]
@@ -804,18 +811,8 @@
              [ui/TableCell {:collapsing true
                             :style      {:padding-bottom 8}} "Tag"]
              [ui/TableCell
-              [ui/Dropdown {:selection true
-                            :name      "tag"
-                            :clearable true
-                            :on-change (ui-callback/value
-                                         #(do
-                                            (dispatch [::events/set-components-tagged-number %])
-                                            (on-change :resource-filter (if (empty? %)
-                                                                          ""
-                                                                          (str "tags='" % "'")))))
-                            :value     filter-tag
-                            :disabled  true
-                            :options   (resource-tag-options)}]]]]]
+              [ui/Input    {:value       filter-tag
+                            :disabled    true}]]]]]
 
           [ui/Header {:as "h3"} "Criteria"]
           [ui/Table style/definition
@@ -1082,7 +1079,7 @@
 (defn TabSubscriptions
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        subscription-configs (subscribe [::subs/notification-subscription-configs])
+        subscription-configs  (subscribe [::subs/notification-subscription-configs-grouped])
         notif-methods        (subscribe [::subs/notification-methods])
         on-change            (fn [name-kw value]
                                (dispatch [::events/update-notification-subscription-config name-kw value]))]
@@ -1090,7 +1087,7 @@
     (dispatch-sync [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
     (fn []
-      (let [grouped-subscriptions (group-by :resource-kind @subscription-configs)]
+      (let [grouped-subscriptions @subscription-configs]
         [ui/TabPane
          [MenuBarSubscription]
          (if (empty? @subscription-configs)
@@ -1147,7 +1144,7 @@
                                          :style    {:cursor :pointer}
                                          :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]])]]
                        :title-size :h4
-                       :default-open (= 0 idx)
+                       :default-open true
                        :count (count resource-subs-confs)
                        :label (beautify-name resource-kind)]))))]))))
 

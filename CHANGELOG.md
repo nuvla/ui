@@ -19,6 +19,9 @@
 - NuvlaEdge details - Optimize vulnerabilty
 - NuvlaEdge details - Fix warnings in console
 - NuvlaEdge details - Always shows tags card in nuvlaedge details overview, bugfix #1101
+- Notification subscriptions - Addmodal: Disables greying out of unchecked radio button
+- Notification subscriptions - Sort config always showing NuvlaEdge first
+- Notification subscriptions - Shows configured tag for resource-filter in edit config modal
 - Global - Adding translations
 
 ## [2.32.12] - 2023-01-06

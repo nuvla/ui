@@ -627,63 +627,6 @@ body .ui.breadcrumb a:hover {
   font-size: 1rem;
 }
 
-/*
- * Hi Hanhai!
- * I disabled the breadcrumb css for the icons,
- * because it showed the icon on every breadcrum element,
- * not just the first one.
- *
- * Rendering of the icon is now controlled by the app code.
- * Thanks for the work!
- * Mario
- *
-body .ui.breadcrumb a::before {
-     font-family: "Font Awesome 6 Pro";
-     padding-right: 10px;
-     font-weight: 300;
-}
-
-body .nuvla-welcome .ui.breadcrumb a::before {
-     content: "\f015";
-}
-
-body .nuvla-dashboard .ui.breadcrumb a::before {
-     content: "\f628";
-}
-
-body .nuvla-apps .ui.breadcrumb a::before {
-     content: "\f5fd";
-}
-
-body .nuvla-deployments .ui.breadcrumb a::before {
-     content: "\e027";
-}
-
-body .nuvla-edges .ui.breadcrumb a::before {
-     content: "\f466";
-}
-
-body .nuvla-credentials .ui.breadcrumb a::before {
-     content: "\f084";
-}
-
-body .nuvla-notifications .ui.breadcrumb a::before {
-     content: "\f0f3";
-}
-
-body .nuvla-data .ui.breadcrumb a::before {
-     content: "\f1c0";
-}
-
-body .nuvla-clouds .ui.breadcrumb a::before {
-     content: "\f0c2";
-}
-
-body .nuvla-api .ui.breadcrumb a::before {
-     content: "\f121";
-}
-*/
-
 body i.icon.chevron.right:before {
   font-family: 'Font Awesome 6 Pro';
   content: '\f054';

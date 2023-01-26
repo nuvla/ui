@@ -22,19 +22,18 @@
       [ui/TabPane
        [Table {:columns
                [{:field-key :jobs
-                 :accessor :id
-                 :cell (fn [{id :cell-data}] [values/as-link id :label (general-utils/id->short-uuid id)])}
+                 :accessor  :id
+                 :cell      (fn [{id :cell-data}] [values/as-link id :label (general-utils/id->short-uuid id)])}
                 {:field-key :action}
                 {:field-key :timestamp
-                 :accessor :time-of-status-change}
+                 :accessor  :time-of-status-change}
                 {:field-key :state}
                 {:field-key :progress}
                 {:field-key :return-code}
-                {:field-key :message
-                 :accessor :status-message
+                {:field-key  :message
+                 :accessor   :status-message
                  :cell-props {:style {:white-space "pre"}}}]
-               :rows       resources
-               }]
+               :rows resources}]
        [pagination-plugin/Pagination
         {:db-path      [::spec/pagination]
          :change-event [::events/get-jobs]

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Jobs - Scrollable table
+- Events - Scrollable table
+
 ## [2.33.0] - 2023-01-26
 
 ### Changed

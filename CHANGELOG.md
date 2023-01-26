@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Api details page - Pushes content below AclButton
+
 ## [2.33.0] - 2023-01-26
 
 ### Changed

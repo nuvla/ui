@@ -28,7 +28,7 @@
                   (str (name field) ":" order))))
 
 (s/def ::field-key keyword?)
-(s/def ::accessor (s/nilable fn?))
+(s/def ::accessor (s/nilable (s/or :function fn? :keyword keyword?)))
 (s/def ::header-content (s/nilable any?))
 (s/def ::sort-key (s/nilable (s/or :keyword keyword? :string string?)))
 (s/def ::no-sort (s/nilable boolean?))
@@ -76,7 +76,7 @@
           direction->class {"asc"  " ascending"
                             "desc" " descending"}]
       [uix/LinkIcon {:name     (str "sort" (direction->class direction))
-                     :on-click #(dispatch [::sort {:field       sort-key
+                     :on-click #(dispatch [::sort {:field        sort-key
                                                    :direction   direction
                                                    :db-path     db-path
                                                    :fetch-event fetch-event}])}])))

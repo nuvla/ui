@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Downloads - Rename nuvlabox-self-registration.py to nuvlaedge-self-registration.py
 - Apps - App description truncated if bold text is used fix
 - Values - Markdown summary should support nested elements #1077
 - Deps - Upgrade api client v2.0.11

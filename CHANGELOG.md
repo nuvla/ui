@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Global - Fix issues noticed after release #1117
+
 ## [2.33.0] - 2023-01-26
 
 ### Changed

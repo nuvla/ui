@@ -247,8 +247,7 @@
          [DocumentationButton]
 
          [ui/FormGroup
-          [ui/FormField
-           [cloud-entry-point-title]]]
+          [cloud-entry-point-title]]
          [ui/FormGroup {:widths "equal"}
           [ui/FormField
            ; the key below is a workaround react issue with controlled input cursor position,
@@ -306,8 +305,8 @@
          [ui/FormField
           ^{:key (str "filter:" $filter)}
           [ui/Input
-           {:className "labeled"
-            :action    (boolean @selected-id)}
+           {:class  "labeled"
+            :action true}
            [ui/Label (@tr [:filter])]
            [:input {:aria-label   (@tr [:filter])
                     :tab-index    7

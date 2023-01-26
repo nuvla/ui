@@ -45,8 +45,9 @@
                         {:id        refresh-action-get-deployment
                          :frequency 20000
                          :event     [::deployments-events/get-deployments
-                                     {:filter-external-arg (str "module/id='" (:id module) "'")
-                                      :pagination-db-path  ::apps-application-spec/deployment-pagination}]}]]]})))
+                                     {:filter-external-arg   (str "module/id='" (:id module) "'")
+                                      :external-filter-only? true
+                                      :pagination-db-path   ::apps-application-spec/deployment-pagination}]}]]]})))
 
 
 
@@ -195,8 +196,9 @@
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::deployments-events/get-deployments
-                                                    {:filter-external-arg (str "module/id='" (:id %) "'")
-                                                     :pagination-db-path  ::apps-application-spec/deployment-pagination}]))]})))
+                                                    {:filter-external-arg   (str "module/id='" (:id %) "'")
+                                                     :external-filter-only? true
+                                                     :pagination-db-path   ::apps-application-spec/deployment-pagination}]))]})))
 
 
 (reg-event-db

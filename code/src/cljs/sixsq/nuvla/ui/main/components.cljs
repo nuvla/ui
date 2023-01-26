@@ -134,7 +134,8 @@
                           (= label @state-selector)
                           (and (= label "TOTAL")
                                (nil? @state-selector)))
-         color          (if (pos? value) positive-color "grey")]
+         color          (if (pos? value) positive-color "grey")
+         icon-key       (str label "-" icons)]
      [ui/Statistic {:style    (when clickable? {:cursor "pointer"})
                     :color    color
                     :class    (when clickable? "slight-up")
@@ -146,7 +147,7 @@
               {:style {:margin-right "auto"
                        :margin-left  "auto"}}
               (for [i icons]
-                [uix/Icon {:key     (str "icon-" (str/join "-" i) "-id")
+                [uix/Icon {:key     icon-key
                            :size    (when (and clickable? selected?) "large")
                            :loading (and (pos? value) (= "spinner" i))
                            :style   {:margin-right 0}
@@ -160,7 +161,7 @@
           "\u2002"
           [ui/IconGroup
            (for [i icons]
-             [uix/Icon {:key     (str "icon-" (str/join "-" i) "-id")
+             [uix/Icon {:key     icon-key
                         :size    (when (and clickable? selected?) "large")
                         :loading (and (pos? value) (= "spinner" i))
                         :name    i}])]]

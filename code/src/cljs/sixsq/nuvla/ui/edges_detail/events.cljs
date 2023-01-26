@@ -386,12 +386,12 @@
 (reg-event-fx
   ::get-nuvlaedge-release
   (fn [{{:keys [::spec/nuvlaedge-release] :as db} :db} [_ {:keys [nuvlabox-engine-version]}]]
-    (cond-> {:db (assoc db ::spec/nuvlaedge-release nil)}
-            (and nuvlabox-engine-version
-                 (not= (:release nuvlaedge-release) nuvlabox-engine-version))
-            (assoc ::cimi-api-fx/search [:nuvlabox-release
-                                         {:filter  (str "release='" nuvlabox-engine-version "'")
-                                          :select  "id, release, pre-release"
-                                          :orderby "release-date:desc"
-                                          :last    10000}
-                                         #(dispatch [::set-nuvlaedge-release (first (:resources %))])]))))
+    (when (and nuvlabox-engine-version
+            (not= (:release nuvlaedge-release) nuvlabox-engine-version))
+      (-> {:db (assoc db ::spec/nuvlaedge-release nil)}
+          (assoc ::cimi-api-fx/search [:nuvlabox-release
+                                       {:filter  (str "release='" nuvlabox-engine-version "'")
+                                        :select  "id, release, pre-release"
+                                        :orderby "release-date:desc"
+                                        :last    10000}
+                                       #(dispatch [::set-nuvlaedge-release (first (:resources %))])])))))

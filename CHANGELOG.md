@@ -23,6 +23,7 @@
 - Notification subscriptions - Sort config always showing NuvlaEdge first
 - Notification subscriptions - Shows configured tag for resource-filter in edit config modal
 - Global - Adding translations
+- NuvlaEdge details - Pre release flag was toggling on refreshes, bugfix #1109
 
 ## [2.32.12] - 2023-01-06
 

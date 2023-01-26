@@ -282,7 +282,7 @@
         :discover-my-apps-message                      "These are your apps - i.e. you are listed as an owner. It includes draft and published apps."
         :discover-published-apps-message               "Discover published apps, either public or shared with you. Their authors state that they are production ready. Remember most published apps are not public. Therefore, get in touch if you are looking for anything specific, and we will get you in touch with the right app vendors."
         :docker-plugins                                "Docker plugins"
-        :docker-server-version                         "Docker server version"
+        :docker-server-version                         "Docker daemon version"
         :documentation                                 "documentation"
         :download                                      "download"
         :due-date                                      "Due date"

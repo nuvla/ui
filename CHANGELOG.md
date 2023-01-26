@@ -2,13 +2,14 @@
 
 ## Unreleased
 
+## [2.33.0] - 2023-01-26
+
 ### Changed
 
-- Downloads - Rename nuvlabox-self-registration.py to nuvlaedge-self-registration.py
 - Apps - App description truncated if bold text is used fix
 - Values - Markdown summary should support nested elements #1077
 - Deps - Upgrade api client v2.0.11
-- Main - Loader service unavailable message visible on error
+- Main - On error, main loader displays unavailable
 - NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
 - Edges overview - Adds more advanced filtering similar to e.g. deployments tab #1010
 - Routing - Introduces reitit frontend router for client side routing
@@ -18,13 +19,13 @@
 - e2e tests - Marketplace tests checks for param in request body #1095
 - NuvlaEdge details - Shows pre-release flag behind version number #1054
 - NuvlaEdge details - Optimize vulnerabilty
-- NuvlaEdge details - Fix warnings in console
 - NuvlaEdge details - Always shows tags card in nuvlaedge details overview, bugfix #1101
 - Notification subscriptions - Addmodal: Disables greying out of unchecked radio button
 - Notification subscriptions - Sort config always showing NuvlaEdge first
 - Notification subscriptions - Shows configured tag for resource-filter in edit config modal
+- Downloads - Rename and refactor nuvlabox-self-registration.py to nuvlaedge-self-registration.py
 - Global - Adding translations
-- NuvlaEdge details - Pre release flag was toggling on refreshes, bugfix #1109
+- Global - Styling
 
 ## [2.32.12] - 2023-01-06
 

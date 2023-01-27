@@ -9,6 +9,9 @@
 - Global - Fix issues noticed after release #1117
 - Api page - Move documentation button to menu and hide it on mobile
 - Api details page - Pushes content below AclButton
+- Switch group - Switch group on enter #1122
+- Switch group - Change selection of group with arrow keys
+- Switch group - Allow to search group including spaces
 
 ## [2.33.0] - 2023-01-26
 

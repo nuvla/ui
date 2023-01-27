@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Apps details - Deployments tab only applyting external filters for fetching deployments, bugfix #1112
+- Apps details - Deployments tab only applying external filters for fetching deployments, bugfix #1112
 
 ## [2.33.0] - 2023-01-26
 

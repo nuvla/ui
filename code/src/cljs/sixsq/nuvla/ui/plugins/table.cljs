@@ -61,7 +61,7 @@
                     db-path        :db-path
                     fetch-event    :fetch-event}]]
     {:db (update db db-path (partial calc-new-ordering {:sort-key sort-key :order sort-direction}))
-     :fx [[:dispatch [fetch-event]]]}))
+     :fx [[:dispatch fetch-event]]}))
 
 (reg-sub
   ::sort-direction

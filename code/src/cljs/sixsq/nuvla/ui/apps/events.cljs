@@ -195,11 +195,18 @@
       {:db                  (cond-> db
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
-                                         (dispatch [::deployments-events/get-deployments
-                                                    {:filter-external-arg   (str "module/id='" (:id %) "'")
-                                                     :external-filter-only? true
-                                                     :pagination-db-path   ::apps-application-spec/deployment-pagination}]))]})))
+                                         (dispatch [::get-deployments-for-module %]))]})))
 
+
+(reg-event-fx
+  ::get-deployments-for-module
+  (fn [{{:keys [::spec/module]} :db} [_ {id :id}]]
+    (let [module-id (or id (:id module))]
+      (when module-id
+        {:fx [[:dispatch [::deployments-events/get-deployments
+                          {:filter-external-arg   (str "module/id='" module-id "'")
+                           :external-filter-only? true
+                           :pagination-db-path   ::apps-application-spec/deployment-pagination}]]]}))))
 
 (reg-event-db
   ::set-active-tab

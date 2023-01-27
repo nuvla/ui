@@ -318,7 +318,7 @@
                        :on-click #(reset! editing? false)}]]
           [ui/LabelGroup {:size  "tiny"
                           :color "teal"
-                          :style {:margin-top 10, :max-height 150,
+                          :style {:margin-top 10, :min-height 30 :max-height 150,
                                   :overflow   "auto"}}
            (for [tag tags]
              ^{:key (str uuid "_" tag)}

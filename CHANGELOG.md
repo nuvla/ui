@@ -6,6 +6,8 @@
 
 - Jobs - Scrollable table
 - Events - Scrollable table
+- Global - Fix issues noticed after release #1117
+- Api page - Move documentation button to menu and hide it on mobile
 - Api details page - Pushes content below AclButton
 
 ## [2.33.0] - 2023-01-26

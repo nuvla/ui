@@ -58,8 +58,15 @@
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
-                        [:dispatch [::deployments-events/get-deployments
-                                    {:filter-external-arg (str "deployment-set='" id "'")}]]]}))
+                        [:dispatch [::get-deployments-for-deployment-sets id]]]}))
+
+(reg-event-fx
+  ::get-deployments-for-deployment-sets
+  (fn [_ [_ id]]
+    (when id
+      {:fx [:dispatch [::deployments-events/get-deployments
+                       {:filter-external-arg (str "deployment-set='" id "'")
+                        :external-filter-only? true}]]})))
 
 (reg-event-fx
   ::edit

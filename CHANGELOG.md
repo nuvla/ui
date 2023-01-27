@@ -4,6 +4,7 @@
 
 - Apps details - Deployments tab only applying external filters (= module id) for fetching deployments, bugfix #1112
 - NuvlaEdge details - Deployments tab only applying external filters (= edge id) for fetching deployments, bugfix #1112
+- Deployment Sets - Deployments table only applying external filters (= deployment sets id) for fetching deployments, bugfix #1112
 
 ## [2.33.0] - 2023-01-26
 

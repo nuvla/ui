@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Api details page - Pushes content below AclButton
+- Cimi detail - Display simple string ids as links or list of links when multiple ones #1120
+- Global - Display parent resource as link
 
 ## [2.33.0] - 2023-01-26
 

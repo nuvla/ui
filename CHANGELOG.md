@@ -9,6 +9,8 @@
 - Global - Fix issues noticed after release #1117
 - Api page - Move documentation button to menu and hide it on mobile
 - Api details page - Pushes content below AclButton
+- Cimi detail - Display simple string ids as links or list of links when multiple ones #1120
+- Global - Display parent resource as link
 
 ## [2.33.0] - 2023-01-26
 

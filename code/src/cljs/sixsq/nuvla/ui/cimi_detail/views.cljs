@@ -200,7 +200,7 @@
              subtype (conj (metadata-row "subtype" subtype))
              method (conj (metadata-row "method" method))
              state (conj (metadata-row "state" state))
-             parent (conj (metadata-row "parent" parent)))]))
+             parent (conj (metadata-row "parent" (values/as-link parent))))]))
 
 
 (defn strip-attr-ns

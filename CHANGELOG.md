@@ -6,6 +6,7 @@
 
 - Jobs - Scrollable table
 - Events - Scrollable table
+- Api details page - Pushes content below AclButton
 
 ## [2.33.0] - 2023-01-26
 

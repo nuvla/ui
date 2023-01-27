@@ -263,11 +263,13 @@
         [:<>
          (when acl
            ^{:key (str resource-id "-" updated)}
-           [acl-views/AclButton {:default-value acl
-                                 :read-only     (not (general-utils/can-edit? resource-value))
-                                 :on-change     #(dispatch [::events/edit
-                                                            resource-id
-                                                            (assoc resource-value :acl %)])}])
+           [:div {:style {:display :flex
+                          :justify-content :end}}
+            [acl-views/AclButton {:default-value acl
+                                  :read-only     (not (general-utils/can-edit? resource-value))
+                                  :on-change     #(dispatch [::events/edit
+                                                             resource-id
+                                                             (assoc resource-value :acl %)])}]])
          [resource-detail
           [components/RefreshMenu
            {:on-refresh #(dispatch [::events/get resource-id])

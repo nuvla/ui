@@ -324,7 +324,7 @@
          :no-module-name     true
          :empty-msg          (@tr [:empty-deployment-module-msg])
          :pagination-db-path ::spec/deployment-pagination
-         :fetch-event [::apps-events/get-deployments-for-module]}])]))
+         :fetch-event        [::apps-events/get-deployments-for-module]}])]))
 
 
 (defn TabMenuVersions

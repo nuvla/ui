@@ -178,22 +178,17 @@
              [results-table @selected-fields entries]]))))))
 
 
-(defn cloud-entry-point-title
+(defn CollectionSelector
   []
   (let [tr          (subscribe [::i18n-subs/tr])
-        cep         (subscribe [::subs/cloud-entry-point])
+        options     (subscribe [::subs/collection-dropdown-options])
         selected-id (subscribe [::subs/collection-name])]
     (fn []
-      (let [options  (->> @cep
-                          :collection-href
-                          vals
-                          sort
-                          (map (fn [k] {:value k :text k}))
-                          vec)
-            callback #(dispatch [::routing-events/navigate
+      (let [callback #(dispatch [::routing-events/navigate
                                  routes/api-sub-page {:sub-path %}])]
-        [ui/Dropdown
+        [ui/FormDropdown
          {:aria-label  (@tr [:resource-type])
+          :style       {:max-width 250}
           :value       @selected-id
           :placeholder (@tr [:resource-type])
           :tab-index   1
@@ -201,30 +196,17 @@
           :search      true
           :selection   true
           :upward      false
-          :options     options
+          :options     @options
           :on-change   (ui-callback/value callback)}]))))
 
 (defn DocumentationButton
   []
-  (let [tr                 (subscribe [::i18n-subs/tr])
-        mobile?            (subscribe [::main-subs/is-mobile-device?])
-        documentation-page (subscribe [::main-subs/page-info "documentation"])
-        on-button          (r/atom false)]
-    (fn []
-      [ui/Button
-       (cond->
-         {:icon           (:icon @documentation-page)
-          :basic          true
-          :color          "blue"
-          :content        (@tr [(:label-kw @documentation-page)])
-          ;; this is an ugly workaround about a misbehavior when a user push enter
-          ;; in an input of form for unknown reason the on-click fn of this button
-          ;; was called
-          :on-mouse-enter #(reset! on-button true)
-          :on-mouse-leave #(reset! on-button false)
-          :on-click       #(when @on-button
-                             (dispatch [::routing-events/navigate (:key @documentation-page)]))}
-         (not @mobile?) (assoc :floated "right"))])))
+  (let [tr                 @(subscribe [::i18n-subs/tr])
+        documentation-page @(subscribe [::main-subs/page-info "documentation"])]
+    [ui/MenuItem
+     {:on-click #(dispatch [::routing-events/navigate (:key documentation-page)])}
+     [uix/Icon {:name (:icon documentation-page)}]
+     (tr [(:label-kw documentation-page)])]))
 
 (defn search-header []
   (let [tr           (subscribe [::i18n-subs/tr])
@@ -243,11 +225,7 @@
                   :on-key-press (partial forms/on-return-key
                                          #(when @selected-id
                                             (dispatch [::events/get-results])))}
-
-         [DocumentationButton]
-
-         [ui/FormGroup
-          [cloud-entry-point-title]]
+         [CollectionSelector]
          [ui/FormGroup {:widths "equal"}
           [ui/FormField
            ; the key below is a workaround react issue with controlled input cursor position,
@@ -477,7 +455,8 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         resources        (subscribe [::subs/collection])
         selected-rows    (subscribe [::subs/selected-rows])
-        can-bulk-delete? (subscribe [::subs/can-bulk-delete?])]
+        can-bulk-delete? (subscribe [::subs/can-bulk-delete?])
+        mobile?          (subscribe [::main-subs/is-mobile-device?])]
     (fn []
       (when (instance? js/Error @resources)
         (dispatch [::messages-events/add
@@ -496,7 +475,10 @@
           [create-button])
         (when (and (not-empty @selected-rows)
                    @can-bulk-delete?)
-          [delete-resources-button])]
+          [delete-resources-button])
+        (when-not @mobile?
+          [ui/MenuMenu {:position :right}
+           [DocumentationButton]])]
        [ui/Segment {:attached "bottom"}
         [search-header]]])))
 

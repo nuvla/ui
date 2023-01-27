@@ -5,6 +5,7 @@
 ### Changed
 
 - Global - Fix issues noticed after release #1117
+- CIMI page - Move documentation button to menu and hide it on mobile
 
 ## [2.33.0] - 2023-01-26
 

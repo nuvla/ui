@@ -4,13 +4,20 @@
 
 ### Changed
 
+- Apps details - Deployments tab only applying external filters (= module id) for fetching deployments, bugfix #1112
+- NuvlaEdge details - Deployments tab only applying external filters (= edge id) for fetching deployments, bugfix #1112
+- Deployment Sets - Deployments table only applying external filters (= deployment sets id) for fetching deployments, bugfix #1112
 - Jobs - Scrollable table
 - Events - Scrollable table
 - Global - Fix issues noticed after release #1117
 - Api page - Move documentation button to menu and hide it on mobile
 - Api details page - Pushes content below AclButton
+- Switch group - Switch group on enter #1122
+- Switch group - Change selection of group with arrow keys
+- Switch group - Allow to search group including spaces
 - Cimi detail - Display simple string ids as links or list of links when multiple ones #1120
 - Global - Display parent resource as link
+- Routing - Navigating to same page should not delete running actions intervals regression fix #1124
 
 ## [2.33.0] - 2023-01-26
 

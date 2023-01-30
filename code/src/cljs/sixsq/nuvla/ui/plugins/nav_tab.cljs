@@ -23,7 +23,7 @@
         k-prefix     (str/replace (str/join last-two-ns) "spec" "")]
     (->> qualified-key
          name
-         (str k-prefix)
+         (str k-prefix "-")
          keyword)))
 
 (defn get-active-tab

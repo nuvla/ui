@@ -8,7 +8,6 @@
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.subs :as subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
-            [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
             [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
             [sixsq.nuvla.ui.edges.views-utils :as views-utils]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
@@ -865,7 +864,7 @@
                            {:field-key :tags :no-sort? true}
                            {:field-key :manager :no-sort? true}]]
     [Table {:sort-config {:db-path     ::spec/ordering
-                          :fetch-event ::events/get-nuvlaboxes}
+                          :fetch-event [::events/get-nuvlaboxes]}
             :columns     columns
             :rows        selected-nbs
             :table-props {:compact "very" :selectable true}

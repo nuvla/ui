@@ -42,7 +42,6 @@
         (let [{:keys [id name level children]} (first h)]
           (recur (conj acc {:text     (or name (general-utils/id->uuid id))
                             :value    id
-                            :selected (= active-claim id)
                             :level    (or level 0)
                             :icon     "group"})
                  (concat

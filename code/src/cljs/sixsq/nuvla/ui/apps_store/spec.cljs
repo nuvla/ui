@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.apps-store.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]))
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::modules any?)
 (s/def ::tab any?)

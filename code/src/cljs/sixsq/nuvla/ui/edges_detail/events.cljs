@@ -149,13 +149,21 @@
      :fx                  [[:dispatch [::events-plugin/load-events
                                        [::spec/events] id false]]
                            [:dispatch [::job-events/get-jobs id]]
-                           [:dispatch [::deployments-events/get-deployments
-                                       {:filter-external-arg (str "nuvlabox='" id "'")
-                                        :pagination-db-path  ::spec/deployment-pagination}]]
+                           [:dispatch [::get-deployments-for-edge id]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)
                                                                          nil)]]]}))
+
+(reg-event-fx
+  ::get-deployments-for-edge
+  (fn [{{:keys [::spec/nuvlabox]} :db} [_ id]]
+    (let [resource-id (or id (:id nuvlabox))]
+      (when resource-id
+        {:fx [[:dispatch [::deployments-events/get-deployments
+                          {:filter-external-arg (str "nuvlabox='" (or id (:id nuvlabox)) "'")
+                           :external-filter-only? true
+                           :pagination-db-path  ::spec/deployment-pagination}]]]}))))
 
 (reg-event-fx
   ::decommission

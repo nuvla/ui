@@ -19,7 +19,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.tab-new :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -1972,7 +1972,8 @@
                       [deployments-views/DeploymentTable
                        {:no-actions         true
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
-                        :pagination-db-path ::spec/deployment-pagination}]])}
+                        :pagination-db-path ::spec/deployment-pagination
+                        :fetch-event        [::events/get-deployments-for-edge] }]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}

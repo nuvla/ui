@@ -22,11 +22,14 @@
   (fn [{db :db} [_ {:keys [path query-params] :as new-match}]]
     (let [old-match                  (:current-route db)
           controllers                (rfc/apply-controllers (:controllers old-match) new-match)
-          new-match-with-controllers (assoc new-match :controllers controllers)]
+          new-match-with-controllers (assoc new-match :controllers controllers)
+          view-changed?              (not= (:view (:data old-match))
+                                           (:view (:data new-match-with-controllers)))]
       {:db                   (-> db (assoc :current-route new-match-with-controllers
                                            ::main-spec/nav-path (utils/split-path-alias path)
                                            ::main-spec/nav-query-params query-params))
-       :fx                   [[:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]]]
+       :fx                   [(when view-changed?
+                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])]
        ::fx/set-window-title [(utils/strip-base-path (:path new-match))]})))
 
 (reg-event-fx

@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.data.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]))
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::data-records any?)
 (s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))

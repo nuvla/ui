@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.33.1] - 2023-01-30
+
 ### Changed
 
 - Apps details - Deployments tab only applying external filters (= module id) for fetching deployments, bugfix #1112

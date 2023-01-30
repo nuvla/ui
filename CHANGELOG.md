@@ -18,6 +18,7 @@
 - Cimi detail - Display simple string ids as links or list of links when multiple ones #1120
 - Global - Display parent resource as link
 - Routing - Navigating to same page should not delete running actions intervals regression fix #1124
+- Routing - Clicking link that leads to identical match should not add to history stack fix #1130
 
 ## [2.33.0] - 2023-01-26
 

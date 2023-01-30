@@ -42,7 +42,7 @@
         check-status           (creds-utils/credential-check-status
                                  @credential-loading? (not @credential-valid?))
         credentials-completed? (subscribe [::subs/credentials-completed?])]
-    (dispatch [::events/set-launch-status step-id check-status])
+    (dispatch [::events/set-deploy-status step-id check-status])
     (or (when (and @credentials-completed? (not= :ok check-status))
           [creds-comp/CredentialCheckPopup @cred-id])
         [step-icon step-state])))
@@ -96,7 +96,7 @@
 
            [cred-reg reg-cred-status] focused-cred-reg]
 
-          (dispatch [::events/set-launch-status step-id (or reg-cred-status :ok)])
+          (dispatch [::events/set-deploy-status step-id (or reg-cred-status :ok)])
           (when (and cred-reg (not= :ok reg-cred-status))
             [creds-comp/CredentialCheckPopup cred-reg])))
       [step-icon step-state]
@@ -120,9 +120,12 @@
 
 (defn step-content-segment
   [active-step]
-  [ui/Segment style/autoscroll-y
-   ^{:key active-step}
-   [utils/step-content active-step]])
+  (let [style (cond-> style/autoscroll-y
+                (= active-step :module-version)
+                (update-in [:style] dissoc :overflow-y))]
+    [ui/Segment style
+     ^{:key active-step}
+     [utils/step-content active-step]]))
 
 
 (defn deploy-modal

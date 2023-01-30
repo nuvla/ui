@@ -219,7 +219,7 @@
   (let [current-route @(subscribe [::subs/current-route])
         path          @(subscribe [::subs/nav-path])
         view          (-> current-route :data :view)]
-    [:div
+    [:<>
      (when current-route
        [view (assoc current-route :path path
                                   :pathname (:path current-route))])]))

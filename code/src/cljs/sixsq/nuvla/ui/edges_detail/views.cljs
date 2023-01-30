@@ -1267,7 +1267,7 @@
     [ui/Segment {:secondary true
                  :color     "teal"
                  :raised    true}
-     [:h4 "Tags"]
+     [:h4 (str/capitalize (@tr [:tags]))]
      [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
                                                    (@tr [:updated-successfully])])]]))
 
@@ -1390,7 +1390,7 @@
         {:keys [state]} @(subscribe [::subs/nuvlabox])
         infra-services (subscribe [::subs/infra-services])]
     (fn []
-      (let [{:keys [tags ssh-keys]} @nuvlabox
+      (let [{:keys [ssh-keys]} @nuvlabox
             suspended? (= state "SUSPENDED")]
         (when (not= (count ssh-keys) (count @ssh-creds))
           (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
@@ -1420,7 +1420,7 @@
             [ui/GridColumn {:stretched true}
              [TabOverviewCluster @nb-status]])
 
-          (when (and (seq tags) (not suspended?))
+          (when-not suspended?
             [ui/GridColumn
              [TabOverviewTags @nuvlabox]])
 

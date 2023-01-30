@@ -59,7 +59,7 @@
                ::content-key          (random-uuid)
                ::pages                {"welcome"         {:key        routes/home
                                                           :label-kw   :home
-                                                          :icon       "home"
+                                                          :icon       "fa-light fa-house"
                                                           :protected? false
                                                           :order      0}
                                        "documentation"   {:key        routes/documentation
@@ -68,59 +68,58 @@
                                                           :protected? false}
                                        "dashboard"       {:key        routes/dashboard
                                                           :label-kw   :dashboard
-                                                          :icon       "dashboard"
+                                                          :icon       "fa-light fa-gauge-min"
                                                           :protected? true
                                                           :order      10}
                                        "apps"            {:key        routes/apps
                                                           :label-kw   :apps
-                                                          :icon       "fas fa-store"
+                                                          :icon       "fa-light fa-layer-group"
                                                           :protected? true
                                                           :order      20}
                                        "deployments"     {:key        routes/deployments
                                                           :label-kw   :deployments
                                                           :name       "deployments"
-                                                          :icon       "rocket"
+                                                          :icon       "fa-light fa-rocket-launch"
                                                           :protected? true
                                                           :order      30}
                                        "deployment-sets" {:key        routes/deployment-sets
                                                           :label-kw   :deployment-sets
                                                           :name       "deployments-sets"
-                                                          :icon       "bullseye"
+                                                          :icon       "fa-light fa-bullseye"
                                                           :protected? true
                                                           :hidden?    (not config/debug?)
                                                           :order      31}
                                        "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"
-                                                          :icon       "box"
+                                                          :icon       "fa-light fa-box"
                                                           :protected? true
                                                           :order      40}
                                        "credentials"     {:key        routes/credentials
                                                           :label-kw   :credentials
-                                                          :icon       "key"
+                                                          :icon       "fa-light fa-key"
                                                           :protected? true
                                                           :order      50}
                                        "notifications"   {:key        routes/notifications
                                                           :label-kw   :notifications
-                                                          :icon       "bell"
+                                                          :icon       "fa-light fa-bell"
                                                           :protected? true
                                                           :order      60}
                                        "data"            {:key             routes/data
                                                           :label-kw        :data
-                                                          :icon            "database"
+                                                          :icon            "fa-light fa-database"
                                                           :protected?      true
                                                           :iframe-visible? true
                                                           :order           70}
                                        "clouds"          {:key        routes/clouds
                                                           :label-kw   :infra-service-short
-                                                          :icon       "cloud"
+                                                          :icon       "fa-light fa-cloud"
                                                           :protected? true
                                                           :order      80}
                                        "api"             {:key        routes/api
                                                           :label-kw   :api
-                                                          :icon       "code"
+                                                          :icon       "fa-light fa-code"
                                                           :protected? false
-                                                          :order      90}
-                                       }
+                                                          :order      90}}
                ::open-modal           nil
                ::stripe               nil})

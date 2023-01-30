@@ -40,7 +40,7 @@
   (let [tr                (subscribe [::i18n-subs/tr])
         border-left-style {:style {:border-left "1px solid rgba(34,36,38,.1)"}}]
     (if (is-advanced-mode? @mode)
-      [ui/TableHeader
+      [ui/TableHeader {:style {:font-size "12px"}}
        [ui/TableRow
         [ui/TableHeaderCell {:row-span 2 :text-align "left"} (str/capitalize (@tr [:rights]))]
         [ui/TableHeaderCell (merge border-left-style {:col-span 3})
@@ -303,7 +303,7 @@
 
 
 (defn AclWidget
-  [{:keys [default-value read-only mode owner-read-only] :as _opts} & [ui-acl]]
+  [{:keys [default-value read-only mode owner-read-only margin-override] :as _opts} & [ui-acl]]
   (let [mode       (r/atom (or mode :simple))
         ui-acl     (or ui-acl
                        (->ui-acl default-value (not read-only)))
@@ -314,8 +314,10 @@
                              :on-change (or on-change #()))]
 
         [:div
-         {:style (cond-> {:margin-bottom "10px"
-                          :margin-top    "10px"}
+         {:style (cond-> (merge {:margin-top    "10px"
+                                 :margin-bottom "10px"
+                                 :font-size     "13px"}
+                                margin-override)
                          @is-mobile? (assoc :overflow-x "auto"))}
          [AclOwners (assoc opts :read-only (or owner-read-only read-only)) ui-acl]
          (when (or (not read-only)
@@ -339,9 +341,9 @@
                                  :read-only       (not can-edit?)
                                  :owner-read-only owner-read-only
                                  :on-change       #(dispatch
-                                                     [edit-event
-                                                      (:id @e) (assoc @e :acl %)
-                                                      (@tr [:acl-updated])])}
+                                                    [edit-event
+                                                     (:id @e) (assoc @e :acl %)
+                                                     (@tr [:acl-updated])])}
                       ui-acl])))}))
 
 
@@ -368,17 +370,22 @@
                                 :else nil)]
           [:<>
            [ui/Button {:floated  "right"
-                       :style    {:margin-bottom "5px"}
+                       :style    {:padding-left "0.8rem" :padding-right "0.8rem"
+                                  :margin-bottom "5px"}
                        :basic    true
                        :on-click #(accordion-utils/toggle active?)}
-            [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
-                       :position "bottom center"
-                       :content  (@tr [:access-rights])}]
-            (when icon-right
-              [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
-                         :position "bottom center"
-                         :content  (@tr [:access-rights])}])
-            [ui/Icon {:name (if @active? "caret down" "caret left")}]]])))))
+            [:div
+             [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
+                        :position "bottom center"
+                        :content  (@tr [:access-rights])
+                        :style {:margin 0}}]
+             (when icon-right
+               [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right
+                                                            :style {:margin 0}}])
+                          :position "bottom center"
+                          :content  (@tr [:access-rights])}])
+             [ui/Icon {:name (if @active? "caret down" "caret left")
+                       :style {:margin 0}}]]]])))))
 
 
 (defn AclSection

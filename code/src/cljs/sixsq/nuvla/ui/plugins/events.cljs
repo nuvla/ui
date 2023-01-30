@@ -4,6 +4,7 @@
             [re-frame.core :refer [dispatch reg-event-fx subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
@@ -42,31 +43,26 @@
 
 (defn EventsTable
   [{:keys [db-path href] :as _opts}]
-  (let [tr        @(subscribe [::i18n-subs/tr])
-        events    @(subscribe [::helpers/retrieve db-path ::events])
+  (let [events    @(subscribe [::helpers/retrieve db-path ::events])
         resources (:resources events)
         start     (-> resources last :timestamp)]
     [:<>
-     [ui/Table {:basic :very}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell [:span (tr [:event])]]
-        [ui/TableHeaderCell [:span (tr [:timestamp])]]
-        [ui/TableHeaderCell [:span (tr [:delta-min])]]
-        [ui/TableHeaderCell [:span (tr [:category])]]
-        [ui/TableHeaderCell [:span (tr [:state])]]]]
-      [ui/TableBody
-       (for [{:keys [id content timestamp category]} resources]
-         ^{:key id}
-         [ui/TableRow
-          [ui/TableCell [values/as-link id
-                         :label (general-utils/id->short-uuid id)]]
-          [ui/TableCell timestamp]
-          [ui/TableCell (-> start
-                            (time/delta-minutes timestamp)
-                            general-utils/round-up)]
-          [ui/TableCell category]
-          [ui/TableCell (:state content)]])]]
+     [Table {:columns
+             [{:field-key :events
+               :accessor  :id
+               :cell      (fn [{id :cell-data}]
+                            [values/as-link id
+                             :label (general-utils/id->short-uuid id)])}
+              {:field-key :timestamp}
+              {:field-key :delta-min
+               :accessor  #(-> start
+                               (time/delta-minutes (:timestamp %))
+                               general-utils/round-up)}
+              {:field-key :category}
+              {:field-key  :state
+               :accessor   #(get-in % [:content :state])
+               :cell-props {:style {:white-space "pre"}}}]
+             :rows resources}]
      [pagination-plugin/Pagination
       {:db-path      (conj db-path ::pagination)
        :total-items  (:count events)

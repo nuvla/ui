@@ -36,8 +36,7 @@
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [:div {:style {:display     :flex
-                      :align-items :baseline}}
+       [:div
         [:div [full-text-search-plugin/FullTextSearch
                {:db-path            [::spec/deployments-search]
                 :change-event       [::pagination-plugin/change-page
@@ -45,11 +44,12 @@
                 :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))}]]
         " "
         ^{:key (random-uuid)}
-        [filter-comp/ButtonFilter
-         {:resource-name  "deployment"
-          :default-filter @additional-filter
-          :open?          filter-open?
-          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
+        [:div {:style {:margin-top "10px"}}
+         [filter-comp/ButtonFilter
+          {:resource-name  "deployment"
+           :default-filter @additional-filter
+           :open?          filter-open?
+           :on-done        #(dispatch [::events/set-additional-filter %])}]]]])))
 
 (defn BulkUpdateModal
   []
@@ -183,7 +183,14 @@
      (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
-                              :max-width     "20ch"}} (:name module)])
+                              :max-width     "20ch"}}
+        [:div {:class "app-icon-name"
+               :style {:display     :flex
+                       :align-items :center}}
+         [:img {:src   (or (:thumb-nail module) (:logo-url module))
+                :style {:width  "42px"
+                        :height "30px"}}]
+         [:div (:name module)]]])
      [ui/TableCell (utils/deployment-version deployment)]
      [ui/TableCell state]
      [ui/TableCell (when url
@@ -306,7 +313,7 @@
         select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment {:basic true}
+        [ui/Segment {:basic true :class "table-wrapper"}
          (if (= @view "cards")
            [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:show-options? (false? @select-all?)}])]))))
@@ -328,19 +335,45 @@
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
-          [components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
-           ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState started [(utils/state->icon utils/STARTED)] utils/STARTED
-           clickable? "green"
-           ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState starting-plus [(utils/state->icon utils/STARTING)]
-           utils/STARTING clickable? "yellow"
-           ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState stopped [(utils/state->icon utils/STOPPED)] utils/STOPPED
-           clickable? "yellow"
-           ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState error [(utils/state->icon utils/ERROR)] utils/ERROR
-           clickable? "red" ::events/set-state-selector ::subs/state-selector]]]))))
+          [components/StatisticState {:value                    total
+                                      :icons                    ["fa-light fa-rocket-launch"]
+                                      :label                    "TOTAL"
+                                      :stacked?                 true
+                                      :clickable?               clickable?
+                                      :set-state-selector-event ::events/set-state-selector
+                                      :state-selector-subs      ::subs/state-selector}]
+          [components/StatisticState {:value                    started,
+                                      :icons                    [(utils/state->icon utils/STARTED)],
+                                      :label                    utils/STARTED,
+                                      :stacked?                 true
+                                      :clickable?               clickable?,
+                                      :positive-color           "green",
+                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value                    starting-plus,
+                                      :icons                    [(utils/state->icon utils/STARTING)],
+                                      :label                    utils/STARTING,
+                                      :stacked?                 true
+                                      :clickable?               clickable?,
+                                      :positive-color           "orange",
+                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value                    stopped,
+                                      :icons                    [(utils/state->icon utils/STOPPED)],
+                                      :label                    utils/STOPPED,
+                                      :stacked?                 true
+                                      :clickable?               clickable?,
+                                      :positive-color           "orange",
+                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value                    error,
+                                      :icons                    [(utils/state->icon utils/ERROR)],
+                                      :label                    utils/ERROR,
+                                      :stacked?                 true
+                                      :clickable?               clickable?,
+                                      :positive-color           "red",
+                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]]]))))
 
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
@@ -381,29 +414,28 @@
     (fn [{:keys [no-actions]}]
       (let [deployments  (:resources @elements)
             show-options (and (false? @select-all?) (not (true? no-actions)))]
-        [:<>
+        [:div {:class "table-wrapper"}
          [VerticalDataTable
           deployments (assoc options :select-all @select-all? :show-options? show-options)]
          [Pagination (:pagination-db-path options)]]))))
 
 (defn DeploymentsMainContent
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/init])
-    (fn []
-      [components/LoadingPage {}
-       [:<>
-        [uix/PageHeader "rocket"
-         (general-utils/capitalize-first-letter (@tr [:deployments]))]
-        [MenuBar]
-        [ui/Grid {:stackable true
-                  :reversed  "mobile"}
-         [ControlBar]
-         [StatisticStates true ::subs/deployments-summary]]
-        [bulk-progress-plugin/MonitoredJobs
-         {:db-path [::spec/bulk-jobs]}]
-        [DeploymentsDisplay]
-        [Pagination]]])))
+  (dispatch [::events/init])
+  (fn []
+    [components/LoadingPage {}
+     [:<>
+      [MenuBar]
+      [ui/Grid {:stackable true
+                :reversed  "mobile"
+                :style     {:margin-top    0
+                            :margin-bottom 0}}
+       [ControlBar]
+       [StatisticStates true ::subs/deployments-summary]]
+      [bulk-progress-plugin/MonitoredJobs
+       {:db-path [::spec/bulk-jobs]}]
+      [DeploymentsDisplay]
+      [Pagination]]]))
 
 (defn deployments-view
   []

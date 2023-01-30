@@ -127,31 +127,45 @@
 
 
 (defn StatisticState
-  ([value icons label clickable? set-state-selector-event state-selector-subs]
-   (StatisticState value icons label clickable? "black" set-state-selector-event state-selector-subs))
-  ([value icons label clickable? positive-color set-state-selector-event state-selector-subs]
+  ([{:keys [value icons label clickable? positive-color set-state-selector-event state-selector-subs stacked?]
+     :or   {positive-color "black"}}]
    (let [state-selector (subscribe [state-selector-subs])
          selected?      (or
                           (= label @state-selector)
                           (and (= label "TOTAL")
                                (nil? @state-selector)))
-         color          (if (pos? value) positive-color "grey")]
+         color          (if (pos? value) positive-color "grey")
+         icon-key       (str label "-" icons)]
      [ui/Statistic {:style    (when clickable? {:cursor "pointer"})
                     :color    color
                     :class    (when clickable? "slight-up")
                     :on-click #(when clickable?
                                  (dispatch [set-state-selector-event
                                             (if (= label "TOTAL") nil label)]))}
-      [ui/StatisticValue
-       (or value "-")
-       "\u2002"
-       [ui/IconGroup
-        (for [i icons]
-          [ui/Icon {:key       (str "icon-" (str/join "-" i) "-id")
-                    :size      (when (and clickable? selected?) "large")
-                    :loading   (and (pos? value) (= "spinner" i))
-                    :className i}])]]
-      [ui/StatisticLabel label]])))
+      (if stacked?
+        [:<> [ui/IconGroup
+              {:style {:margin-right "auto"
+                       :margin-left  "auto"}}
+              (for [i icons]
+                [uix/Icon {:key     icon-key
+                           :size    (when (and clickable? selected?) "large")
+                           :loading (and (pos? value) (= "spinner" i))
+                           :style   {:margin-right 0}
+                           :name    i}])]
+         [ui/StatisticValue
+          (or value "-")]
+         [ui/StatisticLabel label]]
+        [:<>
+         [ui/StatisticValue
+          (or value "-")
+          "\u2002"
+          [ui/IconGroup
+           (for [i icons]
+             [uix/Icon {:key     icon-key
+                        :size    (when (and clickable? selected?) "large")
+                        :loading (and (pos? value) (= "spinner" i))
+                        :name    i}])]]
+         [ui/StatisticLabel label]])])))
 
 
 (defn ClickMeStaticPopup
@@ -276,14 +290,14 @@
         (if @editing?
           [:div {:style {:display "flex"}}
            [ui/Dropdown {:selection        true
-                         :placeholder      "Type to add tags"
+                         :placeholder      (@tr [:type-to-add-tags])
                          :default-value    @new-tags
                          :name             "tag"
                          :fluid            true
                          :allowAdditions   true
                          :additionLabel    (str (@tr [:add-dropdown]) " ")
                          :search           true
-                         :noResultsMessage "Type to add a new tag"
+                         :noResultsMessage (@tr [:type-to-add-new-tag])
                          :multiple         true
                          :on-change        (ui-callback/value #(do
                                                                  (reset! new-tags %)
@@ -299,13 +313,13 @@
                                                           :content (.-value label)
                                                           :style   {:margin-top 10
                                                                     :max-height 150
-                                                                    :overflow   "auto"}}]))
-                         }]
+                                                                    :overflow   "auto"}}]))}]
            [ui/Button {:icon     "check"
                        :on-click #(reset! editing? false)}]]
           [ui/LabelGroup {:size  "tiny"
                           :color "teal"
-                          :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+                          :style {:margin-top 10, :min-height 30 :max-height 150,
+                                  :overflow   "auto"}}
            (for [tag tags]
              ^{:key (str uuid "_" tag)}
              [ui/Popup
@@ -316,7 +330,10 @@
                :on             "hover"
                :size           "tiny"
                :hide-on-scroll true}])
+           (when-not (seq tags)
+             (if editable?
+               (@tr [:add-first-tag])
+               [ui/Message (@tr [:no-items-to-show])]))
+           ff/nbsp
            (when editable?
-             [:<>
-              ff/nbsp
-              [Pencil editing?]])])))))
+             [Pencil editing?])])))))

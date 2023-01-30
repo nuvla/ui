@@ -76,7 +76,7 @@
     (assoc db ::spec/active-step active-step)))
 
 (reg-event-db
-  ::set-launch-status
+  ::set-deploy-status
   (fn [db [_ step-id status]]
     (assoc-in db [::spec/step-states step-id :status] status)))
 

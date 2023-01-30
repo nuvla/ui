@@ -54,42 +54,42 @@
 
         [ui/StatisticGroup {:widths (if clickable? nil 4)
                             :size   "tiny"}
-         [components/StatisticState {:value total,
-                                     :icons ["fal fa-box"],
-                                     :label "TOTAL",
-                                     :stacked? true,
-                                     :clickable? clickable?,
-                                     :positive-color nil,
+         [components/StatisticState {:value                    total,
+                                     :icons                    ["fal fa-box"],
+                                     :label                    "TOTAL",
+                                     :stacked?                 true,
+                                     :clickable?               clickable?,
+                                     :positive-color           nil,
                                      :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                     :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
-         [components/StatisticState {:value online,
-                                     :icons ["fal fa-power-off"],
-                                     :label utils/status-online,
-                                     :clickable? clickable?,
-                                     :stacked? true,
-                                     :positive-color "green",
+                                     :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector}]
+         [components/StatisticState {:value                    online,
+                                     :icons                    ["fal fa-power-off"],
+                                     :label                    utils/status-online,
+                                     :clickable?               clickable?,
+                                     :stacked?                 true,
+                                     :positive-color           "green",
                                      :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                     :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
-         [components/StatisticState {:value offline,
-                                     :icons ["fal fa-power-off"],
-                                     :label utils/status-offline,
-                                     :clickable? clickable?,
-                                     :stacked? true,
-                                     :positive-color "red",
+                                     :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector}]
+         [components/StatisticState {:value                    offline,
+                                     :icons                    ["fal fa-power-off"],
+                                     :label                    utils/status-offline,
+                                     :clickable?               clickable?,
+                                     :stacked?                 true,
+                                     :positive-color           "red",
                                      :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                     :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
-         [components/StatisticState {:value unknown,
-                                     :icons ["fal fa-power-off"],
-                                     :label utils/status-unknown,
-                                     :clickable? clickable?,
-                                     :stacked? true,
-                                     :positive-color "orange",
+                                     :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector}]
+         [components/StatisticState {:value                    unknown,
+                                     :icons                    ["fal fa-power-off"],
+                                     :label                    utils/status-unknown,
+                                     :clickable?               clickable?,
+                                     :stacked?                 true,
+                                     :positive-color           "orange",
                                      :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                     :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]
+                                     :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector}]
          (when clickable?
            [ui/Button
             {:icon     true
-             :style    {:margin     "50px auto 15px"}
+             :style    {:margin "50px auto 15px"}
              :on-click #(when clickable?
                           (reset! show-state-statistics (not @show-state-statistics))
                           (when-not @show-state-statistics
@@ -129,55 +129,55 @@
                     :display    "flex"
                     :text-align "center"
                     :width      "100%"}}
-           [components/StatisticState {:value new,
-                                       :icons [(utils/state->icon utils/state-new)],
-                                       :label utils/state-new,
-                                       :clickable? true,
+           [components/StatisticState {:value                    new,
+                                       :icons                    [(utils/state->icon utils/state-new)],
+                                       :label                    utils/state-new,
+                                       :clickable?               true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked? true}]
-           [components/StatisticState {:value activated,
-                                       :icons [(utils/state->icon utils/state-activated)],
-                                       :label utils/state-activated,
-                                       :clickable? true,
+                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked?                 true}]
+           [components/StatisticState {:value                    activated,
+                                       :icons                    [(utils/state->icon utils/state-activated)],
+                                       :label                    utils/state-activated,
+                                       :clickable?               true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked? true}]
-           [components/StatisticState {:value commissioned,
-                                       :icons [(utils/state->icon utils/state-commissioned)],
-                                       :label utils/state-commissioned,
-                                       :clickable? true,
+                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked?                 true}]
+           [components/StatisticState {:value                    commissioned,
+                                       :icons                    [(utils/state->icon utils/state-commissioned)],
+                                       :label                    utils/state-commissioned,
+                                       :clickable?               true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked? true}]
-           [components/StatisticState {:value decommissioning,
-                                       :icons [(utils/state->icon utils/state-decommissioning)],
-                                       :label utils/state-decommissioning,
-                                       :clickable? true,
+                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked?                 true}]
+           [components/StatisticState {:value                    decommissioning,
+                                       :icons                    [(utils/state->icon utils/state-decommissioning)],
+                                       :label                    utils/state-decommissioning,
+                                       :clickable?               true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked? true}]
-           [components/StatisticState {:value decommissioned,
-                                       :icons [(utils/state->icon utils/state-decommissioned)],
-                                       :label utils/state-decommissioned,
-                                       :clickable? true,
+                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked?                 true}]
+           [components/StatisticState {:value                    decommissioned,
+                                       :icons                    [(utils/state->icon utils/state-decommissioned)],
+                                       :label                    utils/state-decommissioned,
+                                       :clickable?               true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked? true}]
-           [components/StatisticState {:value suspended,
-                                       :icons [(utils/state->icon utils/state-suspended)],
-                                       :label utils/state-suspended,
-                                       :clickable? true,
+                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked?                 true}]
+           [components/StatisticState {:value                    suspended,
+                                       :icons                    [(utils/state->icon utils/state-suspended)],
+                                       :label                    utils/state-suspended,
+                                       :clickable?               true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked? true}]
-           [components/StatisticState {:value error,
-                                       :icons [(utils/state->icon utils/state-error)],
-                                       :label utils/state-error,
-                                       :clickable? true,
+                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked?                 true}]
+           [components/StatisticState {:value                    error,
+                                       :icons                    [(utils/state->icon utils/state-error)],
+                                       :label                    utils/state-error,
+                                       :clickable?               true,
                                        :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked? true}]]]]))))
+                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
+                                       :stacked?                 true}]]]]))))
 
 (defn switch-from-cluster-view?
   [current-view new-view]
@@ -408,7 +408,13 @@
                                    (general-utils/edn->json nuvlabox-trigger-file)))
                   :target   "_blank"
                   :download "nuvlabox-installation-trigger-usb.nuvla"}
-              [ui/Button {:positive       true
+              [ui/Button {:style          {:border-radius "inherit"}
+                          :href           (str "data:text/plain;charset=utf-8,"
+                                               (js/encodeURIComponent
+                                                 (general-utils/edn->json nuvlabox-trigger-file)))
+                          :target         "_blank"
+                          :download       "nuvlabox-installation-trigger-usb.nuvla"
+                          :positive       true
                           :fluid          true
                           :loading        (nil? apikey)
                           :icon           "download"
@@ -926,7 +932,7 @@
         [:div {:style {:margin-top "10px"}}
          [filter-comp/ButtonFilter
           {:resource-name  "nuvlabox"
-           :default-filter  @additional-filter
+           :default-filter @additional-filter
            :open?          filter-open?
            :on-done        #(dispatch [::events/set-additional-filter %])}]]]])))
 
@@ -940,8 +946,8 @@
     [MenuBar]
     [ui/Grid {:stackable true
               :reversed  "mobile"
-              :style     {:padding-bottom 10
-                          :margin         0}}
+              :style     {:margin-top    0
+                          :margin-bottom 0}}
      [ControlBar]
      [ui/GridColumn {:width 10}
       (if (= @view-type :cluster)

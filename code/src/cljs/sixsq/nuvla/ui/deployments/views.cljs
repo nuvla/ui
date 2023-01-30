@@ -185,10 +185,10 @@
                               :text-overflow "ellipsis",
                               :max-width     "20ch"}}
         [:div {:class "app-icon-name"
-               :style {:display :flex
+               :style {:display     :flex
                        :align-items :center}}
-         [:img {:src (or (:thumb-nail module) (:logo-url module))
-                :style {:width "42px"
+         [:img {:src   (or (:thumb-nail module) (:logo-url module))
+                :style {:width  "42px"
                         :height "30px"}}]
          [:div (:name module)]]])
      [ui/TableCell (utils/deployment-version deployment)]
@@ -323,7 +323,7 @@
   (let [summary (subscribe [summary-subs])]
     (fn [clickable? _summary-subs]
       (let [terms         (general-utils/aggregate-to-map
-                           (get-in @summary [:aggregations :terms:state :buckets]))
+                            (get-in @summary [:aggregations :terms:state :buckets]))
             started       (:STARTED terms 0)
             starting      (:STARTING terms 0)
             created       (:CREATED terms 0)
@@ -335,45 +335,45 @@
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
-          [components/StatisticState {:value total
-                                      :icons ["fa-light fa-rocket-launch"]
-                                      :label "TOTAL"
-                                      :stacked? true
-                                      :clickable? clickable?
+          [components/StatisticState {:value                    total
+                                      :icons                    ["fa-light fa-rocket-launch"]
+                                      :label                    "TOTAL"
+                                      :stacked?                 true
+                                      :clickable?               clickable?
                                       :set-state-selector-event ::events/set-state-selector
-                                      :state-selector-subs ::subs/state-selector}]
-          [components/StatisticState {:value started,
-                                      :icons [(utils/state->icon utils/STARTED)],
-                                      :label utils/STARTED,
-                                      :stacked? true
-                                      :clickable? clickable?,
-                                      :positive-color "green",
+                                      :state-selector-subs      ::subs/state-selector}]
+          [components/StatisticState {:value                    started,
+                                      :icons                    [(utils/state->icon utils/STARTED)],
+                                      :label                    utils/STARTED,
+                                      :stacked?                 true
+                                      :clickable?               clickable?,
+                                      :positive-color           "green",
                                       :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
-                                      :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
-          [components/StatisticState {:value starting-plus,
-                                      :icons [(utils/state->icon utils/STARTING)],
-                                      :label utils/STARTING,
-                                      :stacked? true
-                                      :clickable? clickable?,
-                                      :positive-color "orange",
+                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value                    starting-plus,
+                                      :icons                    [(utils/state->icon utils/STARTING)],
+                                      :label                    utils/STARTING,
+                                      :stacked?                 true
+                                      :clickable?               clickable?,
+                                      :positive-color           "orange",
                                       :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
-                                      :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
-          [components/StatisticState {:value stopped,
-                                      :icons [(utils/state->icon utils/STOPPED)],
-                                      :label utils/STOPPED,
-                                      :stacked? true
-                                      :clickable? clickable?,
-                                      :positive-color "orange",
+                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value                    stopped,
+                                      :icons                    [(utils/state->icon utils/STOPPED)],
+                                      :label                    utils/STOPPED,
+                                      :stacked?                 true
+                                      :clickable?               clickable?,
+                                      :positive-color           "orange",
                                       :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
-                                      :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]
-          [components/StatisticState {:value error,
-                                      :icons [(utils/state->icon utils/ERROR)],
-                                      :label utils/ERROR,
-                                      :stacked? true
-                                      :clickable? clickable?,
-                                      :positive-color "red",
+                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
+          [components/StatisticState {:value                    error,
+                                      :icons                    [(utils/state->icon utils/ERROR)],
+                                      :label                    utils/ERROR,
+                                      :stacked?                 true
+                                      :clickable?               clickable?,
+                                      :positive-color           "red",
                                       :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
-                                      :state-selector-subs :sixsq.nuvla.ui.deployments.subs/state-selector}]]]))))
+                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]]]))))
 
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
@@ -428,7 +428,8 @@
       [MenuBar]
       [ui/Grid {:stackable true
                 :reversed  "mobile"
-                :style     {:margin "0"}}
+                :style     {:margin-top    0
+                            :margin-bottom 0}}
        [ControlBar]
        [StatisticStates true ::subs/deployments-summary]]
       [bulk-progress-plugin/MonitoredJobs

@@ -13,6 +13,11 @@
   [value]
   (and (map? value) (:href value)))
 
+(defn id?
+  "Returns true if the value look like an id."
+  [value]
+  (and (string? value) (re-find #"^[a-z-]+/[a-zA-Z0-9-]+$" value)))
+
 
 (defn as-href
   "Renders a link to the API detail page associated with the href. Ignores
@@ -37,7 +42,6 @@
   [value]
   (vec (concat [:span] (interpose " " (map as-href value)))))
 
-
 (defn format-value
   "This will format a value for presentation in the UI. Note that this assumes
    that vectors are already a visual element and will return the vector
@@ -45,8 +49,8 @@
    format-collection function."
   [value]
   (cond
-    (href-coll? value) (as-href-coll value)
     (href? value) (as-href value)
+    (id? value) (as-link value)
     (vector? value) value
     (map? value) (with-out-str (pprint value))
     :else (str value)))
@@ -70,9 +74,10 @@
    collection are turned into strings. If the argument is not a collection,
    then the value is returned unchanged."
   [v]
-  (if (coll? v)
-    (vec (concat [ui/ListSA] (map format-item v)))
-    v))
+  (cond
+    (href-coll? v) (as-href-coll v)
+    (coll? v) (vec (concat [ui/ListSA] (map format-item v)))
+    :else v))
 
 
 (defn status->color

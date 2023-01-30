@@ -241,7 +241,7 @@
                                                    :no-sort?  true})]
                 :rows        deployments-list
                 :sort-config {:db-path     ::spec/ordering
-                              :fetch-event ::events/get-deployments}
+                             :fetch-event (or (:fetch-event options) [::events/get-deployments])}
                 :row-render  (fn [deployment] [RowFn deployment options])
                 :table-props (merge style/single-line {:stackable true})}]))))
 

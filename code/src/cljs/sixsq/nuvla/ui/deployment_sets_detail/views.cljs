@@ -207,7 +207,8 @@
                             :key     :deployments
                             :icon    "rocket"}
                  :render   #(r/as-element [deployments-views/DeploymentTable
-                                           {:no-actions true
+                                           {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
+                                            :no-actions true
                                             :empty-msg  (tr [:empty-deployemnt-msg])}])}
                 (job-views/jobs-section)
                 (acl/TabAcls {:e          deployment-set

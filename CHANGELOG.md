@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Apps details - Deployments tab only applying external filters (= module id) for fetching deployments, bugfix #1112
+- NuvlaEdge details - Deployments tab only applying external filters (= edge id) for fetching deployments, bugfix #1112
+- Deployment Sets - Deployments table only applying external filters (= deployment sets id) for fetching deployments, bugfix #1112
 - Jobs - Scrollable table
 - Events - Scrollable table
 - Global - Fix issues noticed after release #1117

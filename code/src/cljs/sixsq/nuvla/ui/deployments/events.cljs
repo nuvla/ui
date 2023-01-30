@@ -62,15 +62,17 @@
   (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
                 ::spec/filter-external
-                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path]}]]
+                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path external-filter-only?]}]]
     (let [filter-external (or filter-external-arg filter-external)
           state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param
-                            {:full-text-search  (full-text-search-plugin/filter-text
-                                                  db [::spec/deployments-search])
-                             :additional-filter additional-filter
-                             :state-selector    state
-                             :filter-external   filter-external})]
+                            (if external-filter-only?
+                              {:filter-external filter-external}
+                              {:full-text-search  (full-text-search-plugin/filter-text
+                                                    db [::spec/deployments-search])
+                               :additional-filter additional-filter
+                               :state-selector   state
+                               :filter-external   filter-external}))]
       {:db                  (assoc db ::spec/filter-external filter-external)
        ::cimi-api-fx/search [:deployment
                              (->> {:aggregation "terms:state"

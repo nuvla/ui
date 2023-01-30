@@ -865,7 +865,7 @@
                            {:field-key :tags :no-sort? true}
                            {:field-key :manager :no-sort? true}]]
     [Table {:sort-config {:db-path     ::spec/ordering
-                          :fetch-event ::events/get-nuvlaboxes}
+                          :fetch-event [::events/get-nuvlaboxes]}
             :columns     columns
             :rows        selected-nbs
             :table-props {:compact "very" :selectable true}

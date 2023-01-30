@@ -1972,7 +1972,8 @@
                       [deployments-views/DeploymentTable
                        {:no-actions         true
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
-                        :pagination-db-path ::spec/deployment-pagination}]])}
+                        :pagination-db-path ::spec/deployment-pagination
+                        :fetch-event        [::events/get-deployments-for-edge] }]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}

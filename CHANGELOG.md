@@ -12,6 +12,8 @@
 - Switch group - Switch group on enter #1122
 - Switch group - Change selection of group with arrow keys
 - Switch group - Allow to search group including spaces
+- Cimi detail - Display simple string ids as links or list of links when multiple ones #1120
+- Global - Display parent resource as link
 
 ## [2.33.0] - 2023-01-26
 

@@ -303,7 +303,7 @@
 
 
 (defn AclWidget
-  [{:keys [default-value read-only mode owner-read-only] :as _opts} & [ui-acl]]
+  [{:keys [default-value read-only mode owner-read-only margin-override] :as _opts} & [ui-acl]]
   (let [mode       (r/atom (or mode :simple))
         ui-acl     (or ui-acl
                        (->ui-acl default-value (not read-only)))
@@ -314,9 +314,10 @@
                              :on-change (or on-change #()))]
 
         [:div
-         {:style (cond-> {:margin-bottom "10px"
-                          :margin-top    "10px"
-                          :font-size     "13px"}
+         {:style (cond-> (merge {:margin-top    "10px"
+                                 :margin-bottom "10px"
+                                 :font-size     "13px"}
+                                margin-override)
                          @is-mobile? (assoc :overflow-x "auto"))}
          [AclOwners (assoc opts :read-only (or owner-read-only read-only)) ui-acl]
          (when (or (not read-only)
@@ -340,9 +341,9 @@
                                  :read-only       (not can-edit?)
                                  :owner-read-only owner-read-only
                                  :on-change       #(dispatch
-                                                     [edit-event
-                                                      (:id @e) (assoc @e :acl %)
-                                                      (@tr [:acl-updated])])}
+                                                    [edit-event
+                                                     (:id @e) (assoc @e :acl %)
+                                                     (@tr [:acl-updated])])}
                       ui-acl])))}))
 
 

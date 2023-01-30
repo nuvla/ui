@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.routing.events
   (:require [re-frame.core :refer [reg-event-fx]]
+            [reitit.frontend :refer [match-by-path]]
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.effects :as fx]
@@ -13,8 +14,11 @@
 
 (reg-event-fx
   ::push-state-by-path
-  (fn [_ [_ new-path]]
-    {::fx/push-state new-path}))
+  (fn [{ {:keys [current-route
+                 router]} :db} [_ new-path]]
+    (let [new-match (dissoc (match-by-path router new-path) :controllers)]
+      (when-not (= new-match (dissoc current-route :controllers))
+        {::fx/push-state new-path}))))
 
 (reg-event-fx
   ::navigated

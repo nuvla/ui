@@ -19,7 +19,8 @@
         is-user?     (subscribe [::session-subs/is-user?])
         active?      (subscribe [::route-subs/nav-url-active? url])
         auth-needed? (and protected? (not @is-user?))
-        auth-url     (name->href routes/sign-in)]
+        auth-url     (name->href routes/sign-in)
+        href         (if auth-needed? auth-url url)]
 
     ^{:key (name label-kw)}
     [uix/MenuItem
@@ -29,7 +30,7 @@
       :style                    {:min-width  sidebar-width
                                  :overflow-x "hidden"}
       :active                   @active?
-      :href                     (if auth-needed? auth-url url)
+      :href                     href
       :on-click                 (fn [event]
                                   (.preventDefault event)
                                   (dispatch (if auth-needed?

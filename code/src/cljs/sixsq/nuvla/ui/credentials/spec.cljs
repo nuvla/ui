@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.credentials.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 
@@ -158,8 +157,6 @@
                                                ::openstack-username
                                                ::openstack-password]))
 
-
-(s/def ::hashed-password any?)
 
 (s/def ::state-selector any?)
 

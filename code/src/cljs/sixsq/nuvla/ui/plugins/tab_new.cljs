@@ -79,7 +79,7 @@
     (fn [opts]
       [ui/Tab
        (-> (assoc opts :panes (map add-hrefs panes))
-           (dissoc :db-path :change-event :default-active-tab)
+           (dissoc :db-path :change-event)
            (assoc :active-index
              (get key->index (keyword @cur-view) 0)))])))
 

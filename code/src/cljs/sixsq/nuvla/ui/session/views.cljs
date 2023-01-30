@@ -27,6 +27,7 @@
   (let [extended?    (r/atom false)
         search       (r/atom "")
         open         (r/atom false)
+        cursor       (r/atom 0)
         on-click     #(dispatch [::events/switch-group % @extended?])
         options      (subscribe [::subs/switch-group-options])
         tr           (subscribe [::i18n-subs/tr])
@@ -34,25 +35,31 @@
         active-claim (subscribe [::subs/active-claim])
         id-menu      "nuvla-close-menu-item"]
     (fn []
-      (let [visible-opts (->> @options
-                              (filter
-                                #(re-matches
-                                   (re-pattern
-                                     (str "(?i).*"
-                                          (general-utils/regex-escape @search)
-                                          ".*"))
-                                   (str (:text %) (:value %))))
-                              doall)]
+      (let [visible-opts (filter
+                           #(re-matches
+                              (re-pattern
+                                (str "(?i).*"
+                                     (general-utils/regex-escape @search)
+                                     ".*"))
+                              (str (:text %) (:value %)))
+                           @options)]
         (when (seq @options)
           [ui/Dropdown
            {:id            id-menu
             :className     "nuvla-close-menu-item"
             :item          true
-            :on-click      #(reset! open true)
+            :on-click      #(do (reset! open true)
+                                (reset! cursor 0))
             :close-on-blur false
             :on-blur       #(when (not= (.-id (.-target %1))
                                         id-menu)
                               (reset! open false))
+            :on-key-down   #(case (.-key %)
+                              "ArrowDown" (when (< @cursor (-> visible-opts count dec))
+                                            (swap! cursor inc))
+                              "ArrowUp" (when (> @cursor 0) (swap! cursor dec))
+                              "Enter" (some-> visible-opts (nth @cursor) :value on-click)
+                              nil)
             :open          @open
             :on-close      #(do
                               (reset! open false)
@@ -71,20 +78,25 @@
                 :auto-complete :off
                 :auto-focus    true
                 :value         @search
+                :on-key-down   #(when (= (.-key %) " ")
+                                  (.stopPropagation %))
                 :placeholder   (str (@tr [:search]) "...")
                 :on-change     (ui-callback/input-callback
-                                 #(reset! search %))
+                                 #(do
+                                    (reset! cursor 0)
+                                    (reset! search %)))
                 :on-click      #(.stopPropagation %)}]
               [ui/DropdownMenu {:scrolling true}
-               (for [{:keys [value text icon level selected]} visible-opts]
-                 ^{:key value}
-                 [ui/DropdownItem {:on-click #(on-click value)
-                                   :selected selected}
-                  [:span (str/join (repeat (* level 5) ff/nbsp))]
-                  [ui/Icon {:name icon}]
-                  (if selected
-                    [:b text]
-                    text)])]
+               (doall
+                 (for [[i {:keys [value text icon level]}] (map-indexed vector visible-opts)]
+                   ^{:key value}
+                   [ui/DropdownItem {:on-click #(on-click value)
+                                     :selected (= i @cursor)}
+                    [:span (str/join (repeat (* level 5) ff/nbsp))]
+                    [ui/Icon {:name icon}]
+                    (if (= @active-claim value)
+                      [:b {:style {:color "#c10e12"}} text]
+                      text)]))]
               [ui/DropdownDivider]
               [ui/DropdownItem
                {:text     "show subgroups resources"

@@ -98,7 +98,7 @@
 
 
 (defn versions-table
-  [versions current-version & {:keys [on-click]}]
+  [versions-sub current-version-sub & {:keys [on-click]}]
   [ui/Table
    [ui/TableHeader
     [ui/TableRow
@@ -107,9 +107,9 @@
      [ui/TableHeaderCell {:width "1"} "Author"]
      [ui/TableHeaderCell {:width "13"} "Commit message"]]]
    [ui/TableBody
-    (for [[i v] versions]
+    (for [[i v] @versions-sub]
       (let [{:keys [href commit author published]} v
-            is-current? (= current-version href)]
+            is-current? (= @current-version-sub href)]
         ^{:key (str "version" i)}
         [ui/TableRow (when is-current? {:active true})
          [ui/TableCell
@@ -136,6 +136,6 @@
           (when (> (count @versions) 1)
             [:div
              [versions-compare @versions]])
-          [versions-table @versions @current-version
+          [versions-table versions current-version
            :on-click #(dispatch [::events/get-module %])]]
          [ui/Message {:info true} (@tr [:no-versions])])])))

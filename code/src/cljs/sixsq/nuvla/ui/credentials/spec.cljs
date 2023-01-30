@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.credentials.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 
@@ -159,13 +158,10 @@
                                                ::openstack-password]))
 
 
-(s/def ::hashed-password any?)
-
 (s/def ::state-selector any?)
 
 (s/def ::infrastructure-services-available any?)
 
-(s/def ::active-tab keyword?)
 (s/def ::tab any?)
 
 (def defaults {::add-credential-modal-visible?     false
@@ -182,6 +178,4 @@
                ::error-message                     nil
                ::state-selector                    nil
                ::infrastructure-services-available nil
-               ::credential-check-table            nil
-               ::tab                               (tab-plugin/build-spec)})
-
+               ::credential-check-table            nil})

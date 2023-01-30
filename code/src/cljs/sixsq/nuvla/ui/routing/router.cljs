@@ -18,7 +18,8 @@
             [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
             [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
             [sixsq.nuvla.ui.docs.views :refer [documentation]]
-            [sixsq.nuvla.ui.edges.views :refer [edges-view]]
+            [sixsq.nuvla.ui.edges.views :refer [DetailedViewPage edges-view]]
+            [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
             [sixsq.nuvla.ui.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.profile.views :refer [profile]]
             [sixsq.nuvla.ui.routing.events :as events]
@@ -53,10 +54,10 @@
             ["/" (create-route-name page-alias "-slashed")]]
            [(str page-alias "/:uuid")
             {:name      (create-route-name page-alias "-details")
-             :view      edges-view}]
+             :view      DetailedViewPage}]
            [(str page-alias "/nuvlabox-cluster/:uuid")
             {:name (create-route-name page-alias "-cluster-details")
-             :view edges-view}]])
+             :view views-cluster/ClusterViewPage}]])
         (utils/canonical->all-page-names "edges")))
 
 (def cloud-routes

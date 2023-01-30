@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.data.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::data-records any?)
 (s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))
@@ -23,8 +22,6 @@
 (s/def ::modal-open? boolean?)
 (s/def ::add-data-set-form any?)
 
-(def default-time-period [(time/days-before 30) (time/now)])
-
 (def defaults
   {::modal-open?                 false
    ::data-records                nil
@@ -40,7 +37,7 @@
    ::data-sets                   {}
    ::selected-data-set-ids       #{}
    ::add-data-set-form           {}
-   ::tab                         (tab-plugin/build-spec :active-tab :data-sets)})
+   ::tab                         (tab-plugin/build-spec :default-tab :data-sets)})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 8)})

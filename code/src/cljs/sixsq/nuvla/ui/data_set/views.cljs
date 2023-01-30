@@ -16,8 +16,8 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.map :as map]
@@ -272,7 +272,7 @@
   (let [tr                    (subscribe [::i18n-subs/tr])
         selected-data-sets    (subscribe [::data-subs/selected-data-set-ids])
         selected-data-records (subscribe [::subs/selected-data-record-ids])
-        active-tab            (subscribe [::tab-plugin/active-tab [::data-spec/tab]])
+        active-tab            (subscribe [::tab-plugin/default-tab [::data-spec/tab]])
         on-click              #(dispatch [::main-events/subscription-required-dispatch
                                           [::data-events/open-application-select-modal]])]
     (fn [button-type]
@@ -298,7 +298,7 @@
 (defn CreateDataSet
   []
   (let [tr                       (subscribe [::i18n-subs/tr])
-        active-tab               (subscribe [::tab-plugin/active-tab
+        active-tab               (subscribe [::tab-plugin/default-tab
                                              [::data-spec/tab]])
         selected-data-record-ids (subscribe [::subs/selected-data-record-ids])
         data-record-filter       (subscribe [::subs/data-record-filter])

@@ -19,7 +19,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -1987,7 +1987,6 @@
                      :can-edit?       can-edit?
                      :owner-read-only true
                      :edit-event      ::events/edit})])))
-
 
 (defn TabsNuvlaBox
   []

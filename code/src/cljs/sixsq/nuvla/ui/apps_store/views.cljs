@@ -14,8 +14,8 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.utils.general :as utils-general :refer [format-money]]
@@ -65,11 +65,11 @@
       :href          detail-href
       :button        [ui/Button button-ops]}]))
 
+
 (defn ModulesCardsGroup
-  []
+  [active-tab]
   (let [modules              (subscribe [::subs/modules])
-        active-tab           (subscribe [::tab-plugin/active-tab [::spec/tab]])
-        show-published-tick? (boolean (#{:allapps :myapps} @active-tab))]
+        show-published-tick? (boolean (#{:allapps :myapps} active-tab))]
     [:div utils-style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4
@@ -79,77 +79,79 @@
         [ModuleCard module show-published-tick?])]]))
 
 (defn RefreshButton
-  []
+  [active-tab]
   [components/RefreshMenu
-   {:on-refresh #(dispatch [::events/get-modules])}])
+   {:on-refresh #(dispatch [::events/get-modules active-tab])}])
 
 (defn Pagination
-  []
+  [active-tab]
   (let [modules @(subscribe [::subs/modules])]
     [pagination-plugin/Pagination
-     {:db-path      [::spec/pagination]
+     {:db-path      [(spec/page-keys->pagination-db-path active-tab)]
       :total-items  (:count modules)
-      :change-event [::events/get-modules]}]))
+      :change-event [::events/get-modules active-tab]}]))
 
 (defn ControlBar
-  []
+  [active-tab]
   [ui/Menu {:secondary true}
    [ui/MenuMenu {:position "left"}
     [full-text-search-plugin/FullTextSearch
      {:db-path      [::spec/modules-search]
-      :change-event [::pagination-plugin/change-page [::spec/pagination] 1]}]]
-   [RefreshButton]])
+      :change-event [::pagination-plugin/change-page [(spec/page-keys->pagination-db-path active-tab)] 1]}]]
+   [RefreshButton active-tab]])
 
-(defn ControlBarProjects []
+(defn ControlBarProjects [active-tab]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu {:borderless true}
      [uix/MenuItem
       {:name     (@tr [:add])
        :icon     "add"
        :on-click #(dispatch [::apps-events/open-add-modal])}]
-     [RefreshButton]]))
+     [RefreshButton active-tab]]))
 
-(defn TabNavigator []
+(defn TabNavigator [active-tab]
   (let [module (subscribe [::apps-subs/module])]
-    (dispatch [::apps-events/get-module])
+    (dispatch [::apps-events/get-module active-tab])
     (fn []
       [components/LoadingPage {}
        [:<>
         [apps-views-detail/AddModal]
         [apps-views-detail/format-error @module]
         [ui/TabPane
-         [ControlBarProjects]
+         [ControlBarProjects active-tab]
          (let [{:keys [children]} @module]
            [apps-project-views/FormatModuleChildren children])]]])))
 
 (defn TabDefault
-  []
+  [active-tab]
+  (dispatch [::events/get-modules active-tab])
+  ^{:key active-tab}
   [components/LoadingPage {}
    [ui/TabPane
-    [ControlBar]
-    [ModulesCardsGroup]
-    [Pagination]]])
+    [ControlBar active-tab]
+    [ModulesCardsGroup active-tab]
+    [Pagination active-tab]]])
+
 
 (defn tabs
   []
-  (let [tr     @(subscribe [::i18n-subs/tr])
-        render #(r/as-element [TabDefault])]
+  (let [tr     @(subscribe [::i18n-subs/tr]) ]
     [{:menuItem {:content (utils-general/capitalize-words (tr [:appstore]))
-                 :key     :appstore
+                 :key     spec/appstore-key
                  :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-      :render   render}
+      :render   #(r/as-element [TabDefault spec/appstore-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:all-apps]))
-                 :key     :allapps
+                 :key     spec/allapps-key
                  :icon    "grid layout"}
-      :render   render}
+      :render   #(r/as-element [TabDefault spec/allapps-key ])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:my-apps]))
-                 :key     :myapps
+                 :key     spec/myapps-key
                  :icon    "user"}
-      :render   render}
+      :render   #(r/as-element [TabDefault spec/myapps-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:navigate-apps]))
-                 :key     :navigate
+                 :key     spec/navigate-key
                  :icon    "folder open"}
-      :render   #(r/as-element [TabNavigator])}]))
+      :render   #(r/as-element [TabNavigator spec/navigate-key])}]))
 
 (defn RootView
   []

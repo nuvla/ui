@@ -10,7 +10,7 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-fx
@@ -128,7 +128,7 @@
   (fn [{{:keys [::spec/selected-data-set-ids
                 ::data-set-spec/selected-data-record-ids
                 ::spec/tab] :as db} :db}]
-    (let [tab-data-set-selected? (= (::tab-plugin/active-tab tab) :data-sets)
+    (let [tab-data-set-selected? (= (::tab-plugin/default-tab tab) :data-sets)
           {:keys [resource
                   selected-data
                   dispatch-event]} (if tab-data-set-selected?
@@ -189,9 +189,9 @@
 
 (reg-event-db
   ::tab-changed
-  (fn [{{:keys [::tab-plugin/active-tab]} ::spec/tab :as db}]
+  (fn [{{:keys [:sixsq.nuvla.ui.plugins.tab-new/default-tab]} ::spec/tab :as db}]
     (cond-> db
-            (= active-tab :data-records)
+            (= (keyword (or (tab-plugin/get-active-tab db [::spec/tab]) default-tab)) :data-records)
             (assoc ::data-set-spec/data-set-id nil
                    ::data-set-spec/data-record-filter nil
                    ::data-set-spec/map-selection nil

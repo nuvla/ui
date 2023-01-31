@@ -6,6 +6,7 @@
 
 - Apps - icon in modal should not be red
 - CSS - Force blue color for all huge or massive icons within cards
+- Favicon - Changes favicon to lighter red
 
 ## [2.33.1] - 2023-01-30
 

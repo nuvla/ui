@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.edges.events :as events]
             [sixsq.nuvla.ui.edges.subs :as subs]
             [sixsq.nuvla.ui.edges.views-utils :as views-utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -22,8 +21,13 @@
   (let [clusters (subscribe [::subs/nuvlabox-clusters])]
     (fn []
       [ui/StatisticGroup {:widths 4 :size "tiny"}
-       [components/StatisticState (:count @clusters) ["fas fa-chart-network"] "TOTAL"
-        false ::events/set-state-selector ::subs/state-selector]])))
+       [components/StatisticState  {:value (:count @clusters),
+                                    :icons ["fas fa-chart-network"],
+                                    :label "TOTAL",
+                                    :clickable? false,
+                                    :positive-color "",
+                                    :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
+                                    :state-selector-subs :sixsq.nuvla.ui.edges.subs/state-selector}]])))
 
 
 (defn NuvlaBoxClusterCard

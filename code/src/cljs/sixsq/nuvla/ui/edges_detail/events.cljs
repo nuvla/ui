@@ -149,13 +149,21 @@
      :fx                  [[:dispatch [::events-plugin/load-events
                                        [::spec/events] id false]]
                            [:dispatch [::job-events/get-jobs id]]
-                           [:dispatch [::deployments-events/get-deployments
-                                       {:filter-external-arg (str "nuvlabox='" id "'")
-                                        :pagination-db-path  ::spec/deployment-pagination}]]
+                           [:dispatch [::get-deployments-for-edge id]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)
                                                                          nil)]]]}))
+
+(reg-event-fx
+  ::get-deployments-for-edge
+  (fn [{{:keys [::spec/nuvlabox]} :db} [_ id]]
+    (let [resource-id (or id (:id nuvlabox))]
+      (when resource-id
+        {:fx [[:dispatch [::deployments-events/get-deployments
+                          {:filter-external-arg (str "nuvlabox='" (or id (:id nuvlabox)) "'")
+                           :external-filter-only? true
+                           :pagination-db-path  ::spec/deployment-pagination}]]]}))))
 
 (reg-event-fx
   ::decommission
@@ -386,12 +394,12 @@
 (reg-event-fx
   ::get-nuvlaedge-release
   (fn [{{:keys [::spec/nuvlaedge-release] :as db} :db} [_ {:keys [nuvlabox-engine-version]}]]
-    (cond-> {:db (assoc db ::spec/nuvlaedge-release nil)}
-            (and nuvlabox-engine-version
-                 (not= (:release nuvlaedge-release) nuvlabox-engine-version))
-            (assoc ::cimi-api-fx/search [:nuvlabox-release
-                                         {:filter  (str "release='" nuvlabox-engine-version "'")
-                                          :select  "id, release, pre-release"
-                                          :orderby "release-date:desc"
-                                          :last    10000}
-                                         #(dispatch [::set-nuvlaedge-release (first (:resources %))])]))))
+    (when (and nuvlabox-engine-version
+            (not= (:release nuvlaedge-release) nuvlabox-engine-version))
+      (-> {:db (assoc db ::spec/nuvlaedge-release nil)}
+          (assoc ::cimi-api-fx/search [:nuvlabox-release
+                                       {:filter  (str "release='" nuvlabox-engine-version "'")
+                                        :select  "id, release, pre-release"
+                                        :orderby "release-date:desc"
+                                        :last    10000}
+                                       #(dispatch [::set-nuvlaedge-release (first (:resources %))])])))))

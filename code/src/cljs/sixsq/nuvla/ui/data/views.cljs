@@ -16,8 +16,8 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -149,11 +149,11 @@
                                  (dispatch [::events/close-application-select-modal])
                                  (dispatch [::deployment-dialog-events/create-deployment id :data]))
 
-        launch-fn              #(do
+        deploy-fn              #(do
                                   (dispatch [::events/close-application-select-modal])
                                   (dispatch [::deployment-dialog-events/edit-deployment]))]
     (fn []
-      (let [launch-disabled? (or (not @deployment)
+      (let [deploy-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
                                  (not @env-completed?))]
@@ -174,11 +174,11 @@
            [ui/Icon {:name "settings"}]
            (@tr [:configure])]
           [ui/Button {:disabled (or (nil? @selected-app-id)
-                                    launch-disabled?)
+                                    deploy-disabled?)
                       :primary  true
-                      :on-click launch-fn}
+                      :on-click deploy-fn}
            [ui/Icon {:name "rocket"}]
-           (@tr [:launch])]]]))))
+           (@tr [:deploy])]]]))))
 
 (defn Pagination
   []
@@ -311,24 +311,22 @@
 (defn data-view
   []
   (refresh)
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      (let [panes (data-panes)]
-        [components/LoadingPage {}
-         [ui/Segment style/basic
-          [uix/PageHeader "database" (@tr [:data-processing])]
-          [MenuBar]
-          [NewDatasetModal]
-          [tab-plugin/Tab
-           {:db-path      [::spec/tab]
-            :menu         {:secondary true
-                           :pointing  true
-                           :style     {:display        "flex"
-                                       :flex-direction "row"
-                                       :flex-wrap      "wrap"}}
-            :change-event [::events/tab-changed]
-            :panes        panes}]
-          [ApplicationSelectModal]
-          [deployment-dialog-views/deploy-modal true]
-          [data-set-views/ProcessButton]
-          [data-set-views/CreateDataSet]]]))))
+  (fn []
+    (let [panes (data-panes)]
+      [components/LoadingPage {}
+       [ui/Segment style/basic
+        [MenuBar]
+        [NewDatasetModal]
+        [tab-plugin/Tab
+         {:db-path      [::spec/tab]
+          :menu         {:secondary true
+                         :pointing  true
+                         :style     {:display        "flex"
+                                     :flex-direction "row"
+                                     :flex-wrap      "wrap"}}
+          :change-event [::events/tab-changed]
+          :panes        panes}]
+        [ApplicationSelectModal]
+        [deployment-dialog-views/deploy-modal true]
+        [data-set-views/ProcessButton]
+        [data-set-views/CreateDataSet]]])))

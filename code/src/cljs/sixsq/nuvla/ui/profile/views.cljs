@@ -12,7 +12,7 @@
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.profile.events :as events]
             [sixsq.nuvla.ui.profile.spec :as spec]
             [sixsq.nuvla.ui.profile.subs :as subs]

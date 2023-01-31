@@ -200,7 +200,7 @@
              subtype (conj (metadata-row "subtype" subtype))
              method (conj (metadata-row "method" method))
              state (conj (metadata-row "state" state))
-             parent (conj (metadata-row "parent" parent)))]))
+             parent (conj (metadata-row "parent" (values/as-link parent))))]))
 
 
 (defn strip-attr-ns
@@ -263,11 +263,13 @@
         [:<>
          (when acl
            ^{:key (str resource-id "-" updated)}
-           [acl-views/AclButton {:default-value acl
-                                 :read-only     (not (general-utils/can-edit? resource-value))
-                                 :on-change     #(dispatch [::events/edit
-                                                            resource-id
-                                                            (assoc resource-value :acl %)])}])
+           [:div {:style {:min-height "30px"}}
+            [acl-views/AclButton {:default-value acl
+                                  :read-only     (not (general-utils/can-edit? resource-value))
+                                  :on-change     #(dispatch [::events/edit
+                                                             resource-id
+                                                             (assoc resource-value :acl %)])
+                                  :margin-override {:margin-top 0}}]])
          [resource-detail
           [components/RefreshMenu
            {:on-refresh #(dispatch [::events/get resource-id])

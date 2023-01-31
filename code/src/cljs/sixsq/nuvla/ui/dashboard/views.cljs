@@ -6,13 +6,14 @@
             [sixsq.nuvla.ui.dashboard.events :as events]
             [sixsq.nuvla.ui.dashboard.utils :as utils]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-            [sixsq.nuvla.ui.deployments.views :as deployments-views]
+            [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
-            [sixsq.nuvla.ui.edges.views :as edges-views]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]))
@@ -30,73 +31,127 @@
     {:action-id  events/refresh-action-deployments-id
      :on-refresh refresh}]])
 
+(defn Statistic
+  [{:keys [value icon class label target positive-color icon-color color]
+    :or   {positive-color "black"}}]
+  (let [color        (or color (if (pos? value) positive-color "grey"))
+        {:keys [resource tab-event]} target
+        interactive? (or tab-event resource)]
+    [ui/Statistic {:style    {:cursor (when interactive? "pointer")}
+                   :color    color
+                   :class    (conj [(when interactive? "slight-up")] class)
+                   :on-click #(do
+                                (when tab-event
+                                  (dispatch tab-event))
+                                (when resource
+                                  (dispatch [::routing-events/navigate resource])))}
+     [uix/Icon (merge {:name icon} (when icon-color {:color icon-color}))]
+     [ui/StatisticValue (or value "-")]
+     [ui/StatisticLabel label]]))
+
+
+(defn StatisticStatesEdge
+  []
+  (let [summary         (subscribe [::edges-subs/nuvlaboxes-summary-all])
+        total           (:count @summary)
+        online-statuses (general-utils/aggregate-to-map
+                          (get-in @summary [:aggregations :terms:online :buckets]))
+        online          (:1 online-statuses)
+        offline         (:0 online-statuses)
+        unknown         (- total (+ online offline))]
+
+    [ui/StatisticGroup {:size  "tiny"
+                        :style {:padding "0.2rem"}}
+     [Statistic {:value total
+                 :icon  "fa-light fa-box"
+                 :label "TOTAL"
+                 :color "black"}]
+     [Statistic {:value          online
+                 :icon           "fa-light fa-power-off"
+                 :label          edges-utils/status-online
+                 :positive-color "green"
+                 :color          "green"}]
+     [Statistic {:value offline
+                 :icon  "fa-light fa-power-off"
+                 :label edges-utils/status-offline
+                 :color "red"}]
+     [Statistic {:value unknown
+                 :icon  "fa-light fa-power-off"
+                 :label edges-utils/status-unknown
+                 :color "orange"}]]))
 
 (defn TabOverviewNuvlaBox
   []
-  (let [icon "box"
-        {:keys [resource tab-index tab-index-event]} utils/target-nbs]
+  (let [{:keys [resource tab-index tab-index-event]} utils/target-nbs]
     [ui/Segment {:secondary true
-                 :color     "green"
                  :raised    true
+                 :class     "nuvla-edges"
                  :style     {:display         "flex"
                              :flex-direction  "column"
-                             :justify-content "space-between"}}
+                             :justify-content "space-between"
+                             :border-radius   "8px"
+                             :overflow        :hidden}}
 
-     [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
+     [:h4 {:class "ui-header"}
+      [uix/Icon {:name "fa-light fa-box"}]
+      (str/upper-case "NuvlaEdges")]
 
-     [edges-views/StatisticStatesEdge false]
+     [StatisticStatesEdge]
 
-     [ui/Button {:icon     icon
-                 :color    :green
-                 :style    {:align-self "start"}
+     [ui/Button {:class    "center"
                  :content  "Show me"
                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
                                 (dispatch [::routing-events/navigate resource]))}]]))
 
 
+(defn StatisticStates
+  [summary-subs]
+  (let [summary       (subscribe [summary-subs])
+        terms         (general-utils/aggregate-to-map
+                        (get-in @summary [:aggregations :terms:state :buckets]))
+        started       (:STARTED terms 0)
+        starting      (:STARTING terms 0)
+        created       (:CREATED terms 0)
+        stopped       (:STOPPED terms 0)
+        error         (:ERROR terms 0)
+        pending       (:PENDING terms 0)
+        starting-plus (+ starting created pending)
+        total         (:count @summary)]
+    [ui/GridColumn {:class "wide"
+                    :style {:padding "0.2rem"}}
+     [ui/StatisticGroup {:size  "tiny"
+                         :style {:justify-content "center"}}
+      [Statistic {:value total :icon "fa-light fa-rocket-launch" :label "TOTAL" :color "black"}]
+      [Statistic {:value started :icon (deployments-utils/state->icon deployments-utils/STARTED) :label deployments-utils/STARTED :color "green"}]
+      [Statistic {:value starting-plus :icon (deployments-utils/state->icon deployments-utils/STARTING) :label deployments-utils/STARTING :color "orange"}]
+      [Statistic {:value stopped :icon (deployments-utils/state->icon deployments-utils/STOPPED) :label deployments-utils/STOPPED :color "orange"}]
+      [Statistic {:value error :icon (deployments-utils/state->icon deployments-utils/ERROR) :label deployments-utils/ERROR :positive-color "red"}]]]))
+
 ; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
 (defn TabOverviewDeployments
   []
-  (let [tr    (subscribe [::i18n-subs/tr])
-        icon  "rocket"
-        color "blue"
+  (let [tr   (subscribe [::i18n-subs/tr])
         {:keys [resource tab-key tab-event]} utils/target-deployments]
     [ui/Segment {:secondary true
-                 :color     color
                  :raised    true
+                 :class     "nuvla-deployments"
                  :style     {:display         "flex"
                              :flex-direction  "column"
-                             :justify-content "space-between"}}
+                             :justify-content "space-between"
+                             :border-radius   "8px"
+                             :overflow        :hidden}}
 
-     [:h4 [ui/Icon {:name icon}] (str/upper-case (@tr [:deployments]))]
+     [:h4 {:class "ui-header"} [uix/Icon {:name "fa-light fa-rocket-launch"}]
+      (str/upper-case (@tr [:deployments]))]
 
-     [deployments-views/StatisticStates false ::deployments-subs/deployments-summary-all]
+     [StatisticStates ::deployments-subs/deployments-summary-all]
 
-     [ui/Button {:color    color
-                 :icon     icon
-                 :style    {:align-self "start"}
+     [ui/Button {:class    "center"
                  :content  "Show me"
                  :on-click #(do (when (and tab-event tab-key)
                                   (dispatch [tab-event tab-key]))
                                 (dispatch [::routing-events/navigate resource]))}]]))
-
-
-(defn Statistic
-  [value icon label target]
-  (let [color (if (pos? value) "black" "grey")
-        {:keys [resource tab-event]} target]
-    [ui/Statistic {:style    {:cursor "pointer"}
-                   :color    color
-                   :class    "slight-up"
-                   :on-click #(do
-                                (when tab-event
-                                  (dispatch tab-event))
-                                (dispatch [::routing-events/navigate resource]))}
-     [ui/StatisticValue (or value "-")
-      "\u2002"
-      [ui/Icon {:className icon}]]
-     [ui/StatisticLabel label]]))
 
 
 (defn Statistics
@@ -111,36 +166,36 @@
         no-of-creds       (:count @credentials)]
     [ui/StatisticGroup (merge {:widths 10 :size "tiny"
                                :style  {:margin     "0px auto 10px auto"
-                                        :display    "block"
+                                        :display    "flex"
                                         :text-align "center"
-                                        :width      "100%"}})
-     [Statistic no-of-apps (utils/type->icon utils/type-apps) utils/type-apps utils/target-apps]
-     [Statistic no-of-deployments (utils/type->icon utils/type-deployments) utils/type-deployments utils/target-deployments]
-     [Statistic no-of-nb (utils/type->icon utils/type-nbs) utils/type-nbs utils/target-nbs]
-     [Statistic no-of-creds (utils/type->icon utils/type-creds) utils/type-creds utils/target-creds]]))
+                                        :width      "100%"
+                                        :max-width  1200
+                                        :padding    "2rem"}})
+     [Statistic {:value no-of-apps :icon (utils/type->icon utils/type-apps) :class "nuvla-apps" :label utils/type-apps :target utils/target-apps}]
+     [Statistic {:value no-of-deployments :icon (utils/type->icon utils/type-deployments) :class "nuvla-deployments" :label utils/type-deployments :target utils/target-deployments}]
+     [Statistic {:value no-of-nb :icon (utils/type->icon utils/type-nbs) :class "nuvla-edges" :label utils/type-nbs :target utils/target-nbs}]
+     [Statistic {:value no-of-creds :icon (utils/type->icon utils/type-creds) :class "nuvla-credentials" :label utils/type-creds :target utils/target-creds}]]))
 
 
 (defn DashboardMain
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (refresh)
-    (fn []
-      [components/LoadingPage {}
-       [:<>
-        [:div {:style {:display         :flex
-                       :justify-content :space-between}}
-         [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
-         [MenuRefresh]]
-        [Statistics]
-        [:div utils-style/center-items
-         [ui/Grid {:columns   2,
-                   :stackable true
-                   :padded    true}
-          [ui/GridRow
-           [ui/GridColumn {:stretched true}
-            [TabOverviewDeployments]]
-           [ui/GridColumn {:stretched true}
-            [TabOverviewNuvlaBox]]]]]]])))
+  (refresh)
+  (fn []
+    [components/LoadingPage {}
+     [:<>
+      [:div {:style {:display         :flex
+                     :justify-content :space-between}}
+       [MenuRefresh]]
+      [Statistics]
+      [:div utils-style/center-items
+       [ui/Grid {:columns   2,
+                 :stackable true
+                 :padded    true}
+        [ui/GridRow
+         [ui/GridColumn {:stretched true}
+          [TabOverviewDeployments]]
+         [ui/GridColumn {:stretched true}
+          [TabOverviewNuvlaBox]]]]]]]))
 
 
 (defn dashboard-view

@@ -26,10 +26,10 @@
 
 (defn Icon
   [{:keys [name] :as opts}]
-  [ui/Icon (cond-> opts
-                   (or (str/starts-with? name "fad ")
-                       (str/starts-with? name "fas ")) (-> (dissoc :name)
-                                                           (assoc :className name)))])
+  [ui/Icon
+   (if (some #(str/starts-with? name %) ["fa-" "fal " "fad " "fas "])
+     (-> opts (dissoc :name) (assoc :class name))
+     opts)])
 
 
 (defn Button
@@ -477,6 +477,7 @@
      [ui/Image
       {:src      image
        :bordered true
+       :class    :card-image-centered
        :style    {:width      "auto"
                   :height     "200px"
                   :object-fit "cover"

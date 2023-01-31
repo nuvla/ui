@@ -61,6 +61,12 @@
   :-> ::spec/cloud-entry-point)
 
 (reg-sub
+  ::collection-dropdown-options
+  :<- [::cloud-entry-point]
+  (fn [{:keys [collection-href]}]
+    (->> collection-href vals sort (map (fn [k] {:value k :text k})))))
+
+(reg-sub
   ::cloud-entry-point-error?
   :-> ::spec/cloud-entry-point-error?)
 

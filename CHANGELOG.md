@@ -2,22 +2,55 @@
 
 ## Unreleased
 
+## [2.33.1] - 2023-01-30
+
+### Changed
+
+- Apps details - Deployments tab only applying external filters (= module id) for fetching deployments, bugfix #1112
+- NuvlaEdge details - Deployments tab only applying external filters (= edge id) for fetching deployments, bugfix #1112
+- Deployment Sets - Deployments table only applying external filters (= deployment sets id) for fetching deployments, bugfix #1112
+- Jobs - Scrollable table
+- Events - Scrollable table
+- Global - Fix issues noticed after release #1117
+- Api page - Move documentation button to menu and hide it on mobile
+- Api details page - Pushes content below AclButton
+- Switch group - Switch group on enter #1122
+- Switch group - Change selection of group with arrow keys
+- Switch group - Allow to search group including spaces
+- Cimi detail - Display simple string ids as links or list of links when multiple ones #1120
+- Global - Display parent resource as link
+- Routing - Navigating to same page should not delete running actions intervals regression fix #1124
+- Routing - Clicking link that leads to identical match should not add to history stack fix #1130
+
+## [2.33.0] - 2023-01-26
+
 ### Changed
 
 - Apps - App description truncated if bold text is used fix
 - Values - Markdown summary should support nested elements #1077
 - Deps - Upgrade api client v2.0.11
-- Main - Loader service unavailable message visible on error
+- Main - On error, main loader displays unavailable
 - NuvlaEdge details - Unify layout for IPs and network interfaces, removes click to show anchor text #1051
 - Edges overview - Adds more advanced filtering similar to e.g. deployments tab #1010
 - Routing - Introduces reitit frontend router for client side routing
 - Credentials - Add modal obfuscating password input fields #1084
 - NuvlaEdge - Add and edit modals can handle nuvlabox-release endpoint sending back published flag #1053
 - Tables - Enables horizontal scroll on tables, bugfix #1089
+- NuvlaEdge Details - Makes changing tab a navigation via query params #1092
+- Deployment Details - Makes changing tab a navigation via query params #1094
+- Data page - Makes changing tab a navigation via query params #1099
+- Credentials page - Makes changing tab a navigation via query params #1098
+- Apps page - Makes changing tab a navigation via query params #1097
 - e2e tests - Marketplace tests checks for param in request body #1095
 - NuvlaEdge details - Shows pre-release flag behind version number #1054
 - NuvlaEdge details - Optimize vulnerabilty
-- NuvlaEdge details - Fix warnings in console
+- NuvlaEdge details - Always shows tags card in nuvlaedge details overview, bugfix #1101
+- Notification subscriptions - Addmodal: Disables greying out of unchecked radio button
+- Notification subscriptions - Sort config always showing NuvlaEdge first
+- Notification subscriptions - Shows configured tag for resource-filter in edit config modal
+- Downloads - Rename and refactor nuvlabox-self-registration.py to nuvlaedge-self-registration.py
+- Global - Adding translations
+- Global - Styling
 
 ## [2.32.12] - 2023-01-06
 

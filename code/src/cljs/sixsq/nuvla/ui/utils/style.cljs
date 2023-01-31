@@ -10,8 +10,8 @@
   basic
   {:basic  true
    :padded false
-   :style  {:padding-top    "inherit"
-            :padding-bottom "inherit"
+   :style  {:padding-top    0
+            :padding-bottom 0
             :padding-left   0
             :padding-right  0}})
 

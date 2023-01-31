@@ -208,7 +208,8 @@
                              :key     :deployments
                              :icon    "rocket"}
                   :render   #(r/as-element [deployments-views/DeploymentTable
-                                            {:no-actions true
+                                           {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
+                                            :no-actions true
                                              :empty-msg  (tr [:empty-deployemnt-msg])}])}
                  (job-views/jobs-section)
                  (acl/TabAcls {:e          deployment-set
@@ -777,6 +778,7 @@
     (dispatch [::events/new])
     (fn []
       [ui/Container {:fluid true}
+       [uix/PageHeader "add" (str/capitalize (@tr [:add]))]
        [step-group/StepGroup
         {:db-path [::spec/steps]
          :size    :mini

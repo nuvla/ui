@@ -19,7 +19,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -1267,7 +1267,7 @@
     [ui/Segment {:secondary true
                  :color     "teal"
                  :raised    true}
-     [:h4 "Tags"]
+     [:h4 (str/capitalize (@tr [:tags]))]
      [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
                                                    (@tr [:updated-successfully])])]]))
 
@@ -1390,7 +1390,7 @@
         {:keys [state]} @(subscribe [::subs/nuvlabox])
         infra-services (subscribe [::subs/infra-services])]
     (fn []
-      (let [{:keys [tags ssh-keys]} @nuvlabox
+      (let [{:keys [ssh-keys]} @nuvlabox
             suspended? (= state "SUSPENDED")]
         (when (not= (count ssh-keys) (count @ssh-creds))
           (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
@@ -1420,7 +1420,7 @@
             [ui/GridColumn {:stretched true}
              [TabOverviewCluster @nb-status]])
 
-          (when (and (seq tags) (not suspended?))
+          (when-not suspended?
             [ui/GridColumn
              [TabOverviewTags @nuvlabox]])
 
@@ -1972,7 +1972,8 @@
                       [deployments-views/DeploymentTable
                        {:no-actions         true
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
-                        :pagination-db-path ::spec/deployment-pagination}]])}
+                        :pagination-db-path ::spec/deployment-pagination
+                        :fetch-event        [::events/get-deployments-for-edge] }]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}
@@ -1986,7 +1987,6 @@
                      :can-edit?       can-edit?
                      :owner-read-only true
                      :edit-event      ::events/edit})])))
-
 
 (defn TabsNuvlaBox
   []

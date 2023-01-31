@@ -27,19 +27,31 @@
 
 (defn crumb
   [index segment]
-  (let [nav-path (subscribe [::route-subs/nav-path])
-        click-fn #(dispatch [::routing-events/navigate (trim-path @nav-path index)])]
+  (let [nav-path  (subscribe [::route-subs/nav-path])
+        click-fn  #(dispatch [::routing-events/navigate (trim-path @nav-path index)])
+        page-icon (:icon-class segment)]
     ^{:key (str index "_" segment)}
     [ui/BreadcrumbSection
      [:a {:on-click click-fn
-          :style    {:cursor "pointer"}}
-      (utils/truncate (str segment))]]))
+          :style    {:cursor "pointer"}
+          :class    (when (zero? index) :parent)}
+      (when page-icon [uix/Icon {:name page-icon :style {:padding-right "10px"
+                                                         :font-weight   400}}])
+      (utils/truncate (str (or (:text segment) segment)))]]))
+
+(defn- format-path-segment [tr first-segment]
+  (utils/capitalize-first-letter (@tr [(keyword first-segment)])))
 
 
 (defn format-first-crumb
   [nav-path]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (utils/capitalize-first-letter (@tr [(keyword (first nav-path))]))))
+  (let [tr            (subscribe [::i18n-subs/tr])
+        first-segment (first nav-path)
+        page-info     (subscribe [::subs/page-info first-segment])]
+    {:text       (if (seq first-segment)
+                   (format-path-segment tr first-segment)
+                   (format-path-segment tr "welcome"))
+     :icon-class (:icon @page-info)}))
 
 
 (defn decorate-breadcrumbs
@@ -50,7 +62,8 @@
 (defn breadcrumbs-links []
   (let [nav-path           (subscribe [::route-subs/nav-path])
         decorated-nav-path (decorate-breadcrumbs @nav-path)]
-    (vec (concat [ui/Breadcrumb {:size :large}]
+    (vec (concat [ui/Breadcrumb {:id   "nuvla-ui-header-breadcrumb"
+                                 :size :large}]
                  (->> decorated-nav-path
                       (map crumb (range))
                       (interpose [ui/BreadcrumbDivider {:icon "chevron right"}]))))))
@@ -88,7 +101,8 @@
                               :padding-bottom 5
                               :text-align     "center"}}
         current-year (.getFullYear (time/now))]
-    [ui/Segment {:style {:border-radius 0}}
+    [ui/Segment {:class "footer" :style {:border-radius 0
+                                         :z-index       10}}
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
       [ui/GridColumn grid-style
@@ -200,13 +214,13 @@
 (defn header
   []
   [:header
-   [ui/Menu {:className  "nuvla-ui-header"
+   [ui/Menu {:class      "nuvla-ui-header"
              :borderless true}
 
     [ui/MenuItem {:aria-label "toggle sidebar"
                   :link       true
                   :on-click   #(dispatch [::events/toggle-sidebar])}
-     [ui/Icon {:name "bars"}]]
+     [uix/Icon {:name "fa-light fa-bars"}]]
 
     [ui/MenuItem [breadcrumbs]]
 
@@ -251,7 +265,8 @@
          [:<>
           [intercom/widget]
           [sidebar/menu]
-          [:div {:style {:transition  "0.5s"
+          [:div {:class (str "nuvla-" (first @resource-path))
+                 :style {:transition  "0.5s"
                          :margin-left (if (and (not @is-small-device?) @show?)
                                         sidebar/sidebar-width "0")}}
            [ui/Dimmer {:active   (and @is-small-device? @show?)

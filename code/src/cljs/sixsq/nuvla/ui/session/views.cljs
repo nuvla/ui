@@ -27,6 +27,7 @@
   (let [extended?    (r/atom false)
         search       (r/atom "")
         open         (r/atom false)
+        cursor       (r/atom 0)
         on-click     #(dispatch [::events/switch-group % @extended?])
         options      (subscribe [::subs/switch-group-options])
         tr           (subscribe [::i18n-subs/tr])
@@ -34,34 +35,38 @@
         active-claim (subscribe [::subs/active-claim])
         id-menu      "nuvla-close-menu-item"]
     (fn []
-      (let [visible-opts (->> @options
-                              (filter
-                                #(re-matches
-                                   (re-pattern
-                                     (str "(?i).*"
-                                          (general-utils/regex-escape @search)
-                                          ".*"))
-                                   (str (:text %) (:value %))))
-                              doall)]
+      (let [visible-opts (filter
+                           #(re-matches
+                              (re-pattern
+                                (str "(?i).*"
+                                     (general-utils/regex-escape @search)
+                                     ".*"))
+                              (str (:text %) (:value %)))
+                           @options)]
         (when (seq @options)
           [ui/Dropdown
            {:id            id-menu
             :className     "nuvla-close-menu-item"
             :item          true
-            :on-click      #(reset! open true)
+            :on-click      #(do (reset! open true)
+                                (reset! cursor 0))
             :close-on-blur false
             :on-blur       #(when (not= (.-id (.-target %1))
                                         id-menu)
                               (reset! open false))
+            :on-key-down   #(case (.-key %)
+                              "ArrowDown" (when (< @cursor (-> visible-opts count dec))
+                                            (swap! cursor inc))
+                              "ArrowUp" (when (> @cursor 0) (swap! cursor dec))
+                              "Enter" (some-> visible-opts (nth @cursor) :value on-click)
+                              nil)
             :open          @open
             :on-close      #(do
                               (reset! open false)
                               (reset! search ""))
             :icon          (r/as-element
                              [:<>
-                              [ui/IconGroup
-                               [ui/Icon {:name "users" :size "large"}]
-                               [ui/Icon {:name "refresh" :corner "top right"}]]
+                              [uix/Icon {:name "fa-light fa-user-group large"}]
                               (when-not @is-mobile?
                                 [uix/TR :switch-group])])}
            (when @open
@@ -73,20 +78,25 @@
                 :auto-complete :off
                 :auto-focus    true
                 :value         @search
+                :on-key-down   #(when (= (.-key %) " ")
+                                  (.stopPropagation %))
                 :placeholder   (str (@tr [:search]) "...")
                 :on-change     (ui-callback/input-callback
-                                 #(reset! search %))
+                                 #(do
+                                    (reset! cursor 0)
+                                    (reset! search %)))
                 :on-click      #(.stopPropagation %)}]
               [ui/DropdownMenu {:scrolling true}
-               (for [{:keys [value text icon level selected]} visible-opts]
-                 ^{:key value}
-                 [ui/DropdownItem {:on-click #(on-click value)
-                                   :selected selected}
-                  [:span (str/join (repeat (* level 5) ff/nbsp))]
-                  [ui/Icon {:name icon}]
-                  (if selected
-                    [:b text]
-                    text)])]
+               (doall
+                 (for [[i {:keys [value text icon level]}] (map-indexed vector visible-opts)]
+                   ^{:key value}
+                   [ui/DropdownItem {:on-click #(on-click value)
+                                     :selected (= i @cursor)}
+                    [:span (str/join (repeat (* level 5) ff/nbsp))]
+                    [ui/Icon {:name icon}]
+                    (if (= @active-claim value)
+                      [:b {:style {:color "#c10e12"}} text]
+                      text)]))]
               [ui/DropdownDivider]
               [ui/DropdownItem
                {:text     "show subgroups resources"
@@ -106,8 +116,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [ui/Icon {:name     (if @is-group? "group" "user")
-                 :circular true}]
+       [uix/Icon {:name (str "fa-light large" (if @is-group? " fa-user-group" " fa-user-large"))}]
        (-> @user
            utils/remove-group-prefix
            (general-utils/truncate (if @is-mobile? 6 20)))])))
@@ -120,8 +129,8 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [ui/Icon {:name "sign-out"
-                 :size "large"}]
+       [uix/Icon {:name "fa-light fa-arrow-right-from-bracket"
+                  :size "large"}]
        (when-not @is-mobile?
          [uix/TR :logout])])))
 
@@ -134,7 +143,6 @@
     (fn []
       (when @signup-template?
         [ui/MenuItem {:on-click on-click}
-         [ui/Icon {:name "signup"}]
          [uix/TR :sign-up]]))))
 
 
@@ -143,8 +151,8 @@
   (let [on-click #(dispatch [::routing-events/navigate routes/sign-in])]
     (fn []
       [ui/Button {:primary  true
-                  :on-click on-click}
-       [ui/Icon {:name "sign in"}]
+                  :on-click on-click
+                  :style    {:margin "0.6rem 1.5rem 0.6rem 0.6rem"}}
        [uix/TR :login]])))
 
 
@@ -189,38 +197,41 @@
 (defn LeftPanel
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        first-path           (subscribe  [::route-subs/nav-path-first])
+        first-path           (subscribe [::route-subs/nav-path-first])
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         eula                 (subscribe [::main-subs/config :eula])
         terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
-    [:div {:class "nuvla-ui-session-left"}
+    [:div {:class "nuvla-ui-session-left"
+           :style {:padding          "4rem"
+                   :background-color "#C10E12"}}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
                 :size     "medium"
                 :centered false}]
      [:br]
 
-     [:div {:style {:line-height "normal"
-                    :font-size   "2em"}}
-      (@tr [:edge-platform-as-a-service])]
+     [:h1 (@tr [:edge-platform-as-a-service])]
      [:br]
 
-     [:p {:style {:font-size "1.4em"}} (@tr [:start-journey-to-the-edge])]
+     [:p (@tr [:start-journey-to-the-edge])]
 
-     [:br] [:br]
      [:div
       [uix/Button
-       {:text     (@tr [:sign-in])
-        :inverted true
-        :active   (= @first-path "sign-in")
-        :on-click #(dispatch [::routing-events/navigate routes/sign-in])}]
+       {:class                                             "white-button"
+        (if (= @first-path "sign-in") :primary :secondary) true
+        :text                                              (@tr [:sign-in])
+        :inverted                                          true
+        :active                                            (= @first-path "sign-in")
+        :on-click                                          #(dispatch [::routing-events/navigate routes/sign-in])}]
       (when @signup-template?
         [:span
          [uix/Button
-          {:text     (@tr [:sign-up])
-           :inverted true
-           :active   (= @first-path "sign-up")
-           :on-click #(dispatch [::routing-events/navigate routes/sign-up])}]
+          {:class                                             "white-button"
+           (if (= @first-path "sign-up") :primary :secondary) true
+           :text                                              (@tr [:sign-up])
+           :inverted                                          true
+           :active                                            (= @first-path "sign-up")
+           :on-click                                          #(dispatch [::routing-events/navigate routes/sign-up])}]
          [:br]
          [:br]
          (when @terms-and-conditions
@@ -278,14 +289,10 @@
     [ui/Grid {:stackable true
               :columns   2
               :style     {:margin           0
-                          :background-color "white"}}
+                          :background-color "white"
+                          :padding          0}}
 
-     [ui/GridColumn {:style {:background-image    "url(/ui/images/session.png)"
-                             :background-size     "cover"
-                             :background-position "left"
-                             :background-repeat   "no-repeat"
-                             :color               "white"
-                             :min-height          "100vh"}}
+     [ui/GridColumn {:class "login-left"}
       [LeftPanel]]
      [ui/GridColumn
       [RightPanel]]]))

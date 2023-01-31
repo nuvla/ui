@@ -1,9 +1,11 @@
 (ns sixsq.nuvla.ui.routing.events
   (:require [re-frame.core :refer [reg-event-fx]]
+            [reitit.frontend :refer [match-by-path]]
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.effects :as fx]
-            [sixsq.nuvla.ui.routing.utils :as utils :refer [name->href]]
+            [sixsq.nuvla.ui.routing.utils :as utils :refer [name->href
+                                                            new-route-data]]
             [taoensso.timbre :as log]))
 
 (reg-event-fx
@@ -13,19 +15,25 @@
 
 (reg-event-fx
   ::push-state-by-path
-  (fn [_ [_ new-path]]
-    {::fx/push-state new-path}))
+  (fn [{ {:keys [current-route
+                 router]} :db} [_ new-path]]
+    (let [new-match (dissoc (match-by-path router new-path) :controllers)]
+      (when-not (= new-match (dissoc current-route :controllers))
+        {::fx/push-state new-path}))))
 
 (reg-event-fx
   ::navigated
   (fn [{db :db} [_ {:keys [path query-params] :as new-match}]]
     (let [old-match                  (:current-route db)
           controllers                (rfc/apply-controllers (:controllers old-match) new-match)
-          new-match-with-controllers (assoc new-match :controllers controllers)]
+          new-match-with-controllers (assoc new-match :controllers controllers)
+          view-changed?              (not= (:view (:data old-match))
+                                           (:view (:data new-match-with-controllers)))]
       {:db                   (-> db (assoc :current-route new-match-with-controllers
                                            ::main-spec/nav-path (utils/split-path-alias path)
                                            ::main-spec/nav-query-params query-params))
-       :fx                   [[:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]]]
+       :fx                   [(when view-changed?
+                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])]
        ::fx/set-window-title [(utils/strip-base-path (:path new-match))]})))
 
 (reg-event-fx
@@ -57,12 +65,21 @@
 
 (reg-event-fx
   ::navigate
-  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params]]
+  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params {change-event :change-event}]]
     (let [nav-effect {:fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
-                                                                (utils/add-base-path navigate-to)
-                                                                (name->href navigate-to path-params query-params))]]]}]
+                                                              (utils/add-base-path navigate-to)
+                                                              (name->href navigate-to path-params query-params))]]
+                           (when change-event [:dispatch change-event])]}]
       (if changes-protection?
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect)}
         (do
           (log/info "triggering navigate effect " (str {:relative-url navigate-to}))
           nav-effect)))))
+
+(reg-event-fx
+  ::navigate-partial
+  (fn [{{:keys [current-route]} :db} [_ {:keys [change-event] :as new-partial-route-data}]]
+    (let [{:keys [route-name
+                  path-params
+                  query-params]} (new-route-data current-route new-partial-route-data)]
+      {:fx [[:dispatch [::navigate route-name path-params query-params {:change-event change-event}]]]})))

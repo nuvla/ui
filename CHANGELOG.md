@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Apps - icon in modal should not be red
+- CSS - Force blue color for all icons within cards  
+
 ## [2.33.1] - 2023-01-30
 
 ### Changed

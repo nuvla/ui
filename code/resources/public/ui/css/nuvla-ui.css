@@ -432,13 +432,11 @@ div.search.dropdown > input {
   padding: 2rem 2rem 5rem 2rem !important;
 }
 
-a.card i.docker,
-a.card i.database {
+a.card i.massive,i.huge {
   color: #4283c4;
 }
 
-a.card:hover i.docker,
-a.card:hover i.database {
+a.card:hover i.massive,i.huge {
   color: #1e70bf;
 }
 

@@ -187,17 +187,18 @@
       (let [callback #(dispatch [::routing-events/navigate
                                  routes/api-sub-page {:sub-path %}])]
         [ui/FormDropdown
-         {:aria-label  (@tr [:resource-type])
-          :style       {:max-width 250}
-          :value       @selected-id
-          :placeholder (@tr [:resource-type])
-          :tab-index   1
-          :scrolling   true
-          :search      true
-          :selection   true
-          :upward      false
-          :options     @options
-          :on-change   (ui-callback/value callback)}]))))
+         {:aria-label           (@tr [:resource-type])
+          :style                {:max-width 250}
+          :value                @selected-id
+          :placeholder          (@tr [:resource-type])
+          :tab-index            1
+          :scrolling            true
+          :search               true
+          :selection            true
+          :upward               false
+          :options              @options
+          :select-on-navigation false
+          :on-change            (ui-callback/value callback)}]))))
 
 (defn DocumentationButton
   []
@@ -221,10 +222,9 @@
              $select      :select,
              $aggregation :aggregation,
              $orderby     :orderby} @query-params]
-        [ui/Form {:aria-label   "filter parameters"
-                  :on-key-press (partial forms/on-return-key
-                                         #(when @selected-id
-                                            (dispatch [::events/get-results])))}
+        [ui/Form {:aria-label  "filter parameters"
+                  :on-key-down #(when (= (.-key %) "Enter")
+                                  (.preventDefault %))}
          [CollectionSelector]
          [ui/FormGroup {:widths "equal"}
           [ui/FormField
@@ -488,8 +488,8 @@
   (let [path         (subscribe [::route-subs/nav-path])
         query-params (subscribe [::route-subs/nav-query-params])]
     (fn []
-      (let [[_ resource-type _] @path]
-        (dispatch [::events/set-collection-name resource-type])
+      (let [[_ resource-type uuid] @path]
+        (dispatch [::events/set-collection-name resource-type uuid])
         (when @query-params
           (dispatch [::events/set-query-params @query-params])))
       (let [n        (count @path)
@@ -500,6 +500,7 @@
                           [results-display]]
                        3 [cimi-detail-views/cimi-detail]
                        [menu-bar])]
+
         [ui/Segment style/basic
          children]))))
 

@@ -1,11 +1,12 @@
 (ns sixsq.nuvla.ui.cimi.events
-  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.cimi.spec :as spec]
-            [sixsq.nuvla.ui.cimi.utils :as utils]
-            [sixsq.nuvla.ui.messages.events :as messages-events]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+  (:require
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.cimi.spec :as spec]
+    [sixsq.nuvla.ui.cimi.utils :as utils]
+    [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
@@ -63,24 +64,26 @@
 (reg-event-fx
   ::set-collection-name
   (fn [{{:keys [::spec/cloud-entry-point
-                ::spec/collection-name] :as db} :db} [_ coll-name]]
-    (if (or (empty? coll-name) (-> cloud-entry-point
-                                   :collection-key
-                                   (get coll-name)))
-      {:db (cond-> db
-                   (not= coll-name collection-name) (assoc ::spec/collection-name coll-name
-                                                           ::spec/selected-rows #{}
-                                                           ::spec/collection nil))}
+                ::spec/collection-name] :as db} :db} [_ coll-name uuid]]
+    (let [coll-changed? (not= coll-name collection-name)
+          found?        (and cloud-entry-point
+                             (-> cloud-entry-point
+                                 :collection-key
+                                 (get coll-name)))]
+      (cond
 
-      (when cloud-entry-point
-        (let [msg-map {:header  (cond-> (str "invalid resource type: " coll-name))
-                       :content (str "The resource type '" coll-name "' is not valid. "
-                                     "Please choose another resource type.")
-                       :type    :error}]
+        (and coll-name (nil? uuid) found? coll-changed?)
+        {:db (assoc db ::spec/collection-name coll-name
+                       ::spec/selected-rows #{}
+                       ::spec/collection nil)
+         :fx [[:dispatch [::get-results]]]}
 
-          ;; only send error message when the cloud-entry-point is actually set, otherwise
-          ;; we don't yet know if this is a valid resource or not
-          {:dispatch [::messages-events/add msg-map]})))))
+        (and coll-name (not found?))
+        {:dispatch [::messages-events/add
+                    {:header  (cond-> (str "Invalid resource type: " coll-name))
+                     :content (str "The resource type '" coll-name "' is not valid. "
+                                   "Please choose another resource type.")
+                     :type    :error}]}))))
 
 
 (reg-event-db

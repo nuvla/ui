@@ -432,11 +432,11 @@ div.search.dropdown > input {
   padding: 2rem 2rem 5rem 2rem !important;
 }
 
-a.card i {
+a.card i.massive,i.huge {
   color: #4283c4;
 }
 
-a.card:hover i {
+a.card:hover i.massive,i.huge {
   color: #1e70bf;
 }
 

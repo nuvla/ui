@@ -278,7 +278,7 @@
         query-params (subscribe [::route-subs/nav-query-params])
         tr           (subscribe [::i18n-subs/tr])]
     (when (and navigate? @session)
-      (dispatch [::routing-events/navigate (or (:redirect @query-params)
+      (dispatch [::routing-events/navigate (or (js/decodeURIComponent (:redirect @query-params))
                                                (name->href routes/home))]))
     (when-let [error (:error @query-params)]
       (dispatch [::events/set-error-message

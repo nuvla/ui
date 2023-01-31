@@ -6,6 +6,7 @@
 
 - Apps - icon in modal should not be red
 - CSS - Force blue color for all huge or massive icons within cards
+- Routing - decoding redirect query param on sign-in page, fix #1133
 
 ## [2.33.1] - 2023-01-30
 

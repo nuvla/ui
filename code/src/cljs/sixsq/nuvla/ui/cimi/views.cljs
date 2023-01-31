@@ -222,7 +222,9 @@
              $select      :select,
              $aggregation :aggregation,
              $orderby     :orderby} @query-params]
-        [ui/Form {:aria-label  "filter parameters"}
+        [ui/Form {:aria-label  "filter parameters"
+                  :on-key-down #(when (= (.-key %) "Enter")
+                                  (dispatch [::events/get-results]))}
          [CollectionSelector]
          [ui/FormGroup {:widths "equal"}
           [ui/FormField

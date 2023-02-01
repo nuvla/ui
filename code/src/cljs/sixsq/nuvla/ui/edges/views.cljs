@@ -812,22 +812,22 @@
         [ui/Icon {:name "check"}])]]))
 
 (defn Pagination
-  []
+  [view-type]
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
-        view-type         (subscribe [::subs/view-type])
-        total-elements    (if (= @view-type spec/cluster-view)
+        total-elements    (if (= view-type spec/cluster-view)
                             (:count @nuvlabox-clusters)
                             (if @current-cluster
                               (+ (count (:nuvlabox-managers @current-cluster))
                                  (count (:nuvlabox-managers @current-cluster)))
                               (:count @nuvlaboxes)))]
-    [pagination-plugin/Pagination
-     {:db-path                [::spec/pagination]
-      :change-event           [::events/refresh-root]
-      :total-items            total-elements
-      :i-per-page-multipliers [1 2 4]}]))
+    (when-not (= view-type spec/map-view)
+      [pagination-plugin/Pagination
+       {:db-path                [::spec/pagination]
+        :change-event           [::events/refresh-root]
+        :total-items            total-elements
+        :i-per-page-multipliers [1 2 4]}])))
 
 
 (defn NuvlaboxTable
@@ -934,29 +934,30 @@
 
 (defn NuvlaBoxesOrClusters
   []
+  (dispatch [::events/init])
   (dispatch [::events/refresh-root])
   (dispatch [::events/set-nuvlabox-cluster nil])
   (let [view-type (subscribe [::subs/view-type])]
-    [components/LoadingPage {}
-     [:<>
-      [MenuBar]
-      [ui/Grid {:stackable true
-                :reversed  "mobile"
-                :style     {:margin-top    0
-                            :margin-bottom 0}}
-       [ControlBar]
-       [ui/GridColumn {:width 10}
-        (if (= @view-type spec/cluster-view)
-          [views-clusters/StatisticStates]
-          [StatisticStates])]]
-      (condp = @view-type
-        spec/cards-view   [NuvlaboxCards]
-        spec/table-view   [NuvlaboxTable]
-        spec/map-view     [NuvlaboxMap]
-        spec/cluster-view [views-clusters/NuvlaboxClusters]
-        [NuvlaboxTable])
-      (when-not (= @view-type spec/map-view)
-        [Pagination])]]))
+    (fn []
+      [components/LoadingPage {}
+       [:<>
+        [MenuBar]
+        [ui/Grid {:stackable true
+                  :reversed  "mobile"
+                  :style     {:margin-top    0
+                              :margin-bottom 0}}
+         [ControlBar]
+         [ui/GridColumn {:width 10}
+          (if (= @view-type spec/cluster-view)
+            [views-clusters/StatisticStates]
+            [StatisticStates])]]
+        (condp = @view-type
+          spec/cards-view   [NuvlaboxCards]
+          spec/table-view   [NuvlaboxTable]
+          spec/map-view     [NuvlaboxMap]
+          spec/cluster-view [views-clusters/NuvlaboxClusters]
+          [NuvlaboxTable])
+        [Pagination @view-type]]])))
 
 
 (defn DetailedViewPage
@@ -970,7 +971,6 @@
 
 (defn edges-view
   []
-  (dispatch [::events/init])
   [:<>
    [ui/Segment style/basic [NuvlaBoxesOrClusters]]
    [AddModalWrapper]])

@@ -12,6 +12,7 @@
 - API detail - Do not fire search when user is on detail page
 - Routing - decoding redirect query param on sign-in page, fix #1133
 - Edges overview - Saves current view as query param, #1125
+- Edges overview - Stores to and loads preferred view from localStorage, #1141
 - Favicon - Changes favicon to lighter red
 
 ## [2.33.1] - 2023-01-30

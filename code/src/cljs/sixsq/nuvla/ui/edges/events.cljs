@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.edges.events
-  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+  (:require [re-frame.core :refer [inject-cofx dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as utils]
@@ -13,7 +13,8 @@
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [clojure.edn :as edn]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
@@ -29,7 +30,21 @@
     {:db (-> db
              (merge spec/defaults)
              (assoc ::main-spec/loading? true))
-     :fx [[:dispatch [::get-nuvlabox-releases]]]}))
+     :fx [[:dispatch [::init-view]]
+          [:dispatch [::get-nuvlabox-releases]]]}))
+
+(reg-event-fx
+  ::init-view
+  [(inject-cofx :storage/get {:name spec/local-storage-key})]
+  (fn [{{current-route :current-route} :db
+        storage :storage/get}]
+    (let [view-query (-> current-route :query-params :view)]
+      (when-not view-query
+        {:fx [[:dispatch [::routing-events/change-query-param
+                          {:partial-query-params
+                           {:view (or
+                                    (:view (edn/read-string storage))
+                                    spec/table-view)}}]]]}))))
 
 (reg-event-fx
   ::refresh-root
@@ -466,12 +481,22 @@
   (fn [db [_ cronjob]]
     (assoc db ::spec/nuvlabox-playbooks-cronjob cronjob)))
 
-
+;;
 (reg-event-fx
   ::change-view-type
   (fn [{{:keys [current-route]} :db} [_ new-view-type]]
-    (let [current-view (keyword (-> current-route :query-params :view))]
+    (let [current-view  (keyword (-> current-route :query-params :view))
+          prefered-view {:view new-view-type}]
       {:fx [(when (#{new-view-type current-view} spec/cluster-view)
               [:dispatch [::pagination-plugin/change-page
                           [::spec/pagination] 1]])
-            [:dispatch [::routing-events/change-query-param {:partial-query-params {:view new-view-type}}]]]})))
+            [:dispatch [::routing-events/change-query-param {:partial-query-params prefered-view}]]
+            [:dispatch [::store-preferences prefered-view]]]})))
+
+(reg-event-fx
+  ::store-preferences
+  [(inject-cofx :storage/get {:name spec/local-storage-key})]
+  (fn [{storage :storage/get} [_ preference]]
+    {:storage/set {:session? false
+                   :name     spec/local-storage-key
+                   :value    (merge (edn/read-string storage) preference)}}))

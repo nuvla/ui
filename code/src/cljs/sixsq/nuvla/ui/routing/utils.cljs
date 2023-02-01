@@ -27,7 +27,6 @@
   - new-route-data   Map with :route-name, :path-params, :query-params, :partial-query-params."
 
   [current-route-data {:keys [route-name path-params query-params partial-query-params]}]
-(tap> [route-name path-params query-params partial-query-params])
   {:route-name   (or route-name (get-route-name current-route-data))
    :path-params  (or path-params (:path-params current-route-data))
    :query-params (merge (or query-params (:query-params current-route-data))

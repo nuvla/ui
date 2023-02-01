@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -464,3 +465,13 @@
   ::set-nuvlabox-playbooks-cronjob
   (fn [db [_ cronjob]]
     (assoc db ::spec/nuvlabox-playbooks-cronjob cronjob)))
+
+
+(reg-event-fx
+  ::change-view-type
+  (fn [{{:keys [current-route]} :db} [_ new-view-type]]
+    (let [current-view (keyword (-> current-route :query-params :view))]
+      {:fx [(when (#{new-view-type current-view} spec/cluster-view)
+              [:dispatch [::pagination-plugin/change-page
+                          [::spec/pagination] 1]])
+            [:dispatch [::routing-events/change-query-param {:partial-query-params {:view new-view-type}}]]]})))

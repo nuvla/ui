@@ -43,6 +43,13 @@
 
 (def default-ordering {:field :created :order "desc"})
 
+(def cards-view :cards)
+(def table-view :table)
+(def map-view :map)
+(def cluster-view :cluster)
+
+(def view-types [cards-view table-view map-view cluster-view])
+
 (def defaults
   {::nuvlaboxes                    nil
    ::next-heartbeats-offline-edges nil

@@ -4,10 +4,15 @@
 
 ### Changed
 
-- Apps - icon in modal should not be red
+- Apps - Icon in modal should not be red
 - CSS - Force blue color for all huge or massive icons within cards
+- API - Filter modal should not open when user hit enter key bugfix #1136
+- API - Disable select on navigation for collection selector
+- API - Fire search when user select a collection
+- API detail - Do not fire search when user is on detail page
 - Routing - decoding redirect query param on sign-in page, fix #1133
 - Edges overview - Saves current view as query param, #1125
+- Favicon - Changes favicon to lighter red
 
 ## [2.33.1] - 2023-01-30
 

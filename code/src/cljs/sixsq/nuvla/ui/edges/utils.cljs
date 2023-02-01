@@ -224,14 +224,12 @@
        (some str/blank?)
        boolean))
 
-(defn last-time-online [next-heartbeat-moment refresh-interval locale]
-  (time/ago
-    (->> refresh-interval
-         (* 2)
-         (+ 10)
-         (* 1000)
-         (time/subtract-milliseconds next-heartbeat-moment)
-         ) locale))
+(defn last-time-online [next-heartbeat-moment refresh-interval]
+  (->> refresh-interval
+       (* 2)
+       (+ 10)
+       (* 1000)
+       (time/subtract-milliseconds next-heartbeat-moment)))
 
 (defn edges-details-url
   [id]

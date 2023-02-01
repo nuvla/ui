@@ -10,6 +10,7 @@
 - API - Disable select on navigation for collection selector
 - API - Fire search when user select a collection
 - API detail - Do not fire search when user is on detail page
+- Routing - decoding redirect query param on sign-in page, fix #1133
 
 ## [2.33.1] - 2023-01-30
 

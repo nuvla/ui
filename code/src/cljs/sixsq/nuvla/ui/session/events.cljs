@@ -31,9 +31,7 @@
     (let [query-str (.-search (.-location js/window))
           redirect  (when (and (nil? new-session)
                                (->> nav-path first (get pages) :protected?))
-                      (str (str/join "/" nav-path)
-                           (when-not (str/blank? query-str)
-                             (js/encodeURIComponent query-str))))]
+                      (str (str/join "/" nav-path) query-str))]
       (cond-> {:db (assoc db ::spec/session new-session
                              ::spec/session-loading? false)}
               new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])
@@ -105,7 +103,8 @@
 
 (reg-event-fx
   ::submit
-  (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
+  (fn [{{:keys [::spec/server-redirect-uri
+                current-route] :as db} :db} [_ form-id form-data opts]]
     (let [{success-msg  :success-msg,
            callback-add :callback-add,
            redirect-url :redirect-url
@@ -124,7 +123,10 @@
                                      (dispatch [::routing-events/navigate navigate-to])))
                                  (do
                                    (dispatch [::set-callback-2fa %1])
-                                   (dispatch [::routing-events/navigate routes/sign-in-token])))))
+                                   (dispatch [::routing-events/navigate
+                                              routes/sign-in-token
+                                              nil
+                                              (:query-params current-route)])))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])

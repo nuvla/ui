@@ -177,13 +177,12 @@
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml
-           default-value
-           (fn [_editor _data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form]))
-           @editable?]
+          [uix/EditorYaml {:value      default-value
+                           :on-change  (fn [_editor _data value]
+                                         (dispatch [::events/update-docker-compose value])
+                                         (dispatch [::main-events/changes-protection? true])
+                                         (dispatch [::apps-events/validate-form]))
+                           :read-only? (not @editable?)}]
           (when validate?
             (dispatch [::events/set-docker-validation-error
                        apps-views-detail/application-kubernetes-subtype (not valid?)])
@@ -215,13 +214,12 @@
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml
-           default-value
-           (fn [_editor _data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form]))
-           @editable?]
+          [uix/EditorYaml {:value default-value
+                           :on-change (fn [_editor _data value]
+                                        (dispatch [::events/update-docker-compose value])
+                                        (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::apps-events/validate-form]))
+                           :read-only? (not @editable?)}]
           (when validate?
             (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
             (when (not valid?)

@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.plugins.nav-tab
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-event-fx
-                                   reg-sub subscribe]]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub
+                                   subscribe]]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
@@ -13,8 +13,8 @@
 (s/def ::change-event (s/nilable coll?))
 
 (defn build-spec
-  [& {:keys [active-tab]}]
-  {::default-tab active-tab})
+  [& {:keys [default-tab]}]
+  {:default-tab default-tab})
 
 (defn db-path->query-param-key
   [[qualified-key]]
@@ -32,10 +32,25 @@
           [:query-params (db-path->query-param-key db-path)]
           (get-in db (conj db-path ::default-tab))))
 
+(defn- default-db-path
+  [db-path]
+  (conj db-path ::default-tab))
+
+(defn get-default-tab
+  [db db-path]
+  (get-in db (default-db-path db-path)))
+
 (reg-sub
   ::default-tab
   (fn [db [_ db-path]]
-    (get-in db (conj db-path ::default-tab))))
+    (get-default-tab db db-path)))
+
+(reg-event-db
+  ::set-default-tab
+  (fn [db [_ db-path tab-key]]
+    (tap> {:db-path db-path })
+    (tap> {:tab-key tab-key })
+    (assoc-in db (default-db-path db-path) tab-key)))
 
 (reg-sub
   ::active-tab
@@ -57,7 +72,7 @@
 (defn Tab
   [{:keys [db-path panes change-event] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
-  (let [active-tab      (subscribe [::helpers/retrieve db-path ::default-tab])
+  (let [default-tab     (subscribe [::helpers/retrieve db-path ::default-tab])
         route           (subscribe [::route-subs/current-route])
         panes           (remove nil? panes)
         key->index      (zipmap (map (comp :key :menuItem) panes)
@@ -74,12 +89,12 @@
                             (-> item
                                 (update :menuItem merge {:href href :onClick on-click
                                                          :data-reitit-handle-click false}))))]
-    (when (nil? @active-tab)
+    (when (nil? @default-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [opts]
       [ui/Tab
        (-> (assoc opts :panes (map add-hrefs panes))
-           (dissoc :db-path :change-event)
+           (dissoc :db-path)
            (assoc :active-index
              (get key->index (keyword @cur-view) 0)))])))
 

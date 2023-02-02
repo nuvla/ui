@@ -24,7 +24,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.tab :as tab]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]))
@@ -553,27 +553,23 @@
   (let [module-common (subscribe [::apps-subs/module-common])
         active-tab    (subscribe [::apps-subs/active-tab])
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
-                         (dispatch [::apps-events/set-active-tab :overview]))
+    (dispatch [::apps-events/init-view (when (true? @is-new?) :details)])
     (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []
+      (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
-         [ui/Tab
-          {:menu             {:secondary true
+         [nav-tab/Tab
+          {:db-path          [::apps-spec/tab]
+           :menu             {:secondary true
                               :pointing  true
                               :style     {:display        "flex"
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}}
            :panes            panes
-           :activeIndex      (tab/key->index panes @active-tab)
-           :renderActiveOnly false
-           :onTabChange      (tab/on-tab-change
-                               panes
-                               #(dispatch [::apps-events/set-active-tab %]))}]
-         ]))))
+           :renderActiveOnly false}]]))))

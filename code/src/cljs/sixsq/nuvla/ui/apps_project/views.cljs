@@ -107,7 +107,7 @@
 
 (defn DetailsPane
   []
-  (let [active-tab (subscribe [::apps-subs/active-tab])]
+  (let [active-tab (subscribe [::apps-subs/active-tab [::spec/tab]])]
     @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
@@ -154,7 +154,7 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        active-tab    (subscribe [::apps-subs/active-tab])
+        active-tab    (subscribe [::apps-subs/active-tab [::spec/tab]])
         is-new?       (subscribe [::apps-subs/is-new?])]
     (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
                          (dispatch [::apps-events/set-active-tab :overview]))

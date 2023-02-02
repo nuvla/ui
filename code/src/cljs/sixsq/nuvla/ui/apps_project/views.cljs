@@ -156,8 +156,7 @@
   (let [module-common (subscribe [::apps-subs/module-common])
         active-tab    (subscribe [::apps-subs/active-tab [::spec/tab]])
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
-                         (dispatch [::apps-events/set-active-tab :overview]))
+    (dispatch [::apps-events/init-view (if (true? @is-new?) :details :overview)])
     (dispatch [::apps-events/set-form-spec ::spec/module-project])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)

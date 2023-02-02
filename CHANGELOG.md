@@ -12,6 +12,7 @@
 - API detail - Do not fire search when user is on detail page
 - Routing - decoding redirect query param on sign-in page, fix #1133
 - Favicon - Changes favicon to lighter red
+- API page - Make list of plain ids navigable #1143
 
 ## [2.33.1] - 2023-01-30
 

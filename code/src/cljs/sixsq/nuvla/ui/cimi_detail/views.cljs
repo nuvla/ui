@@ -94,19 +94,18 @@
 (defn view-button
   "Creates an view that will bring up an edit dialog and will save the
    modified resource when saved."
-  [data]
+  [{:keys [id] :as data}]
   (let [tr   (subscribe [::i18n-subs/tr])
         text (atom (general-utils/edn->json data))]
-    (fn [{:keys [id] :as data} action-fn]
-      [action-button-icon
-       (@tr [:raw])
-       (@tr [:close])
-       "eye"
-       nil
-       [forms/resource-editor id text true]
-       nil
-       nil
-       true])))
+    [action-button-icon
+     (@tr [:raw])
+     (@tr [:close])
+     "eye"
+     nil
+     [forms/resource-editor id text true]
+     #()
+     #()
+     true]))
 
 
 (defn delete-button

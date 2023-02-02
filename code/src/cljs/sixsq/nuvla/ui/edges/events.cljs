@@ -486,12 +486,12 @@
   ::change-view-type
   (fn [{{:keys [current-route]} :db} [_ new-view-type]]
     (let [current-view  (keyword (-> current-route :query-params :view))
-          prefered-view {:view new-view-type}]
+          preferred-view {:view new-view-type}]
       {:fx [(when (#{new-view-type current-view} spec/cluster-view)
               [:dispatch [::pagination-plugin/change-page
                           [::spec/pagination] 1]])
-            [:dispatch [::routing-events/change-query-param {:partial-query-params prefered-view}]]
-            [:dispatch [::store-preferences prefered-view]]]})))
+            [:dispatch [::routing-events/change-query-param {:partial-query-params preferred-view}]]
+            [:dispatch [::store-preferences preferred-view]]]})))
 
 (reg-event-fx
   ::store-preferences

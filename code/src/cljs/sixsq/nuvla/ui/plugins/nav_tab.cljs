@@ -81,7 +81,8 @@
        (-> (assoc opts :panes (map add-hrefs panes))
            (dissoc :db-path :change-event)
            (assoc :active-index
-             (get key->index (keyword @cur-view) 0)))])))
+             (get key->index (keyword @cur-view) 0))
+           (update :menu assoc :class :uix-tab-nav))])))
 
 (s/fdef Tab
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]

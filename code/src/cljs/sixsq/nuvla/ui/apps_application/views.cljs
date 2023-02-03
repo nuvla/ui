@@ -440,13 +440,6 @@
                      :align          :middle}]])))
 
 
-(defn TabMenuDetails
-  []
-  (let [error? (subscribe [::subs/details-validation-error?])]
-    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
-     [apps-views-detail/DeploymentsTitle]]))
-
-
 (defn subtype->pretty
   [subtype]
   (case subtype
@@ -458,7 +451,7 @@
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
         module-subtype (subscribe [::apps-subs/module-subtype])
-        active-tab  (sub-apps-tab)
+        active-tab     (sub-apps-tab)
         editable?      (subscribe [::apps-subs/editable?])]
     @active-tab
     ^{:key (random-uuid)}

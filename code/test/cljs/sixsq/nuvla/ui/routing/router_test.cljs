@@ -29,9 +29,8 @@
           nil [routes/edges-details]
           nil [routes/edges-details {:no-match "here"}]))
       (testing "that are catch-all routes where multi segment
-                paths as :sub-path values get URI encoded by reitit,
-                which is a problem for '/'. That's why name->href uses
-                js/decodeURIComponent to make it work."
+                paths as :sub-path values get URI encoded by reitit:
+                Our name->href decodes it again"
         (is (not= "/ui/apps/this-works%2Fperhaps%2Funexpected?query-param=hello%2Fworld"
                (name->href routes/apps-details
                            {:sub-path "this-works/perhaps/unexpected"}

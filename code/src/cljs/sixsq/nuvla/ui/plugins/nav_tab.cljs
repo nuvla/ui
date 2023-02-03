@@ -48,8 +48,6 @@
 (reg-event-db
   ::set-default-tab
   (fn [db [_ db-path tab-key]]
-    (tap> {:db-path db-path })
-    (tap> {:tab-key tab-key })
     (assoc-in db (default-db-path db-path) tab-key)))
 
 (reg-sub

@@ -31,6 +31,11 @@
 
 (def docker-docu-link "https://docs.docker.com/compose/compose-file/compose-file-v3/#not-supported-for-docker-stack-deploy")
 
+(defn sub-apps-tab
+  []
+  (subscribe [::apps-subs/active-tab]))
+
+
 (defn SingleFile
   #_{:clj-kondo/ignore [:unused-binding]}
   [{:keys [id ::spec/file-name ::spec/file-content]}]
@@ -404,7 +409,7 @@
   1. The CodeMirror component used must be reloaded to render correctly
   2. The component must be loaded even if not visible to run the validation"
   []
-  (let [active-tab     (subscribe [::apps-subs/active-tab])
+  (let [active-tab     (sub-apps-tab)
         module-subtype (subscribe [::apps-subs/module-subtype])]
     @active-tab
     [:<>
@@ -453,7 +458,7 @@
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
         module-subtype (subscribe [::apps-subs/module-subtype])
-        active-tab     (subscribe [::apps-subs/active-tab])
+        active-tab  (sub-apps-tab)
         editable?      (subscribe [::apps-subs/editable?])]
     @active-tab
     ^{:key (random-uuid)}
@@ -551,9 +556,9 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        active-tab    (subscribe [::apps-subs/active-tab])
+        active-tab    (sub-apps-tab)
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (dispatch [::apps-events/init-view (when (true? @is-new?) :details)])
+    (dispatch [::apps-events/init-view {:tab-key (when (true? @is-new?) :details)}])
     (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []

@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
@@ -104,10 +105,13 @@
             [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]])
          [apps-views-detail/AuthorVendor]]]]]]))
 
+(defn- sub-apps-projects-tab
+  []
+  (subscribe [::apps-subs/active-tab [::spec/tab]]))
 
 (defn DetailsPane
   []
-  (let [active-tab (subscribe [::apps-subs/active-tab [::spec/tab]])]
+  (let [active-tab (sub-apps-projects-tab)]
     @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
@@ -154,9 +158,9 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        active-tab    (subscribe [::apps-subs/active-tab [::spec/tab]])
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (dispatch [::apps-events/init-view (if (true? @is-new?) :details :overview)])
+    (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)
+                                        :db-path [::spec/tab]}])
     (dispatch [::apps-events/set-form-spec ::spec/module-project])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
@@ -166,16 +170,13 @@
          [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
          [apps-views-detail/MenuBar]
-         [ui/Tab
-          {:menu             {:secondary true
+         [nav-tab/Tab
+          {:db-path          [::spec/tab]
+           :menu             {:secondary true
                               :pointing  true
                               :style     {:display        "flex"
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}}
            :panes            panes
-           :activeIndex      (tab/key->index panes @active-tab)
-           :renderActiveOnly false
-           :onTabChange      (tab/on-tab-change
-                               panes
-                               #(dispatch [::apps-events/set-active-tab %]))}]])
+           :renderActiveOnly false}]])
       )))

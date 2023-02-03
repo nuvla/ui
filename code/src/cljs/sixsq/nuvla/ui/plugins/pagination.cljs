@@ -55,7 +55,7 @@
   (fn [{db :db} [_ db-path page]]
     (let [change-event (get-in db (conj db-path ::change-event))]
       {:db (assoc-in db (conj db-path ::active-page) page)
-       :fx [[:dispatch change-event]]})))
+       :fx [(when change-event [:dispatch change-event])]})))
 
 (defn first-last-params
   [db db-path params]

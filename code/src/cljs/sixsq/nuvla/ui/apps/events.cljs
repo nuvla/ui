@@ -211,14 +211,15 @@
 
 (reg-event-fx
   ::init-view
-  (fn [{{current-route :current-route :as db} :db} [_ tab-key]]
-    (let [query-key  (nav-tab/db-path->query-param-key [::spec/tab])
+  (fn [{{current-route :current-route :as db} :db} [_ {:keys [tab-key db-path]}]]
+    (let [db-path    (or db-path [::spec/tab])
+          query-key  (nav-tab/db-path->query-param-key db-path)
           query-view (get (:query-params current-route) query-key)]
       (when-not query-view
         {:fx [[:dispatch [::routing-events/change-query-param
                           {:partial-query-params {query-key (or
                                                               tab-key
-                                                              (nav-tab/get-default-tab db [::spec/tab])
+                                                              (nav-tab/get-default-tab db db-path)
                                                               spec/default-tab)}}]]]}))))
 
 (reg-event-fx

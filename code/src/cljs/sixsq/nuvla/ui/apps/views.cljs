@@ -39,7 +39,7 @@
           "component" [apps-component-views/view-edit]
           "application" [apps-application-views/ViewEdit]
           "application_kubernetes" [apps-application-views/ViewEdit]
-          ^{:key (random-uuid)}
+          ^{:key subtype}
           [apps-project-views/ViewEdit])))))
 
 

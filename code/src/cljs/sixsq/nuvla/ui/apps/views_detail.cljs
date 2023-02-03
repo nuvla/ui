@@ -338,7 +338,7 @@
                        :size :massive}]]]
 
            [ui/Card
-            {:href     (pathify [base-path "New Application?subtype=application"])
+            {:href     (when parent (pathify [base-path "New Application?subtype=application"]))
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
@@ -354,7 +354,7 @@
                               :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
-            {:href     (pathify [base-path "New Application?subtype=application_kubernetes"])
+            {:href     (when parent (pathify [base-path "New Application?subtype=application_kubernetes"]))
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}

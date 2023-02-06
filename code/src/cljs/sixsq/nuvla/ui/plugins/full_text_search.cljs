@@ -3,6 +3,8 @@
             [re-frame.core :refer [dispatch reg-event-fx subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
+            [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -22,9 +24,12 @@
 (reg-event-fx
   ::search
   (fn [{db :db} [_ db-path text]]
-    (let [change-event (get-in db (conj db-path ::change-event))]
+    (let [change-event (get-in db (conj db-path ::change-event))
+          query-key    (nav-tab/db-path->query-param-key db-path)]
       {:db (assoc-in db (conj db-path ::text) text)
-       :fx [[:dispatch change-event]]})))
+       :fx [[:dispatch change-event]
+            [:dispatch [::route-events/change-query-param {:partial-query-params {query-key text}}]]
+            ]})))
 
 (defn FullTextSearch
   [{:keys [db-path change-event placeholder-suffix] :as opts}]

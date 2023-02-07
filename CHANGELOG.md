@@ -15,6 +15,7 @@
 - Edges overview - Stores to and loads preferred view from localStorage, #1141
 - Favicon - Changes favicon to lighter red
 - Apps AddModal - Disables docker and k8s apps buttons when not inside a project, regression fix #1150
+- Full text search - Stores full text search in query param, #1128
 
 ## [2.33.1] - 2023-01-30
 

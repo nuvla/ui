@@ -28,22 +28,32 @@
           query-key    (nav-tab/db-path->query-param-key db-path)]
       {:db (assoc-in db (conj db-path ::text) text)
        :fx [[:dispatch change-event]
-            [:dispatch [::route-events/change-query-param {:partial-query-params {query-key text}}]]
-            ]})))
+            [:dispatch [::route-events/change-query-param {:partial-query-params {query-key text}}]]]})))
+
+(reg-event-fx
+  ::init-search
+  (fn [{{:keys [current-route] :as db} :db} [_ db-path change-event]]
+    (let [search (-> current-route :query-params (get (nav-tab/db-path->query-param-key db-path)))]
+      (when (seq search)
+        {:db (assoc-in db (conj db-path ::text) search)
+         :fx [[:dispatch change-event]]}))))
+
 
 (defn FullTextSearch
-  [{:keys [db-path change-event placeholder-suffix] :as opts}]
+  [{:keys [db-path change-event _placeholder-suffix]}]
   (dispatch [::helpers/set db-path ::change-event change-event])
+  (dispatch [::init-search db-path change-event])
   (let [tr   @(subscribe [::i18n-subs/tr])
         text @(subscribe [::helpers/retrieve db-path ::text])]
-    [ui/Input
-     (-> opts
-         (dissoc :db-path :change-event :placeholder-suffix)
-         (assoc :placeholder (str (tr [:search]) placeholder-suffix "...")
-                :icon "search"
-                :default-value (or text "")
-                :on-change (ui-callback/input-callback
-                             #(dispatch [::search db-path %]))))]))
+    (fn [{:keys [placeholder-suffix] :as opts}]
+      [ui/Input
+       (-> opts
+           (dissoc :db-path :change-event :placeholder-suffix)
+           (assoc :placeholder (str (tr [:search]) placeholder-suffix "...")
+             :icon "search"
+             :default-value (or text "")
+             :on-change (ui-callback/input-callback
+                          #(dispatch [::search db-path %]))))])))
 
 (s/fdef FullTextSearch
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path

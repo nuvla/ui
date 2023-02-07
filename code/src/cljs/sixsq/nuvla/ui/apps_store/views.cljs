@@ -118,6 +118,7 @@
         [apps-views-detail/AddModal]
         [apps-views-detail/format-error @module]
         [ui/TabPane
+         {:class :uix-apps-navigator}
          [ControlBarProjects active-tab]
          (let [{:keys [children]} @module]
            [apps-project-views/FormatModuleChildren children])]]])))
@@ -163,7 +164,7 @@
        :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
        :menu         {:secondary true
                       :pointing  true
-                      :style     {:display        "flex"
+                      :style     {:display       "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
        :panes        (tabs)}]]))

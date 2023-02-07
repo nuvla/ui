@@ -20,7 +20,7 @@
   [[qualified-key]]
   (let [ns-path     (str/split (namespace qualified-key) #"\.")
         last-two-ns (drop (- (count ns-path) 2) ns-path)
-        k-prefix     (str/replace (str/join last-two-ns) "spec" "")]
+        k-prefix    (str/replace (str/join last-two-ns) "spec" "")]
     (->> qualified-key
          name
          (str k-prefix "-")
@@ -51,7 +51,7 @@
   (fn [{db :db} [_ db-path tab-key]]
     (let [change-event (get-in db (conj db-path ::change-event))]
       {:fx [[:dispatch [::route-events/navigate-partial
-                        {:change-event change-event
+                        {:change-event         change-event
                          :partial-query-params {(db-path->query-param-key db-path) tab-key}}]]]})))
 
 (defn Tab
@@ -61,7 +61,7 @@
         route           (subscribe [::route-subs/current-route])
         panes           (remove nil? panes)
         key->index      (zipmap (map (comp :key :menuItem) panes)
-                          (range (count panes)))
+                                (range (count panes)))
         query-param-key (db-path->query-param-key db-path)
         cur-view        (subscribe [::route-subs/query-param query-param-key])
         add-hrefs       (fn [item]
@@ -72,16 +72,16 @@
                                            (.preventDefault event)
                                            (dispatch [::change-tab db-path k]))]
                             (-> item
-                                (update :menuItem merge {:href href :onClick on-click
+                                (update :menuItem merge {:href                     href :onClick on-click
                                                          :data-reitit-handle-click false}))))]
     (when (nil? @active-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [opts]
       [ui/Tab
-       (-> (assoc opts :panes (map add-hrefs panes))
-           (dissoc :db-path :change-event)
-           (assoc :active-index
-             (get key->index (keyword @cur-view) 0)))])))
+       (-> (dissoc opts :db-path :change-event)
+           (assoc :panes (map add-hrefs panes)
+                  :active-index (get key->index (keyword @cur-view) 0))
+           (assoc-in [:menu :class] :uix-tab-nav))])))
 
 (s/fdef Tab
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]

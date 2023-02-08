@@ -59,9 +59,6 @@
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [active-tab      (subscribe [::helpers/retrieve db-path ::default-tab])
         route           (subscribe [::route-subs/current-route])
-        panes           (remove nil? panes)
-        key->index      (zipmap (map (comp :key :menuItem) panes)
-                                (range (count panes)))
         query-param-key (db-path->query-param-key db-path)
         cur-view        (subscribe [::route-subs/query-param query-param-key])
         add-hrefs       (fn [item]
@@ -77,11 +74,14 @@
     (when (nil? @active-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [{:keys [panes] :as opts}]
-      [ui/Tab
-       (-> (dissoc opts :db-path :change-event)
-           (assoc :panes (map add-hrefs panes)
-                  :active-index (get key->index (keyword @cur-view) 0))
-           (assoc-in [:menu :class] :uix-tab-nav))])))
+      (let [non-nil-panes   (remove nil? panes)
+            key->index      (zipmap (map (comp :key :menuItem) non-nil-panes)
+                              (range (count non-nil-panes)))]
+        [ui/Tab
+         (-> (dissoc opts :db-path :change-event)
+             (assoc :panes (map add-hrefs non-nil-panes)
+               :active-index (get key->index (keyword @cur-view) 0))
+             (assoc-in [:menu :class] :uix-tab-nav))]))))
 
 (s/fdef Tab
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]

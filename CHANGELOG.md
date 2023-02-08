@@ -14,7 +14,9 @@
 - Edges overview - Saves current view as query param, #1125
 - Edges overview - Stores to and loads preferred view from localStorage, #1141
 - Favicon - Changes favicon to lighter red
-- Nav tab - Bugfix when panes content change, nav-tab should re-render bugfix #1158   
+- Pagination - Styling
+- Apps AddModal - Disables docker and k8s apps buttons when not inside a project, regression fix #1150
+- Nav tab - Bugfix when panes content change, nav-tab should re-render bugfix #1158
 
 ## [2.33.1] - 2023-01-30
 

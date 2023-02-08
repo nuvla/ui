@@ -56,7 +56,8 @@
         status              (subscribe [::creds-subs/credential-check-status id])
         last-check          (subscribe [::creds-subs/credential-check-last-check id])
         selected?           (= id (:id @selected-credential))]
-    [ui/ListItem (cond-> {:active   selected?
+    [ui/ListItem (cond-> {:disabled true
+                          :active   selected?
                           :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}
@@ -98,11 +99,13 @@
       [ui/Message {:error true} (@tr [:no-credentials])])))
 
 
-(defn item
-  [{:keys [id name subtype description] :as infra-service}]
-  (let [selected-infra (subscribe [::subs/selected-infra-service])
-        active?        (= (:id @selected-infra) id)
-        loading?       (subscribe [::subs/credentials-loading?])]
+(defn InfraServiceItem
+  [{:keys [id name subtype description swarm-enabled swarm-manager] :as infra-service}]
+  (let [selected-infra          (subscribe [::subs/selected-infra-service])
+        active?                 (= (:id @selected-infra) id)
+        loading?                (subscribe [::subs/credentials-loading?])
+        app-infra-compatibility (subscribe [::subs/app-infra-compatibility infra-service])]
+    (js/console.info "not-compatible?" @app-infra-compatibility)
     [:<>
      [ui/AccordionTitle {:active   active?
                          :on-click #(dispatch [::events/set-selected-infra-service
@@ -115,13 +118,37 @@
                            :height         28
                            :margin-right   4
                            :padding-bottom 7}}]
-        [ui/Icon {:name "docker"}])
+        [:<>
+         [ui/Icon {:name "docker"}]
+         (when (some? swarm-enabled)
+           (let [compose? (false? swarm-enabled)
+                 manager? (and swarm-enabled
+                               (or swarm-manager (nil? swarm-manager)))
+                 worker?  (and swarm-enabled (false? swarm-manager))]
+             [ui/Label {:circular   true
+                        :size       "small"
+                        :float      "right"
+                        :horizontal true
+                        :style      {:float "right"}}
+              (cond
+                manager? "Manager => Stack & Compose"
+                worker? "Worker => Stack via manager & Compose"
+                compose? "Swarm disabled => Compose")]))])
       ff/nbsp
       (or name id)]
      [ui/AccordionContent {:active active?}
       description
       [ui/Segment (assoc style/basic :loading @loading?)
-       [creds-list]]]]))
+
+       (when @app-infra-compatibility
+         (let [info?    (:list-creds? @app-infra-compatibility)]
+           [ui/Message {:size    "tiny"
+                        :info    info?
+                        :warning (not info?)}
+            [ui/Icon {:name (if info? "info" "warning")}]
+            (:msg @app-infra-compatibility)]))
+       (when-not (false? (:list-creds? @app-infra-compatibility))
+         [creds-list])]]]))
 
 
 (defmethod utils/step-content :infra-services
@@ -135,5 +162,5 @@
         (doall
           (for [{:keys [id] :as infra-service} @infra-services]
             ^{:key id}
-            [item infra-service]))]
+            [InfraServiceItem infra-service]))]
        [ui/Message {:error true} (@tr [:no-infra-services])])]))

@@ -99,7 +99,7 @@
                                     ::spec/infra-services nil)
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter  filter,
-                            :select  "id, name, description, subtype, capabilities"
+                            :select  "id, name, description, subtype, capabilities, swarm-enabled, swarm-manager"
                             :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-services %])]}))
 

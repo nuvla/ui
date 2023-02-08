@@ -7,6 +7,8 @@
             [sixsq.nuvla.ui.filter-comp.events :as events]
             [sixsq.nuvla.ui.filter-comp.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.routing.events :as route-events]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -298,18 +300,20 @@
      additional-filters-applied]))
 
 (defn ButtonFilter
-  [{:keys [resource-name open? default-filter _on-done]}]
+  [{:keys [resource-name open? default-filter on-done]}]
   (let [tr          (subscribe [::i18n-subs/tr])
         show-error? (r/atom false)
         init-data   (or (when-not (str/blank? default-filter)
                           (utils/filter-str->data default-filter))
-                        [{:el "empty"} {:el "attribute"} {:el "empty"}])
+                      [{:el "empty"} {:el "attribute"} {:el "empty"}])
         data        (r/atom init-data)
         close-fn    #(do
                        (reset! open? false)
                        (reset! data init-data))
-        open-fn     #(reset! open? true)]
+        open-fn     #(reset! open? true)
+        filter-query @(subscribe [::route-subs/query-param (keyword resource-name)])]
     (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
+    (when (seq filter-query) (on-done filter-query))
     (fn [{:keys [resource-name open? _default-filter on-done]}]
       (let [filter-string  (utils/data->filter-str @data)
             error          (utils/filter-syntax-error filter-string)
@@ -357,5 +361,7 @@
                :disabled (some? error)
                :on-click #(do
                             (on-done filter-string)
+                            (dispatch [::route-events/change-query-param
+                                       {:partial-query-params {(or (keyword resource-name) :filter) filter-string}}])
                             (close-fn))}
               "Done"]]])]))))

@@ -16,6 +16,7 @@
 - Favicon - Changes favicon to lighter red
 - Pagination - Styling
 - Apps AddModal - Disables docker and k8s apps buttons when not inside a project, regression fix #1150
+- Filter wizard - Additional filter is stored in and loads from query param
 
 ## [2.33.1] - 2023-01-30
 

@@ -76,7 +76,7 @@
                                                          :data-reitit-handle-click false}))))]
     (when (nil? @active-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
-    (fn [opts]
+    (fn [{:keys [panes] :as opts}]
       [ui/Tab
        (-> (assoc opts :panes (map add-hrefs panes))
            (dissoc :db-path :change-event)

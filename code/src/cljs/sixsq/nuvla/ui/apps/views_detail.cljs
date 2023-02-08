@@ -544,7 +544,7 @@
                        parent   ""
                        logo-url @default-logo-url
                        subtype  "project"}} @module-common]
-        [:<>
+        [:div {:class :uix-apps-details-details}
          [:h2 [DetailsTitle]]
          [ui/Grid {:stackable true, :reversed :mobile}
           [ui/GridRow
@@ -1233,7 +1233,7 @@
     {:menuItem {:content (r/as-element [ShareTitle])
                 :key     :share}
      :pane     {:content (r/as-element
-                           [:<>
+                           [:div {:class :uix-apps-details-share}
                             [:h2 [ShareTitle]]
                             ^{:key (:updated @e)}
                             [acl-views/AclWidget {:default-value default-value

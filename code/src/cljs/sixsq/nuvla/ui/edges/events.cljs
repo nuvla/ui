@@ -1,5 +1,7 @@
 (ns sixsq.nuvla.ui.edges.events
-  (:require [re-frame.core :refer [inject-cofx dispatch reg-event-db reg-event-fx]]
+  (:require [clojure.edn :as edn]
+            [re-frame.core :refer [dispatch inject-cofx reg-event-db
+                                   reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as utils]
@@ -13,8 +15,7 @@
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]
-            [clojure.edn :as edn]))
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
@@ -273,9 +274,12 @@
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db (assoc db ::spec/state-selector state-selector)
-     :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]
-          [:dispatch [::get-nuvlabox-locations]]]}))
+    (let [db-path ::spec/state-selector]
+      {:db (assoc db db-path state-selector)
+       :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]
+            [:dispatch [::get-nuvlabox-locations]]
+            [:dispatch [::routing-events/store-in-query-param {:db-path [db-path]
+                                                               :value   state-selector}]]]})))
 
 
 (reg-event-db

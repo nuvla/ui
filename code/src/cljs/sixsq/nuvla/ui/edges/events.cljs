@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.utils :refer [get-stored-db-value-from-query-param]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -27,12 +28,15 @@
 
 (reg-event-fx
   ::init
-  (fn [{db :db}]
-    {:db (-> db
-             (merge spec/defaults)
-             (assoc ::main-spec/loading? true))
-     :fx [[:dispatch [::init-view]]
-          [:dispatch [::get-nuvlabox-releases]]]}))
+  (fn [{{:keys [current-route] :as db} :db}]
+    (let [db-path      ::spec/state-selector
+          search-query (get-stored-db-value-from-query-param current-route [db-path])]
+      {:db (-> db
+               (merge spec/defaults)
+               (assoc ::main-spec/loading? true)
+               (assoc db-path search-query))
+       :fx [[:dispatch [::init-view]]
+            [:dispatch [::get-nuvlabox-releases]]]})))
 
 (reg-event-fx
   ::init-view

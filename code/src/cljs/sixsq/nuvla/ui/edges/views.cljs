@@ -102,22 +102,17 @@
 
 (defn StatisticStates
   []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        summary (subscribe [::subs/nuvlaboxes-summary])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        summary  (subscribe [::subs/nuvlaboxes-summary])
+        selected (subscribe [:sixsq.nuvla.ui.edges.subs/state-selector])]
+    (when ((set utils/states) @selected)
+      (reset! show-state-statistics true))
     (fn []
       (let [terms           (general-utils/aggregate-to-map
-                              (get-in @summary [:aggregations :terms:state :buckets]))
-            new             (:NEW terms 0)
-            activated       (:ACTIVATED terms 0)
-            commissioned    (:COMMISSIONED terms 0)
-            decommissioning (:DECOMMISSIONING terms 0)
-            decommissioned  (:DECOMMISSIONED terms 0)
-            suspended       (:SUSPENDED terms 0)
-            error           (:ERROR terms 0)]
-
+                              (get-in @summary [:aggregations :terms:state :buckets]))]
         [:div {:style {:display         :flex
                        :justify-content :center
-                       :flex-direction  :column
+                       :flex-direction   :column
                        :align-items     :center}}
          [StatisticStatesEdge true]
          [ui/Segment {:compact true
@@ -131,55 +126,15 @@
                     :display    "flex"
                     :text-align "center"
                     :width      "100%"}}
-           [components/StatisticState {:value                    new,
-                                       :icons                    [(utils/state->icon utils/state-new)],
-                                       :label                    utils/state-new,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    activated,
-                                       :icons                    [(utils/state->icon utils/state-activated)],
-                                       :label                    utils/state-activated,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    commissioned,
-                                       :icons                    [(utils/state->icon utils/state-commissioned)],
-                                       :label                    utils/state-commissioned,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    decommissioning,
-                                       :icons                    [(utils/state->icon utils/state-decommissioning)],
-                                       :label                    utils/state-decommissioning,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    decommissioned,
-                                       :icons                    [(utils/state->icon utils/state-decommissioned)],
-                                       :label                    utils/state-decommissioned,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    suspended,
-                                       :icons                    [(utils/state->icon utils/state-suspended)],
-                                       :label                    utils/state-suspended,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    error,
-                                       :icons                    [(utils/state->icon utils/state-error)],
-                                       :label                    utils/state-error,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]]]]))))
+           (for [state utils/states]
+             ^{:key state}
+             [components/StatisticState {:value                    ((keyword state) terms 0),
+                                         :icons                    [(utils/state->icon state)],
+                                         :label                    state,
+                                         :clickable?               true,
+                                         :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
+                                         :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
+                                         :stacked?                 true}])]]]))))
 
 (def view->icon-classes
   {spec/cards-view   "grid layout"

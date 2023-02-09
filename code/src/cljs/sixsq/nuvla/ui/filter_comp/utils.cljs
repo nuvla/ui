@@ -98,7 +98,7 @@
                                (second args)]))
        :EqOp              identity
        :FullTextOp        identity
-       :PrefixOp          identity
+       :PrefixOp           identity
        :RelOp             identity
        :Comp              (fn [a o v]
                             (if (string? a)
@@ -109,7 +109,7 @@
                               [{:el "logic" :value "("}
                                a
                                {:el "logic" :value ")"}]))
-       :Attribute         identity
+       :Attribute         str
        :IntValue          int
        :DoubleQuoteString #(subs % 1 (dec (count %)))
        :SingleQuoteString #(subs % 1 (dec (count %)))

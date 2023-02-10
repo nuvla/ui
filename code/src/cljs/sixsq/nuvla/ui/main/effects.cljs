@@ -41,3 +41,34 @@
     (if protected?
       (set-unload-protection)
       (clear-unload-protection))))
+
+
+(defn- stop-browser-back
+  [f]
+  (.pushState js/window.history nil "" (.-href js/window.location))
+  (set!
+    js/window.onpopstate
+    (fn []
+      (.pushState js/window.history nil "" (.-href js/window.location))
+      (when (fn? f) (f)))))
+
+(defn- start-browser-back
+  []
+  (set! js/window.onpopstate nil)
+  (.back js/window.history))
+
+(comment
+  (stop-browser-back +)
+  (start-browser-back)
+  )
+
+(reg-fx
+  ::disable-browser-back
+  (fn [f]
+    (stop-browser-back f)))
+
+(reg-fx
+  ::enable-browser-back
+  (fn [_]
+    (js/console.error "hoooo")
+    (start-browser-back)))

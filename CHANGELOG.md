@@ -14,6 +14,8 @@
 - Edges overview - Saves current view as query param, #1125
 - Edges overview - Stores to and loads preferred view from localStorage, #1141
 - Favicon - Changes favicon to lighter red
+- Edge - Last and next telemetry report time ago refreshed #1140
+- Edge detail - Last and next telemetry report time ago refreshed #1140
 - API page - Make list of plain ids navigable #1143
 - Pagination - Styling
 - Apps AddModal - Disables docker and k8s apps buttons when not inside a project, regression fix #1150

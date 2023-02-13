@@ -1192,10 +1192,9 @@
   [{:keys [next-heartbeat] :as _nb-status}]
   (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])
         tr                       @(subscribe [::i18n-subs/tr])
-        locale                   @(subscribe [::i18n-subs/locale])
         next-heartbeat-moment    (some-> next-heartbeat time/parse-iso8601)
-        next-heartbeat-times-ago (some-> next-heartbeat-moment
-                                         (time/ago locale))]
+        next-heartbeat-times-ago (when next-heartbeat-moment
+                                   [uix/TimeAgo next-heartbeat-moment])]
     (when next-heartbeat-moment
       [:<>
        (if (time/before-now? next-heartbeat-moment)
@@ -1204,7 +1203,10 @@
          [:p (tr [:nuvlaedge-next-telemetry-expected])
           next-heartbeat-times-ago "."])
        [:p (tr [:nuvlaedge-last-telemetry-was])
-        (utils/last-time-online next-heartbeat-moment refresh-interval locale) "."]])))
+        [uix/TimeAgo (utils/last-time-online
+                       next-heartbeat-moment
+                       refresh-interval)]
+        "."]])))
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]
@@ -1973,7 +1975,7 @@
                        {:no-actions         true
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
                         :pagination-db-path ::spec/deployment-pagination
-                        :fetch-event        [::events/get-deployments-for-edge] }]])}
+                        :fetch-event        [::events/get-deployments-for-edge]}]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}

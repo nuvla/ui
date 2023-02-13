@@ -804,7 +804,10 @@
      [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell @creator]
      [ui/TableCell (str refresh-interval "s")]
-     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))]
+     [ui/TableCell (when next-heartbeat-moment
+                     [uix/TimeAgo (utils/last-time-online
+                                    next-heartbeat-moment
+                                    refresh-interval)])]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}

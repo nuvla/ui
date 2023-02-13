@@ -117,8 +117,8 @@
   (let [tr                (subscribe [::i18n-subs/tr])
         navigation-info   (subscribe [::subs/ignore-changes-modal])
         ignore-changes-fn #(dispatch [::events/ignore-changes false])]
-
-    (dispatch [::events/disable-browser-back])
+    (when @navigation-info
+      (dispatch [::events/disable-browser-back]))
 
     [ui/Modal {:open       (some? @navigation-info)
                :close-icon true

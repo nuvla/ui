@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.edges.subs
   (:require [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.edges.spec :as spec]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -10,9 +11,10 @@
     (::spec/loading? db)))
 
 (reg-sub
-  ::query-params
-  (fn [db]
-    (::spec/query-params db)))
+  ::view-type
+  :<- [::route-subs/query-param :view]
+  (fn [view-type]
+    (keyword (or view-type spec/table-view))))
 
 (reg-sub
   ::nuvlaboxes

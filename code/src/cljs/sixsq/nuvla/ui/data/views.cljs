@@ -211,7 +211,7 @@
          [ui/TableCell data-record-filter]
          [ui/TableCell module-filter]
          [ui/TableCell [uix/Tags tags]]
-         [ui/TableCell (utils-values/as-link id :label uuid)]]))))
+         [ui/TableCell (utils-values/AsLink id :label uuid)]]))))
 
 (defn DataSetTable
   []

@@ -23,7 +23,7 @@
        [Table {:columns
                [{:field-key :jobs
                  :accessor  :id
-                 :cell      (fn [{id :cell-data}] [values/as-link id :label (general-utils/id->short-uuid id)])}
+                 :cell      (fn [{id :cell-data}] [values/AsLink id :label (general-utils/id->short-uuid id)])}
                 {:field-key :action}
                 {:field-key :timestamp
                  :accessor  :time-of-status-change}

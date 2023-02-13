@@ -83,3 +83,11 @@
                   path-params
                   query-params]} (new-route-data current-route new-partial-route-data)]
       {:fx [[:dispatch [::navigate route-name path-params query-params {:change-event change-event}]]]})))
+
+(reg-event-fx
+  ::change-query-param
+  (fn [{{:keys [current-route]} :db} [_ new-partial-route-data]]
+    (let [{:keys [route-name
+                  path-params
+                  query-params]} (new-route-data current-route new-partial-route-data)]
+      {::fx/replace-state (name->href route-name path-params query-params)})))

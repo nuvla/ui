@@ -31,7 +31,15 @@
     (.pushState js/window.history nil {} path)
     (rfh/-on-navigate @rfe/history path)))
 
+
 (reg-fx
   ::navigate-back!
   (fn []
     (.back js/window.history)))
+
+(reg-fx
+  ::replace-state
+  (fn [path]
+    ;; .replaceState does not call popState, that's why we have to call rfh/-on-navigate
+    (.replaceState js/window.history nil {} path)
+    (rfh/-on-navigate @rfe/history path)))

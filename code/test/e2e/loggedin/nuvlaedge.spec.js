@@ -6,7 +6,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page.waitForResponse((resp) => resp.url().includes('get-subscription'));
   await page.getByRole('link', { name: 'Edges' }).click();
 
-  const edgesPageRegex = /\/ui\/edges$/;
+  const edgesPageRegex = /\/ui\/edges/;
 
   await expect(page).toHaveURL(edgesPageRegex);
 

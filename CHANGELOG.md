@@ -14,6 +14,8 @@
 - Edges overview - Saves current view as query param, #1125
 - Edges overview - Stores to and loads preferred view from localStorage, #1141
 - Favicon - Changes favicon to lighter red
+- API detail - User can see raw json on api detail even when he is not able to edit #1145
+- Global - Refactor CodeEditor with default-options
 - Edge - Last and next telemetry report time ago refreshed #1140
 - Edge detail - Last and next telemetry report time ago refreshed #1140
 - API page - Make list of plain ids navigable #1143

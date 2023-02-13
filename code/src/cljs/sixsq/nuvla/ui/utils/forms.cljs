@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.utils.forms
-  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (defn on-key
@@ -53,18 +54,12 @@
 
 
 (defn resource-editor
-  [_form-id _text]
-  (fn [form-id text]
+  [_form-id _text _read-only?]
+  (fn [form-id text read-only?]
     ^{:key form-id}
     [ui/Segment {:attached "bottom"}
-     [ui/CodeMirror {:value     @text
-                     :on-change (fn
-                                  [_editor _data value]
-                                  (reset! text value))
-                     :options   {:mode                "application/json"
-                                 :line-numbers        true
-                                 :match-brackets      true
-                                 :auto-close-brackets true
-                                 :style-active-line   true
-                                 :fold-gutter         true
-                                 :gutters             ["CodeMirror-foldgutter"]}}]]))
+     [uix/EditorJson {:value      @text
+                      :on-change  (fn
+                                    [_editor _data value]
+                                    (reset! text value))
+                      :read-only? (or read-only? false)}]]))

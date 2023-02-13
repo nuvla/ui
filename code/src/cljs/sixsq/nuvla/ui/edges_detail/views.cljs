@@ -1756,13 +1756,11 @@
             [ui/FormField {:label    "Run"
                            :required true}]
             "Shell script: "
-            [uix/EditorShell
-             ""
-             (fn [_editor _data value]
-               (ui-callback/input-callback
-                 (swap! form-data assoc :run value)))
-             true
-             "full-width"]]]]
+            [uix/EditorShell {:value     ""
+                              :on-change (fn [_editor _data value]
+                                           (ui-callback/input-callback
+                                             (swap! form-data assoc :run value)))
+                              :class     "full-width"}]]]]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:add])
@@ -1870,13 +1868,12 @@
 
                    [ui/Container {:text-align "left"}
                     "Shell script: "
-                    [uix/EditorShell
-                     (:run @selected-playbook)
-                     (fn [_editor _data value]
-                       (reset! run value)
-                       (reset! run-changed? true))
-                     @can-edit?
-                     "full-height"]]
+                    [uix/EditorShell {:value      (:run @selected-playbook)
+                                      :on-change  (fn [_editor _data value]
+                                                    (reset! run value)
+                                                    (reset! run-changed? true))
+                                      :read-only? (not @can-edit?)
+                                      :class "full-height"}]]
 
                    [uix/Button {:primary  true
                                 :text     (@tr [:save])

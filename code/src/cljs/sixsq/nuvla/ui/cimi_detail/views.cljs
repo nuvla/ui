@@ -91,6 +91,22 @@
        #(reset! text (general-utils/edn->json data))
        true])))
 
+(defn view-button
+  "Creates an view that will bring up an edit dialog and will save the
+   modified resource when saved."
+  [{:keys [id] :as data}]
+  (let [tr   (subscribe [::i18n-subs/tr])
+        text (atom (general-utils/edn->json data))]
+    [action-button-icon
+     (@tr [:raw])
+     (@tr [:close])
+     "eye"
+     nil
+     [forms/resource-editor id text true]
+     #()
+     #()
+     true]))
+
 
 (defn delete-button
   "Creates a button that will bring up a delete dialog and will execute the
@@ -227,11 +243,12 @@
 
 
 (defn detail-menu
-  [RefreshButton data]
-  (let [MenuItems (format-operations data)]
-    [components/ResponsiveMenuBar
-     MenuItems
-     RefreshButton]))
+  [RefreshButton {:keys [id] :as data}]
+  [components/ResponsiveMenuBar
+   (cond->> (format-operations data)
+            (not (general-utils/can-edit? data))
+            (cons ^{:key (str id "_view")} [view-button data]))
+   RefreshButton])
 
 
 (defn resource-detail
@@ -264,11 +281,11 @@
          (when acl
            ^{:key (str resource-id "-" updated)}
            [:div {:style {:min-height "30px"}}
-            [acl-views/AclButton {:default-value acl
-                                  :read-only     (not (general-utils/can-edit? resource-value))
-                                  :on-change     #(dispatch [::events/edit
-                                                             resource-id
-                                                             (assoc resource-value :acl %)])
+            [acl-views/AclButton {:default-value   acl
+                                  :read-only       (not (general-utils/can-edit? resource-value))
+                                  :on-change       #(dispatch [::events/edit
+                                                               resource-id
+                                                               (assoc resource-value :acl %)])
                                   :margin-override {:margin-top 0}}]])
          [resource-detail
           [components/RefreshMenu

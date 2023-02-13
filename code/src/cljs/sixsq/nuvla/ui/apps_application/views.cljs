@@ -287,7 +287,7 @@
        (when parent-path
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:project]))]
-          [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+          [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
         [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
@@ -297,7 +297,7 @@
        (when id
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:id]))]
-          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]])
+          [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]

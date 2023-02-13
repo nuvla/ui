@@ -232,7 +232,7 @@
 (defn job-map-to-row
   [{:keys [id action time-of-status-change state progress return-code status-message]}]
   [ui/TableRow
-   [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
+   [ui/TableCell [values/AsLink id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell action]
    [ui/TableCell time-of-status-change]
    [ui/TableCell state]
@@ -538,7 +538,7 @@
        (when name
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:name]))]
-          [ui/TableCell [values/as-link path :label name :page "apps"]]])
+          [ui/TableCell [values/AsLink path :label name :page "apps"]]])
        (when desc-short
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:description]))]
@@ -546,7 +546,7 @@
        (when parent-path
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:project]))]
-          [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+          [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
         [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
@@ -555,7 +555,7 @@
         [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:id]))]
-        [ui/TableCell [values/as-link id :label (general-utils/id->uuid
+        [ui/TableCell [values/AsLink id :label (general-utils/id->uuid
                                                   (or id ""))]]]]]]))
 
 
@@ -670,7 +670,7 @@
          [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]
         [ui/TableRow
          [ui/TableCell "Id"]
-         [ui/TableCell (when (some? id) [values/as-link id :label (general-utils/id->uuid id)])]]
+         [ui/TableCell (when (some? id) [values/AsLink id :label (general-utils/id->uuid id)])]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:owner]))]
          [ui/TableCell
@@ -700,7 +700,7 @@
            [ui/TableCell
             [:<>
              [ui/Icon {:name "bullseye"}]
-             [values/as-link (general-utils/id->uuid deployment-set) :label
+             [values/AsLink (general-utils/id->uuid deployment-set) :label
               (or deployment-set-name
                   (general-utils/id->uuid deployment-set))
               :page "deployment-sets"]]]])]]]

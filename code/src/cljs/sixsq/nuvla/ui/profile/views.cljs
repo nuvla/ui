@@ -394,10 +394,10 @@
            [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]
           [ui/TableRow
            [ui/TableCell [:b "User id"]]
-           [ui/TableCell (values/as-href {:href user-id})]]
+           [ui/TableCell [values/AsHref {:href user-id}]]]
           [ui/TableRow
            [ui/TableCell [:b "Roles"]]
-           [ui/TableCell (values/format-collection (sort (str/split (:roles @session) #"\s+")))]]]]
+           [ui/TableCell [values/FormatCollection (sort (str/split (:roles @session) #"\s+"))]]]]]
         [ui/Grid {:text-align     "center"
                   :vertical-align "middle"
                   :style          {:height "100%"}}

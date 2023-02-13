@@ -177,13 +177,12 @@
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml
-           default-value
-           (fn [_editor _data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form]))
-           @editable?]
+          [uix/EditorYaml {:value      default-value
+                           :on-change  (fn [_editor _data value]
+                                         (dispatch [::events/update-docker-compose value])
+                                         (dispatch [::main-events/changes-protection? true])
+                                         (dispatch [::apps-events/validate-form]))
+                           :read-only? (not @editable?)}]
           (when validate?
             (dispatch [::events/set-docker-validation-error
                        apps-views-detail/application-kubernetes-subtype (not valid?)])
@@ -215,13 +214,12 @@
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml
-           default-value
-           (fn [_editor _data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form]))
-           @editable?]
+          [uix/EditorYaml {:value default-value
+                           :on-change (fn [_editor _data value]
+                                        (dispatch [::events/update-docker-compose value])
+                                        (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::apps-events/validate-form]))
+                           :read-only? (not @editable?)}]
           (when validate?
             (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
             (when (not valid?)
@@ -287,7 +285,7 @@
        (when parent-path
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:project]))]
-          [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+          [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
         [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
@@ -297,7 +295,7 @@
        (when id
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:id]))]
-          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]])
+          [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]

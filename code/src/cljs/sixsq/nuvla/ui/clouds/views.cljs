@@ -92,7 +92,7 @@
       ]
      [ui/CardContent
       [ui/CardDescription
-       [values/as-link id :label name]]
+       [values/AsLink id :label name]]
       [ui/CardHeader {:style {:word-wrap "break-word"}}]
       (if @services
         (for [{service-id :id :as service} @services]

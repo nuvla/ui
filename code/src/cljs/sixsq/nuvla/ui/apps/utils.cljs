@@ -93,7 +93,7 @@
 (defn subtype-icon
   [subtype]
   (case subtype
-    "project" "folder"
+    "project" "fa-light fa-folder"
     "component" "grid layout"
     "application" "cubes"
     "application_kubernetes" "cubes"

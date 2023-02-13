@@ -36,7 +36,7 @@
         on-click (or on-click #())]
     [uix/MenuItem
      {:name     (@tr [:refresh])
-      :icon     "refresh"
+      :icon     "fal fa-arrows-rotate"
       :loading? (boolean loading?)
       :on-click on-click
       :style    {:cursor "pointer"

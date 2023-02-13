@@ -74,11 +74,14 @@
 
 (defn swarm-manager?
   [{:keys [swarm-enabled swarm-manager] :as _infra-service}]
-  (and swarm-enabled (or swarm-manager (nil? swarm-manager))))
+  (and (true? swarm-enabled)
+       (or (true? swarm-manager)
+           (nil? swarm-manager))))
 
 (defn swarm-worker?
   [{:keys [swarm-enabled swarm-manager] :as _infra-service}]
-  (and swarm-enabled (false? swarm-manager)))
+  (and (true? swarm-enabled)
+       (false? swarm-manager)))
 
 (defn swarm-disabled?
   [{:keys [swarm-enabled] :as _infra-service}]
@@ -86,10 +89,9 @@
 
 (defn infra-app-compatible?
   [{app-subtype :subtype app-compatibility :compatibility :as _module}
-   {:keys [swarm-enabled swarm-manager] infra-subtype :subtype :as _infra}]
+   {infra-subtype :subtype :as infra-service}]
   (boolean (not (and (= infra-subtype "swarm")
                      (= app-subtype "application")
                      (= app-compatibility "swarm")
-                     (or (false? swarm-enabled)
-                         (and (true? swarm-enabled)
-                              (false? swarm-manager)))))))
+                     (or (swarm-disabled? infra-service)
+                         (swarm-worker? infra-service))))))

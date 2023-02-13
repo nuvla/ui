@@ -432,11 +432,13 @@ div.search.dropdown > input {
   padding: 2rem 2rem 5rem 2rem !important;
 }
 
-a.card i.massive,i.huge {
+a.card i.massive,
+i.huge {
   color: #4283c4;
 }
 
-a.card:hover i.massive,i.huge {
+a.card:hover i.massive,
+i.huge {
   color: #1e70bf;
 }
 
@@ -846,15 +848,15 @@ body .divider-red {
   margin-top: 8px;
 }
 
-.uix-pagination-navigation {
-  align-items: center;
-}
-
 .uix-pagination .pagination {
   border: none !important;
 }
 .uix-pagination .ui.menu {
   box-shadow: none !important;
+}
+
+.uix-pagination-navigation {
+  align-items: center;
 }
 
 .uix-pagination .ui.menu .item:before {
@@ -902,3 +904,48 @@ body .divider-red {
   }
 }
 /** Pagination **/
+
+/** apps **/
+
+.uix-apps-navigator .ui.list .list > .item .header,
+.ui.list > .item .header {
+  font-family: 'Poppins' !important;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.uix-apps-navigator .ui.list .list > .item .description,
+.ui.list > .item .description {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+}
+
+.uix-apps-navigator .ui.relaxed.list:not(.horizontal) > .item:not(:last-child) {
+  padding-bottom: 0.7em;
+}
+
+.uix-apps-navigator .ui.relaxed.list:not(.horizontal) > .item:not(:first-child) {
+  padding-top: 0.7em;
+}
+
+.uix-tab-nav .ui.menu {
+  border: 0px solid rgba(34, 36, 38, 0.15);
+  box-shadow: 1px 1px 8px 0 rgb(34 36 38 / 15%);
+}
+
+.uix-tab-nav .ui.menu.item {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.ui.secondary.pointing.menu .active.item {
+  border-color: #c10e12;
+}
+
+.ui.segment[class*='bottom attached'] {
+  border-radius: 0.3rem;
+}
+
+.ui.attached.segment {
+  border: 1px solid rgba(34, 36, 38, 0.15);
+}
+/** apps end **/

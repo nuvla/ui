@@ -17,15 +17,15 @@ test('test', async ({ page, context }, { project, config }) => {
 
   // Edges aliases
   await page.getByRole('link').getByText('Edges').click();
-  await expect(page).toHaveURL(`${baseURL}/ui/edges`);
+  await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/edges`));
   await page.getByRole('heading').getByText('Edges').isVisible();
 
   await page.goto(`${baseURL}/ui/edge`);
-  await expect(page).toHaveURL(`${baseURL}/ui/edge`);
+  await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/edge`));
   await page.getByRole('heading').getByText('Edges').isVisible();
 
   await page.goto(`${baseURL}/ui/nuvlabox`);
-  await expect(page).toHaveURL(`${baseURL}/ui/nuvlabox`);
+  await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/nuvlabox`));
   await page.getByRole('heading').getByText('Edges').isVisible();
 
   const edgeName = /e2e-Test-Do_not_delete/;

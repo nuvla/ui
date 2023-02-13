@@ -216,7 +216,7 @@
              subtype (conj (metadata-row "subtype" subtype))
              method (conj (metadata-row "method" method))
              state (conj (metadata-row "state" state))
-             parent (conj (metadata-row "parent" (values/as-link parent))))]))
+             parent (conj (metadata-row "parent" (values/AsLink parent))))]))
 
 
 (defn strip-attr-ns
@@ -232,8 +232,8 @@
    [ui/TableCell {:style {:max-width     "80ex"             ;; FIXME: need to get this from parent container
                           :text-overflow "ellipsis"
                           :overflow      "hidden"}} (if (vector? value)
-                                                      (values/format-collection value)
-                                                      (values/format-value value))]])
+                                                      [values/FormatCollection value]
+                                                      [values/FormatValue value])]])
 
 
 (defn group-table-sui

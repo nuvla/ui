@@ -530,7 +530,7 @@
              (map (fn [{:keys [id name] :as _pb}]
                     [ui/ListItem
                      ^{:key id}
-                     [values/as-link id :label (or name id)]])
+                     [values/AsLink id :label (or name id)]])
                   em-enabled)]])]))))
 
 
@@ -1028,7 +1028,7 @@
        [ui/TableRow
         [ui/TableCell "Id"]
         (when id
-          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]])]
+          [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]])]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
         [EditableCell :name]]
@@ -1192,10 +1192,9 @@
   [{:keys [next-heartbeat] :as _nb-status}]
   (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])
         tr                       @(subscribe [::i18n-subs/tr])
-        locale                   @(subscribe [::i18n-subs/locale])
         next-heartbeat-moment    (some-> next-heartbeat time/parse-iso8601)
-        next-heartbeat-times-ago (some-> next-heartbeat-moment
-                                         (time/ago locale))]
+        next-heartbeat-times-ago (when next-heartbeat-moment
+                                   [uix/TimeAgo next-heartbeat-moment])]
     (when next-heartbeat-moment
       [:<>
        (if (time/before-now? next-heartbeat-moment)
@@ -1204,7 +1203,10 @@
          [:p (tr [:nuvlaedge-next-telemetry-expected])
           next-heartbeat-times-ago "."])
        [:p (tr [:nuvlaedge-last-telemetry-was])
-        (utils/last-time-online next-heartbeat-moment refresh-interval locale) "."]])))
+        [uix/TimeAgo (utils/last-time-online
+                       next-heartbeat-moment
+                       refresh-interval)]
+        "."]])))
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]
@@ -1836,7 +1838,7 @@
                     [ui/TableBody
                      [ui/TableRow
                       [ui/TableCell "ID"]
-                      [ui/TableCell [values/as-link (:id @selected-playbook) :label
+                      [ui/TableCell [values/AsLink (:id @selected-playbook) :label
                                      (general-utils/id->uuid (:id @selected-playbook))]]]
                      (when (:name @selected-playbook)
                        [ui/TableRow

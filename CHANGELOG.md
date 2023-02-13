@@ -17,6 +17,10 @@
 - Pagination - Styling
 - Apps AddModal - Disables docker and k8s apps buttons when not inside a project, regression fix #1150
 - Nav tab - Bugfix when panes content change, nav-tab should re-render bugfix #1158
+- Apps detail - Fix warning log caused by versions table
+- Deployment modal - Display infrastructure docker labels #996
+- Deployment modal - Do not allow deployment of Swarm application on Swarm disabled node or worker node #996
+- Deployment modal - Inform user that he is deploying a Compose application on a Docker swarm node #996
 
 ## [2.33.1] - 2023-01-30
 

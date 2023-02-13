@@ -285,36 +285,24 @@
   :-> ::spec/credentials-loading?)
 
 (reg-sub
-  ::app-infra-compatibility
+  ::app-infra-compatibility-msg
   :<- [::module-subtype]
   :<- [::module-compatibility]
   (fn [[module-subtype module-compatibility :as a]
        [_ {:keys [swarm-enabled swarm-manager] infra-subtype :subtype
            :as   _infra-service}]]
-    (js/console.info "Sub" a _infra-service)
     (cond
       (= [module-subtype module-compatibility infra-subtype swarm-enabled]
          ["application" "swarm" "swarm" false])
-      {:msg "Swarm app can't be deployed on swarm disabled node"
-       :list-creds? false}
+      "Swarm application can't be deployed on a node without Docker Swarm! To deploy it, you need to create a Swarm cluster on this node."
 
       (= [module-subtype module-compatibility infra-subtype swarm-enabled swarm-manager]
          ["application" "swarm" "swarm" true false])
-      {:msg        "Swarm app can't be deployed on swarm worker node, you should select the swarm manager node"
-       :list-creds? false}
+      "Swarm application can't be deployed on Swarm worker node! To deploy it, you should select a Swarm manager node part of that cluster."
 
       (= [module-subtype module-compatibility infra-subtype swarm-enabled]
          ["application" "docker-compose" "swarm" true])
-      {:msg        "Docker compose app deployed on swarm enabled node. This app will be only available on this specific node"
-       :list-creds? true}
-
-      )
-    ;[module-subtype module-compatibility infra-subtype swarm-enabled swarm-manager]
-    ;["application" "swarm" "swarm" false -] {:msg "Swarm app can't be deployed on swarm disabled node" :list-creds false}
-    ;["application" "swarm" "swarm" true false] {:msg "Swarm app can't be deployed on swarm worker node, you should select the swarm manager node" :list-creds false}
-    ;["application" "docker-compose" "swarm" true _] {:msg "Docker compose app deployed on swarm enabled node. This app will be only available on this specific node" :list-creds true}
-
-    ))
+      "Docker compose application deployed on Swarm node. This application will only be available on this specific node.")))
 
 (reg-sub
   ::credentials

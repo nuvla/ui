@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-infra-services
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
             [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
@@ -98,14 +99,56 @@
            [cred-item credential]))]
       [ui/Message {:error true} (@tr [:no-credentials])])))
 
+(defn CompatibilityLabel
+  [infra-service]
+  (let [{:keys [popup-txt label-txt label-icon label-color]
+         :or   {label-color "blue"}
+         } (cond
+             (utils/swarm-manager? infra-service)
+             {:popup-txt  "Swarm Manager"
+              :label-txt  "Swarm"
+              :label-icon "fa-solid fa-crown"}
+
+             (utils/swarm-worker? infra-service)
+             {:popup-txt  "Swarm Worker"
+              :label-txt  "Swarm"
+              :label-icon "fa-solid fa-robot"}
+
+             (utils/swarm-disabled? infra-service)
+             {:popup-txt   "Swarm Disabled"
+              :label-txt   "Swarm Disabled"
+              :label-color "brown"})]
+    (when label-txt
+      [ui/Popup
+      {:size    "tiny"
+       :content popup-txt
+       :trigger (r/as-element
+                  [ui/Label {:circular true
+                             :color    label-color
+                             :size     "tiny"
+                             :basic    true
+                             :style    {:float "right"}}
+                   (when label-icon
+                     [uix/Icon {:name label-icon}])
+                   label-txt])}])))
+
+(defn CompatibilityMessage
+  [infra-service compatible?]
+  (let [compatibility-msg (subscribe [::subs/app-infra-compatibility-msg infra-service])]
+    (when @compatibility-msg
+      [ui/Message {:size    "tiny"
+                   :info    compatible?
+                   :warning (not compatible?)}
+       [ui/Icon {:name (if compatible? "info" "warning")}]
+       @compatibility-msg])))
 
 (defn InfraServiceItem
-  [{:keys [id name subtype description swarm-enabled swarm-manager] :as infra-service}]
-  (let [selected-infra          (subscribe [::subs/selected-infra-service])
-        active?                 (= (:id @selected-infra) id)
-        loading?                (subscribe [::subs/credentials-loading?])
-        app-infra-compatibility (subscribe [::subs/app-infra-compatibility infra-service])]
-    (js/console.info "not-compatible?" @app-infra-compatibility)
+  [{:keys [id name subtype description] :as infra-service}]
+  (let [selected-infra (subscribe [::subs/selected-infra-service])
+        active?        (= (:id @selected-infra) id)
+        loading?       (subscribe [::subs/credentials-loading?])
+        module         (subscribe [::subs/module])
+        compatible?    (utils/infra-app-compatible? @module infra-service)]
     [:<>
      [ui/AccordionTitle {:active   active?
                          :on-click #(dispatch [::events/set-selected-infra-service
@@ -120,34 +163,14 @@
                            :padding-bottom 7}}]
         [:<>
          [ui/Icon {:name "docker"}]
-         (when (some? swarm-enabled)
-           (let [compose? (false? swarm-enabled)
-                 manager? (and swarm-enabled
-                               (or swarm-manager (nil? swarm-manager)))
-                 worker?  (and swarm-enabled (false? swarm-manager))]
-             [ui/Label {:circular   true
-                        :size       "small"
-                        :float      "right"
-                        :horizontal true
-                        :style      {:float "right"}}
-              (cond
-                manager? "Manager => Stack & Compose"
-                worker? "Worker => Stack via manager & Compose"
-                compose? "Swarm disabled => Compose")]))])
+         [CompatibilityLabel infra-service]])
       ff/nbsp
       (or name id)]
      [ui/AccordionContent {:active active?}
       description
       [ui/Segment (assoc style/basic :loading @loading?)
-
-       (when @app-infra-compatibility
-         (let [info?    (:list-creds? @app-infra-compatibility)]
-           [ui/Message {:size    "tiny"
-                        :info    info?
-                        :warning (not info?)}
-            [ui/Icon {:name (if info? "info" "warning")}]
-            (:msg @app-infra-compatibility)]))
-       (when-not (false? (:list-creds? @app-infra-compatibility))
+       [CompatibilityMessage infra-service compatible?]
+       (when compatible?
          [creds-list])]]]))
 
 

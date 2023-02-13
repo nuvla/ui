@@ -71,3 +71,25 @@
 (defn infra-support-pull?
   [{:keys [capabilities] :as _infrastructure-service}]
   (contains? (set capabilities) "NUVLA_JOB_PULL"))
+
+(defn swarm-manager?
+  [{:keys [swarm-enabled swarm-manager] :as _infra-service}]
+  (and swarm-enabled (or swarm-manager (nil? swarm-manager))))
+
+(defn swarm-worker?
+  [{:keys [swarm-enabled swarm-manager] :as _infra-service}]
+  (and swarm-enabled (false? swarm-manager)))
+
+(defn swarm-disabled?
+  [{:keys [swarm-enabled] :as _infra-service}]
+  (false? swarm-enabled))
+
+(defn infra-app-compatible?
+  [{app-subtype :subtype app-compatibility :compatibility :as _module}
+   {:keys [swarm-enabled swarm-manager] infra-subtype :subtype :as _infra}]
+  (boolean (not (and (= infra-subtype "swarm")
+                     (= app-subtype "application")
+                     (= app-compatibility "swarm")
+                     (or (false? swarm-enabled)
+                         (and (true? swarm-enabled)
+                              (false? swarm-manager)))))))

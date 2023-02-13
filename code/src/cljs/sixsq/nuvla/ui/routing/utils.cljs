@@ -16,6 +16,16 @@
   [route]
   (get-in route [:data :name]))
 
+(defn db-path->query-param-key
+  [[qualified-key]]
+  (let [ns-path     (str/split (namespace qualified-key) #"\.")
+        last-two-ns (drop (- (count ns-path) 2) ns-path)
+        k-prefix     (str/replace (str/join last-two-ns) "spec" "")]
+    (->> qualified-key
+         name
+         (str k-prefix "-")
+         keyword)))
+
 (defn new-route-data
   "Takes current route data and merges it with partial new route data, returning new
   route data map with :route-name, :path-params, :query-params
@@ -58,6 +68,10 @@
 (defn get-query-param
   [route key]
   (get-in route [:query-params key]))
+
+(defn get-stored-db-value-from-query-param
+  [route db-path]
+  (get-query-param route (db-path->query-param-key db-path)))
 
 (defn add-base-path
   [url]

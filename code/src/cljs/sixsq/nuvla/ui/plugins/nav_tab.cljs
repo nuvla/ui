@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.plugins.nav-tab
   (:require [cljs.spec.alpha :as s]
-            [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-event-fx
-                                   reg-sub subscribe]]
+            [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.routing.utils :refer [gen-href]]
+            [sixsq.nuvla.ui.routing.utils :refer [db-path->query-param-key
+                                                  gen-href]]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (s/def ::default-tab keyword?)
@@ -16,15 +15,6 @@
   [& {:keys [active-tab]}]
   {::default-tab active-tab})
 
-(defn db-path->query-param-key
-  [[qualified-key]]
-  (let [ns-path     (str/split (namespace qualified-key) #"\.")
-        last-two-ns (drop (- (count ns-path) 2) ns-path)
-        k-prefix    (str/replace (str/join last-two-ns) "spec" "")]
-    (->> qualified-key
-         name
-         (str k-prefix "-")
-         keyword)))
 
 (defn get-active-tab
   [db db-path]

@@ -8,10 +8,13 @@
 (def state-new "NEW")
 (def state-activated "ACTIVATED")
 (def state-commissioned "COMMISSIONED")
-(def state-suspended "SUSPENDED")
 (def state-decommissioning "DECOMMISSIONING")
 (def state-decommissioned "DECOMMISSIONED")
+(def state-suspended "SUSPENDED")
 (def state-error "ERROR")
+
+(def states [state-new state-activated state-commissioned state-decommissioning
+             state-decommissioned state-suspended state-error])
 
 (def status-online "ONLINE")
 (def status-offline "OFFLINE")

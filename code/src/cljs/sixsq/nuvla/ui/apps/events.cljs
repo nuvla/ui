@@ -20,7 +20,8 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify
+                                                  db-path->query-param-key]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -48,7 +49,7 @@
                          :event     [::deployments-events/get-deployments
                                      {:filter-external-arg   (str "module/id='" (:id module) "'")
                                       :external-filter-only? true
-                                      :pagination-db-path   ::apps-application-spec/deployment-pagination}]}]]]})))
+                                      :pagination-db-path    ::apps-application-spec/deployment-pagination}]}]]]})))
 
 
 
@@ -207,13 +208,13 @@
         {:fx [[:dispatch [::deployments-events/get-deployments
                           {:filter-external-arg   (str "module/id='" module-id "'")
                            :external-filter-only? true
-                           :pagination-db-path   ::apps-application-spec/deployment-pagination}]]]}))))
+                           :pagination-db-path    ::apps-application-spec/deployment-pagination}]]]}))))
 
 (reg-event-fx
   ::init-view
   (fn [{{current-route :current-route :as db} :db} [_ {:keys [tab-key db-path]}]]
     (let [db-path    (or db-path [::spec/tab])
-          query-key  (nav-tab/db-path->query-param-key db-path)
+          query-key  (db-path->query-param-key db-path)
           query-view (get (:query-params current-route) query-key)]
       (when-not query-view
         {:fx [[:dispatch [::routing-events/change-query-param

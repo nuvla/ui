@@ -495,12 +495,13 @@
             [:h4 "Markdown" [general-utils/mandatory-icon]]
             [ui/Segment
              [uix/EditorMarkdown
-              default-value
-              (fn [_editor _data value]
-                (dispatch [::events/description value])
-                (dispatch [::main-events/changes-protection? true])
-                (dispatch [::events/validate-form]))
-              @editable?]
+              {:value      default-value
+               :on-change  (fn [_editor _data value]
+                             (dispatch [::events/description value])
+                             (dispatch [::main-events/changes-protection? true])
+                             (dispatch [::events/validate-form]))
+               :class      "full-height"
+               :read-only? (not @editable?)}]
              (when validate?
                (when validation-event
                  (dispatch [validation-event "description" (not valid?)]))

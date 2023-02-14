@@ -145,7 +145,8 @@
       (if stacked?
         [:<> [ui/IconGroup
               {:style {:margin-right "auto"
-                       :margin-left  "auto"}}
+                       :margin-left  "auto"}
+               :role  :button}
               (for [i icons]
                 [uix/Icon {:key     icon-key
                            :size    (when (and clickable? selected?) "large")

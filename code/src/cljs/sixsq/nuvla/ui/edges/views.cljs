@@ -53,41 +53,31 @@
             online          (:1 online-statuses)
             offline         (:0 online-statuses)
             unknown         (- total (+ online offline))]
-
-        [ui/StatisticGroup {:widths (if clickable? nil 4)
+        [ui/StatisticGroup {:widths (when-not clickable? 4)
                             :size   "tiny"}
-         [components/StatisticState {:value                    total,
-                                     :icons                    ["fal fa-box"],
-                                     :label                    "TOTAL",
-                                     :stacked?                 true,
-                                     :clickable?               clickable?,
-                                     :positive-color           nil,
-                                     :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                     :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector}]
-         [components/StatisticState {:value                    online,
-                                     :icons                    ["fal fa-power-off"],
-                                     :label                    utils/status-online,
-                                     :clickable?               clickable?,
-                                     :stacked?                 true,
-                                     :positive-color           "green",
-                                     :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                     :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector}]
-         [components/StatisticState {:value                    offline,
-                                     :icons                    ["fal fa-power-off"],
-                                     :label                    utils/status-offline,
-                                     :clickable?               clickable?,
-                                     :stacked?                 true,
-                                     :positive-color           "red",
-                                     :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                     :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector}]
-         [components/StatisticState {:value                    unknown,
-                                     :icons                    ["fal fa-power-off"],
-                                     :label                    utils/status-unknown,
-                                     :clickable?               clickable?,
-                                     :stacked?                 true,
-                                     :positive-color           "orange",
-                                     :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                     :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector}]
+         (for [statistic-opts [{:value          total
+                                :icons          ["fal fa-box"]
+                                :label          "TOTAL"
+                                :positive-color nil}
+                               {:value          online
+                                :icons          ["fal fa-power-off"]
+                                :label          utils/status-online
+                                :positive-color "green"}
+                               {:value          offline
+                                :icons          ["fal fa-power-off"]
+                                :label          utils/status-offline
+                                :positive-color "red"}
+                               {:value          unknown
+                                :icons          ["fal fa-power-off"]
+                                :label          utils/status-unknown
+                                :positive-color "orange"}]]
+           ^{:key (str "stat-state-" (:label statistic-opts))}
+           [components/StatisticState
+            (assoc statistic-opts
+              :stacked? true
+              :clickable? clickable?
+              :set-state-selector-event ::events/set-state-selector
+              :state-selector-subs ::subs/state-selector)])
          (when clickable?
            [ui/Button
             {:icon     true
@@ -102,19 +92,14 @@
 
 (defn StatisticStates
   []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        summary (subscribe [::subs/nuvlaboxes-summary])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        summary  (subscribe [::subs/nuvlaboxes-summary])
+        selected (subscribe [::subs/state-selector])]
+    (when ((set utils/states) @selected)
+      (reset! show-state-statistics true))
     (fn []
-      (let [terms           (general-utils/aggregate-to-map
-                              (get-in @summary [:aggregations :terms:state :buckets]))
-            new             (:NEW terms 0)
-            activated       (:ACTIVATED terms 0)
-            commissioned    (:COMMISSIONED terms 0)
-            decommissioning (:DECOMMISSIONING terms 0)
-            decommissioned  (:DECOMMISSIONED terms 0)
-            suspended       (:SUSPENDED terms 0)
-            error           (:ERROR terms 0)]
-
+      (let [terms (general-utils/aggregate-to-map
+                    (get-in @summary [:aggregations :terms:state :buckets]))]
         [:div {:style {:display         :flex
                        :justify-content :center
                        :flex-direction  :column
@@ -131,55 +116,16 @@
                     :display    "flex"
                     :text-align "center"
                     :width      "100%"}}
-           [components/StatisticState {:value                    new,
-                                       :icons                    [(utils/state->icon utils/state-new)],
-                                       :label                    utils/state-new,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    activated,
-                                       :icons                    [(utils/state->icon utils/state-activated)],
-                                       :label                    utils/state-activated,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    commissioned,
-                                       :icons                    [(utils/state->icon utils/state-commissioned)],
-                                       :label                    utils/state-commissioned,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    decommissioning,
-                                       :icons                    [(utils/state->icon utils/state-decommissioning)],
-                                       :label                    utils/state-decommissioning,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    decommissioned,
-                                       :icons                    [(utils/state->icon utils/state-decommissioned)],
-                                       :label                    utils/state-decommissioned,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    suspended,
-                                       :icons                    [(utils/state->icon utils/state-suspended)],
-                                       :label                    utils/state-suspended,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]
-           [components/StatisticState {:value                    error,
-                                       :icons                    [(utils/state->icon utils/state-error)],
-                                       :label                    utils/state-error,
-                                       :clickable?               true,
-                                       :set-state-selector-event :sixsq.nuvla.ui.edges.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.edges.subs/state-selector
-                                       :stacked?                 true}]]]]))))
+           (for [state utils/states]
+             ^{:key state}
+             [components/StatisticState
+              {:value                    ((keyword state) terms 0)
+               :icons                    [(utils/state->icon state)]
+               :label                    state
+               :clickable?               true
+               :set-state-selector-event ::events/set-state-selector
+               :state-selector-subs      ::subs/state-selector
+               :stacked?                 true}])]]]))))
 
 (def view->icon-classes
   {spec/cards-view   "grid layout"
@@ -804,7 +750,10 @@
      [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell @creator]
      [ui/TableCell (str refresh-interval "s")]
-     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval locale))]
+     [ui/TableCell (when next-heartbeat-moment
+                     [uix/TimeAgo (utils/last-time-online
+                                    next-heartbeat-moment
+                                    refresh-interval)])]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
@@ -921,7 +870,7 @@
          {:db-path            [::spec/edges-search]
           :change-event       [::pagination-plugin/change-page
                                [::spec/pagination] 1]
-          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
+          :placeholder-suffix  (str " " @(subscribe [::subs/state-selector]))
           :style              {:width "100%"}}]
         ^{:key (random-uuid)}
         [:div {:style {:margin-top "10px"}}
@@ -952,9 +901,9 @@
             [views-clusters/StatisticStates]
             [StatisticStates])]]
         (condp = @view-type
-          spec/cards-view   [NuvlaboxCards]
-          spec/table-view   [NuvlaboxTable]
-          spec/map-view     [NuvlaboxMap]
+          spec/cards-view [NuvlaboxCards]
+          spec/table-view [NuvlaboxTable]
+          spec/map-view [NuvlaboxMap]
           spec/cluster-view [views-clusters/NuvlaboxClusters]
           [NuvlaboxTable])
         [Pagination @view-type]]])))

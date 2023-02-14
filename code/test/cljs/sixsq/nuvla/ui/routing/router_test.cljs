@@ -29,12 +29,13 @@
           nil [routes/edges-details]
           nil [routes/edges-details {:no-match "here"}]))
       (testing "that are catch-all routes where multi segment
-                paths as :sub-path values get mangled by URI encoding the '/'"
-        (is (= "/ui/apps/this-works%2Fperhaps%2Funexpected?query-param=hello%2Fworld"
+                paths as :sub-path values get URI encoded by reitit:
+                Our name->href decodes it again"
+        (is (not= "/ui/apps/this-works%2Fperhaps%2Funexpected?query-param=hello%2Fworld"
                (name->href routes/apps-details
                            {:sub-path "this-works/perhaps/unexpected"}
                            {:query-param "hello/world"})))
-        (is (not=
+        (is (=
               "/ui/apps/this-works/perhaps/unexpected?query-param=hello/world"
               (name->href routes/apps-details
                           {:sub-path "this-works/perhaps/unexpected"}

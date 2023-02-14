@@ -173,6 +173,10 @@
 
 (s/def ::module-not-found? boolean?)
 
+(s/def ::tab any?)
+
+(def default-tab :overview)
+
 (def defaults
   {::active-input              nil
    ::form-spec                 nil
@@ -195,6 +199,5 @@
    ::version                   nil
    ::copy-module               nil
    ::paste-modal-visible?      false
-   ::active-tab                :overview
    ::module-not-found?         false
    ::details-validation-errors #{}})

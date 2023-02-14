@@ -338,7 +338,7 @@
                        :size :massive}]]]
 
            [ui/Card
-            {:href     (pathify [base-path "New Application?subtype=application"])
+            {:href     (when parent (pathify [base-path "New Application?subtype=application"]))
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
@@ -354,7 +354,7 @@
                               :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
-            {:href     (pathify [base-path "New Application?subtype=application_kubernetes"])
+            {:href     (when parent (pathify [base-path "New Application?subtype=application_kubernetes"]))
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
@@ -495,12 +495,13 @@
             [:h4 "Markdown" [general-utils/mandatory-icon]]
             [ui/Segment
              [uix/EditorMarkdown
-              default-value
-              (fn [_editor _data value]
-                (dispatch [::events/description value])
-                (dispatch [::main-events/changes-protection? true])
-                (dispatch [::events/validate-form]))
-              @editable?]
+              {:value      default-value
+               :on-change  (fn [_editor _data value]
+                             (dispatch [::events/description value])
+                             (dispatch [::main-events/changes-protection? true])
+                             (dispatch [::events/validate-form]))
+               :class      "full-height"
+               :read-only? (not @editable?)}]
              (when validate?
                (when validation-event
                  (dispatch [validation-event "description" (not valid?)]))
@@ -544,7 +545,7 @@
                        parent   ""
                        logo-url @default-logo-url
                        subtype  "project"}} @module-common]
-        [:<>
+        [:div {:class :uix-apps-details-details}
          [:h2 [DetailsTitle]]
          [ui/Grid {:stackable true, :reversed :mobile}
           [ui/GridRow
@@ -1233,7 +1234,7 @@
     {:menuItem {:content (r/as-element [ShareTitle])
                 :key     :share}
      :pane     {:content (r/as-element
-                           [:<>
+                           [:div {:class :uix-apps-details-share}
                             [:h2 [ShareTitle]]
                             ^{:key (:updated @e)}
                             [acl-views/AclWidget {:default-value default-value

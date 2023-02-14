@@ -24,12 +24,17 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.tab :as tab]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]))
 
 (def docker-docu-link "https://docs.docker.com/compose/compose-file/compose-file-v3/#not-supported-for-docker-stack-deploy")
+
+(defn sub-apps-tab
+  []
+  (subscribe [::apps-subs/active-tab]))
+
 
 (defn SingleFile
   #_{:clj-kondo/ignore [:unused-binding]}
@@ -402,7 +407,7 @@
   1. The CodeMirror component used must be reloaded to render correctly
   2. The component must be loaded even if not visible to run the validation"
   []
-  (let [active-tab     (subscribe [::apps-subs/active-tab])
+  (let [active-tab     (sub-apps-tab)
         module-subtype (subscribe [::apps-subs/module-subtype])]
     @active-tab
     [:div {:class :uix-apps-details-docker}
@@ -433,13 +438,6 @@
                      :align          :middle}]])))
 
 
-(defn TabMenuDetails
-  []
-  (let [error? (subscribe [::subs/details-validation-error?])]
-    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
-     [apps-views-detail/DeploymentsTitle]]))
-
-
 (defn subtype->pretty
   [subtype]
   (case subtype
@@ -451,7 +449,7 @@
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
         module-subtype (subscribe [::apps-subs/module-subtype])
-        active-tab     (subscribe [::apps-subs/active-tab])
+        active-tab     (sub-apps-tab)
         editable?      (subscribe [::apps-subs/editable?])]
     @active-tab
     ^{:key (random-uuid)}
@@ -550,13 +548,13 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        active-tab    (subscribe [::apps-subs/active-tab])
+        active-tab    (sub-apps-tab)
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
-                         (dispatch [::apps-events/set-active-tab :overview]))
+    (dispatch [::apps-events/init-view {:tab-key (when (true? @is-new?) :details)}])
     (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []
+      (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
@@ -564,17 +562,13 @@
                        :class :uix-apps-details}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
-         [ui/Tab
-          {:menu             {:secondary true
+         [nav-tab/Tab
+          {:db-path          [::apps-spec/tab]
+           :menu             {:secondary true
                               :pointing  true
                               :style     {:display        "flex"
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}
                               :class     :uix-tab-nav}
            :panes            panes
-           :activeIndex      (tab/key->index panes @active-tab)
-           :renderActiveOnly false
-           :onTabChange      (tab/on-tab-change
-                               panes
-                               #(dispatch [::apps-events/set-active-tab %]))}]
-         ]))))
+           :renderActiveOnly false}]]))))

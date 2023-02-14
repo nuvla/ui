@@ -10,7 +10,9 @@
   ([k params]
    (name->href k params nil))
   ([k params query]
-   (rfe/href k params query)))
+   (some->
+     (rfe/href k params query)
+     js/decodeURIComponent)))
 
 (defn get-route-name
   [route]

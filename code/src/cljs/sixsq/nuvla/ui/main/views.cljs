@@ -21,7 +21,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [clojure.string :as str]))
 
 
 (defn crumb
@@ -116,6 +117,9 @@
   []
   (let [tr                (subscribe [::i18n-subs/tr])
         navigation-info   (subscribe [::subs/ignore-changes-modal])
+        on-apps-page?     (-> @(subscribe [::route-subs/current-route])
+                              :template
+                              (str/includes? "apps"))
         ignore-changes-fn #(dispatch [::events/ignore-changes false])]
     (when @navigation-info
       (dispatch [::events/disable-browser-back]))
@@ -134,7 +138,7 @@
                    :active   true
                    :on-click #(do (dispatch [::events/ignore-changes true])
                                   (dispatch [::apps-events/form-valid])
-                                  (dispatch [::apps-events/set-active-tab :overview]))}]]]))
+                                  (when on-apps-page? (dispatch [::apps-events/set-active-tab :overview])))}]]]))
 
 (defn subscription-required-modal
   []

@@ -8,10 +8,13 @@
 (def state-new "NEW")
 (def state-activated "ACTIVATED")
 (def state-commissioned "COMMISSIONED")
-(def state-suspended "SUSPENDED")
 (def state-decommissioning "DECOMMISSIONING")
 (def state-decommissioned "DECOMMISSIONED")
+(def state-suspended "SUSPENDED")
 (def state-error "ERROR")
+
+(def states [state-new state-activated state-commissioned state-decommissioning
+             state-decommissioned state-suspended state-error])
 
 (def status-online "ONLINE")
 (def status-offline "OFFLINE")
@@ -224,14 +227,12 @@
        (some str/blank?)
        boolean))
 
-(defn last-time-online [next-heartbeat-moment refresh-interval locale]
-  (time/ago
-    (->> refresh-interval
-         (* 2)
-         (+ 10)
-         (* 1000)
-         (time/subtract-milliseconds next-heartbeat-moment)
-         ) locale))
+(defn last-time-online [next-heartbeat-moment refresh-interval]
+  (->> refresh-interval
+       (* 2)
+       (+ 10)
+       (* 1000)
+       (time/subtract-milliseconds next-heartbeat-moment)))
 
 (defn edges-details-url
   [id]

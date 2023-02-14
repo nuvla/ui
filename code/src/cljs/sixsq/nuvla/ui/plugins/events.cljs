@@ -51,7 +51,7 @@
              [{:field-key :events
                :accessor  :id
                :cell      (fn [{id :cell-data}]
-                            [values/as-link id
+                            [values/AsLink id
                              :label (general-utils/id->short-uuid id)])}
               {:field-key :timestamp}
               {:field-key :delta-min

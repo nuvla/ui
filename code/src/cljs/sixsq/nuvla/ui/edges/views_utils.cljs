@@ -53,8 +53,7 @@
 
 (defn NuvlaboxCard
   [_nuvlabox _managers]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        locale (subscribe [::i18n-subs/locale])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
       (let [href                  (name->href routes/edges-details {:uuid (general-utils/id->uuid id)})
             next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
@@ -79,7 +78,9 @@
                                      @creator)])
                         (when next-heartbeat-moment
                           [:div (str (@tr [:last-online]) " "
-                                     (utils/last-time-online next-heartbeat-moment refresh-interval @locale))])]
+                                     [uix/TimeAgo (utils/last-time-online
+                                                    next-heartbeat-moment
+                                                    refresh-interval)])])]
           :state       state
           :description (when-not (str/blank? description) description)
           :tags        tags}]))))

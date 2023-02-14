@@ -131,38 +131,37 @@
 
 (reg-event-fx
   ::changes-protection?
-  (fn [{db :db} [_ choice]]
-(js/console.error "changes-protection? event" choice)
-    {:db                       (assoc db ::spec/changes-protection? choice)
-     :fx [[::fx/on-unload-protection choice]]}))
+  (fn [{db :db} [_ protect?]]
+    (let [protected? (get db ::spec/changes-protection?)
+          changed?   (not= protect? protected?)]
+      (when changed?
+        {:db (assoc db ::spec/changes-protection? protect?)
+         :fx [[::fx/on-unload-protection protect?]
+              [:dispatch [(if protect? ::disable-browser-back ::enable-browser-back)]]]}))))
 
 (reg-event-fx
   ::ignore-changes
   (fn [{{:keys [::spec/ignore-changes-modal
                 ::spec/do-not-ignore-changes-modal] :as db} :db} [_ choice]]
     (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil
-                                   ::spec/do-not-ignore-changes-modal nil)
-          enable-back    [:dispatch [::enable-browser-back]]]
+                                   ::spec/do-not-ignore-changes-modal nil)]
       (if choice
-        (let [new-db (assoc close-modal-db
-                       ::spec/changes-protection? false)]
+        (let [fx [[:dispatch [::changes-protection? false]]]]
           (cond
             (map? ignore-changes-modal)
-            (merge {:db close-modal-db :fx [[:dispatch [::changes-protection? false]]]}
-              #_ignore-changes-modal
-              )
+            {:db close-modal-db :fx (concat fx (:fx ignore-changes-modal))}
 
             (fn? ignore-changes-modal)
             (do (ignore-changes-modal)
-                {:db new-db :fx [enable-back]})))
+              {:db close-modal-db})))
 
-        (merge {:db close-modal-db :fx [enable-back]}
-          do-not-ignore-changes-modal)))))
+        (merge {:db close-modal-db}
+               do-not-ignore-changes-modal)))))
 
 (reg-event-fx
   ::disable-browser-back
   (fn [_ _]
-    {::fx/disable-browser-back #(dispatch [::close-ignore-modal]) }))
+    {:fx [::fx/disable-browser-back]}))
 
 (reg-event-fx
   ::enable-browser-back
@@ -176,8 +175,7 @@
   (fn [{db :db} _]
     (js/console.error "close-ignore-modal")
     {:db (assoc db ::spec/ignore-changes-modal nil
-           ::spec/do-not-ignore-changes-modal nil)
-     ::fx/enable-browser-back nil}))
+           ::spec/do-not-ignore-changes-modal nil)}))
 
 (reg-event-db
   ::ignore-changes-modal

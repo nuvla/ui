@@ -177,13 +177,12 @@
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml
-           default-value
-           (fn [_editor _data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form]))
-           @editable?]
+          [uix/EditorYaml {:value      default-value
+                           :on-change  (fn [_editor _data value]
+                                         (dispatch [::events/update-docker-compose value])
+                                         (dispatch [::main-events/changes-protection? true])
+                                         (dispatch [::apps-events/validate-form]))
+                           :read-only? (not @editable?)}]
           (when validate?
             (dispatch [::events/set-docker-validation-error
                        apps-views-detail/application-kubernetes-subtype (not valid?)])
@@ -215,13 +214,12 @@
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml
-           default-value
-           (fn [_editor _data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form]))
-           @editable?]
+          [uix/EditorYaml {:value default-value
+                           :on-change (fn [_editor _data value]
+                                        (dispatch [::events/update-docker-compose value])
+                                        (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::apps-events/validate-form]))
+                           :read-only? (not @editable?)}]
           (when validate?
             (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
             (when (not valid?)
@@ -287,7 +285,7 @@
        (when parent-path
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:project]))]
-          [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+          [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
         [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
@@ -297,7 +295,7 @@
        (when id
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:id]))]
-          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]])
+          [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
@@ -315,7 +313,7 @@
   []
   (let [tr      (subscribe [::i18n-subs/tr])
         is-new? (subscribe [::apps-subs/is-new?])]
-    [:<>
+    [:div {:class :uix-apps-details-deployments}
      [:h2 [apps-views-detail/DeploymentsTitle]]
      (if @is-new?
        [uix/WarningMsgNoElements]
@@ -347,7 +345,7 @@
 
 (defn ConfigurationPane
   []
-  [:<>
+  [:div {:class :uix-apps-details-configuration}
    [:h2 [apps-views-detail/ConfigurationTitle]]
    [apps-views-detail/EnvVariablesSection]
    [FilesSection]
@@ -381,7 +379,7 @@
         price     (subscribe [::apps-subs/price])
         vendor    (subscribe [::profile-subs/vendor])]
     (fn []
-      [:<>
+      [:div {:class :uix-apps-details-pricing}
        [:h2 [apps-views-detail/PricingTitle]]
        (if (or (and @editable? @vendor) (some? @price))
          [apps-views-detail/Pricing]
@@ -407,7 +405,7 @@
   (let [active-tab     (subscribe [::apps-subs/active-tab])
         module-subtype (subscribe [::apps-subs/module-subtype])]
     @active-tab
-    [:<>
+    [:div {:class :uix-apps-details-docker}
      [:h2 [apps-views-detail/DockerTitle]]
      [apps-views-detail/registries-section]
      ^{:key (random-uuid)}
@@ -488,7 +486,8 @@
     [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
               :stackable true
               :padded    true
-              :centered  true}
+              :centered  true
+              :class :uix-apps-details-overview}
      [ui/GridRow {:centered true}
       (when (not @is-new?)
         [ui/GridColumn
@@ -561,7 +560,8 @@
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
-        [ui/Container {:fluid true}
+        [ui/Container {:fluid true
+                       :class :uix-apps-details}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [ui/Tab
@@ -569,7 +569,8 @@
                               :pointing  true
                               :style     {:display        "flex"
                                           :flex-direction "row"
-                                          :flex-wrap      "wrap"}}
+                                          :flex-wrap      "wrap"}
+                              :class     :uix-tab-nav}
            :panes            panes
            :activeIndex      (tab/key->index panes @active-tab)
            :renderActiveOnly false

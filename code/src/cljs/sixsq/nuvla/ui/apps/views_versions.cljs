@@ -129,7 +129,7 @@
         versions        (subscribe [::subs/versions])
         current-version (subscribe [::subs/module-content-id])]
     (fn []
-      [:<>
+      [:div {:class :uix-apps-details-versions}
        [:h2 [VersionsTitle]]
        (if (seq @versions)
          [:<>

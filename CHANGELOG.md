@@ -21,6 +21,7 @@
 - API page - Make list of plain ids navigable #1143
 - Pagination - Styling
 - Apps AddModal - Disables docker and k8s apps buttons when not inside a project, regression fix #1150
+- Full text search - Stores full text search in query param, #1128
 - Edges overview - Stores and loads state filter from query param, #1127
 - Deployments overview - Stores and loads state filter from query param, #1127
 - Nav tab - Bugfix when panes content change, nav-tab should re-render bugfix #1158

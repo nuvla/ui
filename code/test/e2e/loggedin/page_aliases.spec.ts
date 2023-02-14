@@ -29,7 +29,6 @@ test('test', async ({ page, context }, { project, config }) => {
   await page.getByRole('heading').getByText('Edges').isVisible();
 
   const edgeName = /e2e-Test-Do_not_delete/;
-  await page.pause();
   await page.getByPlaceholder('Search ...').click();
   await page.getByPlaceholder('Search ...').fill('15339469');
   await page.getByRole('link', { name: edgeName }).click();

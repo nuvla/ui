@@ -13,7 +13,6 @@ test('Language modal not behind main content', async ({ page, context }, { proje
   await page.waitForURL(url);
 
   for (let i of [0, 1, 2, 3, 4, 5, 6, 7]) {
-    await page.pause();
     console.log('testing app no', i);
     await page
       .getByRole('button', { name: /(free trial)|(deploy)/ })

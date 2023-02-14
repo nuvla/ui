@@ -22,7 +22,6 @@ test('Marketplace shows only published apps', async ({ page }, { project, config
   await page.route('/api/module', async (route) => {
     return route.continue();
   });
-  await page.pause();
 
   await elements[0].click();
   const appdetails = await page.locator('.nuvla-apps');
@@ -34,7 +33,7 @@ test('Marketplace shows only published apps', async ({ page }, { project, config
   await page.waitForURL(/apps-tab=deployments$/);
   expect(page.locator('.nuvla-apps').getByRole('link', { name: 'Deployments' })).toHaveClass(/active/);
   await page.locator('#nuvla-ui-header-breadcrumb').getByText('Apps').click();
-  await page.waitForURL('https://nui.localhost/ui/apps');
+  await page.waitForURL(`${baseURL}/ui/apps`);
   await page.getByRole('link', { name: 'Navigate Apps' }).click();
   await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
 });

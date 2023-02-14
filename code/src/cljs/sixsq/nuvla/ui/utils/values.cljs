@@ -18,39 +18,32 @@
   [value]
   (and (string? value) (re-find #"^[a-z-]+/[a-zA-Z0-9-]+$" value)))
 
-
-(defn as-href
-  "Renders a link to the API detail page associated with the href. Ignores
-   other values of the map (if any)."
-  [{:keys [href]}]
-  [uix/Link (str "api/" href) (str href)])
-
-
-(defn as-link
-  "Renders a link to the API detail page associated with the href."
-  [href & {:keys [label page]}]
-  [uix/Link (str (or page "api") "/" href) (or label href)])
-
-
 (defn href-coll?
   [value]
   (and (coll? value)
        (every? href? value)))
 
-
-(defn as-href-coll
+(defn id-coll?
   [value]
-  (vec (concat [:span] (interpose " " (map as-href value)))))
+  (and (coll? value)
+       (every? id? value)))
 
-(defn format-value
-  "This will format a value for presentation in the UI. Note that this assumes
-   that vectors are already a visual element and will return the vector
-   unmodified. If you need to transform the vector into a list, use the
-   format-collection function."
+(defn AsHref
+  "Renders a link to the API detail page associated with the href. Ignores
+   other values of the map (if any)."
+  [{:keys [href]}]
+  [uix/Link (str "api/" href) (str href)])
+
+(defn AsLink
+  "Renders a link to the API detail page associated with the href."
+  [href & {:keys [label page]}]
+  [uix/Link (str (or page "api") "/" href) (or label href)])
+
+(defn FormatValue
   [value]
   (cond
-    (href? value) (as-href value)
-    (id? value) (as-link value)
+    (href? value) [AsHref value]
+    (id? value) [AsLink value]
     (vector? value) value
     (map? value) (with-out-str (pprint value))
     :else (str value)))
@@ -62,21 +55,23 @@
     (with-out-str (pprint v))
     (str v)))
 
+(defn ListValues
+  [values FormatValue]
+  [ui/ListSA
+   (for [value values]
+     ^{:key (random-uuid)}
+     [ui/ListItem [FormatValue value]])])
 
-(defn format-item
-  [v]
-  (let [s (stringify-value v)]
-    ^{:key s} [ui/ListItem s]))
 
-
-(defn format-collection
+(defn FormatCollection
   "Transforms a collection into a Semantic UI list. The elements of the
    collection are turned into strings. If the argument is not a collection,
    then the value is returned unchanged."
   [v]
   (cond
-    (href-coll? v) (as-href-coll v)
-    (coll? v) (vec (concat [ui/ListSA] (map format-item v)))
+    (href-coll? v) [ListValues v AsHref]
+    (id-coll? v) [ListValues v AsLink]
+    (coll? v) [ListValues v stringify-value]
     :else v))
 
 

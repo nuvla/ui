@@ -348,7 +348,7 @@
                                       :stacked?                 true
                                       :clickable?               clickable?,
                                       :positive-color           "green",
-                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :set-state-selector-event ::events/set-state-selector,
                                       :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
           [components/StatisticState {:value                    starting-plus,
                                       :icons                    [(utils/state->icon utils/STARTING)],
@@ -356,7 +356,7 @@
                                       :stacked?                 true
                                       :clickable?               clickable?,
                                       :positive-color           "orange",
-                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :set-state-selector-event ::events/set-state-selector,
                                       :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
           [components/StatisticState {:value                    stopped,
                                       :icons                    [(utils/state->icon utils/STOPPED)],
@@ -364,7 +364,7 @@
                                       :stacked?                 true
                                       :clickable?               clickable?,
                                       :positive-color           "orange",
-                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :set-state-selector-event ::events/set-state-selector,
                                       :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
           [components/StatisticState {:value                    error,
                                       :icons                    [(utils/state->icon utils/ERROR)],
@@ -372,7 +372,7 @@
                                       :stacked?                 true
                                       :clickable?               clickable?,
                                       :positive-color           "red",
-                                      :set-state-selector-event :sixsq.nuvla.ui.deployments.events/set-state-selector,
+                                      :set-state-selector-event ::events/set-state-selector,
                                       :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]]]))))
 
 (defn DeploymentsOverviewSegment

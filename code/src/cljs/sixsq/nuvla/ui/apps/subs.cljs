@@ -1,10 +1,11 @@
 (ns sixsq.nuvla.ui.apps.subs
   (:require [clojure.set :as set]
-            [re-frame.core :refer [reg-sub]]
+            [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.apps.utils :as utils]
             [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
@@ -373,8 +374,10 @@
 
 (reg-sub
   ::active-tab
-  (fn [db]
-    (::spec/active-tab db)))
+  (fn [[_ db-path]]
+    (subscribe [::nav-tab/active-tab (or db-path [::spec/tab])]))
+  (fn [active-tab]
+    active-tab))
 
 
 (reg-sub

@@ -394,12 +394,12 @@
          [ui/TableCell content-type]
          [ui/TableCell [uix/Tags tags]]
          [ui/TableCell
-          [values/as-link is-uuid :page "clouds"
+          [values/AsLink is-uuid :page "clouds"
            :label (utils-general/id->short-uuid infrastructure-service)]]
          [ui/TableCell (when resource:deployment
-                         (values/as-link resource:deployment
-                                         :label deployment-uuid))]
-         [ui/TableCell (values/as-link id :label uuid)]]))))
+                         (values/AsLink resource:deployment
+                                        :label deployment-uuid))]
+         [ui/TableCell (values/AsLink id :label uuid)]]))))
 
 (defn NoDataRecordsMessage
   []
@@ -465,12 +465,12 @@
                     (when resource-deployment-id
                       [:div {:style {:padding "10px 0 0 0"}}
                        [ui/Icon {:name "rocket"}]
-                       (values/as-link resource-deployment-id :page "deployment"
-                                       :label (@tr [:deployment]))])
+                       (values/AsLink resource-deployment-id :page "deployment"
+                                      :label (@tr [:deployment]))])
                     (when infrastructure-service-id
                       [:div {:style {:padding "10px 0 0 0"}}
                        [ui/Icon {:name "cloud"}]
-                       [values/as-link infrastructure-service-id
+                       [values/AsLink infrastructure-service-id
                         :page "clouds" :label (@tr [:storage-service])]])]
       :tags        tags
       :on-select   #(dispatch [::events/toggle-data-record-id id])
@@ -596,7 +596,7 @@
            [ui/TableRow
             [ui/TableCell "Id"]
             [ui/TableCell (when (some? id)
-                            [values/as-link id
+                            [values/AsLink id
                              :label (utils-general/id->uuid id)])]]]]]]]]]))
 
 (defn DataRecordCards

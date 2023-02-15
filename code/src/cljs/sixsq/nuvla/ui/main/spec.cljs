@@ -20,8 +20,8 @@
 (s/def ::nav-query-params any?)
 
 (s/def ::changes-protection? boolean?)
-
 (s/def ::ignore-changes-modal (s/nilable any?))
+(s/def ::after-clear-event (s/nilable any?))
 
 (s/def ::do-not-ignore-changes-modal (s/nilable any?))
 

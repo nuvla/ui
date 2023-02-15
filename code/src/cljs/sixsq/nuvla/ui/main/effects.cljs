@@ -75,6 +75,7 @@
 
 (reg-fx
   ::enable-browser-back
-  (fn [_]
-    (js/console.error "enable-browser-back effect")
-    (start-browser-back)))
+  (fn [fn]
+    (js/console.error "enable-browser-back effect" fn)
+    (start-browser-back)
+    (when (fn? fn) (fn))))

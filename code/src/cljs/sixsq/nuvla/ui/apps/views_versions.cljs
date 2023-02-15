@@ -107,21 +107,22 @@
      [ui/TableHeaderCell {:width "1"} "Author"]
      [ui/TableHeaderCell {:width "13"} "Commit message"]]]
    [ui/TableBody
-    (for [[i v] @versions-sub]
-      (let [{:keys [href commit author published]} v
-            is-current? (= @current-version-sub href)]
-        ^{:key (str "version" i)}
-        [ui/TableRow (when is-current? {:active true})
-         [ui/TableCell
-          (if on-click
-            [:a {:style    {:cursor "pointer"}
-                 :on-click #(on-click i)}
-             (str "v" i)]
-            (str "v" i))
-          (when is-current? " <<")]
-         [ui/TableCell (when (true? published) [ui/Icon {:name "check" :color "teal"}])]
-         [ui/TableCell author]
-         [ui/TableCell commit]]))]])
+    (doall
+      (for [[i v] @versions-sub]
+        (let [{:keys [href commit author published]} v
+              is-current? (= @current-version-sub href)]
+          ^{:key (str "version" i)}
+          [ui/TableRow (when is-current? {:active true})
+           [ui/TableCell
+            (if on-click
+              [:a {:style    {:cursor "pointer"}
+                   :on-click #(on-click i)}
+               (str "v" i)]
+              (str "v" i))
+            (when is-current? " <<")]
+           [ui/TableCell (when (true? published) [ui/Icon {:name "check" :color "teal"}])]
+           [ui/TableCell author]
+           [ui/TableCell commit]])))]])
 
 
 (defn Versions []

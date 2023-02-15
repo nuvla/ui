@@ -10,16 +10,19 @@
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]))
+            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.routing.events :as route-events]
+            [sixsq.nuvla.ui.routing.utils :refer [get-stored-db-value-from-query-param]]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
 
 (reg-event-fx
   ::init
-  (fn [{db :db} [_]]
-    {:db (merge db spec/defaults)
-     :fx [[:dispatch [::refresh]]]}))
+  (fn [{{:keys [current-route] :as db} :db} _]
+    (let [search-query (get-stored-db-value-from-query-param current-route [::spec/state-selector])]
+      {:db (merge db spec/defaults {::spec/state-selector search-query})
+       :fx [[:dispatch [::refresh]]]})))
 
 (reg-event-fx
   ::refresh
@@ -131,10 +134,13 @@
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db (assoc db ::spec/state-selector state-selector
-                   ::spec/selected-set #{})
-     :fx [[:dispatch
-           [::pagination-plugin/change-page [::spec/pagination] 1]]]}))
+    (let [db-path ::spec/state-selector]
+      {:db (assoc db db-path state-selector
+             ::spec/selected-set #{})
+       :fx [[:dispatch [::route-events/store-in-query-param {:db-path [db-path]
+                                                             :value state-selector}]]
+            [:dispatch
+             [::pagination-plugin/change-page [::spec/pagination] 1]]]})))
 
 (reg-event-fx
   ::open-modal-bulk-update

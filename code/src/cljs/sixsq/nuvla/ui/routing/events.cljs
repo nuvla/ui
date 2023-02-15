@@ -4,8 +4,7 @@
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.effects :as fx]
-            [sixsq.nuvla.ui.routing.utils :as utils :refer [name->href
-                                                            new-route-data]]
+            [sixsq.nuvla.ui.routing.utils :as utils]
             [taoensso.timbre :as log]))
 
 (reg-event-fx
@@ -68,7 +67,7 @@
   (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params {change-event :change-event}]]
     (let [nav-effect {:fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
                                                               (utils/add-base-path navigate-to)
-                                                              (name->href navigate-to path-params query-params))]]
+                                                              (utils/name->href navigate-to path-params query-params))]]
                            (when change-event [:dispatch change-event])]}]
       (if changes-protection?
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect)}
@@ -81,5 +80,24 @@
   (fn [{{:keys [current-route]} :db} [_ {:keys [change-event] :as new-partial-route-data}]]
     (let [{:keys [route-name
                   path-params
-                  query-params]} (new-route-data current-route new-partial-route-data)]
+                  query-params]} (utils/new-route-data current-route new-partial-route-data)]
       {:fx [[:dispatch [::navigate route-name path-params query-params {:change-event change-event}]]]})))
+
+(reg-event-fx
+  ::change-query-param
+  (fn [{{:keys [current-route]} :db} [_ new-partial-route-data]]
+    (let [{:keys [route-name
+                  path-params
+                  query-params]} (utils/new-route-data current-route new-partial-route-data)]
+      {::fx/replace-state (utils/name->href route-name path-params query-params)})))
+
+(reg-event-fx
+  ::store-in-query-param
+  (fn [{{:keys [current-route]} :db} [_ {:keys [db-path value]}]]
+    (let [query-key              (utils/db-path->query-param-key db-path)
+          new-partial-route-data (if (seq value)
+                                   {:partial-query-params
+                                    {query-key value}}
+                                   {:query-params (dissoc (:query-params current-route) query-key)})]
+      {:fx [[:dispatch
+             [::change-query-param new-partial-route-data]]]})))

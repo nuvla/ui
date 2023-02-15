@@ -55,7 +55,7 @@
   (fn [{db :db} [_ db-path page]]
     (let [change-event (get-in db (conj db-path ::change-event))]
       {:db (assoc-in db (conj db-path ::active-page) page)
-       :fx [[:dispatch change-event]]})))
+       :fx [(when change-event [:dispatch change-event])]})))
 
 (defn first-last-params
   [db db-path params]
@@ -94,8 +94,10 @@
                    :justify-content :space-between
                    :align-items     :baseline
                    :flex-wrap       :wrap-reverse
-                   :margin-top      10}}
-     [:div {:style {:display :flex}}
+                   :margin-top      10}
+           :class :uix-pagination}
+     [:div {:style {:display :flex}
+            :class :uix-pagination-control}
       [:div {:style {:display :flex}}
        [:div {:style {:margin-right "0.5rem"}}
         (str (str/capitalize (tr [:total])) ":")]
@@ -111,6 +113,7 @@
                                     (change-page active-page)))}]]
      [ui/Pagination
       {:size          :tiny
+       :class         :uix-pagination-navigation
        :total-pages   total-pages
        :first-item    (icon "angle double left")
        :last-item     (icon "angle double right")

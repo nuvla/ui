@@ -151,7 +151,7 @@
                              parent "key"
                              :else nil)}]
        (if link
-         [values/as-link (general-utils/id->uuid href)
+         [values/AsLink (general-utils/id->uuid href)
           :label label
           :page (cond nuvlabox "edges"
                       infrastructure-service "clouds"

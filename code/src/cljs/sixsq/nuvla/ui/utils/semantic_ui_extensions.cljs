@@ -146,49 +146,57 @@
                                 :name  "clone"}]])}
          [TR :click-to-copy]])]]]])
 
+(defn EditorCode
+  [{:keys [read-only? options default-options]
+    :or   {default-options {}
+           read-only?      false}
+    :as   props}]
+  [ui/CodeMirror
+   (-> props
+       (dissoc :default-options :read-only?)
+       (assoc :options (-> default-options
+                           (merge options)
+                           (assoc :read-only read-only?))))])
+
+(defn EditorJson
+  [props]
+  (let [opts {:mode                "application/json"
+              :line-numbers        true
+              :match-brackets      true
+              :auto-close-brackets true
+              :style-active-line   true
+              :fold-gutter         true
+              :gutters             ["CodeMirror-foldgutter"]}]
+    [EditorCode (assoc props :default-options opts)]))
 
 (defn EditorYaml
-  [_text _on-change-fn _editable?]
-  (fn [text on-change-fn editable?]
-    [ui/CodeMirror {:value      text
-                    :autoCursor true
-                    :options    {:mode              "text/x-yaml"
-                                 :read-only         (not editable?)
-                                 :line-numbers      true
-                                 :style-active-line true}
-                    :on-change  on-change-fn
-                    :class      "full-height"}]))
-
+  [props]
+  (let [opts {:mode              "text/x-yaml"
+              :line-numbers      true
+              :style-active-line true}]
+    [EditorCode
+     (assoc props :default-options opts
+                  :class "full-height")]))
 
 (defn EditorShell
-  [_text _on-change-fn _editable? _class]
-  (fn [text on-change-fn editable? class]
-    [ui/CodeMirror {:value      text
-                    :autoCursor true
-                    :options    {:mode              "text/x-sh"
-                                 :read-only         (not editable?)
-                                 :line-numbers      true
-                                 :style-active-line true}
-                    :on-change  on-change-fn
-                    :class      class}]))
-
+  [props]
+  (let [opts {:mode              "text/x-sh"
+              :line-numbers      true
+              :style-active-line true}]
+    [EditorCode
+     (assoc props :default-options opts)]))
 
 (defn EditorMarkdown
-  "A convenience function to setup the CodeMirror editor component for Markdown."
-  [_text _on-change-fn _editable?]
-  (fn [text on-change-fn editable?]
-    [ui/CodeMirror {:value      text
-                    :autoCursor true
-                    :options    {:mode                "text/x-markdown"
-                                 :read-only           (not editable?)
-                                 :lineWrapping        true
-                                 :match-brackets      true
-                                 :auto-close-brackets true
-                                 :style-active-line   true
-                                 :fold-gutter         true
-                                 :gutters             ["CodeMirror-foldgutter"]}
-                    :class      "full-height"
-                    :on-change  on-change-fn}]))
+  [props]
+  (let [opts {:mode                "text/x-markdown"
+              :lineWrapping        true
+              :match-brackets      true
+              :auto-close-brackets true
+              :style-active-line   true
+              :fold-gutter         true
+              :gutters             ["CodeMirror-foldgutter"]}]
+    [EditorCode
+     (assoc props :default-options opts)]))
 
 
 (defn Accordion

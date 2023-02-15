@@ -19,9 +19,11 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify
+                                                  db-path->query-param-key]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -49,7 +51,7 @@
                          :event     [::deployments-events/get-deployments
                                      {:filter-external-arg   (str "module/id='" (:id module) "'")
                                       :external-filter-only? true
-                                      :pagination-db-path   ::apps-application-spec/deployment-pagination}]}]]]})))
+                                      :pagination-db-path    ::apps-application-spec/deployment-pagination}]}]]]})))
 
 
 
@@ -213,13 +215,30 @@
         {:fx [[:dispatch [::deployments-events/get-deployments
                           {:filter-external-arg   (str "module/id='" module-id "'")
                            :external-filter-only? true
-                           :pagination-db-path   ::apps-application-spec/deployment-pagination}]]]}))))
+                           :pagination-db-path    ::apps-application-spec/deployment-pagination}]]]}))))
 
-(reg-event-db
+(reg-event-fx
+  ::init-view
+  (fn [{{current-route :current-route :as db} :db} [_ {:keys [tab-key db-path]}]]
+    (let [db-path    (or db-path [::spec/tab])
+          query-key  (db-path->query-param-key db-path)
+          query-view (get (:query-params current-route) query-key)]
+      (when-not query-view
+        {:fx [[:dispatch [::routing-events/change-query-param
+                          {:partial-query-params {query-key (or
+                                                              tab-key
+                                                              (nav-tab/get-default-tab db db-path)
+                                                              spec/default-tab)}}]]]}))))
+
+(reg-event-fx
   ::set-active-tab
-  (fn [db [_ active-tab]]
-    (assoc db ::spec/active-tab active-tab)))
+  (fn [_ [_ active-tab]]
+    {:fx [[:dispatch [::nav-tab/change-tab [::spec/tab] active-tab]]]}))
 
+(reg-event-fx
+  ::set-default-tab
+  (fn [_ [_ active-tab]]
+    {:fx [[:dispatch [::nav-tab/set-default-tab [::spec/tab] (keyword active-tab)]]]}))
 
 (reg-event-db
   ::is-new?

@@ -530,7 +530,7 @@
              (map (fn [{:keys [id name] :as _pb}]
                     [ui/ListItem
                      ^{:key id}
-                     [values/as-link id :label (or name id)]])
+                     [values/AsLink id :label (or name id)]])
                   em-enabled)]])]))))
 
 
@@ -1028,7 +1028,7 @@
        [ui/TableRow
         [ui/TableCell "Id"]
         (when id
-          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]])]
+          [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]])]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
         [EditableCell :name]]
@@ -1192,10 +1192,9 @@
   [{:keys [next-heartbeat] :as _nb-status}]
   (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])
         tr                       @(subscribe [::i18n-subs/tr])
-        locale                   @(subscribe [::i18n-subs/locale])
         next-heartbeat-moment    (some-> next-heartbeat time/parse-iso8601)
-        next-heartbeat-times-ago (some-> next-heartbeat-moment
-                                         (time/ago locale))]
+        next-heartbeat-times-ago (when next-heartbeat-moment
+                                   [uix/TimeAgo next-heartbeat-moment])]
     (when next-heartbeat-moment
       [:<>
        (if (time/before-now? next-heartbeat-moment)
@@ -1204,7 +1203,10 @@
          [:p (tr [:nuvlaedge-next-telemetry-expected])
           next-heartbeat-times-ago "."])
        [:p (tr [:nuvlaedge-last-telemetry-was])
-        (utils/last-time-online next-heartbeat-moment refresh-interval locale) "."]])))
+        [uix/TimeAgo (utils/last-time-online
+                       next-heartbeat-moment
+                       refresh-interval)]
+        "."]])))
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]
@@ -1754,13 +1756,11 @@
             [ui/FormField {:label    "Run"
                            :required true}]
             "Shell script: "
-            [uix/EditorShell
-             ""
-             (fn [_editor _data value]
-               (ui-callback/input-callback
-                 (swap! form-data assoc :run value)))
-             true
-             "full-width"]]]]
+            [uix/EditorShell {:value     ""
+                              :on-change (fn [_editor _data value]
+                                           (ui-callback/input-callback
+                                             (swap! form-data assoc :run value)))
+                              :class     "full-width"}]]]]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:add])
@@ -1838,7 +1838,7 @@
                     [ui/TableBody
                      [ui/TableRow
                       [ui/TableCell "ID"]
-                      [ui/TableCell [values/as-link (:id @selected-playbook) :label
+                      [ui/TableCell [values/AsLink (:id @selected-playbook) :label
                                      (general-utils/id->uuid (:id @selected-playbook))]]]
                      (when (:name @selected-playbook)
                        [ui/TableRow
@@ -1868,13 +1868,12 @@
 
                    [ui/Container {:text-align "left"}
                     "Shell script: "
-                    [uix/EditorShell
-                     (:run @selected-playbook)
-                     (fn [_editor _data value]
-                       (reset! run value)
-                       (reset! run-changed? true))
-                     @can-edit?
-                     "full-height"]]
+                    [uix/EditorShell {:value      (:run @selected-playbook)
+                                      :on-change  (fn [_editor _data value]
+                                                    (reset! run value)
+                                                    (reset! run-changed? true))
+                                      :read-only? (not @can-edit?)
+                                      :class "full-height"}]]
 
                    [uix/Button {:primary  true
                                 :text     (@tr [:save])
@@ -1973,7 +1972,7 @@
                        {:no-actions         true
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
                         :pagination-db-path ::spec/deployment-pagination
-                        :fetch-event        [::events/get-deployments-for-edge] }]])}
+                        :fetch-event        [::events/get-deployments-for-edge]}]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}

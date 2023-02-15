@@ -1,5 +1,7 @@
 (ns sixsq.nuvla.ui.edges.events
-  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+  (:require [clojure.edn :as edn]
+            [re-frame.core :refer [dispatch inject-cofx reg-event-db
+                                   reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as utils]
@@ -9,6 +11,8 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.utils :refer [get-stored-db-value-from-query-param]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -24,11 +28,28 @@
 
 (reg-event-fx
   ::init
-  (fn [{db :db}]
-    {:db (-> db
-             (merge spec/defaults)
-             (assoc ::main-spec/loading? true))
-     :fx [[:dispatch [::get-nuvlabox-releases]]]}))
+  (fn [{{:keys [current-route] :as db} :db}]
+    (let [db-path      ::spec/state-selector
+          search-query (get-stored-db-value-from-query-param current-route [db-path])]
+      {:db (-> db
+               (merge spec/defaults)
+               (assoc ::main-spec/loading? true)
+               (assoc db-path search-query))
+       :fx [[:dispatch [::init-view]]
+            [:dispatch [::get-nuvlabox-releases]]]})))
+
+(reg-event-fx
+  ::init-view
+  [(inject-cofx :storage/get {:name spec/local-storage-key})]
+  (fn [{{current-route :current-route} :db
+        storage :storage/get}]
+    (let [view-query (-> current-route :query-params :view)]
+      (when-not view-query
+        {:fx [[:dispatch [::routing-events/change-query-param
+                          {:partial-query-params
+                           {:view (or
+                                    (:view (edn/read-string storage))
+                                    spec/table-view)}}]]]}))))
 
 (reg-event-fx
   ::refresh-root
@@ -257,9 +278,12 @@
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db (assoc db ::spec/state-selector state-selector)
-     :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]
-          [:dispatch [::get-nuvlabox-locations]]]}))
+    (let [db-path ::spec/state-selector]
+      {:db (assoc db db-path state-selector)
+       :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]
+            [:dispatch [::get-nuvlabox-locations]]
+            [:dispatch [::routing-events/store-in-query-param {:db-path [db-path]
+                                                               :value   state-selector}]]]})))
 
 
 (reg-event-db
@@ -464,3 +488,23 @@
   ::set-nuvlabox-playbooks-cronjob
   (fn [db [_ cronjob]]
     (assoc db ::spec/nuvlabox-playbooks-cronjob cronjob)))
+
+;;
+(reg-event-fx
+  ::change-view-type
+  (fn [{{:keys [current-route]} :db} [_ new-view-type]]
+    (let [current-view  (keyword (-> current-route :query-params :view))
+          preferred-view {:view new-view-type}]
+      {:fx [(when (#{new-view-type current-view} spec/cluster-view)
+              [:dispatch [::pagination-plugin/change-page
+                          [::spec/pagination] 1]])
+            [:dispatch [::routing-events/change-query-param {:partial-query-params preferred-view}]]
+            [:dispatch [::store-preferences preferred-view]]]})))
+
+(reg-event-fx
+  ::store-preferences
+  [(inject-cofx :storage/get {:name spec/local-storage-key})]
+  (fn [{storage :storage/get} [_ preference]]
+    {:storage/set {:session? false
+                   :name     spec/local-storage-key
+                   :value    (merge (edn/read-string storage) preference)}}))

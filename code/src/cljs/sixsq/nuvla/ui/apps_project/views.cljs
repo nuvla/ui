@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
@@ -87,11 +88,11 @@
          (when name
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:name]))]
-            [ui/TableCell [values/as-link path :label name :page "apps"]]])
+            [ui/TableCell [values/AsLink path :label name :page "apps"]]])
          (when (seq parent-path)
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:project]))]
-            [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+            [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:created]))]
           [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
@@ -101,13 +102,16 @@
          (when id
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:id]))]
-            [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]])
+            [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
          [apps-views-detail/AuthorVendor]]]]]]))
 
+(defn- sub-apps-projects-tab
+  []
+  (subscribe [::apps-subs/active-tab [::spec/tab]]))
 
 (defn DetailsPane
   []
-  (let [active-tab (subscribe [::apps-subs/active-tab])]
+  (let [active-tab (sub-apps-projects-tab)]
     @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
@@ -154,10 +158,9 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        active-tab    (subscribe [::apps-subs/active-tab])
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
-                         (dispatch [::apps-events/set-active-tab :overview]))
+    (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)
+                                        :db-path [::spec/tab]}])
     (dispatch [::apps-events/set-form-spec ::spec/module-project])
     (fn []
       (tap> "View ViewEdit project")
@@ -168,16 +171,13 @@
          [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
          [apps-views-detail/MenuBar]
-         [ui/Tab
-          {:menu             {:secondary true
+         [nav-tab/Tab
+          {:db-path          [::spec/tab]
+           :menu             {:secondary true
                               :pointing  true
                               :style     {:display        "flex"
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}}
            :panes            panes
-           :activeIndex      (tab/key->index panes @active-tab)
-           :renderActiveOnly false
-           :onTabChange      (tab/on-tab-change
-                               panes
-                               #(dispatch [::apps-events/set-active-tab %]))}]])
+           :renderActiveOnly false}]])
       )))

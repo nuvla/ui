@@ -34,16 +34,16 @@
 
 (defn ModuleDetails
   [_nav-query-params]
-  (let [module (subscribe [::subs/module])]
-    (fn [nav-query-params]
-      (let [new-subtype (:subtype @nav-query-params)
-            subtype     (or (:subtype @module) new-subtype)]
+  (let [module (subscribe [::subs/module])
+        new-subtype (subscribe [::route-subs/query-param :subtype])]
+    (fn []
+      (let [subtype (or (:subtype @module) @new-subtype)]
         (case subtype
           "component" [apps-component-views/view-edit]
           "application" [apps-application-views/ViewEdit]
           "application_kubernetes" [apps-application-views/ViewEdit]
           "applications_sets" [apps-applications-sets-views/ViewEdit]
-          ^{:key (random-uuid)}
+          ^{:key subtype}
           [apps-project-views/ViewEdit])))))
 
 

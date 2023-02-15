@@ -17,20 +17,22 @@ test('test', async ({ page, context }, { project, config }) => {
 
   // Edges aliases
   await page.getByRole('link').getByText('Edges').click();
-  await expect(page).toHaveURL(`${baseURL}/ui/edges`);
+  await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/edges`));
   await page.getByRole('heading').getByText('Edges').isVisible();
 
   await page.goto(`${baseURL}/ui/edge`);
-  await expect(page).toHaveURL(`${baseURL}/ui/edge`);
+  await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/edge`));
   await page.getByRole('heading').getByText('Edges').isVisible();
 
   await page.goto(`${baseURL}/ui/nuvlabox`);
-  await expect(page).toHaveURL(`${baseURL}/ui/nuvlabox`);
+  await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/nuvlabox`));
   await page.getByRole('heading').getByText('Edges').isVisible();
 
   const edgeName = /e2e-Test-Do_not_delete/;
-  await page.pause();
+  await page.getByPlaceholder('Search ...').click();
+  await page.getByPlaceholder('Search ...').fill('15339469');
   await page.getByRole('link', { name: edgeName }).click();
+
   await page.waitForURL(`${baseURL}/ui/edges/15339469-0b4c-4c45-a0b7-65c494e99a3b`);
   await page.getByRole('heading', { name: edgeName }).isVisible();
 

@@ -432,13 +432,11 @@ div.search.dropdown > input {
   padding: 2rem 2rem 5rem 2rem !important;
 }
 
-a.card i.docker,
-a.card i.database {
+a.card i.massive,i.huge {
   color: #4283c4;
 }
 
-a.card:hover i.docker,
-a.card:hover i.database {
+a.card:hover i.massive,i.huge {
   color: #1e70bf;
 }
 
@@ -835,3 +833,72 @@ body .divider-red {
 }
 
 /** Deployments Page End**/
+
+/** Pagination **/
+.uix-pagination {
+  justify-content: center !important;
+  margin-top: 40px !important;
+  margin-bottom: 10px;
+}
+.uix-pagination-control {
+  position: absolute;
+  left: 2rem;
+  margin-top: 8px;
+}
+
+.uix-pagination-navigation {
+  align-items: center;
+}
+
+.uix-pagination .pagination {
+  border: none !important;
+}
+.uix-pagination .ui.menu {
+  box-shadow: none !important;
+}
+
+.uix-pagination .ui.menu .item:before {
+  width: 0;
+}
+.uix-pagination .ui.pagination.menu .item {
+  width: 30px;
+  height: 30px;
+  border-radius: 30px;
+  background-color: rgba(0, 0, 0, 0.07);
+  min-width: auto;
+  text-align: center;
+  margin: 0 3px;
+  display: block;
+  padding: 10px 0 !important;
+}
+.uix-pagination .ui.pagination.menu .item:hover {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+.uix-pagination .ui.pagination.menu .active.item {
+  background-color: #c10e12;
+  color: #ffffff;
+}
+.uix-pagination .ui.pagination.menu .active.item:hover {
+  background-color: rgba(237, 43, 43, 1);
+}
+.uix-pagination .ui.pagination.menu .icon.item {
+  background-color: #ffffff;
+  margin: 0;
+}
+.uix-pagination .ui.pagination.menu .icon.item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+@media (max-width: 767px) {
+  .uix-pagination {
+    display: block !important;
+    text-align: center;
+  }
+  .uix-pagination-control {
+    position: relative;
+    left: 0;
+    margin-bottom: 20px;
+    justify-content: center !important;
+  }
+}
+/** Pagination **/

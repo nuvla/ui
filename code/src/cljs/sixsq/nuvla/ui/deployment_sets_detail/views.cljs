@@ -135,7 +135,7 @@
        [ui/TableRow
         [ui/TableCell "Id"]
         (when id
-          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]])]
+          [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]])]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
         [EditableCell :name]]

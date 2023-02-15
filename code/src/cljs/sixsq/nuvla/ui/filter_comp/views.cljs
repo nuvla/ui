@@ -318,7 +318,8 @@
          {:trigger    (r/as-element
                         [ui/Popup
                          {:trigger  (r/as-element
-                                      [ui/Button {:icon     true
+                                      [ui/Button {:type     :button
+                                                  :icon     true
                                                   :disabled (nil? resource-name)
                                                   :on-click open-fn
                                                   :color    (when active-filter? :teal)

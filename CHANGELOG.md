@@ -25,6 +25,7 @@
 - Edges overview - Stores and loads state filter from query param, #1127
 - Deployments overview - Stores and loads state filter from query param, #1127
 - Nav tab - Bugfix when panes content change, nav-tab should re-render bugfix #1158
+- Apps - Navigate to an app make ui crash #1168
 
 ## [2.33.1] - 2023-01-30
 

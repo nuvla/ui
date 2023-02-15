@@ -109,10 +109,9 @@
        :on-click #(dispatch [::apps-events/open-add-modal])}]
      [RefreshButton active-tab]]))
 
-(defn TabNavigator [active-tab]
+(defn TabNavigator [_active-tab]
   (let [module (subscribe [::apps-subs/module])]
-    (dispatch [::apps-events/get-module active-tab])
-    (fn []
+    (fn [active-tab]
       [components/LoadingPage {}
        [:<>
         [apps-views-detail/AddModal]

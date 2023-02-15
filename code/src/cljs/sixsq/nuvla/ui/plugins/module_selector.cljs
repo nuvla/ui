@@ -11,7 +11,6 @@
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
@@ -37,19 +36,20 @@
   (fn [{{:keys [::session-spec/session] :as db} :db} [_ db-path & {:keys [loading? subtypes]}]]
     (let [subtypes-path (conj db-path ::subtypes)
           subtypes      (or subtypes (get-in db subtypes-path))
-          active-tab    (tab/active-tab db (conj db-path ::tab))
-          params        (->> {:select  "id, name, description, parent-path, subtype"
-                              :orderby "path:asc"
-                              :filter  (general-utils/join-and
-                                         (full-text-search/filter-text db (conj db-path ::search))
-                                         (case active-tab
-                                           :my-apps (str "acl/owners='" (or (:active-claim session)
-                                                                            (:user session)) "'")
-                                           :app-store "published=true"
-                                           nil)
-                                         (apply general-utils/join-or (map #(str "subtype='" % "'") subtypes))
-                                         "subtype!='project'")}
-                             (pagination/first-last-params db (conj db-path ::pagination)))]
+          active-tab    (tab-plugin/active-tab db (conj db-path ::tab))
+          params        (pagination/first-last-params
+                          db (conj db-path ::pagination)
+                          {:select  "id, name, description, parent-path, subtype"
+                           :orderby "path:asc"
+                           :filter  (general-utils/join-and
+                                      (full-text-search/filter-text db (conj db-path ::search))
+                                      (case active-tab
+                                        :my-apps (str "acl/owners='" (or (:active-claim session)
+                                                                         (:user session)) "'")
+                                        :app-store "published=true"
+                                        nil)
+                                      (apply general-utils/join-or (map #(str "subtype='" % "'") subtypes))
+                                      "subtype!='project'")})]
       {:db                  (cond-> db
                                     loading? (assoc-in
                                                (conj db-path ::loading?) true)
@@ -61,7 +61,7 @@
 
 (reg-event-fx
   ::restore-selected
-  (fn [{{:keys [::session-spec/session] :as db} :db} [_ db-path selected-ids]]
+  (fn [{:keys [db]} [_ db-path selected-ids]]
     (if (seq selected-ids)
       (let [rebuild-selected (fn [{:keys [resources]}]
                                (let [selected-ids-set (set selected-ids)
@@ -187,7 +187,7 @@
                          {:db-path      (conj db-path ::pagination)
                           :total-items  count
                           :change-event [::load-apps db-path]}]]))]
-      [tab/Tab
+      [tab-plugin/Tab
        {:db-path                    (conj db-path ::tab)
         :panes                      [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
                                                  :key     :app-store

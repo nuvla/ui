@@ -51,7 +51,7 @@
 
 (reg-event-fx
   ::reload-apps-sets-response
-  (fn [{{:keys [::spec/apps-sets] :as db} :db} [_ module apps-count {:keys [resources]}]]
+  (fn [{:keys [db]} [_ module apps-count {:keys [resources]}]]
     (let [modules-by-id     (->> resources (map (juxt :id identity)) (into {}))
           indexed-apps-sets (->> module
                                  :content

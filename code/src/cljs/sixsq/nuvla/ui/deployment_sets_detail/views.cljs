@@ -741,35 +741,34 @@
 ; FIXME sketch
 (defn ConfigureDemo
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [tab/Tab
-     {:db-path [::spec/x]
-      :menu    {:secondary true
-                :pointing  true}
-      :panes   (map
-                 (fn [i]
-                   {:menuItem {:content (str i)
-                               :key     (random-uuid)}
-                    :render   #(r/as-element
-                                 [tab/Tab
-                                  {:db-path [::spec/y]
-                                   :panes   (map
-                                              (fn [{:keys [text icon]}]
-                                                {:menuItem {:content text
-                                                            :icon    icon
-                                                            :key     (random-uuid)}
-                                                 :render   (fn []
-                                                             (r/as-element
-                                                               [ui/TabPane
+  [tab/Tab
+   {:db-path [::spec/x]
+    :menu    {:secondary true
+              :pointing  true}
+    :panes   (map
+               (fn [i]
+                 {:menuItem {:content (str i)
+                             :key     (random-uuid)}
+                  :render   #(r/as-element
+                               [tab/Tab
+                                {:db-path [::spec/y]
+                                 :panes   (map
+                                            (fn [{:keys [text icon]}]
+                                              {:menuItem {:content text
+                                                          :icon    icon
+                                                          :key     (random-uuid)}
+                                               :render   (fn []
+                                                           (r/as-element
+                                                             [ui/TabPane
 
-                                                                ]))}
-                                                ) [{:text "App 1" :icon "cubes"}
-                                                   {:text "App 2" :icon "cubes"}
-                                                   {:text "App 3" :icon "cubes"}])}])}
-                   ) ["1 | Blackbox ➔ Geneva"
-                      "2 | Whitebox ➔ Zurich"
-                      "3 | Monitoring ➔ Exoscale Cloud"
-                      ])}]))
+                                                              ]))}
+                                              ) [{:text "App 1" :icon "cubes"}
+                                                 {:text "App 2" :icon "cubes"}
+                                                 {:text "App 3" :icon "cubes"}])}])}
+                 ) ["1 | Blackbox ➔ Geneva"
+                    "2 | Whitebox ➔ Zurich"
+                    "3 | Monitoring ➔ Exoscale Cloud"
+                    ])}])
 
 (defn AddPage
   []

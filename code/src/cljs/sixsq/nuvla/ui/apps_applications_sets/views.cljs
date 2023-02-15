@@ -172,7 +172,7 @@
       [:<>
        (doall
          (for [[i [id {:keys [::spec/apps-set-name
-                              ::spec/apps-set-description] :as apps-group}]]
+                              ::spec/apps-set-description] :as _apps-group}]]
                (map-indexed vector @apps-sets)]
            (let [i (inc i)]
              ^{:key (str "apps-set-" i)}
@@ -237,7 +237,7 @@
        (when parent-path
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:project]))]
-          [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+          [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
         [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
@@ -247,7 +247,7 @@
        (when id
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:id]))]
-          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]])
+          [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
@@ -300,8 +300,7 @@
 
 
 (defn DetailsPane []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        active-tab (subscribe [::apps-subs/active-tab])
+  (let [active-tab (subscribe [::apps-subs/active-tab])
         editable?  (subscribe [::apps-subs/editable?])]
     @active-tab
     ^{:key (random-uuid)}
@@ -331,7 +330,7 @@
               :padded    true
               :centered  true}
      [ui/GridRow {:centered true}
-      (when (not @is-new?)
+      (when-not @is-new?
         [ui/GridColumn
          [deployments-views/DeploymentsOverviewSegment
           ::deployments-subs/deployments ::apps-events/set-active-tab :deployments]])]

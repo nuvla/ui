@@ -290,7 +290,7 @@
     (fn [{:keys [tags] :as _element} on-change-fn]
       (let [options (map (fn [v] {:key v :text v :value v}) @value-options)]
         (if @editing?
-          [:div {:style {:display "flex"
+          [:div {:style {:display     "flex"
                          :align-items "center"}}
            [ui/Dropdown {:selection        true
                          :placeholder      (@tr [:type-to-add-tags])

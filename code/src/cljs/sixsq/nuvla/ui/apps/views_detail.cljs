@@ -572,7 +572,7 @@
            [ui/GridColumn {:width 3 :floated "right"}
             [ui/Image {:src (or logo-url @default-logo-url)}]
             (when @editable?
-              [ui/Button {:style {:border-radius 0}
+              [ui/Button {:style    {:border-radius 0}
                           :fluid    true
                           :on-click #(dispatch [::events/open-logo-url-modal])}
                (@tr [:module-change-logo])])]]]

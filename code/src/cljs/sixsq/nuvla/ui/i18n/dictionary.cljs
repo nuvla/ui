@@ -3,6 +3,9 @@
 
 (def dictionary
   {:en {
+        :swarm-app-cant-be-deployed-compose-node       "Swarm application can't be deployed on a node without Docker Swarm! To deploy it, you need to create a Swarm cluster on this node."
+        :swarm-app-cant-be-deployed-worker-node        "Swarm application can't be deployed on Swarm worker node! To deploy it, you should select a Swarm manager node part of that cluster."
+        :compose-app-deployed-swarm-node               "Docker compose application deployed on Swarm node. This application will only be available on this specific node."
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -945,6 +948,9 @@
         }
 
    :fr {
+        :swarm-app-cant-be-deployed-compose-node       "Une application Swarm ne peut pas être déployée sur un noeud sans Docker Swarm ! Pour la déployer, vous devez créer un cluster Swarm sur ce noeud."
+        :swarm-app-cant-be-deployed-worker-node        "Une application Swarm ne peut pas être déployée sur noeud Swarm Worker! Pour la déployer, vous devez sélectionner un noeud Swarm Manager faisant partie de ce cluster."
+        :compose-app-deployed-swarm-node               "Une application Docker compose Docker déployée sur un noeud Swarm. Cette application ne sera disponible que sur ce noeud spécifique."
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"

@@ -288,21 +288,22 @@
   ::app-infra-compatibility-msg
   :<- [::module-subtype]
   :<- [::module-compatibility]
-  (fn [[module-subtype module-compatibility :as a]
+  :<- [::i18n-subs/tr]
+  (fn [[module-subtype module-compatibility tr]
        [_ {:keys [swarm-enabled swarm-manager] infra-subtype :subtype
            :as   _infra-service}]]
     (cond
       (= [module-subtype module-compatibility infra-subtype swarm-enabled]
          ["application" "swarm" "swarm" false])
-      "Swarm application can't be deployed on a node without Docker Swarm! To deploy it, you need to create a Swarm cluster on this node."
+      (tr [:swarm-app-cant-be-deployed-compose-node])
 
       (= [module-subtype module-compatibility infra-subtype swarm-enabled swarm-manager]
          ["application" "swarm" "swarm" true false])
-      "Swarm application can't be deployed on Swarm worker node! To deploy it, you should select a Swarm manager node part of that cluster."
+      (tr [:swarm-app-cant-be-deployed-worker-node])
 
       (= [module-subtype module-compatibility infra-subtype swarm-enabled]
          ["application" "docker-compose" "swarm" true])
-      "Docker compose application deployed on Swarm node. This application will only be available on this specific node.")))
+      (tr [:compose-app-deployed-swarm-node]))))
 
 (reg-sub
   ::credentials

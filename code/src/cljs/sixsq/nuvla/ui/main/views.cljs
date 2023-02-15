@@ -122,8 +122,6 @@
                               (str/includes? "apps"))
         ignore-changes-fn #(dispatch [::events/ignore-changes false])]
 
-    (dispatch [::events/disable-browser-back])
-
     [ui/Modal {:open       (some? @navigation-info)
                :close-icon true
                :on-close   ignore-changes-fn}

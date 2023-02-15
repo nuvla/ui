@@ -369,7 +369,7 @@
 
             ]
            [ui/Card
-            {:href     (pathify [base-path "New Applications Sets?subtype=applications_sets"])
+            {:href     (when parent (pathify [base-path "New Applications Sets?subtype=applications_sets"]))
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}

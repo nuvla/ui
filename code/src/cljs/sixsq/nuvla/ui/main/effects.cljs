@@ -42,10 +42,6 @@
       (set-unload-protection)
       (clear-unload-protection))))
 
-(comment
-  (set-unload-protection)
-  (clear-unload-protection)
-  )
 
 (defn- stop-browser-back
   [f]
@@ -69,11 +65,10 @@
 (reg-fx
   ::disable-browser-back
   (fn [f]
-    (js/console.error "disable-browser-back")
     (stop-browser-back f)))
 
 (reg-fx
   ::enable-browser-back
   (fn [_]
-    (js/console.error "enable-browser-back effect")
+    (js/console.error "hoooo")
     (start-browser-back)))

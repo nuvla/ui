@@ -111,6 +111,7 @@
 
 (defn TabNavigator [_active-tab]
   (let [module (subscribe [::apps-subs/module])]
+    (dispatch [::apps-events/get-module])
     (fn [active-tab]
       [components/LoadingPage {}
        [:<>

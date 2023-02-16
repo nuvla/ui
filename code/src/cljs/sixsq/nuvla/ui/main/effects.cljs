@@ -73,6 +73,19 @@
     (js/console.error "disable-browser-back")
     (stop-browser-back f)))
 
+
+
+(defn- add-popstate-event-listener
+  [f]
+    (js/console.error "add-popstate-event-listener" f)
+  (.addEventListener js/window "popstate" f))
+
+(reg-fx
+  ::add-pop-state-listener-close-modal-event
+  (fn [f]
+    (add-popstate-event-listener f)
+    (js/console.error "disable-browser-back")))
+
 (reg-fx
   ::enable-browser-back
   (fn [fn]

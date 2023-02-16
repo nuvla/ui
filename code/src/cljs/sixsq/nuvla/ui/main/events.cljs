@@ -150,6 +150,7 @@
   ::ignore-changes
   (fn [{{:keys [::spec/ignore-changes-modal
                 ::spec/do-not-ignore-changes-modal] :as db} :db} [_ choice]]
+    (js/console.error "::ignore-changes" choice)
     (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil
                                    ::spec/do-not-ignore-changes-modal nil)]
       (if choice
@@ -172,7 +173,28 @@
   (fn [_ _]
     {:fx [[::fx/disable-browser-back]]}))
 
-(defn dispatch-after-clear-effect
+(reg-event-fx
+  ::close-modal-by-back-button
+  (fn [{db :db} _]
+(js/console.error "::close-modal-by-back-button")
+    {:db (assoc db ::spec/ignore-changes-modal nil
+                                   ::spec/do-not-ignore-changes-modal nil)
+     :fx [[::ignore-changes false]]}))
+
+(defn- dispatch-close-modal-by-back-button-event
+  []
+  (js/console.error "dispatch-close-modal-by-back-button-event")
+  (dispatch [::close-modal-by-back-button])
+  ;; TODO: Dispatch event->effect to remove event-listener
+  )
+
+(reg-event-fx
+  ::opening-protection-modal
+  (fn [_ _]
+    (js/console.error "::opening-protection-modal")
+    {:fx [[::fx/add-pop-state-listener-close-modal-event dispatch-close-modal-by-back-button-event]]}))
+
+(defn- dispatch-after-clear-effect
   []
   (js/console.error "dispatch-after-clear-effect")
   (dispatch [::after-clear-event]))

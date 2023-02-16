@@ -63,12 +63,12 @@
         project     (get db ::apps-project-spec/module-project)
         application (get db ::apps-application-spec/module-application)
         apps-sets   (get db ::apps-applications-sets-spec/apps-sets)]
-    (case module-subtype
-      "component" component
-      "project" project
-      "application" application
-      "application_kubernetes" application
-      "applications_sets" apps-sets
+    (condp = module-subtype
+      utils/subtype-component component
+      utils/subtype-project project
+      utils/subtype-application application
+      utils/subtype-application-k8s application
+      utils/subtype-applications-sets apps-sets
       project)))
 
 
@@ -149,14 +149,14 @@
                             ::spec/module-not-found? (nil? module)
                             ::main-spec/loading? false)
           subtype (:subtype module)]
-      (cond-> {:db (case subtype
-                     "component" (apps-component-utils/module->db db module)
-                     "project" (apps-project-utils/module->db db module)
-                     "application" (apps-application-utils/module->db db module)
-                     "application_kubernetes" (apps-application-utils/module->db db module)
-                     "applications_sets" (apps-applications-sets-utils/module->db db module)
+      (cond-> {:db (condp = subtype
+                     utils/subtype-component (apps-component-utils/module->db db module)
+                     utils/subtype-project (apps-project-utils/module->db db module)
+                     utils/subtype-application (apps-application-utils/module->db db module)
+                     utils/subtype-application-k8s (apps-application-utils/module->db db module)
+                     utils/subtype-applications-sets (apps-applications-sets-utils/module->db db module)
                      db)}
-              (= subtype "applications_sets")
+              (= subtype utils/subtype-applications-sets)
               (assoc :fx (apps-applications-sets-utils/module->fx module))))))
 
 
@@ -617,12 +617,13 @@
   ::edit-module
   (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
     (let [id (:id module)
-          {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)]
+          {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)
+          is-app? (= subtype utils/subtype-application)]
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
                             #(do
                                (dispatch [::set-module sanitized-module]) ;Needed?
-                               (when (= subtype "application")
+                               (when is-app?
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
                                (dispatch [::main-events/changes-protection? false])
                                (dispatch [::routing-events/navigate
@@ -643,7 +644,7 @@
                                               :content message
                                               :type    :error}]))
                                 (do (dispatch [::get-module (version-id->index %)])
-                                    (when (= subtype "application")
+                                    (when is-app?
                                       (dispatch [::validate-docker-compose %]))
                                     (dispatch [::main-events/changes-protection? false])))]}))))
 

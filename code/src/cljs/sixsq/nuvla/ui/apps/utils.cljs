@@ -5,6 +5,11 @@
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
+(def subtype-project "project")
+(def subtype-component "component")
+(def subtype-application "application")
+(def subtype-application-k8s "application_kubernetes")
+(def subtype-applications-sets "applications_sets")
 
 (def publish-icon
   "check circle outline")
@@ -92,32 +97,32 @@
 
 (defn subtype-icon
   [subtype]
-  (case subtype
-    "project" "folder"
-    "component" "grid layout"
-    "application" "cubes"
-    "application_kubernetes" "cubes"
-    "applications_sets" "th large"
+  (condp = subtype
+    subtype-project "folder"
+    subtype-component "grid layout"
+    subtype-application "cubes"
+    subtype-application-k8s "cubes"
+    subtype-applications-sets "th large"
     "question circle"))
 
 (defn subtype-icon-infra
   [subtype selected]
-  (case subtype
-    "project" [ui/Icon {:name "folder"}]
-    "component" [ui/Icon {:name "docker"}]
-    "application" [ui/Icon {:name "docker"}]
-    "application_kubernetes" [ui/Image {:src   (if selected
-                                                 "/ui/images/kubernetes.svg"
-                                                 "/ui/images/kubernetes-grey.svg")
-                                        :style {:width   "1.18em"
-                                                :margin  "0 .25rem 0 0"
-                                                :display :inline-block}}]
+  (condp = subtype
+    subtype-project [ui/Icon {:name "folder"}]
+    subtype-component [ui/Icon {:name "docker"}]
+    subtype-application [ui/Icon {:name "docker"}]
+    subtype-application-k8s [ui/Image {:src   (if selected
+                                                "/ui/images/kubernetes.svg"
+                                                "/ui/images/kubernetes-grey.svg")
+                                       :style {:width   "1.18em"
+                                               :margin  "0 .25rem 0 0"
+                                               :display :inline-block}}]
     [ui/Icon {:name "question circle"}]))
 
 
 (defn meta-subtype-icon
   [subtype]
-  (if (= "project" subtype)
+  (if (= subtype-project subtype)
     "folder open"
     (subtype-icon subtype)))
 

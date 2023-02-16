@@ -38,7 +38,7 @@
   ::is-project?
   :<- [::module-subtype]
   (fn [subtype]
-    (= subtype "project")))
+    (= subtype utils/subtype-project)))
 
 (reg-sub
   ::is-app?

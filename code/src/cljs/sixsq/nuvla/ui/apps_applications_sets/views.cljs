@@ -95,10 +95,10 @@
      (for [{:keys [subtype name] module-id :id} selected]
        ^{:key module-id}
        [ui/ListItem
-        (case subtype
-          "application_kubernetes" kubernetes-icon
-          "application" docker-icon
-          "component" docker-icon
+        (condp = subtype
+          apps-utils/subtype-application-k8s kubernetes-icon
+          apps-utils/subtype-application docker-icon
+          apps-utils/subtype-component docker-icon
           unknown-icon)
         [ui/ListContent (or name module-id) " "
          (when editable?
@@ -324,13 +324,14 @@
 (defn OverviewPane
   []
   (let [device  (subscribe [::main-subs/device])
-        is-new? (subscribe [::apps-subs/is-new?])]
+        is-new? (subscribe [::apps-subs/is-new?])
+        subtype (subscribe [::apps-subs/module-subtype])]
     [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
               :stackable true
               :padded    true
               :centered  true}
      [ui/GridRow {:centered true}
-      (when-not @is-new?
+      (when-not (or @is-new? (= @subtype apps-utils/subtype-applications-sets))
         [ui/GridColumn
          [deployments-views/DeploymentsOverviewSegment
           ::deployments-subs/deployments ::apps-events/set-active-tab :deployments]])]

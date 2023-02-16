@@ -33,10 +33,6 @@
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as utils-values]))
 
-
-(def application-kubernetes-subtype "application_kubernetes")
-(def docker-compose-subtype "application")
-
 (def edit-cell-left-padding 24)
 
 (defn LicenseTitle
@@ -74,7 +70,7 @@
 (defn DockerTitle
   []
   (let [module-subtype (subscribe [::subs/module-subtype])
-        tab-name       (if (= application-kubernetes-subtype @module-subtype) "Kubernetes" "Docker")]
+        tab-name       (if (= utils/subtype-application-k8s @module-subtype) "Kubernetes" "Docker")]
     [:<>
      [uix/Icon {:name "docker"}]
      (str/capitalize tab-name)]))
@@ -111,7 +107,7 @@
         new-subtype (:subtype @(subscribe [::route-subs/nav-query-params]))]
     (when form-valid?
       (dispatch [::events/set-validate-form? false])
-      (if (= (or subtype new-subtype) "project")
+      (if (= (or subtype new-subtype) utils/subtype-project)
         (dispatch [::events/open-save-modal])
         (dispatch [::events/open-save-modal])))))
 
@@ -262,7 +258,7 @@
          [uix/ModalHeader {:header (str (@tr [:save]) " " (@tr [:component]))}]
 
          [ui/ModalContent
-          (if (and @need-commit? (not= @subtype "project"))
+          (if (and @need-commit? (not= @subtype utils/subtype-project))
             [ui/Input {:placeholder   (@tr [:commit-placeholder])
                        :fluid         true
                        :default-value @commit-message
@@ -558,7 +554,7 @@
              :or      {name     ""
                        parent   ""
                        logo-url @default-logo-url
-                       subtype  "project"}} @module-common]
+                       subtype  utils/subtype-project}} @module-common]
         [:div {:class :uix-apps-details-details}
          [:h2 [DetailsTitle]]
          [ui/Grid {:stackable true, :reversed :mobile}
@@ -572,7 +568,7 @@
                :default-value name, :on-change (partial on-change ::events/name)
                :on-validation ::events/set-details-validation-error]
               (when (not-empty parent)
-                (let [label (if (= "project" subtype) "parent project" "project")]
+                (let [label (if (= utils/subtype-project subtype) "parent project" "project")]
                   [ui/TableRow
                    [ui/TableCell {:collapsing true
                                   :style      {:padding-bottom 8}} label]
@@ -1021,8 +1017,8 @@
                (for [[id registry] @registries]
                  ^{:key (str "registry-" id)}
                  [single-registry registry])]]])
-          (when (and @editable? (or (not= @subtype "component")
-                                    (and (= @subtype "component")
+          (when (and @editable? (or (not= @subtype utils/subtype-component)
+                                    (and (= @subtype utils/subtype-component)
                                          (zero? no-of-registries))))
             [:div {:style {:padding-top 10}}
              [plus ::events/add-registry]])]
@@ -1118,7 +1114,7 @@
       (let [is-editable? (and @editable? @is-custom?)
             {:keys [license-name]} @license]
         [:<>
-         (when (not= "component" subtype)
+         (when (not= utils/subtype-component subtype)
            [:h2 [LicenseTitle {:full true}]])
          (if (or @editable? (some? @license))
            [ui/Form

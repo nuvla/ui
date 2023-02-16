@@ -38,11 +38,11 @@
         new-subtype (subscribe [::route-subs/query-param :subtype])]
     (fn []
       (let [subtype (or (:subtype @module) @new-subtype)]
-        (case subtype
-          "component" [apps-component-views/view-edit]
-          "application" [apps-application-views/ViewEdit]
-          "application_kubernetes" [apps-application-views/ViewEdit]
-          "applications_sets" [apps-applications-sets-views/ViewEdit]
+        (condp = subtype
+          utils/subtype-component [apps-component-views/view-edit]
+          utils/subtype-application [apps-application-views/ViewEdit]
+          utils/subtype-application-k8s [apps-application-views/ViewEdit]
+          utils/subtype-applications-sets [apps-applications-sets-views/ViewEdit]
           ^{:key subtype}
           [apps-project-views/ViewEdit])))))
 

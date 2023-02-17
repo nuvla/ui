@@ -565,14 +565,15 @@
                    [ui/TableCell {:style {:padding-left (when @editable? edit-cell-left-padding)}} parent]]))
               [ui/TableRow
                [ui/TableCell (@tr [:tags])]
-               [ui/TableCell [Tags]]]
+               [ui/TableCell {:style {:padding-left (when @editable? edit-cell-left-padding)}} [Tags]]]
               (for [x extras]
                 x)]]
             [details-section]]
            [ui/GridColumn {:width 3 :floated "right"}
             [ui/Image {:src (or logo-url @default-logo-url)}]
             (when @editable?
-              [ui/Button {:fluid    true
+              [ui/Button {:style    {:border-radius 0}
+                          :fluid    true
                           :on-click #(dispatch [::events/open-logo-url-modal])}
                (@tr [:module-change-logo])])]]]
          [Description validation-event]]))))

@@ -179,7 +179,7 @@
             valid?    (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
-          [:div {:style {:margin-bottom "10px"}} "Env substitution"
+          [:div {:style {:margin-bottom "10px"}}  (@tr [:env-substitution])
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
           [uix/EditorYaml {:value      default-value
@@ -216,7 +216,7 @@
             valid?      (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
-          [:div {:style {:margin-bottom "10px"}} "Env substitution"
+          [:div {:style {:margin-bottom "10px"}} (@tr [:env-substitution])
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
           [uix/EditorYaml {:value default-value

@@ -124,9 +124,11 @@
     (when @navigation-info
       (dispatch [::events/opening-protection-modal]))
 
-    [ui/Modal {:open       (some? @navigation-info)
-               :close-icon true
-               :on-close   ignore-changes-fn}
+    [ui/Modal {:open        (some? @navigation-info)
+               :close-icon  true
+               :on-close    ignore-changes-fn
+                ;; data-testid is used for e2e test
+               :data-testid "protection-modal"}
 
      [uix/ModalHeader {:header (@tr [:ignore-changes?])}]
 

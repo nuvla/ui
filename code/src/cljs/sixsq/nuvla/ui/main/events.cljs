@@ -173,20 +173,20 @@
   (fn [_ _]
     {:fx [[::fx/disable-browser-back]]}))
 
-(reg-event-fx
-  ::close-modal-by-back-button
-  (fn [{db :db} _]
-(js/console.error "::close-modal-by-back-button")
-    {:db (assoc db ::spec/ignore-changes-modal nil
-                                   ::spec/do-not-ignore-changes-modal nil)
-     :fx [[::ignore-changes false]]}))
-
 (defn- dispatch-close-modal-by-back-button-event
   []
   (js/console.error "dispatch-close-modal-by-back-button-event")
   (dispatch [::close-modal-by-back-button])
-  ;; TODO: Dispatch event->effect to remove event-listener
   )
+
+(reg-event-fx
+  ::close-modal-by-back-button
+  (fn [{db :db} _]
+    {:db (assoc db ::spec/ignore-changes-modal nil
+                   ::spec/do-not-ignore-changes-modal nil)
+     :fx [[::ignore-changes false]
+          [::fx/clear-popstate-event-listener dispatch-close-modal-by-back-button-event]]}))
+
 
 (reg-event-fx
   ::opening-protection-modal

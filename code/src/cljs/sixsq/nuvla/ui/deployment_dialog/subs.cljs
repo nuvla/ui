@@ -2,9 +2,9 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.clouds.utils :as clouds-utils]
             [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-            [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.session.subs :as session-subs]))
 
@@ -85,7 +85,7 @@
     (or (:execution-mode deployment)
         (let [cred-unknown? @(subscribe [::creds-subs/credential-check-status-unknown? cred-id])
               cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])]
-          (if (utils/infra-support-pull? infra-service)
+          (if (clouds-utils/infra-support-pull? infra-service)
             (if (and cred-unknown? (not cred-loading?))
               "pull"
               "mixed")

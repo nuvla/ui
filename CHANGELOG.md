@@ -32,6 +32,7 @@
 - Deployment modal - Display infrastructure docker labels #996
 - Deployment modal - Do not allow deployment of Swarm application on Swarm disabled node or worker node #996
 - Deployment modal - Inform user that he is deploying a Compose application on a Docker swarm node #996
+- Clouds and cloud details - Show compatibility label
 
 ## [2.33.1] - 2023-01-30
 

@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.clouds-detail.events :as events]
             [sixsq.nuvla.ui.clouds-detail.spec :as spec]
             [sixsq.nuvla.ui.clouds-detail.subs :as subs]
+            [sixsq.nuvla.ui.clouds.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as main-components]
             [sixsq.nuvla.ui.main.events :as main-events]
@@ -34,6 +35,40 @@
   (let [valid? (s/valid? form-spec data)]
     (when-not valid? (s/explain form-spec data))
     (callback valid?)))
+
+
+(defn CompatibilityLabel
+  [infra-service]
+  (let [{:keys [popup-txt label-txt label-icon label-color]
+         :or   {label-color "blue"}
+         } (cond
+             (utils/swarm-manager? infra-service)
+             {:popup-txt  "Swarm Manager"
+              :label-txt  "Swarm"
+              :label-icon "fa-solid fa-crown"}
+
+             (utils/swarm-worker? infra-service)
+             {:popup-txt  "Swarm Worker"
+              :label-txt  "Swarm"
+              :label-icon "fa-solid fa-robot"}
+
+             (utils/swarm-disabled? infra-service)
+             {:popup-txt   "Swarm Disabled"
+              :label-txt   "Swarm Disabled"
+              :label-color "brown"})]
+    (when label-txt
+      [ui/Popup
+       {:size    "tiny"
+        :content popup-txt
+        :trigger (r/as-element
+                   [ui/Label {:circular true
+                              :color    label-color
+                              :size     "tiny"
+                              :basic    true
+                              :style    {:float "right"}}
+                    (when label-icon
+                      [uix/Icon {:name label-icon}])
+                    label-txt])}])))
 
 
 (defn DeleteButton
@@ -192,8 +227,7 @@
 
 (defn PageHeader
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        infra-service (subscribe [::subs/infrastructure-service])]
+  (let [infra-service (subscribe [::subs/infrastructure-service])]
     (fn []
       (let [{:keys [state online name id]} @infra-service]
         [:div
@@ -202,15 +236,9 @@
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [OnlineStatusIcon online]
+          [CompatibilityLabel @infra-service]
           [:span {:style {:font-weight "bold"}}
-           "State "
-           [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:name "question circle"}])
-             :content        (@tr [:nuvlabox-state])
-             :position       "bottom center"
-             :on             "hover"
-             :size           "tiny"
-             :hide-on-scroll true}] ": "]
+           "State: "]
           state]]))))
 
 

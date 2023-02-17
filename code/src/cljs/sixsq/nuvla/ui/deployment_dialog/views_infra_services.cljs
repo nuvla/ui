@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-infra-services
   (:require [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.clouds-detail.views :as clouds-detail]
             [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
@@ -99,39 +100,6 @@
            [cred-item credential]))]
       [ui/Message {:error true} (@tr [:no-credentials])])))
 
-(defn CompatibilityLabel
-  [infra-service]
-  (let [{:keys [popup-txt label-txt label-icon label-color]
-         :or   {label-color "blue"}
-         } (cond
-             (utils/swarm-manager? infra-service)
-             {:popup-txt  "Swarm Manager"
-              :label-txt  "Swarm"
-              :label-icon "fa-solid fa-crown"}
-
-             (utils/swarm-worker? infra-service)
-             {:popup-txt  "Swarm Worker"
-              :label-txt  "Swarm"
-              :label-icon "fa-solid fa-robot"}
-
-             (utils/swarm-disabled? infra-service)
-             {:popup-txt   "Swarm Disabled"
-              :label-txt   "Swarm Disabled"
-              :label-color "brown"})]
-    (when label-txt
-      [ui/Popup
-      {:size    "tiny"
-       :content popup-txt
-       :trigger (r/as-element
-                  [ui/Label {:circular true
-                             :color    label-color
-                             :size     "tiny"
-                             :basic    true
-                             :style    {:float "right"}}
-                   (when label-icon
-                     [uix/Icon {:name label-icon}])
-                   label-txt])}])))
-
 (defn CompatibilityMessage
   [infra-service compatible?]
   (let [compatibility-msg (subscribe [::subs/app-infra-compatibility-msg infra-service])]
@@ -163,7 +131,7 @@
                            :padding-bottom 7}}]
         [:<>
          [ui/Icon {:name "docker"}]
-         [CompatibilityLabel infra-service]])
+         [clouds-detail/CompatibilityLabel infra-service]])
       ff/nbsp
       (or name id)]
      [ui/AccordionContent {:active active?}

@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-infra-services
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [reagent.core :as r]
             [sixsq.nuvla.ui.clouds-detail.views :as clouds-detail]
             [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]

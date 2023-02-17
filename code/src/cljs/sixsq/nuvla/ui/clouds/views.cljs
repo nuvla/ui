@@ -47,7 +47,7 @@
        {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]]))
 
 (defn ServiceCard
-  [{:keys [id name description path subtype logo-url online swarm-enabled]
+  [{:keys [id name description path subtype logo-url online]
     :as infra-service}]
   (let [status (cond
                  (true? online) true

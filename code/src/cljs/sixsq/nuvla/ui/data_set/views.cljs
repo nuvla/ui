@@ -620,9 +620,9 @@
 
 (defn DataSet
   [{{dataset-id :uuid} :path-params}]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        data-set   (subscribe [::subs/data-set])
-        device     (subscribe [::main-subs/device])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        data-set (subscribe [::subs/data-set])
+        device   (subscribe [::main-subs/device])]
     (dispatch [::events/set-data-set-id dataset-id])
     (refresh)
     (fn []

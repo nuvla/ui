@@ -25,6 +25,9 @@
 - Edges overview - Stores and loads state filter from query param, #1127
 - Deployments overview - Stores and loads state filter from query param, #1127
 - Nav tab - Bugfix when panes content change, nav-tab should re-render bugfix #1158
+- Apps - Tags alignment fix
+- Components - Tags button border-radius fix
+- Apps - Change logo button border-radius fix
 - Apps detail - Fix warning log caused by versions table
 - Deployment modal - Display infrastructure docker labels #996
 - Deployment modal - Do not allow deployment of Swarm application on Swarm disabled node or worker node #996

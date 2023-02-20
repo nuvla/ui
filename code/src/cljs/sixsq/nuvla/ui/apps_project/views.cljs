@@ -77,7 +77,7 @@
     [ui/Segment {:secondary true
                  :raised    true}
      [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:project]))]
-     [ui/Grid {:columns 2}
+     [ui/Grid
       [ui/GridColumn
        [ui/Table {:basic  "very"
                   :padded false}
@@ -163,14 +163,14 @@
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
-         [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader "fa-light fa-folder" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path          [::spec/tab]
            :menu             {:secondary true
                               :pointing  true
-                              :style     {:display        "flex"
+                              :style     {:display       "flex"
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}}
            :panes            panes

@@ -279,7 +279,7 @@
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 (str/capitalize (@tr [:summary]))]
+     [:h4 {:class "fa-light fa-cubes"} (str/capitalize (@tr [:summary]))]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody

@@ -60,7 +60,7 @@
       (let [children (:children @module)]
         [ui/Segment {:secondary true
                      :raised    true}
-         [:h4 (str/capitalize (@tr [:content]))]
+         [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:content]))]
          (if (empty? children)
            [ui/Message {:warning true}
             [ui/Icon {:name "warning sign"}]
@@ -76,7 +76,7 @@
         {:keys [id created updated name parent-path path]} @module]
     [ui/Segment {:secondary true
                  :raised    true}
-     [:h4 (str/capitalize (@tr [:project]))]
+     [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:project]))]
      [ui/Grid {:columns 2}
       [ui/GridColumn
        [ui/Table {:basic  "very"

@@ -1196,7 +1196,7 @@
                :stackable true}
       [ui/GridRow {:columns 2}
        [ui/GridColumn {:floated "left"}
-        [:h4 (str/capitalize (@tr [:description]))]]
+       [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:description]))]]
        (when @editable?
          [ui/GridColumn {:style {:text-align "right"}}
           [ui/Button {:icon     "pencil"

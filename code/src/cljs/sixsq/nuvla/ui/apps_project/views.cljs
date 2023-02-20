@@ -122,20 +122,19 @@
 (defn OverviewPane
   []
   (let [device (subscribe [::main-subs/device])]
-    [ui/TabPane
-     [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
-               :stackable true
-               :padded    true
-               :centered  true}
-      [ui/GridRow {:centered true}
-       [ui/GridColumn
-        [apps-views-detail/OverviewDescription]]]
-      [ui/GridRow
-       [ui/GridColumn
-        [ModulesView]]]
-      [ui/GridRow
-       [ui/GridColumn
-        [OverviewModuleSummary]]]]]))
+    [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
+              :stackable true
+              :padded    true
+              :centered  true}
+     [ui/GridRow {:centered true}
+      [ui/GridColumn
+       [apps-views-detail/OverviewDescription]]]
+     [ui/GridRow
+      [ui/GridColumn
+       [ModulesView]]]
+     [ui/GridRow
+      [ui/GridColumn
+       [OverviewModuleSummary]]]]))
 
 
 (defn module-detail-panes

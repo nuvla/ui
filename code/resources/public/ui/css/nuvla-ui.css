@@ -907,33 +907,33 @@ body .divider-red {
 
 /** apps **/
 
-.uix-apps-navigator .ui.list .list > .item .header,
+.ui.list .list > .item .header,
 .ui.list > .item .header {
   font-family: 'Poppins' !important;
   font-weight: 500;
   margin-bottom: 0.2rem;
 }
 
-.uix-apps-navigator .ui.list .list > .item .description,
+.ui.list .list > .item .description,
 .ui.list > .item .description {
   color: rgba(0, 0, 0, 0.6);
   font-size: 0.9rem;
 }
 
-.uix-apps-navigator .ui.relaxed.list:not(.horizontal) > .item:not(:last-child) {
+.ui.relaxed.list:not(.horizontal) > .item:not(:last-child) {
   padding-bottom: 0.7em;
 }
 
-.uix-apps-navigator .ui.relaxed.list:not(.horizontal) > .item:not(:first-child) {
+.ui.relaxed.list:not(.horizontal) > .item:not(:first-child) {
   padding-top: 0.7em;
 }
 
-.uix-tab-nav .ui.menu {
+.ui.menu {
   border: 0px solid rgba(34, 36, 38, 0.15);
   box-shadow: 1px 1px 8px 0 rgb(34 36 38 / 15%);
 }
 
-.uix-tab-nav .ui.menu.item {
+.ui.menu.item {
   color: rgba(0, 0, 0, 0.6);
 }
 
@@ -948,4 +948,26 @@ body .divider-red {
 .ui.attached.segment {
   border: 1px solid rgba(34, 36, 38, 0.15);
 }
+
+.nuvla-apps .ui.secondary.segment h1 {
+  color: rgba(0, 0, 0, 0.87) !important;
+  margin-top: 0 !important;
+}
+
+.nuvla-apps .ui.secondary.segment img {
+  background-color: #ffffff;
+  border-radius: 0.6rem;
+  overflow: hidden;
+}
+
+.nuvla-apps .ui.secondary.segment h4.tab-app-detail {
+  color: rgba(0, 0, 0, 0.87) !important;
+  font-weight: 400;
+  font-size: 1rem;
+  padding: 0.4rem 0.6rem;
+  display: inline-block;
+  background-color: rgba(73, 135, 250, 0.3) !important;
+  border-radius: 0.25rem;
+}
+
 /** apps end **/

@@ -19,7 +19,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.tab :as tab]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -60,7 +59,6 @@
     (fn []
       (let [children (:children @module)]
         [ui/Segment {:secondary true
-                     :color     "blue"
                      :raised    true}
          [:h4 (str/capitalize (@tr [:content]))]
          (if (empty? children)
@@ -77,7 +75,6 @@
         module (subscribe [::apps-subs/module])
         {:keys [id created updated name parent-path path]} @module]
     [ui/Segment {:secondary true
-                 :color     "blue"
                  :raised    true}
      [:h4 (str/capitalize (@tr [:project]))]
      [ui/Grid {:columns 2}

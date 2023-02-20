@@ -1190,7 +1190,6 @@
         device      (subscribe [::main-subs/device])
         {:keys [logo-url]} @(subscribe [::subs/module])]
     [ui/Segment {:secondary true
-                 :color     "purple"
                  :raised    true
                  :padded    true}
      [ui/Grid {:columns   1

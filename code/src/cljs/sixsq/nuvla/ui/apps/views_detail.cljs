@@ -93,7 +93,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         error? (subscribe [::subs/details-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
-     [uix/Icon {:name "info"}]
+     [uix/Icon {:name "fa-light fa-circle-info"}]
      (str/capitalize (@tr [:details]))]))
 
 
@@ -199,9 +199,9 @@
                                    @module-id :infra-services]])}])
 
         (when @is-project?
-          [uix/MenuItem
+          [ui/MenuItem
            {:name     (@tr [:add])
-            :icon     "add"
+            :icon     (r/as-element [uix/Icon {:name "fa-light fa-plus-large"}])
             :disabled @deploy-disabled?
             :on-click #(dispatch [::events/open-add-modal])}])
         (when @can-copy?
@@ -219,9 +219,9 @@
             :hide-on-scroll true}])
 
         (when @is-project?
-          [uix/MenuItem
+          [ui/MenuItem
            {:name     (@tr [:paste])
-            :icon     "paste"
+            :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy icon"}])
             :disabled @paste-disabled?
             :on-click #(dispatch [::events/open-paste-modal])}])
 
@@ -1220,7 +1220,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "users"}]
+     [uix/Icon {:name "fa-light fa-user-group"}]
      (str/capitalize (@tr [:share]))]))
 
 

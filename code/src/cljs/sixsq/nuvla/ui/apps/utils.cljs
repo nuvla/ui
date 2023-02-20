@@ -95,7 +95,7 @@
   (case subtype
     "project" "fa-light fa-folder"
     "component" "grid layout"
-    "application" "cubes"
+    "application" "fa-light fa-cubes"
     "application_kubernetes" "cubes"
     "question circle"))
 

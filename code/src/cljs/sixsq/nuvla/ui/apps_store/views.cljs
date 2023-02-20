@@ -56,7 +56,7 @@
     [uix/Card
      {:image         logo-url
       :header        [:<>
-                      [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
+                      [uix/Icon {:name (apps-utils/subtype-icon subtype)}]
                       (or name id)]
       :description   (utils-general/truncate desc-summary 180)
       :content       [uix/Tags tags]

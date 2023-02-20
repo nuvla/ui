@@ -30,6 +30,7 @@
 - Apps - Change logo button border-radius fix
 - Tabs - New design
 - Apps Store, Navigate apps tab - New design
+- Apps Project Details, Overview tab - New design
 
 ## [2.33.1] - 2023-01-30
 

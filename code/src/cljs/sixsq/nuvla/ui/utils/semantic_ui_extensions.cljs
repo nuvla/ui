@@ -11,6 +11,11 @@
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
+            ["@codemirror/lang-markdown" :as lang-markdown]
+            ["@codemirror/lang-json" :as lang-json]
+            ["@codemirror/language" :as language]
+            ["@codemirror/legacy-modes/mode/yaml" :as yaml]
+            ["@codemirror/legacy-modes/mode/shell" :as shell]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -182,56 +187,36 @@
          [TR :click-to-copy]])]]]])
 
 (defn EditorCode
-  [{:keys [read-only? options default-options]
-    :or   {default-options {}
-           read-only?      false}
-    :as   props}]
+  [{:keys [value] :as props}]
   [ui/CodeMirror
-   (-> props
-       (dissoc :default-options :read-only?)
-       (assoc :options (-> default-options
-                           (merge options)
-                           (assoc :read-only read-only?))))])
+   (assoc props :value (or value ""))])
 
 (defn EditorJson
   [props]
-  (let [opts {:mode                "application/json"
-              :line-numbers        true
-              :match-brackets      true
-              :auto-close-brackets true
-              :style-active-line   true
-              :fold-gutter         true
-              :gutters             ["CodeMirror-foldgutter"]}]
-    [EditorCode (assoc props :default-options opts)]))
+  [EditorCode
+   (assoc props
+     :extensions [(lang-json/json)])])
 
 (defn EditorYaml
   [props]
-  (let [opts {:mode              "text/x-yaml"
-              :line-numbers      true
-              :style-active-line true}]
-    [EditorCode
-     (assoc props :default-options opts
-                  :class "full-height")]))
+  [EditorCode
+   (assoc props
+     :extensions [(.define language/StreamLanguage yaml/yaml)])])
 
 (defn EditorShell
   [props]
-  (let [opts {:mode              "text/x-sh"
-              :line-numbers      true
-              :style-active-line true}]
-    [EditorCode
-     (assoc props :default-options opts)]))
+  ; autocompletion disabled because doesn't play well with modal
+  [EditorCode
+   (assoc props
+     :basic-setup {:autocompletion false}
+     :extensions [(.define language/StreamLanguage shell/shell)])])
 
 (defn EditorMarkdown
   [props]
-  (let [opts {:mode                "text/x-markdown"
-              :lineWrapping        true
-              :match-brackets      true
-              :auto-close-brackets true
-              :style-active-line   true
-              :fold-gutter         true
-              :gutters             ["CodeMirror-foldgutter"]}]
-    [EditorCode
-     (assoc props :default-options opts)]))
+  [EditorCode
+   (assoc props
+     :basic-setup {:line-numbers false}
+     :extensions [(lang-markdown/markdown)])])
 
 
 (defn Accordion

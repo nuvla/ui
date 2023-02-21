@@ -60,6 +60,6 @@
     [ui/Segment {:attached "bottom"}
      [uix/EditorJson {:value      @text
                       :on-change  (fn
-                                    [_editor _data value]
+                                    [value]
                                     (reset! text value))
-                      :read-only? (or read-only? false)}]]))
+                      :editable   (not read-only?)}]]))

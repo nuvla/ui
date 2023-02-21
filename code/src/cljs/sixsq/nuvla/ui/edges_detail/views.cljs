@@ -1416,7 +1416,7 @@
             [ui/GridColumn {:stretched true}
              [deployments-views/DeploymentsOverviewSegment
               ::deployments-subs/deployments nil nil
-              #(dispatch [::tab-plugin/change-tab [::spec/tab] :deployments])]])
+              #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :deployments}])]])
 
           (when (and (:node-id @nb-status) (not suspended?))
             [ui/GridColumn {:stretched true}
@@ -2024,7 +2024,7 @@
        [PageHeader]
        [MenuBar uuid]
        [components/ErrorJobsMessage ::job-subs/jobs nil nil
-        #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
+        #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
        [job-views/ProgressJobAction nb-status]
        (when (and nb-status (not (:online nb-status)))
          [ui/Message {:warning true

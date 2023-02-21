@@ -226,7 +226,7 @@
 (reg-event-fx
   ::set-active-tab
   (fn [_ [_ active-tab]]
-    {:fx [[:dispatch [::nav-tab/change-tab [::spec/tab] active-tab]]]}))
+    {:fx [[:dispatch [::nav-tab/change-tab {:db-path [::spec/tab] :tab-key active-tab}]]]}))
 
 (reg-event-fx
   ::set-default-tab

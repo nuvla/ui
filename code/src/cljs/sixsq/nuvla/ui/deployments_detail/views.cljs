@@ -828,7 +828,7 @@
           [PageHeader]
           [MenuBar @deployment]
           [components/ErrorJobsMessage ::job-subs/jobs
-           nil nil #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
+           nil nil #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
           [ProgressBars]
           [vpn-info]
           [tab-plugin/Tab

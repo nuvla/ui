@@ -48,15 +48,17 @@
   (dispatch [::main-events/changes-protection? false])
   (dispatch [::events/form-valid true])
   (dispatch [::events/set-validate-form? false])
-  (fn [nav-query-params]
-    [components/LoadingPage {:dimmable? true}
-     [:<>
-      [components/NotFoundPortal
-       ::subs/module-not-found?
-       :no-module-message-header
-       :no-module-message-content]
-      [views-detail/VersionWarning]
-      [ModuleDetails nav-query-params]]]))
+  (let [nav-query-params (subscribe [::route-subs/nav-query-params])]
+    (fn []
+      ^{:key (str @nav-query-params)}
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/module-not-found?
+         :no-module-message-header
+         :no-module-message-content]
+        [views-detail/VersionWarning]
+        [ModuleDetails nav-query-params]]])))
 
 (defn- CommonComponents
   []
@@ -69,18 +71,21 @@
 
 (defn AppDetails
   []
-  (let [nav-query-params (subscribe [::route-subs/nav-query-params])]
+  (let [version      (subscribe [::route-subs/query-param :version])
+        sub-type     (subscribe [::route-subs/query-param :subtype ])]
     (fn []
-      (let [version     (:version @nav-query-params)
-            new-subtype (:subtype @nav-query-params)
-            is-new?     (boolean (seq new-subtype))]
+      (let [is-new?  (boolean (seq @sub-type))]
         (dispatch [::events/is-new? is-new?])
         (if is-new?
-          (dispatch-clear-events new-subtype)
-          (dispatch [::events/get-module version]))
+          (dispatch-clear-events @sub-type)
+          (dispatch [::events/get-module @version]))
         [:<>
          [CommonComponents]
-         [Module nav-query-params]]))))
+         [Module]]))))
+
+(defn AppDetailsRoute
+  []
+  (fn [] [AppDetails]))
 
 (defn AppsOverview
   [_path]

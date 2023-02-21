@@ -30,7 +30,7 @@
 
 
 (defn ModuleDetails
-  [_nav-query-params]
+  []
   (let [module (subscribe [::subs/module])
         new-subtype (subscribe [::route-subs/query-param :subtype])]
     (fn []
@@ -44,21 +44,18 @@
 
 
 (defn Module
-  [_nav-query-params]
+  []
   (dispatch [::main-events/changes-protection? false])
   (dispatch [::events/form-valid true])
   (dispatch [::events/set-validate-form? false])
-  (let [nav-query-params (subscribe [::route-subs/nav-query-params])]
-    (fn []
-      ^{:key (str @nav-query-params)}
-      [components/LoadingPage {:dimmable? true}
-       [:<>
-        [components/NotFoundPortal
-         ::subs/module-not-found?
-         :no-module-message-header
-         :no-module-message-content]
-        [views-detail/VersionWarning]
-        [ModuleDetails nav-query-params]]])))
+  [components/LoadingPage {:dimmable? true}
+   [:<>
+    [components/NotFoundPortal
+     ::subs/module-not-found?
+     :no-module-message-header
+     :no-module-message-content]
+    [views-detail/VersionWarning]
+    [ModuleDetails]]])
 
 (defn- CommonComponents
   []

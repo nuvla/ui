@@ -55,7 +55,7 @@
              (utils/swarm-disabled? infra-service)
              {:popup-txt   "Swarm Disabled"
               :label-txt   "Swarm Disabled"
-              :label-color "brown"})]
+              :label-color "grey"})]
     (when label-txt
       [ui/Popup
        {:size    "tiny"

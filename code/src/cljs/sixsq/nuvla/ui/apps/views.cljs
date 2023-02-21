@@ -69,7 +69,7 @@
 (defn AppDetails
   []
   (let [version      (subscribe [::route-subs/query-param :version])
-        sub-type     (subscribe [::route-subs/query-param :subtype ])]
+        sub-type     (subscribe [::route-subs/query-param :subtype])]
     (fn []
       (let [is-new?  (boolean (seq @sub-type))]
         (dispatch [::events/is-new? is-new?])
@@ -81,8 +81,8 @@
          [Module]]))))
 
 (defn AppDetailsRoute
-  []
-  (fn [] [AppDetails]))
+  [{:keys [path-params]}]
+  [AppDetails {:key (str path-params)}])
 
 (defn AppsOverview
   [_path]

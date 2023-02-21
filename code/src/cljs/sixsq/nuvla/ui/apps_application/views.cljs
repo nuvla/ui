@@ -185,7 +185,7 @@
                                         (dispatch [::events/update-docker-compose value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form]))
-                           :editable? @editable?}]
+                           :editable  @editable?}]
           (when @validate-form?
             (dispatch [::events/set-docker-validation-error
                        apps-views-detail/application-kubernetes-subtype (not valid?)])

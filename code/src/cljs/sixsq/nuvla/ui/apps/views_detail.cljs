@@ -1183,7 +1183,7 @@
 
 
 (defn OverviewDescription
-  []
+  [db-path]
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (subscribe [::subs/editable?])
         description (subscribe [::subs/description])
@@ -1202,7 +1202,7 @@
          [ui/GridColumn {:style {:text-align "right"}}
           [ui/Button {:icon     "pencil"
                       :compact  true
-                      :on-click #(dispatch [::events/set-active-tab :details])}]])]
+                      :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
                        :only      "mobile"}

@@ -76,7 +76,7 @@
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect
                        ::ignore-changes-protection ignore-chng-protection?)}
         (do
-          (log/error "triggering navigate effect " (str {:relative-url navigate-to}))
+          (log/info "triggering navigate effect " (str {:relative-url navigate-to}))
           nav-effect)))))
 
 (reg-event-fx

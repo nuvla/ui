@@ -42,10 +42,6 @@
       (set-unload-protection)
       (clear-unload-protection))))
 
-(comment
-  (set-unload-protection)
-  (clear-unload-protection)
-  )
 
 (defn- stop-browser-back
   "It's not possible to disable navigate back in modern browsers.
@@ -69,9 +65,6 @@
   (if nav-back? (.go js/window.history -2)
     (if (fn? f) (f) (.back js/window.history))))
 
-(comment
-  (stop-browser-back +)
-  (start-browser-back + -))
 
 (reg-fx
   ::disable-browser-back

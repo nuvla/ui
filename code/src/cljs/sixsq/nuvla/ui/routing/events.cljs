@@ -16,7 +16,6 @@
   ::push-state-by-path
   (fn [{ {:keys [current-route
                  router]} :db} [_ new-path]]
-(js/console.error "HELLO pushing route")
     (let [new-match (dissoc (match-by-path router new-path) :controllers)]
       (when-not (= new-match (dissoc current-route :controllers))
         {::fx/push-state new-path}))))

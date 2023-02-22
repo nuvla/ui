@@ -62,8 +62,6 @@
                {:target-path "resources/public/ui/css/themes"}]
               ["node_modules/react-datepicker/dist/react-datepicker.min.css"
                {:target-path "resources/public/ui/css/react-datepicker.min.css"}]
-              ["node_modules/codemirror/lib/codemirror.css"
-               {:target-path "resources/public/ui/css/codemirror.css"}]
               ["node_modules/codemirror/addon/fold/foldgutter.css"
                {:target-path "resources/public/ui/css/foldgutter.css"}]
               ["node_modules/codemirror/addon/dialog/dialog.css"

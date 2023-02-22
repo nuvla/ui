@@ -9,7 +9,7 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   //
   // await page.pause();
 
-  await setUp(page);
+  await setUp(page, baseURL);
 
   // await page.pause();
   const url = page.url();
@@ -22,9 +22,9 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
 
   // ignores changes
   await page.getByRole('button', { name: 'ignore changes' }).click();
-  page.waitForURL(new RegExp('https://nui.localhost/ui/deployments'), { timeout: 2000 });
+  page.waitForURL(new RegExp(`${baseURL}/ui/deployments`), { timeout: 2000 });
 
-  await setUp(page);
+  await setUp(page, baseURL);
 
   // await page.pause();
 
@@ -90,25 +90,23 @@ function expectModalHidden(page, errorMessage = 'Modal hidden?', timeout = 0) {
   expect(page.getByRole('button', { name: 'ignore changes' }), errorMessage).toBeHidden({ timeout });
 }
 
-async function setUp(page: Page) {
+async function setUp(page: Page, baseURL) {
   await page.getByRole('link', { name: 'apps' }).click();
-  await page.waitForURL('https://nui.localhost/ui/apps');
+  await page.waitForURL(`${baseURL}/ui/apps`);
   await page.getByRole('link', { name: 'Navigate Apps' }).click();
-  await page.waitForURL('https://nui.localhost/ui/apps?apps-store-tab=navigate');
+  await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
   // await page.pause();
   await page.getByText('DO NOT DELETE --- e2e test project', { exact: true }).click();
-  await page.waitForURL('https://nui.localhost/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview');
+  await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview`);
   await page
     .locator('main:has-text("Validation error!The form is invalid. Please review the fields in red.Oops can\'t")')
     .getByRole('button')
     .click();
   await page.waitForURL(
-    'https://nui.localhost/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview&apps-tab=details'
+    `${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview&apps-tab=details`
   );
   await page.getByRole('link', { name: 'Details' }).click();
-  await page.waitForURL(
-    'https://nui.localhost/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=details&apps-tab=details'
-  );
+  await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=details&apps-tab=details`);
   await page.locator('input[type="input"]').click();
   return page.locator('input[type="input"]').fill('DO NOT DELETE --- e2e test project HELLO');
 }

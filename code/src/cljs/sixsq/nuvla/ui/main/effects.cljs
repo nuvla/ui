@@ -48,6 +48,12 @@
   )
 
 (defn- stop-browser-back
+  "It's not possible to disable navigate back in modern browsers.
+
+   Workaround:
+   1. Push current route on history stack, so that navigate back leaves you on same page.
+   2. Navigating back then goes to same page, triggers 'popstate' event, which pushes current route again.
+       see: https://stackoverflow.com/a/64572567"
   [f]
   (.pushState js/window.history nil "" (.-href js/window.location))
   (set!
@@ -57,14 +63,15 @@
       (when (fn? f) (f)))))
 
 (defn- start-browser-back
-  [f]
+  [f nav-back?]
   (set! js/window.onpopstate nil)
-  (if (fn? f) (f) (.back js/window.history)))
+  ;; if modal was opened by navigating back, go back two steps in history stack
+  (if nav-back? (.go js/window.history -2)
+    (if (fn? f) (f) (.back js/window.history))))
 
 (comment
   (stop-browser-back +)
-  (start-browser-back +)
-  )
+  (start-browser-back + -))
 
 (reg-fx
   ::disable-browser-back
@@ -74,8 +81,8 @@
 
 (reg-fx
   ::enable-browser-back
-  (fn [f]
-    (start-browser-back f)))
+  (fn [{:keys [cb-fn nav-back?]}]
+    (start-browser-back cb-fn nav-back?)))
 
 (reg-fx
   ::add-pop-state-listener-close-modal-event

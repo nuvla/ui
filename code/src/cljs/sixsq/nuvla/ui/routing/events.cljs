@@ -64,7 +64,7 @@
                ;; disables the protection.
                ::ignore-changes-protection true)}
         (merge {:db (assoc db ::ignore-changes-protection false)}
-               event)))))
+          event)))))
 
 (reg-event-fx
   ::navigate
@@ -82,7 +82,6 @@
 (reg-event-fx
   ::navigate-partial
   (fn [{{:keys [current-route]} :db} [_ {:keys [change-event] :as new-partial-route-data}]]
-;; (js/console.error "::navigate-partial" new-partial-route-data)
     (let [{:keys [route-name
                   path-params
                   query-params]} (utils/new-route-data current-route new-partial-route-data)]

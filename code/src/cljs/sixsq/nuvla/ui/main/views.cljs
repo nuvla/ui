@@ -115,18 +115,15 @@
 
 (defn ignore-changes-modal
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        navigation-info   (subscribe [::subs/ignore-changes-modal])
-        on-apps-page?     (-> @(subscribe [::route-subs/current-route])
-                              :template
-                              (str/includes? "apps"))
-        ignore-changes-fn #(dispatch [::events/ignore-changes false])]
+  (let [tr                       (subscribe [::i18n-subs/tr])
+        navigation-info          (subscribe [::subs/ignore-changes-modal])
+        do-not-ignore-changes-fn #(dispatch [::events/ignore-changes false])]
     (when @navigation-info
       (dispatch [::events/opening-protection-modal]))
 
     [ui/Modal {:open        (some? @navigation-info)
                :close-icon  true
-               :on-close    ignore-changes-fn
+               :on-close    do-not-ignore-changes-fn
                 ;; data-testid is used for e2e test
                :data-testid "protection-modal"}
 
@@ -139,8 +136,7 @@
                    :positive true
                    :active   true
                    :on-click #(do (dispatch [::events/ignore-changes true])
-                                  (dispatch [::apps-events/form-valid])
-                                  (when on-apps-page? (dispatch [::apps-events/set-active-tab :overview])))}]]]))
+                                  (dispatch [::apps-events/form-valid]))}]]]))
 
 (defn subscription-required-modal
   []

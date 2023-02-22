@@ -38,6 +38,7 @@
 (reg-fx
   ::on-unload-protection
   (fn [protected?]
+    (js/console.error "2: ::on-unload-protection")
     (if protected?
       (set-unload-protection)
       (clear-unload-protection))))
@@ -58,8 +59,10 @@
 
 (defn- start-browser-back
   []
+  (js/console.error "4a: start-browser-back before setting onpopstate nil")
   (set! js/window.onpopstate nil)
-  (.back js/window.history))
+  (js/console.error "4b: start-browser-back before browser back")
+  (.back js/window.history)  (js/console.error "4c: start-browser-back after browser back"))
 
 (comment
   (stop-browser-back +)
@@ -73,19 +76,21 @@
 
 
 (reg-fx
+  ::enable-browser-back
+  (fn [fn]
+    (js/console.error "3: ::fx/enable-browser-back")
+    (start-browser-back)
+    (when (fn? fn) (fn))))
+
+(reg-fx
   ::add-pop-state-listener-close-modal-event
   (fn [f]
     (.addEventListener js/window "popstate" f)))
 
-(reg-fx
-  ::enable-browser-back
-  (fn [fn]
-    (start-browser-back)
-    (when (fn? fn) (fn))))
 
 (reg-fx
   ::clear-popstate-event-listener
   (fn
     [f]
-    (js/console.error "clear-popstate-event-listener")
+    (js/console.error "1: clear-popstate-event-listener")
     (.removeEventListener js/window "popstate" f)))

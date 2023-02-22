@@ -132,7 +132,6 @@
 (reg-event-fx
   ::changes-protection?
   (fn [{db :db} [_ protect?]]
-    (js/console.error "changes-protection?" protect?)
     (let [protected? (get db ::spec/changes-protection?)
           changed?   (not= protect? protected?)]
       (when changed?
@@ -142,9 +141,7 @@
 
 (defn- dispatch-close-modal-by-back-button-event
   []
-(js/console.error "dispatch-close-modal-by-back-button-event")
-  (dispatch [::close-modal-by-back-button])
-  )
+  (dispatch [::close-modal-by-back-button]))
 
 (reg-event-fx
   ::clear-changes-protections
@@ -162,21 +159,22 @@
                                    ::spec/do-not-ignore-changes-modal nil)]
       (if choice
         (let [new-db (-> close-modal-db
-                       (assoc ::spec/after-clear-event ignore-changes-modal)
-                       (assoc ::spec/changes-protection? false))]
+                         (assoc ::spec/after-clear-event ignore-changes-modal)
+                         (assoc ::spec/changes-protection? false))]
           (cond
             (map? ignore-changes-modal)
-            (do (js/console.error "ignore-changes-modal" ignore-changes-modal)
-              {:db new-db
-               :fx [[:dispatch [::clear-changes-protections]]]})
+            {:db new-db
+             :fx [[:dispatch [::clear-changes-protections]]]}
 
             (fn? ignore-changes-modal)
             (do (ignore-changes-modal)
               {:db new-db
                :fx [[:dispatch [::clear-changes-protections]]]})))
 
-        (merge {:db close-modal-db}
-          do-not-ignore-changes-modal)))))
+        (merge  {:db close-modal-db} do-not-ignore-changes-modal
+          #_(update do-not-ignore-changes-modal
+              :fx conj
+              [::fx/clear-popstate-event-listener dispatch-close-modal-by-back-button-event]))))))
 
 (reg-event-fx
   ::disable-browser-back
@@ -188,8 +186,7 @@
   (fn [{db :db} _]
     {:db (assoc db ::spec/ignore-changes-modal nil
                    ::spec/do-not-ignore-changes-modal nil)
-     :fx [[::ignore-changes false]
-          [::fx/clear-popstate-event-listener dispatch-close-modal-by-back-button-event]]}))
+     :fx [[::fx/clear-popstate-event-listener dispatch-close-modal-by-back-button-event]]}))
 
 
 (reg-event-fx
@@ -197,10 +194,6 @@
   (fn [_ _]
     {:fx [[::fx/add-pop-state-listener-close-modal-event dispatch-close-modal-by-back-button-event]]}))
 
-;; (defn- dispatch-after-clear-effect
-;;   []
-;;   (js/console.error "dispatch-after-clear-effect")
-;;   (dispatch [::after-clear-event]))
 
 (reg-event-fx
   ::enable-browser-back
@@ -211,7 +204,6 @@
 (reg-event-fx
   ::after-clear-event
   (fn [{{after-clear-event ::spec/after-clear-event :as db} :db}]
-    (js/console.error "after-clear-event" after-clear-event)
     {:db (assoc db ::spec/after-clear-event nil)
      :fx (:fx after-clear-event)}))
 

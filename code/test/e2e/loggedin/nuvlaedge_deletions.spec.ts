@@ -28,7 +28,7 @@ test('Deletes all nuvlaedges created through e2e tests', async ({ page, context 
     await page.locator('a:has-text("delete")').click();
     // await page.pause();
     await page.getByRole('button', { name: 'delete' }).click();
-    await page.waitForURL('https://nui.localhost/ui/edges?view=table');
+    await page.waitForURL(`${baseURL}/ui/edges?view=table`);
     await page.getByPlaceholder('Search ...').click();
     page.getByPlaceholder('Search ...').fill(newEdgeName);
     await page.waitForResponse('/api/nuvlabox');

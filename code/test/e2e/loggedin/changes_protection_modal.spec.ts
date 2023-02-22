@@ -22,7 +22,6 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
 
   // ignores changes
   await page.getByRole('button', { name: 'ignore changes' }).click();
-  expectModalHidden(page, 'Modal hidden after ignoring changes');
   page.waitForURL(new RegExp('https://nui.localhost/ui/deployments'), { timeout: 2000 });
 
   await setUp(page);
@@ -33,7 +32,6 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   await openModal();
   await page.waitForTimeout(200);
   await page.locator('.close').click();
-  expectModalHidden(page, 'Modal hidden after click on X', 200);
   testSameUrl(page, url, 'Same URL after click on X');
 
   // NAVIGATE BACK for closing

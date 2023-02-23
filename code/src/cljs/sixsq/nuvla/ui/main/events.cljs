@@ -128,16 +128,27 @@
   (fn [_ [_ uri]]
     {::fx/open-new-window [uri]}))
 
+(reg-event-fx
+  ::reset-changes-protection
+  (fn [{db :db} [_ f]]
+    {:db (assoc db ::spec/changes-protection? false)
+     :fx [[::fx/on-unload-protection false]
+          [::fx/enable-browser-back {:cb-fn f}]]}))
 
 (reg-event-fx
   ::changes-protection?
-  (fn [{db :db} [_ protect?]]
+  (fn [{db :db} [_ protect? after-clear-event]]
     (let [protected? (get db ::spec/changes-protection?)
-          changed?   (not= protect? protected?)]
-      (when changed?
-        {:db (assoc db ::spec/changes-protection? protect?)
+          changed?   (not= protect? protected?)
+          new-db     (assoc db ::spec/changes-protection? protect?)]
+      (if changed?
+        {:db new-db
          :fx [[::fx/on-unload-protection protect?]
-              [:dispatch (if protect? [::disable-browser-back] [::enable-browser-back])]]}))))
+              (if protect?
+                  [:dispatch [::disable-browser-back]]
+                  [:dispatch [::enable-browser-back {:cb-fn #(dispatch after-clear-event)}]])]}
+        {:db new-db
+         :fx [(when after-clear-event [:dispatch after-clear-event])]}))))
 
 (defn- dispatch-close-modal-by-back-button-event
   []
@@ -184,7 +195,8 @@
                           [:dispatch [::clear-changes-protections]]]]
       (cond
         (map? ignore-changes-modal)
-        {:db (assoc db-chng-unprtd ::spec/after-clear-event ignore-changes-modal)
+        {:db (merge (:db ignore-changes-modal)
+                    (assoc db-chng-unprtd ::spec/after-clear-event (dissoc ignore-changes-modal :db)))
          :fx clear-fx}
 
         (fn? ignore-changes-modal)
@@ -220,9 +232,9 @@
 
 (reg-event-fx
   ::enable-browser-back
-  (fn [{db :db} _]
+  (fn [{db :db} [_ payload]]
     {:db (assoc db ::routing-events/ignore-changes-protection true)
-     :fx [[::fx/enable-browser-back]]}))
+     :fx [[::fx/enable-browser-back payload]]}))
 
 
 

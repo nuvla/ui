@@ -196,9 +196,6 @@
 ;;
 
 (def CodeMirror (r/adapt-react-class ccode-mirror/default))
-;(def CodeMirror (r/adapt-react-class code-mirror/UnControlled))
-;;(def CodeMirrorControlled (r/adapt-react-class code-mirror/Controlled))
-
 
 ;;
 ;; Diff viewer

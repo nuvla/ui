@@ -362,10 +362,7 @@ div.search.dropdown > input {
   z-index: 999;
 }
 
-.full-height > .CodeMirror {
-  height: auto !important;
-}
-
+/* cleanup? */
 .large-height > .CodeMirror {
   height: 600px !important;
 }

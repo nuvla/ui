@@ -1756,8 +1756,7 @@
             [ui/FormField {:label    "Run"
                            :required true}]
             "Shell script: "
-            [uix/EditorShell {:value     ""
-                              :on-change (fn [value]
+            [uix/EditorShell {:on-change (fn [value]
                                            (ui-callback/input-callback
                                              (swap! form-data assoc :run value)))}]]]]
          [ui/ModalActions
@@ -1766,7 +1765,6 @@
             :disabled (utils/form-add-playbook-incomplete? @form-data)
             :primary  true
             :on-click on-click-fn}]]]))))
-
 
 (defn TabPlaybooks
   []
@@ -1871,7 +1869,7 @@
                                       :on-change (fn [value]
                                                    (reset! run value)
                                                    (reset! run-changed? true))
-                                      :editable  @can-edit?}]]
+                                      :read-only (not @can-edit?)}]]
 
                    [uix/Button {:primary  true
                                 :text     (@tr [:save])
@@ -1896,13 +1894,8 @@
                        "Output"]
                       [ui/Segment {:attached   true
                                    :text-align "left"}
-                       [ui/CodeMirror {:value      (:output @selected-playbook)
-                                       :autoCursor true
-                                       :options    {:mode              "text/plain"
-                                                    :read-only         true
-                                                    :line-numbers      false
-                                                    :style-active-line false}
-                                       :class      "full-width"}]]]
+                       [uix/EditorCode {:value     (:output @selected-playbook)
+                                        :read-only true}]]]
                      [ui/Segment {:vertical true}
                       (@tr [:nuvlabox-playbooks-no-outputs])])]]]]
                (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))

@@ -185,7 +185,7 @@
                                         (dispatch [::events/update-docker-compose value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form]))
-                           :editable  @editable?}]
+                           :read-only (not @editable?)}]
           (when @validate-form?
             (dispatch [::events/set-docker-validation-error
                        apps-views-detail/application-kubernetes-subtype (not valid?)])
@@ -220,7 +220,7 @@
                                         (dispatch [::events/update-docker-compose value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form]))
-                           :editable  @editable?}]
+                           :read-only (not @editable?)}]
           (when @validate-form?
             (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
             (when (not valid?)

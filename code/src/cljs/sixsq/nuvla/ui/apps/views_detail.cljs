@@ -484,7 +484,7 @@
         editable?      (subscribe [::subs/editable?])
         validate-form? (subscribe [::subs/validate-form?])]
     (fn []
-      (let [valid?    (s/valid? ::spec/description @description)]
+      (let [valid? (s/valid? ::spec/description @description)]
         [uix/Accordion
          [:<>
           [ui/Grid {:centered true
@@ -498,7 +498,7 @@
                             (dispatch [::events/description value])
                             (dispatch [::main-events/changes-protection? true])
                             (dispatch [::events/validate-form]))
-               :editable  @editable?}]
+               :read-only (not @editable?)}]
              (when @validate-form?
                (when validation-event
                  (dispatch [validation-event "description" (not valid?)]))

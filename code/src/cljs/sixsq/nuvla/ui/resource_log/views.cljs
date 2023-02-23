@@ -6,7 +6,9 @@
             [sixsq.nuvla.ui.resource-log.events :as events]
             [sixsq.nuvla.ui.resource-log.subs :as subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
+            ["@codemirror/view" :as codemirror-view]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn log-controller
@@ -77,25 +79,24 @@
          "Clear"]]])))
 
 (defn LogsArea
-  [log scroll-info go-live?]
-  [:<>
-   [ui/Segment {:attached true
-                :style    {:padding 0
-                           :z-index 0
-                           :height  600}}
-    [ui/CodeMirror {:value    (str/join "\n" log)
-                    :scroll   {:x (:left @scroll-info)
-                               :y (if go-live?
-                                    (.-MAX_VALUE js/Number)
-                                    (:top @scroll-info))}
-                    :onScroll #(reset! scroll-info
-                                       (js->clj %2 :keywordize-keys true))
-                    :options  {:mode     ""
-                               :readOnly true
-                               :theme    "logger"}
-                    :class    ["large-height"]}]]
-   [ui/Label (str "line count:")
-    [ui/LabelDetail (count log)]]])
+  [_log _go-live?]
+  (let [scroll-down (fn [view-update]
+                      (let [scroll-dom    (-> view-update .-view .-scrollDOM)
+                            scroll-height (.-scrollHeight scroll-dom)]
+                        (set! (.-scrollTop scroll-dom) scroll-height)))]
+    (fn [log go-live?]
+      [:<>
+       [ui/Segment {:attached true
+                    :style    {:padding 0
+                               :z-index 0
+                               :height  600}}
+        [uix/EditorCode
+         {:value     (str/join "\n" log)
+          :height    "600px"
+          :read-only true
+          :on-update #(when go-live? (scroll-down %))}]]
+       [ui/Label (str "line count:")
+        [ui/LabelDetail (count log)]]])))
 
 (defn logs-viewer
   [parent components-subs]
@@ -103,8 +104,7 @@
         id           (subscribe [::subs/id])
         play?        (subscribe [::subs/play?])
         components   (components-subs)
-        go-live?     (r/atom true)
-        scroll-info  (r/atom nil)]
+        go-live?     (r/atom true)]
     (dispatch [::events/set-parent parent])
     (fn [_parent _components-subs]
       (dispatch [::events/set-available-components @components])
@@ -123,7 +123,7 @@
                                      :z-index 0}}
            (if (and @id last-timestamp)
              (if (empty? log-components)
-               [LogsArea (:_all-in-one log) scroll-info @go-live?]
+               [LogsArea (:_all-in-one log) @go-live?]
                [ui/Tab
                 {:menu  {:tabular  false
                          :pointing true
@@ -134,7 +134,7 @@
                                         :key     (name component-name)}
                              :render   #(r/as-element
                                           [LogsArea component-log
-                                           scroll-info @go-live?])}) log)}])
+                                           @go-live?])}) log)}])
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get logs"])]]]))))

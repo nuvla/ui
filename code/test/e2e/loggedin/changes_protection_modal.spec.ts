@@ -38,7 +38,7 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   await openModal();
   await page.waitForTimeout(200);
   await page.goBack();
-  expectModalHidden(page, 'Modal hidden after navigating back');
+  expectModalHidden(page, 'Modal hidden after navigating back 1st time');
   testSameUrl(page, url, 'Same URL after navigating back');
 
   // CLICKS OUTSIDE MODAL for closing
@@ -58,24 +58,12 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   expectModalHidden(page, 'Modal still hides after clicking X?');
   await page.goBack();
   await page.locator('.close').click({ timeout: 2000 });
-});
+  expectModalHidden(page, 'Modal still after navigating back 2nd time?');
 
-test.skip('CHANGES PROTECTION MODAL TEST 1b: opens by main navigation, and closes by navigating back', async ({
-  page,
-}, { config }) => {
-  const { baseURL } = config.projects[0].use;
-  await page.goto(baseURL + '/ui/welcome');
-
-  //
-  // await page.pause();
-
-  await setUp(page);
-  const url = page.url();
-
-  await page.getByRole('link', { name: 'deployments' }).click();
-  await page.goBack();
-  expect(page.getByRole('button', { name: 'ignore changes' })).toBeHidden({ timeout: 2000 });
-  expect(page.url()).toBe(url);
+  await openModal();
+  expectModalHidden(page, 'Modal still hides after clicking X?', 200);
+  await page.getByRole('button', { name: 'ignore changes' }).click();
+  expect(page.url(), 'Final: Navigated to deployments page').toMatch(new RegExp(`${baseURL}/ui/deployments`));
 });
 
 function testSameUrl(page, url: string, errorMessage = 'Same URL?') {

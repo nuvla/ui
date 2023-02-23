@@ -195,7 +195,6 @@
 (reg-event-fx
   ::after-clear-event
   (fn [{{after-clear-event ::spec/after-clear-event :as db} :db}]
-    (js/console.error "::after-clear-event" after-clear-event)
     {:db (assoc db ::spec/after-clear-event nil)
      :fx (:fx after-clear-event)}))
 

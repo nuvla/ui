@@ -362,11 +362,6 @@ div.search.dropdown > input {
   z-index: 999;
 }
 
-/* cleanup? */
-.large-height > .CodeMirror {
-  height: 600px !important;
-}
-
 .markdown img {
   max-width: 100%;
 }

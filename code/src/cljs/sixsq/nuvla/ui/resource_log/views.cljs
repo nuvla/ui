@@ -8,7 +8,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            ["@codemirror/view" :as codemirror-view]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn log-controller
@@ -80,7 +79,7 @@
 
 (defn LogsArea
   [_log _go-live?]
-  (let [scroll-down (fn [view-update]
+  (let [scroll-down (fn [^js view-update]
                       (let [scroll-dom    (-> view-update .-view .-scrollDOM)
                             scroll-height (.-scrollHeight scroll-dom)]
                         (set! (.-scrollTop scroll-dom) scroll-height)))]

@@ -3,7 +3,7 @@
    namespace has no real functionality; it just keeps Cursive from complaining
    about undefined symbols."
   (:require ["qrcode.react" :as qrcode]
-            ["@uiw/react-codemirror" :as ccode-mirror]
+            ["@uiw/react-codemirror" :as code-mirror]
             ["react-copy-to-clipboard" :as copy-to-clipboard]
             ["react-datepicker" :as date-picker]
             ["react-diff-viewer" :as react-diff-viewer]
@@ -195,7 +195,7 @@
 ;; code mirror
 ;;
 
-(def CodeMirror (r/adapt-react-class ccode-mirror/default))
+(def CodeMirror (r/adapt-react-class code-mirror/default))
 
 ;;
 ;; Diff viewer

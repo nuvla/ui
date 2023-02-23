@@ -77,12 +77,15 @@
           [ui/Icon {:name "trash", :corner true}]]
          "Clear"]]])))
 
-(defn LogsArea
+  (defn LogsArea
   [_log _go-live?]
-  (let [scroll-down (fn [^js view-update]
-                      (let [scroll-dom    (-> view-update .-view .-scrollDOM)
-                            scroll-height (.-scrollHeight scroll-dom)]
-                        (set! (.-scrollTop scroll-dom) scroll-height)))]
+  (let [first-render (atom true)
+        scroll-down (fn [^js view-update]
+                      (when (or @first-render (.-docChanged view-update))
+                        (reset! first-render false)
+                        (let [scroll-dom    (-> view-update .-view .-scrollDOM)
+                              scroll-height (.-scrollHeight scroll-dom)]
+                          (set! (.-scrollTop scroll-dom) scroll-height))))]
     (fn [log go-live?]
       [:<>
        [ui/Segment {:attached true
@@ -93,7 +96,7 @@
          {:value     (str/join "\n" log)
           :height    "600px"
           :read-only true
-          :on-update #(when go-live? (scroll-down %))}]]
+          :on-update #(when (or go-live? @first-render) (scroll-down %))}]]
        [ui/Label (str "line count:")
         [ui/LabelDetail (count log)]]])))
 

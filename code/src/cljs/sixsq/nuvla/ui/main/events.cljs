@@ -128,28 +128,6 @@
   (fn [_ [_ uri]]
     {::fx/open-new-window [uri]}))
 
-(reg-event-fx
-  ::reset-changes-protection
-  (fn [{db :db} [_ f]]
-    {:db (assoc db ::spec/changes-protection? false)
-     :fx [[::fx/on-unload-protection false]
-          [::fx/enable-browser-back {:cb-fn f}]]}))
-
-(reg-event-fx
-  ::changes-protection?
-  (fn [{db :db} [_ protect? after-clear-event]]
-    (let [protected? (get db ::spec/changes-protection?)
-          changed?   (not= protect? protected?)
-          new-db     (assoc db ::spec/changes-protection? protect?)]
-      (if changed?
-        {:db new-db
-         :fx [[::fx/on-unload-protection protect?]
-              (if protect?
-                  [:dispatch [::disable-browser-back]]
-                  [:dispatch [::enable-browser-back {:cb-fn #(dispatch after-clear-event)}]])]}
-        {:db new-db
-         :fx [(when after-clear-event [:dispatch after-clear-event])]}))))
-
 (defn- dispatch-close-modal-by-back-button-event
   []
   (dispatch [::do-not-ignore-changes]))
@@ -158,10 +136,37 @@
 (def clear-openend-by-browser-back-event [:dispatch [::unset-opened-by-browser-back]])
 
 (reg-event-fx
+  ::reset-changes-protection
+  (fn [{db :db} [_ after-clear-event]]
+    (js/console.error ::reset-changes-protection after-clear-event)
+    (let [protected? (get db ::spec/changes-protection?)]
+      (if protected?
+      (do
+        (js/console.error "::reset-changes-protection protected" protected?)
+        {:db (assoc db
+               ::spec/changes-protection? false
+               ::routing-events/ignore-changes-protection true
+              ;;  ::spec/after-clear-event {:fx [(when after-clear-event [:dispatch after-clear-event])]}
+               )
+         :fx [[::fx/on-unload-protection false]
+              [:dispatch [::enable-browser-back {:cb-fn #(dispatch [::after-clear-event after-clear-event])}]]]})
+        {:fx [(when after-clear-event [:dispatch after-clear-event])]}))))
+
+(reg-event-fx
+  ::changes-protection?
+  (fn [{db :db} [_ protect?]]
+    (let [protected? (get db ::spec/changes-protection?)
+          changed?   (not= protect? protected?)]
+      (when changed?
+        {:db (assoc db ::spec/changes-protection? protect?)
+         :fx [[::fx/on-unload-protection protect?]
+              [:dispatch (if protect? [::disable-browser-back] [::enable-browser-back])]]}))))
+
+
+(reg-event-fx
   ::clear-changes-protections
   (fn [{db :db}]
-    {:db (-> db
-             (assoc  ::routing-events/ignore-changes-protection true))
+    {:db (assoc db ::routing-events/ignore-changes-protection true)
      :fx [clear-close-modal-on-back-fx
           [::fx/on-unload-protection false]
           [::fx/enable-browser-back {:cb-fn     #(dispatch [::after-clear-event])
@@ -206,9 +211,9 @@
 
 (reg-event-fx
   ::after-clear-event
-  (fn [{{after-clear-event ::spec/after-clear-event :as db} :db}]
+  (fn [{{after-clear-event ::spec/after-clear-event :as db} :db} [_ clear-event]]
     {:db (assoc db ::spec/after-clear-event nil)
-     :fx (:fx after-clear-event)}))
+     :fx (if clear-event [[:dispatch clear-event]] (:fx after-clear-event))}))
 
 (reg-event-db
   ::set-opened-by-browser-back
@@ -233,6 +238,8 @@
 (reg-event-fx
   ::enable-browser-back
   (fn [{db :db} [_ payload]]
+    (js/console.error "::enable-browser-back event, payload" payload)
+    (js/console.error "::enable-browser-back event, changes-protection?" (::spec/changes-protection? db))
     {:db (assoc db ::routing-events/ignore-changes-protection true)
      :fx [[::fx/enable-browser-back payload]]}))
 

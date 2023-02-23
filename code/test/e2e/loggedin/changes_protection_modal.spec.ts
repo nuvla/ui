@@ -83,18 +83,11 @@ async function setUp(page: Page, baseURL) {
   await page.waitForURL(`${baseURL}/ui/apps`);
   await page.getByRole('link', { name: 'Navigate Apps' }).click();
   await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
-  // await page.pause();
+  await page.pause();
   await page.getByText('DO NOT DELETE --- e2e test project', { exact: true }).click();
   await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview`);
-  await page
-    .locator('main:has-text("Validation error!The form is invalid. Please review the fields in red.Oops can\'t")')
-    .getByRole('button')
-    .click();
-  await page.waitForURL(
-    `${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview&apps-tab=details`
-  );
   await page.getByRole('link', { name: 'Details' }).click();
-  await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=details&apps-tab=details`);
+  await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=details`);
   await page.locator('input[type="input"]').click();
   return page.locator('input[type="input"]').fill('DO NOT DELETE --- e2e test project HELLO');
 }

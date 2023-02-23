@@ -49,6 +49,7 @@
   ::navigated-protected
   (fn [{{:keys [::main-spec/changes-protection?
                 ::ignore-changes-protection] :as db} :db} [_ new-match]]
+    (js/console.error "::navigated-protected" new-match "changes-protection?" changes-protection?)
     (let [event  {:fx [[:dispatch [::navigated new-match]]
                        [:dispatch [::reset-ignore-changes-protection]]]}
           revert {:fx [[:dispatch [::navigate-back]]
@@ -71,6 +72,7 @@
   (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params
                                                                {change-event :change-event
                                                                 ignore-chng-protection? :ignore-chng-protection?}]]
+    (js/console.error "::navigate" navigate-to "changes-protection?" changes-protection?)
     (let [nav-effect {:db (assoc db ::ignore-changes-protection ignore-chng-protection?)
                       :fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
                                                               (utils/add-base-path navigate-to)

@@ -123,7 +123,8 @@
         {:keys [id name description]} module
         content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
     [uix/ModalDanger
-     {:on-confirm  #(dispatch [::events/delete-module id])
+     {:on-confirm   #(do (dispatch [::main-events/reset-changes-protection])
+                        (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [ui/Icon {:name "trash"}]
                                   (str/capitalize (@tr [:delete]))])

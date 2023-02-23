@@ -62,8 +62,12 @@
   [f nav-back?]
   (set! js/window.onpopstate nil)
   ;; if modal was opened by navigating back, go back two steps in history stack
-  (if nav-back? (.go js/window.history -2)
-    (if (fn? f) (f) (.back js/window.history))))
+(js/console.error "start-browser-back f" f)
+(js/console.error "start-browser-back nav-back?" f)
+  (cond
+    nav-back? (.go js/window.history -2)
+    (fn? f)   (f)
+    :else     (.back js/window.history)))
 
 
 (reg-fx
@@ -75,6 +79,7 @@
 (reg-fx
   ::enable-browser-back
   (fn [{:keys [cb-fn nav-back?]}]
+    (js/console.error "::enable-browser-back fx")
     (start-browser-back cb-fn nav-back?)))
 
 (reg-fx

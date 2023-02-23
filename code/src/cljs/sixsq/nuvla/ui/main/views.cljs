@@ -117,7 +117,7 @@
   []
   (let [tr                       (subscribe [::i18n-subs/tr])
         navigation-info          (subscribe [::subs/ignore-changes-modal])
-        do-not-ignore-changes-fn #(dispatch [::events/ignore-changes false])]
+        do-not-ignore-changes-fn #(dispatch [::events/do-not-ignore-changes])]
     (when @navigation-info
       (dispatch [::events/opening-protection-modal]))
 
@@ -135,7 +135,7 @@
       [uix/Button {:text     (@tr [:ignore-changes]),
                    :positive true
                    :active   true
-                   :on-click #(do (dispatch [::events/ignore-changes true])
+                   :on-click #(do (dispatch [::events/ignore-changes])
                                   (dispatch [::apps-events/form-valid]))}]]]))
 
 (defn subscription-required-modal

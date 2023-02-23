@@ -142,7 +142,7 @@
      ["/" ::routes/apps-slashed]
      ["/*sub-path"
       {:name ::routes/apps-details
-       :view app-views/AppDetails}]]
+       :view app-views/AppDetailsRoute}]]
     ["credentials"
      {:name      ::routes/credentials
       :view      credentials-view

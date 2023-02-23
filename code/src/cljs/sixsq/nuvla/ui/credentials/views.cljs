@@ -813,7 +813,7 @@
               :active   true
               :on-click #(do (save-callback validation-spec)
                              (dispatch [::tab-plugin/change-tab
-                                        [::spec/tab] tab-key]))}]]])))))
+                                        {:db-path [::spec/tab] :tab-key tab-key}]))}]]])))))
 
 
 (defn AddCredentialModal

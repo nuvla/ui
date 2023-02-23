@@ -64,24 +64,32 @@
 
 (reg-event-fx
   ::navigate
-  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params {change-event :change-event}]]
-    (let [nav-effect {:fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
+  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params
+                                                               {change-event :change-event
+                                                                ignore-chng-protection? :ignore-chng-protection?}]]
+    (let [nav-effect {:db (assoc db ::ignore-changes-protection ignore-chng-protection?)
+                      :fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
                                                               (utils/add-base-path navigate-to)
                                                               (utils/name->href navigate-to path-params query-params))]]
                            (when change-event [:dispatch change-event])]}]
-      (if changes-protection?
-        {:db (assoc db ::main-spec/ignore-changes-modal nav-effect)}
+      (if (and changes-protection? (not ignore-chng-protection?))
+        {:db (assoc db ::main-spec/ignore-changes-modal nav-effect
+                       ::ignore-changes-protection ignore-chng-protection?)}
         (do
           (log/info "triggering navigate effect " (str {:relative-url navigate-to}))
           nav-effect)))))
 
 (reg-event-fx
   ::navigate-partial
-  (fn [{{:keys [current-route]} :db} [_ {:keys [change-event] :as new-partial-route-data}]]
+  (fn [{{:keys [current-route]} :db} [_ {:keys [change-event
+                                                ignore-chng-protection?]
+                                         :as new-partial-route-data}]]
     (let [{:keys [route-name
                   path-params
                   query-params]} (utils/new-route-data current-route new-partial-route-data)]
-      {:fx [[:dispatch [::navigate route-name path-params query-params {:change-event change-event}]]]})))
+      {:fx [[:dispatch [::navigate route-name path-params query-params
+                        {:change-event change-event
+                         :ignore-chng-protection? ignore-chng-protection?}]]]})))
 
 (reg-event-fx
   ::change-query-param

@@ -141,13 +141,13 @@
   (fn [{{:keys [::spec/ignore-changes-modal
                 ::spec/do-not-ignore-changes-modal] :as db} :db} [_ choice]]
     (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil
-                                   ::spec/do-not-ignore-changes-modal nil)]
+                                ::spec/do-not-ignore-changes-modal nil)]
       (if choice
         (let [new-db (assoc close-modal-db
-                       ::spec/changes-protection? false)]
+                            ::spec/changes-protection? false)]
           (cond
-            (map? ignore-changes-modal)
-            (merge {:db new-db} ignore-changes-modal)
+            (map?  ignore-changes-modal)
+            (merge ignore-changes-modal {:db new-db})
 
             (fn? ignore-changes-modal)
             (do (ignore-changes-modal)

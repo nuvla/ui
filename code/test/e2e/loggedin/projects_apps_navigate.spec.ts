@@ -14,8 +14,9 @@ test('Navigate from projects to apps', async ({ page }, { config }) => {
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/apps/do-not-delete--e2e-test-project`));
 
   await page.getByText('DO NOT DELETE -- e2e test app').click();
-  await expect(page).toHaveURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project/do-not-delete--e2e-test-app?apps-tab=overview`);
+  await expect(page).toHaveURL(
+    `${baseURL}/ui/apps/do-not-delete--e2e-test-project/do-not-delete--e2e-test-app?apps-tab=overview`
+  );
   await expect(page).toHaveTitle('Nuvla apps/do-not-delete--e2e-test-project/do-not-delete--e2e-test-app');
-  await expect(page.getByRole('cell', { name: 'DO NOT DELETE -- e2e test app'})).toBeVisible();
-
+  await expect(page.getByRole('cell', { name: 'DO NOT DELETE -- e2e test app' })).toBeVisible();
 });

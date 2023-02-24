@@ -3,6 +3,12 @@
 
 (def dictionary
   {:en {
+        :select-components                             "Select components"
+        :all-components                                "All components"
+        :since                                         "Since:"
+        :go-live                                       "Go live"
+        :row-count                                     "row count:"
+        :get-logs                                      "Get logs"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -945,6 +951,12 @@
         }
 
    :fr {
+        :select-components                             "Sélectionnez les composants"
+        :all-components                                "Tous les composants"
+        :since                                         "Depuis :"
+        :go-live                                       "En direct"
+        :row-count                                     "nombre de lignes :"
+        :get-logs                                      "Obtenir les logs"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"

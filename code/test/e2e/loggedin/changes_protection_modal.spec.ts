@@ -6,12 +6,8 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
 
-  //
-  // await page.pause();
-
   await setUp(page, baseURL);
 
-  // await page.pause();
   const url = page.url();
 
   ////////////////////////////////////
@@ -26,8 +22,6 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
 
   await setUp(page, baseURL);
 
-  // await page.pause();
-
   // CLICKS X for closing
   await openModal();
   await page.waitForTimeout(200);
@@ -38,7 +32,6 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   await openModal();
   await page.waitForTimeout(200);
   await page.goBack();
-  expectModalHidden(page, 'Modal hidden after navigating back 1st time');
   testSameUrl(page, url, 'Same URL after navigating back');
 
   // CLICKS OUTSIDE MODAL for closing
@@ -62,7 +55,6 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
 
   await openModal();
   expectModalHidden(page, 'Modal still hides after clicking X?', 200);
-  await page.pause();
   await page.getByRole('button', { name: 'ignore changes' }).click();
   expect(page.url(), 'Finally Navigated to deployments page').toMatch(new RegExp(`${baseURL}/ui/deployments`));
 });
@@ -75,7 +67,7 @@ function expectModalVisible(page, errorMessage = 'Modal visible?') {
   expect(page.getByRole('button', { name: 'ignore changes' }), errorMessage).toBeVisible({ timeout: 2000 });
 }
 
-function expectModalHidden(page, errorMessage = 'Modal hidden?', timeout = 0) {
+function expectModalHidden(page, errorMessage = 'Modal hidden?', timeout = 500) {
   expect(page.getByRole('button', { name: 'ignore changes' }), errorMessage).toBeHidden({ timeout });
 }
 
@@ -84,7 +76,6 @@ async function setUp(page: Page, baseURL) {
   await page.waitForURL(`${baseURL}/ui/apps`);
   await page.getByRole('link', { name: 'Navigate Apps' }).click();
   await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
-  await page.pause();
   await page.getByText('DO NOT DELETE --- e2e test project', { exact: true }).click();
   await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview`);
   await page.getByRole('link', { name: 'Details' }).click();

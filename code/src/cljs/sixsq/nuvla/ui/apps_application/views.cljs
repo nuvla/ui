@@ -172,23 +172,21 @@
         unsupp-opts    (:unsupported-options (:content @module-app))
         compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
-        editable?      (subscribe [::apps-subs/editable?])
-        default-value  @docker-compose]
+        editable?      (subscribe [::apps-subs/editable?])]
     (fn []
-      (let [validate? @validate-form?
-            valid?    (s/valid? ::spec/docker-compose @docker-compose)]
+      (let [valid? (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml {:value      default-value
-                           :on-change  (fn [_editor _data value]
-                                         (dispatch [::events/update-docker-compose value])
-                                         (dispatch [::main-events/changes-protection? true])
-                                         (dispatch [::apps-events/validate-form]))
-                           :read-only? (not @editable?)}]
-          (when validate?
+          [uix/EditorYaml {:value     @docker-compose
+                           :on-change (fn [value]
+                                        (dispatch [::events/update-docker-compose value])
+                                        (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::apps-events/validate-form]))
+                           :read-only (not @editable?)}]
+          (when @validate-form?
             (dispatch [::events/set-docker-validation-error
                        apps-views-detail/application-kubernetes-subtype (not valid?)])
             (when (not valid?)
@@ -208,24 +206,22 @@
         unsupp-opts    (:unsupported-options (:content @module-app))
         compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
-        editable?      (subscribe [::apps-subs/editable?])
-        default-value  @docker-compose]
+        editable?      (subscribe [::apps-subs/editable?])]
     (fn []
       (let [validate-dc (subscribe [::apps-subs/validate-docker-compose])
-            validate?   @validate-form?
             valid?      (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml {:value default-value
-                           :on-change (fn [_editor _data value]
+          [uix/EditorYaml {:value     @docker-compose
+                           :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form]))
-                           :read-only? (not @editable?)}]
-          (when validate?
+                           :read-only (not @editable?)}]
+          (when @validate-form?
             (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
             (when (not valid?)
               (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
@@ -485,7 +481,7 @@
               :stackable true
               :padded    true
               :centered  true
-              :class :uix-apps-details-overview}
+              :class     :uix-apps-details-overview}
      [ui/GridRow {:centered true}
       (when (not @is-new?)
         [ui/GridColumn

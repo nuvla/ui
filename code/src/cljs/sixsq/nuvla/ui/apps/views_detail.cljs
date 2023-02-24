@@ -482,11 +482,9 @@
   (let [tr             (subscribe [::i18n-subs/tr])
         description    (subscribe [::subs/description])
         editable?      (subscribe [::subs/editable?])
-        validate-form? (subscribe [::subs/validate-form?])
-        default-value  @description]
+        validate-form? (subscribe [::subs/validate-form?])]
     (fn []
-      (let [valid?    (s/valid? ::spec/description @description)
-            validate? @validate-form?]
+      (let [valid? (s/valid? ::spec/description @description)]
         [uix/Accordion
          [:<>
           [ui/Grid {:centered true
@@ -495,14 +493,13 @@
             [:h4 "Markdown" [general-utils/mandatory-icon]]
             [ui/Segment
              [uix/EditorMarkdown
-              {:value      default-value
-               :on-change  (fn [_editor _data value]
-                             (dispatch [::events/description value])
-                             (dispatch [::main-events/changes-protection? true])
-                             (dispatch [::events/validate-form]))
-               :class      "full-height"
-               :read-only? (not @editable?)}]
-             (when validate?
+              {:value     @description
+               :on-change (fn [value]
+                            (dispatch [::events/description value])
+                            (dispatch [::main-events/changes-protection? true])
+                            (dispatch [::events/validate-form]))
+               :read-only (not @editable?)}]
+             (when @validate-form?
                (when validation-event
                  (dispatch [validation-event "description" (not valid?)]))
                (when (not valid?)

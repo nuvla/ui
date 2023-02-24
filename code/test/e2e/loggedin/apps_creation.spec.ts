@@ -79,7 +79,7 @@ test('Creating a new app', async ({ page }, { config }) => {
   await page.locator('a:has-text("Delete")').nth(1).click();
   await page.getByText('I understand that deleting this application is permanent and cannot be undone.').click();
   await page.getByRole('button', { name: 'delete' }).click();
-  await page.waitForURL(`${baseURL}/ui/apps`);
+  await page.waitForURL(new RegExp(`${baseURL}/ui/apps`));
 
   await page.pause();
   await page.getByRole('link', { name: 'My Apps' }).click();

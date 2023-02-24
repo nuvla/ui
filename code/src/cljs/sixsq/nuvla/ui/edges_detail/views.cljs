@@ -1459,7 +1459,7 @@
                          :on-drag-end (map/drag-end-location update-new-location)}])]
          [:div {:align "right"}
           [ui/Button {:on-click #(do (reset! new-location nil)
-                                     (dispatch [::main-events/changes-protection? false]))}
+                                     (dispatch [::main-events/reset-changes-protection]))}
            (@tr [:cancel])]
           [ui/Button {:primary  true
                       :on-click #(do (dispatch
@@ -1468,7 +1468,7 @@
                                           :location
                                           (update @new-location 0 map/normalize-lng))
                                         (@tr [:nuvlabox-position-update])])
-                                     (dispatch [::main-events/changes-protection? false]))
+                                     (dispatch [::main-events/reset-changes-protection]))
                       :disabled (nil? @new-location)}
            (@tr [:save])]]]))))
 

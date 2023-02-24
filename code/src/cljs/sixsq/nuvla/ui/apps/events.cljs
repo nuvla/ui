@@ -650,7 +650,8 @@
       {:db                  (-> db
                                 (dissoc ::spec/module)
                                 (assoc  ::spec/form-valid? true))
-       ::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate routes/apps nil query-params])]})))
+       ::cimi-api-fx/delete [id #(dispatch [::main-events/reset-changes-protection
+                                            [::routing-events/navigate routes/apps nil query-params]])]})))
 
 
 (reg-event-db

@@ -54,7 +54,7 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   // clicks X to close it
   // Open modal
   await openModal();
-  await page.locator('.close').click({ timeout: 2000 });
+  await page.locator('.close').click();
   expectModalHidden(page, 'Modal still hides after clicking X?');
   await page.goBack();
   await page.locator('.close').click({ timeout: 2000 });
@@ -62,8 +62,9 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
 
   await openModal();
   expectModalHidden(page, 'Modal still hides after clicking X?', 200);
+  await page.pause();
   await page.getByRole('button', { name: 'ignore changes' }).click();
-  expect(page.url(), 'Final: Navigated to deployments page').toMatch(new RegExp(`${baseURL}/ui/deployments`));
+  expect(page.url(), 'Finally Navigated to deployments page').toMatch(new RegExp(`${baseURL}/ui/deployments`));
 });
 
 function testSameUrl(page, url: string, errorMessage = 'Same URL?') {

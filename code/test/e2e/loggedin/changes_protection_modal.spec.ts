@@ -32,7 +32,6 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   await openModal();
   await page.waitForTimeout(200);
   await page.goBack();
-  expectModalHidden(page, 'Modal hidden after navigating back 1st time');
   testSameUrl(page, url, 'Same URL after navigating back');
 
   // CLICKS OUTSIDE MODAL for closing

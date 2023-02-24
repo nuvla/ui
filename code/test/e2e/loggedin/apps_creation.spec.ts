@@ -15,8 +15,6 @@ test('Creating a new app', async ({ page }, { config }) => {
   await page.getByText('DO NOT DELETE --- e2e test project').click();
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/apps/do-not-delete--e2e-test-project`));
 
-  await page.pause();
-
   await page.locator('a:has-text("Add")').click();
   await page.getByRole('link', { name: 'Docker Application' }).click();
   await page.waitForURL(
@@ -27,19 +25,17 @@ test('Creating a new app', async ({ page }, { config }) => {
   const NEW_APP_NAME_SANITZIED = NEW_APP_NAME.replace(/-|:|\./g, '').toLowerCase();
 
   await page.locator('input[type="input"]').click();
-  await page.locator('input[type="input"]').click();
   await page.locator('input[type="input"]').fill(NEW_APP_NAME);
   await page.locator('a:has-text("Save")').click();
   await page.getByText('Validation error!The form is invalid. Please review the fields in red.').click();
-  await page.locator('pre[role="presentation"]:has-text("​")').first().click();
-  await page.locator('textarea').first().fill('Hi there');
+  await page.locator('.cm-activeLine').first().click();
+  await page.locator('.cm-activeLine').first().fill('Hi there');
   await page.getByRole('link', { name: 'Docker' }).click();
   await page.waitForURL(
     `${baseURL}/ui/apps/do-not-delete--e2e-test-project/New%20Application?subtype=application&apps-tab=docker`
   );
-  await page.locator('pre[role="presentation"]:has-text("​")').click();
   await page.getByText('Please describe your Docker stack in this docker compose field').click();
-  await page.locator('pre[role="presentation"]:has-text("​")').click();
+  await page.locator('role=textbox').click();
   await page.getByRole('textbox').fill('How are you');
   await page.locator('a:has-text("Save")').click();
   await page.getByPlaceholder('Commit message - explicit is better').click();
@@ -81,7 +77,6 @@ test('Creating a new app', async ({ page }, { config }) => {
   await page.getByRole('button', { name: 'delete' }).click();
   await page.waitForURL(new RegExp(`${baseURL}/ui/apps`));
 
-  await page.pause();
   await page.getByRole('link', { name: 'My Apps' }).click();
   await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=myapps`);
   await page.getByPlaceholder('Search...').click();

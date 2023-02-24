@@ -2,8 +2,8 @@
   "Mapping of names of Semantic UI components to the Soda Ash wrappers. This
    namespace has no real functionality; it just keeps Cursive from complaining
    about undefined symbols."
-  (:require ["qrcode.react" :as qrcode]
-            ["@uiw/react-codemirror" :as code-mirror]
+  (:require ["@uiw/react-codemirror" :as code-mirror]
+            ["qrcode.react" :as qrcode]
             ["react-copy-to-clipboard" :as copy-to-clipboard]
             ["react-datepicker" :as date-picker]
             ["react-diff-viewer" :as react-diff-viewer]

@@ -21,8 +21,8 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify
-                                                  db-path->query-param-key]]
+            [sixsq.nuvla.ui.routing.utils :refer [db-path->query-param-key name->href
+                                                  str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 

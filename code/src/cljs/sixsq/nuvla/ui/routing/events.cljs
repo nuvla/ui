@@ -106,7 +106,7 @@
 
 (reg-event-fx
   ::store-in-query-param
-  (fn [{{:keys [current-route] :as db} :db} [_ {:keys [db-path value]}]]
+  (fn [{{:keys [current-route]} :db} [_ {:keys [db-path value]}]]
     (let [query-key              (utils/db-path->query-param-key db-path)
           new-partial-route-data (if (seq value)
                                    {:partial-query-params

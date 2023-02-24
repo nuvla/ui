@@ -21,8 +21,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [clojure.string :as str]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn crumb

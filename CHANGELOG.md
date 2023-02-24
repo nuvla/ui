@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.33.2] - 2023-02-24
+
 ### Changed
 
 - Apps - Icon in modal should not be red

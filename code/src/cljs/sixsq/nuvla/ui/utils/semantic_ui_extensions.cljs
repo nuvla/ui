@@ -1,5 +1,10 @@
 (ns sixsq.nuvla.ui.utils.semantic-ui-extensions
-  (:require [cljs.spec.alpha :as s]
+  (:require ["@codemirror/lang-json" :as lang-json]
+            ["@codemirror/lang-markdown" :as lang-markdown]
+            ["@codemirror/language" :as language]
+            ["@codemirror/legacy-modes/mode/shell" :as shell]
+            ["@codemirror/legacy-modes/mode/yaml" :as yaml]
+            [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
@@ -11,11 +16,6 @@
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
-            ["@codemirror/lang-markdown" :as lang-markdown]
-            ["@codemirror/lang-json" :as lang-json]
-            ["@codemirror/language" :as language]
-            ["@codemirror/legacy-modes/mode/yaml" :as yaml]
-            ["@codemirror/legacy-modes/mode/shell" :as shell]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 

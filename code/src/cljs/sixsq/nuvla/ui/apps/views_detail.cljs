@@ -123,7 +123,7 @@
         {:keys [id name description]} module
         content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
     [uix/ModalDanger
-     {:on-confirm  #(dispatch [::events/delete-module id])
+     {:on-confirm   (fn [] (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [ui/Icon {:name "trash"}]
                                   (str/capitalize (@tr [:delete]))])
@@ -1180,7 +1180,7 @@
 
 
 (defn OverviewDescription
-  []
+  [db-path]
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (subscribe [::subs/editable?])
         description (subscribe [::subs/description])
@@ -1199,7 +1199,7 @@
          [ui/GridColumn {:style {:text-align "right"}}
           [ui/Button {:icon     "pencil"
                       :compact  true
-                      :on-click #(dispatch [::events/set-active-tab :details])}]])]
+                      :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
                        :only      "mobile"}

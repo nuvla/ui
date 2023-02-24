@@ -559,12 +559,13 @@
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
-          {:db-path          [::apps-spec/tab]
-           :menu             {:secondary true
-                              :pointing  true
-                              :style     {:display        "flex"
-                                          :flex-direction "row"
-                                          :flex-wrap      "wrap"}
-                              :class     :uix-tab-nav}
-           :panes            panes
-           :renderActiveOnly false}]]))))
+          {:db-path                 [::apps-spec/tab]
+           :menu                    {:secondary true
+                                     :pointing  true
+                                     :style     {:display        "flex"
+                                                 :flex-direction "row"
+                                                 :flex-wrap      "wrap"}
+                                     :class     :uix-tab-nav}
+           :panes                   panes
+           :renderActiveOnly        false
+           :ignore-chng-protection? true}]]))))

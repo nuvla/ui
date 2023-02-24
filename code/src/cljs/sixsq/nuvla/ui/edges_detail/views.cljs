@@ -1416,7 +1416,7 @@
             [ui/GridColumn {:stretched true}
              [deployments-views/DeploymentsOverviewSegment
               ::deployments-subs/deployments nil nil
-              #(dispatch [::tab-plugin/change-tab [::spec/tab] :deployments])]])
+              #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :deployments}])]])
 
           (when (and (:node-id @nb-status) (not suspended?))
             [ui/GridColumn {:stretched true}
@@ -1459,7 +1459,7 @@
                          :on-drag-end (map/drag-end-location update-new-location)}])]
          [:div {:align "right"}
           [ui/Button {:on-click #(do (reset! new-location nil)
-                                     (dispatch [::main-events/changes-protection? false]))}
+                                     (dispatch [::main-events/reset-changes-protection]))}
            (@tr [:cancel])]
           [ui/Button {:primary  true
                       :on-click #(do (dispatch
@@ -1468,7 +1468,7 @@
                                           :location
                                           (update @new-location 0 map/normalize-lng))
                                         (@tr [:nuvlabox-position-update])])
-                                     (dispatch [::main-events/changes-protection? false]))
+                                     (dispatch [::main-events/reset-changes-protection]))
                       :disabled (nil? @new-location)}
            (@tr [:save])]]]))))
 
@@ -2016,7 +2016,7 @@
        [PageHeader]
        [MenuBar uuid]
        [components/ErrorJobsMessage ::job-subs/jobs nil nil
-        #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
+        #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
        [job-views/ProgressJobAction nb-status]
        (when (and nb-status (not (:online nb-status)))
          [ui/Message {:warning true

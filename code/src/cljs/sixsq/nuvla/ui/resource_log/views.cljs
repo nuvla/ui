@@ -21,7 +21,8 @@
                 :attached  "top"
                 :stackable true}
        [ui/MenuItem
-        {:on-click #(dispatch [::events/set-play? (not @play?)])}
+        {:aria-label (if @play? "pause" "play")
+         :on-click #(dispatch [::events/set-play? (not @play?)])}
         [ui/Icon {:name (if @play? "pause" "play")}]]
 
        (when (pos? (count @avail-components))

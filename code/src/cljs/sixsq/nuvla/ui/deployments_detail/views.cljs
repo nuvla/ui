@@ -295,7 +295,8 @@
      :render   (fn [] (r/as-element
                         [log-views/TabLogs
                          (:id @deployment)
-                         #(subscribe [::subs/deployment-services-list])]))}))
+                         #(subscribe [::subs/deployment-services-list])
+                         true]))}))
 
 
 

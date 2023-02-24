@@ -1938,7 +1938,8 @@
                    :icon    "file code"}
         :render   (fn [] (r/as-element [log-views/TabLogs
                                         (:id @nuvlabox)
-                                        #(subscribe [::subs/nuvlabox-components])]))}
+                                        #(subscribe [::subs/nuvlabox-components])
+                                        false]))}
        {:menuItem {:content (r/as-element [:span "Peripherals"
                                            [ui/Label {:circular true
                                                       :size     "mini"

@@ -126,6 +126,7 @@
 (defn TabDefault
   [active-tab]
   (dispatch [::events/get-modules active-tab])
+  (dispatch [::events/set-default-tab active-tab])
   ^{:key active-tab}
   [components/LoadingPage {}
    [ui/TabPane

@@ -295,7 +295,8 @@
      :render   (fn [] (r/as-element
                         [log-views/TabLogs
                          (:id @deployment)
-                         #(subscribe [::subs/deployment-services-list])]))}))
+                         #(subscribe [::subs/deployment-services-list])
+                         true]))}))
 
 
 
@@ -828,7 +829,7 @@
           [PageHeader]
           [MenuBar @deployment]
           [components/ErrorJobsMessage ::job-subs/jobs
-           nil nil #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
+           nil nil #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
           [ProgressBars]
           [vpn-info]
           [tab-plugin/Tab

@@ -6,3 +6,4 @@ node_modules/
 storageState.json
 storage.json
 storage-e2e.json
+logger_test.har

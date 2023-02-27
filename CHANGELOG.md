@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Sign in/up - Removes border from buttons, bugfix #1177
+
 ## [2.33.2] - 2023-02-24
 
 ### Changed

@@ -32,7 +32,8 @@
                                            ::main-spec/nav-path (utils/split-path-alias path)
                                            ::main-spec/nav-query-params query-params))
        :fx                   [(when view-changed?
-                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])]
+                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])
+                              [::fx/after-nav-cb (::after-nav-cb db)]]
        ::fx/set-window-title [(utils/strip-base-path (:path new-match))]})))
 
 (reg-event-db
@@ -100,16 +101,20 @@
   (fn [{{:keys [current-route] :as db} :db} [_ new-partial-route-data]]
     (let [{:keys [route-name
                   path-params
-                  query-params]} (utils/new-route-data current-route new-partial-route-data)]
+                  query-params]} (utils/new-route-data current-route new-partial-route-data)
+          push-state?            (:push-state? new-partial-route-data)]
       {:db (assoc db ::ignore-changes-protection true)
-       :fx [[::fx/replace-state (utils/name->href route-name path-params query-params)]]})))
+       :fx [[(if push-state? ::fx/push-state ::fx/replace-state) (utils/name->href route-name path-params query-params)]]})))
 
 (reg-event-fx
   ::store-in-query-param
-  (fn [{{:keys [current-route]} :db} [_ {:keys [db-path value]}]]
-    (let [query-key              (utils/db-path->query-param-key db-path)
+  (fn [{{:keys [current-route] :as db} :db} [_ {:keys [db-path query-key value after-nav-cb]
+                                                :as   route-instructions}]]
+    (let [query-key-calculated   (or query-key (utils/db-path->query-param-key db-path))
           new-partial-route-data (if (seq value)
                                    {:partial-query-params
-                                    {query-key value}}
-                                   {:query-params (dissoc (:query-params current-route) query-key)})]
-      {:fx [[::fx/replace-state-without-navigation (-> (utils/new-route-data current-route new-partial-route-data) utils/name->href)]]})))
+                                    {query-key-calculated value}}
+                                   {:query-params (dissoc (:query-params current-route) query-key-calculated)})]
+      {:db (assoc db ::after-nav-cb after-nav-cb)
+       :fx [[:dispatch
+             [::change-query-param (merge route-instructions new-partial-route-data)]]]})))

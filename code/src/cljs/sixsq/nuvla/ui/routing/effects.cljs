@@ -54,6 +54,6 @@
     (call-navigate! path)))
 
 (reg-fx
-  ::replace-state-without-navigation
-  (fn [path]
-    (replace-state! path)))
+ ::after-nav-cb
+ (fn [after-nav-cb]
+   (when (fn? after-nav-cb) (after-nav-cb))))

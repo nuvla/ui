@@ -878,7 +878,8 @@
           {:resource-name  "nuvlabox"
            :default-filter @additional-filter
            :open?          filter-open?
-           :on-done        #(dispatch [::events/set-additional-filter %])}]]]])))
+           :on-done        #(dispatch [::events/set-additional-filter %])
+           :show-clear-button-outside-modal? true}]]]])))
 
 
 (defn NuvlaBoxesOrClusters

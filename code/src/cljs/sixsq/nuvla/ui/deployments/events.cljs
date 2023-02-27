@@ -125,11 +125,6 @@
   (fn [db [_ view-type]]
     (assoc db ::spec/view view-type)))
 
-(reg-event-fx
-  ::stop-deployment
-  (fn [_ [_ href]]
-    (let [on-success #(dispatch [::get-deployments])]
-      {::cimi-api-fx/operation [href "stop" on-success]})))
 
 (reg-event-fx
   ::set-state-selector

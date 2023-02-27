@@ -8,6 +8,8 @@
 - Deployment modal - Do not allow deployment of Swarm application on Swarm disabled node or worker node #996
 - Deployment modal - Inform user that he is deploying a Compose application on a Docker swarm node #996
 - Clouds and cloud details - Show compatibility label
+- Filter wizard - Additional filter is stored in and loads from query param
+- Filter wizard - Reopening modal with active filter shows correct attribute and condition in dropdown, bugfix #1159
 
 ## [2.33.2] - 2023-02-27
 
@@ -30,8 +32,6 @@
 - API page - Make list of plain ids navigable #1143
 - Pagination - Styling
 - Apps AddModal - Disables docker and k8s apps buttons when not inside a project, regression fix #1150
-- Filter wizard - Additional filter is stored in and loads from query param
-- Filter wizard - Reopening modal with active filter shows correct attribute and condition in dropdown, bugfix #1159
 - Full text search - Stores full text search in query param, #1128
 - Edges overview - Stores and loads state filter from query param, #1127
 - Deployments overview - Stores and loads state filter from query param, #1127

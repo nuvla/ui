@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.routing.events
-  (:require [re-frame.core :refer [reg-event-fx]]
+  (:require [re-frame.core :refer [reg-event-db reg-event-fx]]
             [reitit.frontend :refer [match-by-path]]
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -35,6 +35,11 @@
                                 [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])]
        ::fx/set-window-title [(utils/strip-base-path (:path new-match))]})))
 
+(reg-event-db
+  ::reset-ignore-changes-protection
+  (fn [db]
+    (assoc db ::ignore-changes-protection false)))
+
 (reg-event-fx
   ;; In case of normal anchor tag click, we do not fire ::history-events/navigate
   ;; but let reitit/browser handle the .pushState to the history stack,
@@ -44,11 +49,10 @@
   ::navigated-protected
   (fn [{{:keys [::main-spec/changes-protection?
                 ::ignore-changes-protection] :as db} :db} [_ new-match]]
-    (let [new-db (assoc db ::ignore-changes-protection false)
-          event  {:fx [[:dispatch [::navigated new-match]]]
-                  :db new-db}
-          revert {:fx [[:dispatch [::navigate-back]]]
-                  :db new-db}]
+    (let [event  {:fx [[:dispatch [::navigated new-match]]
+                       [:dispatch [::reset-ignore-changes-protection]]]}
+          revert {:fx [[:dispatch [::navigate-back]]
+                       [:dispatch [::reset-ignore-changes-protection]]]}]
       (if (and changes-protection? (not ignore-changes-protection))
         {:db (assoc db
                ::main-spec/ignore-changes-modal event
@@ -60,7 +64,7 @@
                ;; disables the protection.
                ::ignore-changes-protection true)}
         (merge {:db (assoc db ::ignore-changes-protection false)}
-               event)))))
+          event)))))
 
 (reg-event-fx
   ::navigate
@@ -93,11 +97,12 @@
 
 (reg-event-fx
   ::change-query-param
-  (fn [{{:keys [current-route]} :db} [_ new-partial-route-data]]
+  (fn [{{:keys [current-route] :as db} :db} [_ new-partial-route-data]]
     (let [{:keys [route-name
                   path-params
                   query-params]} (utils/new-route-data current-route new-partial-route-data)]
-      {::fx/replace-state (utils/name->href route-name path-params query-params)})))
+      {:db (assoc db ::ignore-changes-protection true)
+       :fx [[::fx/replace-state (utils/name->href route-name path-params query-params)]]})))
 
 (reg-event-fx
   ::store-in-query-param

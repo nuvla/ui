@@ -39,7 +39,7 @@
           normal-behavior {:db (assoc-in db (conj db-path ::active-tab) tab-key)
                            :fx [(when change-event
                                   [:dispatch change-event])
-                                [:dispatch [::main-events/changes-protection? false]]]}]
+                                [:dispatch [::main-events/reset-changes-protection]]]}]
       (if changes-protection?
         {:db (assoc db ::main-spec/ignore-changes-modal normal-behavior)}
         normal-behavior))))

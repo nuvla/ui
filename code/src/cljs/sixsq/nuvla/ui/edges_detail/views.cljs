@@ -1459,7 +1459,7 @@
                          :on-drag-end (map/drag-end-location update-new-location)}])]
          [:div {:align "right"}
           [ui/Button {:on-click #(do (reset! new-location nil)
-                                     (dispatch [::main-events/changes-protection? false]))}
+                                     (dispatch [::main-events/reset-changes-protection]))}
            (@tr [:cancel])]
           [ui/Button {:primary  true
                       :on-click #(do (dispatch
@@ -1468,7 +1468,7 @@
                                           :location
                                           (update @new-location 0 map/normalize-lng))
                                         (@tr [:nuvlabox-position-update])])
-                                     (dispatch [::main-events/changes-protection? false]))
+                                     (dispatch [::main-events/reset-changes-protection]))
                       :disabled (nil? @new-location)}
            (@tr [:save])]]]))))
 
@@ -1756,18 +1756,15 @@
             [ui/FormField {:label    "Run"
                            :required true}]
             "Shell script: "
-            [uix/EditorShell {:value     ""
-                              :on-change (fn [_editor _data value]
+            [uix/EditorShell {:on-change (fn [value]
                                            (ui-callback/input-callback
-                                             (swap! form-data assoc :run value)))
-                              :class     "full-width"}]]]]
+                                             (swap! form-data assoc :run value)))}]]]]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:add])
             :disabled (utils/form-add-playbook-incomplete? @form-data)
             :primary  true
             :on-click on-click-fn}]]]))))
-
 
 (defn TabPlaybooks
   []
@@ -1868,12 +1865,11 @@
 
                    [ui/Container {:text-align "left"}
                     "Shell script: "
-                    [uix/EditorShell {:value      (:run @selected-playbook)
-                                      :on-change  (fn [_editor _data value]
-                                                    (reset! run value)
-                                                    (reset! run-changed? true))
-                                      :read-only? (not @can-edit?)
-                                      :class "full-height"}]]
+                    [uix/EditorShell {:value     (:run @selected-playbook)
+                                      :on-change (fn [value]
+                                                   (reset! run value)
+                                                   (reset! run-changed? true))
+                                      :read-only (not @can-edit?)}]]
 
                    [uix/Button {:primary  true
                                 :text     (@tr [:save])
@@ -1898,13 +1894,8 @@
                        "Output"]
                       [ui/Segment {:attached   true
                                    :text-align "left"}
-                       [ui/CodeMirror {:value      (:output @selected-playbook)
-                                       :autoCursor true
-                                       :options    {:mode              "text/plain"
-                                                    :read-only         true
-                                                    :line-numbers      false
-                                                    :style-active-line false}
-                                       :class      "full-width"}]]]
+                       [uix/EditorCode {:value     (:output @selected-playbook)
+                                        :read-only true}]]]
                      [ui/Segment {:vertical true}
                       (@tr [:nuvlabox-playbooks-no-outputs])])]]]]
                (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))
@@ -1947,7 +1938,8 @@
                    :icon    "file code"}
         :render   (fn [] (r/as-element [log-views/TabLogs
                                         (:id @nuvlabox)
-                                        #(subscribe [::subs/nuvlabox-components])]))}
+                                        #(subscribe [::subs/nuvlabox-components])
+                                        false]))}
        {:menuItem {:content (r/as-element [:span "Peripherals"
                                            [ui/Label {:circular true
                                                       :size     "mini"

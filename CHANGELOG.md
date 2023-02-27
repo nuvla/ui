@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.33.2] - 2023-02-27
+
 ### Changed
 
 - Apps - Icon in modal should not be red
@@ -28,6 +30,7 @@
 - Apps - Tags alignment fix
 - Components - Tags button border-radius fix
 - Apps - Change logo button border-radius fix
+- Deps - Codemirror v6 and replace react-codemirror2 by @uiw/react-codemirror
 
 ## [2.33.1] - 2023-01-30
 

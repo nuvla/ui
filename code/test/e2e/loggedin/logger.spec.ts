@@ -30,7 +30,7 @@ test('test', async ({ page }, { config }) => {
   await expect(page).toHaveURL(
     baseURL + '/ui/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18?deployments-detail-tab=logs'
   );
-  await page.getByText('All components').click();
+  await page.getByText('Select components').click();
   await page.getByRole('option', { name: 'web' }).click();
 
   // set up creating resource log
@@ -120,45 +120,23 @@ test('test', async ({ page }, { config }) => {
   });
   await waitForLogger(page);
 
-  // Last line schould be hidden, because auto scroll is disabled
   expect(
     page.getByText(
       /2023-02-23T11:59:18\.674765152Z\s+127\.0\.0\.1\s+-\s+-\s+\[23\/Feb\/2023:11:59:18\s+\+0000\]\s+"GET\s+\//
     )
-  ).toBeHidden();
+  ).toBeVisible();
 
-  await page.locator('div:nth-child(4) > div:nth-child(2) > div > a').click();
+  await page.locator('a[aria-label=pause]').click();
+  expect(page.locator('.cm-line')).toHaveCount(48);
   await page.getByText('Clear').click();
-  expect(await page.locator('.CodeMirror-scroll').innerText()).toMatch('');
+  await page.waitForTimeout(200);
+  expect(page.locator('.cm-line')).toHaveCount(1);
+  expect(page.locator('.cm-line')).toHaveText('');
 });
 
 function waitForLogger(page: Page) {
   return page.waitForResponse('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', { timeout: 10000 });
 }
-
-const createLogResponse = {
-  status: 201,
-  statusText: '',
-  httpVersion: 'HTTP/2.0',
-  cookies: [],
-  headers: [
-    { name: 'alt-svc', value: 'h3=":443"; ma=2592000' },
-    { name: 'content-length', value: '166' },
-    { name: 'content-type', value: 'application/json; charset=utf-8' },
-    { name: 'date', value: 'Thu, 23 Feb 2023 11:59:03 GMT' },
-    { name: 'location', value: 'resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743' },
-    { name: 'server', value: 'Caddy' },
-    { name: 'server', value: 'Aleph/0.4.4' },
-  ],
-  content: {
-    size: -1,
-    mimeType: 'application/json; charset=utf-8',
-    text: '{\n  "status" : 201,\n  "message" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743 created",\n  "resource-id" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743"\n}',
-  },
-  headersSize: -1,
-  bodySize: -1,
-  redirectURL: '',
-};
 
 const resourceLogResponses = [
   {

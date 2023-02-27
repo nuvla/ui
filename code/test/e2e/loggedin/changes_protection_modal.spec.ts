@@ -56,7 +56,7 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   await openModal();
   expectModalHidden(page, 'Modal still hides after clicking X?', 200);
   await page.getByRole('button', { name: 'ignore changes' }).click();
-  expect(page.url(), 'Finally Navigated to deployments page').toMatch(new RegExp(`${baseURL}/ui/deployments`));
+  await page.waitForURL(`${baseURL}/ui/deployments`);
 });
 
 function testSameUrl(page, url: string, errorMessage = 'Same URL?') {

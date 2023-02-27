@@ -4,6 +4,15 @@
 
 ### Changed
 
+- Deployment modal - Display infrastructure docker labels #996
+- Deployment modal - Do not allow deployment of Swarm application on Swarm disabled node or worker node #996
+- Deployment modal - Inform user that he is deploying a Compose application on a Docker swarm node #996
+- Clouds and cloud details - Show compatibility label
+
+## [2.33.2] - 2023-02-27
+
+### Changed
+
 - Apps - Icon in modal should not be red
 - CSS - Force blue color for all huge or massive icons within cards
 - API - Filter modal should not open when user hit enter key bugfix #1136
@@ -27,6 +36,10 @@
 - Edges overview - Stores and loads state filter from query param, #1127
 - Deployments overview - Stores and loads state filter from query param, #1127
 - Nav tab - Bugfix when panes content change, nav-tab should re-render bugfix #1158
+- Apps - Tags alignment fix
+- Components - Tags button border-radius fix
+- Apps - Change logo button border-radius fix
+- Deps - Codemirror v6 and replace react-codemirror2 by @uiw/react-codemirror
 
 ## [2.33.1] - 2023-01-30
 

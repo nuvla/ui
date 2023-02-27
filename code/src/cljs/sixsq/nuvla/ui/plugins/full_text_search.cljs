@@ -26,7 +26,6 @@
   (fn [{db :db} [_ db-path text]]
     (let [change-event (get-in db (conj db-path ::change-event))
           query-key    (db-path->query-param-key db-path)]
-      (js/console.info ::search text)
       {:db (assoc-in db (conj db-path ::text) text)
        :fx [[:dispatch change-event]
             [:dispatch [::route-events/change-query-param {:partial-query-params {query-key text}}]]]})))

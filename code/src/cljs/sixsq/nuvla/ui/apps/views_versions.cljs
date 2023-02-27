@@ -19,16 +19,6 @@
      (str/capitalize (@tr [:versions]))]))
 
 
-(defn show-versions [show-versions?]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        label     (@tr (if @show-versions? [:hide-versions] [:show-versions]))
-        icon-name (if @show-versions? "caret down" "caret right")]
-    [:a {:style    {:cursor "pointer"}
-         :on-click #(reset! show-versions? (not @show-versions?))}
-     [ui/Icon {:name icon-name}]
-     label]))
-
-
 (defn version-comparison-modal
   [left right version-left version-right]
   (if (and left right)
@@ -107,21 +97,22 @@
      [ui/TableHeaderCell {:width "1"} "Author"]
      [ui/TableHeaderCell {:width "13"} "Commit message"]]]
    [ui/TableBody
-    (for [[i v] @versions-sub]
-      (let [{:keys [href commit author published]} v
-            is-current? (= @current-version-sub href)]
-        ^{:key (str "version" i)}
-        [ui/TableRow (when is-current? {:active true})
-         [ui/TableCell
-          (if on-click
-            [:a {:style    {:cursor "pointer"}
-                 :on-click #(on-click i)}
-             (str "v" i)]
-            (str "v" i))
-          (when is-current? " <<")]
-         [ui/TableCell (when (true? published) [ui/Icon {:name "check" :color "teal"}])]
-         [ui/TableCell author]
-         [ui/TableCell commit]]))]])
+    (doall
+      (for [[i v] @versions-sub]
+        (let [{:keys [href commit author published]} v
+              is-current? (= @current-version-sub href)]
+          ^{:key (str "version" i)}
+          [ui/TableRow (when is-current? {:active true})
+           [ui/TableCell
+            (if on-click
+              [:a {:style    {:cursor "pointer"}
+                   :on-click #(on-click i)}
+               (str "v" i)]
+              (str "v" i))
+            (when is-current? " <<")]
+           [ui/TableCell (when (true? published) [ui/Icon {:name "check" :color "teal"}])]
+           [ui/TableCell author]
+           [ui/TableCell commit]])))]])
 
 
 (defn Versions []

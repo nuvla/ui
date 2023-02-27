@@ -1,4 +1,5 @@
-(ns sixsq.nuvla.ui.deployment-dialog.utils)
+(ns sixsq.nuvla.ui.deployment-dialog.utils
+  (:require [sixsq.nuvla.ui.clouds.utils :as clouds-utils]))
 
 
 (defn kw->str
@@ -67,7 +68,11 @@
               (seq files) (assoc :files files))
       :href (:id current-module))))
 
-
-(defn infra-support-pull?
-  [{:keys [capabilities] :as _infrastructure-service}]
-  (contains? (set capabilities) "NUVLA_JOB_PULL"))
+(defn infra-app-compatible?
+  [{app-subtype :subtype app-compatibility :compatibility :as _module}
+   {infra-subtype :subtype :as infra-service}]
+  (boolean (not (and (= infra-subtype "swarm")
+                     (= app-subtype "application")
+                     (= app-compatibility "swarm")
+                     (or (clouds-utils/swarm-disabled? infra-service)
+                         (clouds-utils/swarm-worker? infra-service))))))

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.33.3] - 2023-02-27
+
 ### Changed
 
 - Deployment modal - Display infrastructure docker labels #996

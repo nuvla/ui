@@ -362,6 +362,14 @@ div.search.dropdown > input {
   z-index: 999;
 }
 
+.full-height > .CodeMirror {
+  height: auto !important;
+}
+
+.large-height > .CodeMirror {
+  height: 600px !important;
+}
+
 .markdown img {
   max-width: 100%;
 }
@@ -520,17 +528,19 @@ body .ui.primary.button:hover,
 
 body .ui.primary.white-button.button,
 .ui.primary.white-button.buttons .button {
-  background-color: #ffffff;
-  color: #c10e12;
+  background-color: #ffffff !important;
+  color: #c10e12 !important;
   border-radius: 50px;
 }
 
 body .ui.primary.white-button.button:hover,
 .ui.primary.white-button.buttons .button:hover {
-  background-color: rgba(237, 43, 43, 1);
-  color: #ffffff;
+  background-color: rgba(237, 43, 43, 1) !important;
+  color: #ffffff !important;
 }
-
+body .ui.inverted.secondary.button{
+  box-shadow: none !important;
+}
 body .ui.secondary.button {
   background-color: #ffffff;
   border: 2px solid #c10e12;
@@ -952,7 +962,8 @@ body .divider-red {
   overflow: hidden;
 }
 
-.nuvla-apps .ui.secondary.segment h4.tab-app-detail {
+.nuvla-apps .ui.secondary.segment h4.tab-app-detail,
+.nuvla-apps .uix-apps-details-details h4.tab-app-detail{
   color: rgba(0, 0, 0, 0.87) !important;
   font-weight: 400;
   font-size: 1rem;
@@ -960,6 +971,13 @@ body .divider-red {
   display: inline-block;
   background-color: rgba(73, 135, 250, 0.3) !important;
   border-radius: 0.25rem;
+}
+
+
+.nuvla-apps .uix-apps-details-details .ui.styled.accordion > .active.title {
+    background-color: transparent;
+    border-bottom :  1px solid rgba(34, 36, 38, 0.15);
+    margin-bottom: 15px;
 }
 
 /** apps end **/

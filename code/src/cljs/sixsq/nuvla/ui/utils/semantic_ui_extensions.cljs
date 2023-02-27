@@ -223,10 +223,11 @@
   [_content & {:keys [_id _label _count default-open _title-size _on-open _on-close !control-open? _icon _styled?]
                :or   {default-open true}}]
   (let [active? (or !control-open? (r/atom default-open))]
-    (fn [content & {:keys [id label count _default-open title-size on-open on-close _!control-open? icon styled?]
+    (fn [content & {:keys [id label count _default-open title-size on-open on-close _!control-open? icon styled?
+                           title-class]
                     :or   {title-size :h3, on-open #(), on-close #(), styled? true}}]
       [ui/Accordion {:id        id
-                     :fluid     true
+                     :fluid      true
                      :styled    styled?
                      :style     {:margin-top    "10px"
                                  :margin-bottom "10px"}
@@ -240,7 +241,9 @@
                                         (accordion-utils/toggle active?)
                                         (if @active? (on-open) (on-close)))}
         [title-size
-         [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+         {:class title-class}
+
+         [ui/Icon {:name (if @active? "fal fa-angle-down" "fal fa-angle-right")}]
 
          (when icon
            [:<> [Icon {:name icon}] " "])

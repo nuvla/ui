@@ -66,9 +66,7 @@
 (defn DetailsTitle
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [:<>
-     [uix/Icon {:name "info"}]
-     (str/capitalize (@tr [:details]))]))
+    (str/capitalize (@tr [:details]))))
 
 
 (defn DockerTitle
@@ -509,7 +507,9 @@
            [ui/GridColumn
             [:h4 "Preview"]
             [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
-         :label (str/capitalize (@tr [:description]))
+         :title-size   :h4
+         :title-class  :tab-app-detail
+         :label        (str/capitalize (@tr [:description]))
          :default-open true]))))
 
 
@@ -543,7 +543,7 @@
                        logo-url @default-logo-url
                        subtype  "project"}} @module-common]
         [:div {:class :uix-apps-details-details}
-         [:h2 [DetailsTitle]]
+         [:h4 {:class :tab-app-detail} [DetailsTitle]]
          [ui/Grid {:stackable true, :reversed :mobile}
           [ui/GridRow
            [ui/GridColumn {:width 13}
@@ -573,7 +573,8 @@
                           :fluid    true
                           :on-click #(dispatch [::events/open-logo-url-modal])}
                (@tr [:module-change-logo])])]]]
-         [Description validation-event]]))))
+         [:div {:style {:margin-top "30px"}}
+          [Description validation-event]]]))))
 
 
 (defn input

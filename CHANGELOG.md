@@ -5,6 +5,7 @@
 - Tabs - New design
 - Apps Store, Navigate apps tab - New design
 - Apps Project Details, Overview tab - New design
+- Apps Details, Details tab - New design
 
 ## [2.33.2] - 2023-02-24
 

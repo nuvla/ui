@@ -34,4 +34,3 @@ package-lock.json
 .scannerwork
 .eastwood
 code/out
-code/test/e2e/loggedin/logger_test.har

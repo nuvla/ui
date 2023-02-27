@@ -125,7 +125,7 @@
               :centered  true}
      [ui/GridRow {:centered true}
       [ui/GridColumn
-       [apps-views-detail/OverviewDescription]]]
+       [apps-views-detail/OverviewDescription [::spec/tab]]]]
      [ui/GridRow
       [ui/GridColumn
        [ModulesView]]]

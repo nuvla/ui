@@ -68,7 +68,7 @@
   [id]
   (swap! group-changed! assoc id false)
   (when-not (some true? (vals @group-changed!))
-    (dispatch [::main-events/changes-protection? false])))
+    (dispatch [::main-events/reset-changes-protection])))
 
 (defn AddGroupButton
   []

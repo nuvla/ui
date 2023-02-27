@@ -112,5 +112,4 @@
                                    {:partial-query-params
                                     {query-key value}}
                                    {:query-params (dissoc (:query-params current-route) query-key)})]
-      {:fx [[:dispatch
-             [::change-query-param new-partial-route-data]]]})))
+      {:fx [[::fx/replace-state-without-navigation (-> (utils/new-route-data current-route new-partial-route-data) utils/name->href)]]})))

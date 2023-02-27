@@ -82,9 +82,13 @@
 
 (reg-event-fx
   ::set-selected-infra-service
-  (fn [{:keys [db]} [_ infra-service]]
-    {:db       (assoc db ::spec/selected-infra-service infra-service)
-     :dispatch [::get-credentials]}))
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ infra-service]]
+    {:db (assoc db ::spec/selected-infra-service infra-service
+                   ::spec/credentials nil
+                   ::spec/selected-credential-id nil)
+     :fx [(when (utils/infra-app-compatible?
+                  (:module deployment)
+                  infra-service) [:dispatch [::get-credentials]])]}))
 
 (reg-event-fx
   ::set-infra-services
@@ -99,7 +103,7 @@
                                     ::spec/infra-services nil)
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter  filter,
-                            :select  "id, name, description, subtype, capabilities"
+                            :select  "id, name, description, subtype, capabilities, swarm-enabled, swarm-manager"
                             :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-services %])]}))
 
@@ -341,10 +345,8 @@
 
 (reg-event-fx
   ::get-credentials
-  (fn [{db :db} _]
-    {:db       (assoc db ::spec/credentials-loading? true
-                         ::spec/credentials nil
-                         ::spec/selected-credential-id nil)
+  (fn [{db :db}]
+    {:db       (assoc db ::spec/credentials-loading? true)
      :dispatch [::refresh-credentials]}))
 
 (reg-event-fx

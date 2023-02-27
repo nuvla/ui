@@ -529,6 +529,22 @@ body .ui.primary.white-button.button:hover,
   color: #ffffff;
 }
 
+body .ui.primary.white-button.button,
+.ui.primary.white-button.buttons .button {
+  background-color: #ffffff !important;
+  color: #c10e12 !important;
+  border-radius: 50px;
+}
+
+body .ui.primary.white-button.button:hover,
+.ui.primary.white-button.buttons .button:hover {
+  background-color: rgba(237, 43, 43, 1) !important;
+  color: #ffffff !important;
+}
+body .ui.inverted.secondary.button {
+  box-shadow: none !important;
+}
+
 body .ui.secondary.button {
   background-color: #ffffff;
   border: 2px solid #c10e12;

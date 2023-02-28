@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-infra-services
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.clouds-detail.views :as clouds-detail]
             [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
@@ -56,7 +57,8 @@
         status              (subscribe [::creds-subs/credential-check-status id])
         last-check          (subscribe [::creds-subs/credential-check-last-check id])
         selected?           (= id (:id @selected-credential))]
-    [ui/ListItem (cond-> {:active   selected?
+    [ui/ListItem (cond-> {:disabled true
+                          :active   selected?
                           :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}
@@ -97,12 +99,23 @@
            [cred-item credential]))]
       [ui/Message {:error true} (@tr [:no-credentials])])))
 
+(defn CompatibilityMessage
+  [infra-service compatible?]
+  (let [compatibility-msg (subscribe [::subs/app-infra-compatibility-msg infra-service])]
+    (when @compatibility-msg
+      [ui/Message {:size    "tiny"
+                   :info    compatible?
+                   :warning (not compatible?)}
+       [ui/Icon {:name (if compatible? "info" "warning")}]
+       @compatibility-msg])))
 
-(defn item
+(defn InfraServiceItem
   [{:keys [id name subtype description] :as infra-service}]
   (let [selected-infra (subscribe [::subs/selected-infra-service])
         active?        (= (:id @selected-infra) id)
-        loading?       (subscribe [::subs/credentials-loading?])]
+        loading?       (subscribe [::subs/credentials-loading?])
+        module         (subscribe [::subs/module])
+        compatible?    (utils/infra-app-compatible? @module infra-service)]
     [:<>
      [ui/AccordionTitle {:active   active?
                          :on-click #(dispatch [::events/set-selected-infra-service
@@ -115,13 +128,17 @@
                            :height         28
                            :margin-right   4
                            :padding-bottom 7}}]
-        [ui/Icon {:name "docker"}])
+        [:<>
+         [ui/Icon {:name "docker"}]
+         [clouds-detail/CompatibilityLabel infra-service]])
       ff/nbsp
       (or name id)]
      [ui/AccordionContent {:active active?}
       description
       [ui/Segment (assoc style/basic :loading @loading?)
-       [creds-list]]]]))
+       [CompatibilityMessage infra-service compatible?]
+       (when compatible?
+         [creds-list])]]]))
 
 
 (defmethod utils/step-content :infra-services
@@ -135,5 +152,5 @@
         (doall
           (for [{:keys [id] :as infra-service} @infra-services]
             ^{:key id}
-            [item infra-service]))]
+            [InfraServiceItem infra-service]))]
        [ui/Message {:error true} (@tr [:no-infra-services])])]))

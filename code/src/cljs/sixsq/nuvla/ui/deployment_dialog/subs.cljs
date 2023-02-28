@@ -2,32 +2,26 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.clouds.utils :as clouds-utils]
             [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-            [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.session.subs :as session-subs]))
 
-
 (reg-sub
   ::deploy-modal-visible?
-  (fn [db]
-    (::spec/deploy-modal-visible? db)))
-
+  :-> ::spec/deploy-modal-visible?)
 
 (reg-sub
   ::deployment-state
   :<- [::deployment]
-  (fn [deployment]
-    (:state deployment)))
-
+  :-> :state)
 
 (reg-sub
   ::deployment-start?
   :<- [::deployment-state]
   (fn [state]
     (boolean (#{"CREATED" "STOPPED"} state))))
-
 
 (reg-sub
   ::visible-steps
@@ -55,13 +49,11 @@
          (remove nil?)
          set)))
 
-
 (reg-sub
   ::is-step-visible?
   :<- [::visible-steps]
   (fn [visible-steps-set [_ step]]
     (boolean (visible-steps-set step))))
-
 
 (reg-sub
   ::modal-header-text
@@ -72,20 +64,17 @@
       "\u2026"
       (str "\u00a0" module-name))))
 
-
 (reg-sub
   ::modal-action-button-icon
   :<- [::deployment-start?]
   (fn [start?]
     (if start? "rocket" "redo")))
 
-
 (reg-sub
   ::modal-operation
   :<- [::deployment-start?]
   (fn [start?]
     (if start? "start" "update")))
-
 
 (reg-sub
   ::execution-mode
@@ -96,12 +85,11 @@
     (or (:execution-mode deployment)
         (let [cred-unknown? @(subscribe [::creds-subs/credential-check-status-unknown? cred-id])
               cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])]
-          (if (utils/infra-support-pull? infra-service)
+          (if (clouds-utils/infra-support-pull? infra-service)
             (if (and cred-unknown? (not cred-loading?))
               "pull"
               "mixed")
             "push")))))
-
 
 (reg-sub
   ::modal-action-button-text
@@ -119,17 +107,15 @@
              (and (not start?) deploy-status-ok?) :update
              :else :update-force)]))))
 
-
 (reg-sub
   ::modal-action-button-color
   :<- [::is-deploy-status? :warning]
   (fn [launch-deploy-warning?]
     (if launch-deploy-warning? "yellow" "blue")))
 
-
 (reg-sub
   ::step-completed?
-  (fn [_ _]
+  (fn []
     [(subscribe [::selected-credential-id])
      (subscribe [::data-completed?])
      (subscribe [::env-variables-completed?])
@@ -154,32 +140,25 @@
         :pricing price-completed?
         false))))
 
-
 (reg-sub
   ::step-active?
   :<- [::active-step]
   (fn [active-step [_ step-id]]
     (= active-step step-id)))
 
-
 (reg-sub
   ::deployment
-  (fn [db]
-    (::spec/deployment db)))
-
+  :-> ::spec/deployment)
 
 (reg-sub
   ::loading-deployment?
   :<- [::deployment]
-  (fn [deployment]
-    (nil? deployment)))
-
+  :-> nil?)
 
 (reg-sub
   ::module
   :<- [::deployment]
-  (fn [deployment]
-    (:module deployment)))
+  :-> :module)
 
 (reg-sub
   ::can-edit-module-data?
@@ -190,41 +169,30 @@
         set
         (contains? active-claim))))
 
-
 (reg-sub
   ::module-content
   :<- [::module]
-  (fn [module]
-    (:content module)))
-
+  :-> :content)
 
 (reg-sub
-  ::version-id
-  :<- [::module-content]
-  (fn [content]
-    (:id content)))
-
+  ::module-compatibility
+  :<- [::module]
+  :-> :compatibility)
 
 (reg-sub
   ::module-name
   :<- [::module]
-  (fn [module]
-    (:name module)))
-
+  :-> :name)
 
 (reg-sub
   ::module-subtype
   :<- [::module]
-  (fn [module]
-    (:subtype module)))
-
+  :-> :subtype)
 
 (reg-sub
   ::module-id
   :<- [::module]
-  (fn [module]
-    (:id module)))
-
+  :-> :id)
 
 (reg-sub
   ::is-application?
@@ -232,47 +200,34 @@
   (fn [{:keys [subtype]}]
     (= subtype apps-utils/subtype-application)))
 
-
 (reg-sub
   ::price
   :<- [::module]
-  (fn [module]
-    (:price module)))
-
+  :-> :price)
 
 (reg-sub
   ::license
   :<- [::module]
-  (fn [module]
-    (:license module)))
-
+  :-> :license)
 
 (reg-sub
   ::coupon
   :<- [::deployment]
-  (fn [deployment]
-    (:coupon deployment)))
-
+  :-> :coupon)
 
 (reg-sub
   ::files
   :<- [::module-content]
-  (fn [module-content]
-    (:files module-content)))
-
+  :-> :files)
 
 (reg-sub
   ::current-module-content-id
   :<- [::module-content]
-  (fn [module-content]
-    (:id module-content)))
-
+  :-> :id)
 
 (reg-sub
   ::module-info
-  (fn [db]
-    (::spec/module-info db)))
-
+  :-> ::spec/module-info)
 
 (reg-sub
   ::module-versions
@@ -280,20 +235,17 @@
   (fn [module-info]
     (-> module-info :versions apps-utils/map-versions-index)))
 
-
 (reg-sub
   ::latest-version
   :<- [::module-versions]
   (fn [module-versions]
     (some-> module-versions first second :href)))
 
-
 (reg-sub
   ::latest-published-version
   :<- [::module-versions]
   (fn [module-versions]
     (-> module-versions apps-utils/latest-published-version)))
-
 
 (reg-sub
   ::is-latest-version?
@@ -304,7 +256,6 @@
       true
       false)))
 
-
 (reg-sub
   ::is-latest-published-version?
   :<- [::latest-published-version]
@@ -314,36 +265,50 @@
       true
       false)))
 
-
 (reg-sub
   ::is-module-published?
   :<- [::module]
   (fn [module]
     (-> module :published true?)))
 
-
 (reg-sub
   ::selected-version
-  (fn [db]
-    (::spec/selected-version db)))
-
+  :-> ::spec/selected-version)
 
 (reg-sub
   ::original-module
-  (fn [db]
-    (::spec/original-module db)))
+  :-> ::spec/original-module)
 
 
 (reg-sub
   ::credentials-loading?
-  ::spec/credentials-loading?)
+  :-> ::spec/credentials-loading?)
 
+(reg-sub
+  ::app-infra-compatibility-msg
+  :<- [::module-subtype]
+  :<- [::module-compatibility]
+  :<- [::i18n-subs/tr]
+  (fn [[module-subtype module-compatibility tr]
+       [_ {:keys [swarm-enabled swarm-manager] infra-subtype :subtype
+           :as   _infra-service}]]
+    (cond
+      (= [module-subtype module-compatibility infra-subtype swarm-enabled]
+         ["application" "swarm" "swarm" false])
+      (tr [:swarm-app-cant-be-deployed-compose-node])
+
+      (= [module-subtype module-compatibility infra-subtype swarm-enabled swarm-manager]
+         ["application" "swarm" "swarm" true false])
+      (tr [:swarm-app-cant-be-deployed-worker-node])
+
+      (= [module-subtype module-compatibility infra-subtype swarm-enabled]
+         ["application" "docker-compose" "swarm" true])
+      (tr [:compose-app-deployed-swarm-node]))))
 
 (reg-sub
   ::credentials
   (fn [db]
     (sort-by (juxt :name :id) (::spec/credentials db))))
-
 
 (reg-sub
   ::credentials-by-ids
@@ -353,19 +318,16 @@
          (map (juxt :id identity))
          (into {}))))
 
-
 (reg-sub
   ::credential
   :<- [::credentials-by-ids]
   (fn [credentials-by-ids [_ id]]
     (get credentials-by-ids id)))
 
-
 (reg-sub
   ::selected-credential-id
   (fn [db]
     (::spec/selected-credential-id db)))
-
 
 (reg-sub
   ::selected-credential
@@ -374,24 +336,20 @@
   (fn [[credentials-by-ids selected-credential]]
     (get credentials-by-ids selected-credential)))
 
-
 (reg-sub
   ::infra-services-loading?
   (fn [db]
     (::spec/infra-services-loading? db)))
-
 
 (reg-sub
   ::selected-infra-service
   (fn [db]
     (::spec/selected-infra-service db)))
 
-
 (reg-sub
   ::infra-services
   (fn [db]
     (::spec/infra-services db)))
-
 
 (reg-sub
   ::visible-infra-services
@@ -403,7 +361,6 @@
       infra-services
       (when selected-infra-service [selected-infra-service]))))
 
-
 (reg-sub
   ::deploy-status-registries
   (fn [db [_ step-id]]
@@ -414,7 +371,6 @@
   (fn [db]
     (::spec/infra-registries db)))
 
-
 (reg-sub
   ::infra-registries-by-ids
   :<- [::infra-registries]
@@ -423,25 +379,19 @@
          (map (juxt :id identity))
          (into {}))))
 
-
 (reg-sub
   ::infra-registry
   :<- [::infra-registries-by-ids]
   (fn [infra-registries-by-ids [_ id]]
     (get infra-registries-by-ids id)))
 
-
 (reg-sub
   ::infra-registries-loading?
-  (fn [db]
-    (::spec/infra-registries-loading? db)))
-
+  :-> ::spec/infra-registries-loading?)
 
 (reg-sub
   ::infra-registries-creds
-  (fn [db]
-    (::spec/infra-registries-creds db)))
-
+  :-> ::spec/infra-registries-creds)
 
 (reg-sub
   ::infra-registries-creds-by-parent-options
@@ -451,47 +401,30 @@
          (map (fn [{:keys [id name]}]
                 {:key id, :text (or name id), :value id})))))
 
-
 (reg-sub
   ::active-step
-  (fn [db]
-    (::spec/active-step db)))
-
+  :-> ::spec/active-step)
 
 (reg-sub
   ::data-step-active?
-  (fn [db]
-    (::spec/data-step-active? db)))
-
+  :-> ::spec/data-step-active?)
 
 (reg-sub
   ::step-states
-  (fn [db]
-    (::spec/step-states db)))
-
+  :-> ::spec/step-states)
 
 (reg-sub
   ::data-clouds
-  (fn [db]
-    (::spec/data-clouds db)))
-
+  :-> ::spec/data-clouds)
 
 (reg-sub
   ::selected-cloud
-  (fn [db]
-    (::spec/selected-cloud db)))
+  :-> ::spec/selected-cloud)
 
 
 (reg-sub
   ::cloud-infra-services
-  (fn [db]
-    (::spec/cloud-infra-services db)))
-
-
-;;
-;; dynamic subscriptions to manage flow of derived data
-;;
-
+  :-> ::spec/cloud-infra-services)
 
 (reg-sub
   ::credentials-completed?
@@ -500,12 +433,10 @@
   (fn [[selected-credential deployment]]
     (boolean (and selected-credential (:parent deployment)))))
 
-
 (reg-sub
   ::infra-services-completed?
   :<- [::selected-infra-service]
-  (fn [selected-infra-service]
-    (boolean selected-infra-service)))
+  :-> boolean)
 
 (reg-sub
   ::deployment-reg-creds-count
@@ -519,14 +450,12 @@
   (fn [module-content]
     (-> module-content :private-registries count)))
 
-
 (reg-sub
   ::registries-completed?
   :<- [::module-private-registries-count]
   :<- [::deployment-reg-creds-count]
   (fn [[module-private-registries-count deployment-reg-creds-count]]
     (>= deployment-reg-creds-count module-private-registries-count)))
-
 
 (reg-sub
   ::version-completed?
@@ -552,7 +481,6 @@
         (some #{:loading} steps-status) :loading
         :else :ok))))
 
-
 (reg-sub
   ::is-deploy-status?
   :<- [::deploy-status]
@@ -561,34 +489,24 @@
 
 (reg-sub
   ::license-completed?
-  (fn [db]
-    (::spec/license-accepted? db)))
-
+  :-> ::spec/license-accepted?)
 
 (reg-sub
   ::price-completed?
-  (fn [db]
-    (::spec/price-accepted? db)))
-
+  :-> ::spec/price-accepted?)
 
 (reg-sub
   ::registries-creds
-  (fn [db]
-    (::spec/registries-creds db)))
-
+  :-> ::spec/registries-creds)
 
 (reg-sub
   ::env-variables
   :<- [::module-content]
-  (fn [module-content]
-    (-> module-content :environmental-variables)))
-
+  :-> :environmental-variables)
 
 (reg-sub
   ::error-message
-  (fn [db]
-    (::spec/error-message db)))
-
+  :-> ::spec/error-message)
 
 (reg-sub
   ::env-variables-completed?
@@ -598,13 +516,10 @@
          (filter #(:required %))
          (every? #(not (str/blank? (:value %)))))))
 
-
 (reg-sub
   ::data-completed?
   :<- [::selected-cloud]
-  (fn [selected-cloud]
-    (boolean selected-cloud)))
-
+  :-> boolean)
 
 (reg-sub
   ::modal-action-button-disabled?
@@ -635,12 +550,9 @@
           (not version-completed?)
           cred-invalid?))))
 
-
 (reg-sub
   ::check-dct
-  (fn [db]
-    (::spec/check-dct db)))
-
+  :-> ::spec/check-dct)
 
 (reg-sub
   ::new-price
@@ -652,8 +564,6 @@
                (not= (:cent-amount-daily current-price) (:cent-amount-daily new-price)))
       new-price)))
 
-
 (reg-sub
   ::submit-loading?
-  (fn [db]
-    (::spec/submit-loading? db)))
+  :-> ::spec/submit-loading?)

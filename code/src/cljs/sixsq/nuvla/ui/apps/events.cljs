@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
             [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
             [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
+            [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
             [sixsq.nuvla.ui.apps.effects :as apps-fx]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.apps.utils :as utils]
@@ -232,8 +233,8 @@
 
 (reg-event-fx
   ::set-active-tab
-  (fn [_ [_ active-tab]]
-    {:fx [[:dispatch [::nav-tab/change-tab [::spec/tab] active-tab]]]}))
+  (fn [_ [_ active-tab db-path]]
+    {:fx [[:dispatch [::nav-tab/change-tab {:db-path (or db-path [::spec/tab]) :tab-key active-tab}]]]}))
 
 (reg-event-fx
   ::set-default-tab
@@ -625,9 +626,9 @@
                                (dispatch [::set-module sanitized-module]) ;Needed?
                                (when is-app?
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
-                               (dispatch [::main-events/changes-protection? false])
-                               (dispatch [::routing-events/navigate
-                                          (str-pathify (name->href routes/apps) (:path sanitized-module))]))
+                               (dispatch [::main-events/reset-changes-protection
+                                          [::routing-events/navigate
+                                           (str-pathify (name->href routes/apps) (:path sanitized-module))]]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)
@@ -646,18 +647,19 @@
                                 (do (dispatch [::get-module (version-id->index %)])
                                     (when is-app?
                                       (dispatch [::validate-docker-compose %]))
-                                    (dispatch [::main-events/changes-protection? false])))]}))))
+                                    (dispatch [::main-events/reset-changes-protection])))]}))))
 
 
 (reg-event-fx
   ::delete-module
   (fn [{:keys [db]} [_ id]]
-    {:db                  (-> db
-                              (dissoc ::spec/module)
-                              (assoc ::spec/form-valid? true))
-     ::cimi-api-fx/delete [id #(do
-                                 (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::routing-events/navigate routes/apps]))]}))
+    ;; TODO: Add on-error restoring changes-protection
+    (let [query-params {:apps-store-tab (-> db ::apps-store-spec/tab :default-tab)}]
+      {:db                  (-> db
+                                (dissoc ::spec/module)
+                                (assoc  ::spec/form-valid? true))
+       ::cimi-api-fx/delete [id #(dispatch [::main-events/reset-changes-protection
+                                            [::routing-events/navigate routes/apps nil query-params]])]})))
 
 
 (reg-event-db
@@ -688,10 +690,9 @@
                                 (assoc :path (utils/contruct-path paste-parent-path new-module-name)))]
 
       {::cimi-api-fx/add [:module paste-module
-                          #(do
-                             (dispatch [::main-events/changes-protection? false])
-                             (dispatch [::routing-events/navigate
-                                        (str-pathify (name->href routes/apps) (:path paste-module))]))
+                          #(dispatch [::main-events/reset-changes-protection
+                                      [::routing-events/navigate
+                                       (str-pathify (name->href routes/apps) (:path paste-module))]])
                           :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                        (cimi-api-fx/default-add-on-error :module %)
                                        (when (= status 409)

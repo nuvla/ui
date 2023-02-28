@@ -362,14 +362,6 @@ div.search.dropdown > input {
   z-index: 999;
 }
 
-.full-height > .CodeMirror {
-  height: auto !important;
-}
-
-.large-height > .CodeMirror {
-  height: 600px !important;
-}
-
 .markdown img {
   max-width: 100%;
 }
@@ -535,6 +527,22 @@ body .ui.primary.white-button.button:hover,
 .ui.primary.white-button.buttons .button:hover {
   background-color: rgba(237, 43, 43, 1);
   color: #ffffff;
+}
+
+body .ui.primary.white-button.button,
+.ui.primary.white-button.buttons .button {
+  background-color: #ffffff !important;
+  color: #c10e12 !important;
+  border-radius: 50px;
+}
+
+body .ui.primary.white-button.button:hover,
+.ui.primary.white-button.buttons .button:hover {
+  background-color: rgba(237, 43, 43, 1) !important;
+  color: #ffffff !important;
+}
+body .ui.inverted.secondary.button {
+  box-shadow: none !important;
 }
 
 body .ui.secondary.button {

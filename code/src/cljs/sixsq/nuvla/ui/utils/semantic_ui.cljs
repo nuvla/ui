@@ -2,23 +2,8 @@
   "Mapping of names of Semantic UI components to the Soda Ash wrappers. This
    namespace has no real functionality; it just keeps Cursive from complaining
    about undefined symbols."
-  (:require ["codemirror/addon/dialog/dialog"]
-            ["codemirror/addon/edit/closebrackets"]
-            ["codemirror/addon/edit/matchbrackets"]
-            ["codemirror/addon/fold/brace-fold"]
-            ["codemirror/addon/fold/foldcode"]
-            ["codemirror/addon/fold/foldgutter"]
-            ["codemirror/addon/fold/indent-fold"]
-            ["codemirror/addon/search/matchesonscrollbar"]
-            ["codemirror/addon/search/search"]
-            ["codemirror/addon/search/searchcursor"]
-            ["codemirror/addon/selection/active-line"]
-            ["codemirror/mode/javascript/javascript"]
-            ["codemirror/mode/markdown/markdown"]
-            ["codemirror/mode/shell/shell"]
-            ["codemirror/mode/yaml/yaml"]
+  (:require ["@uiw/react-codemirror" :as code-mirror]
             ["qrcode.react" :as qrcode]
-            ["react-codemirror2" :as code-mirror]
             ["react-copy-to-clipboard" :as copy-to-clipboard]
             ["react-datepicker" :as date-picker]
             ["react-diff-viewer" :as react-diff-viewer]
@@ -211,9 +196,7 @@
 ;; code mirror
 ;;
 
-(def CodeMirror (r/adapt-react-class code-mirror/UnControlled))
-;;(def CodeMirrorControlled (r/adapt-react-class code-mirror/Controlled))
-
+(def CodeMirror (r/adapt-react-class code-mirror/default))
 
 ;;
 ;; Diff viewer

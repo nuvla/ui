@@ -37,8 +37,7 @@
 
 
 (defn SingleFile
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id ::spec/file-name ::spec/file-content]}]
+  [_file]
   (let [tr              (subscribe [::i18n-subs/tr])
         validate-form?  (subscribe [::apps-subs/validate-form?])
         editable?       (subscribe [::apps-subs/editable?])
@@ -172,23 +171,21 @@
         unsupp-opts    (:unsupported-options (:content @module-app))
         compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
-        editable?      (subscribe [::apps-subs/editable?])
-        default-value  @docker-compose]
+        editable?      (subscribe [::apps-subs/editable?])]
     (fn []
-      (let [validate? @validate-form?
-            valid?    (s/valid? ::spec/docker-compose @docker-compose)]
+      (let [valid? (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml {:value      default-value
-                           :on-change  (fn [_editor _data value]
-                                         (dispatch [::events/update-docker-compose value])
-                                         (dispatch [::main-events/changes-protection? true])
-                                         (dispatch [::apps-events/validate-form]))
-                           :read-only? (not @editable?)}]
-          (when validate?
+          [uix/EditorYaml {:value     @docker-compose
+                           :on-change (fn [value]
+                                        (dispatch [::events/update-docker-compose value])
+                                        (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::apps-events/validate-form]))
+                           :read-only (not @editable?)}]
+          (when @validate-form?
             (dispatch [::events/set-docker-validation-error
                        apps-utils/subtype-application-k8s (not valid?)])
             (when (not valid?)
@@ -208,24 +205,22 @@
         unsupp-opts    (:unsupported-options (:content @module-app))
         compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
-        editable?      (subscribe [::apps-subs/editable?])
-        default-value  @docker-compose]
+        editable?      (subscribe [::apps-subs/editable?])]
     (fn []
       (let [validate-dc (subscribe [::apps-subs/validate-docker-compose])
-            validate?   @validate-form?
             valid?      (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml {:value default-value
-                           :on-change (fn [_editor _data value]
+          [uix/EditorYaml {:value     @docker-compose
+                           :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form]))
-                           :read-only? (not @editable?)}]
-          (when validate?
+                           :read-only (not @editable?)}]
+          (when @validate-form?
             (dispatch [::events/set-docker-validation-error apps-utils/subtype-application (not valid?)])
             (when (not valid?)
               (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
@@ -322,8 +317,7 @@
      [:h2 [apps-views-detail/DeploymentsTitle]]
      (if @is-new?
        [uix/WarningMsgNoElements]
-       [:div]
-       #_[deployments-views/DeploymentTable
+       [deployments-views/DeploymentTable
         {:no-actions         true
          :no-module-name     true
          :empty-msg          (@tr [:empty-deployment-module-msg])
@@ -486,7 +480,7 @@
               :stackable true
               :padded    true
               :centered  true
-              :class :uix-apps-details-overview}
+              :class     :uix-apps-details-overview}
      [ui/GridRow {:centered true}
       (when (not @is-new?)
         [ui/GridColumn
@@ -564,12 +558,13 @@
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
-          {:db-path          [::apps-spec/tab]
-           :menu             {:secondary true
-                              :pointing  true
-                              :style     {:display        "flex"
-                                          :flex-direction "row"
-                                          :flex-wrap      "wrap"}
-                              :class     :uix-tab-nav}
-           :panes            panes
-           :renderActiveOnly false}]]))))
+          {:db-path                 [::apps-spec/tab]
+           :menu                    {:secondary true
+                                     :pointing  true
+                                     :style     {:display        "flex"
+                                                 :flex-direction "row"
+                                                 :flex-wrap      "wrap"}
+                                     :class     :uix-tab-nav}
+           :panes                   panes
+           :renderActiveOnly        false
+           :ignore-chng-protection? true}]]))))

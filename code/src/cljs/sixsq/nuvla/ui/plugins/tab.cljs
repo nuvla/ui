@@ -9,7 +9,6 @@
 
 (s/def ::active-tab keyword?)
 (s/def ::change-event (s/nilable coll?))
-(s/def ::ignore-changes-protection? boolean?)
 
 (defn build-spec
   [& {:keys [active-tab]}]
@@ -37,12 +36,11 @@
   ::change-tab
   (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ db-path tab-key]]
     (let [change-event    (get-in db (conj db-path ::change-event))
-          ignore-changes? (get-in db (conj db-path ::ignore-changes-protection?))
           normal-behavior {:db (assoc-in db (conj db-path ::active-tab) tab-key)
                            :fx [(when change-event
                                   [:dispatch change-event])
-                                [:dispatch [::main-events/changes-protection? false]]]}]
-      (if (and changes-protection? (not ignore-changes?))
+                                [:dispatch [::main-events/reset-changes-protection]]]}]
+      (if changes-protection?
         {:db (assoc db ::main-spec/ignore-changes-modal normal-behavior)}
         normal-behavior))))
 
@@ -63,21 +61,16 @@
       (dispatch [::change-tab db-path tab-key]))))
 
 (defn Tab
-  [{:keys [db-path change-event ignore-changes-protection?]
-    :or   {ignore-changes-protection? false}
-    :as   _opts}]
+  [{:keys [db-path change-event] :as _opts}]
   (let [active-tab (subscribe [::helpers/retrieve db-path ::active-tab])]
-    (dispatch [::helpers/set db-path
-               ::change-event change-event
-               ::ignore-changes-protection? ignore-changes-protection?])
+    (dispatch [::helpers/set db-path ::change-event change-event])
     (fn [{:keys [db-path panes] :as opts}]
       (when (nil? @active-tab)
         (dispatch [::helpers/set db-path
                    ::active-tab (some-> (seq panes) first :menuItem :key)]))
       [ui/Tab
        (-> opts
-           (dissoc :db-path :change-event
-                   :default-active-tab :ignore-changes-protection?)
+           (dissoc :db-path :change-event :default-active-tab)
            (assoc :on-tab-change (on-tab-change db-path panes))
            (cond->
              @active-tab (assoc :active-index

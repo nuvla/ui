@@ -19,6 +19,11 @@
           [:dispatch [::apps-events/module-not-found false]]]}))
 
 (reg-event-db
+  ::set-default-tab
+  (fn [db [_ active-tab]]
+    (update db ::spec/tab assoc :default-tab active-tab)))
+
+(reg-event-db
   ::set-modules
   (fn [db [_ modules]]
     (assoc db ::spec/modules modules

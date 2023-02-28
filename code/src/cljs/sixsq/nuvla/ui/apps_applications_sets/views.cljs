@@ -19,11 +19,11 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
+    [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -440,16 +440,14 @@
         [ui/Container {:fluid true}
          [uix/PageHeader "th large" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
-         [ui/Tab
-          {:menu             {:secondary true
-                              :pointing  true
-                              :style     {:display        "flex"
-                                          :flex-direction "row"
-                                          :flex-wrap      "wrap"}}
-           :panes            panes
-           :activeIndex      (tab/key->index panes @active-tab)
-           :renderActiveOnly false
-           :onTabChange      (tab/on-tab-change
-                               panes
-                               #(dispatch [::apps-events/set-active-tab %]))}]
-         ]))))
+         [nav-tab/Tab
+          {:db-path                 [::apps-spec/tab]
+           :menu                    {:secondary true
+                                     :pointing  true
+                                     :style     {:display        "flex"
+                                                 :flex-direction "row"
+                                                 :flex-wrap      "wrap"}
+                                     :class     :uix-tab-nav}
+           :panes                   panes
+           :renderActiveOnly        false
+           :ignore-chng-protection? true}]]))))

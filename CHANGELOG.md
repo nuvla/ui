@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## [2.33.3] - 2023-02-27
+
+### Changed
+
+- Deployment modal - Display infrastructure docker labels #996
+- Deployment modal - Do not allow deployment of Swarm application on Swarm disabled node or worker node #996
+- Deployment modal - Inform user that he is deploying a Compose application on a Docker swarm node #996
+- Clouds and cloud details - Show compatibility label
+- Logger - Add e2e test
+- Sign in/up - Removes border from buttons, bugfix #1177
+
+## [2.33.2] - 2023-02-27
+
 ### Changed
 
 - Apps - Icon in modal should not be red
@@ -28,6 +41,7 @@
 - Apps - Tags alignment fix
 - Components - Tags button border-radius fix
 - Apps - Change logo button border-radius fix
+- Deps - Codemirror v6 and replace react-codemirror2 by @uiw/react-codemirror
 
 ## [2.33.1] - 2023-01-30
 

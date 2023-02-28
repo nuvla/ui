@@ -87,7 +87,8 @@
 
 (reg-event-fx
   ::set-resource-log
-  (fn [{{:keys [::spec/resource-log] :as db} :db} [_ new-resource-log]]
+  (fn [{{:keys [::spec/resource-log
+                ::spec/play?] :as db} :db} [_ new-resource-log]]
     (let [new-log     (:log new-resource-log)
           old-log     (:log resource-log)
           all-in-one? (empty? (:components new-resource-log))
@@ -96,7 +97,7 @@
                           (merge-logs old-log))]
       {:db       (assoc db ::spec/resource-log
                            (assoc new-resource-log :log merged-logs))
-       :dispatch [::fetch]})))
+       :fx       [(when play? [:dispatch [::fetch]])]})))
 
 (reg-event-fx
   ::fetch

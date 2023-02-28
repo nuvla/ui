@@ -58,8 +58,8 @@
   (fn [form-id text read-only?]
     ^{:key form-id}
     [ui/Segment {:attached "bottom"}
-     [uix/EditorJson {:value      @text
-                      :on-change  (fn
-                                    [_editor _data value]
-                                    (reset! text value))
-                      :read-only? (or read-only? false)}]]))
+     [uix/EditorJson {:value     @text
+                      :on-change (fn
+                                   [value]
+                                   (reset! text value))
+                      :read-only read-only?}]]))

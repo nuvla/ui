@@ -241,8 +241,9 @@
         :scrolling true
         :upward    false
         :selection true
-        :on-change #(dispatch [::change-version db-path
-                               (str id "_" (get-version-id @versions-indexed %))])
+        :on-change (ui-callback/value
+                     #(dispatch [::change-version db-path
+                                 (str id "_" (get-version-id @versions-indexed %))]))
         :fluid     true
         :options   @options
         :disabled  read-only?}])))

@@ -350,6 +350,7 @@
         db-path      [::spec/apps-sets id]
         read-only?   (not @editable?)]
     (if (seq @applications)
+      ^{:key (str "tab-apps-" id)}
       [ui/Tab
        {:panes (map
                  (fn [{:keys [name subtype] module-id :id}]
@@ -392,6 +393,7 @@
                              :render   #(r/as-element [ConfigureSetApplications id])}))
                         @apps-sets)}]
       [ui/Message {:info true} "No apps sets created yet"])))
+
 (defn module-detail-panes
   []
   (let [module    (subscribe [::apps-subs/module])

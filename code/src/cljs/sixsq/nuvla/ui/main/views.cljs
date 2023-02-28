@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.views
-  (:require [re-frame.core :refer [dispatch subscribe]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.apps-applications-sets.views]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.cimi.subs :as api-subs]
@@ -22,8 +23,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [clojure.string :as str]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn crumb

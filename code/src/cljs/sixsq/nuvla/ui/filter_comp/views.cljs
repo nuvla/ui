@@ -13,7 +13,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]))
 
 
 (defn DeleteIcon
@@ -335,59 +336,65 @@
         (on-done @filter-query))
       (let [filter-string  (utils/data->filter-str @data)
             error         (utils/filter-syntax-error filter-string)
-            active-filter? (boolean (some-> filter-string (utils/filter-str->data)))]
+            active-filter? (boolean (some-> filter-string (utils/filter-str->data)))
+            filter-popup   (fn [trigger]
+                             (r/as-element
+                              [ui/Popup
+                               {:trigger  (r/as-element trigger)
+                                :disabled (not active-filter?)}
+                               [:div [FilterSummary {:additional-filters-applied default-filter}]]]))]
         [:div
          {:style {:display :flex}}
-         [ui/Modal
-          {:trigger    (r/as-element
-                        [ui/Popup
-                         {:trigger  (r/as-element
-                                     [:div [ui/Button {:type     :button
-                                                       :icon     true
-                                                       :disabled (nil? resource-name)
-                                                       :on-click open-fn
-                                                       :style    {:z-index 100
-                                                                  :display :flex}}
-                                            [uix/Icon {:name (str (when-not active-filter? "fal ") "fa-filter")}]
-                                            \u00A0
-                                            (str/capitalize (@tr [:filter]))]])
-                          :disabled (not active-filter?)}
-                         [FilterSummary {:additional-filters-applied default-filter}]])
-           :open       @open?
-           :on-close   close-fn
-           :close-icon true}
+         [filter-popup
+          [:div
+           {:style {:display :flex}}
+           [ui/Modal
+            {:trigger    (r/as-element
+                          [ui/Button {:type     :button
+                                      :icon     true
+                                      :disabled (nil? resource-name)
+                                      :on-click open-fn
+                                      :style    {:z-index 100
+                                                 :display :flex}}
+                           [uix/Icon {:name (str (when-not active-filter? "fal ") "fa-filter")}]
+                           \u00A0
+                           (str/capitalize (@tr [:filter]))])
+             :open       @open?
+             :on-close   close-fn
+             :close-icon true}
 
-          [uix/ModalHeader {:header (@tr [:filter-composer])}]
+            [uix/ModalHeader {:header (@tr [:filter-composer])}]
 
-          (when resource-name
-            [:<>
-             [ui/ModalContent
-              [FilterFancy resource-name data]
-              [ui/Message {:error (and @show-error? (some? error))}
-               [ui/MessageHeader {:style {:margin-bottom 10}}
-                (str/capitalize "Result:")
-                [ui/Button {:floated  "right"
-                            :icon     true
-                            :toggle   true
-                            :active   @show-error?
-                            :on-click #(swap! show-error? not)}
-                 [ui/Icon {:className "fad fa-spell-check"}]]]
-               [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
-                (or (and @show-error? error) filter-string)]]]
-             [ui/ModalActions
-              [ClearButton {:on-done on-done :close-fn close-fn
-                            :active-filter? active-filter? :resource-name resource-name}]
-              [ui/Button
-               {:positive true
-                :disabled (some? error)
-                :on-click #(do
-                             (on-done filter-string)
-                             (dispatch [::route-events/store-in-query-param
-                                        {:query-key   (or (keyword resource-name) :filter)
-                                         :value       filter-string
-                                         :push-state? true}])
-                             (close-fn))}
-               (@tr [:done])]]])]
-         (when  (and active-filter? show-clear-button-outside-modal?)
-           [ClearButton {:on-done on-done :close-fn close-fn
-                         :active-filter? active-filter? :resource-name resource-name}])]))))
+            (when resource-name
+              [:<>
+               [ui/ModalContent
+                [FilterFancy resource-name data]
+                [ui/Message {:error (and @show-error? (some? error))}
+                 [ui/MessageHeader {:style {:margin-bottom 10}}
+                  (str/capitalize "Result:")
+                  [ui/Button {:floated  "right"
+                              :icon     true
+                              :toggle   true
+                              :active   @show-error?
+                              :on-click #(swap! show-error? not)}
+                   [ui/Icon {:className "fad fa-spell-check"}]]]
+                 [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
+                  (or (and @show-error? error) filter-string)]]]
+               [ui/ModalActions
+                [ClearButton {:on-done on-done :close-fn close-fn
+                              :active-filter? active-filter? :resource-name resource-name}]
+                [ui/Button
+                 {:positive true
+                  :disabled (some? error)
+                  :on-click #(do
+                               (on-done filter-string)
+                               (dispatch [::route-events/store-in-query-param
+                                          {:query-key   (or (keyword resource-name) :filter)
+                                           :value       filter-string
+                                           :push-state? true}])
+                               (close-fn))}
+                 (@tr [:done])]]])]
+           (when show-clear-button-outside-modal?
+             [ClearButton {:on-done on-done :close-fn close-fn
+                           :active-filter? active-filter? :resource-name resource-name}])]]
+         [ff/help-popup (@tr [:additional-filter-help-text])]]))))

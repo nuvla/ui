@@ -308,17 +308,22 @@
               :push-state?  true}]))
 
 (defn- ClearButton
-  [{:keys [active-filter? on-done close-fn resource-name]}]
+  [{:keys [active-filter? on-done close-fn resource-name persist?]}]
   (let [ tr (subscribe [::i18n-subs/tr])]
     [ui/Button
-     {:disabled (not active-filter?)
+     {:positive true
+      :style    {:align-items :center}
+      :disabled (not active-filter?)
       :on-click #(do
-                   (clear-filter on-done resource-name)
+                   (if persist?
+                     (clear-filter on-done resource-name)
+                     (on-done ""))
                    (close-fn))}
      (@tr [:clear-filter])]))
 
 (defn ButtonFilter
-  [{:keys [resource-name open? default-filter show-clear-button-outside-modal?]}]
+  [{:keys [resource-name open? default-filter show-clear-button-outside-modal? persist?]
+    :or   {persist? true}}]
   (let [tr          (subscribe [::i18n-subs/tr])
         show-error? (r/atom false)
         init-data   (or (when-not (str/blank? default-filter)
@@ -332,7 +337,7 @@
         filter-query (subscribe [::route-subs/query-param (keyword resource-name)])]
     (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
     (fn [{:keys [resource-name open? _default-filter on-done]}]
-      (when-not (= @filter-query default-filter)
+      (when (and persist? (not= @filter-query default-filter))
         (on-done @filter-query))
       (let [filter-string  (utils/data->filter-str @data)
             error         (utils/filter-syntax-error filter-string)
@@ -354,7 +359,8 @@
                                       :icon     true
                                       :disabled (nil? resource-name)
                                       :on-click open-fn
-                                      :style    {:z-index 100
+                                      :style    {:align-items :center
+                                                 :z-index 100
                                                  :display :flex}}
                            [uix/Icon {:name (str (when-not active-filter? "fal ") "fa-filter")}]
                            \u00A0
@@ -381,20 +387,22 @@
                  [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
                   (or (and @show-error? error) filter-string)]]]
                [ui/ModalActions
-                [ClearButton {:on-done on-done :close-fn close-fn
+                [ClearButton {:persist? persist? :on-done on-done :close-fn close-fn
                               :active-filter? active-filter? :resource-name resource-name}]
                 [ui/Button
                  {:positive true
                   :disabled (some? error)
                   :on-click #(do
                                (on-done filter-string)
-                               (dispatch [::route-events/store-in-query-param
-                                          {:query-key   (or (keyword resource-name) :filter)
-                                           :value       filter-string
-                                           :push-state? true}])
+                               (when persist?
+                                 (dispatch [::route-events/store-in-query-param
+                                            {:query-key   (or (keyword resource-name) :filter)
+                                             :value       filter-string
+                                             :push-state? true}]))
                                (close-fn))}
                  (@tr [:done])]]])]
            (when show-clear-button-outside-modal?
              [ClearButton {:on-done on-done :close-fn close-fn
                            :active-filter? active-filter? :resource-name resource-name}])]]
-         [ff/help-popup (@tr [:additional-filter-help-text])]]))))
+         (when persist?
+           [ff/help-popup (@tr [:additional-filter-help-text])])]))))

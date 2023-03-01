@@ -46,7 +46,7 @@
         ^{:key (random-uuid)}
         [:div {:style {:margin-top "10px"}}
          [filter-comp/ButtonFilter
-          {:resource-name  "deployment"
+          {:resource-name  spec/resource-name
            :default-filter @additional-filter
            :open?          filter-open?
            :on-done        #(dispatch [::events/set-additional-filter %])

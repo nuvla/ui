@@ -5,6 +5,8 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
 
+(def resource-name "deployment")
+
 (s/def ::deployments any?)
 (s/def ::deployments-summary any?)
 (s/def ::deployments-summary-all any?)

@@ -12,7 +12,8 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
             [sixsq.nuvla.ui.routing.events :as route-events]
-            [sixsq.nuvla.ui.routing.utils :refer [get-stored-db-value-from-query-param]]))
+            [sixsq.nuvla.ui.routing.utils :refer [get-query-param
+                                                  get-stored-db-value-from-query-param]]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
@@ -20,8 +21,12 @@
 (reg-event-fx
   ::init
   (fn [{{:keys [current-route] :as db} :db} _]
-    (let [search-query (get-stored-db-value-from-query-param current-route [::spec/state-selector])]
-      {:db (merge db spec/defaults {::spec/state-selector search-query})
+    (let [search-query (get-stored-db-value-from-query-param current-route [::spec/state-selector])
+          filter-query  (get-query-param current-route (keyword spec/resource-name))
+          ]
+      {:db (merge db spec/defaults
+                  {::spec/state-selector   search-query
+                   ::spec/additional-filter filter-query})
        :fx [[:dispatch [::refresh]]]})))
 
 (reg-event-fx

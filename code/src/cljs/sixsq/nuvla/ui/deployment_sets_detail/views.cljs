@@ -21,7 +21,7 @@
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
-            [sixsq.nuvla.ui.plugins.tab :as tab]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -183,7 +183,8 @@
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
-             #(dispatch [::tab/change-tab [::spec/tab] :deployments])]]]
+             #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                           :tab-key :deployments}])]]]
 
           (when (seq tags)
             [ui/GridColumn
@@ -196,27 +197,27 @@
         can-edit?      @(subscribe [::subs/can-edit?])]
     (when @deployment-set
       [tab/Tab
-      {:db-path [::spec/tab]
-       :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
-                             :key     :overview
-                             :icon    "info"}
-                  :render   #(r/as-element [TabOverview])}
-                 (events-plugin/events-section
-                   {:db-path [::spec/events]
-                    :href    (:id @deployment-set)})
-                 {:menuItem {:content (str/capitalize (tr [:deployments]))
-                             :key     :deployments
-                             :icon    "rocket"}
-                  :render   #(r/as-element [deployments-views/DeploymentTable
-                                           {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
-                                            :no-actions true
-                                             :empty-msg  (tr [:empty-deployemnt-msg])}])}
-                 (job-views/jobs-section)
-                 (acl/TabAcls {:e          deployment-set
-                               :can-edit?  can-edit?
-                               :edit-event ::events/edit})]
-       :menu    {:secondary true
-                 :pointing  true}}])))
+       {:db-path [::spec/tab]
+        :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
+                              :key     :overview
+                              :icon    "info"}
+                   :render   #(r/as-element [TabOverview])}
+                  (events-plugin/events-section
+                    {:db-path [::spec/events]
+                     :href    (:id @deployment-set)})
+                  {:menuItem {:content (str/capitalize (tr [:deployments]))
+                              :key     :deployments
+                              :icon    "rocket"}
+                   :render   #(r/as-element [deployments-views/DeploymentTable
+                                             {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
+                                              :no-actions  true
+                                              :empty-msg   (tr [:empty-deployemnt-msg])}])}
+                  (job-views/jobs-section)
+                  (acl/TabAcls {:e          deployment-set
+                                :can-edit?  can-edit?
+                                :edit-event ::events/edit})]
+        :menu    {:secondary true
+                  :pointing  true}}])))
 
 (defn Application
   [{:keys [id name subtype description] :as module}]
@@ -845,7 +846,8 @@
         {:db-path [::spec/bulk-jobs]}]
        [components/ErrorJobsMessage
         ::job-subs/jobs nil nil
-        #(dispatch [::tab/change-tab [::spec/tab] :jobs])]
+        #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                      :tab-key :jobs}])]
        [TabsDeploymentSet]]]]))
 
 

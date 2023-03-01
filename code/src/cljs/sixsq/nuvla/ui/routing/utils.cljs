@@ -19,14 +19,13 @@
   (get-in route [:data :name]))
 
 (defn db-path->query-param-key
-  [[qualified-key]]
-  (let [ns-path     (str/split (namespace qualified-key) #"\.")
-        last-two-ns (drop (- (count ns-path) 2) ns-path)
-        k-prefix     (str/replace (str/join last-two-ns) "spec" "")]
-    (->> qualified-key
-         name
-         (str k-prefix "-")
-         keyword)))
+  [db-path]
+  (let [qualified-key (first db-path)
+        ns-path       (str/split (namespace qualified-key) #"\.")
+        last-two-ns   (drop (- (count ns-path) 2) ns-path)
+        k-prefix      (str/replace (str/join last-two-ns) "spec" "")
+        k-suffix      (-> db-path last name)]
+    (keyword (str k-prefix "-" k-suffix))))
 
 (defn new-route-data
   "Takes current route data and merges it with partial new route data, returning new
@@ -42,7 +41,7 @@
   {:route-name   (or route-name (get-route-name current-route-data))
    :path-params  (or path-params (:path-params current-route-data))
    :query-params (merge (or query-params (:query-params current-route-data))
-                            partial-query-params)})
+                        partial-query-params)})
 
 (defn gen-href
   "Takes current route data and merges it with partial new route data, returning new path.

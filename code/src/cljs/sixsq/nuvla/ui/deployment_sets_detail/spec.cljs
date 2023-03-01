@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.step-group :as step-group-plugin]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]))
 
 (s/def ::deployment-set (s/nilable any?))
 (s/def ::deployment-set-not-found? boolean?)
@@ -43,7 +43,7 @@
    ::targets-selected          #{}
    ::edges-search              (full-text-search-plugin/build-spec)
    ::clouds-search             (full-text-search-plugin/build-spec)
-   ::tab-new-apps              (tab-plugin/build-spec :active-tab :app-store)
+   ::tab-new-apps              (nav-tab/build-spec :default-tab :app-store)
    ::bulk-jobs                 (bulk-progress-plugin/build-spec)
    ::create-name               ""
    ::create-description        ""

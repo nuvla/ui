@@ -11,7 +11,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
-            [sixsq.nuvla.ui.plugins.tab :as tab]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.spec :as session-spec]
@@ -102,8 +102,7 @@
 
 (reg-event-fx
   ::search-apps
-  (fn [{{:keys [::spec/tab-new-apps
-                ::session-spec/session] :as db} :db}]
+  (fn [{{:keys [::session-spec/session] :as db} :db}]
     {:db (assoc db ::spec/apps-loading? true)
      ::cimi-api-fx/search
      [:module (->>
@@ -111,7 +110,7 @@
                  :orderby "path:asc"
                  :filter  (general-utils/join-and
                             (full-text-search/filter-text db [::spec/apps-search])
-                            (case (::tab/active-tab tab-new-apps)
+                            (case (nav-tab/get-active-tab db [::spec/tab-new-apps])
                               :my-apps (str "acl/owners='" (get-active-claim session) "'")
                               :app-store "published=true"
                               nil)

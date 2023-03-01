@@ -23,9 +23,9 @@
                                   :opt-un [::version]))
 (s/def ::apps-selected (s/map-of string? ::apps-application))
 
-(s/def ::apps-set (s/keys :req [::apps-set-name
-                                ::apps-selected]
-                          :opt [::apps-set-description
+(s/def ::apps-set (s/keys :req [::apps-set-name]
+                          :opt [::apps-selected
+                                ::apps-set-description
                                 ::apps-set-subtypes]))
 
 (s/def ::apps-sets (s/map-of any? ::apps-set))

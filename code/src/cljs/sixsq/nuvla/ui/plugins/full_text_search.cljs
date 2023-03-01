@@ -11,10 +11,13 @@
 
 (s/def ::text string?)
 (s/def ::change-event (s/nilable coll?))
+(s/def ::persistent? boolean?)
 
 (defn build-spec
-  []
-  {::text ""})
+  [& {:keys [persistent?]
+      :or   {persistent? true}}]
+  {::text        ""
+   ::persistent? persistent?})
 
 (defn filter-text
   [db db-path]
@@ -25,15 +28,21 @@
   ::search
   (fn [{db :db} [_ db-path text]]
     (let [change-event (get-in db (conj db-path ::change-event))
+          persistent?  (get-in db (conj db-path ::persistent?))
           query-key    (db-path->query-param-key db-path)]
       {:db (assoc-in db (conj db-path ::text) text)
        :fx [[:dispatch change-event]
-            [:dispatch [::route-events/change-query-param {:partial-query-params {query-key text}}]]]})))
+            (when persistent?
+              [:dispatch [::route-events/change-query-param
+                          {:partial-query-params {query-key text}}]])]})))
 
 (reg-event-fx
   ::init-search
   (fn [{{:keys [current-route] :as db} :db} [_ db-path change-event]]
-    (let [search (-> current-route :query-params (get (db-path->query-param-key db-path)))]
+    (let [persistent? (get-in db (conj db-path ::persistent?))
+          search      (when persistent?
+                        (-> current-route :query-params
+                            (get (db-path->query-param-key db-path))))]
       (when (seq search)
         {:db (assoc-in db (conj db-path ::text) search)
          :fx [[:dispatch change-event]]}))))

@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.apps.subs :as subs]
             [sixsq.nuvla.ui.apps.utils :as utils]
             [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
+            [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
@@ -361,21 +362,20 @@
                         :color (when-not parent :grey)}]
               [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
                          :floated "right"
-                         :style   {:width "50px"}}]]]
+                         :style   {:width "50px"}}]]]]
+           (when config/debug?
+             [ui/Card
+             {:href     (when parent (pathify [base-path "New Applications Sets?subtype=applications_sets"]))
+              :on-click (when parent
+                          #(dispatch [::events/close-add-modal]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Applications sets (preview)"]
+              [:div]
+              [ui/Icon {:name  "th large"
+                        :size  :massive
+                        :color (when-not parent :grey)}]]
 
-            ]
-           [ui/Card
-            {:href     (when parent (pathify [base-path "New Applications Sets?subtype=applications_sets"]))
-             :on-click (when parent
-                         #(dispatch [::events/close-add-modal]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Applications sets"]
-             [:div]
-             [ui/Icon {:name "th large"
-                       :size :massive
-                       :color (when-not parent :grey)}]]
-
-            ]]]]))))
+             ])]]]))))
 
 
 (defn paste-modal

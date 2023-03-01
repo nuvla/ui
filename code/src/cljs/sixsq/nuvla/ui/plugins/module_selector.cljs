@@ -9,8 +9,8 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
@@ -23,7 +23,8 @@
   {::loading?   true
    ::apps       nil
    ::selected   #{}
-   ::tab        (tab-plugin/build-spec :active-tab :app-store)
+   ::tab        (nav-tab/build-spec :default-tab :app-store)
+   ::search     (full-text-search/build-spec :persistent? false)
    ::pagination (pagination/build-spec
                   :default-items-per-page default-items-per-page)})
 
@@ -36,7 +37,7 @@
   (fn [{{:keys [::session-spec/session] :as db} :db} [_ db-path & {:keys [loading? subtypes]}]]
     (let [subtypes-path (conj db-path ::subtypes)
           subtypes      (or subtypes (get-in db subtypes-path))
-          active-tab    (tab-plugin/active-tab db (conj db-path ::tab))
+          active-tab    (nav-tab/get-active-tab db (conj db-path ::tab))
           params        (pagination/first-last-params
                           db (conj db-path ::pagination)
                           {:select  "id, name, description, parent-path, subtype"
@@ -50,6 +51,7 @@
                                         nil)
                                       (apply general-utils/join-or (map #(str "subtype='" % "'") subtypes))
                                       "subtype!='project'")})]
+      (js/console.info ::load-apps active-tab subtypes params)
       {:db                  (cond-> db
                                     loading? (assoc-in
                                                (conj db-path ::loading?) true)
@@ -187,22 +189,22 @@
                          {:db-path      (conj db-path ::pagination)
                           :total-items  count
                           :change-event [::load-apps db-path]}]]))]
-      [tab-plugin/Tab
-       {:db-path                    (conj db-path ::tab)
-        :panes                      [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
-                                                 :key     :app-store
-                                                 :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-                                      :render   render}
-                                     {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
-                                                 :key     :all-apps
-                                                 :icon    "grid layout"}
-                                      :render   render}
-                                     {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
-                                                 :key     :my-apps
-                                                 :icon    "user"}
-                                      :render   render}]
-        :change-event               [::load-apps db-path]
-        :ignore-changes-protection? true}])))
+      [nav-tab/Tab
+       {:db-path                 (conj db-path ::tab)
+        :panes                   [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
+                                              :key     :app-store
+                                              :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+                                   :render   render}
+                                  {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
+                                              :key     :all-apps
+                                              :icon    "grid layout"}
+                                   :render   render}
+                                  {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
+                                              :key     :my-apps
+                                              :icon    "user"}
+                                   :render   render}]
+        :change-event            [::load-apps db-path]
+        :ignore-chng-protection? true}])))
 
 (s/fdef AppsSelectorSection
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]

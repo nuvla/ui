@@ -4,6 +4,8 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
 
+(def resource-name "nuvlabox")
+
 (s/def ::stale-count nat-int?)
 (s/def ::active-count nat-int?)
 (s/def ::nuvlaboxes any?)

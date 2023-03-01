@@ -875,7 +875,7 @@
         ^{:key (random-uuid)}
         [:div {:style {:margin-top "10px"}}
          [filter-comp/ButtonFilter
-          {:resource-name  "nuvlabox"
+          {:resource-name  spec/resource-name
            :default-filter @additional-filter
            :open?          filter-open?
            :on-done        #(dispatch [::events/set-additional-filter %])
@@ -885,7 +885,7 @@
 (defn NuvlaBoxesOrClusters
   []
   (dispatch [::events/init])
-  (dispatch [::events/refresh-root])
+  ;; (dispatch [::events/refresh-root])
   (dispatch [::events/set-nuvlabox-cluster nil])
   (let [view-type (subscribe [::subs/view-type])]
     (fn []

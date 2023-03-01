@@ -1045,7 +1045,7 @@
         :city                                          "Ville"
         :clear                                         "effacer"
         :clear-all                                     "tout effacer"
-        :cleawr-filter                                  "supprimer le filtre"
+        :clear-filter                                   "supprimer le filtre"
         :click-for-details                             "Cliquez pour plus de détails"
         :click-here                                    "cliquez-ici"
         :click-to-copy                                 "Cliquez pour copier"

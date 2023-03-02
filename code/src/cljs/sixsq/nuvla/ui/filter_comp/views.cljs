@@ -308,7 +308,8 @@
               :push-state?  true}]))
 
 (defn- ClearButton
-  [{:keys [active-filter? on-done close-fn resource-name persist?]}]
+  [{:keys [active-filter? on-done close-fn resource-name persist?]
+    :or   {persist? true}}]
   (let [ tr (subscribe [::i18n-subs/tr])]
     [ui/Button
      {:positive true

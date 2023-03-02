@@ -77,10 +77,10 @@
                           [:div (str (@tr [:by]) " "
                                      @creator)])
                         (when next-heartbeat-moment
-                          [:div (str (@tr [:last-online]) " "
-                                     [uix/TimeAgo (utils/last-time-online
-                                                    next-heartbeat-moment
-                                                    refresh-interval)])])]
+                          [:div (str (@tr [:last-online]) " ")
+                                [uix/TimeAgo (utils/last-time-online
+                                               next-heartbeat-moment
+                                               refresh-interval)]])]
           :state       state
           :description (when-not (str/blank? description) description)
           :tags        tags}]))))

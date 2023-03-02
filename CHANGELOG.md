@@ -12,6 +12,8 @@
 - Clouds and cloud details - Show compatibility label
 - Logger - Add e2e test
 - Sign in/up - Removes border from buttons, bugfix #1177
+- Filter wizard - Additional filter is stored in and loads from query param
+- Filter wizard - Reopening modal with active filter shows correct attribute and condition in dropdown, bugfix #1159
 
 ## [2.33.2] - 2023-02-27
 

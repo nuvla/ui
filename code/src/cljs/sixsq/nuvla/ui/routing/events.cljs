@@ -7,6 +7,8 @@
             [sixsq.nuvla.ui.routing.utils :as utils]
             [taoensso.timbre :as log]))
 
+(def after-nav-cb-key ::after-nav-cb)
+
 (reg-event-fx
   ::navigate-back
   (fn []
@@ -28,11 +30,14 @@
           new-match-with-controllers (assoc new-match :controllers controllers)
           view-changed?              (not= (:view (:data old-match))
                                            (:view (:data new-match-with-controllers)))]
-      {:db                   (-> db (assoc :current-route new-match-with-controllers
-                                           ::main-spec/nav-path (utils/split-path-alias path)
-                                           ::main-spec/nav-query-params query-params))
+      {:db                   (-> db
+                                 (assoc :current-route new-match-with-controllers
+                                        ::main-spec/nav-path (utils/split-path-alias path)
+                                        ::main-spec/nav-query-params query-params)
+                                 (dissoc after-nav-cb-key))
        :fx                   [(when view-changed?
-                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])]
+                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])
+                              [::fx/after-nav-cb (after-nav-cb-key db)]]
        ::fx/set-window-title [(utils/strip-base-path (:path new-match))]})))
 
 (reg-event-db
@@ -100,17 +105,20 @@
   (fn [{{:keys [current-route] :as db} :db} [_ new-partial-route-data]]
     (let [{:keys [route-name
                   path-params
-                  query-params]} (utils/new-route-data current-route new-partial-route-data)]
+                  query-params]} (utils/new-route-data current-route new-partial-route-data)
+          push-state?            (:push-state? new-partial-route-data)]
       {:db (assoc db ::ignore-changes-protection true)
-       :fx [[::fx/replace-state (utils/name->href route-name path-params query-params)]]})))
+       :fx [[(if push-state? ::fx/push-state ::fx/replace-state) (utils/name->href route-name path-params query-params)]]})))
 
 (reg-event-fx
   ::store-in-query-param
-  (fn [{{:keys [current-route]} :db} [_ {:keys [db-path value]}]]
-    (let [query-key              (utils/db-path->query-param-key db-path)
+  (fn [{{:keys [current-route] :as db} :db} [_ {:keys [db-path query-key value after-nav-cb]
+                                                :as   route-instructions}]]
+    (let [query-key-calculated   (or query-key (utils/db-path->query-param-key db-path))
           new-partial-route-data (if (seq value)
                                    {:partial-query-params
-                                    {query-key value}}
-                                   {:query-params (dissoc (:query-params current-route) query-key)})]
-      {:fx [[:dispatch
-             [::change-query-param new-partial-route-data]]]})))
+                                    {query-key-calculated value}}
+                                   {:query-params (dissoc (:query-params current-route) query-key-calculated)})]
+      {:db (assoc db after-nav-cb-key after-nav-cb)
+       :fx [[:dispatch
+             [::change-query-param (merge route-instructions new-partial-route-data)]]]})))

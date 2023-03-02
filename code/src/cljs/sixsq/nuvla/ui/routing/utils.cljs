@@ -5,8 +5,12 @@
 
 (defn name->href
   "Return relative url for given route. Url can be used in HTML links."
-  ([k]
-   (name->href k nil nil))
+  ([{:keys [route-name
+            path-params
+            query-params] :as k}]
+   (if route-name
+     (name->href route-name path-params query-params)
+     (name->href k nil nil)))
   ([k params]
    (name->href k params nil))
   ([k params query]

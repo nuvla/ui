@@ -1,11 +1,13 @@
 (ns sixsq.nuvla.ui.routing.events
-  (:require [re-frame.core :refer [reg-event-db reg-event-fx]]
+  (:require [re-frame.core :refer [reg-event-db dispatch reg-event-fx]]
             [reitit.frontend :refer [match-by-path]]
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.effects :as fx]
             [sixsq.nuvla.ui.routing.utils :as utils]
             [taoensso.timbre :as log]))
+
+(def after-nav-cb-key ::after-nav-cb)
 
 (reg-event-fx
   ::navigate-back
@@ -14,8 +16,8 @@
 
 (reg-event-fx
   ::push-state-by-path
-  (fn [{ {:keys [current-route
-                 router]} :db} [_ new-path]]
+  (fn [{{:keys [current-route
+                router]} :db} [_ new-path]]
     (let [new-match (dissoc (match-by-path router new-path) :controllers)]
       (when-not (= new-match (dissoc current-route :controllers))
         {::fx/push-state new-path}))))
@@ -28,11 +30,14 @@
           new-match-with-controllers (assoc new-match :controllers controllers)
           view-changed?              (not= (:view (:data old-match))
                                            (:view (:data new-match-with-controllers)))]
-      {:db                   (-> db (assoc :current-route new-match-with-controllers
-                                           ::main-spec/nav-path (utils/split-path-alias path)
-                                           ::main-spec/nav-query-params query-params))
+      {:db                   (-> db
+                                 (assoc :current-route new-match-with-controllers
+                                        ::main-spec/nav-path (utils/split-path-alias path)
+                                        ::main-spec/nav-query-params query-params)
+                                 (dissoc after-nav-cb-key))
        :fx                   [(when view-changed?
-                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])]
+                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])
+                              [::fx/after-nav-cb (after-nav-cb-key db)]]
        ::fx/set-window-title [(utils/strip-base-path (:path new-match))]})))
 
 (reg-event-db
@@ -64,18 +69,20 @@
                ;; disables the protection.
                ::ignore-changes-protection true)}
         (merge {:db (assoc db ::ignore-changes-protection false)}
-          event)))))
+               event)))))
 
 (reg-event-fx
   ::navigate
-  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params
-                                                               {change-event :change-event
-                                                                ignore-chng-protection? :ignore-chng-protection?}]]
-    (let [nav-effect {:db (assoc db ::ignore-changes-protection ignore-chng-protection?)
-                      :fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
-                                                              (utils/add-base-path navigate-to)
-                                                              (utils/name->href navigate-to path-params query-params))]]
-                           (when change-event [:dispatch change-event])]}]
+  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db}
+       [_ navigate-to path-params query-params
+        {change-event            :change-event
+         ignore-chng-protection? :ignore-chng-protection?}]]
+    (let [nav-effect {:db (cond-> (assoc db ::ignore-changes-protection ignore-chng-protection?)
+                                  change-event (assoc after-nav-cb-key #(dispatch change-event)))
+                      :fx [[:dispatch [::push-state-by-path
+                                       (if (string? navigate-to)
+                                         (utils/add-base-path navigate-to)
+                                         (utils/name->href navigate-to path-params query-params))]]]}]
       (if (and changes-protection? (not ignore-chng-protection?))
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect
                        ::ignore-changes-protection ignore-chng-protection?)}
@@ -87,12 +94,12 @@
   ::navigate-partial
   (fn [{{:keys [current-route]} :db} [_ {:keys [change-event
                                                 ignore-chng-protection?]
-                                         :as new-partial-route-data}]]
+                                         :as   new-partial-route-data}]]
     (let [{:keys [route-name
                   path-params
                   query-params]} (utils/new-route-data current-route new-partial-route-data)]
       {:fx [[:dispatch [::navigate route-name path-params query-params
-                        {:change-event change-event
+                        {:change-event            change-event
                          :ignore-chng-protection? ignore-chng-protection?}]]]})))
 
 (reg-event-fx
@@ -100,17 +107,24 @@
   (fn [{{:keys [current-route] :as db} :db} [_ new-partial-route-data]]
     (let [{:keys [route-name
                   path-params
-                  query-params]} (utils/new-route-data current-route new-partial-route-data)]
+                  query-params]} (utils/new-route-data current-route new-partial-route-data)
+          push-state? (:push-state? new-partial-route-data)]
       {:db (assoc db ::ignore-changes-protection true)
-       :fx [[::fx/replace-state (utils/name->href route-name path-params query-params)]]})))
+       :fx [[(if push-state? ::fx/push-state ::fx/replace-state)
+             (utils/name->href route-name path-params query-params)]]})))
 
 (reg-event-fx
   ::store-in-query-param
-  (fn [{{:keys [current-route]} :db} [_ {:keys [db-path value]}]]
-    (let [query-key              (utils/db-path->query-param-key db-path)
+  (fn [{{:keys [current-route] :as db} :db} [_ {:keys [db-path query-key value after-nav-cb]
+                                                :as   route-instructions}]]
+    (let [query-key-calculated   (or query-key
+                                     (utils/db-path->query-param-key db-path))
           new-partial-route-data (if (seq value)
                                    {:partial-query-params
-                                    {query-key value}}
-                                   {:query-params (dissoc (:query-params current-route) query-key)})]
-      {:fx [[:dispatch
-             [::change-query-param new-partial-route-data]]]})))
+                                    {query-key-calculated value}}
+                                   {:query-params (-> current-route
+                                                      :query-params
+                                                      (dissoc query-key-calculated))})]
+      {:db (assoc db after-nav-cb-key after-nav-cb)
+       :fx [[:dispatch
+             [::change-query-param (merge route-instructions new-partial-route-data)]]]})))

@@ -28,13 +28,12 @@
   ::search
   (fn [{db :db} [_ db-path text]]
     (let [change-event (get-in db (conj db-path ::change-event))
-          persistent?  (get-in db (conj db-path ::persistent?))
-          query-key    (db-path->query-param-key db-path)]
+          persistent?  (get-in db (conj db-path ::persistent?))]
       {:db (assoc-in db (conj db-path ::text) text)
        :fx [[:dispatch change-event]
             (when persistent?
-              [:dispatch [::route-events/change-query-param
-                          {:partial-query-params {query-key text}}]])]})))
+              [:dispatch [::route-events/store-in-query-param
+                          {:db-path db-path :value text}]])]})))
 
 (reg-event-fx
   ::init-search

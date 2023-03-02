@@ -299,7 +299,8 @@
              :default-filter $filter
              :disabled?      (nil? @selected-id)
              :open?          filter-open?
-             :on-done        #(dispatch [::events/set-filter %])}]]]]))))
+             :on-done        #(dispatch [::events/set-filter %])
+             :trigger-style  {:border-radius 0}}]]]]))))
 
 
 (defn format-field-item [selections-atom item]

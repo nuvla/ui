@@ -108,23 +108,19 @@
     (let [{:keys [route-name
                   path-params
                   query-params]} (utils/new-route-data current-route new-partial-route-data)
-          push-state? (:push-state? new-partial-route-data)]
+          push-state?            (:push-state? new-partial-route-data)]
       {:db (assoc db ::ignore-changes-protection true)
-       :fx [[(if push-state? ::fx/push-state ::fx/replace-state)
-             (utils/name->href route-name path-params query-params)]]})))
+       :fx [[(if push-state? ::fx/push-state ::fx/replace-state) (utils/name->href route-name path-params query-params)]]})))
 
 (reg-event-fx
   ::store-in-query-param
   (fn [{{:keys [current-route] :as db} :db} [_ {:keys [db-path query-key value after-nav-cb]
                                                 :as   route-instructions}]]
-    (let [query-key-calculated   (or query-key
-                                     (utils/db-path->query-param-key db-path))
+    (let [query-key-calculated   (or query-key (utils/db-path->query-param-key db-path))
           new-partial-route-data (if (seq value)
                                    {:partial-query-params
                                     {query-key-calculated value}}
-                                   {:query-params (-> current-route
-                                                      :query-params
-                                                      (dissoc query-key-calculated))})]
+                                   {:query-params (dissoc (:query-params current-route) query-key-calculated)})]
       {:db (assoc db after-nav-cb-key after-nav-cb)
        :fx [[:dispatch
              [::change-query-param (merge route-instructions new-partial-route-data)]]]})))

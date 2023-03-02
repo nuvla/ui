@@ -32,8 +32,7 @@
       {:db (assoc-in db (conj db-path ::text) text)
        :fx [[:dispatch change-event]
             (when persistent?
-              [:dispatch [::route-events/store-in-query-param
-                          {:db-path db-path :value text}]])]})))
+              [:dispatch [::route-events/store-in-query-param {:db-path db-path :value text}]])]})))
 
 (reg-event-fx
   ::init-search

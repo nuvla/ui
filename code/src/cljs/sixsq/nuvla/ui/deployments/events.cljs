@@ -130,6 +130,7 @@
   (fn [db [_ view-type]]
     (assoc db ::spec/view view-type)))
 
+
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]

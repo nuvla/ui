@@ -85,7 +85,6 @@
     (when (nil? @default-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [{:keys [panes] :as opts}]
-      (js/console.info Tab @cur-view)
       (let [non-nil-panes (remove nil? panes)
             key->index    (zipmap (map (comp :key :menuItem) non-nil-panes)
                                   (range (count non-nil-panes)))]

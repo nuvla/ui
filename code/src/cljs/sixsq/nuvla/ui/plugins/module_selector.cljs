@@ -51,7 +51,6 @@
                                         nil)
                                       (apply general-utils/join-or (map #(str "subtype='" % "'") subtypes))
                                       "subtype!='project'")})]
-      (js/console.info ::load-apps active-tab subtypes params)
       {:db                  (cond-> db
                                     loading? (assoc-in
                                                (conj db-path ::loading?) true)

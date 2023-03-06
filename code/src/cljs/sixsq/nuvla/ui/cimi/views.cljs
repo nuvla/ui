@@ -260,8 +260,7 @@
                                           (dispatch [::events/get-results])))
                 :on-change (fn [] (dispatch [::events/persist-cimi-filter]))}
        [CollectionSelector]
-       [ui/FormGroup {:style {:display :grid :grid-template-columns "repeat(6, 1fr)"
-                              :grid-row-gap "1rem"}}
+       [ui/FormGroup {:class :cimi-filter-search-header}
         (for [field search-header-fields
               :let [{:keys [k label tab-index min max event type placeholder cols]} field]]
           ^{:key k}

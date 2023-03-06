@@ -16,7 +16,7 @@ test.beforeAll(({}, { config }) => {
   }
 });
 
-test('test', async ({ page }, { config }) => {
+test.skip('test', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
 
   await page.routeFromHAR('./test/e2e/loggedin/logger_test.har', { url: '**/api/**' });

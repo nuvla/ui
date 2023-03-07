@@ -303,8 +303,8 @@
                              {:key "ram usage" :text "RAM usage %" :value utils/ram}
                              {:key "disk usage" :text "Disk usage %" :value utils/disk}
                              {:key "state" :text "NuvlaEdge online" :value utils/state}
-                             {:key "network rx" :text "Network Rx GB" :value utils/network-rx}
-                             {:key "network tx" :text "Network Tx GB" :value utils/network-tx}
+                             {:key "network rx" :text "Network Rx GiB" :value utils/network-rx}
+                             {:key "network tx" :text "Network Tx GiB" :value utils/network-tx}
                              ]
    "infrastructure-service" [{:key "status" :text "status" :value utils/status}]
    "data-record"            [{:key "content-type" :text "content-type" :value utils/content-type}]})

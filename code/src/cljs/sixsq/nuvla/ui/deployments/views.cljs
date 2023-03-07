@@ -171,8 +171,56 @@
         url       @(subscribe [::subs/deployment-url id primary-url-pattern])
         selected? (subscribe [::subs/is-selected? id])
         creator   (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow
+    [:<>
      (when show-options?
+       [ui/TableCell
+        [ui/Checkbox {:checked  @selected?
+                      :on-click (fn [event]
+                                  (dispatch [::events/select-id id])
+                                  (.stopPropagation event))}]])
+     [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
+                    (general-utils/id->short-uuid id)]]
+     (when-not no-module-name
+       [ui/TableCell {:style {:overflow      "hidden",
+                              :text-overflow "ellipsis",
+                              :max-width     "20ch"}}
+        [:div {:class "app-icon-name"
+               :style {:display     :flex
+                       :align-items :center}}
+         [:img {:src   (or (:thumb-nail module) (:logo-url module))
+                :style {:width  "42px"
+                        :height "30px"}}]
+         [:div (:name module)]]])
+     [ui/TableCell (utils/deployment-version deployment)]
+     [ui/TableCell state]
+     [ui/TableCell (when url
+                     [:a {:href url, :target "_blank", :rel "noreferrer"}
+                      [ui/Icon {:name "external"}]
+                      primary-url-name])]
+     [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
+     [ui/TableCell @creator]
+     [ui/TableCell {:style {:overflow      "hidden",
+                            :text-overflow "ellipsis",
+                            :max-width     "20ch"}}
+      [utils/CloudNuvlaEdgeLink deployment]]
+     (when show-options?
+       [ui/TableCell
+        (cond
+          (general-utils/can-operation? "stop" deployment)
+          [deployments-detail-views/ShutdownButton deployment]
+          (general-utils/can-delete? deployment)
+          [deployments-detail-views/DeleteButton deployment])])]))
+
+(defn RowFn_new
+  [{:keys [id state module created-by] :as deployment}
+   {:keys [no-module-name show-options?] :as _options}]
+  (let [[primary-url-name
+         primary-url-pattern] (-> module :content (get :urls []) first)
+        url       @(subscribe [::subs/deployment-url id primary-url-pattern])
+        selected? (subscribe [::subs/is-selected? id])
+        creator   (subscribe [::session-subs/resolve-user created-by])]
+    [:<>
+     #_(when show-options?
        [ui/TableCell
         [ui/Checkbox {:checked  @selected?
                       :on-click (fn [event]
@@ -245,6 +293,33 @@
                 :row-render  (fn [deployment] [RowFn deployment options])
                 :table-props (merge style/single-line {:stackable true})}]))))
 
+(defn VerticalDataTable_new
+  [_deployments-list _options]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
+    (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
+      (if (empty? deployments-list)
+        [uix/WarningMsgNoElements empty-msg]
+        [Table {:columns     [{:field-key :id}
+                              (when-not no-module-name
+                                {:field-key      :module.name
+                                 :header-content (@tr [:module])})
+                              {:field-key :version :no-sort? true}
+                              {:field-key :status
+                               :sort-key  :state}
+                              {:field-key :url
+                               :no-sort?  true}
+                              {:field-key :created}
+                              {:field-key :created-by}
+                              {:field-key :infrastructure
+                               :no-sort?  true}
+                              (when show-options? {:field-key :actions
+                                                   :no-sort?  true})]
+                :rows        deployments-list
+                :sort-config {:db-path     ::spec/ordering
+                              :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+                :row-render  (fn [deployment] [RowFn_new deployment options])
+                :table-props (merge style/single-line {:stackable true})}]))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]
@@ -316,7 +391,10 @@
         [ui/Segment {:basic true :class "table-wrapper"}
          (if (= @view "cards")
            [CardsDataTable deployments-list]
-           [VerticalDataTable deployments-list {:show-options? (false? @select-all?)}])]))))
+           [:<>
+            [VerticalDataTable deployments-list {:show-options? (false? @select-all?)}]
+            [:div {:style {:margin-top "2rem"}}
+             [VerticalDataTable_new deployments-list {:show-options? (false? @select-all?)}]]])]))))
 
 (defn StatisticStates
   [_clickable? summary-subs]
@@ -436,6 +514,7 @@
        {:db-path [::spec/bulk-jobs]}]
       [DeploymentsDisplay]
       [Pagination]]]))
+
 
 (defn deployments-view
   []

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.plugins.table
   (:require [cljs.spec.alpha :as s]
+            [clojure.set :as set]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -46,6 +47,10 @@
 
 (s/def ::rows (s/nilable (s/coll-of map?)))
 
+;;;; Additional Features ;;;;
+;; sorting
+
+(s/def ::select-config (s/nilable fn?))
 
 (defn- calc-new-ordering [{:keys [order sort-key]} ordering]
   (let [cleaned-ordering (remove #(= sort-key (first %)) ordering)]
@@ -62,6 +67,22 @@
                     fetch-event    :fetch-event}]]
     {:db (update db db-path (partial calc-new-ordering {:sort-key sort-key :order sort-direction}))
      :fx [[:dispatch fetch-event]]}))
+
+;; Bulk selection
+(defn all-page-selected?
+  [selected-set visible-deps-ids-set]
+  (set/superset? selected-set visible-deps-ids-set))
+
+(reg-event-fx
+ ::select-all-clicked
+ (fn [{:keys [::selected-set] :as db} [_ {:keys [resources-db-path select-db-path]}]]
+    (let [
+          visible-dep-ids    (get-in db resources-db-path)
+          all-page-selected? (all-page-selected? selected-set visible-dep-ids)
+          fn                 (if all-page-selected? set/difference set/union)]
+      (-> db
+          (update ::selected-set fn visible-dep-ids)
+          (assoc ::select-all? false)))))
 
 (reg-sub
   ::sort-direction
@@ -81,6 +102,13 @@
                                                    :db-path     db-path
                                                    :fetch-event fetch-event}])}])))
 
+;; TODOs for bulk action
+;; - pass down db-path for selec-config and resource-path
+;; - find way to pass down filters (full text search, additional filters, state selector)
+;; - conditionally rendering checkboxes
+;; - design new top menu bar (e.g. like gmail) for all the stuff currently in menu bar in deployment views
+;; - pass down bulk actions (name, event, icon?)
+
 (defn Table
   "Expects a single config map with a required `:rows` vector of documents.
    If no column definitions are passed through `:columns`, the first document's
@@ -99,7 +127,7 @@
     - `:sort-key` custom sort key for this column, else `:field-key` is used,
     - `:no-sort?` disables sort for this column,
 
-    To enable sort, provide a sort-config:
+    To enable sort, provide a `sort-config` with:
      - `:db-path` tells the table where the currently applied ordering is stored,
      - `:fetch-event` dispatch event after a new ordering is applied,
     Enabled sort for all columns, column wise disabling via `:no-sort?` key in column definition.
@@ -109,16 +137,22 @@
     This overrides any `:cell` custom render function passed or props passed to column definitions.
 "
   [{:keys [cell-props columns rows
-           row-click-handler row-props row-render
-           sort-config]
+           row-click-handler row-props row-render row-style
+           sort-config select-config]
     :as   props}]
   (let [tr            @(subscribe [::i18n-subs/tr])
-        columns       (or columns (map (fn [[k _]] {:field-key k}) (first rows)))]
+        columns       (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
+        selectable?   (s/valid? ::select-config select-config)]
     [:div {:style {:overflow :auto
                    :padding 0}}
      [ui/Table (:table-props props)
       [ui/TableHeader (:header-props props)
        [ui/TableRow
+        (when selectable?
+          [ui/TableHeaderCell
+           [ui/Checkbox
+            {:checked  false #_@is-all-page-selected?
+             :on-click #(dispatch [::select-all-clicked])}]])
         (for [col columns
               :when col
               :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
@@ -148,7 +182,9 @@
            (cond
              row-render
              ^{:key id}
-             [row-render row]
+             [ui/TableRow row-style
+
+              [row-render row]]
              :else
              ^{:key id}
              [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))

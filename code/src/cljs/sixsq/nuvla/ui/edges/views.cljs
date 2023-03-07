@@ -738,9 +738,8 @@
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow {:role     "link"
-                  :on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
-                  :style    {:cursor "pointer"}}
+    [:<>
+
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
@@ -752,8 +751,8 @@
      [ui/TableCell (str refresh-interval "s")]
      [ui/TableCell (when next-heartbeat-moment
                      [uix/TimeAgo (utils/last-time-online
-                                    next-heartbeat-moment
-                                    refresh-interval)])]
+                                   next-heartbeat-moment
+                                   refresh-interval)])]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
@@ -808,13 +807,16 @@
                                              (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
                            {:field-key :tags :no-sort? true}
                            {:field-key :manager :no-sort? true}]]
-    [Table {:sort-config {:db-path     ::spec/ordering
-                          :fetch-event [::events/get-nuvlaboxes]}
-            :columns     columns
-            :rows        selected-nbs
-            :table-props {:compact "very" :selectable true}
-            :cell-props  {:header {:single-line true}}
-            :row-render  (fn [row-data] [NuvlaboxRow row-data managers])}]))
+    [Table {:sort-config        {:db-path     ::spec/ordering
+                                 :fetch-event [::events/get-nuvlaboxes]}
+            :columns           columns
+            :rows              selected-nbs
+            :table-props       {:compact "very" :selectable true}
+            :cell-props        {:header {:single-line true}}
+            :row-render        (fn [row-data] [NuvlaboxRow row-data managers])
+            :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+            :row-props         {:role  "link"
+                                :style {:cursor "pointer"}}}]))
 
 
 (defn NuvlaboxMapPoint

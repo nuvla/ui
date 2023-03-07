@@ -25,7 +25,11 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.deployments.subs :as deployments-subs]))
+
+(def deployments-resources-subs-key [::subs/deployments-resources])
 
 (defn refresh
   []
@@ -99,16 +103,49 @@
                                              {:module-href @selected-module}
                                              [::events/close-modal-bulk-update]])}]]]))))
 
+(defn BulkActionModal
+  [{:keys [on-confirm trigger header danger-msg button-text]}]
+  (let [open? (r/atom false)
+        close        (fn []
+                       (swap! open? not))]
+    (fn []
+      [uix/ModalDanger
+       {:on-confirm  #(do
+                        (on-confirm)
+                        (reset! open? false))
+        :open        @open?
+        :on-close    close
+        :trigger     (r/as-element
+                      [:div {:on-click close} trigger])
+        :header      header
+        :danger-msg  danger-msg
+        :button-text button-text}])))
+
+(defn BulkStopModal
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      [BulkActionModal
+       {:on-confirm   (fn [] (dispatch [::events/bulk-operation "bulk-stop"]))
+        :trigger     (str/capitalize (@tr [:stop]))
+        :header      (@tr [:bulk-deployment-stop])
+        :danger-msg  (@tr [:danger-action-cannot-be-undone])
+        :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}])))
+
+(defn BulkForceDeleteModal
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      [BulkActionModal
+       {:on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-force-delete"]))
+        :trigger     (str/capitalize (@tr [:force-delete]))
+        :header      (@tr [:bulk-deployment-force-delete])
+        :danger-msg  (@tr [:danger-action-deployment-force-delete])
+        :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}])))
+
 (defn MenuBar
   []
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        view                  (subscribe [::subs/view])
-        select-all?           (subscribe [::subs/select-all?])
-        dep-count             (subscribe [::subs/deployments-count])
-        selected-count        (subscribe [::subs/selected-count])
-        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])
-        modal-stop-key        (r/atom (random-uuid))
-        modal-bulk-delete-key (r/atom (random-uuid))]
+  (let [view (subscribe [::subs/view])]
     (fn []
       [:<>
        [components/StickyBar
@@ -120,47 +157,9 @@
                        :active   (= @view "table")
                        :on-click #(dispatch [::events/set-view "table"])}]
 
-         [ui/MenuItem {:on-click #(dispatch [::events/select-all])
-                       :active   @select-all?}
-          (@tr [:select-all])]
-         [ui/MenuItem {:active   @is-all-page-selected?
-                       :on-click #(dispatch [::events/select-all-page])}
-          (@tr [:select-all-page])]
-         [ui/MenuItem {:disabled true}
-          (@tr [:selected])
-          [ui/Label
-           (when (pos? @selected-count) {:color "teal"})
-           (str @selected-count "/" @dep-count)]]
-         [ui/MenuMenu
-          [ui/Dropdown {:item     true :text (@tr [:bulk-action])
-                        :icon     "ellipsis vertical"
-                        :disabled (not (pos? @selected-count))}
-           [ui/DropdownMenu
-            [ui/DropdownItem
-             {:on-click #(dispatch [::events/bulk-update-params])} (str/capitalize (@tr [:update]))]
-            ^{:key @modal-stop-key}
-            [uix/ModalDanger
-             {:on-confirm  #(do
-                              (dispatch [::events/bulk-operation "bulk-stop"])
-                              (swap! modal-stop-key random-uuid))
-              :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:stop]))])
-              :header      (@tr [:bulk-deployment-stop])
-              :danger-msg  (@tr [:danger-action-cannot-be-undone])
-              :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}]
-            ^{:key @modal-bulk-delete-key}
-            [uix/ModalDanger
-             {:on-confirm  #(do
-                              (dispatch [::events/bulk-operation "bulk-force-delete"])
-                              (swap! modal-bulk-delete-key random-uuid))
-              :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:force-delete]))])
-              :header      (@tr [:bulk-deployment-force-delete])
-              :danger-msg  (@tr [:danger-action-deployment-force-delete])
-              :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]]]]
-
          [components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id
-           :on-refresh refresh}]]]
-       [BulkUpdateModal]])))
+           :on-refresh refresh}]]]])))
 
 
 (defn RowFn
@@ -169,15 +168,8 @@
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url       @(subscribe [::subs/deployment-url id primary-url-pattern])
-        selected? (subscribe [::subs/is-selected? id])
         creator   (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow
-     (when show-options?
-       [ui/TableCell
-        [ui/Checkbox {:checked  @selected?
-                      :on-click (fn [event]
-                                  (dispatch [::events/select-id id])
-                                  (.stopPropagation event))}]])
+    [:<>
      [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
      (when-not no-module-name
@@ -211,40 +203,42 @@
           (general-utils/can-delete? deployment)
           [deployments-detail-views/DeleteButton deployment])])]))
 
+
 (defn VerticalDataTable
   [_deployments-list _options]
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
+  (let [tr                (subscribe [::i18n-subs/tr])]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
-        [Table {:columns     [(when show-options?
-                                {:no-sort? true
-                                 :header-content
-                                 [ui/Checkbox
-                                  {:checked  @is-all-page-selected?
-                                   :on-click #(dispatch [::events/select-all-page])}]})
-                              {:field-key :id}
-                              (when-not no-module-name
-                                {:field-key      :module.name
-                                 :header-content (@tr [:module])})
-                              {:field-key :version :no-sort? true}
-                              {:field-key :status
-                               :sort-key  :state}
-                              {:field-key :url
-                               :no-sort?  true}
-                              {:field-key :created}
-                              {:field-key :created-by}
-                              {:field-key :infrastructure
-                               :no-sort?  true}
-                              (when show-options? {:field-key :actions
+        (let [selectable? (or (nil? show-options?) show-options?)]
+          [Table {:columns     [{:field-key :id}
+                                (when-not no-module-name
+                                  {:field-key      :module.name
+                                   :header-content (@tr [:module])})
+                                {:field-key :version :no-sort? true}
+                                {:field-key :status
+                                 :sort-key  :state}
+                                {:field-key :url
+                                 :no-sort?  true}
+                                {:field-key :created}
+                                {:field-key :created-by}
+                                {:field-key :infrastructure
+                                 :no-sort?  true}
+                                (when selectable? {:field-key :actions
                                                    :no-sort?  true})]
-                :rows        deployments-list
-                :sort-config {:db-path     ::spec/ordering
-                             :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                :row-render  (fn [deployment] [RowFn deployment options])
-                :table-props (merge style/single-line {:stackable true})}]))))
-
+                  :rows        deployments-list
+                  :sort-config {:db-path     ::spec/ordering
+                                :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+                  :row-render  (fn [deployment] [RowFn deployment options])
+                  :table-props (merge style/single-line {:stackable true})
+                  :select-config (when selectable?
+                                   {:bulk-actions [{:event [::events/bulk-update-params]
+                                                    :name (str/capitalize (@tr [:update]))}
+                                                   {:component (r/as-element BulkStopModal)}
+                                                   {:component (r/as-element BulkForceDeleteModal)}]
+                                    :select-db-path [::spec/select]
+                                    :total-count-sub-key [::subs/deployments-count]
+                                    :resources-sub-key deployments-resources-subs-key})}])))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]
@@ -256,9 +250,7 @@
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url  (subscribe [::subs/deployment-url id primary-url-pattern])
         started?     (utils/started? state)
-        select-all?  (subscribe [::subs/select-all?])
-        creator      (subscribe [::session-subs/resolve-user created-by])
-        is-selected? (subscribe [::subs/is-selected? id])]
+        creator      (subscribe [::session-subs/resolve-user created-by])]
     ^{:key id}
     [uix/Card
      (cond-> {:header        [:span [:p {:style {:overflow      "hidden",
@@ -282,7 +274,9 @@
                                                        (.stopPropagation event))
                                            :target   "_blank"
                                            :rel      "noreferrer"}])
-              :href          (utils/deployment-href id)
+              :on-click      (fn [event]
+                               (dispatch [::routing-events/navigate (utils/deployment-href id)])
+                               (.preventDefault event))
               :image         (or module-logo-url "")
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond
@@ -291,10 +285,7 @@
 
                                (general-utils/can-delete? deployment)
                                [deployments-detail-views/DeleteButton deployment :label? true])
-              :state         state}
-
-             (not @select-all?) (assoc :on-select #(dispatch [::events/select-id id])
-                                       :selected? @is-selected?))]))
+              :state         state})]))
 
 (defn CardsDataTable
   [deployments-list]
@@ -309,14 +300,13 @@
 (defn DeploymentsDisplay
   []
   (let [view        (subscribe [::subs/view])
-        deployments (subscribe [::subs/deployments])
-        select-all? (subscribe [::subs/select-all?])]
+        deployments (subscribe deployments-resources-subs-key)]
     (fn []
-      (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment {:basic true :class "table-wrapper"}
-         (if (= @view "cards")
-           [CardsDataTable deployments-list]
-           [VerticalDataTable deployments-list {:show-options? (false? @select-all?)}])]))))
+      [ui/Segment {:basic true :class "table-wrapper"}
+       [BulkUpdateModal]
+       (if (= @view "cards")
+         [CardsDataTable @deployments]
+         [VerticalDataTable @deployments])])))
 
 (defn StatisticStates
   [_clickable? summary-subs]
@@ -409,14 +399,12 @@
 
 (defn DeploymentTable
   [options]
-  (let [elements    (subscribe [::subs/deployments])
-        select-all? (subscribe [::subs/select-all?])]
+  (let [deployments    (subscribe deployments-resources-subs-key)]
     (fn [{:keys [no-actions]}]
-      (let [deployments  (:resources @elements)
-            show-options (and (false? @select-all?) (not (true? no-actions)))]
-        [:div {:class "table-wrapper"}
+      (let [show-options (not (true? no-actions))]
+        [:div
          [VerticalDataTable
-          deployments (assoc options :select-all @select-all? :show-options? show-options)]
+          @deployments (assoc options :show-options? show-options)]
          [Pagination (:pagination-db-path options)]]))))
 
 (defn DeploymentsMainContent
@@ -436,6 +424,7 @@
        {:db-path [::spec/bulk-jobs]}]
       [DeploymentsDisplay]
       [Pagination]]]))
+
 
 (defn deployments-view
   []

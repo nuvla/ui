@@ -2,6 +2,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap');
 
+:root {
+  --deployments: rgba(122, 101, 255, 1);
+}
+
 body,
 body .menu .item,
 .ui.header,
@@ -156,6 +160,17 @@ body .nuvla-edges .ui.breadcrumb {
 }
 
 /** Sidebar End **/
+
+.invisible {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.visible {
+  visibility: visible;
+  transition: visibility 0.2s linear, opacity 0.2s linear;
+  opacity: 1;
+}
 
 /** Header **/
 
@@ -424,16 +439,31 @@ div.search.dropdown > input {
   padding: 2rem 2rem 5rem 2rem !important;
 }
 
-a.card i.massive,i.huge {
+a.card i.massive,
+i.huge {
   color: #4283c4;
 }
 
-a.card:hover i.massive,i.huge {
+a.card:hover i.massive,
+i.huge {
   color: #1e70bf;
 }
 
 body .nuvla-deployments a {
-  color: rgba(122, 101, 255, 1);
+  color: var(--deployments);
+}
+
+.nuvla-deployments button.select-all {
+  all: unset;
+  cursor: pointer;
+  color: var(--deployments);
+  border: 2px solid #f9fafb;
+  transition: background-color 0.2s ease-in;
+  padding: 0.3rem 0.4rem;
+}
+
+button.select-all:hover {
+  background-color: #efefef;
 }
 
 body .nuvla-edges a {

@@ -125,10 +125,6 @@
     (let [selected-set       (get-in-db db db-path ::selected-set #{})
           visible-dep-ids    (visible-ids resources)
           all-page-selected? (all-page-selected? selected-set visible-dep-ids)]
-(js/console.error "db " db)
-(js/console.error "resources" resources)
-(js/console.error "db-path" db-path)
-(js/console.error "all-page-selected?" all-page-selected?)
       {:db (-> db
                (assoc-in (conj (or db-path []) ::selected-set) (if all-page-selected? #{} visible-dep-ids))
                (assoc-in (conj (or db-path []) ::select-all?) false))})))
@@ -136,8 +132,9 @@
 
 (reg-event-db
   ::select-id
-  (fn [{:keys [::selected-set] :as db} [_ id db-path]]
-    (let [fn (if (is-selected? selected-set id) disj conj)]
+  (fn [db [_ id db-path]]
+    (let [selected-set (get-in-db db db-path ::selected-set)
+          fn (if (is-selected? selected-set id) disj conj)]
       (update-in db (conj (or db-path []) ::selected-set) (fnil fn #{}) id))))
 
 (reg-event-db
@@ -161,14 +158,12 @@
 (reg-sub
   ::selected-set-sub
   (fn [db [_ db-path]]
-    (js/console.error " ::selected-set" db-path)
     (get-in-db db db-path ::selected-set)))
 
 (reg-sub
   ::select-all?-sub
   (fn [db [_ db-path]]
-    (js/console.error " ::select-all?" db-path)
-    (get-in-db db db-path ::selected-set)))
+    (get-in-db db db-path ::select-all?)))
 
 
 (reg-sub
@@ -197,10 +192,10 @@
     (is-selected? selected-set id)))
 
 (defn CellCeckbox
-  [{:keys [id selected-set-sub] }]
+  [{:keys [id selected-set-sub db-path]}]
   [ui/Checkbox {:checked  (is-selected? @selected-set-sub id)
                 :on-click (fn [event]
-                            (dispatch [::select-id id])
+                            (dispatch [::select-id id db-path])
                             (.stopPropagation event))}])
 
 (defn HeaderCellCeckbox
@@ -210,10 +205,11 @@
                   :on-click #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
 
 (defn BulkActionBar
-  [total-count-sub-key]
+  [{:keys [selected-set-sub total-count-sub-key selected-all-sub] }]
 (js/console.error total-count-sub-key "total-count-sub-key")
- (let [total-count (subscribe total-count-sub-key)]
-    [:div "Selected: " @total-count]))
+ (let [tr          (subscribe [::i18n-subs/tr])
+       total-count (subscribe total-count-sub-key)]
+    [:div (str (@tr [:selected])) ": " (if @selected-all-sub @total-count (count @selected-set-sub)) "/" @total-count]))
 
 
 ;; TODOs for bulk action
@@ -222,6 +218,10 @@
 ;; - conditionally rendering checkboxes -> done on `selectable?`
 ;; - pass down bulk actions (name, event, icon?) -> mock thingy right now
 ;; - design new top menu bar (e.g. like gmail) for all the stuff currently in menu bar in deployment views -> Todo
+;; - spec select-config -> Todo
+;; - Make it show actions
+;; - Make it call actions
+;; - Make it call the right actions
 
 (defn Table
   "Expects a single config map with a required `:rows` vector of documents.
@@ -262,7 +262,7 @@
         selected-set   (subscribe [::selected-set-sub db-path])
         select-all?    (subscribe [::select-all?-sub db-path])]
     [:div
-     (when selectable? [BulkActionBar total-count-sub-key])
+     (when selectable? [BulkActionBar {:selected-all-sub select-all? :selected-set-sub selected-set :total-count-sub-key total-count-sub-key}])
      [:div {:style {:overflow :auto
                     :padding 0}}
       [ui/Table (:table-props props)
@@ -302,7 +302,7 @@
              ^{:key id}
              [ui/TableRow row-style
               (when selectable?
-                [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set }]])
+                [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set :db-path db-path}]])
               [row-render row]]
              :else
              ^{:key id}

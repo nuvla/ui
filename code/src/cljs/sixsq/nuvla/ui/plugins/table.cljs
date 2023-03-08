@@ -159,7 +159,7 @@
     (get-in-db db db-path ::bulk-update-modal)))
 
 (reg-sub
-  ::selected-set
+  ::selected-set-sub
   (fn [db [_ db-path]]
     (js/console.error " ::selected-set" db-path)
     (get-in-db db db-path ::selected-set)))
@@ -174,7 +174,7 @@
 (reg-sub
   ::selected-count
   (fn [[_ db-path]]
-    [(subscribe [::selected-set db-path])
+    [(subscribe [::selected-set-sub db-path])
      (subscribe [::select-all? db-path])])
   (fn [[selected-set select-all?] [_ _ total-count]]
     (if select-all?
@@ -184,7 +184,7 @@
 (reg-sub
   ::is-all-page-selected?
   (fn [[_ db-path]]
-    (subscribe [::selected-set db-path]))
+    (subscribe [::selected-set-sub db-path]))
   (fn [selected-set [_ _ resources]]
     (all-page-selected? selected-set (visible-ids resources))))
 
@@ -192,17 +192,16 @@
 (reg-sub
   ::is-selected?
   (fn [[_ db-path]]
-    (subscribe [::selected-set db-path]))
-  (fn [selected-set [_ db-path id]]
+    (subscribe [::selected-set-sub db-path]))
+  (fn [selected-set [_ _ id]]
     (is-selected? selected-set id)))
 
 (defn CellCeckbox
-  [id db-path]
-  (let [selected? (subscribe [::is-selected? db-path id])]
-    [ui/Checkbox {:checked  @selected?
-                  :on-click (fn [event]
-                              (dispatch [::select-id id])
-                              (.stopPropagation event))}]))
+  [{:keys [id selected-set-sub] }]
+  [ui/Checkbox {:checked  (is-selected? @selected-set-sub id)
+                :on-click (fn [event]
+                            (dispatch [::select-id id])
+                            (.stopPropagation event))}])
 
 (defn HeaderCellCeckbox
   [db-path resources]
@@ -251,7 +250,8 @@
     :as   props}]
   (let [tr             @(subscribe [::i18n-subs/tr])
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
-        selectable?    (and bulk-actions (s/valid? ::bulk-actions bulk-actions))]
+        selectable?    (and bulk-actions (s/valid? ::bulk-actions bulk-actions))
+        selected-set   (subscribe [::selected-set-sub db-path])]
     [:div {:style {:overflow :auto
                    :padding 0}}
      [ui/Table (:table-props props)
@@ -291,7 +291,7 @@
             ^{:key id}
             [ui/TableRow row-style
              (when selectable?
-               [ui/TableCell [CellCeckbox id db-path]])
+               [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set }]])
              [row-render row]]
             :else
             ^{:key id}

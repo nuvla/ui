@@ -319,7 +319,9 @@
                 :sort-config {:db-path     ::spec/ordering
                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
                 :row-render  (fn [deployment] [RowFn_new deployment options])
-                :table-props (merge style/single-line {:stackable true})}]))))
+                :table-props (merge style/single-line {:stackable true})
+                :bulk-actions [{:name "YEAH" :event :oho :build-bulk-filter str}]
+                :db-path     [::spec/select]}]))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]

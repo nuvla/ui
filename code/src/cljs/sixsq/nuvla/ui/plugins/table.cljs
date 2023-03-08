@@ -2,8 +2,10 @@
   (:require [cljs.spec.alpha :as s]
             [clojure.set :as set]
             [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub
+                                   subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -50,7 +52,15 @@
 ;;;; Additional Features ;;;;
 ;; sorting
 
-(s/def ::select-config (s/nilable fn?))
+(s/def ::name string?)
+(s/def ::event (s/or :k keyword? :fn fn?))
+(s/def ::icon (s/nilable fn?))
+(s/def ::build-bulk-filter fn?)
+
+(s/def ::bulk-action (s/keys :req-un [::name ::event ::build-bulk-filter]
+                             :opt-un [::icon]))
+
+(s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
 
 (defn- calc-new-ordering [{:keys [order sort-key]} ordering]
   (let [cleaned-ordering (remove #(= sort-key (first %)) ordering)]
@@ -67,22 +77,6 @@
                     fetch-event    :fetch-event}]]
     {:db (update db db-path (partial calc-new-ordering {:sort-key sort-key :order sort-direction}))
      :fx [[:dispatch fetch-event]]}))
-
-;; Bulk selection
-(defn all-page-selected?
-  [selected-set visible-deps-ids-set]
-  (set/superset? selected-set visible-deps-ids-set))
-
-(reg-event-fx
- ::select-all-clicked
- (fn [{:keys [::selected-set] :as db} [_ {:keys [resources-db-path select-db-path]}]]
-    (let [
-          visible-dep-ids    (get-in db resources-db-path)
-          all-page-selected? (all-page-selected? selected-set visible-dep-ids)
-          fn                 (if all-page-selected? set/difference set/union)]
-      (-> db
-          (update ::selected-set fn visible-dep-ids)
-          (assoc ::select-all? false)))))
 
 (reg-sub
   ::sort-direction
@@ -102,12 +96,127 @@
                                                    :db-path     db-path
                                                    :fetch-event fetch-event}])}])))
 
+;; Bulk selection
+(defn all-page-selected?
+  [selected-set visible-deps-ids-set]
+(js/console.error "all-page-selected" [selected-set visible-deps-ids-set] )
+  (set/superset? selected-set visible-deps-ids-set))
+
+(defn visible-ids
+  [resources]
+  (set (map :id resources)))
+
+(defn is-selected?
+  [selected-set id]
+(js/console.error "is-selected?" selected-set id)
+  (contains? selected-set id))
+
+(defn get-in-db
+  ([db db-path k]
+   (js/console.error "get-in-db" db-path k)
+   (get-in-db db db-path k #{}))
+  ([db db-path k default]
+   (js/console.error "get-in-db" db-path k)
+   (get-in db (conj (or db-path []) k) default)))
+
+(reg-event-fx
+ ::select-all-in-page
+ (fn [{db :db} [_ {:keys [resources db-path]}]]
+    (let [selected-set       (get-in-db db db-path ::selected-set #{})
+          visible-dep-ids    (visible-ids resources)
+          all-page-selected? (all-page-selected? selected-set visible-dep-ids)]
+(js/console.error "db " db)
+(js/console.error "resources" resources)
+(js/console.error "db-path" db-path)
+(js/console.error "all-page-selected?" all-page-selected?)
+      {:db (-> db
+               (assoc-in (conj (or db-path []) ::selected-set) (if all-page-selected? #{} visible-dep-ids))
+               (assoc-in (conj (or db-path []) ::select-all?) false))})))
+
+
+(reg-event-db
+  ::select-id
+  (fn [{:keys [::selected-set] :as db} [_ id db-path]]
+    (let [fn (if (is-selected? selected-set id) disj conj)]
+      (update-in db (conj (or db-path []) ::selected-set) (fnil fn #{}) id))))
+
+(reg-event-db
+  ::select-all
+  (fn [db [_ db-path]]
+    (-> db
+        (update-in (conj (or db-path []) ::select-all?) not)
+        (assoc-in (conj (or db-path []) ::selected-set) #{}))))
+
+(reg-event-db
+  ::reset-selected-set
+  (fn [db [_ db-path]]
+    (assoc-in db (conj (or db-path []) ::selected-set) #{})))
+
+
+(reg-sub
+  ::bulk-update-modal
+  (fn [db [_ db-path]]
+    (get-in-db db db-path ::bulk-update-modal)))
+
+(reg-sub
+  ::selected-set
+  (fn [db [_ db-path]]
+    (js/console.error " ::selected-set" db-path)
+    (get-in-db db db-path ::selected-set)))
+
+(reg-sub
+  ::select-all?
+  (fn [db [_ db-path]]
+(js/console.error " ::select-all?" db-path)
+    (get-in-db db db-path ::selected-set)))
+
+
+(reg-sub
+  ::selected-count
+  (fn [[_ db-path]]
+    [(subscribe [::selected-set db-path])
+     (subscribe [::select-all? db-path])])
+  (fn [[selected-set select-all?] [_ _ total-count]]
+    (if select-all?
+      total-count
+      (count selected-set))))
+
+(reg-sub
+  ::is-all-page-selected?
+  (fn [[_ db-path]]
+    (subscribe [::selected-set db-path]))
+  (fn [selected-set [_ _ resources]]
+    (all-page-selected? selected-set (visible-ids resources))))
+
+
+(reg-sub
+  ::is-selected?
+  (fn [[_ db-path]]
+    (subscribe [::selected-set db-path]))
+  (fn [selected-set [_ db-path id]]
+    (is-selected? selected-set id)))
+
+(defn CellCeckbox
+  [id db-path]
+  (let [selected? (subscribe [::is-selected? db-path id])]
+    [ui/Checkbox {:checked  @selected?
+                  :on-click (fn [event]
+                              (dispatch [::select-id id])
+                              (.stopPropagation event))}]))
+
+(defn HeaderCellCeckbox
+  [db-path resources]
+  (let [page-selected? (subscribe [::is-all-page-selected? db-path resources])]
+    [ui/Checkbox {:checked  @page-selected?
+                  :on-click #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
+
+
 ;; TODOs for bulk action
-;; - pass down db-path for selec-config and resource-path
-;; - find way to pass down filters (full text search, additional filters, state selector)
-;; - conditionally rendering checkboxes
-;; - design new top menu bar (e.g. like gmail) for all the stuff currently in menu bar in deployment views
-;; - pass down bulk actions (name, event, icon?)
+;; - pass down db-path for selec-config and resource-path -> Not needed
+;; - find way to pass down filters (full text search, additional filters, state selector) -> build-bulk-filter
+;; - conditionally rendering checkboxes -> done on selectable?
+;; - pass down bulk actions (name, event, icon?) -> Todo
+;; - design new top menu bar (e.g. like gmail) for all the stuff currently in menu bar in deployment views -> Todo
 
 (defn Table
   "Expects a single config map with a required `:rows` vector of documents.
@@ -138,11 +247,11 @@
 "
   [{:keys [cell-props columns rows
            row-click-handler row-props row-render row-style
-           sort-config select-config]
+           sort-config bulk-actions db-path]
     :as   props}]
-  (let [tr            @(subscribe [::i18n-subs/tr])
-        columns       (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
-        selectable?   (s/valid? ::select-config select-config)]
+  (let [tr             @(subscribe [::i18n-subs/tr])
+        columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
+        selectable?    (and bulk-actions (s/valid? ::bulk-actions bulk-actions))]
     [:div {:style {:overflow :auto
                    :padding 0}}
      [ui/Table (:table-props props)
@@ -150,9 +259,7 @@
        [ui/TableRow
         (when selectable?
           [ui/TableHeaderCell
-           [ui/Checkbox
-            {:checked  false #_@is-all-page-selected?
-             :on-click #(dispatch [::select-all-clicked])}]])
+           [HeaderCellCeckbox db-path rows]])
         (for [col columns
               :when col
               :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
@@ -170,33 +277,34 @@
               :else
               (or (tr [field-key]) field-key))
             (when (and
-                    sort-config
-                    (not no-sort?))
+                   sort-config
+                   (not no-sort?))
               [Sort (merge
-                      sort-config
-                      (select-keys col [:field-key :disable-sort :sort-key]))])]])]]
+                     sort-config
+                     (select-keys col [:field-key :disable-sort :sort-key]))])]])]]
       [ui/TableBody (:body-props props)
        (doall
-         (for [row rows
-               :let [id (:id row)]]
-           (cond
-             row-render
-             ^{:key id}
-             [ui/TableRow row-style
-
-              [row-render row]]
-             :else
-             ^{:key id}
-             [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
-              (for [{:keys [field-key accessor cell cell-props]} columns
-                    :let [cell-data ((or accessor field-key) row)]]
-                ^{:key (str id "-" field-key)}
-                [ui/TableCell
-                 cell-props
-                 (cond
-                   cell [cell {:row-data  row
-                               :cell-data cell-data}]
-                   :else (str cell-data))])])))]]]))
+        (for [row rows
+              :let [id (:id row)]]
+          (cond
+            row-render
+            ^{:key id}
+            [ui/TableRow row-style
+             (when selectable?
+               [ui/TableCell [CellCeckbox id db-path]])
+             [row-render row]]
+            :else
+            ^{:key id}
+            [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
+             (for [{:keys [field-key accessor cell cell-props]} columns
+                   :let [cell-data ((or accessor field-key) row)]]
+               ^{:key (str id "-" field-key)}
+               [ui/TableCell
+                cell-props
+                (cond
+                  cell [cell {:row-data  row
+                              :cell-data cell-data}]
+                  :else (str cell-data))])])))]]]))
 
 
 (s/fdef Table :args (s/cat :opts (s/keys
@@ -208,4 +316,7 @@
                                             ::body-props
                                             ::cell-props
                                             ::row-render
+                                            ::bulk-actions
+                                            ::helpers/db-path
+                                            ::sort-config
                                             ::wide?])))

@@ -165,9 +165,9 @@
     (get-in-db db db-path ::selected-set)))
 
 (reg-sub
-  ::select-all?
+  ::select-all?-sub
   (fn [db [_ db-path]]
-(js/console.error " ::select-all?" db-path)
+    (js/console.error " ::select-all?" db-path)
     (get-in-db db db-path ::selected-set)))
 
 
@@ -175,7 +175,7 @@
   ::selected-count
   (fn [[_ db-path]]
     [(subscribe [::selected-set-sub db-path])
-     (subscribe [::select-all? db-path])])
+     (subscribe [::select-all?-sub db-path])])
   (fn [[selected-set select-all?] [_ _ total-count]]
     (if select-all?
       total-count
@@ -209,12 +209,18 @@
     [ui/Checkbox {:checked  @page-selected?
                   :on-click #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
 
+(defn BulkActionBar
+  [total-count-sub-key]
+(js/console.error total-count-sub-key "total-count-sub-key")
+ (let [total-count (subscribe total-count-sub-key)]
+    [:div "Selected: " @total-count]))
+
 
 ;; TODOs for bulk action
 ;; - pass down db-path for selec-config and resource-path -> Not needed
 ;; - find way to pass down filters (full text search, additional filters, state selector) -> build-bulk-filter
-;; - conditionally rendering checkboxes -> done on selectable?
-;; - pass down bulk actions (name, event, icon?) -> Todo
+;; - conditionally rendering checkboxes -> done on `selectable?`
+;; - pass down bulk actions (name, event, icon?) -> mock thingy right now
 ;; - design new top menu bar (e.g. like gmail) for all the stuff currently in menu bar in deployment views -> Todo
 
 (defn Table
@@ -246,65 +252,70 @@
 "
   [{:keys [cell-props columns rows
            row-click-handler row-props row-render row-style
-           sort-config bulk-actions db-path]
+           sort-config select-config]
     :as   props}]
-  (let [tr             @(subscribe [::i18n-subs/tr])
+  (let [{:keys [bulk-actions db-path total-count-sub-key]} select-config
+        tr             @(subscribe [::i18n-subs/tr])
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
-        selectable?    (and bulk-actions (s/valid? ::bulk-actions bulk-actions))
-        selected-set   (subscribe [::selected-set-sub db-path])]
-    [:div {:style {:overflow :auto
-                   :padding 0}}
-     [ui/Table (:table-props props)
-      [ui/TableHeader (:header-props props)
-       [ui/TableRow
-        (when selectable?
-          [ui/TableHeaderCell
-           [HeaderCellCeckbox db-path rows]])
-        (for [col columns
-              :when col
-              :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
-          ^{:key (or field-key (random-uuid))}
-          [ui/TableHeaderCell
-           (merge (:header cell-props) header-cell-props)
-           [:div
-            (cond
-              (fn? header-content)
-              (header-content)
+        selectable?    (and bulk-actions total-count-sub-key db-path
+                            (s/valid? ::bulk-actions bulk-actions))
+        selected-set   (subscribe [::selected-set-sub db-path])
+        select-all?    (subscribe [::select-all?-sub db-path])]
+    [:div
+     (when selectable? [BulkActionBar total-count-sub-key])
+     [:div {:style {:overflow :auto
+                    :padding 0}}
+      [ui/Table (:table-props props)
+       [ui/TableHeader (:header-props props)
+        [ui/TableRow
+         (when selectable?
+           [ui/TableHeaderCell
+            [HeaderCellCeckbox db-path rows]])
+         (for [col columns
+               :when col
+               :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
+           ^{:key (or field-key (random-uuid))}
+           [ui/TableHeaderCell
+            (merge (:header cell-props) header-cell-props)
+            [:div
+             (cond
+               (fn? header-content)
+               (header-content)
 
-              header-content
-              header-content
+               header-content
+               header-content
 
-              :else
-              (or (tr [field-key]) field-key))
-            (when (and
-                   sort-config
-                   (not no-sort?))
-              [Sort (merge
-                     sort-config
-                     (select-keys col [:field-key :disable-sort :sort-key]))])]])]]
-      [ui/TableBody (:body-props props)
-       (doall
-        (for [row rows
-              :let [id (:id row)]]
-          (cond
-            row-render
-            ^{:key id}
-            [ui/TableRow row-style
-             (when selectable?
-               [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set }]])
-             [row-render row]]
-            :else
-            ^{:key id}
-            [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
-             (for [{:keys [field-key accessor cell cell-props]} columns
-                   :let [cell-data ((or accessor field-key) row)]]
-               ^{:key (str id "-" field-key)}
-               [ui/TableCell
-                cell-props
-                (cond
-                  cell [cell {:row-data  row
-                              :cell-data cell-data}]
-                  :else (str cell-data))])])))]]]))
+               :else
+               (or (tr [field-key]) field-key))
+             (when (and
+                    sort-config
+                    (not no-sort?))
+               [Sort (merge
+                      sort-config
+                      (select-keys col [:field-key :disable-sort :sort-key]))])]])]]
+       [ui/TableBody (:body-props props)
+        (doall
+         (for [row rows
+               :let [id (:id row)]]
+           (cond
+             row-render
+             ^{:key id}
+             [ui/TableRow row-style
+              (when selectable?
+                [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set }]])
+              [row-render row]]
+             :else
+             ^{:key id}
+             [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
+              (for [{:keys [field-key accessor cell cell-props]} columns
+                    :let [cell-data ((or accessor field-key) row)]]
+                ^{:key (str id "-" field-key)}
+                [ui/TableCell
+                 cell-props
+                 (cond
+                   cell [cell {:row-data  row
+                               :cell-data cell-data}]
+                   :else (str cell-data))])])))]]]]))
 
 
 (s/fdef Table :args (s/cat :opts (s/keys

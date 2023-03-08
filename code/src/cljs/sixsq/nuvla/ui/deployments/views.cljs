@@ -296,7 +296,8 @@
 (defn VerticalDataTable_new
   [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
-        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
+        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])
+        total-count           (subscribe [::subs/deployments-count])]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
@@ -320,8 +321,9 @@
                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
                 :row-render  (fn [deployment] [RowFn_new deployment options])
                 :table-props (merge style/single-line {:stackable true})
-                :bulk-actions [{:name "YEAH" :event :oho :build-bulk-filter str}]
-                :db-path     [::spec/select]}]))))
+                :select-config {:bulk-actions [{:name "YEAH" :event :oho :build-bulk-filter str}]
+                                :db-path [::spec/select]
+                                :total-count-sub-key [::subs/deployments-count]}}]))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]

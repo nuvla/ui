@@ -99,6 +99,24 @@
                                              {:module-href @selected-module}
                                              [::events/close-modal-bulk-update]])}]]]))))
 
+(defn BulkActionModal
+  [{:keys [on-confirm trigger header danger-msg button-text]}]
+  (let [open? (r/atom false)
+        close        (fn []
+                       (swap! open? not))]
+    (fn []
+      [uix/ModalDanger
+       {:on-confirm  #(do
+                        (on-confirm)
+                        (reset! open? false))
+        :open        @open?
+        :on-close    close
+        :trigger     (r/as-element
+                      [:div {:on-click close} trigger])
+        :header      header
+        :danger-msg  danger-msg
+        :button-text button-text}])))
+
 (defn MenuBar
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
@@ -106,9 +124,7 @@
         select-all?           (subscribe [::subs/select-all?])
         dep-count             (subscribe [::subs/deployments-count])
         selected-count        (subscribe [::subs/selected-count])
-        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])
-        modal-stop-key        (r/atom (random-uuid))
-        modal-bulk-delete-key (r/atom (random-uuid))]
+        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
     (fn []
       [:<>
        [components/StickyBar
@@ -138,29 +154,25 @@
            [ui/DropdownMenu
             [ui/DropdownItem
              {:on-click #(dispatch [::events/bulk-update-params])} (str/capitalize (@tr [:update]))]
-            ^{:key @modal-stop-key}
-            [uix/ModalDanger
-             {:on-confirm  #(do
-                              (dispatch [::events/bulk-operation "bulk-stop"])
-                              (swap! modal-stop-key random-uuid))
-              :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:stop]))])
-              :header      (@tr [:bulk-deployment-stop])
-              :danger-msg  (@tr [:danger-action-cannot-be-undone])
-              :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}]
-            ^{:key @modal-bulk-delete-key}
-            [uix/ModalDanger
-             {:on-confirm  #(do
-                              (dispatch [::events/bulk-operation "bulk-force-delete"])
-                              (swap! modal-bulk-delete-key random-uuid))
-              :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:force-delete]))])
-              :header      (@tr [:bulk-deployment-force-delete])
-              :danger-msg  (@tr [:danger-action-deployment-force-delete])
-              :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]]]]
+            [ui/DropdownItem
+             [BulkActionModal
+              {:on-confirm   (fn [] (dispatch [::events/bulk-operation "bulk-stop"]))
+               :trigger     (str/capitalize (@tr [:stop]))
+               :header      (@tr [:bulk-deployment-stop])
+               :danger-msg  (@tr [:danger-action-cannot-be-undone])
+               :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}]]
+            [ui/DropdownItem
+             [BulkActionModal
+              {:on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-force-delete"]))
+               :trigger     (str/capitalize (@tr [:force-delete]))
+               :header      (@tr [:bulk-deployment-force-delete])
+               :danger-msg  (@tr [:danger-action-deployment-force-delete])
+               :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]]]]]
 
          [components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id
            :on-refresh refresh}]]]
-       [BulkUpdateModal]])))
+       ])))
 
 
 (defn RowFn
@@ -295,9 +307,7 @@
 
 (defn VerticalDataTable_new
   [_deployments-list _options]
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])
-        total-count           (subscribe [::subs/deployments-count])]
+  (let [tr                    (subscribe [::i18n-subs/tr])]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
@@ -321,7 +331,15 @@
                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
                 :row-render  (fn [deployment] [RowFn_new deployment options])
                 :table-props (merge style/single-line {:stackable true})
-                :select-config {:bulk-actions [{:name "YEAH" :event :oho :build-bulk-filter str}]
+                :select-config {:bulk-actions [{:name ""  :event :a }
+                                               #_{:component nil #_[uix/ModalDanger
+                                                            {:on-confirm  #(do
+                                                                             (dispatch [::events/bulk-operation "bulk-force-delete"])
+                                                                             (swap! modal-bulk-delete-key random-uuid))
+                                                             :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:force-delete]))])
+                                                             :header      (@tr [:bulk-deployment-force-delete])
+                                                             :danger-msg  (@tr [:danger-action-deployment-force-delete])
+                                                             :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]}]
                                 :db-path [::spec/select]
                                 :total-count-sub-key [::subs/deployments-count]}}]))))
 
@@ -393,6 +411,7 @@
     (fn []
       (let [deployments-list (get @deployments :resources [])]
         [ui/Segment {:basic true :class "table-wrapper"}
+         [BulkUpdateModal]
          (if (= @view "cards")
            [CardsDataTable deployments-list]
            [:<>

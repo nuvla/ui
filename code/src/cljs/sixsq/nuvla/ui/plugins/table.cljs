@@ -88,31 +88,34 @@
                                                    :fetch-event fetch-event}])}])))
 
 ;; Bulk selection
-(s/def ::name string?)
+(s/def ::component (s/or :s string? :fn fn?))
 (s/def ::event (s/or :k keyword? :fn fn?))
 (s/def ::icon (s/nilable fn?))
 (s/def ::build-bulk-filter fn?)
-(s/def ::bulk-action (s/keys :req-un [::name ::event ::build-bulk-filter]
-                             :opt-un [::icon]))
+(s/def ::bulk-action (s/keys :req-un [::component]
+                             :opt-un [::icon ::event]))
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
 
 (s/def ::selection-status #{:all :page
                             :some :none})
 
-(defn all-page-selected?
+(defn get-select-options
+  [])
+
+(defn- all-page-selected?
   [selected-set visible-deps-ids-set]
   (set/superset? selected-set visible-deps-ids-set))
 
-(defn visible-ids
+(defn- visible-ids
   [resources]
   (set (map :id resources)))
 
-(defn is-selected?
+(defn- is-selected?
   [selected-set id]
 (js/console.error "is-selected?" selected-set id)
   (contains? selected-set id))
 
-(defn get-in-db
+(defn- get-in-db
   ([db db-path k]
    (get-in-db db db-path k nil))
   ([db db-path k default]
@@ -192,6 +195,39 @@
   (fn [selected-set [_ _ id]]
     (is-selected? selected-set id)))
 
+(reg-sub
+ ::selection-status
+ (fn [[_ db-path resources]]
+   [(subscribe [::selected-set-sub db-path])
+    (subscribe [::select-all?-sub db-path])
+    (subscribe [::is-all-page-selected? db-path resources])])
+ (fn [[selected-set select-all? is-all-page-selected?] [_ _ resources]]
+   (let [number-of-selected (count selected-set)
+         visible-on-page    (count resources)]
+     (cond (and (not select-all?)
+                (= 0 number-of-selected))
+           :none
+
+           select-all?
+           :all
+
+           (< 0 number-of-selected visible-on-page)
+           :some
+
+           (and
+            (< 0 number-of-selected)
+            (= number-of-selected visible-on-page)
+            is-all-page-selected?)
+           :page
+
+           (and
+            (< visible-on-page number-of-selected)
+            is-all-page-selected?)
+           :page-plus
+
+           :else
+           :none))))
+
 (defn CellCeckbox
   [{:keys [id selected-all-sub selected-set-sub db-path]}]
   [ui/Checkbox {:checked  (or @selected-all-sub (is-selected? @selected-set-sub id))
@@ -206,31 +242,37 @@
                 :on-click #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}])
 
 (defn BulkActionBar
-  [{:keys [selected-set-sub total-count-sub-key selected-all-sub page-selected?-sub db-path]}]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        total-count      (subscribe total-count-sub-key)
-        no-selection?    (and (not @selected-all-sub) (or (nil? @selected-set-sub) (= 0 (count @selected-set-sub))))
-        selected-text    (str/join " " [(str/capitalize (@tr [:all]))
-                                        (if @page-selected?-sub (count @selected-set-sub)
-                                            @total-count)
-                                        "deployments"
-                                        (when @page-selected?-sub (@tr [:on-this-page]))
-                                        (@tr [:are-selected])])
-        button-text      (cond @page-selected?-sub "Select all"
-                               @selected-all-sub   "Clear all")]
+  [{:keys [selected-set-sub total-count-sub-key selected-all-sub page-selected?-sub rows db-path]}]
+(js/console.error "total-count-sub-key " total-count-sub-key )
+  (let [tr                          (subscribe [::i18n-subs/tr])
+        total-count                 (subscribe total-count-sub-key)
+        selection-status            (subscribe [::selection-status db-path rows])
+        selected-some?              (or @selected-all-sub (< 0 (count @selected-set-sub)))
+        total-on-page-and-selected? (= @total-count (count @selected-set-sub))
+        selected-text               (str/join " " [(when (#{:all :page} @selection-status) (str/capitalize (@tr [:all])))
+                                                   (if (= :all @selection-status) @total-count
+                                                       (count @selected-set-sub))
+                                                   "deployments"
+                                                   (when (or @page-selected?-sub
+                                                             (not total-on-page-and-selected?))
+                                                     (@tr [:on-this-page]))
+                                                   (@tr [:are-selected])])
+        button-text                 (cond @page-selected?-sub "Select all"
+                                          @selected-all-sub   "Clear all")]
 ;;:on-this-page-are-selected
     [:div {:style {:display :flex
                    :height "2.5rem"
                    :align-items :center
                    :gap "1rem"
-                   :visibility (if no-selection? #_:hidden :visible :visible)}}
+                   :visibility (if selected-some? #_:hidden :visible :visible)}}
     ;;  [:div
     ;;   (str (@tr [:selected])) ": " (if @selected-all-sub @total-count (count @selected-set-sub)) "/" @total-count]
-     (when-not no-selection?
+     (when selected-some?
        [:div
         [:span selected-text]
-        [:button {:on-click (fn [] (dispatch [::select-all db-path]))}
-         (str button-text " " @total-count)]])]))
+        (when-not total-on-page-and-selected?
+          [:button {:on-click (fn [] (dispatch [::select-all db-path]))}
+           (str button-text " " @total-count)])])]))
 
 
 ;; TODOs for bulk action
@@ -289,6 +331,7 @@
                                        :selected-set-sub   selected-set
                                        :page-selected?-sub page-selected?
                                        :total-count-sub-key total-count-sub-key
+                                       :rows      rows
                                        :db-path db-path}])
      [:div {:style {:overflow :auto
                     :padding 0}}

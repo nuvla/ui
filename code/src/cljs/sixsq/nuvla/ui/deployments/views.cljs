@@ -331,7 +331,8 @@
                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
                 :row-render  (fn [deployment] [RowFn_new deployment options])
                 :table-props (merge style/single-line {:stackable true})
-                :select-config {:bulk-actions [{:name ""  :event :a }
+                :select-config {:bulk-actions [{:component ""
+                                                :event :a :build-bulk-filter + }
                                                #_{:component nil #_[uix/ModalDanger
                                                             {:on-confirm  #(do
                                                                              (dispatch [::events/bulk-operation "bulk-force-delete"])

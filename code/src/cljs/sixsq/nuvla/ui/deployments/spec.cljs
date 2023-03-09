@@ -47,4 +47,4 @@
                ::ordering                (build-ordering)})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
-                                        :default-items-per-page 25)})
+                                        :default-items-per-page 2)})

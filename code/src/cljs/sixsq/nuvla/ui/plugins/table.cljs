@@ -88,13 +88,21 @@
                                                    :fetch-event fetch-event}])}])))
 
 ;; Bulk selection
-(s/def ::component (s/or :s string? :fn fn?))
+(s/def ::name string?)
+(s/def ::component fn?)
 (s/def ::event (s/or :k keyword? :fn fn?))
 (s/def ::icon (s/nilable fn?))
 (s/def ::build-bulk-filter fn?)
-(s/def ::bulk-action (s/keys :req-un [::component]
-                             :opt-un [::icon ::event]))
+(s/def ::total-count-sub-key (s/* keyword?))
+
+(s/def ::bulk-action (s/or  :component  (s/keys :req-un [::component]
+                                                :opt-un [::name ::icon])
+                            :name-event (s/keys :req-un [::name ::event]
+                                                :opt-un [::component])))
+
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
+
+(s/def ::select-config (s/keys :req-un [::bulk-actions ::helpers/db-path ::total-count-sub-key]))
 
 (s/def ::selection-status #{:all :page
                             :some :none})
@@ -112,7 +120,6 @@
 
 (defn- is-selected?
   [selected-set id]
-(js/console.error "is-selected?" selected-set id)
   (contains? selected-set id))
 
 (defn- get-in-db
@@ -127,6 +134,7 @@
     (let [selected-set       (get-in-db db db-path ::selected-set #{})
           visible-dep-ids    (visible-ids resources)
           all-page-selected? (all-page-selected? selected-set visible-dep-ids)]
+      (js/console.error all-page-selected? "all-page-selected?")
       {:db (-> db
                (assoc-in (conj (or db-path []) ::selected-set) (if all-page-selected? #{} visible-dep-ids))
                (assoc-in (conj (or db-path []) ::select-all?) false))})))
@@ -134,18 +142,29 @@
 
 (reg-event-db
   ::select-id
-  (fn [db [_ id db-path]]
-    (let [selected-set (get-in-db db db-path ::selected-set)
-          fn (if (is-selected? selected-set id) disj conj)]
+  (fn [db [_ id db-path resources]]
+    (let [selected-set (get-in-db db db-path ::selected-set #{})
+          select-all?  (get-in-db db db-path ::select-all?)
+          new-set      (cond select-all?
+                         (disj (set resources) id)
+
+                         (is-selected? selected-set id)
+                         (disj selected-set id)
+
+                         :else
+                         (conj selected-set id))]
+      (js/console.error "SELECT ALL" select-all?)
+      (js/console.error "new-set" new-set)
+      (js/console.error "resources" resources)
       (-> db
-          (update-in (conj (or db-path []) ::selected-set) (fnil fn #{}) id)
+          (assoc-in (conj (or db-path []) ::selected-set) new-set)
           (assoc-in (conj (or db-path []) ::select-all?) false)))))
 
 (reg-event-db
   ::select-all
-  (fn [db [_ db-path]]
+  (fn [db [_ db-path status]]
     (-> db
-        (update-in (conj (or db-path []) ::select-all?) not)
+        (assoc-in (conj (or db-path []) ::select-all?) (not= status :all))
         (assoc-in (conj (or db-path []) ::selected-set) #{}))))
 
 (reg-event-db
@@ -187,6 +206,20 @@
   (fn [selected-set [_ _ resources]]
     (all-page-selected? selected-set (visible-ids resources))))
 
+(reg-sub
+  ::off-page-selected-set
+  (fn [[_ db-path]]
+    (subscribe [::selected-set-sub db-path]))
+  (fn [selected-set [_ _ resources]]
+    (set/difference selected-set (visible-ids resources))))
+
+(reg-sub
+  ::on-page-selected-set
+  (fn [[_ db-path]]
+    (subscribe [::selected-set-sub db-path]))
+  (fn [selected-set [_ _ resources]]
+    (set/intersection selected-set (visible-ids resources))))
+
 
 (reg-sub
   ::is-selected?
@@ -201,40 +234,42 @@
    [(subscribe [::selected-set-sub db-path])
     (subscribe [::select-all?-sub db-path])
     (subscribe [::is-all-page-selected? db-path resources])])
- (fn [[selected-set select-all? is-all-page-selected?] [_ _ resources]]
+ (fn [[selected-set select-all? is-all-page-selected?] [_ _ resources total-count]]
    (let [number-of-selected (count selected-set)
          visible-on-page    (count resources)]
-     (cond (and (not select-all?)
-                (= 0 number-of-selected))
-           :none
+     (cond
+       (or select-all? (= total-count number-of-selected))
+       :all
 
-           select-all?
-           :all
+       (= 0 number-of-selected)
+       :none
 
-           (< 0 number-of-selected visible-on-page)
-           :some
+       (< 0 number-of-selected visible-on-page)
+       :some
 
-           (and
-            (< 0 number-of-selected)
-            (= number-of-selected visible-on-page)
-            is-all-page-selected?)
-           :page
+       (and
+        (< 0 number-of-selected)
+        (= number-of-selected visible-on-page)
+        is-all-page-selected?)
+       :page
 
-           (and
-            (< visible-on-page number-of-selected)
-            is-all-page-selected?)
-           :page-plus
+       (and
+        (< visible-on-page number-of-selected)
+        is-all-page-selected?)
+       :page-plus
 
-           :else
-           :none))))
+       :else
+       :none))))
 
 (defn CellCeckbox
-  [{:keys [id selected-all-sub selected-set-sub db-path]}]
+  [{:keys [id selected-all-sub selected-set-sub db-path resources]}]
+  (js/console.error "selected-all-sub" selected-all-sub)
+  (js/console.error "selected-set-sub" selected-set-sub)
   [ui/Checkbox {:checked  (or @selected-all-sub (is-selected? @selected-set-sub id))
                 :on-click (fn [event]
-                            (dispatch [::select-id id db-path])
+                            (dispatch [::select-id id db-path (map :id resources)])
                             (.stopPropagation event))}])
-;; All 50 conversations on this page are selected.  Select all 69 conversations in Inbox
+
 
 (defn HeaderCellCeckbox
   [{:keys [db-path resources page-selected?-sub]}]
@@ -243,10 +278,9 @@
 
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub page-selected?-sub rows db-path]}]
-(js/console.error "total-count-sub-key " total-count-sub-key )
   (let [tr                          (subscribe [::i18n-subs/tr])
         total-count                 (subscribe total-count-sub-key)
-        selection-status            (subscribe [::selection-status db-path rows])
+        selection-status            (subscribe [::selection-status db-path rows @total-count])
         selected-some?              (or @selected-all-sub (< 0 (count @selected-set-sub)))
         total-on-page-and-selected? (= @total-count (count @selected-set-sub))
         selected-text               (str/join " " [(when (#{:all :page} @selection-status) (str/capitalize (@tr [:all])))
@@ -257,22 +291,29 @@
                                                              (not total-on-page-and-selected?))
                                                      (@tr [:on-this-page]))
                                                    (@tr [:are-selected])])
-        button-text                 (cond @page-selected?-sub "Select all"
-                                          @selected-all-sub   "Clear all")]
+        button-text                 (if (= @selection-status :all)
+                                      "Clear selection"
+                                      (str "Select all " @total-count))]
 ;;:on-this-page-are-selected
     [:div {:style {:display :flex
                    :height "2.5rem"
                    :align-items :center
-                   :gap "1rem"
-                   :visibility (if selected-some? #_:hidden :visible :visible)}}
+                   :background-color "#f9fafb"
+                   :margin-bottom 0
+                   :gap "1rem"}
+           :class [:ui :table]}
+     [:div
+      {:style {:width "140px"}}
+      [:button {:on-click (fn [] (dispatch [::select-all db-path @selection-status]))
+                :class [:select-all (if
+                                     (= @selection-status :none)
+                                      :invisible :visible)]}
+       (str button-text)]]
     ;;  [:div
     ;;   (str (@tr [:selected])) ": " (if @selected-all-sub @total-count (count @selected-set-sub)) "/" @total-count]
-     (when selected-some?
-       [:div
-        [:span selected-text]
-        (when-not total-on-page-and-selected?
-          [:button {:on-click (fn [] (dispatch [::select-all db-path]))}
-           (str button-text " " @total-count)])])]))
+     [:div
+      {:style {:visibility (if selected-some? :hidden :visible)}}
+      [:span selected-text]]]))
 
 
 ;; TODOs for bulk action
@@ -373,7 +414,7 @@
              [ui/TableRow row-style
               (when selectable?
                 [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set :db-path db-path
-                                            :selected-all-sub select-all?}]])
+                                            :selected-all-sub select-all? :resources rows}]])
               [row-render row]]
              :else
              ^{:key id}

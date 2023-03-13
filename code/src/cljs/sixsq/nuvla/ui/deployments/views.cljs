@@ -117,6 +117,28 @@
         :danger-msg  danger-msg
         :button-text button-text}])))
 
+(defn StopModal
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      [BulkActionModal
+       {:on-confirm   (fn [] (dispatch [::events/bulk-operation "bulk-stop"]))
+        :trigger     (str/capitalize (@tr [:stop]))
+        :header      (@tr [:bulk-deployment-stop])
+        :danger-msg  (@tr [:danger-action-cannot-be-undone])
+        :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}])))
+
+(defn ForceDeleteModal
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      [BulkActionModal
+       {:on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-force-delete"]))
+        :trigger     (str/capitalize (@tr [:force-delete]))
+        :header      (@tr [:bulk-deployment-force-delete])
+        :danger-msg  (@tr [:danger-action-deployment-force-delete])
+        :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}])))
+
 (defn MenuBar
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
@@ -155,19 +177,9 @@
             [ui/DropdownItem
              {:on-click #(dispatch [::events/bulk-update-params])} (str/capitalize (@tr [:update]))]
             [ui/DropdownItem
-             [BulkActionModal
-              {:on-confirm   (fn [] (dispatch [::events/bulk-operation "bulk-stop"]))
-               :trigger     (str/capitalize (@tr [:stop]))
-               :header      (@tr [:bulk-deployment-stop])
-               :danger-msg  (@tr [:danger-action-cannot-be-undone])
-               :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}]]
+             [StopModal]]
             [ui/DropdownItem
-             [BulkActionModal
-              {:on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-force-delete"]))
-               :trigger     (str/capitalize (@tr [:force-delete]))
-               :header      (@tr [:bulk-deployment-force-delete])
-               :danger-msg  (@tr [:danger-action-deployment-force-delete])
-               :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]]]]]
+             [ForceDeleteModal]]]]]
 
          [components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id
@@ -331,16 +343,10 @@
                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
                 :row-render  (fn [deployment] [RowFn_new deployment options])
                 :table-props (merge style/single-line {:stackable true})
-                :select-config {:bulk-actions [{:component ""
-                                                :event :a :build-bulk-filter + }
-                                               #_{:component nil #_[uix/ModalDanger
-                                                            {:on-confirm  #(do
-                                                                             (dispatch [::events/bulk-operation "bulk-force-delete"])
-                                                                             (swap! modal-bulk-delete-key random-uuid))
-                                                             :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:force-delete]))])
-                                                             :header      (@tr [:bulk-deployment-force-delete])
-                                                             :danger-msg  (@tr [:danger-action-deployment-force-delete])
-                                                             :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]}]
+                :select-config {:bulk-actions [{:event #(dispatch [::events/bulk-update-params])
+                                                :name (str/capitalize (@tr [:update]))}
+                                               {:component (r/as-element StopModal)}
+                                               {:component (r/as-element StopModal)}]
                                 :db-path [::spec/select]
                                 :total-count-sub-key [::subs/deployments-count]}}]))))
 

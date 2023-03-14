@@ -25,7 +25,11 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.deployments.subs :as deployments-subs]))
+
+(def deployments-resources-subs-key [::subs/deployments-resources])
 
 (defn refresh
   []
@@ -166,12 +170,6 @@
         url       @(subscribe [::subs/deployment-url id primary-url-pattern])
         creator   (subscribe [::session-subs/resolve-user created-by])]
     [:<>
-     #_(when show-options?
-       [ui/TableCell
-        [ui/Checkbox {:checked  @selected?
-                      :on-click (fn [event]
-                                  (dispatch [::events/select-id id])
-                                  (.stopPropagation event))}]])
      [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
      (when-not no-module-name
@@ -237,7 +235,8 @@
                                                {:component (r/as-element BulkStopModal)}
                                                {:component (r/as-element BulkForceDeleteModal)}]
                                 :db-path [::spec/select]
-                                :total-count-sub-key [::subs/deployments-count]}}]))))
+                                :total-count-sub-key [::subs/deployments-count]
+                                :resources-sub-key deployments-resources-subs-key}}]))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]
@@ -299,15 +298,13 @@
 (defn DeploymentsDisplay
   []
   (let [view        (subscribe [::subs/view])
-        deployments (subscribe [::subs/deployments])
-        select-all? (subscribe [::subs/select-all?])]
+        deployments (subscribe deployments-resources-subs-key)]
     (fn []
-      (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment {:basic true :class "table-wrapper"}
-         [BulkUpdateModal]
-         (if (= @view "cards")
-           [CardsDataTable deployments-list]
-           [VerticalDataTable deployments-list {:show-options? (false? @select-all?)}])]))))
+      [ui/Segment {:basic true :class "table-wrapper"}
+       [BulkUpdateModal]
+       (if (= @view "cards")
+         [CardsDataTable @deployments]
+         [VerticalDataTable @deployments])])))
 
 (defn StatisticStates
   [_clickable? summary-subs]
@@ -400,14 +397,13 @@
 
 (defn DeploymentTable
   [options]
-  (let [elements    (subscribe [::subs/deployments])
+  (let [deployments    (subscribe deployments-resources-subs-key)
         select-all? (subscribe [::subs/select-all?])]
     (fn [{:keys [no-actions]}]
-      (let [deployments  (:resources @elements)
-            show-options (and (false? @select-all?) (not (true? no-actions)))]
+      (let [show-options (and (false? @select-all?) (not (true? no-actions)))]
         [:div {:class "table-wrapper"}
          [VerticalDataTable
-          deployments (assoc options :select-all @select-all? :show-options? show-options)]
+          @deployments (assoc options :select-all @select-all? :show-options? show-options)]
          [Pagination (:pagination-db-path options)]]))))
 
 (defn DeploymentsMainContent

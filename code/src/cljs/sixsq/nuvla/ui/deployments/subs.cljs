@@ -9,6 +9,12 @@
     (::spec/deployments db)))
 
 (reg-sub
+ ::deployments-resources
+ :<- [::deployments]
+ (fn [deployments]
+   (:resources deployments)))
+
+(reg-sub
   ::deployments-summary
   (fn [db]
     (::spec/deployments-summary db)))

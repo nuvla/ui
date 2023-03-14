@@ -273,7 +273,9 @@
                                                        (.stopPropagation event))
                                            :target   "_blank"
                                            :rel      "noreferrer"}])
-              :href          (utils/deployment-href id)
+              :on-click      (fn [event]
+                               (dispatch [::routing-events/navigate (utils/deployment-href id)])
+                               (.preventDefault event))
               :image         (or module-logo-url "")
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond

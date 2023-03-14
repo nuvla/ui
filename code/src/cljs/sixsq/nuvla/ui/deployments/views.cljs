@@ -117,7 +117,7 @@
         :danger-msg  danger-msg
         :button-text button-text}])))
 
-(defn StopModal
+(defn BulkStopModal
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn []
@@ -128,7 +128,7 @@
         :danger-msg  (@tr [:danger-action-cannot-be-undone])
         :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}])))
 
-(defn ForceDeleteModal
+(defn BulkForceDeleteModal
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn []
@@ -177,9 +177,9 @@
             [ui/DropdownItem
              {:on-click #(dispatch [::events/bulk-update-params])} (str/capitalize (@tr [:update]))]
             [ui/DropdownItem
-             [StopModal]]
+             [BulkStopModal]]
             [ui/DropdownItem
-             [ForceDeleteModal]]]]]
+             [BulkForceDeleteModal]]]]]
 
          [components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id
@@ -343,10 +343,10 @@
                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
                 :row-render  (fn [deployment] [RowFn_new deployment options])
                 :table-props (merge style/single-line {:stackable true})
-                :select-config {:bulk-actions [{:event #(dispatch [::events/bulk-update-params])
+                :select-config {:bulk-actions [{:event [::events/bulk-update-params]
                                                 :name (str/capitalize (@tr [:update]))}
-                                               {:component (r/as-element StopModal)}
-                                               {:component (r/as-element StopModal)}]
+                                               {:component (r/as-element BulkStopModal)}
+                                               {:component (r/as-element BulkForceDeleteModal)}]
                                 :db-path [::spec/select]
                                 :total-count-sub-key [::subs/deployments-count]}}]))))
 

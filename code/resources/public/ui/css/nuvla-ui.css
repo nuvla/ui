@@ -161,6 +161,18 @@ body .nuvla-edges .ui.breadcrumb {
 
 /** Sidebar End **/
 
+.bulk-action-bar {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.001s linear, opacity 0.2s linear;
+}
+
+.visible {
+  visibility: visible;
+  transition: visibility 0.2s linear, opacity 0.2s linear;
+  opacity: 1;
+}
+
 /** Header **/
 
 .nuvla-ui-header {
@@ -447,7 +459,7 @@ body .nuvla-deployments a {
   cursor: pointer;
   color: var(--deployments);
   border: 2px solid #f9fafb;
-  transition: all 0.2s ease-in;
+  transition: background-color 0.2s ease-in;
   padding: 0.3rem 0.4rem;
 }
 

@@ -90,7 +90,7 @@
 ;; Bulk selection
 (s/def ::name string?)
 (s/def ::component fn?)
-(s/def ::event (s/or :k keyword? :fn fn?))
+(s/def ::event (s/or :k (s/* keyword?) :fn fn?))
 (s/def ::icon (s/nilable fn?))
 (s/def ::build-bulk-filter fn?)
 (s/def ::total-count-sub-key (s/* keyword?))
@@ -277,7 +277,8 @@
                 :on-click #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}])
 
 (defn BulkActionBar
-  [{:keys [selected-set-sub total-count-sub-key selected-all-sub page-selected?-sub rows db-path]}]
+  [{:keys [selected-set-sub total-count-sub-key selected-all-sub
+           page-selected?-sub rows db-path bulk-actions]}]
   (let [tr                          (subscribe [::i18n-subs/tr])
         total-count                 (subscribe total-count-sub-key)
         selection-status            (subscribe [::selection-status db-path rows @total-count])
@@ -293,27 +294,42 @@
                                                    (@tr [:are-selected])])
         button-text                 (if (= @selection-status :all)
                                       "Clear selection"
-                                      (str "Select all " @total-count))]
+                                      (str "Select all " @total-count))
+        payload                     {:select-all   @selected-all-sub
+                                     :selected-set @selected-set-sub}]
 ;;:on-this-page-are-selected
-    [:div {:style {:display :flex
-                   :height "2.5rem"
-                   :align-items :center
-                   :background-color "#f9fafb"
-                   :margin-bottom 0
-                   :gap "1rem"}
-           :class [:ui :table]}
-     [:div
-      {:style {:width "140px"}}
-      [:button {:on-click (fn [] (dispatch [::select-all db-path @selection-status]))
-                :class [:select-all (if
-                                     (= @selection-status :none)
-                                      :invisible :visible)]}
-       (str button-text)]]
-    ;;  [:div
-    ;;   (str (@tr [:selected])) ": " (if @selected-all-sub @total-count (count @selected-set-sub)) "/" @total-count]
-     [:div
-      {:style {:visibility (if selected-some? :hidden :visible)}}
-      [:span selected-text]]]))
+    [:div
+     {:style {:height "2.5rem"
+              :background-color "#f9fafb"
+              :margin-bottom "0.5rem"}
+      :class [:ui :table :bulk-action-bar (when-not (= :none @selection-status) :visible)]}
+     [:div {:style {:display :flex
+                    :align-items :center
+                    :max-width "1040px"
+                    :height "2.5rem"
+                    :padding-left "1rem"
+                    :background-color "#f9fafb"
+                    :gap "1rem"}}
+      [:div
+       [:span selected-text]]
+      [:div
+       {:style {:display :flex :align-items :center}}
+       [:button {:style {:width "140px" }
+                 :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
+                 :class :select-all}
+        (str button-text)]
+       [ui/Dropdown {:item     true :text (@tr [:bulk-action])
+                     :icon     "ellipsis vertical"}
+        [ui/DropdownMenu
+         (for [action bulk-actions
+               :let [{:keys [component name event]} action]]
+           (do (js/console.error "event" event)
+               (if component [ui/DropdownItem
+                              [component]]
+                   [ui/DropdownItem
+                    {:on-click #(fn []
+                                  (if (fn? event) (event payload)
+                                      (dispatch event)))} name])))]]]]]))
 
 
 ;; TODOs for bulk action
@@ -373,7 +389,8 @@
                                        :page-selected?-sub page-selected?
                                        :total-count-sub-key total-count-sub-key
                                        :rows      rows
-                                       :db-path db-path}])
+                                       :db-path db-path
+                                       :bulk-actions bulk-actions}])
      [:div {:style {:overflow :auto
                     :padding 0}}
       [ui/Table (:table-props props)

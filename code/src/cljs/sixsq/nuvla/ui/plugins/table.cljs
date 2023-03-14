@@ -327,9 +327,9 @@
                (if component [ui/DropdownItem
                               [component]]
                    [ui/DropdownItem
-                    {:on-click #(fn []
-                                  (if (fn? event) (event payload)
-                                      (dispatch event)))} name])))]]]]]))
+                    {:on-click (fn []
+                                 (if (fn? event) (event payload)
+                                     (dispatch event)))} name])))]]]]]))
 
 
 ;; TODOs for bulk action

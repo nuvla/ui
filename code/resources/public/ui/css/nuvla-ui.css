@@ -161,10 +161,9 @@ body .nuvla-edges .ui.breadcrumb {
 
 /** Sidebar End **/
 
-.bulk-action-bar {
+.invisible {
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0.001s linear, opacity 0.2s linear;
 }
 
 .visible {

@@ -393,7 +393,7 @@
     This overrides any `:cell` custom render function passed or props passed to column definitions.
 "
   [{:keys [cell-props columns rows
-           row-click-handler row-props row-render row-style
+           row-click-handler row-props row-render
            sort-config select-config]
     :as   props}]
   (let [{:keys [bulk-actions db-path total-count-sub-key resources-sub-key]} select-config
@@ -403,7 +403,8 @@
                             (s/valid? ::bulk-actions bulk-actions))
         selected-set   (subscribe [::selected-set-sub db-path])
         select-all?    (subscribe [::select-all?-sub db-path])
-        page-selected? (subscribe [::is-all-page-selected? db-path resources-sub-key])]
+        page-selected? (subscribe [::is-all-page-selected? db-path resources-sub-key])
+        get-row-props  (fn [row] (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
 
     [:div
      (when selectable? [BulkActionBar {:selected-all-sub    select-all?
@@ -452,14 +453,14 @@
            (cond
              row-render
              ^{:key id}
-             [ui/TableRow row-style
+             [ui/TableRow (get-row-props row)
               (when selectable?
                 [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set :db-path db-path
                                             :selected-all-sub select-all? :resources-sub-key resources-sub-key}]])
               [row-render row]]
              :else
              ^{:key id}
-             [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
+             [ui/TableRow (get-row-props row)
               (for [{:keys [field-key accessor cell cell-props]} columns
                     :let [cell-data ((or accessor field-key) row)]]
                 ^{:key (str id "-" field-key)}

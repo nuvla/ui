@@ -230,13 +230,14 @@
                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
                 :row-render  (fn [deployment] [RowFn deployment options])
                 :table-props (merge style/single-line {:stackable true})
-                :select-config {:bulk-actions [{:event [::events/bulk-update-params]
-                                                :name (str/capitalize (@tr [:update]))}
-                                               {:component (r/as-element BulkStopModal)}
-                                               {:component (r/as-element BulkForceDeleteModal)}]
-                                :db-path [::spec/select]
-                                :total-count-sub-key [::subs/deployments-count]
-                                :resources-sub-key deployments-resources-subs-key}}]))))
+                :select-config (when show-options?
+                                 {:bulk-actions [{:event [::events/bulk-update-params]
+                                                  :name (str/capitalize (@tr [:update]))}
+                                                 {:component (r/as-element BulkStopModal)}
+                                                 {:component (r/as-element BulkForceDeleteModal)}]
+                                  :db-path [::spec/select]
+                                  :total-count-sub-key [::subs/deployments-count]
+                                  :resources-sub-key deployments-resources-subs-key})}]))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]

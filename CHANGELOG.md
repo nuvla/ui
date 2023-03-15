@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Notificaiton subscriptions - Shows GiB unit for network in modal
+- Enables bulk actions in table plugin - Moves deployments bulk action feature to table plugin, #1180
 
 ## [2.33.3] - 2023-02-27
 

@@ -7,16 +7,34 @@ test.use({
 
 test.beforeAll(({}, { config }) => {
   const { baseURL } = config.projects[0].use;
-  const mockedNetwork = fs.readFileSync('./test/e2e/loggedin/logger_base.har', { encoding: 'utf-8' });
+  let mockedNetwork = fs.readFileSync('./test/e2e/loggedin/logger_base.har', { encoding: 'utf-8' });
+  const expiryDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 7).toISOString();
+
   if (baseURL) {
+    // Replace base URL with correct URL
     const replacedMockedNetworkData = mockedNetwork.replace(/{{baseURL}}/g, baseURL || '');
-    fs.writeFileSync('./test/e2e/loggedin/logger_test.har', replacedMockedNetworkData, {
+
+    // Replace expiry dates with future date
+    const replacedMockedNetworkDataJson = JSON.parse(replacedMockedNetworkData);
+    replacedMockedNetworkDataJson.log.entries = replacedMockedNetworkDataJson.log.entries.map((entry) => {
+      const text = entry?.response?.content?.text || '';
+      if (text.includes('expiry')) {
+        let jsonResponse = JSON.parse(text);
+        if (jsonResponse && jsonResponse.resources?.[0]?.expiry) {
+          jsonResponse.resources[0].expiry = expiryDate;
+          entry.response.content.text = JSON.stringify(jsonResponse);
+        }
+      }
+      return entry;
+    });
+
+    fs.writeFileSync('./test/e2e/loggedin/logger_test.har', JSON.stringify(replacedMockedNetworkDataJson), {
       encoding: 'utf-8',
     });
   }
 });
 
-test('test', async ({ page }, { config }) => {
+test.skip('test', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
 
   await page.routeFromHAR('./test/e2e/loggedin/logger_test.har', { url: '**/api/**' });

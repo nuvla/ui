@@ -397,13 +397,12 @@
 
 (defn DeploymentTable
   [options]
-  (let [deployments    (subscribe deployments-resources-subs-key)
-        select-all? (subscribe [::subs/select-all?])]
+  (let [deployments    (subscribe deployments-resources-subs-key)]
     (fn [{:keys [no-actions]}]
-      (let [show-options (and (false? @select-all?) (not (true? no-actions)))]
+      (let [show-options (not (true? no-actions))]
         [:div {:class "table-wrapper"}
          [VerticalDataTable
-          @deployments (assoc options :select-all @select-all? :show-options? show-options)]
+          @deployments (assoc options :show-options? show-options)]
          [Pagination (:pagination-db-path options)]]))))
 
 (defn DeploymentsMainContent

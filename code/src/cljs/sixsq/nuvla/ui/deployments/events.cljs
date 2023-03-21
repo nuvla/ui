@@ -161,7 +161,6 @@
 (reg-event-fx
   ::bulk-update-params
   (fn [{db :db}]
-    (js/console.error ":bulk-update-params")
     (let [filter-str (utils/build-bulk-filter db)]
       {::cimi-api-fx/search
        [:deployment {:last        0

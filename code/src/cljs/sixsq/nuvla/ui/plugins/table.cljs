@@ -92,25 +92,23 @@
 (s/def ::component fn?)
 (s/def ::event (s/or :k (s/* keyword?) :fn fn?))
 (s/def ::icon (s/nilable fn?))
-(s/def ::build-bulk-filter fn?)
 (s/def ::total-count-sub-key (s/* keyword?))
 (s/def ::resources-sub-key (s/* keyword?))
 
 (s/def ::bulk-action (s/or  :component  (s/keys :req-un [::component]
                                                 :opt-un [::name ::icon])
                             :name-event (s/keys :req-un [::name ::event]
-                                                :opt-un [::component])))
+                                                :opt-un [::component ::icon])))
 
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
 
-(s/def ::select-config (s/keys :req-un [::bulk-actions ::helpers/db-path
+(s/def ::select-db-path (s/* keyword?))
+(s/def ::select-config (s/keys :req-un [::bulk-actions ::select-db-path
                                         ::total-count-sub-key ::resources-sub-key]))
 
 (s/def ::selection-status #{:all :page
                             :some :none})
 
-(defn get-select-options
-  [])
 
 (defn- all-page-selected?
   [selected-set visible-deps-ids-set]
@@ -165,12 +163,6 @@
         (assoc-in (conj (or db-path []) ::select-all?) (not= status :all))
         (assoc-in (conj (or db-path []) ::selected-set) #{}))))
 
-(reg-event-db
-  ::reset-selected-set
-  (fn [db [_ db-path]]
-    (assoc-in db (conj (or db-path []) ::selected-set) #{})))
-
-
 (reg-sub
   ::bulk-update-modal
   (fn [db [_ db-path]]
@@ -179,31 +171,21 @@
 (reg-sub
   ::selected-set-sub
   (fn [db [_ db-path]]
-    (get-in-db db db-path ::selected-set)))
+    (when db-path (get-in-db db db-path ::selected-set))))
 
 (reg-sub
   ::select-all?-sub
   (fn [db [_ db-path]]
-    (get-in-db db db-path ::select-all?)))
+    (when db-path (get-in-db db db-path ::select-all?))))
 
-
-(reg-sub
-  ::selected-count
-  (fn [[_ db-path]]
-    [(subscribe [::selected-set-sub db-path])
-     (subscribe [::select-all?-sub db-path])])
-  (fn [[selected-set select-all?] [_ _ total-count]]
-    (if select-all?
-      total-count
-      (count selected-set))))
 
 (reg-sub
   ::is-all-page-selected?
   (fn [[_ db-path resources-sub-key]]
     [(subscribe [::selected-set-sub db-path])
-     (subscribe resources-sub-key)])
+     (when resources-sub-key (subscribe resources-sub-key))])
   (fn [[selected-set resources]]
-    (all-page-selected? selected-set (visible-ids resources))))
+    (and selected-set resources (all-page-selected? selected-set (visible-ids resources)))))
 
 (reg-sub
   ::off-page-selected-set
@@ -220,14 +202,6 @@
      (subscribe resources-sub-key)])
   (fn [[selected-set resources]]
     (set/intersection selected-set (visible-ids resources))))
-
-
-(reg-sub
-  ::is-selected?
-  (fn [[_ db-path]]
-    (subscribe [::selected-set-sub db-path]))
-  (fn [selected-set [_ _ id]]
-    (is-selected? selected-set id)))
 
 
 (reg-sub
@@ -281,7 +255,7 @@
 
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub
-           page-selected?-sub db-path bulk-actions resources-sub-key]}]
+           db-path bulk-actions resources-sub-key]}]
   (let [tr                          (subscribe [::i18n-subs/tr])
         rows                        @(subscribe resources-sub-key)
         total-count                 (subscribe total-count-sub-key)
@@ -334,36 +308,28 @@
                     :gap "1rem"}}
       [:div
        {:style {:display :flex :align-items :center}}
-       [:button {:style {:width "140px" :text-align :center}
-                 :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
-                 :class :select-all}
-        (str button-text)]
        [ui/Dropdown {:item     true :text (@tr [:bulk-action])
                      :icon     "ellipsis vertical"}
         [ui/DropdownMenu
          (for [action bulk-actions
-               :let [{:keys [component name event]} action]]
-           (do (js/console.error "event" event)
-               (if component [ui/DropdownItem
-                              [component]]
-                   [ui/DropdownItem
-                    {:on-click (fn []
-                                 (if (fn? event) (event payload)
-                                     (dispatch event)))} name])))]]]
-            [:div
-             [:span (or selected-all-text manual-selection-text)]]]]))
+               :let [{:keys [component name event icon]} action]]
+           (if component
+             [ui/DropdownItem
+              icon
+              [component]]
+             [ui/DropdownItem
+              {:on-click (fn []
+                           (if (fn? event) (event payload)
+                               (dispatch event)))}
+              icon
+              name]))]]]
+      [:div
+       [:span (or selected-all-text manual-selection-text)]]
+      [:button {:style {:width "140px" :text-align :center}
+                :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
+                :class :select-all}
+       (str button-text)]]]))
 
-
-;; TODOs for bulk action
-;; - pass down db-path for selec-config and resource-path -> Not needed
-;; - find way to pass down filters (full text search, additional filters, state selector) -> build-bulk-filter
-;; - conditionally rendering checkboxes -> done on `selectable?`
-;; - pass down bulk actions (name, event, icon?) -> mock thingy right now
-;; - design new top menu bar (e.g. like gmail) for all the stuff currently in menu bar in deployment views -> Todo
-;; - spec select-config -> Todo
-;; - Make it show actions
-;; - Make it call actions
-;; - Make it call the right actions
 
 (defn Table
   "Expects a single config map with a required `:rows` vector of documents.
@@ -388,6 +354,14 @@
      - `:fetch-event` dispatch event after a new ordering is applied,
     Enabled sort for all columns, column wise disabling via `:no-sort?` key in column definition.
 
+    To enable bulk selection, provide a `select-config` with:
+     - `:select-db-path` usually [::spec/select],
+     - `:total-count-sub-key` sub key to the total count of resources rendered in table,
+     - `:resources-sub-key`, sub key to the currently visible resources,
+     - `:bulk-actions`, a vector of at least one ::bulk-action. A ::bulk-action must be an
+                        entire component to render or an event and name.
+    Enabled sort for all columns, column wise disabling via `:no-sort?` key in column definition.
+
     A custom render function for a whole row can be provided with:
     - `:row-render`
     This overrides any `:cell` custom render function passed or props passed to column definitions.
@@ -396,14 +370,13 @@
            row-click-handler row-props row-render
            sort-config select-config]
     :as   props}]
-  (let [{:keys [bulk-actions db-path total-count-sub-key resources-sub-key]} select-config
+  (let [{:keys [bulk-actions select-db-path total-count-sub-key resources-sub-key]} select-config
         tr             @(subscribe [::i18n-subs/tr])
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
-        selectable?    (and bulk-actions total-count-sub-key db-path
-                            (s/valid? ::bulk-actions bulk-actions))
-        selected-set   (subscribe [::selected-set-sub db-path])
-        select-all?    (subscribe [::select-all?-sub db-path])
-        page-selected? (subscribe [::is-all-page-selected? db-path resources-sub-key])
+        selectable?    (s/valid? ::select-config select-config)
+        selected-set   (subscribe [::selected-set-sub select-db-path])
+        select-all?    (subscribe [::select-all?-sub select-db-path])
+        page-selected? (subscribe [::is-all-page-selected? select-db-path resources-sub-key])
         get-row-props  (fn [row] (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
 
     [:div
@@ -412,7 +385,7 @@
                                        :page-selected?-sub  page-selected?
                                        :total-count-sub-key total-count-sub-key
                                        :rows                rows
-                                       :db-path             db-path
+                                       :db-path             select-db-path
                                        :bulk-actions        bulk-actions
                                        :resources-sub-key   resources-sub-key}])
      [:div {:style {:overflow :auto
@@ -422,7 +395,7 @@
         [ui/TableRow
          (when selectable?
            [ui/TableHeaderCell
-            [HeaderCellCeckbox {:db-path db-path :resources-sub-key resources-sub-key
+            [HeaderCellCeckbox {:db-path select-db-path :resources-sub-key resources-sub-key
                                 :page-selected?-sub page-selected?}]])
          (for [col columns
                :when col
@@ -455,7 +428,7 @@
              ^{:key id}
              [ui/TableRow (get-row-props row)
               (when selectable?
-                [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set :db-path db-path
+                [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set :db-path select-db-path
                                             :selected-all-sub select-all? :resources-sub-key resources-sub-key}]])
               [row-render row]]
              :else
@@ -484,4 +457,5 @@
                                             ::bulk-actions
                                             ::helpers/db-path
                                             ::sort-config
+                                            ::select-config
                                             ::wide?])))

@@ -206,38 +206,39 @@
 
 (defn VerticalDataTable
   [_deployments-list _options]
-  (let [tr                    (subscribe [::i18n-subs/tr])]
+  (let [tr                (subscribe [::i18n-subs/tr])]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
-        [Table {:columns     [{:field-key :id}
-                              (when-not no-module-name
-                                {:field-key      :module.name
-                                 :header-content (@tr [:module])})
-                              {:field-key :version :no-sort? true}
-                              {:field-key :status
-                               :sort-key  :state}
-                              {:field-key :url
-                               :no-sort?  true}
-                              {:field-key :created}
-                              {:field-key :created-by}
-                              {:field-key :infrastructure
-                               :no-sort?  true}
-                              (when show-options? {:field-key :actions
+        (let [selectable? (or (nil? show-options?) show-options?)]
+          [Table {:columns     [{:field-key :id}
+                                (when-not no-module-name
+                                  {:field-key      :module.name
+                                   :header-content (@tr [:module])})
+                                {:field-key :version :no-sort? true}
+                                {:field-key :status
+                                 :sort-key  :state}
+                                {:field-key :url
+                                 :no-sort?  true}
+                                {:field-key :created}
+                                {:field-key :created-by}
+                                {:field-key :infrastructure
+                                 :no-sort?  true}
+                                (when selectable? {:field-key :actions
                                                    :no-sort?  true})]
-                :rows        deployments-list
-                :sort-config {:db-path     ::spec/ordering
-                              :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                :row-render  (fn [deployment] [RowFn deployment options])
-                :table-props (merge style/single-line {:stackable true})
-                :select-config (when show-options?
-                                 {:bulk-actions [{:event [::events/bulk-update-params]
-                                                  :name (str/capitalize (@tr [:update]))}
-                                                 {:component (r/as-element BulkStopModal)}
-                                                 {:component (r/as-element BulkForceDeleteModal)}]
-                                  :db-path [::spec/select]
-                                  :total-count-sub-key [::subs/deployments-count]
-                                  :resources-sub-key deployments-resources-subs-key})}]))))
+                  :rows        deployments-list
+                  :sort-config {:db-path     ::spec/ordering
+                                :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+                  :row-render  (fn [deployment] [RowFn deployment options])
+                  :table-props (merge style/single-line {:stackable true})
+                  :select-config (when selectable?
+                                   {:bulk-actions [{:event [::events/bulk-update-params]
+                                                    :name (str/capitalize (@tr [:update]))}
+                                                   {:component (r/as-element BulkStopModal)}
+                                                   {:component (r/as-element BulkForceDeleteModal)}]
+                                    :select-db-path [::spec/select]
+                                    :total-count-sub-key [::subs/deployments-count]
+                                    :resources-sub-key deployments-resources-subs-key})}])))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]
@@ -401,7 +402,7 @@
   (let [deployments    (subscribe deployments-resources-subs-key)]
     (fn [{:keys [no-actions]}]
       (let [show-options (not (true? no-actions))]
-        [:div {:class "table-wrapper"}
+        [:div
          [VerticalDataTable
           @deployments (assoc options :show-options? show-options)]
          [Pagination (:pagination-db-path options)]]))))

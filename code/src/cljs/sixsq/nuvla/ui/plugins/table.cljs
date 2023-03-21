@@ -103,8 +103,8 @@
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
 
 (s/def ::select-db-path (s/* keyword?))
-(s/def ::select-config (s/keys :req-un [::bulk-actions ::select-db-path
-                                        ::total-count-sub-key ::resources-sub-key]))
+(s/def ::select-config (s/nilable (s/keys :req-un [::bulk-actions ::select-db-path
+                                                    ::total-count-sub-key ::resources-sub-key])))
 
 (s/def ::selection-status #{:all :page
                             :some :none})
@@ -373,7 +373,7 @@
   (let [{:keys [bulk-actions select-db-path total-count-sub-key resources-sub-key]} select-config
         tr             @(subscribe [::i18n-subs/tr])
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
-        selectable?    (s/valid? ::select-config select-config)
+        selectable?    (and select-config (s/valid? ::select-config select-config))
         selected-set   (subscribe [::selected-set-sub select-db-path])
         select-all?    (subscribe [::select-all?-sub select-db-path])
         page-selected? (subscribe [::is-all-page-selected? select-db-path resources-sub-key])

@@ -1,9 +1,10 @@
 (ns sixsq.nuvla.ui.edges.subs
-  (:require [re-frame.core :refer [reg-sub]]
+  (:require [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
 
 (reg-sub
   ::loading?
@@ -20,6 +21,19 @@
   ::nuvlaboxes
   (fn [db]
     (::spec/nuvlaboxes db)))
+
+(reg-sub
+  ::nuvlaboxes-resources
+  :<- [::nuvlaboxes]
+  (fn [nuvlaboxes]
+    (:resources nuvlaboxes)))
+
+(reg-sub
+  ::nuvlaboxes-count
+  :<- [::nuvlaboxes]
+  (fn [nuvlaboxes]
+    (get nuvlaboxes :count 0)))
+
 
 (reg-sub
   ::edges-status
@@ -175,3 +189,12 @@
   ::additional-filter
   (fn [db]
     (::spec/additional-filter db)))
+
+(reg-sub
+  ::selected-count
+  (fn [_ [_ db-path]]
+    [(subscribe ::table-plugin/selected-set-sub db-path)
+     (subscribe ::table-plugin/select-all?-sub db-path)
+     (subscribe ::nuvlaboxes-count)])
+  (fn [[selected-set selected-all? total-count]]
+    (if selected-all? total-count (count selected-set))))

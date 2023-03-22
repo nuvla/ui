@@ -777,6 +777,27 @@
         :total-items            total-elements
         :i-per-page-multipliers [1 2 4]}])))
 
+(defn BulkUpdateModal
+  []
+  (let [tr              (subscribe [::i18n-subs/tr])
+        selected-count  (subscribe [::subs/selected-count])
+        open?           (r/atom false)]
+    (fn []
+      [ui/Modal {:open       @open?
+                 :close-icon true
+                 :on-close   #(reset! open? false)
+                 :trigger (r/as-element
+                           [:div {:on-click (fn [] (reset! open? true))} "HI THERE"])}
+       [uix/ModalHeader {:header (@tr [:bulk-deployment-update])}]
+
+       [ui/ModalContent
+        [ui/Form
+         ]]
+       [ui/ModalActions
+        [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
+                     :positive true
+                     :active   true
+                     :on-click #(reset! open? false)}]]])))
 
 (defn NuvlaboxTable
   []
@@ -816,7 +837,12 @@
             :row-render        (fn [row-data] [NuvlaboxRow row-data managers])
             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
             :row-props         {:role  "link"
-                                :style {:cursor "pointer"}}}]))
+                                :style {:cursor "pointer"}}
+            :select-config      {:bulk-actions [{:name "Edit Tags" :event (fn [] (js/alert "HI World"))}
+                                                {:component (r/as-element BulkUpdateModal)}]
+                                :total-count-sub-key [::subs/nuvlaboxes-count]
+                                :resources-sub-key [::subs/nuvlaboxes-resources]
+                                :select-db-path [::spec/select]}}]))
 
 
 (defn NuvlaboxMapPoint

@@ -260,13 +260,13 @@
         rows                        @(subscribe resources-sub-key)
         total-count                 (subscribe total-count-sub-key)
         selection-status            (subscribe [::selection-status db-path resources-sub-key @total-count])
-        ON-page-selected            (count @(subscribe [::on-page-selected-set db-path resources-sub-key]))
-        OFF-page-selected           (if @selected-all-sub
+        on-page-selected            (count @(subscribe [::on-page-selected-set db-path resources-sub-key]))
+        off-page-selected           (if @selected-all-sub
                                       (- @total-count (count rows))
                                       (count @(subscribe [::off-page-selected-set db-path resources-sub-key])))
-        off-page-selection?         (< 0 OFF-page-selected)
+        off-page-selection?         (< 0 off-page-selected)
         off-page-selection-text     (when off-page-selection?
-                                      (str/join " " [OFF-page-selected
+                                      (str/join " " [off-page-selected
                                                      (@tr [:on-other-pages])]))
         selected-all-text           (when (= :all @selection-status)
                                       (str/join " " [(str/capitalize (@tr [:all]))
@@ -274,7 +274,7 @@
                                                      (@tr [:are-selected])
                                                      (when off-page-selection-text
                                                        (str "(" off-page-selection-text ")"))]))
-        on-page-selection?          (< 0 ON-page-selected)
+        on-page-selection?          (< 0 on-page-selected)
         manual-selection-text       (str/join " " [(when (#{:all :page :page-plus} @selection-status)
                                                      (str/capitalize (@tr [:all])))
                                                    (when on-page-selection?
@@ -288,7 +288,7 @@
                                                    (when off-page-selection?
                                                      (if on-page-selection?
                                                        (str "(" off-page-selection-text ")")
-                                                       (str OFF-page-selected " " (@tr [:deployments]) " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
+                                                       (str off-page-selected " " (@tr [:deployments]) " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
         button-text                 (if (= @selection-status :all)
                                       "Clear selection"
                                       (str "Select all " @total-count))

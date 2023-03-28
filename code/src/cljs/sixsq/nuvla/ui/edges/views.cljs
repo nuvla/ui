@@ -401,7 +401,7 @@
 
 (defn AddModal
   []
-  (let [modal-id                   :add
+  (let [modal-id                   spec/modal-add-id
         tr                         (subscribe [::i18n-subs/tr])
         visible?                   (subscribe [::subs/modal-visible? modal-id])
         nuvlabox-id                (subscribe [::subs/nuvlabox-created-id])
@@ -582,8 +582,8 @@
                       [ui/Message {:content (str/capitalize
                                               (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]))]
 
-                 (let [{nb-rel                      :nb-rel
-                        nb-assets                   :nb-assets
+                 (let [{nb-rel                     :nb-rel
+                        nb-assets                  :nb-assets
                         {:keys [compose-files url]} :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
@@ -777,27 +777,59 @@
         :total-items            total-elements
         :i-per-page-multipliers [1 2 4]}])))
 
+;; TODOS in update modal
+;; 1. Radio buttons for add, remove and set -> DONE
+;; 2a. descriptions texts for all of them, warning for SET -> DONE
+;; 2b. message: only edges with edit rights will be edited
+;; 2c. for message 2b: fetch edges with edit rights
+;; 3. UI form for adding tags
+;; 4. UI form for removing tags
+;; 5. UI form for setting tags
+;; 6. update/save events and displaying failures
+
+(defn- TagsEditModeRadio
+  [edit-mode opened-modal]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        change-edit-mode (fn [value]
+                           #(dispatch [::events/open-modal value]))
+        active?          (= opened-modal edit-mode)
+        font-weight      (if active? 700 400)]
+    [ui/Radio {:style     {:font-weight font-weight}
+               :label     (@tr [(-> edit-mode name keyword)])
+               :checked   active?
+               :on-change (change-edit-mode edit-mode)}]))
+
 (defn BulkUpdateModal
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        selected-count  (subscribe [::subs/selected-count])
-        open?           (r/atom false)]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        selected-count   (subscribe [::subs/selected-count ::spec/select])
+        opened-modal     (subscribe [::subs/opened-modal])
+        open?            (subscribe [::subs/bulk-modal-visible?])
+        close-fn         (fn [] (dispatch [::events/open-modal nil]))
+        ]
     (fn []
       [ui/Modal {:open       @open?
                  :close-icon true
-                 :on-close   #(reset! open? false)
-                 :trigger (r/as-element
-                           [:div {:on-click (fn [] (reset! open? true))} "HI THERE"])}
+                 :on-close   close-fn}
        [uix/ModalHeader {:header (@tr [:bulk-deployment-update])}]
-
        [ui/ModalContent
         [ui/Form
+         [:div {:style {:display :flex
+                        :gap     "1.5rem"}}
+          (doall (for [edit-mode spec/tags-modal-ids]
+                   ^{:key edit-mode}
+                   [TagsEditModeRadio edit-mode @opened-modal]))]
+         [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
+                    " "
+                    @selected-count
+                    " "
+                    (@tr [(if (= @selected-count 1) :edge :edges)]))]
          ]]
        [ui/ModalActions
         [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
                      :positive true
                      :active   true
-                     :on-click #(reset! open? false)}]]])))
+                     :on-click close-fn}]]])))
 
 (defn NuvlaboxTable
   []
@@ -838,8 +870,7 @@
             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
             :row-props         {:role  "link"
                                 :style {:cursor "pointer"}}
-            :select-config      {:bulk-actions [{:name "Edit Tags" :event (fn [] (js/alert "HI World"))}
-                                                {:component (r/as-element BulkUpdateModal)}]
+            :select-config      {:bulk-actions [{:name "Edit Tags" :event [::events/open-modal spec/modal-tags-add-id]}]
                                 :total-count-sub-key [::subs/nuvlaboxes-count]
                                 :resources-sub-key [::subs/nuvlaboxes-resources]
                                 :select-db-path [::spec/select]}}]))
@@ -913,7 +944,6 @@
 (defn NuvlaBoxesOrClusters
   []
   (dispatch [::events/init])
-  ;; (dispatch [::events/refresh-root])
   (dispatch [::events/set-nuvlabox-cluster nil])
   (let [view-type (subscribe [::subs/view-type])]
     (fn []
@@ -951,4 +981,5 @@
   []
   [:<>
    [ui/Segment style/basic [NuvlaBoxesOrClusters]]
-   [AddModalWrapper]])
+   [AddModalWrapper]
+   [BulkUpdateModal]])

@@ -85,9 +85,21 @@
     (::spec/state-nuvlaboxes db)))
 
 (reg-sub
+  ::opened-modal
+  (fn [db]
+    (::spec/open-modal db)))
+
+(reg-sub
   ::modal-visible?
-  (fn [db [_ modal-id]]
-    (= modal-id (::spec/open-modal db))))
+  :<- [::opened-modal]
+  (fn [opened-modal [_ modal-id]]
+    (= modal-id opened-modal)))
+
+(reg-sub
+  ::bulk-modal-visible?
+  :<- [::opened-modal]
+  (fn [opened-modal]
+    (boolean ((set spec/tags-modal-ids) opened-modal))))
 
 (reg-sub
   ::nuvlabox-created-id
@@ -192,9 +204,9 @@
 
 (reg-sub
   ::selected-count
-  (fn [_ [_ db-path]]
-    [(subscribe ::table-plugin/selected-set-sub db-path)
-     (subscribe ::table-plugin/select-all?-sub db-path)
-     (subscribe ::nuvlaboxes-count)])
+  (fn []
+    [(subscribe [::table-plugin/selected-set-sub [::spec/select]])
+     (subscribe [::table-plugin/select-all?-sub [::spec/select]])
+     (subscribe [::nuvlaboxes-count])])
   (fn [[selected-set selected-all? total-count]]
     (if selected-all? total-count (count selected-set))))

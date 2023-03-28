@@ -145,13 +145,13 @@
     (let [selected-set (get-in-db db db-path ::selected-set #{})
           select-all?  (get-in-db db db-path ::select-all?)
           new-set      (cond select-all?
-                         (disj (set resources) id)
+                             (disj (set resources) id)
 
-                         (is-selected? selected-set id)
-                         (disj selected-set id)
+                             (is-selected? selected-set id)
+                             (disj selected-set id)
 
-                         :else
-                         (conj selected-set id))]
+                             :else
+                             (conj selected-set id))]
       (-> db
           (assoc-in (conj (or db-path []) ::selected-set) new-set)
           (assoc-in (conj (or db-path []) ::select-all?) false)))))
@@ -207,6 +207,7 @@
 (reg-sub
  ::selection-status
  (fn [[_ db-path resources-sub-key]]
+   (js/console.error "selection-status" db-path)
    [(subscribe [::selected-set-sub db-path])
     (subscribe [::select-all?-sub db-path])
     (subscribe [::is-all-page-selected? db-path resources-sub-key])
@@ -241,10 +242,10 @@
 (defn CellCeckbox
   [{:keys [id selected-all-sub selected-set-sub db-path resources-sub-key]}]
   (let [resources (subscribe resources-sub-key)]
-    [ui/Checkbox {:checked  (or @selected-all-sub (is-selected? @selected-set-sub id))
-                  :on-click (fn [event]
-                              (dispatch [::select-id id db-path (map :id resources)])
-                              (.stopPropagation event))}]))
+    [ui/TableCell {:on-click (fn [event]
+                               (dispatch [::select-id id db-path (map :id @resources)])
+                               (.stopPropagation event))}
+     [ui/Checkbox {:checked  (or @selected-all-sub (is-selected? @selected-set-sub id))}]]))
 
 
 (defn HeaderCellCeckbox
@@ -395,6 +396,7 @@
         [ui/TableRow
          (when selectable?
            [ui/TableHeaderCell
+            {:style {:width "30px"}}
             [HeaderCellCeckbox {:db-path select-db-path :resources-sub-key resources-sub-key
                                 :page-selected?-sub page-selected?}]])
          (for [col columns
@@ -428,8 +430,8 @@
              ^{:key id}
              [ui/TableRow (get-row-props row)
               (when selectable?
-                [ui/TableCell [CellCeckbox {:id id :selected-set-sub selected-set :db-path select-db-path
-                                            :selected-all-sub select-all? :resources-sub-key resources-sub-key}]])
+                [CellCeckbox {:id id :selected-set-sub selected-set :db-path select-db-path
+                              :selected-all-sub select-all? :resources-sub-key resources-sub-key}])
               [row-render row]]
              :else
              ^{:key id}

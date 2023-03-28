@@ -54,6 +54,15 @@
 
 (def view-types [cards-view table-view map-view cluster-view])
 
+(def modal-add-id ::add)
+(def modal-tags-set-id ::tags-set)
+(def modal-tags-add-id ::tags-add)
+(def modal-tags-remove-id ::tags-remove)
+
+(def tags-modal-ids [modal-tags-add-id modal-tags-remove-id modal-tags-set-id ])
+
+
+
 (def defaults
   {::nuvlaboxes                    nil
    ::next-heartbeats-offline-edges nil

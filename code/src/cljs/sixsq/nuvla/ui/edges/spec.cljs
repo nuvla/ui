@@ -25,6 +25,8 @@
 (s/def ::state-selector #{"all" "new" "activated" "commissioned"
                           "decommissioning" "decommissioned" "error"})
 (s/def ::vpn-infra any?)
+(s/def ::edges-tags (s/nilable (s/* string?)))
+(s/def ::select (s/nilable any?))
 
 ; ssh key association
 (s/def ::ssh-keys-available any?)
@@ -53,6 +55,7 @@
 (def cluster-view :cluster)
 
 (def view-types [cards-view table-view map-view cluster-view])
+
 
 (def modal-add-id ::add)
 (def modal-tags-set-id ::tags-set)

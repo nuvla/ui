@@ -34,6 +34,11 @@
   (fn [nuvlaboxes]
     (get nuvlaboxes :count 0)))
 
+(reg-sub
+  ::edges-tags
+  (fn [db]
+    (::spec/edges-tags db)))
+
 
 (reg-sub
   ::edges-status

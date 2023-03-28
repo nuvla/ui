@@ -15,7 +15,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.plugins.table :refer [Table] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -803,33 +803,44 @@
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         selected-count   (subscribe [::subs/selected-count ::spec/select])
+        select-all?      (subscribe [::table-plugin/select-all?-sub [::spec/select]])
+        selected-set     (subscribe [::table-plugin/selected-set-sub [::spec/select]])
         opened-modal     (subscribe [::subs/opened-modal])
         open?            (subscribe [::subs/bulk-modal-visible?])
-        close-fn         (fn [] (dispatch [::events/open-modal nil]))
-        ]
+        used-tags        (subscribe [::subs/edges-tags])]
     (fn []
-      [ui/Modal {:open       @open?
-                 :close-icon true
-                 :on-close   close-fn}
-       [uix/ModalHeader {:header (@tr [:bulk-deployment-update])}]
-       [ui/ModalContent
-        [ui/Form
-         [:div {:style {:display :flex
-                        :gap     "1.5rem"}}
-          (doall (for [edit-mode spec/tags-modal-ids]
-                   ^{:key edit-mode}
-                   [TagsEditModeRadio edit-mode @opened-modal]))]
-         [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
-                    " "
-                    @selected-count
-                    " "
-                    (@tr [(if (= @selected-count 1) :edge :edges)]))]
-         ]]
-       [ui/ModalActions
-        [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
-                     :positive true
-                     :active   true
-                     :on-click close-fn}]]])))
+      (let [form-tags (r/atom @used-tags)
+            close-fn      (fn []
+
+                           (dispatch [::events/open-modal nil]))]
+        [ui/Modal {:open       @open?
+                   :close-icon true
+                   :on-close   close-fn}
+         [uix/ModalHeader {:header (@tr [:bulk-deployment-update])}]
+         [ui/ModalContent
+          [ui/Form
+           [:div {:style {:display :flex
+                          :gap     "1.5rem"}}
+            (doall (for [edit-mode spec/tags-modal-ids]
+                     ^{:key edit-mode}
+                     [TagsEditModeRadio edit-mode @opened-modal]))]
+           [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
+                      " "
+                      @selected-count
+                      " "
+                      (@tr [(if (= @selected-count 1) :edge :edges)]))]
+           [components/TagsDropdown {:initial-options @used-tags
+                                     :on-change-fn (fn [tags] (reset! form-tags tags))}]]]
+         [ui/ModalActions
+          [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
+                       :positive true
+                       :active   true
+                       :on-click (fn [] (dispatch [::events/update-tags
+                                                   @opened-modal
+                                                   {:tags         @form-tags
+                                                    :select-all?  @select-all?
+                                                    :selected-set @selected-set
+                                                    :call-back-fn close-fn}]))}]]]))))
 
 (defn NuvlaboxTable
   []
@@ -870,10 +881,13 @@
             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
             :row-props         {:role  "link"
                                 :style {:cursor "pointer"}}
-            :select-config      {:bulk-actions [{:name "Edit Tags" :event [::events/open-modal spec/modal-tags-add-id]}]
-                                :total-count-sub-key [::subs/nuvlaboxes-count]
-                                :resources-sub-key [::subs/nuvlaboxes-resources]
-                                :select-db-path [::spec/select]}}]))
+            :select-config      {:bulk-actions [{:name "Edit Tags"
+                                                 :event (fn []
+                                                          (dispatch [::events/get-edges-tags])
+                                                          (dispatch [::events/open-modal spec/modal-tags-add-id]))}]
+                                 :total-count-sub-key [::subs/nuvlaboxes-count]
+                                 :resources-sub-key [::subs/nuvlaboxes-resources]
+                                 :select-db-path [::spec/select]}}]))
 
 
 (defn NuvlaboxMapPoint

@@ -203,11 +203,9 @@
   (fn [[selected-set resources]]
     (set/intersection selected-set (visible-ids resources))))
 
-
 (reg-sub
  ::selection-status
  (fn [[_ db-path resources-sub-key]]
-   (js/console.error "selection-status" db-path)
    [(subscribe [::selected-set-sub db-path])
     (subscribe [::select-all?-sub db-path])
     (subscribe [::is-all-page-selected? db-path resources-sub-key])

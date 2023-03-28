@@ -97,6 +97,15 @@
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
+;; TODO: USE THIS
+(defn- get-full-filter-string
+  [{:keys [::spec/state-selector
+           ::spec/additional-filter] :as db}]
+  (general-utils/join-and
+   (when state-selector (utils/state-filter state-selector))
+   additional-filter
+   (full-text-search-plugin/filter-text
+    db [::spec/edges-search])))
 
 (reg-event-fx
   ::get-nuvlaboxes
@@ -108,14 +117,77 @@
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)
               :filter  (general-utils/join-and
-                         (when state-selector (utils/state-filter state-selector))
-                         additional-filter
-                         (full-text-search-plugin/filter-text
-                           db [::spec/edges-search]))}
+                        (when state-selector (utils/state-filter state-selector))
+                        additional-filter
+                        (full-text-search-plugin/filter-text
+                         db [::spec/edges-search]))}
              (pagination-plugin/first-last-params
-               db [::spec/pagination]))
+              db [::spec/pagination]))
         #(dispatch [::set-nuvlaboxes %])]})))
 
+(reg-event-fx
+ ::get-edges-tags
+ (fn [_ _]
+   {::cimi-api-fx/search
+    [:nuvlabox
+     {:select "tags"}
+     (fn [response]
+        (dispatch [::set-edges-tags (->> response :resources (mapcat :tags) distinct)]))]}))
+
+(reg-event-db
+  ::set-edges-tags
+  (fn [db [_ tags]]
+    (assoc db ::spec/edges-tags tags)))
+
+;; TODO: STATE FILTER
+(def ^:const STARTING "STARTING")
+(defn state-filter
+  [state]
+  (if (= state STARTING)
+    "state='RUNNING' or state='PENDING' or state='CREATED'"
+    (str "state='" state "'")))
+
+(defn get-filter-param
+  [{:keys [full-text-search additional-filter state-selector filter-external]
+    :as   _args}]
+  (let [filter-state (when state-selector (state-filter state-selector))]
+    (general-utils/join-and
+      "id!=null"
+      filter-state
+      filter-external
+      full-text-search
+      additional-filter)))
+;; TODO: CLEANUP
+(defn build-bulk-filter
+  ([{:keys [::spec/additional-filter
+            ::spec/state-selector] :as db}
+    {:keys [selected-set select-all?]}]
+   (if select-all?
+     (get-filter-param
+      {:full-text-search  (full-text-search-plugin/filter-text
+                           db [::spec/edges-search])
+       :additional-filter additional-filter
+       :state-selector    (when-not (= "all" state-selector) state-selector)
+       :module-id         nil})
+     (->> selected-set
+          (map #(str "id='" % "'"))
+          (apply general-utils/join-or)))))
+
+(reg-event-fx
+  ::update-tags
+  (fn [{db :db} [_ edit-mode {:keys [select-all? selected-set tags call-back-fn]}]]
+    (let [edit-mode->operation {spec/modal-tags-add-id    "add-tags"
+                                spec/modal-tags-remove-id "remove-tags"
+                                spec/modal-tags-set-id    "set-tags"}
+          filter                (build-bulk-filter db {:select-all? select-all? :selected-set selected-set})]
+      {::cimi-api-fx/operation-bulk [:nuvlabox
+                                     (fn []
+                                       ;; FIX ME: WHY?
+                                       (js/setTimeout #(dispatch [::get-nuvlaboxes]) 1000)
+                                       (when (fn? call-back-fn) (call-back-fn)))
+                                     (edit-mode->operation edit-mode)
+                                     filter
+                                     {:filter filter :doc {:tags tags}}]})))
 
 (reg-event-fx
   ::set-additional-filter

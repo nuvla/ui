@@ -276,11 +276,13 @@
           ff/nbsp
           [Pencil editing?]])])))
 
-(defn- TagsDropdown [tags]
+(defn TagsDropdown
+  [{:keys [tags]}]
   (let [tr            (subscribe [::i18n-subs/tr])
         value-options (r/atom tags)]
-    (fn [_tags on-change-fn]
-      (let [options (map (fn [v] {:key v :text v :value v}) (distinct (concat tags @value-options)))]
+    (fn [{:keys [on-change-fn initial-options]}]
+      (let [options (map (fn [v] {:key v :text v :value v})
+                         (distinct (concat (or initial-options tags) @value-options)))]
         [ui/Dropdown {:selection        true
                       :placeholder      (@tr [:type-to-add-tags])
                       :default-value    tags
@@ -291,8 +293,7 @@
                       :search           true
                       :noResultsMessage (@tr [:type-to-add-new-tag])
                       :multiple         true
-                      :on-change        (ui-callback/value #(do
-                                                              (on-change-fn %)))
+                      :on-change        (ui-callback/value (fn [v] (on-change-fn v)))
                       :on-add-item      (ui-callback/value
                                          (fn [value] (reset! value-options (conj @value-options value))))
                       :options          options
@@ -317,7 +318,7 @@
     (fn [{:keys [tags] :as _element} on-change-fn]
       (if @editing?
         [:div {:style {:align-items "center"}}
-         [TagsDropdown tags on-change-fn]
+         [TagsDropdown {:tags tags :on-change-fn on-change-fn}]
          [ui/Button {:icon     "check"
                      :on-click #(reset! editing? false)}]]
         [ui/LabelGroup {:size  "tiny"

@@ -182,10 +182,11 @@
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         options     (subscribe [::subs/collection-dropdown-options])
-        selected-id (subscribe [::subs/collection-name])]
+        selected-id (subscribe [::subs/collection-name])
+        query-param (subscribe [::route-subs/nav-query-params])]
     (fn []
       (let [callback #(dispatch [::routing-events/navigate
-                                 routes/api-sub-page {:sub-path %}])]
+                                 routes/api-sub-page {:sub-path %} @query-param])]
         [ui/FormDropdown
          {:aria-label           (@tr [:resource-type])
           :style                {:max-width 250}
@@ -209,97 +210,105 @@
      [uix/Icon {:name (:icon documentation-page)}]
      (tr [(:label-kw documentation-page)])]))
 
-(defn search-header []
+
+(def search-header-fields [{:k         :first
+                            :label     :first
+                            :tab-index 2
+                            :type      "number"
+                            :min       0
+                            :event     ::events/set-first
+                            :cols      "1/3"}
+                           {:label     :last
+                            :k         :last
+                            :tab-index 3
+                            :type      "number"
+                            :min       0
+                            :max       10000
+                            :event     ::events/set-last
+                            :cols      "3/5"}
+                           {:label       :select
+                            :k           :select
+                            :tab-index   4
+                            :type        "text"
+                            :placeholder "e.g. id, endpoint, ..."
+                            :event       ::events/set-select
+                            :cols        "5/7"}
+                           {:label       :order
+                            :k           :orderby
+                            :tab-index   5
+                            :type        "text"
+                            :placeholder "e.g. created:desc, ..."
+                            :event       ::events/set-orderby
+                            :cols        "1/4"}
+                           {:label       :aggregation
+                            :k           :aggregation
+                            :tab-index   6
+                            :type        "text"
+                            :placeholder "e.g. min:resource:vcpu, ..."
+                            :event       ::events/set-aggregation
+                            :cols        "4/7"}])
+
+(defn SearchField
+  [{:keys [k label tab-index min max event type placeholder cols]}]
+  (let [tr    @(subscribe [::i18n-subs/tr])
+        value @(subscribe [::subs/query-param k])]
+    [ui/FormField
+     {:style {:grid-column cols}}
+     [ui/Input
+      {:class "labeled"}
+      [ui/Label (tr [label])]
+      [:input {:aria-label    (tr [label])
+               :tab-index     tab-index
+               :type          type
+               :min           min
+               :max           max
+               :default-value value
+               :placeholder   placeholder
+               :on-change     (ui-callback/input event)}]]]))
+
+(defn FilterField
+  []
   (let [tr           (subscribe [::i18n-subs/tr])
-        query-params (subscribe [::subs/query-params])
         selected-id  (subscribe [::subs/collection-name])
+        value        (subscribe [::subs/query-param :filter])
         filter-open? (r/atom false)]
     (fn []
-      ;; reset visible values of parameters
-      (let [{$filter      :filter,
-             $first       :first,
-             $last        :last,
-             $select      :select,
-             $aggregation :aggregation,
-             $orderby     :orderby} @query-params]
-        [ui/Form {:aria-label  "filter parameters"
-                  :on-key-press (partial forms/on-return-key
-                                  #(when @selected-id
-                                     (dispatch [::events/get-results])))}
-         [CollectionSelector]
-         [ui/FormGroup {:widths "equal"}
-          [ui/FormField
-           ; the key below is a workaround react issue with controlled input cursor position,
-           ; this will force to re-render defaultValue on change of the value
-           ^{:key (str "first:" $first)}
-           [ui/Input {:aria-label   (@tr [:first])
-                      :tab-index    2
-                      :type         "number"
-                      :min          0
-                      :label        (@tr [:first])
-                      :defaultValue $first
-                      :on-blur      (ui-callback/input ::events/set-first)}]]
+      [ui/FormField
+       {:style {:grid-column "1/7"}}
+       [ui/Input
+        {:class  "labeled"
+         :action true}
+        [ui/Label (@tr [:filter])]
+        [:input {:aria-label  (@tr [:filter])
+                 :tab-index   7
+                 :type        "text"
+                 :placeholder "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
+                 :value       @value
+                 :on-change   (ui-callback/input ::events/set-filter)}]
+        [filter-comp/ButtonFilter
+         {:key            @value
+          :resource-name  @selected-id
+          :default-filter @value
+          :disabled?      (nil? @selected-id)
+          :open?          filter-open?
+          :on-done        #(dispatch [::events/set-filter % [::events/persist-cimi-filter]])
+          :persist?       false}]]])))
 
-          [ui/FormField
-           ^{:key (str "last:" $last)}
-           [ui/Input {:aria-label   (@tr [:last])
-                      :tab-index    3
-                      :type         "number"
-                      :min          0
-                      :label        (@tr [:last])
-                      :defaultValue $last
-                      :on-blur      (ui-callback/input ::events/set-last)}]]
-
-          [ui/FormField
-           ^{:key (str "select:" $select)}
-           [ui/Input {:aria-label   (@tr [:select])
-                      :tab-index    4
-                      :type         "text"
-                      :label        (@tr [:select])
-                      :defaultValue $select
-                      :placeholder  "e.g. id, endpoint, ..."
-                      :on-blur      (ui-callback/input ::events/set-select)}]]]
-
-         [ui/FormGroup {:widths "equal"}
-          [ui/FormField
-           ^{:key (str "orderby:" $orderby)}
-           [ui/Input {:aria-label   (@tr [:order])
-                      :tab-index    5
-                      :type         "text"
-                      :label        (@tr [:order])
-                      :defaultValue $orderby
-                      :placeholder  "e.g. created:desc, ..."
-                      :on-blur      (ui-callback/input ::events/set-orderby)}]]
-
-          [ui/FormField
-           ^{:key (str "aggregation:" $aggregation)}
-           [ui/Input {:aria-label   (@tr [:aggregation])
-                      :tab-index    6
-                      :type         "text"
-                      :label        (@tr [:aggregation])
-                      :defaultValue $aggregation
-                      :placeholder  "e.g. min:resource:vcpu, ..."
-                      :on-blur      (ui-callback/input ::events/set-aggregation)}]]]
-
-         [ui/FormField
-          ^{:key (str "filter:" $filter)}
-          [ui/Input
-           {:class  "labeled"
-            :action true}
-           [ui/Label (@tr [:filter])]
-           [:input {:aria-label   (@tr [:filter])
-                    :tab-index    7
-                    :type         "text"
-                    :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
-                    :defaultValue $filter
-                    :on-blur      (ui-callback/input ::events/set-filter)}]
-           ^{:key (str "filter-composer-" @selected-id)}
-           [filter-comp/ButtonFilter
-            {:resource-name  @selected-id
-             :default-filter $filter
-             :disabled?      (nil? @selected-id)
-             :open?          filter-open?
-             :on-done        #(dispatch [::events/set-filter %])}]]]]))))
+(defn search-header []
+  (let [selected-id (subscribe [::subs/collection-name])]
+    (fn []
+      [ui/Form {:aria-label   "filter parameters"
+                :on-key-press (partial forms/on-return-key
+                                       #(when @selected-id
+                                          (dispatch [::events/get-results])))
+                :on-change    #(dispatch [::events/persist-cimi-filter])}
+       [CollectionSelector]
+       [ui/FormGroup {:class :cimi-filter-search-header}
+        (for [{:keys [k] :as field}
+              search-header-fields]
+          ^{:key k}
+          [SearchField field])
+        [FilterField]]])))
 
 
 (defn format-field-item [selections-atom item]

@@ -5,7 +5,8 @@
             [sixsq.nuvla.ui.cimi.utils :as utils]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.routing.events :as route-events]))
 
 
 (reg-event-db
@@ -20,10 +21,11 @@
     (update db ::spec/query-params merge {:last last-value})))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-filter
-  (fn [db [_ filter-value]]
-    (update db ::spec/query-params merge {:filter filter-value})))
+  (fn [{db :db} [_ filter-value event]]
+    {:db (update db ::spec/query-params merge {:filter filter-value})
+     :fx (when event [[:dispatch event]])}))
 
 
 (reg-event-db
@@ -58,6 +60,12 @@
   ::set-aggregation
   (fn [db [_ aggregation-value]]
     (update db ::spec/query-params merge {:aggregation aggregation-value})))
+
+(reg-event-fx
+  ::persist-cimi-filter
+  (fn [{{:keys [::spec/query-params]} :db}]
+    {:fx [[:dispatch [::route-events/change-query-param {:query-params query-params
+                                                         :push-state?  false}]]]}))
 
 
 (reg-event-fx

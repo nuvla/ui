@@ -803,8 +803,6 @@
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         selected-count   (subscribe [::subs/selected-count ::spec/select])
-        select-all?      (subscribe [::table-plugin/select-all?-sub [::spec/select]])
-        selected-set     (subscribe [::table-plugin/selected-set-sub [::spec/select]])
         opened-modal     (subscribe [::subs/opened-modal])
         open?            (subscribe [::subs/bulk-modal-visible?])
         used-tags        (subscribe [::subs/edges-tags])]
@@ -838,8 +836,6 @@
                        :on-click (fn [] (dispatch [::events/update-tags
                                                    @opened-modal
                                                    {:tags         @form-tags
-                                                    :select-all?  @select-all?
-                                                    :selected-set @selected-set
                                                     :call-back-fn close-fn}]))}]]]))))
 
 (defn NuvlaboxTable

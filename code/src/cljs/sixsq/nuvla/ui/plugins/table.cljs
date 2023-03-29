@@ -6,6 +6,7 @@
                                    subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -109,6 +110,13 @@
 (s/def ::selection-status #{:all :page
                             :some :none})
 
+(defn build-bulk-filter
+  [{:keys [::select-all? ::selected-set]} filter-string]
+  (if select-all?
+    filter-string
+    (->> selected-set
+         (map #(str "id='" % "'"))
+         (apply general-utils/join-or))))
 
 (defn- all-page-selected?
   [selected-set visible-deps-ids-set]

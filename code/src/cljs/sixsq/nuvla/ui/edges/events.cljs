@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param]]
@@ -109,18 +110,12 @@
 
 (reg-event-fx
   ::get-nuvlaboxes
-  (fn [{{:keys [::spec/state-selector
-                ::spec/ordering
-                ::spec/additional-filter] :as db} :db} _]
+  (fn [{{:keys [::spec/ordering] :as db} :db} _]
     (let [ordering (or ordering spec/default-ordering)]
       {::cimi-api-fx/search
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)
-              :filter  (general-utils/join-and
-                        (when state-selector (utils/state-filter state-selector))
-                        additional-filter
-                        (full-text-search-plugin/filter-text
-                         db [::spec/edges-search]))}
+              :filter  (get-full-filter-string db)}
              (pagination-plugin/first-last-params
               db [::spec/pagination]))
         #(dispatch [::set-nuvlaboxes %])]})))
@@ -139,54 +134,26 @@
   (fn [db [_ tags]]
     (assoc db ::spec/edges-tags tags)))
 
-;; TODO: STATE FILTER
-(def ^:const STARTING "STARTING")
-(defn state-filter
-  [state]
-  (if (= state STARTING)
-    "state='RUNNING' or state='PENDING' or state='CREATED'"
-    (str "state='" state "'")))
-
-(defn get-filter-param
-  [{:keys [full-text-search additional-filter state-selector filter-external]
-    :as   _args}]
-  (let [filter-state (when state-selector (state-filter state-selector))]
-    (general-utils/join-and
-      "id!=null"
-      filter-state
-      filter-external
-      full-text-search
-      additional-filter)))
-;; TODO: CLEANUP
-(defn build-bulk-filter
-  ([{:keys [::spec/additional-filter
-            ::spec/state-selector] :as db}
-    {:keys [selected-set select-all?]}]
-   (if select-all?
-     (get-filter-param
-      {:full-text-search  (full-text-search-plugin/filter-text
-                           db [::spec/edges-search])
-       :additional-filter additional-filter
-       :state-selector    (when-not (= "all" state-selector) state-selector)
-       :module-id         nil})
-     (->> selected-set
-          (map #(str "id='" % "'"))
-          (apply general-utils/join-or)))))
 
 (reg-event-fx
   ::update-tags
-  (fn [{db :db} [_ edit-mode {:keys [select-all? selected-set tags call-back-fn]}]]
+  (fn [{{:keys [::spec/select] :as db} :db }
+       [_ edit-mode {:keys [tags call-back-fn]}]]
+    (js/console.error "select " select)
     (let [edit-mode->operation {spec/modal-tags-add-id    "add-tags"
                                 spec/modal-tags-remove-id "remove-tags"
                                 spec/modal-tags-set-id    "set-tags"}
-          filter                (build-bulk-filter db {:select-all? select-all? :selected-set selected-set})]
+          filter                (table-plugin/build-bulk-filter select (get-full-filter-string db))]
       {::cimi-api-fx/operation-bulk [:nuvlabox
-                                     (fn []
+                                     (fn [response]
+                                       (js/console.error response)
                                        ;; FIX ME: WHY?
-                                       (js/setTimeout #(dispatch [::get-nuvlaboxes]) 1000)
+                                      ;;  (js/setTimeout
+                                       (dispatch [::get-nuvlaboxes])
+                                        ;; 100)
                                        (when (fn? call-back-fn) (call-back-fn)))
                                      (edit-mode->operation edit-mode)
-                                     filter
+                                     nil
                                      {:filter filter :doc {:tags tags}}]})))
 
 (reg-event-fx
@@ -207,9 +174,10 @@
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
-      {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                     ::main-spec/loading? false)
-       :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
+      (do (tap> ["set-nuvlaboxes response" nuvlaboxes])
+          {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
+                      ::main-spec/loading? false)
+           :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]}))))
 
 
 (reg-event-fx

@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub
                                    subscribe]]
+            [reagent.core :as r]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -102,10 +103,11 @@
                                                 :opt-un [::component ::icon])))
 
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
-
 (s/def ::select-db-path (s/* keyword?))
+(s/def ::rights-needed keyword?)
 (s/def ::select-config (s/nilable (s/keys :req-un [::bulk-actions ::select-db-path
-                                                    ::total-count-sub-key ::resources-sub-key])))
+                                                   ::total-count-sub-key ::resources-sub-key]
+                                          :opt-un [::rights-needed ])))
 
 (s/def ::selection-status #{:all :page
                             :some :none})
@@ -141,9 +143,14 @@
  (fn [{db :db} [_ {:keys [resources db-path]}]]
     (let [selected-set       (get-in-db db db-path ::selected-set #{})
           visible-dep-ids    (visible-ids resources)
-          all-page-selected? (all-page-selected? selected-set visible-dep-ids)]
+          all-page-selected? (all-page-selected? selected-set visible-dep-ids)
+          new-selected-set   (if all-page-selected?
+                               (set/difference selected-set
+                                               visible-dep-ids)
+                               (set/union visible-dep-ids
+                                          selected-set))]
       {:db (-> db
-               (assoc-in (conj (or db-path []) ::selected-set) (if all-page-selected? #{} visible-dep-ids))
+               (assoc-in (conj (or db-path []) ::selected-set) new-selected-set)
                (assoc-in (conj (or db-path []) ::select-all?) false))})))
 
 
@@ -246,12 +253,14 @@
        :none))))
 
 (defn CellCeckbox
-  [{:keys [id selected-all-sub selected-set-sub db-path resources-sub-key]}]
+  [{:keys [can-edit? id selected-all-sub selected-set-sub db-path resources-sub-key]}]
   (let [resources (subscribe resources-sub-key)]
     [ui/TableCell {:on-click (fn [event]
-                               (dispatch [::select-id id db-path (map :id @resources)])
-                               (.stopPropagation event))}
-     [ui/Checkbox {:checked  (or @selected-all-sub (is-selected? @selected-set-sub id))}]]))
+                               (when can-edit?
+                                 (dispatch [::select-id id db-path (map :id @resources)])
+                                 (.stopPropagation event)))}
+     (when can-edit?
+       [ui/Checkbox {:checked  (or @selected-all-sub (is-selected? @selected-set-sub id))}])]))
 
 
 (defn HeaderCellCeckbox
@@ -262,7 +271,7 @@
 
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub
-           db-path bulk-actions resources-sub-key]}]
+           db-path bulk-actions resources-sub-key selectable? resource-type]}]
   (let [tr                          (subscribe [::i18n-subs/tr])
         rows                        @(subscribe resources-sub-key)
         total-count                 (subscribe total-count-sub-key)
@@ -277,7 +286,8 @@
                                                      (@tr [:on-other-pages])]))
         selected-all-text           (when (= :all @selection-status)
                                       (str/join " " [(str/capitalize (@tr [:all]))
-                                                     (@tr [:deployments])
+                                                     @total-count
+                                                     (@tr [(or resource-type :items)])
                                                      (@tr [:are-selected])
                                                      (when off-page-selection-text
                                                        (str "(" off-page-selection-text ")"))]))
@@ -285,9 +295,9 @@
         manual-selection-text       (str/join " " [(when (#{:all :page :page-plus} @selection-status)
                                                      (str/capitalize (@tr [:all])))
                                                    (when on-page-selection?
-                                                     (str (count @selected-set-sub)
+                                                     (str on-page-selected
                                                           " "
-                                                          (@tr [:deployments])
+                                                          (@tr [(or resource-type :items)])
                                                           " "
                                                           (@tr [:on-this-page])
                                                           " "
@@ -305,7 +315,7 @@
      {:style {:height "2.5rem"
               :background-color "#f9fafb"
               :margin-bottom "0.5rem"}
-      :class [:ui :table (if (= :none @selection-status) :invisible :visible)]}
+      :class [:ui :table (if selectable? :visible :invisible)]}
      [:div {:style {:display :flex
                     :align-items :center
                     :max-width "1040px"
@@ -315,26 +325,34 @@
                     :gap "1rem"}}
       [:div
        {:style {:display :flex :align-items :center}}
-       [ui/Dropdown {:item     true :text (@tr [:bulk-action])
-                     :icon     "ellipsis vertical"}
-        [ui/DropdownMenu
-         (for [action bulk-actions
-               :let [{:keys [component name event icon]} action]]
-           (if component
-             [ui/DropdownItem
-              icon
-              [component]]
-             [ui/DropdownItem
-              {:on-click (fn []
-                           (if (fn? event) (event payload)
-                               (dispatch event)))}
-              icon
-              name]))]]]
+       [ui/Popup {:trigger
+                  (r/as-element
+                   [:div [ui/Dropdown {:disabled (= :none @selection-status)
+                                       :item     true
+                                       :text     (@tr [:bulk-action])
+                                       :icon     "ellipsis vertical"}
+                          [ui/DropdownMenu
+                           (for [action bulk-actions
+                                 :let [{:keys [component name event icon]} action]]
+                             (if component
+                               [ui/DropdownItem
+                                icon
+                                [component]]
+                               [ui/DropdownItem
+                                {:on-click (fn []
+                                             (if (fn? event) (event payload)
+                                                 (dispatch event)))}
+                                icon
+                                name]))]]])
+                  :basic    true
+                  :disabled (not= :none @selection-status)
+                  :content  (@tr [:select-at-least-one-item])}]]
       [:div
+       {:class (if (= :none @selection-status) :invisible :visible)}
        [:span (or selected-all-text manual-selection-text)]]
-      [:button {:style {:width "140px" :text-align :center}
+      [:button {:style {:width "130px" :text-align :center}
                 :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
-                :class :select-all}
+                :class [{:class (if (= :none @selection-status) :invisible :visible)} :select-all]}
        (str button-text)]]]))
 
 
@@ -377,24 +395,27 @@
            row-click-handler row-props row-render
            sort-config select-config]
     :as   props}]
-  (let [{:keys [bulk-actions select-db-path total-count-sub-key resources-sub-key]} select-config
+  (let [{:keys [bulk-actions select-db-path total-count-sub-key resources-sub-key rights-needed]} select-config
         tr             @(subscribe [::i18n-subs/tr])
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
-        selectable?    (and select-config (s/valid? ::select-config select-config))
+        selectable?    (and select-config (s/valid? ::select-config select-config)
+                            (or (not rights-needed)
+                                (some (partial general-utils/can-operation? rights-needed) rows)))
         selected-set   (subscribe [::selected-set-sub select-db-path])
         select-all?    (subscribe [::select-all?-sub select-db-path])
         page-selected? (subscribe [::is-all-page-selected? select-db-path resources-sub-key])
         get-row-props  (fn [row] (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
 
     [:div
-     (when selectable? [BulkActionBar {:selected-all-sub    select-all?
-                                       :selected-set-sub    selected-set
-                                       :page-selected?-sub  page-selected?
-                                       :total-count-sub-key total-count-sub-key
-                                       :rows                rows
-                                       :db-path             select-db-path
-                                       :bulk-actions        bulk-actions
-                                       :resources-sub-key   resources-sub-key}])
+     [BulkActionBar {:selectable?         selectable?
+                     :selected-all-sub    select-all?
+                     :selected-set-sub    selected-set
+                     :page-selected?-sub  page-selected?
+                     :total-count-sub-key total-count-sub-key
+                     :rows                rows
+                     :db-path             select-db-path
+                     :bulk-actions        bulk-actions
+                     :resources-sub-key   resources-sub-key}]
      [:div {:style {:overflow :auto
                     :padding 0}}
       [ui/Table (:table-props props)
@@ -436,7 +457,10 @@
              ^{:key id}
              [ui/TableRow (get-row-props row)
               (when selectable?
-                [CellCeckbox {:id id :selected-set-sub selected-set :db-path select-db-path
+                [CellCeckbox {:can-edit? (if rights-needed
+                                           (general-utils/can-operation? rights-needed row)
+                                           true)
+                              :id id :selected-set-sub selected-set :db-path select-db-path
                               :selected-all-sub select-all? :resources-sub-key resources-sub-key}])
               [row-render row]]
              :else

@@ -782,10 +782,11 @@
 ;; 2a. descriptions texts for all of them, warning for SET -> DONE
 ;; 2b. message: only edges with edit rights will be edited
 ;; 2c. for message 2b: fetch edges with edit rights
-;; 3. UI form for adding tags
-;; 4. UI form for removing tags
-;; 5. UI form for setting tags
-;; 6. update/save events and displaying failures
+;; 3. UI form for adding tags -> DONE
+;; 4. UI form for removing tags -> DONE
+;; 5. UI form for setting tags -> DONE
+;; 6. update/save events and displaying failures -> DONE
+;; 7. STYLING OF UPDATE MODAL
 
 (defn- TagsEditModeRadio
   [edit-mode opened-modal]
@@ -883,7 +884,8 @@
                                                           (dispatch [::events/open-modal spec/modal-tags-add-id]))}]
                                  :total-count-sub-key [::subs/nuvlaboxes-count]
                                  :resources-sub-key [::subs/nuvlaboxes-resources]
-                                 :select-db-path [::spec/select]}}]))
+                                 :select-db-path [::spec/select]
+                                 :rights-needed :edit}}]))
 
 
 (defn NuvlaboxMapPoint

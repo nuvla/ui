@@ -147,10 +147,7 @@
       {::cimi-api-fx/operation-bulk [:nuvlabox
                                      (fn [response]
                                        (js/console.error response)
-                                       ;; FIX ME: WHY?
-                                      ;;  (js/setTimeout
                                        (dispatch [::get-nuvlaboxes])
-                                        ;; 100)
                                        (when (fn? call-back-fn) (call-back-fn)))
                                      (edit-mode->operation edit-mode)
                                      nil

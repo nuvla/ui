@@ -211,13 +211,13 @@
      (tr [(:label-kw documentation-page)])]))
 
 
-(def search-header-fields [{:k :first
-                            :label :first
+(def search-header-fields [{:k         :first
+                            :label     :first
                             :tab-index 2
-                            :type "number"
-                            :min 0
-                            :event ::events/set-first
-                            :cols "1/3"}
+                            :type      "number"
+                            :min       0
+                            :event     ::events/set-first
+                            :cols      "1/3"}
                            {:label     :last
                             :k         :last
                             :tab-index 3
@@ -248,56 +248,67 @@
                             :event       ::events/set-aggregation
                             :cols        "4/7"}])
 
-(defn search-header []
+(defn SearchField
+  [{:keys [k label tab-index min max event type placeholder cols]}]
+  (let [tr    @(subscribe [::i18n-subs/tr])
+        value @(subscribe [::subs/query-param k])]
+    [ui/FormField
+     {:style {:grid-column cols}}
+     [ui/Input
+      {:class "labeled"}
+      [ui/Label (tr [label])]
+      [:input {:aria-label    (tr [label])
+               :tab-index     tab-index
+               :type          type
+               :min           min
+               :max           max
+               :default-value value
+               :placeholder   placeholder
+               :on-change     (ui-callback/input event)}]]]))
+
+(defn FilterField
+  []
   (let [tr           (subscribe [::i18n-subs/tr])
-        query-params (subscribe [::subs/query-params])
         selected-id  (subscribe [::subs/collection-name])
+        value        (subscribe [::subs/query-param :filter])
         filter-open? (r/atom false)]
     (fn []
-      [ui/Form {:aria-label  "filter parameters"
+      [ui/FormField
+       {:style {:grid-column "1/7"}}
+       [ui/Input
+        {:class  "labeled"
+         :action true}
+        [ui/Label (@tr [:filter])]
+        [:input {:aria-label  (@tr [:filter])
+                 :tab-index   7
+                 :type        "text"
+                 :placeholder "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
+                 :value       @value
+                 :on-change   (ui-callback/input ::events/set-filter)}]
+        [filter-comp/ButtonFilter
+         {:key            @value
+          :resource-name  @selected-id
+          :default-filter @value
+          :disabled?      (nil? @selected-id)
+          :open?          filter-open?
+          :on-done        #(dispatch [::events/set-filter % [::events/persist-cimi-filter]])
+          :persist?       false}]]])))
+
+(defn search-header []
+  (let [selected-id (subscribe [::subs/collection-name])]
+    (fn []
+      [ui/Form {:aria-label   "filter parameters"
                 :on-key-press (partial forms/on-return-key
                                        #(when @selected-id
                                           (dispatch [::events/get-results])))
-                :on-change (fn [] (dispatch [::events/persist-cimi-filter]))}
+                :on-change    #(dispatch [::events/persist-cimi-filter])}
        [CollectionSelector]
        [ui/FormGroup {:class :cimi-filter-search-header}
-        (for [field search-header-fields
-              :let [{:keys [k label tab-index min max event type placeholder cols]} field]]
+        (for [{:keys [k] :as field}
+              search-header-fields]
           ^{:key k}
-          [ui/FormField
-           {:style {:grid-column cols}}
-           [ui/Input
-            {:class "labeled"}
-            [ui/Label (@tr [label])]
-            [:input {:aria-label   (@tr [label])
-                     :tab-index    tab-index
-                     :type         type
-                     :min          min
-                     :max          max
-                     :value        (k @query-params)
-                     :placeholder  placeholder
-                     :on-change    (ui-callback/input event)}]]])
-
-        [ui/FormField
-         {:style {:grid-column "1/7"}}
-         [ui/Input
-          {:class  "labeled"
-           :action true}
-          [ui/Label (@tr [:filter])]
-          [:input {:aria-label   (@tr [:filter])
-                   :tab-index    7
-                   :type         "text"
-                   :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
-                   :value        (:filter @query-params)
-                   :on-change    (ui-callback/input ::events/set-filter)}]
-          [filter-comp/ButtonFilter
-           {:key            (:filter @query-params)
-            :resource-name  @selected-id
-            :default-filter  (:filter @query-params)
-            :disabled?      (nil? @selected-id)
-            :open?          filter-open?
-            :on-done        (fn [v] (dispatch [::events/set-filter v [::events/persist-cimi-filter]]))
-            :persist?       false}]]]]])))
+          [SearchField field])
+        [FilterField]]])))
 
 
 (defn format-field-item [selections-atom item]

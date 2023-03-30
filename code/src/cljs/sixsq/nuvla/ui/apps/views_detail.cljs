@@ -21,8 +21,9 @@
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify str-pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -120,7 +121,7 @@
         {:keys [id name description]} module
         content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
     [uix/ModalDanger
-     {:on-confirm   (fn [] (dispatch [::events/delete-module id]))
+     {:on-confirm  (fn [] (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [ui/Icon {:name "trash"}]
                                   (str/capitalize (@tr [:delete]))])
@@ -171,6 +172,7 @@
         module-id        (subscribe [::subs/module-id-version])
         is-project?      (subscribe [::subs/is-project?])
         is-app?          (subscribe [::subs/is-app?])
+        is-apps-sets?    (subscribe [::subs/is-applications-sets?])
         can-copy?        (subscribe [::subs/can-copy?])
         paste-disabled?  (subscribe [::subs/paste-disabled?])
         deploy-disabled? (subscribe [::subs/deploy-disabled?])
@@ -192,8 +194,12 @@
             :icon     "rocket"
             :disabled @deploy-disabled?
             :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                  [::deployment-dialog-events/create-deployment
-                                   @module-id :infra-services]])}])
+                                  (if @is-apps-sets?
+                                    [::routing-events/navigate routes/deployment-sets-details {:uuid "New"}
+                                     {:applications-sets @module-id}]
+                                    [::deployment-dialog-events/create-deployment
+                                     @module-id :infra-services]
+                                    )])}])
 
         (when @is-project?
           [uix/MenuItem
@@ -365,17 +371,17 @@
                          :style   {:width "50px"}}]]]]
            (when config/debug?
              [ui/Card
-             {:href     (when parent (pathify [base-path "New Applications Sets?subtype=applications_sets"]))
-              :on-click (when parent
-                          #(dispatch [::events/close-add-modal]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Applications sets (preview)"]
-              [:div]
-              [ui/Icon {:name  "th large"
-                        :size  :massive
-                        :color (when-not parent :grey)}]]
+              {:href     (when parent (pathify [base-path "New Applications Sets?subtype=applications_sets"]))
+               :on-click (when parent
+                           #(dispatch [::events/close-add-modal]))}
+              [ui/CardContent {:text-align :center}
+               [ui/Header "Applications sets (preview)"]
+               [:div]
+               [ui/Icon {:name  "th large"
+                         :size  :massive
+                         :color (when-not parent :grey)}]]
 
-             ])]]]))))
+              ])]]]))))
 
 
 (defn paste-modal

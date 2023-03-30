@@ -41,6 +41,12 @@
     (= subtype utils/subtype-project)))
 
 (reg-sub
+  ::is-applications-sets?
+  :<- [::module-subtype]
+  (fn [subtype]
+    (= subtype utils/subtype-applications-sets)))
+
+(reg-sub
   ::is-app?
   :<- [::is-project?]
   :-> not)

@@ -13,17 +13,31 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
-
 
 (reg-event-fx
   ::new
-  (fn [{db :db}]
-    {:db (merge db spec/defaults)}))
+  (fn [{{:keys [current-route] :as db} :db}]
+    (let [id (routing-utils/get-query-param current-route :applications-sets)]
+      {:db               (merge db spec/defaults)
+       ::cimi-api-fx/get [id #(dispatch [::set-applications-sets %])]})))
+
+
+(reg-event-fx
+  ::set-applications-sets
+  (fn [{:keys [db]} [_ {:keys [subtype] :as module}]]
+    (if (= subtype apps-utils/subtype-applications-sets)
+      {:db (assoc db ::spec/applications-sets module)}
+      {:dispatch [::messages-events/add
+                  {:header  "Wrong module subtype"
+                   :content (str "Selected module subtype:" subtype)
+                   :type    :error}]})))
 
 (reg-event-fx
   ::set-deployment-set
@@ -65,7 +79,7 @@
   (fn [_ [_ id]]
     (when id
       {:fx [:dispatch [::deployments-events/get-deployments
-                       {:filter-external-arg (str "deployment-set='" id "'")
+                       {:filter-external-arg   (str "deployment-set='" id "'")
                         :external-filter-only? true}]]})))
 
 (reg-event-fx

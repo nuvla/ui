@@ -23,7 +23,8 @@
 (s/def ::create-start boolean?)
 
 (def defaults
-  {::deployment-set            nil
+  {::applications-sets         nil
+   ::deployment-set            nil
    ::deployment-set-not-found? false
    ::apps                      nil
    ::apps-selected             #{}

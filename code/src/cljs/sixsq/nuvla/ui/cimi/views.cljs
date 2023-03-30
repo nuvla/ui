@@ -24,26 +24,21 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
-
 (defn id-selector-formatter [entry]
   (let [v     (:id entry)
         label (second (str/split v #"/"))]
     [uix/Link (str "api/" v) label]))
 
-
-;; FIXME: Provide better visualization of non-string values.
 (defn field-selector
   [field]
   (let [ks (map keyword (str/split field #"/"))]
     (fn [m]
       (str (get-in m ks)))))
 
-
 (defn remove-column-fn
   [label]
   (fn []
     (dispatch [::events/remove-field label])))
-
 
 (defn table-header-cell
   [label]
@@ -57,9 +52,8 @@
                     :on-click (remove-column-fn label)}]
      " " label " "
      [uix/LinkIcon {:name     @sort-icon
-                    :on-click #(do (dispatch [::events/set-orderby next-direction])
+                    :on-click #(do (dispatch [::events/set-query-param :orderby next-direction])
                                    (dispatch [::events/get-results]))}]]))
-
 
 (defn results-table-header [selected-fields]
   (let [can-bulk-delete? (subscribe [::subs/can-bulk-delete?])]
@@ -72,13 +66,11 @@
         ^{:key selected-field}
         [table-header-cell selected-field])]]))
 
-
 (defn results-table-row-fn [selected-fields]
   (apply juxt (map (fn [selected-field] (if (= "id" selected-field)
                                           id-selector-formatter
                                           (field-selector selected-field)))
                    selected-fields)))
-
 
 (defn results-table-row [row-fn entry i]
   (let [can-bulk-delete? (subscribe [::subs/can-bulk-delete?])]
@@ -99,13 +91,11 @@
            ^{:key (str "row-" i "-cell-" j)}
            [ui/TableCell v])]))))
 
-
 (defn results-table-body [row-fn entries]
   [ui/TableBody
    (for [[i entry] (map-indexed vector entries)]
      ^{:key (str "row-" i)}
      [results-table-row row-fn entry i])])
-
 
 (defn results-table [selected-fields entries]
   (when (and (pos? (count entries))
@@ -122,8 +112,7 @@
         (results-table-header selected-fields)
         (results-table-body row-fn entries)]])))
 
-
-(defn statistic
+(defn Statistic
   [[value label :as data]]
   (when data
     ^{:key label}
@@ -132,7 +121,7 @@
      [ui/StatisticLabel label]]))
 
 
-(defn results-statistic
+(defn ResultsStatistic
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         resources (subscribe [::subs/collection])]
@@ -149,8 +138,7 @@
 (def tuple-fn (juxt (comp :value second)
                     (comp name first)))
 
-
-(defn aggregations-table
+(defn AggregationsTable
   []
   (let [aggregations (subscribe [::subs/aggregations])]
     (fn []
@@ -158,13 +146,14 @@
                        (remove (fn [[k _]] (str/starts-with? (str k) ":terms")))
                        (map tuple-fn)
                        (sort second)
-                       (map statistic)
+                       (map Statistic)
                        vec)]
         [ui/Segment style/basic
-         (vec (concat [ui/StatisticGroup {:size "tiny"}] [[results-statistic]] stats))]))))
+         (vec (concat [ui/StatisticGroup {:size "tiny"}] [[ResultsStatistic]] stats))]))))
 
 
-(defn results-display []
+(defn ResultsDisplay
+  []
   (let [collection      (subscribe [::subs/collection])
         selected-fields (subscribe [::subs/selected-fields])]
     (fn []
@@ -174,7 +163,7 @@
            [:pre (with-out-str (pprint (ex-data results)))]]
           (let [entries (get results :resources [])]
             [ui/Segment style/basic
-             [aggregations-table]
+             [AggregationsTable]
              [results-table @selected-fields entries]]))))))
 
 
@@ -182,10 +171,11 @@
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         options     (subscribe [::subs/collection-dropdown-options])
-        selected-id (subscribe [::subs/collection-name])]
+        selected-id (subscribe [::subs/collection-name])
+        query-param (subscribe [::route-subs/nav-query-params])]
     (fn []
       (let [callback #(dispatch [::routing-events/navigate
-                                 routes/api-sub-page {:sub-path %}])]
+                                 routes/api-sub-page {:sub-path %} @query-param])]
         [ui/FormDropdown
          {:aria-label           (@tr [:resource-type])
           :style                {:max-width 250}
@@ -209,100 +199,104 @@
      [uix/Icon {:name (:icon documentation-page)}]
      (tr [(:label-kw documentation-page)])]))
 
-(defn search-header []
+(def search-header-fields [{:k         :first
+                            :label     :first
+                            :tab-index 2
+                            :type      "number"
+                            :min       0
+                            :cols      "1/3"}
+                           {:label     :last
+                            :k         :last
+                            :tab-index 3
+                            :type      "number"
+                            :min       0
+                            :max       10000
+                            :cols      "3/5"}
+                           {:label       :select
+                            :k           :select
+                            :tab-index   4
+                            :type        "text"
+                            :placeholder "e.g. id, endpoint, ..."
+                            :cols        "5/7"}
+                           {:label       :order
+                            :k           :orderby
+                            :controlled? true
+                            :tab-index   5
+                            :type        "text"
+                            :placeholder "e.g. created:desc, ..."
+                            :cols        "1/4"}
+                           {:label       :aggregation
+                            :k           :aggregation
+                            :tab-index   6
+                            :type        "text"
+                            :placeholder "e.g. min:resource:vcpu, ..."
+                            :cols        "4/7"}])
+
+(defn SearchField
+  [{:keys [k label tab-index min max type placeholder cols controlled?]}]
+  (let [tr    @(subscribe [::i18n-subs/tr])
+        value @(subscribe [::subs/query-param k])
+        v-key (if controlled? :value :default-value)]
+    [ui/FormField
+     {:style {:grid-column cols}}
+     [ui/Input
+      {:class "labeled"}
+      [ui/Label (tr [label])]
+      [:input {:aria-label  (tr [label])
+               :tab-index   tab-index
+               :type        type
+               :min         min
+               :max         max
+               v-key        value
+               :placeholder placeholder
+               :on-change   (ui-callback/input-callback
+                              #(dispatch [::events/set-query-param k %]))}]]]))
+
+(defn FilterField
+  []
   (let [tr           (subscribe [::i18n-subs/tr])
-        query-params (subscribe [::subs/query-params])
         selected-id  (subscribe [::subs/collection-name])
-        filter-open? (r/atom false)]
+        value        (subscribe [::subs/query-param :filter])
+        filter-open? (r/atom false)
+        set-filter   #(dispatch [::events/set-query-param :filter %])]
     (fn []
-      ;; reset visible values of parameters
-      (let [{$filter      :filter,
-             $first       :first,
-             $last        :last,
-             $select      :select,
-             $aggregation :aggregation,
-             $orderby     :orderby} @query-params]
-        [ui/Form {:aria-label  "filter parameters"
-                  :on-key-press (partial forms/on-return-key
-                                  #(when @selected-id
-                                     (dispatch [::events/get-results])))}
-         [CollectionSelector]
-         [ui/FormGroup {:widths "equal"}
-          [ui/FormField
-           ; the key below is a workaround react issue with controlled input cursor position,
-           ; this will force to re-render defaultValue on change of the value
-           ^{:key (str "first:" $first)}
-           [ui/Input {:aria-label   (@tr [:first])
-                      :tab-index    2
-                      :type         "number"
-                      :min          0
-                      :label        (@tr [:first])
-                      :defaultValue $first
-                      :on-blur      (ui-callback/input ::events/set-first)}]]
+      [ui/FormField
+       {:style {:grid-column "1/7"}}
+       [ui/Input
+        {:class  "labeled"
+         :action true}
+        [ui/Label (@tr [:filter])]
+        [:input {:aria-label  (@tr [:filter])
+                 :tab-index   7
+                 :type        "text"
+                 :placeholder "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
+                 :value       @value
+                 :on-change   (ui-callback/input-callback set-filter)}]
+        [filter-comp/ButtonFilter
+         {:key            @value
+          :resource-name  @selected-id
+          :default-filter @value
+          :disabled?      (nil? @selected-id)
+          :open?          filter-open?
+          :on-done        set-filter
+          :persist?       false
+          :trigger-style  {:border-radius 0}}]]])))
 
-          [ui/FormField
-           ^{:key (str "last:" $last)}
-           [ui/Input {:aria-label   (@tr [:last])
-                      :tab-index    3
-                      :type         "number"
-                      :min          0
-                      :label        (@tr [:last])
-                      :defaultValue $last
-                      :on-blur      (ui-callback/input ::events/set-last)}]]
+(defn SearchHeader []
+  (let [selected-id (subscribe [::subs/collection-name])]
+    (fn []
+      [ui/Form {:aria-label   "filter parameters"
+                :on-key-press (partial forms/on-return-key
+                                       #(when @selected-id
+                                          (dispatch [::events/get-results])))}
+       [CollectionSelector]
+       [ui/FormGroup {:class :cimi-filter-search-header}
+        (for [field search-header-fields]
+          ^{:key (:k field)}
+          [SearchField field])
+        [FilterField]]])))
 
-          [ui/FormField
-           ^{:key (str "select:" $select)}
-           [ui/Input {:aria-label   (@tr [:select])
-                      :tab-index    4
-                      :type         "text"
-                      :label        (@tr [:select])
-                      :defaultValue $select
-                      :placeholder  "e.g. id, endpoint, ..."
-                      :on-blur      (ui-callback/input ::events/set-select)}]]]
-
-         [ui/FormGroup {:widths "equal"}
-          [ui/FormField
-           ^{:key (str "orderby:" $orderby)}
-           [ui/Input {:aria-label   (@tr [:order])
-                      :tab-index    5
-                      :type         "text"
-                      :label        (@tr [:order])
-                      :defaultValue $orderby
-                      :placeholder  "e.g. created:desc, ..."
-                      :on-blur      (ui-callback/input ::events/set-orderby)}]]
-
-          [ui/FormField
-           ^{:key (str "aggregation:" $aggregation)}
-           [ui/Input {:aria-label   (@tr [:aggregation])
-                      :tab-index    6
-                      :type         "text"
-                      :label        (@tr [:aggregation])
-                      :defaultValue $aggregation
-                      :placeholder  "e.g. min:resource:vcpu, ..."
-                      :on-blur      (ui-callback/input ::events/set-aggregation)}]]]
-
-         [ui/FormField
-          ^{:key (str "filter:" $filter)}
-          [ui/Input
-           {:class  "labeled"
-            :action true}
-           [ui/Label (@tr [:filter])]
-           [:input {:aria-label   (@tr [:filter])
-                    :tab-index    7
-                    :type         "text"
-                    :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
-                    :defaultValue $filter
-                    :on-blur      (ui-callback/input ::events/set-filter)}]
-           ^{:key (str "filter-composer-" @selected-id)}
-           [filter-comp/ButtonFilter
-            {:resource-name  @selected-id
-             :default-filter $filter
-             :disabled?      (nil? @selected-id)
-             :open?          filter-open?
-             :on-done        #(dispatch [::events/set-filter %])}]]]]))))
-
-
-(defn format-field-item [selections-atom item]
+(defn FormatFieldItem [selections-atom item]
   [ui/ListItem
    [ui/ListContent
     [ui/ListHeader
@@ -313,14 +307,12 @@
                                                              (swap! selections-atom set/union #{item})
                                                              (swap! selections-atom set/difference #{item}))))}]]]])
 
-
 (defn format-field-list [available-fields-atom selections-atom]
   (let [items (sort @available-fields-atom)]
     (vec (concat [ui/ListSA]
-                 (map (partial format-field-item selections-atom) items)))))
+                 (map (partial FormatFieldItem selections-atom) items)))))
 
-
-(defn select-fields []
+(defn SelectFields []
   (let [tr               (subscribe [::i18n-subs/tr])
         available-fields (subscribe [::subs/available-fields])
         selected-fields  (subscribe [::subs/selected-fields])
@@ -355,8 +347,7 @@
                       (reset! show? false)
                       (dispatch [::events/set-selected-fields @selections]))}]]])))
 
-
-(defn resource-add-form
+(defn ResourceAddForm
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         show?            (subscribe [::subs/show-add-modal?])
@@ -418,8 +409,7 @@
                               (dispatch [::events/hide-add-modal]))))}]]
            ])))))
 
-
-(defn search-button
+(defn SearchButton
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         loading?    (subscribe [::subs/loading?])
@@ -430,8 +420,7 @@
                               :disabled (nil? @selected-id)
                               :on-click #(dispatch [::events/get-results])}])))
 
-
-(defn create-button
+(defn CreateButton
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
@@ -439,8 +428,7 @@
       :icon     "add"
       :on-click #(dispatch [::events/show-add-modal])}]))
 
-
-(defn delete-resources-button
+(defn DeleteResourcesButton
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [cimi-detail-views/action-button-icon
@@ -451,8 +439,7 @@
      (@tr [:are-you-sure?])
      #(dispatch [::events/delete-selected-rows]) (constantly nil)]))
 
-
-(defn menu-bar []
+(defn MenuBar []
   (let [tr               (subscribe [::i18n-subs/tr])
         resources        (subscribe [::subs/collection])
         selected-rows    (subscribe [::subs/selected-rows])
@@ -467,24 +454,23 @@
                       :message message
                       :type    :error})]))
       [ui/Segment style/basic
-       [resource-add-form]
+       [ResourceAddForm]
        [ui/Menu {:attached   "top"
                  :borderless true}
-        [search-button]
-        [select-fields]
+        [SearchButton]
+        [SelectFields]
         (when (general-utils/can-add? @resources)
-          [create-button])
+          [CreateButton])
         (when (and (not-empty @selected-rows)
                    @can-bulk-delete?)
-          [delete-resources-button])
+          [DeleteResourcesButton])
         (when-not @mobile?
           [ui/MenuMenu {:position :right}
            [DocumentationButton]])]
        [ui/Segment {:attached "bottom"}
-        [search-header]]])))
+        [SearchHeader]]])))
 
-
-(defn cimi-resource
+(defn CimiResource
   []
   (let [path         (subscribe [::route-subs/nav-path])
         query-params (subscribe [::route-subs/nav-query-params])]
@@ -495,17 +481,16 @@
           (dispatch [::events/set-query-params @query-params])))
       (let [n        (count @path)
             children (case n
-                       1 [menu-bar]
+                       1 [MenuBar]
                        2 [:<>
-                          [menu-bar]
-                          [results-display]]
+                          [MenuBar]
+                          [ResultsDisplay]]
                        3 [cimi-detail-views/cimi-detail]
-                       [menu-bar])]
+                       [MenuBar])]
 
         [ui/Segment style/basic
          children]))))
 
-
-(defn api-view
+(defn ApiView
   [_path]
-  [cimi-resource])
+  [CimiResource])

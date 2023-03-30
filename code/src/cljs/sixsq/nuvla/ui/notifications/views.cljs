@@ -122,30 +122,6 @@
                             @notif-methods))}]))
 
 
-(defn SubsNotifMethodSelectOrAdd
-  [_current-method _notif-methods save?]
-  (fn [current-method notif-methods]
-    [:<>
-     [SubsNotifMethodDropdown current-method notif-methods save? nil]
-     [SubsNotifMethodCreateButton]]))
-
-
-(defn DeleteButtonSubscriptions
-  [sub]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        {:keys [id name description]} sub
-        content (str (or name id) (when description " - ") description)]
-    [uix/ModalDanger
-     {:on-confirm  #(dispatch [::events/delete-subscription id])
-      :trigger     (r/as-element [ui/Icon {:name  "trash"
-                                           :style {:cursor "pointer"}
-                                           :color "red"}])
-      :content     [:h3 content]
-      :header      (@tr [:delete-notification-subscription])
-      :danger-msg  (@tr [:notification-subscription-delete-warning])
-      :button-text (@tr [:delete])}]))
-
-
 (defn SingleNotificationSubscription
   [{:keys [enabled resource-id method-ids] :as notif-subs} notif-methods]
   (let [method-names (str/join ", " (for [method-id method-ids]
@@ -327,8 +303,8 @@
                              {:key "ram usage" :text "RAM usage %" :value utils/ram}
                              {:key "disk usage" :text "Disk usage %" :value utils/disk}
                              {:key "state" :text "NuvlaEdge online" :value utils/state}
-                             {:key "network rx" :text "Network Rx GB" :value utils/network-rx}
-                             {:key "network tx" :text "Network Tx GB" :value utils/network-tx}
+                             {:key "network rx" :text "Network Rx GiB" :value utils/network-rx}
+                             {:key "network tx" :text "Network Tx GiB" :value utils/network-tx}
                              ]
    "infrastructure-service" [{:key "status" :text "status" :value utils/status}]
    "data-record"            [{:key "content-type" :text "content-type" :value utils/content-type}]})
@@ -571,6 +547,9 @@
       "")))
 
 
+(defn- NetworkUnit [criteria]
+  (when (#{"network-tx" "network-rx"} (:metric criteria)) [:span {:style {:margin-left "0.5rem"}} "GiB"]))
+
 (defn AddSubscriptionConfigModal
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
@@ -724,7 +703,8 @@
                             :error       (and @validate-form? (js/isNaN (js/parseInt value)))
                             :placeholder (@tr [:number])
                             :read-only   false
-                            :on-change   (ui-callback/value #(on-change :criteria {:value %}))}]]]]
+                            :on-change   (ui-callback/value #(on-change :criteria {:value %}))}]
+                          [NetworkUnit criteria]]]]
               :boolean nil
               nil)
 
@@ -768,7 +748,6 @@
             filter-tag (-> (re-find #"'(.*)'" (or resource-filter "")) last)]
         (dispatch [::events/fetch-tags-available collection])
         (dispatch [::events/set-components-tagged-number filter-tag])
-        [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(do
@@ -861,7 +840,8 @@
                   :name      "Value"
                   :read-only false
                   :value     (:value criteria)
-                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])
+                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]
+                [NetworkUnit criteria]]])
             [ui/TableRow
              [ResetIntervalOptions {:disabled? true}]]
             [ui/TableRow

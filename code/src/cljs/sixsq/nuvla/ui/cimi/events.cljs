@@ -8,36 +8,11 @@
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.routing.events :as route-events]))
 
-
-(reg-event-db
-  ::set-first
-  (fn [db [_ first-value]]
-    (update db ::spec/query-params merge {:first first-value})))
-
-
-(reg-event-db
-  ::set-last
-  (fn [db [_ last-value]]
-    (update db ::spec/query-params merge {:last last-value})))
-
-
 (reg-event-fx
-  ::set-filter
-  (fn [{db :db} [_ filter-value event]]
-    {:db (update db ::spec/query-params merge {:filter filter-value})
-     :fx (when event [[:dispatch event]])}))
-
-
-(reg-event-db
-  ::set-orderby
-  (fn [db [_ orderby-value]]
-    (update db ::spec/query-params merge {:orderby orderby-value})))
-
-
-(reg-event-db
-  ::set-select
-  (fn [db [_ select-value]]
-    (update db ::spec/query-params merge {:select select-value})))
+  ::set-query-param
+  (fn [{db :db} [_ k v]]
+    {:db (assoc-in db [::spec/query-params k] v)
+     :fx [[:dispatch [::persist-cimi-query-params]]]}))
 
 (reg-event-db
   ::set-query-params
@@ -49,24 +24,16 @@
   (fn [db _]
     (assoc db ::spec/show-add-modal? true)))
 
-
 (reg-event-db
   ::hide-add-modal
   (fn [db _]
     (assoc db ::spec/show-add-modal? false)))
 
-
-(reg-event-db
-  ::set-aggregation
-  (fn [db [_ aggregation-value]]
-    (update db ::spec/query-params merge {:aggregation aggregation-value})))
-
 (reg-event-fx
-  ::persist-cimi-filter
+  ::persist-cimi-query-params
   (fn [{{:keys [::spec/query-params]} :db}]
     {:fx [[:dispatch [::route-events/change-query-param {:query-params query-params
                                                          :push-state?  false}]]]}))
-
 
 (reg-event-fx
   ::set-collection-name
@@ -92,12 +59,10 @@
                                    "Please choose another resource type.")
                      :type    :error}]}))))
 
-
 (reg-event-db
   ::set-selected-fields
   (fn [db [_ fields]]
     (assoc db ::spec/selected-fields (sort (vec fields)))))
-
 
 (reg-event-db
   ::remove-field
@@ -107,7 +72,6 @@
          vec
          sort
          (assoc db ::spec/selected-fields))))
-
 
 (reg-event-fx
   ::get-results
@@ -122,7 +86,6 @@
        ::cimi-api-fx/search [resource-type
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-results resource-type %])]})))
-
 
 (reg-event-fx
   ::create-resource
@@ -139,8 +102,6 @@
                                        :content message
                                        :type    :success}]))]
       {::cimi-api-fx/add [resource-type data on-success]})))
-
-
 
 (reg-event-fx
   ::set-results
@@ -161,7 +122,6 @@
                                 :content message
                                 :type    :error})])))))
 
-
 (reg-event-fx
   ::set-cloud-entry-point
   (fn [{db :db} [_ {:keys [base-uri] :as cep}]]
@@ -178,12 +138,10 @@
                        (utils/collections-template-map href-map)
                        ::spec/cloud-entry-point-error? false)}))))
 
-
 (reg-event-fx
   ::get-cloud-entry-point
   (fn [_ _]
     {::cimi-api-fx/cloud-entry-point [#(dispatch [::set-cloud-entry-point %])]}))
-
 
 (reg-event-fx
   ::get-templates
@@ -194,7 +152,6 @@
                             (get (name template-href)))]
       {::cimi-api-fx/search [resource-type {:orderby "id"}
                              #(dispatch [::set-templates template-href (:resources %)])]})))
-
 
 (reg-event-fx
   ::set-templates
@@ -211,13 +168,11 @@
                           (map (juxt :id identity))
                           (into {})))})))
 
-
 (reg-event-db
   ::select-row
   (fn [{:keys [::spec/selected-rows] :as db} [_ checked? id]]
     (let [f (if checked? disj conj)]
       (assoc db ::spec/selected-rows (f selected-rows id)))))
-
 
 (reg-event-db
   ::select-all-row
@@ -229,7 +184,6 @@
                                set)
                           #{})]
       (assoc db ::spec/selected-rows selected-rows))))
-
 
 (reg-event-fx
   ::delete-selected-rows
@@ -244,12 +198,10 @@
                              (dispatch [::get-results]))]
       {::cimi-api-fx/delete-bulk [resource-type on-success filter-str]})))
 
-
 (reg-event-db
   ::set-resource-metadata
   (fn [db [_ resource-name metadata]]
     (assoc-in db [::spec/resource-metadata resource-name] metadata)))
-
 
 (reg-event-fx
   ::get-resource-metadata

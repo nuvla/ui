@@ -34,7 +34,7 @@ test.beforeAll(({}, { config }) => {
   }
 });
 
-test.skip('test', async ({ page }, { config }) => {
+test('test', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
 
   await page.routeFromHAR('./test/e2e/loggedin/logger_test.har', { url: '**/api/**' });
@@ -153,7 +153,7 @@ test.skip('test', async ({ page }, { config }) => {
 });
 
 function waitForLogger(page: Page) {
-  return page.waitForResponse('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', { timeout: 10000 });
+  return page.waitForResponse('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', { timeout: 10200 });
 }
 
 const resourceLogResponses = [

@@ -323,7 +323,7 @@
      (@tr [:clear-filter])]))
 
 (defn ButtonFilter
-  [{:keys [resource-name open? default-filter show-clear-button-outside-modal? persist?]
+  [{:keys [resource-name open? default-filter show-clear-button-outside-modal? persist? trigger-style]
     :or   {persist? true}}]
   (let [tr          (subscribe [::i18n-subs/tr])
         show-error? (r/atom false)
@@ -360,9 +360,11 @@
                                       :icon     true
                                       :disabled (nil? resource-name)
                                       :on-click open-fn
-                                      :style    {:align-items :center
-                                                 :z-index 100
-                                                 :display :flex}}
+                                      :color    :teal
+                                      :style    (merge {:align-items :center
+                                                         :z-index 100
+                                                         :display :flex}
+                                                        trigger-style)}
                            [uix/Icon {:name (str (when-not active-filter? "fal ") "fa-filter")}]
                            \u00A0
                            (str/capitalize (@tr [:filter]))]])

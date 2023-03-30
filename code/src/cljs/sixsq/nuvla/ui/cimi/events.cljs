@@ -14,17 +14,6 @@
     {:db (assoc-in db [::spec/query-params k] v)
      :fx [[:dispatch [::persist-cimi-query-params]]]}))
 
-(reg-event-fx
-  ::set-filter
-  (fn [{db :db} [_ filter-value event]]
-    {:db (update db ::spec/query-params merge {:filter filter-value})
-     :fx (when event [[:dispatch event]])}))
-
-(reg-event-db
-  ::set-orderby
-  (fn [db [_ orderby-value]]
-    (update db ::spec/query-params merge {:orderby orderby-value})))
-
 (reg-event-db
   ::set-query-params
   (fn [db [_ params]]

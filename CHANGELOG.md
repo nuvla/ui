@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Notificaiton subscriptions - Shows GiB unit for network in modal
+- Api Page - Persists and loads all filter parameters
 
 ## [2.33.3] - 2023-02-27
 

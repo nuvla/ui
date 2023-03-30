@@ -35,6 +35,11 @@
     (get nuvlaboxes :count 0)))
 
 (reg-sub
+  ::edges-without-edit-rights
+  (fn [db]
+    (::spec/edges-without-edit-rights db)))
+
+(reg-sub
   ::edges-tags
   (fn [db]
     (::spec/edges-tags db)))

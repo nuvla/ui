@@ -98,7 +98,6 @@
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
-;; TODO: USE THIS
 (defn- get-full-filter-string
   [{:keys [::spec/state-selector
            ::spec/additional-filter] :as db}]
@@ -115,10 +114,32 @@
       {::cimi-api-fx/search
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)
-              :filter  (get-full-filter-string db)}
+              :filter   (get-full-filter-string db)}
              (pagination-plugin/first-last-params
               db [::spec/pagination]))
         #(dispatch [::set-nuvlaboxes %])]})))
+
+(reg-event-fx
+ ::get-edges-without-edit-rights
+  (fn [{{:keys [::spec/select] :as db} :db} _]
+    (let [filter (table-plugin/build-bulk-filter select (get-full-filter-string db))]
+      {::cimi-api-fx/search
+       [:nuvlabox
+        {:filter filter :select "id" :viewable-only true}
+        #(dispatch [::set-edges-without-edit-rights %])]})))
+
+(reg-event-fx
+ ::set-edges-without-edit-rights
+ (fn [{:keys [db]} [_ nuvlaboxes]]
+   (if (instance? js/Error nuvlaboxes)
+     (dispatch [::messages-events/add
+                (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                  {:header  (cond-> (str "failure getting nuvlaboxes")
+                              status (str " (" status ")"))
+                   :content message
+                   :type    :error})])
+     {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
+
 
 (reg-event-fx
  ::get-edges-tags
@@ -139,14 +160,12 @@
   ::update-tags
   (fn [{{:keys [::spec/select] :as db} :db }
        [_ edit-mode {:keys [tags call-back-fn]}]]
-    (js/console.error "select " select)
     (let [edit-mode->operation {spec/modal-tags-add-id    "add-tags"
                                 spec/modal-tags-remove-id "remove-tags"
                                 spec/modal-tags-set-id    "set-tags"}
           filter                (table-plugin/build-bulk-filter select (get-full-filter-string db))]
       {::cimi-api-fx/operation-bulk [:nuvlabox
-                                     (fn [response]
-                                       (js/console.error response)
+                                     (fn [_]
                                        (dispatch [::get-nuvlaboxes])
                                        (when (fn? call-back-fn) (call-back-fn)))
                                      (edit-mode->operation edit-mode)
@@ -168,13 +187,12 @@
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
                    {:header  (cond-> (str "failure getting nuvlaboxes")
-                                     status (str " (" status ")"))
+                               status (str " (" status ")"))
                     :content message
                     :type    :error})])
-      (do (tap> ["set-nuvlaboxes response" nuvlaboxes])
-          {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                      ::main-spec/loading? false)
-           :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]}))))
+      {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
+                     ::main-spec/loading? false)
+       :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
 
 
 (reg-event-fx
@@ -327,11 +345,14 @@
                                                                :value   state-selector}]]]})))
 
 
-(reg-event-db
+(reg-event-fx
   ::open-modal
-  (fn [db [_ modal-id]]
-    (assoc db ::spec/open-modal modal-id)))
-
+  (fn [{db :db} [_ modal-id]]
+    (let [fx (when (and ((set spec/tags-modal-ids) modal-id)
+                        (not ((set spec/tags-modal-ids) (::spec/open-modal db))))
+               [:dispatch [::get-edges-without-edit-rights]])]
+      {:db (assoc db ::spec/open-modal modal-id)
+       :fx [fx]})))
 
 (reg-event-fx
   ::create-ssh-key

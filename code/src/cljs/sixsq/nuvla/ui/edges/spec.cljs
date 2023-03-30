@@ -27,6 +27,7 @@
 (s/def ::vpn-infra any?)
 (s/def ::edges-tags (s/nilable (s/* string?)))
 (s/def ::select (s/nilable any?))
+(s/def ::edges-without-edit-rights any?)
 
 ; ssh key association
 (s/def ::ssh-keys-available any?)

@@ -18,6 +18,7 @@
             [sixsq.nuvla.ui.plugins.table :refer [Table] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :as route-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
@@ -806,12 +807,12 @@
         selected-count   (subscribe [::subs/selected-count ::spec/select])
         opened-modal     (subscribe [::subs/opened-modal])
         open?            (subscribe [::subs/bulk-modal-visible?])
-        used-tags        (subscribe [::subs/edges-tags])]
+        used-tags        (subscribe [::subs/edges-tags])
+        view-only-edges  (subscribe [::subs/edges-without-edit-rights])]
     (fn []
-      (let [form-tags (r/atom @used-tags)
-            close-fn      (fn []
-
-                           (dispatch [::events/open-modal nil]))]
+      (let [form-tags    (r/atom @used-tags)
+            close-fn     (fn [] (dispatch [::events/open-modal nil]))
+            not-editable (:count @view-only-edges)]
         [ui/Modal {:open       @open?
                    :close-icon true
                    :on-close   close-fn}
@@ -823,22 +824,37 @@
             (doall (for [edit-mode spec/tags-modal-ids]
                      ^{:key edit-mode}
                      [TagsEditModeRadio edit-mode @opened-modal]))]
-           [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
-                      " "
-                      @selected-count
-                      " "
-                      (@tr [(if (= @selected-count 1) :edge :edges)]))]
+
            [components/TagsDropdown {:initial-options @used-tags
                                      :on-change-fn (fn [tags] (reset! form-tags tags))}]]]
          [ui/ModalActions
-          [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
-                       :positive true
-                       :active   true
-                       :on-click (fn [] (dispatch [::events/update-tags
-                                                   @opened-modal
-                                                   {:tags         @form-tags
-                                                    :call-back-fn close-fn}]))}]]]))))
-
+          [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
+                     " "
+                     @selected-count
+                     " "
+                     (@tr [(if (= @selected-count 1) :edge :edges)])
+                     ". ")
+           (when (< 0 not-editable)
+                    [:span (str not-editable " will not be updated, because you lack the required rights.")
+                     [:a {:target :_blank
+                          :href (route-utils/name->href {:route-name ::routes/edges
+                                                         :query-params
+                                                         {:nuvlabox (str/join " or "
+                                                                              (map #(str "id='" % "'")
+                                                                                   (->> @view-only-edges :resources (map :id))))}})}
+                      "Show in new tab"]])
+           [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
+                        :positive true ;;:query-params {:nuvlabox (general-utils/join-or (map #(str "id='" % "'") (->> @view-only-edges :resources (map :id))))
+                        :active   true
+                        :style    {:margin-left "2rem"}
+                        :on-click (fn [] (dispatch [::events/update-tags
+                                                    @opened-modal
+                                                    {:tags         @form-tags
+                                                     :call-back-fn close-fn}]))}]]]]))))
+(comment
+  (route-utils/name->href {:route-name
+                           ::routes/edges :query-params {:nuvlabox (str/join " or " (map #(str "id='" % "'") (->> {:resources [{:id "asdfasdf"} {:id "asdfasdfasdfasdfasdf"}]} :resources (map :id))))}})
+  )
 (defn NuvlaboxTable
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])

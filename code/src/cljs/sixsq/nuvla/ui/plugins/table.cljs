@@ -196,9 +196,9 @@
 
 (reg-sub
   ::is-all-page-selected?
-  (fn [[_ db-path resources-sub-key]]
+  (fn [[_ db-path resources-sub-key rights-needed]]
     [(subscribe [::selected-set-sub db-path])
-     (when resources-sub-key (subscribe resources-sub-key))])
+     (when resources-sub-key (subscribe [::editable-resources resources-sub-key rights-needed]))])
   (fn [[selected-set resources]]
     (and selected-set resources (all-page-selected? selected-set (visible-ids resources)))))
 
@@ -252,20 +252,30 @@
        :else
        :none))))
 
+(reg-sub
+ ::editable-resources
+ (fn [[_ resources-sub-key _]]
+   (subscribe resources-sub-key))
+ (fn [resources [_ _ rights-needed]]
+   (if-not rights-needed resources
+           (filter (partial general-utils/can-operation? rights-needed) resources))))
+
 (defn CellCeckbox
-  [{:keys [can-edit? id selected-all-sub selected-set-sub db-path resources-sub-key]}]
-  (let [resources (subscribe resources-sub-key)]
+  [{:keys [can-edit? id selected-all-sub selected-set-sub db-path resources-sub-key rights-needed]}]
+  (let [resources (subscribe [::editable-resources resources-sub-key rights-needed])
+        select-fn (fn [] (dispatch [::select-id id db-path (map :id @resources)]))
+        checked?  (or @selected-all-sub (is-selected? @selected-set-sub id))]
     [ui/TableCell {:on-click (fn [event]
                                (when can-edit?
-                                 (dispatch [::select-id id db-path (map :id @resources)])
+                                 (select-fn)
                                  (.stopPropagation event)))}
      (when can-edit?
-       [ui/Checkbox {:checked  (or @selected-all-sub (is-selected? @selected-set-sub id))}])]))
+       [ui/Checkbox {:checked checked?}])]))
 
 
 (defn HeaderCellCeckbox
-  [{:keys [db-path resources-sub-key page-selected?-sub]}]
-  (let [resources @(subscribe resources-sub-key)]
+  [{:keys [db-path resources-sub-key page-selected?-sub rights-needed]}]
+  (let [resources @(subscribe [::editable-resources resources-sub-key rights-needed])]
     [ui/Checkbox {:checked  @page-selected?-sub
                   :on-click #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
 
@@ -405,7 +415,7 @@
                                 (some (partial general-utils/can-operation? rights-needed) rows)))
         selected-set   (subscribe [::selected-set-sub select-db-path])
         select-all?    (subscribe [::select-all?-sub select-db-path])
-        page-selected? (subscribe [::is-all-page-selected? select-db-path resources-sub-key])
+        page-selected? (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed])
         get-row-props  (fn [row] (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
 
     [:div
@@ -427,7 +437,7 @@
            [ui/TableHeaderCell
             {:style {:width "30px"}}
             [HeaderCellCeckbox {:db-path select-db-path :resources-sub-key resources-sub-key
-                                :page-selected?-sub page-selected?}]])
+                                :page-selected?-sub page-selected? :rights-needed rights-needed}]])
          (for [col columns
                :when col
                :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
@@ -463,7 +473,8 @@
                                            (general-utils/can-operation? rights-needed row)
                                            true)
                               :id id :selected-set-sub selected-set :db-path select-db-path
-                              :selected-all-sub select-all? :resources-sub-key resources-sub-key}])
+                              :selected-all-sub select-all? :resources-sub-key resources-sub-key
+                              :rights-needed rights-needed}])
               [row-render row]]
              :else
              ^{:key id}

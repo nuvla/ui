@@ -310,7 +310,8 @@
                                       "Clear selection"
                                       (str "Select all " @total-count))
         payload                     {:select-all   @selected-all-sub
-                                     :selected-set @selected-set-sub}]
+                                     :selected-set @selected-set-sub}
+        nothing-selected?           (= :none @selection-status)]
     [:div
      {:style {:height "2.5rem"
               :background-color "#f9fafb"
@@ -327,7 +328,7 @@
        {:style {:display :flex :align-items :center}}
        [ui/Popup {:trigger
                   (r/as-element
-                   [:div [ui/Dropdown {:disabled (= :none @selection-status)
+                   [:div [ui/Dropdown {:disabled nothing-selected?
                                        :item     true
                                        :text     (@tr [:bulk-action])
                                        :icon     "ellipsis vertical"}
@@ -348,11 +349,12 @@
                   :disabled (not= :none @selection-status)
                   :content  (@tr [:select-at-least-one-item])}]]
       [:div
-       {:class (if (= :none @selection-status) :invisible :visible)}
+       {:class (if nothing-selected? :invisible :visible)}
        [:span (or selected-all-text manual-selection-text)]]
-      [:button {:style {:width "130px" :text-align :center}
+      [:button {:style {:width "120px" :text-align :center
+                        :display (if nothing-selected? :none :inline-block)}
                 :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
-                :class [{:class (if (= :none @selection-status) :invisible :visible)} :select-all]}
+                :class [(if nothing-selected? :invisible :visible) :select-all]}
        (str button-text)]]]))
 
 

@@ -33,7 +33,7 @@
   ::set-applications-sets
   (fn [{:keys [db]} [_ {:keys [subtype] :as module}]]
     (if (= subtype apps-utils/subtype-applications-sets)
-      {:db (assoc db ::spec/applications-sets module)}
+      {:db (assoc db ::spec/module-applications-sets module)}
       {:dispatch [::messages-events/add
                   {:header  "Wrong module subtype"
                    :content (str "Selected module subtype:" subtype)

@@ -501,6 +501,11 @@
             (@tr [:warning-app-selected-not-compatible-targets])
             (@tr [:warning-target-selected-not-compatible-apps]))])])))
 
+(defn on-change-input
+  [k]
+  (ui-callback/input-callback
+    #(dispatch [::events/set k %])))
+
 (defn Summary
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
@@ -511,10 +516,7 @@
         price-not-accepted?   (subscribe [::subs/some-price-not-accepted?])
         create-name           (subscribe [::subs/get ::spec/create-name])
         create-description    (subscribe [::subs/get ::spec/create-description])
-        create-start          (subscribe [::subs/get ::spec/create-start])
-        on-change-input       (fn [k]
-                                (ui-callback/input-callback
-                                  #(dispatch [::events/set k %])))]
+        create-start          (subscribe [::subs/get ::spec/create-start])]
     (fn []
       (let [resource-names-of-subtype    (fn [resources subtype]
                                            (map #(or (:name %) (:id %)) (get (group-by :subtype resources)
@@ -558,28 +560,32 @@
                          (str/blank? @create-name))
            :floated  :right} (str/capitalize (@tr [:create]))]]))))
 
-; FIXME sketch
-(defn NameIt []
+(defn NameInput
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Form
-     [ui/FormInput
-      {:label         (str/capitalize (@tr [:name]))
-       :placeholder   (@tr [:name-deployment-set])
-       :required      true
-       :default-value ""
-       ;:default-value @create-name
-       ; :on-change     (on-change-input ::spec/create-name)
-       }
-      ]
-     [ui/FormInput
-      {:label         (str/capitalize (@tr [:description]))
-       :placeholder   (@tr [:describe-deployment-set])
-       :default-value ""
-       ;:default-value @create-description
-       ;:on-change     (on-change-input ::spec/create-description)
-       }]])
-  )
+  (let [tr          (subscribe [::i18n-subs/tr])
+        create-name (subscribe [::subs/get ::spec/create-name])]
+    [ui/FormInput
+     {:label         (str/capitalize (@tr [:name]))
+      :placeholder   (@tr [:name-deployment-set])
+      :required      true
+      :default-value @create-name
+      :on-change     (on-change-input ::spec/create-name)}]))
+
+(defn DescriptionInput
+  []
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        create-description (subscribe [::subs/get ::spec/create-description])]
+    [ui/FormInput
+     {:label         (str/capitalize (@tr [:description]))
+      :placeholder   (@tr [:describe-deployment-set])
+      :default-value @create-description
+      :on-change     (on-change-input ::spec/create-description)}]))
+
+(defn NameDescriptionStep
+  []
+  [ui/Form
+   [NameInput]
+   [DescriptionInput]])
 
 ; FIXME sketch
 (defn DropdownDemo
@@ -633,101 +639,148 @@
                   :children  fleet-children}]
    ])
 
-; FIXME sketch
-(defn AppSet
+(defn AppsSet
+  [{:keys [name description]}]
+  [:<>
+   [ui/Header {:as "h4"} name
+    (when description
+      [ui/HeaderSubheader description])]
+   #_[ui/ListSA
+    (for [{:keys [icon text]} app-children]
+      ^{:key (random-uuid)}
+      [ui/ListItem
+       (if (= icon "kubernetes")
+         [ui/Image {:src   "/ui/images/kubernetes-grey.svg"
+                    :style {:width   "1.18em"
+                            :margin  "0 .25rem 0 0"
+                            :display :inline-block}}]
+         [ui/ListIcon {:name icon}])
+       [ui/ListContent text]])]])
+
+(defn AppsSetRow
+  [{:keys [i apps-set read-only fleet-text fleet-children]}]
+  [ui/TableRow {:vertical-align :top}
+   [ui/TableCell {:width 2} [ui/Header i]]
+   [ui/TableCell {:width 6}
+    [AppsSet apps-set]]
+
+   [ui/TableCell (cond-> {:width 2}
+                         (not read-only) (assoc-in [:style :padding-top] 15)) "➔"]
+   [DropdownDemo {:read-only read-only
+                  :text      fleet-text
+                  :children  fleet-children}]])
+
+(defn AppsSets
   [{:keys [read-only]
     :or   {read-only false}}]
-  (let [content [ui/Table {:compact true :definition true}
-                 [ui/TableHeader
-                  [ui/TableRow
-                   [ui/TableHeaderCell]
-                   [ui/TableHeaderCell "Apps set"]
-                   [ui/TableHeaderCell]
-                   [ui/TableHeaderCell "Targets set"]]]
+  (let [applications-sets        (subscribe [::subs/applications-sets])
+        _                        (js/console.info @applications-sets)
+        content                  [ui/Table {:compact    true
+                                            :definition true}
+                                  [ui/TableHeader
+                                   [ui/TableRow
+                                    [ui/TableHeaderCell]
+                                    [ui/TableHeaderCell "Apps sets"]
+                                    [ui/TableHeaderCell]
+                                    [ui/TableHeaderCell "Targets sets"]]]
 
-                 [ui/TableBody
-                  [RowDemo {:i              1
-                            :read-only      read-only
-                            :app-text       "Blackbox"
-                            :app-children   [
-                                             {:text "App 1" :icon "cubes"}
-                                             {:text "App 2" :icon "cubes"}
-                                             {:text "App 3" :icon "cubes"}
-                                             ]
-                            :fleet-text     "Geneva"
-                            :fleet-children [
-                                             {:text "NuvlaEdge demo 1" :icon "box"}
-                                             {:text "NuvlaEdge demo 2" :icon "box"}
-                                             {:text "NuvlaEdge demo 3" :icon "box"}
-                                             {:text "NuvlaEdge demo 4" :icon "box"}
-                                             {:text "NuvlaEdge demo 5" :icon "box"}
-                                             ]
-                            }]
-                  [RowDemo {:i              2
-                            :read-only      read-only
-                            :app-text       "Whitebox"
-                            :app-children   [
-                                             {:text "App 1" :icon "cubes"}
-                                             {:text "App 5" :icon "cubes"}
-                                             ]
-                            :fleet-text     "Zurich"
-                            :fleet-children [
-                                             {:text "NuvlaEdge demo 6" :icon "box"}
-                                             {:text "NuvlaEdge demo 7" :icon "box"}
-                                             ]
-                            }]
-                  [RowDemo {:i              3
-                            :read-only      read-only
-                            :app-text       "Monitoring"
-                            :app-children   [
-                                             {:text "App 6" :icon "kubernetes"}
-                                             {:text "App 7" :icon "kubernetes"}
-                                             ]
-                            :fleet-text     "Exoscale Cloud"
-                            :fleet-children [
-                                             {:text "Cloud demo 1" :icon "cloud"}
-                                             {:text "Cloud demo 2" :icon "cloud"}
-                                             ]
-                            }]
-                  (when-not read-only
-                    [ui/TableRow
-                     [ui/TableCell [ui/Header "4"]]
-                     [ui/TableCell
-                      [ui/Grid
-                       [ui/GridRow {:columns 2}
-                        [ui/GridColumn
-                         [ui/Dropdown {:selection   true
-                                       :fluid       true
-                                       :placeholder "Select apps set"}]]
-                        [ui/GridColumn
-                         [ui/Modal {:trigger (r/as-element
-                                               [ui/Button {:primary  true
-                                                           :circular true}
-                                                "New apps set"]
-                                               )}
-                          [ui/ModalHeader "New apps set"]
-                          [ui/ModalContent
-                           [ui/Input]
-                           [SelectApps]
-                           ]
-                          ]]
-                        ]]]
-                     [ui/TableCell "➔"]
-                     [ui/TableCell
-                      [ui/Grid
-                       [ui/GridRow {:columns 2}
-                        [ui/GridColumn
-                         [ui/Dropdown {:selection   true
-                                       :fluid       true
-                                       :placeholder "Select targets set"}]]
-                        [ui/GridColumn
-                         [ui/Button {:primary  true
-                                     :circular true}
-                          "New targets set"]]
-                        ]]]
-                     ])
-                  ]
-                 ]]
+                                  [ui/TableBody
+                                   (for [[i apps-set] (map-indexed vector @applications-sets)]
+                                     ^{:key (str "apps-set-" i)}
+                                     [AppsSetRow {:i              i
+                                                  :apps-set       apps-set
+                                                  :read-only      read-only
+                                                  :fleet-text     "Geneva"
+                                                  :fleet-children [
+                                                                   {:text "NuvlaEdge demo 1" :icon "box"}
+                                                                   {:text "NuvlaEdge demo 2" :icon "box"}
+                                                                   {:text "NuvlaEdge demo 3" :icon "box"}
+                                                                   {:text "NuvlaEdge demo 4" :icon "box"}
+                                                                   {:text "NuvlaEdge demo 5" :icon "box"}
+                                                                   ]
+                                                  }])
+                                   #_[AppsSet {:i              1
+                                               :read-only      read-only
+                                               :app-text       "Blackbox"
+                                               :app-children   [
+                                                                {:text "App 1" :icon "cubes"}
+                                                                {:text "App 2" :icon "cubes"}
+                                                                {:text "App 3" :icon "cubes"}
+                                                                ]
+                                               :fleet-text     "Geneva"
+                                               :fleet-children [
+                                                                {:text "NuvlaEdge demo 1" :icon "box"}
+                                                                {:text "NuvlaEdge demo 2" :icon "box"}
+                                                                {:text "NuvlaEdge demo 3" :icon "box"}
+                                                                {:text "NuvlaEdge demo 4" :icon "box"}
+                                                                {:text "NuvlaEdge demo 5" :icon "box"}
+                                                                ]
+                                               }]
+                                   #_[AppsSet {:i              2
+                                               :read-only      read-only
+                                               :app-text       "Whitebox"
+                                               :app-children   [
+                                                                {:text "App 1" :icon "cubes"}
+                                                                {:text "App 5" :icon "cubes"}
+                                                                ]
+                                               :fleet-text     "Zurich"
+                                               :fleet-children [
+                                                                {:text "NuvlaEdge demo 6" :icon "box"}
+                                                                {:text "NuvlaEdge demo 7" :icon "box"}
+                                                                ]
+                                               }]
+                                   #_[AppsSet {:i              3
+                                               :read-only      read-only
+                                               :app-text       "Monitoring"
+                                               :app-children   [
+                                                                {:text "App 6" :icon "kubernetes"}
+                                                                {:text "App 7" :icon "kubernetes"}
+                                                                ]
+                                               :fleet-text     "Exoscale Cloud"
+                                               :fleet-children [
+                                                                {:text "Cloud demo 1" :icon "cloud"}
+                                                                {:text "Cloud demo 2" :icon "cloud"}
+                                                                ]
+                                               }]
+                                   #_(when-not read-only
+                                     [ui/TableRow
+                                      [ui/TableCell [ui/Header "4"]]
+                                      [ui/TableCell
+                                       [ui/Grid
+                                        [ui/GridRow {:columns 2}
+                                         [ui/GridColumn
+                                          [ui/Dropdown {:selection   true
+                                                        :fluid       true
+                                                        :placeholder "Select apps set"}]]
+                                         [ui/GridColumn
+                                          [ui/Modal {:trigger (r/as-element
+                                                                [ui/Button {:primary  true
+                                                                            :circular true}
+                                                                 "New apps set"]
+                                                                )}
+                                           [ui/ModalHeader "New apps set"]
+                                           [ui/ModalContent
+                                            [ui/Input]
+                                            [SelectApps]
+                                            ]
+                                           ]]
+                                         ]]]
+                                      [ui/TableCell "➔"]
+                                      [ui/TableCell
+                                       [ui/Grid
+                                        [ui/GridRow {:columns 2}
+                                         [ui/GridColumn
+                                          [ui/Dropdown {:selection   true
+                                                        :fluid       true
+                                                        :placeholder "Select targets set"}]]
+                                         [ui/GridColumn
+                                          [ui/Button {:primary  true
+                                                      :circular true}
+                                           "New targets set"]]
+                                         ]]]
+                                      ])
+                                   ]
+                                  ]]
     (if read-only
       [ui/Segment (merge style/basic {:clearing true})
        content
@@ -783,17 +836,14 @@
         {:db-path [::spec/steps]
          :size    :mini
          :fluid   true
-         :items   [
-                   ; FIXME sketch
-                   {:key         :name
+         :items   [{:key         :name
                     :icon        "bullseye"
-                    :content     [NameIt]
+                    :content     [NameDescriptionStep]
                     :title       "New deployment set"
                     :description "Give it a name"}
-                   ; FIXME sketch
-                   {:key         :select-apps-targets-new
+                   {:key         :select-apps-targets
                     :icon        "list"
-                    :content     [AppSet]
+                    :content     [AppsSets]
                     :title       "Apps / Targets"
                     :description (@tr [:select-applications-targets])}
                    ; FIXME sketch
@@ -805,7 +855,7 @@
                    ; FIXME sketch
                    {:key         :summary
                     :icon        "info"
-                    :content     [AppSet {:read-only true}]
+                    :content     [AppsSets {:read-only true}]
                     :title       (str/capitalize (@tr [:summary]))
                     :description (@tr [:overall-summary])}
                    ; FIXME sketch uncomment

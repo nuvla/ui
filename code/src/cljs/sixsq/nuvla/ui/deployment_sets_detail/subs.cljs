@@ -163,3 +163,11 @@
   (fn [db [_ k]]
     (get db k)))
 
+(reg-sub
+  ::module-applications-sets
+  :-> ::spec/module-applications-sets)
+
+(reg-sub
+  ::applications-sets
+  :<- [::module-applications-sets]
+  :-> (comp :applications-sets :content))

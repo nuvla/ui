@@ -23,7 +23,7 @@
 (s/def ::create-start boolean?)
 
 (def defaults
-  {::applications-sets         nil
+  {::module-applications-sets  nil
    ::deployment-set            nil
    ::deployment-set-not-found? false
    ::apps                      nil
@@ -38,9 +38,8 @@
    ::creds-search              (full-text-search-plugin/build-spec)
    ;::steps                     (step-group-plugin/build-spec
    ;                              :active-step :select-apps-targets)
-   ; FIXME sketch
    ::steps                     (step-group-plugin/build-spec
-                                 :active-step :select-apps-targets-new)
+                                 :active-step :name)
    ::targets-selected          #{}
    ::edges-search              (full-text-search-plugin/build-spec)
    ::clouds-search             (full-text-search-plugin/build-spec)

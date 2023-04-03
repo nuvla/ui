@@ -31,7 +31,8 @@
 
 (def subtypes-apps-or-filter (->> [apps-utils/subtype-component
                                    apps-utils/subtype-application
-                                   apps-utils/subtype-application-k8s]
+                                   apps-utils/subtype-application-k8s
+                                   apps-utils/subtype-applications-sets]
                                   (map #(str "subtype='" % "'"))
                                   (apply general-utils/join-or)))
 

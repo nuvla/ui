@@ -95,6 +95,17 @@
   (some->> nav-path rest last))
 
 
+(defn subtype?
+  [subtype]
+  (fn [module-subtype]
+    (= module-subtype subtype)))
+
+(def project? (subtype? subtype-project))
+(def component? (subtype? subtype-component))
+(def application? (subtype? subtype-application))
+(def application-k8s? (subtype? subtype-application-k8s))
+(def applications-sets? (subtype? subtype-applications-sets))
+
 (defn subtype-icon
   [subtype]
   (condp = subtype
@@ -118,13 +129,6 @@
                                                :margin  "0 .25rem 0 0"
                                                :display :inline-block}}]
     [ui/Icon {:name "question circle"}]))
-
-
-(defn meta-subtype-icon
-  [subtype]
-  (if (= subtype-project subtype)
-    "folder open"
-    (subtype-icon subtype)))
 
 
 (defn contruct-path [parent name]

@@ -162,6 +162,15 @@
       :button-text (@tr [:un-publish])}]))
 
 
+(defn deploy-click
+  [module-id applications-sets?]
+  (dispatch [::main-events/subscription-required-dispatch
+             (if applications-sets?
+               [::routing-events/navigate routes/deployment-sets-details {:uuid "New"}
+                {:applications-sets module-id}]
+               [::deployment-dialog-events/create-deployment
+                module-id :infra-services])]))
+
 (defn MenuBar []
   (let [tr               (subscribe [::i18n-subs/tr])
         module           (subscribe [::subs/module])
@@ -193,13 +202,7 @@
            {:name     (@tr [:deploy])
             :icon     "rocket"
             :disabled @deploy-disabled?
-            :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                  (if @is-apps-sets?
-                                    [::routing-events/navigate routes/deployment-sets-details {:uuid "New"}
-                                     {:applications-sets @module-id}]
-                                    [::deployment-dialog-events/create-deployment
-                                     @module-id :infra-services]
-                                    )])}])
+            :on-click #(deploy-click @module-id @is-apps-sets?)}])
 
         (when @is-project?
           [uix/MenuItem

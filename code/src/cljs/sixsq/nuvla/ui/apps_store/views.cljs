@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.apps-store.subs :as subs]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.apps.subs :as apps-subs]
+            [sixsq.nuvla.ui.apps.utils :as utils]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
             [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
@@ -42,9 +43,7 @@
                             (@tr [:day]))
         button-content (if price deploy-price (@tr [:deploy]))
         on-click       (fn [event]
-                         (dispatch [::main-events/subscription-required-dispatch
-                                    [::deployment-dialog-events/create-deployment
-                                     module-id :infra-services]])
+                         (apps-views-detail/deploy-click module-id (utils/applications-sets? subtype))
                          (.preventDefault event)
                          (.stopPropagation event))
         button-ops     {:fluid    true

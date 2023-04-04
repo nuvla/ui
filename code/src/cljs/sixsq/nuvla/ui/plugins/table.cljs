@@ -198,7 +198,7 @@
   ::is-all-page-selected?
   (fn [[_ db-path resources-sub-key rights-needed]]
     [(subscribe [::selected-set-sub db-path])
-     (when resources-sub-key (subscribe [::editable-resources resources-sub-key rights-needed]))])
+     (when resources-sub-key (subscribe [::editable-resources-on-page resources-sub-key rights-needed]))])
   (fn [[selected-set resources]]
     (and selected-set resources (all-page-selected? selected-set (visible-ids resources)))))
 
@@ -253,7 +253,7 @@
        :none))))
 
 (reg-sub
- ::editable-resources
+ ::editable-resources-on-page
  (fn [[_ resources-sub-key _]]
    (subscribe resources-sub-key))
  (fn [resources [_ _ rights-needed]]
@@ -262,7 +262,7 @@
 
 (defn CellCeckbox
   [{:keys [can-edit? id selected-all-sub selected-set-sub db-path resources-sub-key rights-needed]}]
-  (let [resources (subscribe [::editable-resources resources-sub-key rights-needed])
+  (let [resources (subscribe [::editable-resources-on-page resources-sub-key rights-needed])
         select-fn (fn [] (dispatch [::select-id id db-path (map :id @resources)]))
         checked?  (or @selected-all-sub (is-selected? @selected-set-sub id))]
     [ui/TableCell {:on-click (fn [event]
@@ -275,7 +275,7 @@
 
 (defn HeaderCellCeckbox
   [{:keys [db-path resources-sub-key page-selected?-sub rights-needed]}]
-  (let [resources @(subscribe [::editable-resources resources-sub-key rights-needed])]
+  (let [resources @(subscribe [::editable-resources-on-page resources-sub-key rights-needed])]
     [ui/Checkbox {:checked  @page-selected?-sub
                   :on-click #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
 

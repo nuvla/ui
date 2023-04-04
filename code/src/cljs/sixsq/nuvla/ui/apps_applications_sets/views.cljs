@@ -80,33 +80,28 @@
                                 {:key     "done", :content "Done" :positive true
                                  :onClick on-done}]}]))))
 
+(defn AppNameIcon
+  [{:keys [subtype name] module-id :id} on-delete]
+  [ui/ListItem
+   [apps-utils/SubtypeDockerK8sListIcon subtype]
+   [ui/ListContent (or name module-id) " "
+    (when on-delete
+      [ui/Icon {:name     "close" :color "red" :link true
+                :on-click #(on-delete module-id)}])]])
+
 
 (defn AppsList
   [id & {:keys [editable?]
          :or   {editable? true} :as _opts}]
-  (let [selected        @(subscribe [::subs/apps-selected id])
-        kubernetes-icon [ui/Image {:src   "/ui/images/kubernetes-grey.svg"
-                                   :style {:width   "1.18em"
-                                           :margin  "0 .25rem 0 0"
-                                           :display :inline-block}}]
-        docker-icon     [ui/ListIcon {:name "docker"}]
-        unknown-icon    [ui/ListIcon {:name "question circle"}]]
+  (let [selected  @(subscribe [::subs/apps-selected id])
+        on-delete #(do
+                     (dispatch [::events/remove-app id %])
+                     (dispatch [::main-events/changes-protection? true])
+                     (dispatch [::apps-events/validate-form]))]
     [ui/ListSA
-     (for [{:keys [subtype name] module-id :id} selected]
-       ^{:key module-id}
-       [ui/ListItem
-        (condp = subtype
-          apps-utils/subtype-application-k8s kubernetes-icon
-          apps-utils/subtype-application docker-icon
-          apps-utils/subtype-component docker-icon
-          unknown-icon)
-        [ui/ListContent (or name module-id) " "
-         (when editable?
-           [ui/Icon {:name     "close" :color "red" :link true
-                     :on-click #(do
-                                  (dispatch [::events/remove-app id module-id])
-                                  (dispatch [::main-events/changes-protection? true])
-                                  (dispatch [::apps-events/validate-form]))}])]])]))
+     (for [module selected]
+       ^{:key (:id module)}
+       [AppNameIcon module on-delete])]))
 
 (defn AddApps
   [id]

@@ -17,6 +17,7 @@
 
 
 (s/def ::subtypes (s/nilable set?))
+
 (defn build-spec
   [& {:keys [default-items-per-page]
       :or   {default-items-per-page 10}}]
@@ -131,7 +132,7 @@
                            "square outline")}]
      [ui/ListContent
       [ui/ListHeader (when selected? {:as :a})
-       (apps-utils/subtype-icon-infra subtype selected?)
+       [apps-utils/SubtypeIconInfra subtype selected?]
        " "
        (or name id)]
       [ui/ListDescription
@@ -202,7 +203,7 @@
                                               :key     :my-apps
                                               :icon    "user"}
                                    :render   render}]
-        :change-event            [::load-apps db-path]
+        :change-event            [::pagination/change-page (conj db-path ::pagination) 1]
         :ignore-chng-protection? true}])))
 
 (s/fdef AppsSelectorSection

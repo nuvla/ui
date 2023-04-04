@@ -106,6 +106,15 @@
 (def application-k8s? (subtype? subtype-application-k8s))
 (def applications-sets? (subtype? subtype-applications-sets))
 
+(defn IconK8s
+  [selected]
+  [ui/Image {:src   (if selected
+                      "/ui/images/kubernetes.svg"
+                      "/ui/images/kubernetes-grey.svg")
+             :style {:width   "1.18em"
+                     :margin  "0 .25rem 0 0"
+                     :display :inline-block}}])
+
 (defn subtype-icon
   [subtype]
   (condp = subtype
@@ -116,19 +125,24 @@
     subtype-applications-sets "th large"
     "question circle"))
 
-(defn subtype-icon-infra
+(defn SubtypeIconInfra
   [subtype selected]
   (condp = subtype
     subtype-project [ui/Icon {:name "folder"}]
     subtype-component [ui/Icon {:name "docker"}]
     subtype-application [ui/Icon {:name "docker"}]
-    subtype-application-k8s [ui/Image {:src   (if selected
-                                                "/ui/images/kubernetes.svg"
-                                                "/ui/images/kubernetes-grey.svg")
-                                       :style {:width   "1.18em"
-                                               :margin  "0 .25rem 0 0"
-                                               :display :inline-block}}]
+    subtype-application-k8s [IconK8s selected]
     [ui/Icon {:name "question circle"}]))
+
+(defn SubtypeDockerK8sListIcon
+  [subtype]
+  (let [unknown-icon    [ui/ListIcon {:name "question circle"}]
+        docker-icon     [ui/ListIcon {:name "docker"}]]
+    (condp = subtype
+      subtype-application-k8s [IconK8s false]
+      subtype-application docker-icon
+      subtype-component docker-icon
+      unknown-icon)))
 
 
 (defn contruct-path [parent name]

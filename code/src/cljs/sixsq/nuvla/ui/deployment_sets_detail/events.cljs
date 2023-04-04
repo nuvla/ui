@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
+            [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -29,11 +30,76 @@
        ::cimi-api-fx/get [id #(dispatch [::set-applications-sets %])]})))
 
 
+(defn restore-applications
+  [modules-by-id db [i {:keys [applications]}]]
+  (-> db
+      (assoc-in [::spec/apps-sets i ::spec/applications]
+                (->> applications
+                     (map (fn [{module-id :id}]
+                            [module-id (get modules-by-id module-id
+                                            {:subtype "unknown" :id module-id})]))
+                     (into {})))
+      (assoc-in [::spec/apps-sets i ::spec/targets]
+                (target-selector/build-spec))))
+
+(defn load-module-configurations
+  [modules-by-id fx [id {:keys [applications]}]]
+  (->> applications
+       (map (fn [{module-id :id :keys [version environmental-variables]}]
+              (when (get modules-by-id module-id)
+                [:dispatch [::module-plugin/load-module
+                            [::spec/apps-sets id]
+                            (str module-id "_" version)
+                            (when (seq environmental-variables)
+                              {:env (->> environmental-variables
+                                         (map (juxt :name :value))
+                                         (into {}))})]])))
+       (concat fx)))
+(reg-event-fx
+  ::load-apps-sets-response
+  (fn [{:keys [db]} [_ module apps-count {:keys [resources]}]]
+    (let [modules-by-id     (->> resources (map (juxt :id identity)) (into {}))
+          indexed-apps-sets (->> module
+                                 :content
+                                 :applications-sets
+                                 (map-indexed vector))
+          new-db            (reduce (partial restore-applications modules-by-id)
+                                    db indexed-apps-sets)
+          fx                (reduce (partial load-module-configurations modules-by-id)
+                                    [] indexed-apps-sets)
+          all-apps-visible? (= apps-count (count resources))]
+      (if all-apps-visible?
+        {:db new-db
+         :fx fx}
+        {:fx [[:dispatch [::messages-events/add
+                          {:header  "Unable to load selected applications sets"
+                           :content (str "Loaded " (count resources) " out of " apps-count ".")
+                           :type    :error}]]]}))))
+
+(reg-event-fx
+  ::load-apps-sets
+  (fn [_ [_ module]]
+    (let [apps-urls  (->> module
+                          :content
+                          :applications-sets
+                          (mapcat :applications)
+                          (map :id)
+                          distinct)
+          filter-str (apply general-utils/join-or (map #(str "id='" % "'") apps-urls))
+          params     {:filter filter-str
+                      :last   1000}
+          callback   #(if (instance? js/Error %)
+                        (cimi-api-fx/default-error-message % "load applications sets failed")
+                        (dispatch [::load-apps-sets-response module (count apps-urls) %]))]
+      (when (seq apps-urls)
+        {::cimi-api-fx/search [:module params callback]}))))
+
 (reg-event-fx
   ::set-applications-sets
   (fn [{:keys [db]} [_ {:keys [subtype] :as module}]]
-    (if (= subtype apps-utils/subtype-applications-sets)
-      {:db (assoc db ::spec/module-applications-sets module)}
+    (if (apps-utils/applications-sets? subtype)
+      {:db (assoc db ::spec/module-applications-sets module)
+       :fx [[:dispatch [::load-apps-sets module]]]}
       {:dispatch [::messages-events/add
                   {:header  "Wrong module subtype"
                    :content (str "Selected module subtype:" subtype)

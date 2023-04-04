@@ -227,6 +227,16 @@
                                       ::coupon %]))}]]
       [ui/Message (tr [:free-app])])))
 
+(defn ModuleNameIcon
+  [{:keys [db-path href]
+    :as   _opts}]
+  (let [{:keys [id name subtype content]} @(subscribe [::module db-path href])
+        versions-indexed (subscribe [::module-versions-indexed db-path href])]
+    [ui/ListItem
+     [apps-utils/SubtypeDockerK8sListIcon subtype]
+     [ui/ListContent
+      (str (or name id) " v" (get-version-id @versions-indexed (:id content)))]]))
+
 (defn ModuleVersions
   [{:keys [db-path href change-event read-only?]
     :or   {read-only? false}

@@ -24,6 +24,7 @@
 
 (def defaults
   {::module-applications-sets  nil
+   ::apps-sets                 nil
    ::deployment-set            nil
    ::deployment-set-not-found? false
    ::apps                      nil

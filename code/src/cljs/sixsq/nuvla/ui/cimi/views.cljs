@@ -220,7 +220,6 @@
                             :cols        "5/7"}
                            {:label       :order
                             :k           :orderby
-                            :controlled? true
                             :tab-index   5
                             :type        "text"
                             :placeholder "e.g. created:desc, ..."
@@ -233,10 +232,9 @@
                             :cols        "4/7"}])
 
 (defn SearchField
-  [{:keys [k label tab-index min max type placeholder cols controlled?]}]
+  [{:keys [k label tab-index min max type placeholder cols]}]
   (let [tr    @(subscribe [::i18n-subs/tr])
-        value @(subscribe [::subs/query-param k])
-        v-key (if controlled? :value :default-value)]
+        value @(subscribe [::subs/query-param k])]
     [ui/FormField
      {:style {:grid-column cols}}
      [ui/Input
@@ -247,7 +245,7 @@
                :type        type
                :min         min
                :max         max
-               v-key        value
+               :value       value
                :placeholder placeholder
                :on-change   (ui-callback/input-callback
                               #(dispatch [::events/set-query-param k %]))}]]]))
@@ -272,6 +270,7 @@
                  :placeholder "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
                  :value       @value
                  :on-change   (ui-callback/input-callback set-filter)}]
+        ^{:key @selected-id}
         [filter-comp/ButtonFilter
          {:key            @value
           :resource-name  @selected-id

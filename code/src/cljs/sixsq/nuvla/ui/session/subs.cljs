@@ -80,7 +80,7 @@
   ::roles
   :<- [::session]
   (fn [session]
-    (set (some-> session :roles (str/split #"\s+")))))
+    (utils/get-roles session)))
 
 (reg-sub
   ::has-role?

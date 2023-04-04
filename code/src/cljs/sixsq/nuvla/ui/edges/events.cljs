@@ -10,13 +10,13 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
-            [sixsq.nuvla.ui.plugins.table :as table-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -121,11 +121,21 @@
 
 (reg-event-fx
  ::get-edges-without-edit-rights
-  (fn [{{:keys [::spec/select] :as db} :db} _]
-    (let [filter (table-plugin/build-bulk-filter select (get-full-filter-string db))]
+  (fn [{{:keys [::spec/select
+                ::session-spec/session] :as db} :db} _]
+    (let [selected-filter (table-plugin/build-bulk-filter
+                           select
+                           (get-full-filter-string db))
+          filter (general-utils/join-and
+                  (apply
+                   general-utils/join-and
+                   (map (fn [role]
+                          (str "acl/edit-meta!='" role "'"))
+                        (session-utils/get-roles session)))
+                  selected-filter)]
       {::cimi-api-fx/search
        [:nuvlabox
-        {:filter filter :select "id" :viewable-only true}
+        {:filter filter :select "id"}
         #(dispatch [::set-edges-without-edit-rights %])]})))
 
 (reg-event-fx
@@ -155,6 +165,10 @@
   (fn [db [_ tags]]
     (assoc db ::spec/edges-tags tags)))
 
+(comment
+   (dispatch [::update-tags spec/modal-tags-add-id {:tags ["hmm", "test", "hoho", "PLEASE", "ANDNOW?"]}])
+
+  )
 
 (reg-event-fx
   ::update-tags
@@ -169,8 +183,8 @@
                                        (dispatch [::get-nuvlaboxes])
                                        (when (fn? call-back-fn) (call-back-fn)))
                                      (edit-mode->operation edit-mode)
-                                     nil
-                                     {:filter filter :doc {:tags tags}}]})))
+                                     (when (seq filter) filter)
+                                     {:doc {:tags tags}}]})))
 
 (reg-event-fx
   ::set-additional-filter

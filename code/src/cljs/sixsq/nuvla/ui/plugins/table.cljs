@@ -315,7 +315,7 @@
                                                    (when off-page-selection?
                                                      (if on-page-selection?
                                                        (str "(" off-page-selection-text ")")
-                                                       (str off-page-selected " " (@tr [:deployments]) " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
+                                                       (str off-page-selected " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
         button-text                 (if (= @selection-status :all)
                                       "Clear selection"
                                       (str "Select all " @total-count))

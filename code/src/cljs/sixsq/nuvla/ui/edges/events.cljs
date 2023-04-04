@@ -15,12 +15,12 @@
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
-            [sixsq.nuvla.ui.session.utils :as session-utils]
+            [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
+(def refresh-id-non-edit :edges-without-edit-rights)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
 (def refresh-id-inferred-locations :nuvlabox-get-nuvlabox-inferred-locations)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
@@ -62,6 +62,9 @@
     {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
                                                            :frequency 10000
                                                            :event     [::get-nuvlaboxes]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-id-non-edit
+                                                           :frequency 10000
+                                                           :event     [::get-edges-without-edit-rights]}]]
           [:dispatch [::main-events/action-interval-start {:id        refresh-id-locations
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-locations]}]]
@@ -123,6 +126,7 @@
  ::get-edges-without-edit-rights
   (fn [{{:keys [::spec/select
                 ::session-spec/session] :as db} :db} _]
+    (js/console.error "get-edges-without-edit-rights")
     (let [selected-filter (table-plugin/build-bulk-filter
                            select
                            (get-full-filter-string db))
@@ -166,9 +170,14 @@
     (assoc db ::spec/edges-tags tags)))
 
 (comment
-   (dispatch [::update-tags spec/modal-tags-add-id {:tags ["hmm", "test", "hoho", "PLEASE", "ANDNOW?"]}])
+  (dispatch [::update-tags spec/modal-tags-add-id {:tags ["hmm", "test", "hoho", "PLEASE", "ANDNOW?"]}])
+  (reg-event-fx
+   ::just-testing
+   (fn [_ [_ ]]
+     {::cimi-api-fx/operation-bulk [:nuvlabox (fn []) "remove-tags" "heyho" {:doc {:tags  ["ciao"]
+                                                                                          :filter "world"}}] }))
 
-  )
+  (dispatch [::just-testing]))
 
 (reg-event-fx
   ::update-tags
@@ -185,7 +194,6 @@
                                      (edit-mode->operation edit-mode)
                                      (when (seq filter) filter)
                                      {:doc {:tags tags}}]})))
-
 (reg-event-fx
   ::set-additional-filter
   (fn [{db :db} [_ filter]]

@@ -39,6 +39,7 @@
   (fn [db]
     (::spec/edges-without-edit-rights db)))
 
+
 (reg-sub
   ::edges-tags
   (fn [db]

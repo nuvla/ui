@@ -789,17 +789,56 @@
 ;; 6. update/save events and displaying failures -> DONE
 ;; 7. STYLING OF UPDATE MODAL
 
+(defn- get-name-as-keyword
+  [tr q-key]
+  (tr [(-> q-key name keyword)]))
+
 (defn- TagsEditModeRadio
   [edit-mode opened-modal]
   (let [tr               (subscribe [::i18n-subs/tr])
         change-edit-mode (fn [value]
                            #(dispatch [::events/open-modal value]))
         active?          (= opened-modal edit-mode)
-        font-weight      (if active? 700 400)]
+        font-weight      (if active? 700 400)
+        setting-tags?    (= spec/modal-tags-set-id edit-mode)]
     [ui/Radio {:style     {:font-weight font-weight}
-               :label     (@tr [(-> edit-mode name keyword)])
+               :label     (str (get-name-as-keyword @tr edit-mode)
+                               (when setting-tags? (str " (" (@tr [:tags-overwrite]) "!)")))
                :checked   active?
                :on-change (change-edit-mode edit-mode)}]))
+
+(defn- ButtonAskingForConfirmation
+  [_form-tags close-fn]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        opened-modal (subscribe [::subs/opened-modal])
+        mode         (r/atom :idle)]
+    (fn [form-tags _close-fn]
+      (let [text      (if (and (= spec/modal-tags-set-id @opened-modal)
+                               (= 0 (count form-tags)))
+                        (@tr [:tags-remove-all])
+                        (get-name-as-keyword @tr @opened-modal))
+            update-fn (fn [] (dispatch [::events/update-tags
+                                        @opened-modal
+                                        {:tags        form-tags
+                                         :call-back-fn close-fn}]))
+            disabled? (and  (not= spec/modal-tags-set-id @opened-modal)
+                            (= 0 (count form-tags)))]
+        (if (= :idle @mode)
+          [uix/Button {:text     text
+                       :positive true
+                       :disabled disabled?
+                       :active   true
+                       :style    {:margin-left "2rem"}
+                       :on-click (fn [] (reset! mode :confirming))}]
+          [:div
+           [:span "Sure? "]
+           [uix/Button {:text     "No"
+                        :icon     [ui/Icon {:name "fal fa-check"}]
+                        :on-click (fn [] (reset! mode :idle))}]
+           [uix/Button {:text     (str "Yes, " text)
+                        :disabled disabled?
+                        :positive true
+                        :on-click update-fn}]])))))
 
 (defn BulkUpdateModal
   []
@@ -808,10 +847,12 @@
         opened-modal     (subscribe [::subs/opened-modal])
         open?            (subscribe [::subs/bulk-modal-visible?])
         used-tags        (subscribe [::subs/edges-tags])
-        view-only-edges  (subscribe [::subs/edges-without-edit-rights])]
+        view-only-edges  (subscribe [::subs/edges-without-edit-rights])
+        form-tags        (r/atom [])]
     (fn []
-      (let [form-tags    (r/atom @used-tags)
-            close-fn     (fn [] (dispatch [::events/open-modal nil]))
+      (let [close-fn     (fn []
+                           (dispatch [::events/open-modal nil])
+                           (reset! form-tags []))
             not-editable (:count @view-only-edges)]
         [ui/Modal {:open       @open?
                    :close-icon true
@@ -824,37 +865,38 @@
             (doall (for [edit-mode spec/tags-modal-ids]
                      ^{:key edit-mode}
                      [TagsEditModeRadio edit-mode @opened-modal]))]
-
            [components/TagsDropdown {:initial-options @used-tags
                                      :on-change-fn (fn [tags] (reset! form-tags tags))}]]]
          [ui/ModalActions
-          [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
-                     " "
-                     @selected-count
-                     " "
-                     (@tr [(if (= @selected-count 1) :edge :edges)])
-                     ". ")
-           (when (< 0 not-editable)
-                    [:span (str not-editable " will not be updated, because you lack the required rights.")
-                     [:a {:target :_blank
-                          :href (route-utils/name->href {:route-name ::routes/edges
-                                                         :query-params
-                                                         {:nuvlabox (str/join " or "
-                                                                              (map #(str "id='" % "'")
-                                                                                   (->> @view-only-edges :resources (map :id))))}})}
-                      "Show in new tab"]])
-           [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
-                        :positive true ;;:query-params {:nuvlabox (general-utils/join-or (map #(str "id='" % "'") (->> @view-only-edges :resources (map :id))))
-                        :active   true
-                        :style    {:margin-left "2rem"}
-                        :on-click (fn [] (dispatch [::events/update-tags
-                                                    @opened-modal
-                                                    {:tags         @form-tags
-                                                     :call-back-fn close-fn}]))}]]]]))))
+          {:style {:display         :flex
+                   :align-items     :center
+                   :justify-content :space-between
+                   :text-align      :left}}
+          [:div
+           {:style {:line-height "1.2rem"}}
+           [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
+                      " "
+                      @selected-count
+                      " "
+                      (@tr [(if (= @selected-count 1) :edge :edges)])
+                      ". ")]
+           (when (< 0 not-editable @selected-count)
+             [:div
+              [:span (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " will not be updated, because you lack the required rights.")]]
+             [:div [:a {:target :_blank
+                        :href (route-utils/name->href {:route-name ::routes/edges
+                                                       :query-params
+                                                       {:nuvlabox (str/join " or "
+                                                                            (map #(str "id='" % "'")
+                                                                                 (->> @view-only-edges :resources (map :id))))}})}
+                    "Open in a new tab"]])]
+          [ButtonAskingForConfirmation @form-tags close-fn]]]))))
+
 (comment
   (route-utils/name->href {:route-name
                            ::routes/edges :query-params {:nuvlabox (str/join " or " (map #(str "id='" % "'") (->> {:resources [{:id "asdfasdf"} {:id "asdfasdfasdfasdfasdf"}]} :resources (map :id))))}})
   )
+
 (defn NuvlaboxTable
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])

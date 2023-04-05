@@ -605,8 +605,7 @@
                                        (swap! nuvlabox-release-data
                                               assoc :nb-selected nb-selected)
                                        (swap! nuvlabox-release-data assoc :nb-assets
-                                              (set (map :scope (:compose-files nb-selected)))))
-                                     ))}]
+                                              (set (map :scope (:compose-files nb-selected)))))))}]
 
                     [:a {:href   url
                          :target "_blank"
@@ -892,18 +891,14 @@
                     "Open in a new tab"]])]
           [ButtonAskingForConfirmation @form-tags close-fn]]]))))
 
-(comment
-  (route-utils/name->href {:route-name
-                           ::routes/edges :query-params {:nuvlabox (str/join " or " (map #(str "id='" % "'") (->> {:resources [{:id "asdfasdf"} {:id "asdfasdfasdfasdfasdf"}]} :resources (map :id))))}})
-  )
 
 (defn NuvlaboxTable
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                            (apply concat
-                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                           (apply concat
+                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)

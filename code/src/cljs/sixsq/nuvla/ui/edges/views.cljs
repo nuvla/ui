@@ -778,16 +778,6 @@
         :total-items            total-elements
         :i-per-page-multipliers [1 2 4]}])))
 
-;; TODOS in update modal
-;; 1. Radio buttons for add, remove and set -> DONE
-;; 2a. descriptions texts for all of them, warning for SET -> DONE
-;; 2b. message: only edges with edit rights will be edited
-;; 2c. for message 2b: fetch edges with edit rights
-;; 3. UI form for adding tags -> DONE
-;; 4. UI form for removing tags -> DONE
-;; 5. UI form for setting tags -> DONE
-;; 6. update/save events and displaying failures -> DONE
-;; 7. STYLING OF UPDATE MODAL
 
 (defn- get-name-as-keyword
   [tr q-key]
@@ -823,7 +813,9 @@
                         (get-name-as-keyword @tr @edit-mode))
             call-back (fn [updated]
                         (dispatch [::table-plugin/set-bulk-edit-success-message
-                                   (str updated " " (@tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)])
+                                   (str updated " " (@tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)
+                                   [::spec/select]])
+                        (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]])
                         (close-fn))
             update-fn (fn []
                         (dispatch [::events/update-tags

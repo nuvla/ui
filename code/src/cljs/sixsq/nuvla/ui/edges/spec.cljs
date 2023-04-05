@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
+            [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
 
 (def resource-name "nuvlabox")
 
@@ -89,7 +90,9 @@
    ::nuvlabox-playbooks-cronjob    nil
    ::ordering                      (build-ordering)
    ::edges-search                  (full-text-search-plugin/build-spec)
-   ::additional-filter              nil})
+   ::additional-filter              nil
+   ::select                        (table-plugin/build-bulk-edit-spec)
+   })
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 25)})

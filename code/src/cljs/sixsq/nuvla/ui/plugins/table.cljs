@@ -89,7 +89,7 @@
                                                    :db-path     db-path
                                                    :fetch-event fetch-event}])}])))
 
-;; Bulk selection
+;; Bulk selection, table plugin args
 (s/def ::name string?)
 (s/def ::component fn?)
 (s/def ::event (s/or :k (s/* keyword?) :fn fn?))
@@ -109,7 +109,21 @@
                                                    ::total-count-sub-key ::resources-sub-key]
                                           :opt-un [::rights-needed ])))
 
+;; Bulk selection db entries
 (s/def ::bulk-edit-success-msg (s/nilable string?))
+(s/def ::select-all? (s/nilable boolean?))
+(s/def ::selected-set (s/nilable set?))
+(defn build-bulk-edit-spec
+  []
+  {::select-all?           false
+   ::selected-set          #{}
+   ::bulk-edit-success-msg nil})
+
+(reg-event-db
+  ::reset-bulk-edit-selection
+  (fn [db [_ db-path]]
+    (update-in db db-path merge {::select-all?           false
+                                 ::selected-set          #{}})))
 
 (reg-event-db
   ::set-bulk-edit-success-message
@@ -118,8 +132,8 @@
 
 (reg-sub
   ::bulk-edit-success-message-sub
-  (fn [db]
-    (::bulk-edit-success-msg db)))
+  (fn [db [_ db-path]]
+    (get-in db (conj db-path ::bulk-edit-success-msg))))
 
 (s/def ::selection-status #{:all :page
                             :some :none})
@@ -341,7 +355,6 @@
      [:div {:style {:display :flex
                     :justify-content :space-between
                     :align-items :center
-                    :max-width "1040px"
                     :height "2.5rem"
                     :padding-left "1rem"
                     :background-color "#f9fafb"

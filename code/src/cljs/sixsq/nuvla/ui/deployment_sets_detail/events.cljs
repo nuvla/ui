@@ -144,9 +144,9 @@
   ::get-deployments-for-deployment-sets
   (fn [_ [_ id]]
     (when id
-      {:fx [:dispatch [::deployments-events/get-deployments
-                       {:filter-external-arg   (str "deployment-set='" id "'")
-                        :external-filter-only? true}]]})))
+      {:fx [[:dispatch [::deployments-events/get-deployments
+                        {:filter-external-arg   (str "deployment-set='" id "'")
+                         :external-filter-only? true}]]]})))
 
 (reg-event-fx
   ::edit

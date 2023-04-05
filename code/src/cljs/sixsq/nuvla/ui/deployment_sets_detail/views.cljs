@@ -663,8 +663,7 @@
           db-path          [::spec/apps-sets i ::spec/targets]
           on-open          #(dispatch [::target-selector/restore-selected
                                        db-path (map :id targets-selected)])
-          on-done          #(dispatch [::events/set-targets-selected i db-path])
-          ]
+          on-done          #(dispatch [::events/set-targets-selected i db-path])]
       [ui/Modal
        {:close-icon true
         :trigger    (r/as-element

@@ -48,9 +48,9 @@
                                                                      set)))))]
         {:db                  (assoc-in db (conj db-path ::loading?) true)
          ::cimi-api-fx/search [:credential {:select "id, name, description, parent, subtype"
-                                        :filter (apply general-utils/join-or
-                                                       (map #(str "id='" % "'") selected-ids))
-                                        :last   10000}
+                                            :filter (apply general-utils/join-or
+                                                           (map #(str "id='" % "'") selected-ids))
+                                            :last   10000}
                                #(dispatch [::helpers/set db-path
                                            ::selected (rebuild-selected %)
                                            ::loading? false])]})
@@ -293,7 +293,7 @@
                                           :key     :clouds
                                           :icon    "cloud"}
                                :render   #(r/as-element [TargetClouds opts])}]
-    :on-change-event         [::pagination/change-page (conj db-path ::pagination) 1]
+    :change-event            [::pagination/change-page (conj db-path ::pagination) 1]
     :ignore-chng-protection? true}])
 
 (s/fdef TargetsSelectorSection

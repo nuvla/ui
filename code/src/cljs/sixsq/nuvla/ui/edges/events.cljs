@@ -169,15 +169,6 @@
   (fn [db [_ tags]]
     (assoc db ::spec/edges-tags tags)))
 
-(comment
-  (dispatch [::update-tags spec/modal-tags-add-id {:tags ["hmm", "test", "hoho", "PLEASE", "ANDNOW?"]}])
-  (reg-event-fx
-   ::just-testing
-   (fn [_ [_ ]]
-     {::cimi-api-fx/operation-bulk [:nuvlabox (fn []) "remove-tags" "heyho" {:doc {:tags  ["ciao"]
-                                                                                          :filter "world"}}] }))
-
-  (dispatch [::just-testing]))
 
 (reg-event-fx
   ::update-tags

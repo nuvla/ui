@@ -668,8 +668,8 @@
       [ui/Modal
        {:close-icon true
         :trigger    (r/as-element
-                      [ui/Icon {:name  "add"
-                                :color "green"
+                      [ui/Icon {:name     "add"
+                                :color    "green"
                                 :on-click on-open}])
         :header     "New apps set"
         :content    (r/as-element
@@ -722,7 +722,7 @@
   [{:keys [i apps-set read-only fleet-text fleet-children]}]
   [ui/TableRow {:vertical-align :top}
    [ui/TableCell {:width 2}
-    [ui/Header i]]
+    [ui/Header (inc i)]]
    [ui/TableCell {:width 6}
     [AppsSet i apps-set]]
    [ui/TableCell
@@ -852,37 +852,39 @@
         ]]
       content)))
 
-; FIXME sketch
-(defn ConfigureDemo
-  []
+(defn ConfigureApps
+  [i applications]
   [tab/Tab
-   {:db-path [::spec/x]
-    :menu    {:secondary true
-              :pointing  true}
+   {:db-path [::spec/apps-sets i ::spec/configure-set-tab]
     :panes   (map
-               (fn [i]
-                 {:menuItem {:content (str i)
-                             :key     (random-uuid)}
-                  :render   #(r/as-element
-                               [tab/Tab
-                                {:db-path [::spec/y]
-                                 :panes   (map
-                                            (fn [{:keys [text icon]}]
-                                              {:menuItem {:content text
-                                                          :icon    icon
-                                                          :key     (random-uuid)}
-                                               :render   (fn []
-                                                           (r/as-element
-                                                             [ui/TabPane
+               (fn [{:keys [id]}]
+                 (let [app @(subscribe [::module-plugin/module
+                                        [::spec/apps-sets i] id])]
+                   {:menuItem {:content (or (:name app) (:id app))
+                               :icon    "cubes"
+                               :key     (keyword (str "configure-set-" i "-app-" id))}
+                    :render   #(r/as-element
+                                 [ui/TabPane
+                                  [module-plugin/EnvVariables
+                                   {:db-path [::spec/apps-sets i]
+                                    :href    id}]])})
+                 ) applications)}])
 
-                                                              ]))}
-                                              ) [{:text "App 1" :icon "cubes"}
-                                                 {:text "App 2" :icon "cubes"}
-                                                 {:text "App 3" :icon "cubes"}])}])}
-                 ) ["1 | Blackbox ➔ Geneva"
-                    "2 | Whitebox ➔ Zurich"
-                    "3 | Monitoring ➔ Exoscale Cloud"
-                    ])}])
+(defn ConfigureSets
+  []
+  (let [panes (map-indexed
+                (fn [i {:keys [name applications]}]
+                  {:menuItem {:content (str (inc i) " | " name)
+                              :key     (keyword (str "configure-set-" i))}
+                   :render   #(r/as-element
+                                [ConfigureApps i applications])}
+                  ) @(subscribe [::subs/applications-sets]))]
+    [tab/Tab
+     {:db-path                 [::spec/tab-configure-sets]
+      :menu                    {:secondary true
+                                :pointing  true}
+      :panes                   panes
+      :ignore-chng-protection? true}]))
 
 (defn AddPage
   []
@@ -909,7 +911,7 @@
                    ; FIXME sketch
                    {:key         :configure-new
                     :icon        "configure"
-                    :content     [ConfigureDemo]
+                    :content     [ConfigureSets]
                     :title       (str/capitalize (@tr [:configure]))
                     :description (@tr [:configure-applications])}
                    ; FIXME sketch

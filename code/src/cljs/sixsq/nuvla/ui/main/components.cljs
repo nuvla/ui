@@ -280,7 +280,7 @@
   [{:keys [tags]}]
   (let [tr            (subscribe [::i18n-subs/tr])
         value-options (r/atom tags)]
-    (fn [{:keys [on-change-fn initial-options]}]
+    (fn [{:keys [on-change-fn initial-options tag-color]}]
       (let [options (map (fn [v] {:key v :text v :value v})
                          (distinct (concat (or initial-options tags) @value-options)))]
         [ui/Dropdown {:selection        true
@@ -301,7 +301,7 @@
                                           (r/as-element
                                            [ui/Label {:icon    "tag"
                                                       :size    "mini"
-                                                      :color   "teal"
+                                                      :color   (or tag-color "teal")
                                                       :content (.-value label)
                                                       :style   {:margin-top 10
                                                                 :max-height 150

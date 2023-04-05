@@ -806,25 +806,29 @@
                :checked   active?
                :on-change (change-edit-mode edit-mode)}]))
 
+
 (defn- ButtonAskingForConfirmation
   [_form-tags close-fn]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        opened-modal (subscribe [::subs/opened-modal])
-        mode         (r/atom :idle)]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        edit-mode        (subscribe [::subs/opened-modal])
+        mode             (r/atom :idle)
+        edit-mode->color {spec/modal-tags-add-id    :green
+                          spec/modal-tags-remove-id :red
+                          spec/modal-tags-set-id    :red}]
     (fn [form-tags _close-fn]
-      (let [text      (if (and (= spec/modal-tags-set-id @opened-modal)
+      (let [text      (if (and (= spec/modal-tags-set-id @edit-mode)
                                (= 0 (count form-tags)))
                         (@tr [:tags-remove-all])
-                        (get-name-as-keyword @tr @opened-modal))
+                        (get-name-as-keyword @tr @edit-mode))
             update-fn (fn [] (dispatch [::events/update-tags
-                                        @opened-modal
-                                        {:tags        form-tags
+                                        @edit-mode
+                                        {:tags         form-tags
                                          :call-back-fn close-fn}]))
-            disabled? (and  (not= spec/modal-tags-set-id @opened-modal)
+            disabled? (and  (not= spec/modal-tags-set-id @edit-mode)
                             (= 0 (count form-tags)))]
         (if (= :idle @mode)
           [uix/Button {:text     text
-                       :positive true
+                       :color    (edit-mode->color @edit-mode)
                        :disabled disabled?
                        :active   true
                        :style    {:margin-left "2rem"}
@@ -836,7 +840,7 @@
                         :on-click (fn [] (reset! mode :idle))}]
            [uix/Button {:text     (str "Yes, " text)
                         :disabled disabled?
-                        :positive true
+                        :color    (edit-mode->color @edit-mode)
                         :on-click update-fn}]])))))
 
 (defn BulkUpdateModal
@@ -847,7 +851,8 @@
         open?            (subscribe [::subs/bulk-modal-visible?])
         used-tags        (subscribe [::subs/edges-tags])
         view-only-edges  (subscribe [::subs/edges-without-edit-rights])
-        form-tags        (r/atom [])]
+        form-tags        (r/atom [])
+        mode->tag-color  (zipmap spec/tags-modal-ids [:teal :red :teal])]
     (fn []
       (let [close-fn     (fn []
                            (dispatch [::events/open-modal nil])
@@ -866,7 +871,8 @@
                      [TagsEditModeRadio edit-mode @opened-modal]))]
            [:div {:style {:margin-top "1.5rem"}}
             [components/TagsDropdown {:initial-options @used-tags
-                                      :on-change-fn (fn [tags] (reset! form-tags tags))}]]]]
+                                      :on-change-fn (fn [tags] (reset! form-tags tags))
+                                      :tag-color       (mode->tag-color @opened-modal)}]]]]
          [ui/ModalActions
           {:style {:display         :flex
                    :align-items     :center

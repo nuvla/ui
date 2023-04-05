@@ -864,8 +864,9 @@
             (doall (for [edit-mode spec/tags-modal-ids]
                      ^{:key edit-mode}
                      [TagsEditModeRadio edit-mode @opened-modal]))]
-           [components/TagsDropdown {:initial-options @used-tags
-                                     :on-change-fn (fn [tags] (reset! form-tags tags))}]]]
+           [:div {:style {:margin-top "1.5rem"}}
+            [components/TagsDropdown {:initial-options @used-tags
+                                      :on-change-fn (fn [tags] (reset! form-tags tags))}]]]]
          [ui/ModalActions
           {:style {:display         :flex
                    :align-items     :center

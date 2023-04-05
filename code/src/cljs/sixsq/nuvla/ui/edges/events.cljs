@@ -198,7 +198,8 @@
     {:db (-> db
              (assoc ::spec/additional-filter filter)
              (assoc-in [::spec/pagination :active-page] 1))
-     :fx [[:dispatch [::get-nuvlaboxes]]]}))
+     :fx [[:dispatch [::get-nuvlaboxes]]
+          [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]]}))
 
 (reg-event-fx
   ::set-nuvlaboxes
@@ -362,7 +363,9 @@
        :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]
             [:dispatch [::get-nuvlabox-locations]]
             [:dispatch [::routing-events/store-in-query-param {:db-path [db-path]
-                                                               :value   state-selector}]]]})))
+                                                               :value   state-selector}]]
+            [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]
+             ]]})))
 
 
 (reg-event-fx

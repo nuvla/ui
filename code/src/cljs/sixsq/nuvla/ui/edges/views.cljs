@@ -869,7 +869,7 @@
                      [TagsEditModeRadio edit-mode @opened-modal]))]
            [:div {:style {:margin-top "1.5rem"}}
             [components/TagsDropdown {:initial-options @used-tags
-                                      :on-change-fn (fn [tags] (reset! form-tags tags))
+                                      :on-change-fn    (fn [tags] (reset! form-tags tags))
                                       :tag-color       (mode->tag-color @opened-modal)}]]]]
          [ui/ModalActions
           {:style {:display         :flex
@@ -882,18 +882,20 @@
                       " "
                       @selected-count
                       " "
-                      (@tr [(if (= @selected-count 1) :edge :edges)])
+                      (@tr [(if (= @selected-count 0) :edge :edges)])
                       ". ")]
-           (when (< 0 not-editable @selected-count)
-             [:div
-              [:span (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " will not be updated, because you lack the required rights.")]]
-             [:div [:a {:target :_blank
-                        :href (route-utils/name->href {:route-name ::routes/edges
-                                                       :query-params
-                                                       {:nuvlabox (str/join " or "
-                                                                            (map #(str "id='" % "'")
-                                                                                 (->> @view-only-edges :resources (map :id))))}})}
-                    "Open in a new tab"]])]
+           (when (<= 0 not-editable @selected-count)
+             [:<>
+              [:div
+               (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " will not be updated, because you lack the required rights.")]
+              [:div [:a {:target :_blank
+                         :href (route-utils/name->href
+                                {:route-name ::routes/edges
+                                 :query-params
+                                 {:nuvlabox (str/join " or "
+                                                      (map #(str "id='" % "'")
+                                                           (->> @view-only-edges :resources (map :id))))}})}
+                     (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
           [ButtonAskingForConfirmation @form-tags close-fn]]]))))
 
 

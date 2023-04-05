@@ -323,10 +323,7 @@
                                      :selected-set @selected-set-sub}
         nothing-selected?           (= :none @selection-status)]
     [:div
-     {:style {:height "2.5rem"
-              :background-color "#f9fafb"
-              :margin-bottom "0.5rem"}
-      :class [:ui :table (if selectable? :visible :invisible)]}
+     {:class [(if selectable? :visible :invisible)]}
      [:div {:style {:display :flex
                     :align-items :center
                     :max-width "1040px"
@@ -357,15 +354,20 @@
                                 name]))]]])
                   :basic    true
                   :disabled (not= :none @selection-status)
-                  :content  (@tr [:select-at-least-one-item])}]]
-      [:div
-       {:class (if nothing-selected? :invisible :visible)}
-       [:span (or selected-all-text manual-selection-text)]]
-      [:button {:style {:width "120px" :text-align :center
-                        :display (if nothing-selected? :none :inline-block)}
-                :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
-                :class [(if nothing-selected? :invisible :visible) :select-all]}
-       (str button-text)]]]))
+                  :content  (@tr [:select-at-least-one-item])}]]]
+     [:div
+      {:style {:heigh "2rem"
+               :padding-left "1rem"}}
+      [:div {:style {:display         :flex
+                     :justify-content :center
+                     :align-items     :center}
+            ;;  :class (if (= :none @selection-status) :invisible :visible)
+             }
+       [:span (or selected-all-text manual-selection-text)]
+       [:button {:style {:width "120px" :text-align :center :border :none}
+                 :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
+                 :class [ :select-all]}
+        (str button-text)]]]]))
 
 
 (defn Table

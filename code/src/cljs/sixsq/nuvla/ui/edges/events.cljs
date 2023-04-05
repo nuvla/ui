@@ -177,14 +177,21 @@
     (let [edit-mode->operation {spec/modal-tags-add-id    "add-tags"
                                 spec/modal-tags-remove-id "remove-tags"
                                 spec/modal-tags-set-id    "set-tags"}
-          filter                (table-plugin/build-bulk-filter select (get-full-filter-string db))]
+          filter                (table-plugin/build-bulk-filter select (get-full-filter-string db))
+          operation            (edit-mode->operation edit-mode)]
       {::cimi-api-fx/operation-bulk [:nuvlabox
-                                     (fn [_]
+                                     (fn [result]
+                                       (dispatch [::messages-events/add
+                                                  {:header  "Bulk edit operation successful"
+                                                   :content (str "Number of updated resources: "
+                                                                 (-> result :updated))
+                                                   :type    :success}])
                                        (dispatch [::get-nuvlaboxes])
-                                       (when (fn? call-back-fn) (call-back-fn)))
-                                     (edit-mode->operation edit-mode)
+                                       (when (fn? call-back-fn) (call-back-fn (-> result :updated))))
+                                     operation
                                      (when (seq filter) filter)
                                      {:doc {:tags tags}}]})))
+
 (reg-event-fx
   ::set-additional-filter
   (fn [{db :db} [_ filter]]

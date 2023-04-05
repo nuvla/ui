@@ -31,7 +31,8 @@
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            [sixsq.nuvla.ui.utils.zip :as zip]))
+            [sixsq.nuvla.ui.utils.zip :as zip]
+            [sixsq.nuvla.ui.messages.events :as messages-events]))
 
 (def show-state-statistics (r/atom false))
 
@@ -820,10 +821,15 @@
                                (= 0 (count form-tags)))
                         (@tr [:tags-remove-all])
                         (get-name-as-keyword @tr @edit-mode))
-            update-fn (fn [] (dispatch [::events/update-tags
-                                        @edit-mode
-                                        {:tags         form-tags
-                                         :call-back-fn close-fn}]))
+            call-back (fn [updated]
+                        (dispatch [::table-plugin/set-bulk-edit-success-message
+                                   (str updated " " (@tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)])
+                        (close-fn))
+            update-fn (fn []
+                        (dispatch [::events/update-tags
+                                   @edit-mode
+                                   {:tags         form-tags
+                                    :call-back-fn call-back}]))
             disabled? (and  (not= spec/modal-tags-set-id @edit-mode)
                             (= 0 (count form-tags)))]
         (if (= :idle @mode)

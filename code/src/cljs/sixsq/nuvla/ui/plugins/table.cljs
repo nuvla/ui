@@ -109,6 +109,18 @@
                                                    ::total-count-sub-key ::resources-sub-key]
                                           :opt-un [::rights-needed ])))
 
+(s/def ::bulk-edit-success-msg (s/nilable string?))
+
+(reg-event-db
+  ::set-bulk-edit-success-message
+  (fn [db [_ msg db-path]]
+    (assoc-in db (conj db-path ::bulk-edit-success-msg) msg)))
+
+(reg-sub
+  ::bulk-edit-success-message-sub
+  (fn [db]
+    (::bulk-edit-success-msg db)))
+
 (s/def ::selection-status #{:all :page
                             :some :none})
 
@@ -137,6 +149,7 @@
    (get-in-db db db-path k nil))
   ([db db-path k default]
    (get-in db (conj (or db-path []) k) default)))
+
 
 (reg-event-fx
  ::select-all-in-page
@@ -321,10 +334,12 @@
                                       (str "Select all " @total-count))
         payload                     {:select-all   @selected-all-sub
                                      :selected-set @selected-set-sub}
-        nothing-selected?           (= :none @selection-status)]
+        nothing-selected?           (= :none @selection-status)
+        bulk-edit-success-message   (subscribe [::bulk-edit-success-message-sub db-path])]
     [:div
      {:class [(if selectable? :visible :invisible)]}
      [:div {:style {:display :flex
+                    :justify-content :space-between
                     :align-items :center
                     :max-width "1040px"
                     :height "2.5rem"
@@ -332,7 +347,7 @@
                     :background-color "#f9fafb"
                     :gap "1rem"}}
       [:div
-       {:style {:display :flex :align-items :center}}
+      ;;  {:style {:display :flex :align-items :center}}
        [ui/Popup {:trigger
                   (r/as-element
                    [:div [ui/Dropdown {:disabled nothing-selected?
@@ -354,7 +369,9 @@
                                 name]))]]])
                   :basic    true
                   :disabled (not= :none @selection-status)
-                  :content  (@tr [:select-at-least-one-item])}]]]
+                  :content  (@tr [:select-at-least-one-item])}]]
+      [:div {:style {:padding-right "1rem"}}
+       @bulk-edit-success-message]]
      [:div
       {:style {:heigh "2rem"
                :padding-left "1rem"}}

@@ -119,7 +119,8 @@
 
 (reg-sub
   ::targets-selected
-  :-> ::spec/targets-selected)
+  (fn [db [_ i]]
+    (vals (get-in db [::spec/apps-sets i ::spec/targets-selected]))))
 
 (reg-sub
   ::targets-selected?

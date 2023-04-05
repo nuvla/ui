@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.plugins.target-selector
   (:require [cljs.spec.alpha :as s]
+            [clojure.set :as set]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -9,6 +10,9 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+
+; "infrastructure-service-swarm" "infrastructure-service-kubernetes"
+;(s/def ::subtype (s/nilable #{"swarm" "kubernetes"}))
 
 (defn build-spec
   [& {:keys [default-items-per-page]
@@ -23,6 +27,34 @@
    ::clouds-search     (full-text-search/build-spec :persistent? false)
    ::clouds-pagination (pagination/build-spec
                          :default-items-per-page default-items-per-page)})
+
+(defn db-selected
+  [db db-path]
+  (get-in db (conj db-path ::selected)))
+
+(reg-event-fx
+  ::restore-selected
+  (fn [{:keys [db]} [_ db-path selected-ids]]
+    (if (seq selected-ids)
+      (let [rebuild-selected (fn [{:keys [resources]}]
+                               (let [selected-ids-set (set selected-ids)
+                                     result-ids-set   (set (map :id resources))
+                                     difference-set   (set/difference selected-ids-set result-ids-set)
+                                     resources-set    (set resources)]
+                                 (cond-> resources-set
+                                         (seq difference-set) (set/union
+                                                                (->> difference-set
+                                                                     (map #(hash-map :id % :subtype "unknown"))
+                                                                     set)))))]
+        {:db                  (assoc-in db (conj db-path ::loading?) true)
+         ::cimi-api-fx/search [:credential {:select "id, name, description, parent, subtype"
+                                        :filter (apply general-utils/join-or
+                                                       (map #(str "id='" % "'") selected-ids))
+                                        :last   10000}
+                               #(dispatch [::helpers/set db-path
+                                           ::selected (rebuild-selected %)
+                                           ::loading? false])]})
+      {:db (assoc-in db (conj db-path ::selected) #{})})))
 
 (reg-event-db
   ::set-credentials
@@ -165,7 +197,6 @@
 (defn CredentialItem
   [db-path {:keys [id name description] :as credential} credentials]
   (let [selected? @(subscribe [::selected? db-path [credential]])]
-    (js/console.info id)
     [ui/ListItem {:style    {:cursor :pointer}
                   :on-click #(dispatch [::toggle-select-target db-path
                                         credential credentials])}
@@ -252,7 +283,6 @@
 
 (defn TargetsSelectorSection
   [{:keys [db-path] :as opts}]
-
   [nav-tab/Tab
    {:db-path                 db-path
     :panes                   [{:menuItem {:content "Edges"
@@ -268,4 +298,6 @@
 
 (s/fdef TargetsSelectorSection
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]
-                                   :opt-un [::helpers/change-event])))
+                                   :opt-un [::helpers/change-event
+                                            ;::subtype
+                                            ])))

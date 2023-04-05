@@ -639,19 +639,14 @@
                   :text      fleet-text
                   :children  fleet-children}]])
 
-(defn AppNameIcon
-  [{:keys [id name subtype] :as _module}]
-  [ui/ListItem
-   [apps-utils/SubtypeDockerK8sListIcon subtype]
-   [ui/ListContent (or name id)]])
-
 (defn AppsList
   [i applications]
   [ui/ListSA
    (for [{:keys [id]} applications]
      ^{:key (str "apps-set-" i "-" id)}
-     [module-plugin/ModuleNameIcon {:db-path [::spec/apps-sets i]
-                                    :href    id}])])
+     [module-plugin/ModuleNameIcon
+      {:db-path [::spec/apps-sets i]
+       :href    id}])])
 
 (defn AppsSet
   [i {:keys [name description applications] :as apps-set}]
@@ -661,32 +656,86 @@
       [ui/HeaderSubheader description])]
    [AppsList i applications]])
 
+(defn SelectTargetsModal
+  [_i]
+  (fn [i]
+    (let [targets-selected @(subscribe [::subs/targets-selected i])
+          db-path          [::spec/apps-sets i ::spec/targets]
+          on-open          #(dispatch [::target-selector/restore-selected
+                                       db-path (map :id targets-selected)])
+          on-done          #(dispatch [::events/set-targets-selected i db-path])
+          ]
+      [ui/Modal
+       {:close-icon true
+        :trigger    (r/as-element
+                      [ui/Icon {:name  "add"
+                                :color "green"
+                                :on-click on-open}])
+        :header     "New apps set"
+        :content    (r/as-element
+                      [ui/ModalContent
+                       [target-selector/TargetsSelectorSection
+                        {:db-path db-path}]])
+        :actions    [{:key "cancel", :content "Cancel"}
+                     {:key     "done", :content "Done" :positive true
+                      :onClick on-done}]}])))
+
+
+(defn TargetIcon
+  [subtype]
+  (condp = subtype
+    "infrastructure-service-swarm" [ui/Icon {:name "docker"}]
+    "infrastructure-service-kubernetes" [apps-utils/IconK8s false]
+    [ui/Icon {:name "question circle"}]))
+(defn TargetNameIcon
+  [{:keys [subtype name] target-id :id} on-delete]
+  [ui/ListItem
+   [TargetIcon subtype]
+   [ui/ListContent (or name target-id) " "
+    (when on-delete
+      [ui/Icon {:name     "close" :color "red" :link true
+                :on-click #(on-delete target-id)}])]])
+
+
+(defn TargetsList
+  [i & {:keys [editable?]
+        :or   {editable? true} :as _opts}]
+  (let [selected  @(subscribe [::subs/targets-selected i])
+        on-delete #(dispatch [::events/remove-target i %])]
+    [ui/ListSA
+     (for [target selected]
+       ^{:key (:id target)}
+       [TargetNameIcon target on-delete])]))
 
 (defn TargetsSet
-  [i read-only fleet-text fleet-children]
-  #_[SelectTargets]
-  [target-selector/TargetsSelectorSection
-   {:db-path [::spec/apps-sets i ::spec/targets]}]
+  [i apps-set]
+  [:<>
+   [:h4]
+   [TargetsList i]
+   (when (-> apps-set count pos?)
+     [SelectTargetsModal i])]
   #_[DropdownDemo {:read-only read-only
-                 :text      fleet-text
-                 :children  fleet-children}])
+                   :text      fleet-text
+                   :children  fleet-children}])
 
 (defn AppsSetRow
   [{:keys [i apps-set read-only fleet-text fleet-children]}]
   [ui/TableRow {:vertical-align :top}
-   [ui/TableCell {:width 2} [ui/Header i]]
+   [ui/TableCell {:width 2}
+    [ui/Header i]]
    [ui/TableCell {:width 6}
     [AppsSet i apps-set]]
-
-   [ui/TableCell (cond-> {:width 2}
-                         (not read-only) (assoc-in [:style :padding-top] 15)) "➔"]
-   [TargetsSet i read-only fleet-text fleet-children]])
+   [ui/TableCell
+    (cond-> {:width 2}
+            (not read-only)
+            (assoc-in [:style :padding-top] 15)) "➔"]
+   [ui/TableCell {:width 6}
+    [TargetsSet i apps-set]]])
 
 (defn AppsSets
   [{:keys [read-only]
     :or   {read-only false}}]
   (let [applications-sets (subscribe [::subs/applications-sets])
-        _                 (js/console.info @applications-sets)
         content           [ui/Table {:compact    true
                                      :definition true}
                            [ui/TableHeader
@@ -801,8 +850,7 @@
         [ui/ButtonOr]
         [ui/Button {:icon "play" :content "Start"}]
         ]]
-      content))
-  )
+      content)))
 
 ; FIXME sketch
 (defn ConfigureDemo

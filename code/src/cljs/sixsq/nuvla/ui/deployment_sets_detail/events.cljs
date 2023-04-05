@@ -361,3 +361,17 @@
   ::set
   (fn [db [_ k v]]
     (assoc db k v)))
+
+(reg-event-db
+  ::remove-target
+  (fn [db [_ i target-id]]
+    (update-in db [::spec/apps-sets i ::spec/targets-selected] dissoc target-id)))
+
+(reg-event-fx
+  ::set-targets-selected
+  (fn [{db :db} [_ i db-path]]
+    (let [selected (target-selector/db-selected db db-path)]
+      {:db (->> selected
+                (map (juxt :id identity))
+                (into {})
+                (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))

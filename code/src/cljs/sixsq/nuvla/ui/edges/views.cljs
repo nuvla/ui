@@ -888,13 +888,15 @@
              [:<>
               [:div
                (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " will not be updated, because you lack the required rights.")]
-              [:div [:a {:target :_blank
-                         :href (route-utils/name->href
-                                {:route-name ::routes/edges
-                                 :query-params
-                                 {:nuvlabox (str/join " or "
-                                                      (map #(str "id='" % "'")
-                                                           (->> @view-only-edges :resources (map :id))))}})}
+              [:div [:a {:style {:cursor :pointer}
+                         :target :_blank
+                         :on-click
+                         (fn []
+                           (dispatch
+                            [::events/store-filter-and-open-in-new-tab
+                             (str/join " or "
+                                       (map #(str "id='" % "'")
+                                            (->> @view-only-edges :resources (map :id))))]))}
                      (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
           [ButtonAskingForConfirmation @form-tags close-fn]]]))))
 

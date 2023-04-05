@@ -12,8 +12,10 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param]]
+            [sixsq.nuvla.ui.routing.utils :as route-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -126,7 +128,6 @@
  ::get-edges-without-edit-rights
   (fn [{{:keys [::spec/select
                 ::session-spec/session] :as db} :db} _]
-    (js/console.error "get-edges-without-edit-rights")
     (let [selected-filter (table-plugin/build-bulk-filter
                            select
                            (get-full-filter-string db))
@@ -593,3 +594,20 @@
     {:storage/set {:session? false
                    :name     spec/local-storage-key
                    :value    (merge (edn/read-string storage) preference)}}))
+
+;; TODO: Implement this:
+;;   1. Store in localstorage under UUID key -> done
+;;   2. Open new edges page tab with query param storage-key=UUID -> done
+;;   3. Use this filter in ::init of edges page
+(reg-event-fx
+  ::store-filter-and-open-in-new-tab
+  (fn [_ [_ filter-string]]
+    (let [uuid (random-uuid)]
+      {:storage/set {:session? false
+                     :name     uuid
+                     :value    filter-string}
+       :fx [[:dispatch
+             [::main-events/open-link
+              (route-utils/name->href
+               {:route-name   ::routes/edges
+                :query-params {:filter-storage-key uuid}})]]]})))

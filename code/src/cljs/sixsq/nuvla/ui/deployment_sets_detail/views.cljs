@@ -18,9 +18,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -86,7 +84,8 @@
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:delete])}]))
 
-(defn MenuBar [uuid]
+(defn MenuBar
+  [uuid]
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])]
     (fn []
@@ -220,346 +219,10 @@
         :menu    {:secondary true
                   :pointing  true}}])))
 
-(defn Application
-  [{:keys [id name subtype description] :as module}]
-  (let [selected? @(subscribe [::subs/apps-selected? module])]
-    [ui/ListItem {:on-click #(dispatch [::events/toggle-select-app module])
-                  :style    {:cursor :pointer}}
-     [ui/ListIcon {:name (if selected?
-                           "check square outline"
-                           "square outline")}]
-     [ui/ListContent
-      [ui/ListHeader (when selected? {:as :a})
-       [apps-utils/SubtypeIconInfra subtype selected?]
-       " "
-       (or name id)]
-      [ui/ListDescription
-       (general-utils/truncate description 100)]]]))
-
-(defn Applications
-  [applications]
-  [:<>
-   (for [{:keys [id] :as child} applications]
-     ^{:key id}
-     [Application child])])
-
-(declare Node)
-
-(defn Project
-  [path {:keys [applications] :as content}]
-  [ui/ListItem
-   [ui/ListIcon {:name "folder"}]
-   [ui/ListContent
-    [ui/ListHeader path]
-    [ui/ListList
-     [Node
-      (dissoc content :applications)
-      applications]]]])
-
-(defn Projects
-  [projects]
-  [:<>
-   (for [[path content] projects]
-     ^{:key path}
-     [Project path content])])
-
-(defn Node
-  [projects applications]
-  [:<>
-   [Projects (sort-by first projects)]
-   [Applications (sort-by (juxt :id :name) applications)]])
-
-(defn SelectApps
-  []
-  (dispatch [::events/search-apps])
-  (fn []
-    (let [{:keys [count]} @(subscribe [::subs/apps])
-          apps     @(subscribe [::subs/apps-tree])
-          loading? @(subscribe [::subs/apps-loading?])
-          tr       @(subscribe [::i18n-subs/tr])
-          render   (fn []
-                     (r/as-element
-                       [ui/TabPane {:loading loading?}
-                        [full-text-search-plugin/FullTextSearch
-                         {:db-path      [::spec/apps-search]
-                          :change-event [::events/search-apps]}]
-                        [ui/ListSA
-                         [Node (dissoc apps :applications) (:applications apps)]]
-                        [pagination/Pagination
-                         {:db-path      [::spec/apps-pagination]
-                          :total-items  count
-                          :change-event [::events/search-apps]}]]))]
-      [tab/Tab
-       {:db-path      [::spec/tab-new-apps]
-        :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
-                                   :key     :app-store
-                                   :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-                        :render   render}
-                       {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
-                                   :key     :all-apps
-                                   :icon    "grid layout"}
-                        :render   render}
-                       {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
-                                   :key     :my-apps
-                                   :icon    "user"}
-                        :render   render}]
-        :change-event [::events/search-apps]}])))
-
-(defn CredentialItem
-  [{:keys [id name description] :as credential} credentials]
-  (let [selected? @(subscribe [::subs/targets-selected? [credential]])]
-    [ui/ListItem {:style    {:cursor :pointer}
-                  :on-click #(dispatch [::events/toggle-select-target
-                                        credential credentials])}
-     [ui/ListIcon
-      [ui/Icon {:name (if selected?
-                        "check square outline"
-                        "square outline")}]]
-     [ui/ListContent
-      [ui/ListHeader (when selected? {:as :a})
-       [ui/Icon {:name "key"}] " "
-       (or name id)]
-      (when description
-        [ui/ListDescription (general-utils/truncate description 100)])]]))
-
-(defn TargetItem
-  [{:keys [id name description credentials subtype] :as _infrastructure}]
-  (let [selected?      (subscribe [::subs/targets-selected? credentials])
-        multiple-cred? (> (count credentials) 1)]
-    [ui/ListItem (when-not multiple-cred?
-                   {:style    {:cursor :pointer}
-                    :disabled (-> credentials count zero?)
-                    :on-click #(dispatch [::events/toggle-select-target
-                                          (first credentials)])})
-     [ui/ListIcon
-      [ui/Icon {:name (if @selected?
-                        "check square outline"
-                        "square outline")}]]
-     [ui/ListContent
-      [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
-       (case subtype
-         "swarm" [ui/Icon {:name "docker"}]
-         "kubernetes" [ui/Image {:src   (if @selected?
-                                          "/ui/images/kubernetes.svg"
-                                          "/ui/images/kubernetes-grey.svg")
-                                 :style {:width   "1.18em"
-                                         :margin  "0 .25rem 0 0"
-                                         :display :inline-block}}])
-       " " (or name id)]
-      (when description
-        [ui/ListDescription (general-utils/truncate description 100)])
-      (when multiple-cred?
-        [ui/ListList
-         [:<>
-          (for [{:keys [id] :as credential} credentials]
-            ^{:key id}
-            [CredentialItem credential credentials])]])]]))
-
-(defn TargetEdges
-  []
-  (dispatch [::events/search-edges])
-  (fn []
-    (let [{:keys [count]} @(subscribe [::subs/edges])
-          infrastructures @(subscribe [::subs/infrastructures-with-credentials])
-          loading?        @(subscribe [::subs/targets-loading?])]
-      [ui/TabPane {:loading loading?}
-       [full-text-search-plugin/FullTextSearch
-        {:db-path      [::spec/edges-search]
-         :change-event [::events/search-edges]}]
-       [ui/ListSA
-        [:<>
-         (for [{:keys [id] :as infrastructures} infrastructures]
-           ^{:key id}
-           [TargetItem infrastructures])]]
-       [pagination/Pagination {:db-path      [::spec/edges-pagination]
-                               :total-items  count
-                               :change-event [::events/search-edges]}]])))
-
-(defn TargetClouds
-  []
-  (dispatch [::events/search-clouds])
-  (fn []
-    (let [{:keys [count]} @(subscribe [::subs/infrastructures])
-          infrastructures @(subscribe [::subs/infrastructures-with-credentials])
-          loading?        @(subscribe [::subs/targets-loading?])]
-      [ui/TabPane {:loading loading?}
-       [full-text-search-plugin/FullTextSearch
-        {:db-path      [::spec/clouds-search]
-         :change-event [::events/search-clouds]}]
-       [ui/ListSA
-        [:<>
-         (for [{:keys [id] :as infrastructures} infrastructures]
-           ^{:key id}
-           [TargetItem infrastructures])]]
-       [pagination/Pagination {:db-path      [::spec/clouds-pagination]
-                               :total-items  count
-                               :change-event [::events/search-clouds]}]])))
-
-(defn SelectTargets
-  []
-  [tab/Tab
-   {:db-path [::spec/tab-new-targets]
-    :panes   [{:menuItem {:content "Edges"
-                          :key     :edges
-                          :icon    "box"}
-               :render   #(r/as-element [TargetEdges])}
-              {:menuItem {:content "Clouds"
-                          :key     :clouds
-                          :icon    "cloud"}
-               :render   #(r/as-element [TargetClouds])}]}])
-
-(defn StepApplicationsTargets
-  []
-  (let [tr @(subscribe [::i18n-subs/tr])]
-    [ui/Grid {:stackable true}
-     [ui/GridRow {:columns   2
-                  :stretched true}
-      [ui/GridColumn
-       [ui/Segment
-        [:h2 (tr [:applications])]
-        [SelectApps]]]
-      [ui/GridColumn
-       [ui/Segment
-        [:h2 (tr [:targets])]
-        [SelectTargets]]]]]))
-
-(defn ConfigureApplications
-  []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        apps-selected (subscribe [::subs/apps-selected])]
-    [:div
-     [tab/Tab
-      {:db-path [::spec/config-apps-tab]
-       :panes   (map
-                  (fn [{:keys [id name subtype]}]
-                    {:menuItem {:content (or name id)
-                                :key     id
-                                :icon    (r/as-element
-                                           (apps-utils/SubtypeIconInfra
-                                             subtype false))}
-                     :render   #(r/as-element
-                                  [ui/TabPane
-                                   [uix/Accordion
-                                    ^{:key id}
-                                    [module-plugin/ModuleVersions
-                                     {:db-path [::spec/module-versions]
-                                      :href    id}]
-                                    :label (@tr [:select-version])
-                                    :default-open true]
-                                   [uix/Accordion
-                                    [module-plugin/EnvVariables
-                                     {:db-path [::spec/module-versions]
-                                      :href    id}]
-                                    :label (@tr [:env-variables])
-                                    :default-open true]
-                                   [uix/Accordion
-                                    [module-plugin/AcceptLicense
-                                     {:db-path [::spec/module-versions]
-                                      :href    id}]
-                                    :label (@tr [:eula-full])
-                                    :default-open true]
-                                   [uix/Accordion
-                                    [module-plugin/AcceptPrice
-                                     {:db-path [::spec/module-versions]
-                                      :href    id}]
-                                    :label (str/capitalize (@tr [:price]))
-                                    :default-open true]
-                                   ])}
-                    ) @apps-selected)}]]))
-
-(defn AddSelectedTargetsApps
-  [header apps-names targets-names]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        warning? (not (and (seq apps-names)
-                           (seq targets-names)))]
-    (when (or (seq apps-names)
-              (seq targets-names))
-      [:<>
-       [ui/Header {:as :h4, :attached :top} header]
-       [ui/Segment {:attached (or warning? :bottom)}
-        [ui/Table {:basic :very :celled true}
-         [ui/TableBody
-          [ui/TableRow
-           [ui/TableCell {:collapsing true}
-            [ui/Header {:as :h5 :content (str (str/capitalize (@tr [:targets]))
-                                              ":")}]]
-           [ui/TableCell
-            (for [target-name targets-names]
-              ^{:key target-name}
-              [ui/Label {:content target-name}])]]
-          [ui/TableRow
-           [ui/TableCell {:collapsing true}
-            [ui/Header {:as :h5 :content (str (str/capitalize (@tr [:apps]))
-                                              ":")}]]
-           [ui/TableCell
-            (for [app-name apps-names]
-              ^{:key app-name}
-              [ui/Label {:content app-name}])]]]]]
-       (when warning?
-         [ui/Message {:warning true :attached :bottom}
-          [ui/Icon {:name "question"}]
-          (if (seq apps-names)
-            (@tr [:warning-app-selected-not-compatible-targets])
-            (@tr [:warning-target-selected-not-compatible-apps]))])])))
-
 (defn on-change-input
   [k]
   (ui-callback/input-callback
     #(dispatch [::events/set k %])))
-
-(defn Summary
-  []
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        create-disabled?      (subscribe [::subs/create-disabled?])
-        apps-selected         (subscribe [::subs/apps-selected])
-        targets-selected      (subscribe [::subs/targets-selected])
-        license-not-accepted? (subscribe [::subs/some-license-not-accepted?])
-        price-not-accepted?   (subscribe [::subs/some-price-not-accepted?])
-        create-name           (subscribe [::subs/get ::spec/create-name])
-        create-description    (subscribe [::subs/get ::spec/create-description])
-        create-start          (subscribe [::subs/get ::spec/create-start])]
-    (fn []
-      (let [resource-names-of-subtype    (fn [resources subtype]
-                                           (map #(or (:name %) (:id %)) (get (group-by :subtype resources)
-                                                                             subtype)))
-            selected-swarm-targets-names (resource-names-of-subtype @targets-selected "infrastructure-service-swarm")
-            selected-swarm-apps-names    (map :name (remove #(= (:subtype %) "application_kubernetes") @apps-selected))
-            selected-k8s-targets-names   (resource-names-of-subtype @targets-selected "infrastructure-service-kubernetes")
-            selected-k8s-apps-names      (resource-names-of-subtype @apps-selected "application_kubernetes")]
-        [ui/Segment (merge style/basic {:clearing true})
-         [ui/Form
-          [ui/FormInput
-           {:label         (str/capitalize (@tr [:name]))
-            :placeholder   (@tr [:name-deployment-set])
-            :required      true
-            :default-value @create-name
-            :on-change     (on-change-input ::spec/create-name)}]
-          [ui/FormInput
-           {:label         (str/capitalize (@tr [:description]))
-            :placeholder   (@tr [:describe-deployment-set])
-            :default-value @create-description
-            :on-change     (on-change-input ::spec/create-description)}]
-          [ui/FormCheckbox
-           {:label     (@tr [:start-deployment-set-after-creation])
-            :checked   @create-start
-            :on-change (ui-callback/checked
-                         #(dispatch [::events/set ::spec/create-start (not @create-start)]))}]]
-         [AddSelectedTargetsApps "Kubernetes" selected-k8s-apps-names selected-k8s-targets-names]
-         [AddSelectedTargetsApps "Docker" selected-swarm-apps-names selected-swarm-targets-names]
-         (when @license-not-accepted?
-           [ui/Message {:error true}
-            [ui/Icon {:name "warning"}]
-            (@tr [:accept-applications-licenses])])
-         (when @price-not-accepted?
-           [ui/Message {:error true}
-            [ui/Icon {:name "warning"}]
-            (@tr [:accept-applications-prices])])
-         [ui/Button
-          {:positive true
-           :on-click #(dispatch [::events/create])
-           :disabled (or @create-disabled?
-                         (str/blank? @create-name))
-           :floated  :right} (str/capitalize (@tr [:create]))]]))))
 
 (defn NameInput
   []
@@ -588,57 +251,6 @@
    [NameInput]
    [DescriptionInput]])
 
-; FIXME sketch
-(defn DropdownDemo
-  [{:keys [text read-only children]}]
-  [ui/TableCell
-   (if read-only
-     [ui/Header text]
-     [:<>
-      [ui/Dropdown {:selection true
-                    :fluid     true
-                    :text      text
-                    :value     "Hello"
-                    :clearable true}]
-      ]
-     )
-   [ui/ListSA
-    (for [{:keys [icon text]} children]
-      ^{:key (random-uuid)}
-      [ui/ListItem
-       (if (= icon "kubernetes")
-         [ui/Image {:src   "/ui/images/kubernetes-grey.svg"
-                    :style {:width   "1.18em"
-                            :margin  "0 .25rem 0 0"
-                            :display :inline-block}}]
-         [ui/ListIcon {:name icon}])
-       [ui/ListContent text]])
-    #_[ui/ListItem
-       [ui/Button {:floated        :right
-                   :icon           true
-                   :primary        true
-                   :basic          true
-                   :size           :tiny
-                   :label-position :left}
-        [ui/Icon {:name "pencil"}]
-        "Update"
-        ]
-       ]
-    ]])
-
-; FIXME sketch
-(defn RowDemo
-  [{:keys [i read-only app-text app-children fleet-text fleet-children]}]
-  [ui/TableRow {:vertical-align :top}
-   [ui/TableCell (when-not read-only {:style {:padding-top 18}}) [ui/Header i]]
-   [DropdownDemo {:read-only read-only
-                  :text      app-text
-                  :children  app-children}]
-   [ui/TableCell (when-not read-only {:style {:padding-top 15}}) "➔"]
-   [DropdownDemo {:read-only read-only
-                  :text      fleet-text
-                  :children  fleet-children}]])
-
 (defn AppsList
   [i applications]
   [ui/ListSA
@@ -649,7 +261,7 @@
        :href    id}])])
 
 (defn AppsSet
-  [i {:keys [name description applications] :as apps-set}]
+  [i {:keys [name description applications] :as _apps-set}]
   [:<>
    [ui/Header {:as "h4"} name
     (when description
@@ -657,27 +269,26 @@
    [AppsList i applications]])
 
 (defn SelectTargetsModal
-  [_i]
-  (fn [i]
-    (let [targets-selected @(subscribe [::subs/targets-selected i])
-          db-path          [::spec/apps-sets i ::spec/targets]
-          on-open          #(dispatch [::target-selector/restore-selected
-                                       db-path (map :id targets-selected)])
-          on-done          #(dispatch [::events/set-targets-selected i db-path])]
-      [ui/Modal
-       {:close-icon true
-        :trigger    (r/as-element
-                      [ui/Icon {:name     "add"
-                                :color    "green"
-                                :on-click on-open}])
-        :header     "New apps set"
-        :content    (r/as-element
-                      [ui/ModalContent
-                       [target-selector/TargetsSelectorSection
-                        {:db-path db-path}]])
-        :actions    [{:key "cancel", :content "Cancel"}
-                     {:key     "done", :content "Done" :positive true
-                      :onClick on-done}]}])))
+  [i]
+  (let [targets-selected @(subscribe [::subs/targets-selected i])
+        db-path          [::spec/apps-sets i ::spec/targets]
+        on-open          #(dispatch [::target-selector/restore-selected
+                                     db-path (map :id targets-selected)])
+        on-done          #(dispatch [::events/set-targets-selected i db-path])]
+    [ui/Modal
+     {:close-icon true
+      :trigger    (r/as-element
+                    [ui/Icon {:name     "add"
+                              :color    "green"
+                              :on-click on-open}])
+      :header     "New apps set"
+      :content    (r/as-element
+                    [ui/ModalContent
+                     [target-selector/TargetsSelectorSection
+                      {:db-path db-path}]])
+      :actions    [{:key "cancel", :content "Cancel"}
+                   {:key     "done", :content "Done" :positive true
+                    :onClick on-done}]}]))
 
 
 (defn TargetIcon
@@ -700,156 +311,67 @@
   [i & {:keys [editable?]
         :or   {editable? true} :as _opts}]
   (let [selected  @(subscribe [::subs/targets-selected i])
-        on-delete #(dispatch [::events/remove-target i %])]
-    [ui/ListSA
-     (for [target selected]
-       ^{:key (:id target)}
-       [TargetNameIcon target on-delete])]))
+        on-delete (when editable?
+                    #(dispatch [::events/remove-target i %]))]
+    (when (seq selected)
+      [ui/ListSA
+       (for [target selected]
+         ^{:key (:id target)}
+         [TargetNameIcon target on-delete])])))
 
 (defn TargetsSet
-  [i apps-set]
+  [i apps-set editable?]
   [:<>
-   [:h4]
-   [TargetsList i]
-   (when (-> apps-set count pos?)
-     [SelectTargetsModal i])]
-  #_[DropdownDemo {:read-only read-only
-                   :text      fleet-text
-                   :children  fleet-children}])
+   [TargetsList i :editable? editable?]
+   (when (and (-> apps-set count pos?)
+              editable?)
+     [SelectTargetsModal i])])
 
 (defn AppsSetRow
-  [{:keys [i apps-set read-only fleet-text fleet-children]}]
+  [{:keys [i apps-set summary-page]}]
   [ui/TableRow {:vertical-align :top}
    [ui/TableCell {:width 2}
     [ui/Header (inc i)]]
    [ui/TableCell {:width 6}
     [AppsSet i apps-set]]
-   [ui/TableCell
-    (cond-> {:width 2}
-            (not read-only)
-            (assoc-in [:style :padding-top] 15)) "➔"]
+   [ui/TableCell {:width 2} "➔"]
    [ui/TableCell {:width 6}
-    [TargetsSet i apps-set]]])
+    [TargetsSet i apps-set (not summary-page)]]])
+
+(defn CreateStartButton
+  []
+  (let [create-name (subscribe [::subs/get ::spec/create-name])
+        disabled?   (str/blank? @create-name)]
+    [ui/ButtonGroup {:floated  "right"
+                     :positive true}
+     [ui/Button {:disabled disabled?
+                 :content  "Create"}]
+     [ui/ButtonOr]
+     [ui/Button {:icon     "play"
+                 :content  "Start"
+                 :disabled disabled?}]]))
 
 (defn AppsSets
-  [{:keys [read-only]
-    :or   {read-only false}}]
-  (let [applications-sets (subscribe [::subs/applications-sets])
-        content           [ui/Table {:compact    true
-                                     :definition true}
-                           [ui/TableHeader
-                            [ui/TableRow
-                             [ui/TableHeaderCell]
-                             [ui/TableHeaderCell "Apps sets"]
-                             [ui/TableHeaderCell]
-                             [ui/TableHeaderCell "Targets sets"]]]
+  [{:keys [summary-page]
+    :or   {summary-page false}}]
+  (let [applications-sets (subscribe [::subs/applications-sets])]
+    [ui/Segment (merge style/basic {:clearing true})
+     [ui/Table {:compact    true
+                :definition true}
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell]
+        [ui/TableHeaderCell "Apps sets"]
+        [ui/TableHeaderCell]
+        [ui/TableHeaderCell "Targets sets"]]]
 
-                           [ui/TableBody
-                            (for [[i apps-set] (map-indexed vector @applications-sets)]
-                              ^{:key (str "apps-set-" i)}
-                              [AppsSetRow {:i              i
-                                           :apps-set       apps-set
-                                           :read-only      read-only
-                                           :fleet-text     "Geneva"
-                                           :fleet-children [
-                                                            {:text "NuvlaEdge demo 1" :icon "box"}
-                                                            {:text "NuvlaEdge demo 2" :icon "box"}
-                                                            {:text "NuvlaEdge demo 3" :icon "box"}
-                                                            {:text "NuvlaEdge demo 4" :icon "box"}
-                                                            {:text "NuvlaEdge demo 5" :icon "box"}
-                                                            ]
-                                           }])
-                            #_[AppsSet {:i              1
-                                        :read-only      read-only
-                                        :app-text       "Blackbox"
-                                        :app-children   [
-                                                         {:text "App 1" :icon "cubes"}
-                                                         {:text "App 2" :icon "cubes"}
-                                                         {:text "App 3" :icon "cubes"}
-                                                         ]
-                                        :fleet-text     "Geneva"
-                                        :fleet-children [
-                                                         {:text "NuvlaEdge demo 1" :icon "box"}
-                                                         {:text "NuvlaEdge demo 2" :icon "box"}
-                                                         {:text "NuvlaEdge demo 3" :icon "box"}
-                                                         {:text "NuvlaEdge demo 4" :icon "box"}
-                                                         {:text "NuvlaEdge demo 5" :icon "box"}
-                                                         ]
-                                        }]
-                            #_[AppsSet {:i              2
-                                        :read-only      read-only
-                                        :app-text       "Whitebox"
-                                        :app-children   [
-                                                         {:text "App 1" :icon "cubes"}
-                                                         {:text "App 5" :icon "cubes"}
-                                                         ]
-                                        :fleet-text     "Zurich"
-                                        :fleet-children [
-                                                         {:text "NuvlaEdge demo 6" :icon "box"}
-                                                         {:text "NuvlaEdge demo 7" :icon "box"}
-                                                         ]
-                                        }]
-                            #_[AppsSet {:i              3
-                                        :read-only      read-only
-                                        :app-text       "Monitoring"
-                                        :app-children   [
-                                                         {:text "App 6" :icon "kubernetes"}
-                                                         {:text "App 7" :icon "kubernetes"}
-                                                         ]
-                                        :fleet-text     "Exoscale Cloud"
-                                        :fleet-children [
-                                                         {:text "Cloud demo 1" :icon "cloud"}
-                                                         {:text "Cloud demo 2" :icon "cloud"}
-                                                         ]
-                                        }]
-                            #_(when-not read-only
-                                [ui/TableRow
-                                 [ui/TableCell [ui/Header "4"]]
-                                 [ui/TableCell
-                                  [ui/Grid
-                                   [ui/GridRow {:columns 2}
-                                    [ui/GridColumn
-                                     [ui/Dropdown {:selection   true
-                                                   :fluid       true
-                                                   :placeholder "Select apps set"}]]
-                                    [ui/GridColumn
-                                     [ui/Modal {:trigger (r/as-element
-                                                           [ui/Button {:primary  true
-                                                                       :circular true}
-                                                            "New apps set"]
-                                                           )}
-                                      [ui/ModalHeader "New apps set"]
-                                      [ui/ModalContent
-                                       [ui/Input]
-                                       [SelectApps]
-                                       ]
-                                      ]]
-                                    ]]]
-                                 [ui/TableCell "➔"]
-                                 [ui/TableCell
-                                  [ui/Grid
-                                   [ui/GridRow {:columns 2}
-                                    [ui/GridColumn
-                                     [ui/Dropdown {:selection   true
-                                                   :fluid       true
-                                                   :placeholder "Select targets set"}]]
-                                    [ui/GridColumn
-                                     [ui/Button {:primary  true
-                                                 :circular true}
-                                      "New targets set"]]
-                                    ]]]
-                                 ])
-                            ]
-                           ]]
-    (if read-only
-      [ui/Segment (merge style/basic {:clearing true})
-       content
-       [ui/ButtonGroup {:floated "right" :positive true}
-        [ui/Button "Create"]
-        [ui/ButtonOr]
-        [ui/Button {:icon "play" :content "Start"}]
-        ]]
-      content)))
+      [ui/TableBody
+       (for [[i apps-set] (map-indexed vector @applications-sets)]
+         ^{:key (str "apps-set-" i)}
+         [AppsSetRow {:i            i
+                      :apps-set     apps-set
+                      :summary-page summary-page}])]]
+     [CreateStartButton]]))
 
 (defn ConfigureApps
   [i applications]
@@ -887,8 +409,7 @@
 
 (defn AddPage
   []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        configure-disabled? (subscribe [::subs/configure-disabled?])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (dispatch [::events/new])
     (fn []
       [ui/Container {:fluid true}
@@ -907,37 +428,16 @@
                     :content     [AppsSets]
                     :title       "Apps / Targets"
                     :description (@tr [:select-applications-targets])}
-                   ; FIXME sketch
-                   {:key         :configure-new
+                   {:key         :configure-sets
                     :icon        "configure"
                     :content     [ConfigureSets]
                     :title       (str/capitalize (@tr [:configure]))
                     :description (@tr [:configure-applications])}
-                   ; FIXME sketch
                    {:key         :summary
                     :icon        "info"
-                    :content     [AppsSets {:read-only true}]
+                    :content     [AppsSets {:summary-page true}]
                     :title       (str/capitalize (@tr [:summary]))
-                    :description (@tr [:overall-summary])}
-                   ; FIXME sketch uncomment
-                   #_{:key         :select-apps-targets
-                      :icon        "list"
-                      :content     [StepApplicationsTargets]
-                      :title       (@tr [:applications-targets])
-                      :description (@tr [:select-applications-targets])}
-                   ; FIXME sketch uncomment
-                   #_{:key         :configure
-                      :icon        "configure"
-                      :content     [ConfigureApplications]
-                      :title       (str/capitalize (@tr [:configure]))
-                      :disabled    @configure-disabled?
-                      :description (@tr [:configure-applications])}
-                   ; FIXME sketch uncomment
-                   #_{:key         :summary
-                      :icon        "info"
-                      :content     [Summary]
-                      :title       (str/capitalize (@tr [:summary]))
-                      :description (@tr [:overall-summary])}]}]])))
+                    :description (@tr [:overall-summary])}]}]])))
 
 (defn DeploymentSet
   [uuid]

@@ -238,7 +238,7 @@
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
          [ui/Table style/definition
@@ -371,7 +371,7 @@
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
          [ui/Table style/definition
@@ -400,7 +400,7 @@
             {:keys [name description endpoint]} @service]
         [:<>
          [acl/AclButton {:default-value (:acl @service)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
          [ui/Table style/definition

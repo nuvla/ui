@@ -98,10 +98,10 @@
                                :z-index 0
                                :height  600}}
         [uix/EditorCode
-         {:value     (str/join "\n" log)
-          :height    "600px"
-          :read-only true
-          :on-update #(when (or go-live? @first-render) (scroll-down %))}]]
+         {:value        (str/join "\n" log)
+          :height       "600px"
+          :summary-page true
+          :on-update    #(when (or go-live? @first-render) (scroll-down %))}]]
        [ui/Label (@tr [:row-count])
         [ui/LabelDetail (count log)]]])))
 

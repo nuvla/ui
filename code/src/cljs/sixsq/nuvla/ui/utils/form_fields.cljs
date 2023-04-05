@@ -52,7 +52,7 @@
           (cond-> {:type          (if sensitive "password" "text")
                    :name          name
                    :default-value default-value
-                   :read-only     read-only
+                   :summary-page  read-only
                    :on-change     on-change-fn}
                   hidden (assoc :style {:display "none"}))])])))
 
@@ -73,7 +73,7 @@
         (cond-> {:type          "number"
                  :name          name
                  :default-value (or default-value "")
-                 :read-only     (not editable)
+                 :summary-page  (not editable)
                  :on-change     (ui-callback/value #(update-fn form-id name (utils/str->int %)))}
                 hidden (assoc :style {:display "none"}))]])))
 
@@ -93,7 +93,7 @@
          (when-not hidden [:label label nbsp (help-popup help)])
          [ui/DatePicker (cond-> {:custom-input     (reagent/as-element [ui/Input {:style {:width "250px"}}])
                                  :show-time-select true
-                                 :read-only        read-only
+                                 :summary-page     read-only
                                  :locale           (or (time/locale-string->locale-object @locale) @locale)
                                  :date-format      "d MMMM yyyy, hh:mm a"
                                  :on-change        (fn [date]
@@ -122,7 +122,7 @@
        [ui/Checkbox
         (cond-> {:name          name
                  :default-value default-value
-                 :read-only     (not editable)
+                 :summary-page  (not editable)
                  :on-change     (ui-callback/checked #(update-fn form-id name %))}
                 hidden (assoc :style {:display "none"}))]])))
 
@@ -137,6 +137,6 @@
      [ui/Checkbox
       (cond-> {:name          name
                :default-value (or (:value value-scope) (:default value-scope) "")
-               :read-only     (not editable)
+               :summary-page  (not editable)
                :on-change     (ui-callback/value #(update-fn form-id name {:href %}))}
               hidden (assoc :style {:display "none"}))]]))

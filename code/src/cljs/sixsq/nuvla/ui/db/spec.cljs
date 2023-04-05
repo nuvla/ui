@@ -65,5 +65,4 @@
          resource-log/defaults
          deployment-sets/defaults
          deployment-sets-detail/defaults
-         deployment-sets-detail/pagination-defaults
          {:router router}))

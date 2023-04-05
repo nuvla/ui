@@ -78,7 +78,7 @@
         [:<>
 
          [acl/AclButton {:default-value (:acl @credential)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
          [ui/Table style/definition
@@ -118,7 +118,7 @@
         [:<>
 
          [acl/AclButton {:default-value (:acl @credential)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
          [ui/Table style/definition
@@ -158,7 +158,7 @@
 
         [:<>
          [acl/AclButton {:default-value (:acl @credential)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
          [ui/Table style/definition
           [ui/TableBody
@@ -193,7 +193,7 @@
 
         [:<>
          [acl/AclButton {:default-value (:acl @credential)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
          [ui/Table style/definition
@@ -229,7 +229,7 @@
 
         [:<>
          [acl/AclButton {:default-value (:acl @credential)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
          [ui/Table style/definition
@@ -265,7 +265,7 @@
 
         [:<>
          [acl/AclButton {:default-value (:acl @credential)
-                         :read-only     (not editable?)
+                         :summary-page  (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
          [ui/Table style/definition

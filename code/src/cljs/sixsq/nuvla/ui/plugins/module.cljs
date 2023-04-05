@@ -149,13 +149,13 @@
     [ui/FormField {:required env-required}
      [:label env-name ff/nbsp (ff/help-popup env-description)]
      [ui/Input
-      {:type      "text"
-       :name      env-name
-       :value     (or updated-env-value env-value "")
-       :read-only read-only?
-       :fluid     true
-       :on-change (ui-callback/input-callback
-                    #(dispatch [::update-env db-path href index %]))}]]))
+      {:type         "text"
+       :name         env-name
+       :value        (or updated-env-value env-value "")
+       :summary-page read-only?
+       :fluid        true
+       :on-change    (ui-callback/input-callback
+                       #(dispatch [::update-env db-path href index %]))}]]))
 
 (defn EnvVariables
   [{:keys [db-path href change-event read-only?]

@@ -107,7 +107,7 @@
 
 
 (defn RightCheckbox
-  [{:keys [on-change read-only mode] :as _opts} ui-acl row-number principal rights right-kw]
+  [{:keys [on-change summary-page mode] :as _opts} ui-acl row-number principal rights right-kw]
   (let [checked?       (contains? rights right-kw)
         indeterminate? (and
                          (= @mode :simple)
@@ -126,11 +126,11 @@
                                                      (apply conj rights (utils/extent-right right-kw)))]
                                     (swap! ui-acl utils/acl-change-rights-for-row row-number principal new-rights)
                                     (on-change (utils/ui-acl-format->acl @ui-acl)))
-                  :disabled      read-only}]))
+                  :disabled      summary-page}]))
 
 
 (defn RightRow
-  [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights]
+  [{:keys [on-change summary-page mode] :as opts} ui-acl row-number principal rights]
   (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/TableRow
 
@@ -148,7 +148,7 @@
        [ui/TableCell [RightCheckbox opts ui-acl row-number principal rights right-kw]])
 
      [ui/TableCell
-      (when-not read-only
+      (when-not summary-page
         [ui/Icon {:link     true
                   :name     "trash"
                   :color    "red"
@@ -230,7 +230,7 @@
   [_opts _ui-acl]
   (let [mobile? (subscribe [::main-subs/is-mobile-device?])
         tr      (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [read-only on-change mode] :as opts} ui-acl]
+    (fn [{:keys [summary-page on-change mode] :as opts} ui-acl]
       (let [is-advanced? (is-advanced-mode? @mode)
             owners       (utils/acl-get-owners-set @ui-acl)]
         [ui/Table {:unstackable true
@@ -254,9 +254,9 @@
 
              (for [owner owners]
                ^{:key owner}
-               [OwnerItem opts ui-acl (and (not read-only) (>= (count owners) 2)) owner])
+               [OwnerItem opts ui-acl (and (not summary-page) (>= (count owners) 2)) owner])
 
-             (when-not read-only
+             (when-not summary-page
                [ui/ListItem {:style {:vertical-align "middle"}}
                 [ui/ListContent
                  [ui/ListHeader
@@ -269,7 +269,7 @@
 
 
 (defn AclRights
-  [{:keys [read-only] :as opts} ui-acl]
+  [{:keys [summary-page] :as opts} ui-acl]
   (let [principals (:principals @ui-acl)]
     [ui/Table {:unstackable    true
                :attached       "bottom"
@@ -284,7 +284,7 @@
         ^{:key principal}
         [RightRow opts ui-acl row-number principal rights])
 
-      (when-not read-only
+      (when-not summary-page
         [AddRight opts ui-acl])]]))
 
 
@@ -303,14 +303,14 @@
 
 
 (defn AclWidget
-  [{:keys [default-value read-only mode owner-read-only margin-override] :as _opts} & [ui-acl]]
+  [{:keys [default-value summary-page mode owner-read-only margin-override] :as _opts} & [ui-acl]]
   (let [mode       (r/atom (or mode :simple))
         ui-acl     (or ui-acl
-                       (->ui-acl default-value (not read-only)))
+                       (->ui-acl default-value (not summary-page)))
         is-mobile? (subscribe [::main-subs/is-mobile-device?])]
-    (fn [{:keys [on-change read-only] :as opts}]
+    (fn [{:keys [on-change summary-page] :as opts}]
       (let [opts (assoc opts :mode mode
-                             :read-only (or (nil? read-only) read-only)
+                             :summary-page (or (nil? summary-page) summary-page)
                              :on-change (or on-change #()))]
 
         [:div
@@ -319,8 +319,8 @@
                                  :font-size     "13px"}
                                 margin-override)
                          @is-mobile? (assoc :overflow-x "auto"))}
-         [AclOwners (assoc opts :read-only (or owner-read-only read-only)) ui-acl]
-         (when (or (not read-only)
+         [AclOwners (assoc opts :summary-page (or owner-read-only summary-page)) ui-acl]
+         (when (or (not summary-page)
                    (not (utils/acl-rights-empty? @ui-acl)))
            [AclRights opts ui-acl])]))))
 
@@ -338,7 +338,7 @@
                    (when default-value
                      ^{:key (:updated @e)}
                      [AclWidget {:default-value   default-value
-                                 :read-only       (not can-edit?)
+                                 :summary-page    (not can-edit?)
                                  :owner-read-only owner-read-only
                                  :on-change       #(dispatch
                                                     [edit-event
@@ -348,9 +348,9 @@
 
 
 (defn AclButtonOnly
-  [{:keys [default-value read-only active?] :as _opts}]
+  [{:keys [default-value summary-page active?] :as _opts}]
   (let [tr     (subscribe [::i18n-subs/tr])
-        ui-acl (->ui-acl default-value (not read-only))]
+        ui-acl (->ui-acl default-value (not summary-page))]
     (fn [_opts]
       (when ui-acl
         (let [owners          (utils/acl-get-owners-set @ui-acl)
@@ -389,17 +389,17 @@
 
 
 (defn AclSection
-  [{:keys [default-value read-only active?] :as _opts}]
-  (let [ui-acl (->ui-acl default-value (not read-only))]
+  [{:keys [default-value summary-page active?] :as _opts}]
+  (let [ui-acl (->ui-acl default-value (not summary-page))]
     (fn [opts]
       (when (and ui-acl @active?)
         [AclWidget opts ui-acl]))))
 
 
 (defn AclButton
-  [{:keys [default-value read-only default-active?] :as _opts}]
+  [{:keys [default-value summary-page default-active?] :as _opts}]
   (let [active? (r/atom default-active?)
-        ui-acl  (->ui-acl default-value (not read-only))]
+        ui-acl  (->ui-acl default-value (not summary-page))]
     (fn [opts]
       (when ui-acl
         [:<>

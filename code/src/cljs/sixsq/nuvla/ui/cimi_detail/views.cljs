@@ -282,7 +282,7 @@
            ^{:key (str resource-id "-" updated)}
            [:div {:style {:min-height "30px"}}
             [acl-views/AclButton {:default-value   acl
-                                  :read-only       (not (general-utils/can-edit? resource-value))
+                                  :summary-page    (not (general-utils/can-edit? resource-value))
                                   :on-change       #(dispatch [::events/edit
                                                                resource-id
                                                                (assoc resource-value :acl %)])

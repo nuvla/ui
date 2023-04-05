@@ -8,16 +8,11 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination]
-            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -174,146 +169,6 @@
     (let [id (:id deployment-set)]
       {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate routes/deployment-sets])]})))
 
-(reg-event-db
-  ::set-apps
-  (fn [db [_ apps]]
-    (assoc db ::spec/apps apps
-              ::spec/apps-loading? false)))
-
-(reg-event-fx
-  ::search-apps
-  (fn [{{:keys [::session-spec/session] :as db} :db}]
-    {:db (assoc db ::spec/apps-loading? true)
-     ::cimi-api-fx/search
-     [:module (->>
-                {:select  "id, name, description, parent-path, subtype"
-                 :orderby "path:asc"
-                 :filter  (general-utils/join-and
-                            (full-text-search/filter-text db [::spec/apps-search])
-                            (case (nav-tab/get-active-tab db [::spec/tab-new-apps])
-                              :my-apps (str "acl/owners='" (get-active-claim session) "'")
-                              :app-store "published=true"
-                              nil)
-                            "subtype!='project'")}
-                (pagination/first-last-params db [::spec/apps-pagination]))
-      #(dispatch [::set-apps %])]}))
-
-(reg-event-fx
-  ::toggle-select-app
-  (fn [{{:keys [::spec/apps-selected] :as db} :db} [_ {:keys [id] :as module}]]
-    (let [select? (nil? (apps-selected module))
-          op      (if select? conj disj)]
-      (cond-> {:db (update db ::spec/apps-selected op module)}
-              select? (assoc :fx [[:dispatch [::module-plugin/load-module [::spec/module-versions] id]]])))))
-
-(reg-event-db
-  ::toggle-select-target
-  (fn [{:keys [::spec/targets-selected] :as db} [_ credential credentials]]
-    (let [select? (nil? (targets-selected credential))
-          op      (if select? conj disj)]
-      (-> db
-          (assoc ::spec/targets-selected
-                 (apply disj targets-selected credentials))
-          (update ::spec/targets-selected op credential)))))
-
-(reg-event-fx
-  ::set-credentials
-  (fn [{db :db} [_ response]]
-    {:db (assoc db ::spec/targets-loading? false
-                   ::spec/credentials response)}))
-
-(reg-event-fx
-  ::search-credentials
-  (fn [_ [_ filter-str]]
-    {::cimi-api-fx/search
-     [:credential {:last   10000
-                   :select "id, name, description, parent, subtype"
-                   :filter filter-str}
-      #(dispatch [::set-credentials %])]}))
-
-(reg-event-fx
-  ::set-infrastructures
-  (fn [{db :db} [_ {:keys [resources] :as response}]]
-    (if (seq resources)
-      (let [filter-str (->> resources
-                            (map #(str "parent='" (:id %) "'"))
-                            (apply general-utils/join-or)
-                            (general-utils/join-and
-                              (general-utils/join-or
-                                "subtype='infrastructure-service-swarm'"
-                                "subtype='infrastructure-service-kubernetes'"
-                                )))]
-        {:db (assoc db ::spec/infrastructures response)
-         :fx [[:dispatch [::search-credentials filter-str]]]})
-      {:db (assoc db ::spec/targets-loading? false
-                     ::spec/infrastructures response
-                     ::spec/credentials nil)})))
-
-(reg-event-fx
-  ::search-infrastructures
-  (fn [_ [_ filter-str]]
-    {::cimi-api-fx/search
-     [:infrastructure-service
-      {:last   10000
-       :select "id, name, description, subtype, parent"
-       :filter filter-str}
-      #(dispatch [::set-infrastructures %])]}))
-
-(reg-event-fx
-  ::search-clouds
-  (fn [{db :db}]
-    {:db (assoc db ::spec/targets-loading? true)
-     ::cimi-api-fx/search
-     [:infrastructure-service
-      (->> {:select  "id, name, description, subtype, parent"
-            :orderby "name:asc,id:asc"
-            :filter  (general-utils/join-and
-                       (general-utils/join-or
-                         "tags!='nuvlabox=True'"
-                         "tags!='nuvlaedge=True'")
-                       (general-utils/join-or
-                         "subtype='swarm'"
-                         "subtype='kubernetes'")
-                       (full-text-search/filter-text
-                         db [::spec/clouds-search]))}
-           (pagination/first-last-params db [::spec/clouds-pagination]))
-      #(dispatch [::set-infrastructures %])]}))
-
-(reg-event-fx
-  ::set-edges
-  (fn [{db :db} [_ {:keys [resources] :as response}]]
-    (if (seq resources)
-      (let [filter-str (->> resources
-                            (map #(str "parent='"
-                                       (:infrastructure-service-group %)
-                                       "'"))
-                            (apply general-utils/join-or)
-                            (general-utils/join-and
-                              (general-utils/join-or
-                                "subtype='swarm'"
-                                "subtype='kubernetes'")))]
-        {:db (assoc db ::spec/edges response)
-         :fx [[:dispatch [::search-infrastructures filter-str]]]})
-      {:db (assoc db ::spec/targets-loading? false
-                     ::spec/edges response
-                     ::spec/infrastrutures nil
-                     ::spec/credentials nil)})))
-
-(reg-event-fx
-  ::search-edges
-  (fn [{db :db}]
-    {:db (assoc db ::spec/targets-loading? true)
-     ::cimi-api-fx/search
-     [:nuvlabox
-      (->> {:select  "id, name, description, infrastructure-service-group"
-            :orderby "name:asc,id:asc"
-            :filter  (general-utils/join-and
-                       (full-text-search/filter-text db [::spec/edges-search])
-                       "state='COMMISSIONED'"
-                       "infrastructure-service-group!=null")}
-           (pagination/first-last-params db [::spec/edges-pagination]))
-      #(dispatch [::set-edges %])]}))
-
 (defn changed-env-vars
   [application env-vars]
   (keep (fn [{:keys [::module-plugin/new-value :value :name]}]
@@ -324,6 +179,7 @@
           ) env-vars))
 
 
+;; FIXME
 (reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected

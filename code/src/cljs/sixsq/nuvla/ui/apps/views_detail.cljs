@@ -512,12 +512,12 @@
             [:h4 "Markdown" [general-utils/mandatory-icon]]
             [ui/Segment
              [uix/EditorMarkdown
-              {:value     @description
-               :on-change (fn [value]
+              {:value        @description
+               :on-change    (fn [value]
                             (dispatch [::events/description value])
                             (dispatch [::main-events/changes-protection? true])
                             (dispatch [::events/validate-form]))
-               :read-only (not @editable?)}]
+               :summary-page (not @editable?)}]
              (when @validate-form?
                (when validation-event
                  (dispatch [validation-event "description" (not valid?)]))
@@ -1255,7 +1255,7 @@
                             [:h2 [ShareTitle]]
                             ^{:key (:updated @e)}
                             [acl-views/AclWidget {:default-value default-value
-                                                  :read-only     (not can-edit?)
+                                                  :summary-page  (not can-edit?)
                                                   :on-change     edit-event}
                              ui-acl]])
                 :key     :share-pane}}))

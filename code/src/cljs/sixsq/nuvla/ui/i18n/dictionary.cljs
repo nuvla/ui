@@ -3,6 +3,9 @@
 
 (def dictionary
   {:en {
+        :swarm-app-cant-be-deployed-compose-node       "Swarm application can't be deployed on a node without Docker Swarm! To deploy it, you need to create a Swarm cluster on this node."
+        :swarm-app-cant-be-deployed-worker-node        "Swarm application can't be deployed on Swarm worker node! To deploy it, you should select a Swarm manager node part of that cluster."
+        :compose-app-deployed-swarm-node               "Docker compose application deployed on Swarm node. This application will only be available on this specific node."
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -40,7 +43,8 @@
         :add-license                                   "Add a license"
         :add-payment-method                            "Add payment method"
         :additional                                    "Additional"
-        :additional-filter                             "Additional-filter"
+        :additional-filter                              "Additional-filter"
+        :additional-filter-help-text                    "You can use your browser's bookmarks to save applied filters and your browser's back button to return to your last filter after removing it or applying another filter."
         :additional-modules                            "Additional modules"
         :additional-modules-popup                      "This release lets you choose optional modules for automatic peripheral discovery"
         :advanced                                      "Advanced"
@@ -106,6 +110,7 @@
         :city                                          "City"
         :clear                                         "clear"
         :clear-all                                     "clear all"
+        :clear-filter                                   "remove filter"
         :click-for-details                             "Click for more details"
         :click-here                                    "click here"
         :click-to-copy                                 "Click to copy"
@@ -285,6 +290,7 @@
         :docker-plugins                                "Docker plugins"
         :docker-server-version                         "Docker daemon version"
         :documentation                                 "documentation"
+        :done                                          "Done"
         :download                                      "download"
         :due-date                                      "Due date"
         :duration                                      "Duration"
@@ -951,6 +957,9 @@
         }
 
    :fr {
+        :swarm-app-cant-be-deployed-compose-node       "Une application Swarm ne peut pas être déployée sur un noeud sans Docker Swarm ! Pour la déployer, vous devez créer un cluster Swarm sur ce noeud."
+        :swarm-app-cant-be-deployed-worker-node        "Une application Swarm ne peut pas être déployée sur noeud Swarm Worker! Pour la déployer, vous devez sélectionner un noeud Swarm Manager faisant partie de ce cluster."
+        :compose-app-deployed-swarm-node               "Une application Docker compose Docker déployée sur un noeud Swarm. Cette application ne sera disponible que sur ce noeud spécifique."
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
@@ -981,6 +990,8 @@
         :add-license                                   "Ajouter une licence"
         :add-payment-method                            "Ajouter un moyen de paiement"
         :additional                                    "Additionnel"
+        :additional-filter                              "Additional-filter"
+        :additional-filter-help-text                    "Vous pouvez utiliser les signets de votre navigateur pour enregistrer les filtres appliqués et le bouton Précédent de votre navigateur pour revenir au dernier filtre après l'avoir supprimé ou en avoir appliqué un autre."
         :additional-modules                            "Modules supplémentaires"
         :additional-modules-popup                      "Cette version vous permet de choisir des modules optionnels pour la découverte automatique de périphériques"
         :advanced                                      "Avancé"
@@ -1034,6 +1045,7 @@
         :city                                          "Ville"
         :clear                                         "effacer"
         :clear-all                                     "tout effacer"
+        :clear-filter                                   "supprimer le filtre"
         :click-for-details                             "Cliquez pour plus de détails"
         :click-here                                    "cliquez-ici"
         :click-to-copy                                 "Cliquez pour copier"
@@ -1149,6 +1161,7 @@
         :details                                       "détails"
         :disable                                       "désactiver"
         :documentation                                 "documentation"
+        :done                                          "fini"
         :download                                      "télécharger"
         :due-date                                      "Date d'échéance"
         :duration                                      "Durée"

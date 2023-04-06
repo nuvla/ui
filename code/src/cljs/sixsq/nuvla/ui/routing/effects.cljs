@@ -5,6 +5,10 @@
             [reitit.frontend.history :as rfh]
             [taoensso.timbre :as log]))
 
+(defn- call-navigate!
+  [path]
+  (rfh/-on-navigate @rfe/history path))
+
 (defn host-url
   "Extracts the host URL from the javascript window.location object."
   []
@@ -29,7 +33,7 @@
     ;; .pushState does not call popState, that's why we have to call rfh/-on-navigate
     ;; when navigating by raw path (from reitit source)
     (.pushState js/window.history nil {} path)
-    (rfh/-on-navigate @rfe/history path)))
+    (call-navigate! path)))
 
 
 (reg-fx
@@ -37,9 +41,19 @@
   (fn []
     (.back js/window.history)))
 
+(defn- replace-state!
+  [path]
+  (.replaceState js/window.history nil {} path))
+
+
 (reg-fx
   ::replace-state
   (fn [path]
     ;; .replaceState does not call popState, that's why we have to call rfh/-on-navigate
-    (.replaceState js/window.history nil {} path)
-    (rfh/-on-navigate @rfe/history path)))
+    (replace-state! path)
+    (call-navigate! path)))
+
+(reg-fx
+ ::after-nav-cb
+ (fn [after-nav-cb]
+   (when (fn? after-nav-cb) (after-nav-cb))))

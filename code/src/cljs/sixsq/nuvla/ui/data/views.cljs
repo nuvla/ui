@@ -76,7 +76,8 @@
                                 {:resource-name  "data-record"
                                  :default-filter (get @form! data-record-filter-key "")
                                  :open?          filter-record-open?
-                                 :on-done        (partial set-form-value data-record-filter-key)}])}]]
+                                 :on-done        (partial set-form-value data-record-filter-key)
+                                 :trigger-style  {:border-radius 0}}])}]]
            [ui/FormField
             [:label "Applications filter"]
             ^{:key (str module-filter-key "-" (get @form! module-filter-key ""))}
@@ -89,7 +90,8 @@
                                 {:resource-name  "module"
                                  :default-filter (get @form! module-filter-key "")
                                  :open?          filter-module-open?
-                                 :on-done        (partial set-form-value module-filter-key)}])}]]]]
+                                 :on-done        (partial set-form-value module-filter-key)
+                                 :trigger-style  {:border-radius 0}}])}]]]]
          [ui/ModalActions
           [uix/Button
            {:text     (str/capitalize (@tr [:create]))

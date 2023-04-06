@@ -86,7 +86,8 @@
                            {:resource-name  "data-record"
                             :default-filter @data-record-filter
                             :open?          filter-open?
-                            :on-done        set-data-record-filter-fn}]
+                            :on-done        set-data-record-filter-fn
+                            :trigger-style  {:border-radius 0}}]
                           (when @suggest-edit-filter?
                             [ui/Button
                              {:icon     "save"

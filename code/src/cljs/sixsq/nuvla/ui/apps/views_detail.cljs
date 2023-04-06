@@ -1216,9 +1216,7 @@
 (defn ShareTitle
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [:<>
-     [uix/Icon {:name "fa-light fa-user-group"}]
-     (str/capitalize (@tr [:share]))]))
+    (str/capitalize (@tr [:share]))))
 
 
 (defn TabAcls
@@ -1233,7 +1231,7 @@
                 :key     :share}
      :pane     {:content (r/as-element
                            [:div {:class :uix-apps-details-share}
-                            [:h2 [ShareTitle]]
+                            [:h4 {:class :tab-app-share} [ShareTitle]]
                             ^{:key (:updated @e)}
                             [acl-views/AclWidget {:default-value default-value
                                                   :read-only     (not can-edit?)

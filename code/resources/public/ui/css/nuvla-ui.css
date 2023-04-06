@@ -963,7 +963,8 @@ body .divider-red {
 }
 
 .nuvla-apps .ui.secondary.segment h4.tab-app-detail,
-.nuvla-apps .uix-apps-details-details h4.tab-app-detail{
+.nuvla-apps .uix-apps-details-details h4.tab-app-detail,
+.nuvla-apps .uix-apps-details-share h4.tab-app-share{
   color: rgba(0, 0, 0, 0.87) !important;
   font-weight: 400;
   font-size: 1rem;
@@ -978,6 +979,20 @@ body .divider-red {
     background-color: transparent;
     border-bottom :  1px solid rgba(34, 36, 38, 0.15);
     margin-bottom: 15px;
+}
+
+
+i.link.icon, i.link.icons {
+    opacity: .4;
+    font-size: .8rem;
+}
+
+.uix-apps-details h2{
+    font-size: 1.2rem;
+}
+.uix-apps-details > h2:first-child{
+     display: block !important;
+    padding: 20px 0 5px 0;
 }
 
 /** apps end **/

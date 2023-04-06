@@ -108,7 +108,6 @@
 (s/def ::select-config (s/nilable (s/keys :req-un [::bulk-actions ::select-db-path
                                                    ::total-count-sub-key ::resources-sub-key]
                                           :opt-un [::rights-needed ])))
-
 ;; Bulk selection db entries
 (s/def ::bulk-edit-success-msg (s/nilable string?))
 (s/def ::select-all? (s/nilable boolean?))
@@ -355,31 +354,34 @@
      [:div {:style {:display :flex
                     :justify-content :space-between
                     :align-items :center
-                    :height "2.5rem"
-                    :padding-left "1rem"
+                    :height "40px"
                     :background-color "#f9fafb"
                     :gap "1rem"}}
       [:div
       ;;  {:style {:display :flex :align-items :center}}
        [ui/Popup {:trigger
                   (r/as-element
-                   [:div [ui/Dropdown {:disabled nothing-selected?
-                                       :item     true
-                                       :text     (@tr [:bulk-action])
-                                       :icon     "ellipsis vertical"}
-                          [ui/DropdownMenu
-                           (for [action bulk-actions
-                                 :let [{:keys [component name event icon]} action]]
-                             (if component
-                               [ui/DropdownItem
-                                icon
-                                [component]]
-                               [ui/DropdownItem
-                                {:on-click (fn []
-                                             (if (fn? event) (event payload)
-                                                 (dispatch event)))}
-                                icon
-                                name]))]]])
+                   [:div
+                    [ui/Menu {:style {:border          :none
+                                      :box-shadow      :none
+                                      :background-color :transparent}
+                              :borderless (= 1 (count bulk-actions))
+                              :stackable  true}
+                     (for [action bulk-actions
+                           :let [{:keys [component name event icon]} action]]
+                       (if component
+                         [ui/MenuItem
+                          {:style {:border :none}
+                           :disabled nothing-selected?}
+                          [ icon ]
+                          [component]]
+                         [ui/MenuItem
+                          {:disabled nothing-selected?
+                           :on-click (fn []
+                                        (if (fn? event) (event payload)
+                                            (dispatch event)))}
+                          [ icon ]
+                          name]))]])
                   :basic    true
                   :disabled (not= :none @selection-status)
                   :content  (@tr [:select-at-least-one-item])}]]

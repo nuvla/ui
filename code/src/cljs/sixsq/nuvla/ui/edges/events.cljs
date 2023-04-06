@@ -14,8 +14,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
-                                                  get-stored-db-value-from-query-param]]
-            [sixsq.nuvla.ui.routing.utils :as route-utils]
+                                                  get-stored-db-value-from-query-param] :as route-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -32,15 +31,19 @@
 
 (reg-event-fx
   ::init
-  (fn [{{:keys [current-route] :as db} :db}]
-    (let [db-path      ::spec/state-selector
-          search-query (get-stored-db-value-from-query-param current-route [db-path])
-          filter-query  (get-query-param current-route (keyword spec/resource-name))]
+  [(inject-cofx :storage/all)]
+  (fn [{{:keys [current-route] :as db} :db
+        storage :storage/all}]
+    (let [db-path           ::spec/state-selector
+          search-query      (get-stored-db-value-from-query-param current-route [db-path])
+          filter-storage-key (get-query-param current-route (keyword :filter-storage-key))
+          storage-filter     (get storage filter-storage-key)
+          filter-query       (get-query-param current-route (keyword spec/resource-name))]
       {:db (-> db
                (merge spec/defaults)
                (assoc ::main-spec/loading? true)
                (assoc db-path search-query)
-               (assoc ::spec/additional-filter filter-query))
+               (assoc ::spec/additional-filter (or storage-filter filter-query)))
        :fx [[:dispatch [::init-view]]
             [:dispatch [::refresh-root]]
             [:dispatch [::get-nuvlabox-releases]]]})))

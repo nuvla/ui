@@ -94,6 +94,11 @@
   [nav-path]
   (some->> nav-path rest last))
 
+(defn module-version
+  [{{:keys [id]} :content versions :versions}]
+  (->> versions
+       (map-indexed vector)
+       (some (fn [[idx elm]] (when (= (:href elm) id) idx)))))
 
 (defn subtype?
   [subtype]
@@ -136,8 +141,8 @@
 
 (defn SubtypeDockerK8sListIcon
   [subtype]
-  (let [unknown-icon    [ui/ListIcon {:name "question circle"}]
-        docker-icon     [ui/ListIcon {:name "docker"}]]
+  (let [unknown-icon [ui/ListIcon {:name "question circle"}]
+        docker-icon  [ui/ListIcon {:name "docker"}]]
     (condp = subtype
       subtype-application-k8s [IconK8s false]
       subtype-application docker-icon

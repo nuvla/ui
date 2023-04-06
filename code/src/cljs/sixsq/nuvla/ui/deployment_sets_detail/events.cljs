@@ -213,6 +213,32 @@
         (not (str/blank? create-description)) (assoc :description create-description))
       #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
 
+(reg-event-fx
+  ::create-start
+  (fn [{{:keys [::spec/create-name
+                ::spec/create-description
+                ::spec/create-start'
+                ::spec/module-applications-sets
+                ::spec/apps-sets] :as db} :db} [_ start?]]
+
+    (js/console.info ::create-start
+                     "id" (:id module-applications-sets)
+                     "version" (apps-utils/module-version module-applications-sets)
+                     "start" start?
+                     "name " create-name
+                     "descr" create-description
+                     "apps-sets targets" apps-sets)
+    {::cimi-api-fx/add
+     [:deployment-set2
+      (cond->
+        {:name create-name
+         :applications-sets [{:id (:id module-applications-sets)
+                              :version (apps-utils/module-version module-applications-sets)
+                              :overwrites [{} {} {}]}]
+         :start        start?}
+        (not (str/blank? create-description)) (assoc :description create-description))
+      #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
+
 (reg-event-db
   ::set
   (fn [db [_ k v]]

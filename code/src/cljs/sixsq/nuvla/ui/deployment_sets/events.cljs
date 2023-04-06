@@ -43,7 +43,7 @@
                                  (state-filter state-selector))
                                (full-text-search-plugin/filter-text
                                  db [::spec/search]))})]
-      {::cimi-api-fx/search [:deployment-set params
+      {::cimi-api-fx/search [:deployment-set2 params
                              #(dispatch [::set-deployment-sets %])]})))
 
 (reg-event-fx
@@ -76,7 +76,7 @@
 (reg-event-fx
   ::get-deployment-sets-summary
   (fn [{db :db} _]
-    {::cimi-api-fx/search [:deployment-set
+    {::cimi-api-fx/search [:deployment-set2
                            (get-query-aggregation-params
                              (full-text-search-plugin/filter-text
                                db [::spec/search])

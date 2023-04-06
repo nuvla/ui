@@ -10,6 +10,7 @@
 (s/def ::bulk-jobs any?)
 (s/def ::create-name string?)
 (s/def ::create-description string?)
+(s/def ::module-applications-sets (s/nilable map?))
 
 (def defaults
   {::module-applications-sets  nil

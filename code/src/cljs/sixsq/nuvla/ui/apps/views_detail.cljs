@@ -43,7 +43,7 @@
   [{:keys [full] :or {full false}}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "book"}]
+     [uix/Icon {:name "fal fa-book"}]
      (@tr [(if full :eula-full :eula)])]))
 
 
@@ -51,7 +51,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "euro"}]
+     [uix/Icon {:name "fal fa-euro-sign"}]
      (str/capitalize (@tr [:pricing]))]))
 
 
@@ -59,7 +59,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "rocket"}]
+     [uix/Icon {:name "fa-rocket-launch fal"}]
      (str/capitalize (@tr [:deployments]))]))
 
 
@@ -82,7 +82,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "cog"}]
+     [uix/Icon {:name "fal fa-gear"}]
      (str/capitalize (@tr [:configuration]))]))
 
 
@@ -91,7 +91,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         error? (subscribe [::subs/details-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
-     [uix/Icon {:name "fa-light fa-circle-info"}]
+     [uix/Icon {:name "fal fa-circle-info"}]
      (str/capitalize (@tr [:details]))]))
 
 
@@ -123,7 +123,7 @@
     [uix/ModalDanger
      {:on-confirm   (fn [] (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [ui/Icon {:name "trash"}]
+                                  [ui/Icon {:name "fal fa-trash"}]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
       :header      (@tr [:delete-module])
@@ -183,14 +183,14 @@
         (when @editable?
           [uix/MenuItem
            {:name     (@tr [:save])
-            :icon     "save"
+            :icon     "fal fa-floppy-disk"
             :disabled (edit-button-disabled? @page-changed? @form-valid?)
             :on-click save-callback}])
 
         (when @is-app?
           [uix/MenuItem
            {:name     (@tr [:deploy])
-            :icon     "rocket"
+            :icon     "fal fa-rocket-launch"
             :disabled @deploy-disabled?
             :on-click #(dispatch [::main-events/subscription-required-dispatch
                                   [::deployment-dialog-events/create-deployment
@@ -207,7 +207,7 @@
            {:trigger        (r/as-element
                               [ui/MenuItem
                                {:name     (@tr [:copy])
-                                :icon     "copy"
+                                :icon     "fal fa-copy"
                                 :disabled @is-new?
                                 :on-click #(dispatch [::events/copy])}])
             :content        (@tr [:module-copied])
@@ -1214,9 +1214,11 @@
 
 
 (defn ShareTitle
-  []
+  [{:keys [icon?]}]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (str/capitalize (@tr [:share]))))
+    [:<>
+     (when icon? [uix/Icon {:name "fa-light fa-user-group"}])
+     (str/capitalize (@tr [:share]))]))
 
 
 (defn TabAcls
@@ -1227,7 +1229,7 @@
                                                   @(subscribe [::session-subs/active-claim]))]
                             {:owners [user-id]}))
         ui-acl        (r/atom (when acl (acl-utils/acl->ui-acl-format acl)))]
-    {:menuItem {:content (r/as-element [ShareTitle])
+    {:menuItem {:content (r/as-element [ShareTitle {:icon? true}])
                 :key     :share}
      :pane     {:content (r/as-element
                            [:div {:class :uix-apps-details-share}

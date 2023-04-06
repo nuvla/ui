@@ -502,7 +502,7 @@
         stripe    (subscribe [::main-subs/stripe])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
-                              :icon    "info"}
+                              :icon    "fal fa-eye"}
                    :pane     {:content (r/as-element [OverviewPane])
                               :key     :overview-pane}}
                   {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
@@ -556,7 +556,7 @@
             panes  (module-detail-panes)]
         [ui/Container {:fluid true
                        :class :uix-apps-details}
-         [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader "fal fa-layer-group" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

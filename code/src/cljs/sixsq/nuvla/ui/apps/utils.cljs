@@ -11,7 +11,7 @@
 
 
 (def un-publish-icon
-  "times circle outline")
+  "fal fa-link-simple-slash")
 
 
 (defn find-current-version

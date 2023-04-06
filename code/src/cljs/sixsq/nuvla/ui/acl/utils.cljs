@@ -166,8 +166,8 @@
 (defn id->icon
   [id]
   (case (general-utils/id->resource-name id)
-    "user" "user"
-    "group" "group"
+    "user" "fa-user fal"
+    "group" "fa-user-group fal"
     "nuvlabox" "box"
     "infrastructure-service" "cloud"
     "deployment" "rocket"

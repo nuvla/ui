@@ -370,8 +370,7 @@
          ^{:key (str "apps-set-" i)}
          [AppsSetRow {:i            i
                       :apps-set     apps-set
-                      :summary-page summary-page}])]]
-     [CreateStartButton]]))
+                      :summary-page summary-page}])]]]))
 
 (defn ConfigureApps
   [i applications]
@@ -407,6 +406,18 @@
       :panes                   panes
       :ignore-chng-protection? true}]))
 
+(defn Summary
+  []
+  [ui/Segment (merge style/basic {:clearing true})
+   [AppsSets {:summary-page true}]
+   [ui/Segment
+    [:p "Section to accept apps distinct licenses. Each license list concerned apps.
+   Accept all license checkbox shortcut. User can't create deployment set if accept all licenses is not checked."]]
+   [ui/Segment
+    [:p "Section to accept prices. List apps with price multiply by number of targets. Estimated total price per day. User can't create deployment accept estimated price not checked."]]
+   [CreateStartButton]]
+  )
+
 (defn AddPage
   []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -435,7 +446,7 @@
                     :description (@tr [:configure-applications])}
                    {:key         :summary
                     :icon        "info"
-                    :content     [AppsSets {:summary-page true}]
+                    :content     [Summary]
                     :title       (str/capitalize (@tr [:summary]))
                     :description (@tr [:overall-summary])}]}]])))
 

@@ -31,8 +31,6 @@
 
 (defn Icon
   [{:keys [name] :as opts}]
-(when (= name "fa-light fa-check")
-  (js/console.error "ICON name" name))
   [ui/Icon
    (if (some #(str/starts-with? name %) ["fa-" "fal " "fad " "fas "])
      (-> opts (dissoc :name) (assoc :class name))

@@ -31,7 +31,7 @@
        ^{:key (:k feature-flag)}
        [FeatureFlag feature-flag])]]])
 
-(defn about
+(defn About
   [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Container

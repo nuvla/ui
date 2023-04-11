@@ -821,20 +821,24 @@
         (if (= :idle @mode)
           [:div
            [:span (str text "?")]
-           [uix/Button {:icon     "fa-check"
-                        :color    (edit-mode->color @edit-mode)
-                        :disabled disabled?
-                        :active   true
-                        :style    {:margin-left "2rem"}
-                        :on-click (fn [] (reset! mode :confirming))}]]
+           [ui/Button {
+                      ;;  :icon
+                       :color    (edit-mode->color @edit-mode)
+                       :disabled disabled?
+                       :active   true
+                       :style    {:margin-left "2rem"}
+                       :on-click (fn [] (reset! mode :confirming))}
+            [uix/Icon {:style {:margin 0}
+                       :name "fa-check"}]]]
           [:div
            [:span "Are you sure? " ]
            [uix/Button {:text     (str "Yes, " text)
                         :disabled disabled?
                         :color    (edit-mode->color @edit-mode)
                         :on-click update-fn}]
-           [uix/Button {:text     "No"
-                        :on-click (fn [] (reset! mode :idle))}]])))))
+           [ui/Button {:on-click (fn [] (reset! mode :idle))}
+            [ui/Icon {:style {:margin 0}
+                      :name "fa-xmark"}]]])))))
 
 (defn BulkUpdateModal
   []

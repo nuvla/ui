@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.cimi.events :as api-events]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.db.events :as db-events]
+            [sixsq.nuvla.ui.about.events :as about-events]
             [sixsq.nuvla.ui.i18n.events :as i18n-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.views :as main-views]
@@ -76,6 +77,7 @@
   (dispatch-sync [::main-events/check-ui-version-polling])
   (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
+  (dispatch-sync [::about-events/init-feature-flags])
   (visibility-watcher)
   (screen-size-watcher)
   (swap! fv/conf #(merge % {:atom r/atom}))

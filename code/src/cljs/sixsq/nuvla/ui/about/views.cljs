@@ -1,8 +1,35 @@
 (ns sixsq.nuvla.ui.about.views
   (:require [clojure.string :as str]
-            [re-frame.core :refer [subscribe]]
+            [re-frame.core :refer [subscribe dispatch]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.about.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.about.subs :as subs]
+            [sixsq.nuvla.ui.about.events :as about-events]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+
+(defn FeatureFlag
+  [{:keys [k label]}]
+  [ui/FormCheckbox
+   {:label     label
+    :toggle    true
+    :checked   @(subscribe [::subs/feature-flag-enabled? k])
+    :on-change (ui-callback/checked
+                 #(dispatch [::about-events/set-feature-flag k %]))}])
+
+(defn FeatureFlags
+  []
+  [ui/Modal {:trigger    (r/as-element [:a "Feature flags \uD83D\uDEA7"])
+             :close-icon true}
+   [ui/Header {:icon true}
+    [ui/Icon "\uD83D\uDEA7"]
+    "Feature flags"]
+   [ui/ModalContent
+    [ui/Form
+     (for [feature-flag utils/feature-flags]
+       ^{:key (:k feature-flag)}
+       [FeatureFlag feature-flag])]]])
 
 (defn about
   [_path]
@@ -33,8 +60,6 @@
       [ui/ListItem [:a {:href   "https://docs.nuvla.io/nuvla/api"
                         :target "_blank"}
                     (@tr [:api-doc])]]
-      [ui/ListItem [:a {:href   "https://docs.nuvla.io/whoami"
-                        :target "_blank"} (@tr [:personae-desc])]]
       [ui/ListItem [:a {:href   "https://github.com/nuvla/deployment/blob/master/CHANGELOG.md"
                         :target "_blank"}
                     (str/capitalize (@tr [:release-notes]))]]
@@ -42,6 +67,7 @@
                         :target "_blank"}
                     (str/capitalize (@tr [:source-code-on]))
                     " GitHub"]]
+      [ui/ListItem [FeatureFlags]]
       [ui/ListItem (str/capitalize (@tr [:core-license]))
        ": "
        [:a {:href   "https://www.apache.org/licenses/LICENSE-2.0.html"

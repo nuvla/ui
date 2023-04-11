@@ -25,10 +25,12 @@
             [sixsq.nuvla.ui.profile.spec :as profile]
             [sixsq.nuvla.ui.resource-log.spec :as resource-log]
             [sixsq.nuvla.ui.routing.router :refer [router]]
+            [sixsq.nuvla.ui.about.spec :as about]
             [sixsq.nuvla.ui.session.spec :as session]))
 
 (def default-db
-  (merge apps/defaults
+  (merge about/defaults
+         apps/defaults
          apps-component/defaults
          apps-application/defaults
          apps-application/deployments-pagination

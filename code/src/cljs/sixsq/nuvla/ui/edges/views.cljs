@@ -888,7 +888,7 @@
                       " "
                       (@tr [(if (= @selected-count 0) :edge :edges)])
                       ". ")]
-           (when (<= 0 not-editable @selected-count)
+           (when (<= 1 not-editable @selected-count)
              [:<>
               [:div
                (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " " (@tr [:tags-not-updated-no-rights]))]

@@ -98,7 +98,7 @@
         :bulk-force-delete-in-progress                 "Bulk force delete in progress"
         :bulk-stop-in-progress                         "Bulk stop in progress"
         :bulk-update-in-progress                       "Bulk update in progress"
-        :bulk-update-tags                              "Bulk update of tags"
+        :bulk-update-tags                              "Mise à jour des mots clés en batch"
         :by                                            "by"
         :ca                                            "public certificate of the Certificate Authority (CA)"
         :cancel                                        "cancel"

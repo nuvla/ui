@@ -1,12 +1,12 @@
 (ns sixsq.nuvla.ui.about.views
   (:require [clojure.string :as str]
-            [re-frame.core :refer [subscribe dispatch]]
+            [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.about.events :as about-events]
+            [sixsq.nuvla.ui.about.subs :as subs]
             [sixsq.nuvla.ui.about.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.about.subs :as subs]
-            [sixsq.nuvla.ui.about.events :as about-events]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn FeatureFlag

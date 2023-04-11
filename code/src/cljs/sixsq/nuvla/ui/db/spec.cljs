@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.db.spec
-  (:require [sixsq.nuvla.ui.apps-application.spec :as apps-application]
+  (:require [sixsq.nuvla.ui.about.spec :as about]
+            [sixsq.nuvla.ui.apps-application.spec :as apps-application]
             [sixsq.nuvla.ui.apps-component.spec :as apps-component]
             [sixsq.nuvla.ui.apps-store.spec :as apps-store]
             [sixsq.nuvla.ui.apps.spec :as apps]
@@ -25,7 +26,6 @@
             [sixsq.nuvla.ui.profile.spec :as profile]
             [sixsq.nuvla.ui.resource-log.spec :as resource-log]
             [sixsq.nuvla.ui.routing.router :refer [router]]
-            [sixsq.nuvla.ui.about.spec :as about]
             [sixsq.nuvla.ui.session.spec :as session]))
 
 (def default-db

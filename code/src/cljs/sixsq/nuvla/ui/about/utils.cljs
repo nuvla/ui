@@ -4,9 +4,7 @@
 (def feature-flags [{:k     "deployment-set"
                      :label "Page deployment set visible in left menu."}
                     {:k     "applications-sets"
-                     :label "Applications sets support"}
-                    {:k     "yes"
-                     :label :tags}])
+                     :label "Applications sets support"}])
 
 (def existing-feature-flags-keys (->> feature-flags (map :k) set))
 

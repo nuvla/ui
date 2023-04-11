@@ -350,15 +350,18 @@
         nothing-selected?           (= :none @selection-status)
         bulk-edit-success-message   (subscribe [::bulk-edit-success-message-sub db-path])]
     [:div
-     {:class [(if selectable? :visible :invisible)]}
+     {:style  {:position :sticky :top "40px" :z-index 998
+               }
+      :class [(if selectable? :visible :invisible)]}
      [:div {:style {:display :flex
+                    :border "1px solid rgb(230 230 230)"
+                    :border-radius "0.28rem"
+                    :background-color "rgb(249 250 251)"
                     :justify-content :space-between
                     :align-items :center
                     :height "40px"
-                    :background-color "#f9fafb"
                     :gap "1rem"}}
       [:div
-      ;;  {:style {:display :flex :align-items :center}}
        [ui/Popup {:trigger
                   (r/as-element
                    [:div
@@ -373,14 +376,14 @@
                          [ui/MenuItem
                           {:style {:border :none}
                            :disabled nothing-selected?}
-                          [ icon ]
+                          [icon]
                           [component]]
                          [ui/MenuItem
                           {:disabled nothing-selected?
                            :on-click (fn []
-                                        (if (fn? event) (event payload)
-                                            (dispatch event)))}
-                          [ icon ]
+                                       (if (fn? event) (event payload)
+                                           (dispatch event)))}
+                          [icon]
                           name]))]])
                   :basic    true
                   :disabled (not= :none @selection-status)
@@ -389,16 +392,17 @@
        @bulk-edit-success-message]]
      [:div
       {:style {:heigh "2rem"
-               :padding-left "1rem"}}
+               :padding-left "1rem"
+               :border "1px solid rgb(230 230 230)"
+               :border-radius "0.28rem"
+               :background-color "#f0eeef"}}
       [:div {:style {:display         :flex
                      :justify-content :center
-                     :align-items     :center}
-            ;;  :class (if (= :none @selection-status) :invisible :visible)
-             }
+                     :align-items     :center}}
        [:span (or selected-all-text manual-selection-text)]
        [:button {:style {:width "120px" :text-align :center :border :none}
                  :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
-                 :class [ :select-all]}
+                 :class [:select-all]}
         (str button-text)]]]]))
 
 

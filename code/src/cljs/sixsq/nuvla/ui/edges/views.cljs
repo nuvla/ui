@@ -804,7 +804,7 @@
         edit-mode        (subscribe [::subs/opened-modal])
         mode             (r/atom :idle)
         edit-mode->color {spec/modal-tags-add-id    :green
-                          spec/modal-tags-remove-id :red
+                          spec/modal-tags-remove-all :red
                           spec/modal-tags-set-id    :red}]
     (fn [form-tags _close-fn]
       (let [text      (if (and (= spec/modal-tags-set-id @edit-mode)
@@ -859,7 +859,7 @@
         [ui/Modal {:open       @open?
                    :close-icon true
                    :on-close   close-fn}
-         [uix/ModalHeader {:header (@tr [:bulk-deployment-update])}]
+         [uix/ModalHeader {:header (@tr [:bulk-update-tags])}]
          [ui/ModalContent
           [ui/Form
            [:div {:style {:display :flex

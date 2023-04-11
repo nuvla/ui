@@ -819,21 +819,22 @@
                           (and  (not= spec/modal-tags-remove-all @edit-mode)
                                 (= 0 (count form-tags))))]
         (if (= :idle @mode)
-          [uix/Button {:text     text
-                       :color    (edit-mode->color @edit-mode)
-                       :disabled disabled?
-                       :active   true
-                       :style    {:margin-left "2rem"}
-                       :on-click (fn [] (reset! mode :confirming))}]
           [:div
-           [:span "Sure? "]
-           [uix/Button {:text     "No"
-                        :icon     [ui/Icon {:name "fal fa-check"}]
-                        :on-click (fn [] (reset! mode :idle))}]
+           [:span (str text "?")]
+           [uix/Button {:icon     "fa-check"
+                        :color    (edit-mode->color @edit-mode)
+                        :disabled disabled?
+                        :active   true
+                        :style    {:margin-left "2rem"}
+                        :on-click (fn [] (reset! mode :confirming))}]]
+          [:div
+           [:span "Are you sure? " ]
            [uix/Button {:text     (str "Yes, " text)
                         :disabled disabled?
                         :color    (edit-mode->color @edit-mode)
-                        :on-click update-fn}]])))))
+                        :on-click update-fn}]
+           [uix/Button {:text     "No"
+                        :on-click (fn [] (reset! mode :idle))}]])))))
 
 (defn BulkUpdateModal
   []

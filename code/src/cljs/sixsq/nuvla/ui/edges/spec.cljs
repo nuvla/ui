@@ -77,7 +77,7 @@
    ::nuvlabox-releases             nil
    ::state-nuvlaboxes              nil
    ::state-selector                nil
-   ::open-modal                    nil
+   ::open-modal                    ::tags-add
    ::nuvlabox-created-id           nil
    ::nuvlabox-usb-api-key          nil
    ::nuvlabox-ssh-key              nil

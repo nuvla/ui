@@ -31,6 +31,8 @@
 
 (defn Icon
   [{:keys [name] :as opts}]
+(when (= name "fa-light fa-check")
+  (js/console.error "ICON name" name))
   [ui/Icon
    (if (some #(str/starts-with? name %) ["fa-" "fal " "fad " "fas "])
      (-> opts (dissoc :name) (assoc :class name))
@@ -46,7 +48,7 @@
                        (dissoc :text)
                        (dissoc :icon)
                        (assoc :aria-label text))]
-    [ui/Button final-opts (when icon [ui/Icon {:name icon}]) text]))
+    [ui/Button final-opts (when icon [Icon {:name icon}]) text]))
 
 
 (defn MenuItem

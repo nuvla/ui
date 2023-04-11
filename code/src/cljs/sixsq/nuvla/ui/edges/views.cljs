@@ -799,6 +799,7 @@
 (defn- ButtonAskingForConfirmation
   [_form-tags close-fn]
   (let [tr               (subscribe [::i18n-subs/tr])
+        selected-count   (subscribe [::subs/selected-count ::spec/select])
         edit-mode        (subscribe [::subs/opened-modal])
         mode             (r/atom :idle)
         edit-mode->color {spec/modal-tags-add-id     :green
@@ -806,23 +807,17 @@
                           spec/modal-tags-remove-id  :red
                           spec/modal-tags-set-id     :red}]
     (fn [form-tags _close-fn]
-      (let [text      (if (and (= spec/modal-tags-set-id @edit-mode)
-                               (= 0 (count form-tags)))
-                        (@tr [:tags-remove-all])
-                        (get-name-as-keyword @tr @edit-mode))
-            call-back (fn [updated]
-                        (dispatch [::table-plugin/set-bulk-edit-success-message
-                                   (str updated " " (@tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)
-                                   [::spec/select]])
-                        (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]])
-                        (close-fn))
+      (let [text      (get-name-as-keyword @tr @edit-mode)
+            call-back (fn [] (close-fn))
             update-fn (fn []
                         (dispatch [::events/update-tags
                                    @edit-mode
                                    {:tags         form-tags
-                                    :call-back-fn call-back}]))
-            disabled? (and  (not= spec/modal-tags-remove-all @edit-mode)
-                            (= 0 (count form-tags)))]
+                                    :call-back-fn call-back
+                                    :text text}]))
+            disabled? (or (= @selected-count 0)
+                          (and  (not= spec/modal-tags-remove-all @edit-mode)
+                                (= 0 (count form-tags))))]
         (if (= :idle @mode)
           [uix/Button {:text     text
                        :color    (edit-mode->color @edit-mode)

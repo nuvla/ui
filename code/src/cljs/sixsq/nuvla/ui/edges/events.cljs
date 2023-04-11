@@ -18,7 +18,8 @@
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-non-edit :edges-without-edit-rights)
@@ -176,26 +177,30 @@
 
 (reg-event-fx
   ::update-tags
-  (fn [{{:keys [::spec/select] :as db} :db }
-       [_ edit-mode {:keys [tags call-back-fn]}]]
+  (fn [{{:keys [::spec/select
+                ::i18n-spec/tr] :as db} :db}
+       [_ edit-mode {:keys [tags call-back-fn text]}]]
     (let [edit-mode->operation {spec/modal-tags-add-id     "add-tags"
                                 spec/modal-tags-remove-all "set-tags"
                                 spec/modal-tags-set-id     "set-tags"
                                 spec/modal-tags-remove-id  "remove-tags"}
           filter                (table-plugin/build-bulk-filter select (get-full-filter-string db))
           operation            (edit-mode->operation edit-mode)
-          updated-tags         (if (= spec/modal-tags-remove-all edit-mode)
-                                 []
-                                 tags)]
+          updated-tags         (if (= spec/modal-tags-remove-all edit-mode) [] tags)]
       {::cimi-api-fx/operation-bulk [:nuvlabox
                                      (fn [result]
-                                       (dispatch [::messages-events/add
-                                                  {:header  "Bulk edit operation successful"
-                                                   :content (str "Number of updated resources: "
-                                                                 (-> result :updated))
-                                                   :type    :success}])
-                                       (dispatch [::get-nuvlaboxes])
-                                       (when (fn? call-back-fn) (call-back-fn (-> result :updated))))
+                                       (let [updated     (-> result :updated)
+                                             success-msg (str updated " " (tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)]
+                                         (dispatch [::messages-events/add
+                                                    {:header  "Bulk edit operation successful"
+                                                     :content success-msg
+                                                     :type    :success}])
+                                         (dispatch [::table-plugin/set-bulk-edit-success-message
+                                                    success-msg
+                                                    [::spec/select]])
+                                         (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]])
+                                         (dispatch [::get-nuvlaboxes])
+                                         (when (fn? call-back-fn) (call-back-fn (-> result :updated)))))
                                      operation
                                      (when (seq filter) filter)
                                      {:doc {:tags updated-tags}}]})))

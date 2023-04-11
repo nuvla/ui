@@ -891,7 +891,7 @@
            (when (<= 0 not-editable @selected-count)
              [:<>
               [:div
-               (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " will not be updated, because you lack the required rights.")]
+               (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " " (@tr [:tags-not-updated-no-rights]))]
               [:div [:a {:style {:cursor :pointer}
                          :target :_blank
                          :on-click

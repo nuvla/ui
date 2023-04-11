@@ -7,7 +7,7 @@
             [reitit.frontend.history :as rfh]
             [sixsq.nuvla.ui.about.views :refer [about]]
             [sixsq.nuvla.ui.apps.views :as app-views]
-            [sixsq.nuvla.ui.cimi.views :refer [api-view]]
+            [sixsq.nuvla.ui.cimi.views :refer [ApiView]]
             [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
             [sixsq.nuvla.ui.config :refer [base-path]]
             [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
@@ -178,7 +178,7 @@
      ["/*sub-path" ::routes/documentation-sub-page]]
     ["api"
      {:name      ::routes/api
-      :view      api-view
+      :view      ApiView
       :link-text "api"}
      [""]
      ["/" ::routes/api-slashed]

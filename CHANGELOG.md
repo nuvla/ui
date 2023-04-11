@@ -4,6 +4,8 @@
 
 - Notificaiton subscriptions - Shows GiB unit for network in modal
 - Enables bulk actions in table plugin - Moves deployments bulk action feature to table plugin, #1180
+- Edges overview, table view - Enables bulk editing of tags, #1194
+- Api Page - Persists and loads all filter parameters
 
 ## [2.33.3] - 2023-02-27
 

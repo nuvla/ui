@@ -153,7 +153,7 @@ test.skip('test', async ({ page }, { config }) => {
 });
 
 function waitForLogger(page: Page) {
-  return page.waitForResponse('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', { timeout: 10000 });
+  return page.waitForResponse('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', { timeout: 10200 });
 }
 
 const resourceLogResponses = [

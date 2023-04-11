@@ -63,9 +63,9 @@
 (def modal-tags-set-id ::tags-set)
 (def modal-tags-add-id ::tags-add)
 (def modal-tags-remove-id ::tags-remove)
+(def modal-tags-remove-all ::tags-remove-all)
 
-(def tags-modal-ids [modal-tags-add-id modal-tags-remove-id modal-tags-set-id ])
-
+(def tags-modal-ids [modal-tags-add-id modal-tags-set-id modal-tags-remove-id modal-tags-remove-all])
 
 
 (def defaults

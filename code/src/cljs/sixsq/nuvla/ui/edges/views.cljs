@@ -784,10 +784,8 @@
   (tr [(-> q-key name keyword)]))
 
 (defn- TagsEditModeRadio
-  [edit-mode opened-modal]
+  [edit-mode opened-modal change-mode]
   (let [tr               (subscribe [::i18n-subs/tr])
-        change-edit-mode (fn [value]
-                           #(dispatch [::events/open-modal value]))
         active?          (= opened-modal edit-mode)
         font-weight      (if active? 700 400)
         setting-tags?    (= spec/modal-tags-set-id edit-mode)]
@@ -795,7 +793,7 @@
                :label     (str (get-name-as-keyword @tr edit-mode)
                                (when setting-tags? (str " (" (@tr [:tags-overwrite]) "!)")))
                :checked   active?
-               :on-change (change-edit-mode edit-mode)}]))
+               :on-change #(change-mode edit-mode)}]))
 
 
 (defn- ButtonAskingForConfirmation
@@ -803,9 +801,10 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         edit-mode        (subscribe [::subs/opened-modal])
         mode             (r/atom :idle)
-        edit-mode->color {spec/modal-tags-add-id    :green
+        edit-mode->color {spec/modal-tags-add-id     :green
                           spec/modal-tags-remove-all :red
-                          spec/modal-tags-set-id    :red}]
+                          spec/modal-tags-remove-id  :red
+                          spec/modal-tags-set-id     :red}]
     (fn [form-tags _close-fn]
       (let [text      (if (and (= spec/modal-tags-set-id @edit-mode)
                                (= 0 (count form-tags)))
@@ -822,7 +821,7 @@
                                    @edit-mode
                                    {:tags         form-tags
                                     :call-back-fn call-back}]))
-            disabled? (and  (not= spec/modal-tags-set-id @edit-mode)
+            disabled? (and  (not= spec/modal-tags-remove-all @edit-mode)
                             (= 0 (count form-tags)))]
         (if (= :idle @mode)
           [uix/Button {:text     text
@@ -850,11 +849,15 @@
         used-tags        (subscribe [::subs/edges-tags])
         view-only-edges  (subscribe [::subs/edges-without-edit-rights])
         form-tags        (r/atom [])
-        mode->tag-color  (zipmap spec/tags-modal-ids [:teal :red :teal])]
+        mode->tag-color  (zipmap spec/tags-modal-ids [:teal :teal :red :red])]
     (fn []
       (let [close-fn     (fn []
                            (dispatch [::events/open-modal nil])
                            (reset! form-tags []))
+            change-mode  (fn [edit-mode]
+                           (when (= spec/modal-tags-remove-all edit-mode)
+                             (reset! form-tags []))
+                           (dispatch [::events/open-modal edit-mode]))
             not-editable (:count @view-only-edges)]
         [ui/Modal {:open       @open?
                    :close-icon true
@@ -866,11 +869,12 @@
                           :gap     "1.5rem"}}
             (doall (for [edit-mode spec/tags-modal-ids]
                      ^{:key edit-mode}
-                     [TagsEditModeRadio edit-mode @opened-modal]))]
+                     [TagsEditModeRadio edit-mode @opened-modal change-mode]))]
            [:div {:style {:margin-top "1.5rem"}}
-            [components/TagsDropdown {:initial-options @used-tags
-                                      :on-change-fn    (fn [tags] (reset! form-tags tags))
-                                      :tag-color       (mode->tag-color @opened-modal)}]]]]
+            (when-not (= spec/modal-tags-remove-all @opened-modal)
+              [components/TagsDropdown {:initial-options @used-tags
+                                        :on-change-fn    (fn [tags] (reset! form-tags tags))
+                                        :tag-color       (mode->tag-color @opened-modal)}])]]]
          [ui/ModalActions
           {:style {:display         :flex
                    :align-items     :center

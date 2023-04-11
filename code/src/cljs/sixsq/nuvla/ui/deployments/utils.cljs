@@ -160,22 +160,20 @@
          label)])))
 
 (defn build-bulk-filter
-  ([{:keys [::spec/select-all?
-            ::spec/selected-set] :as db}]
-   (build-bulk-filter db {:select-all? select-all? :selected-set selected-set}))
-  ([{:keys [::spec/additional-filter
-            ::spec/state-selector] :as db}
-    {:keys [selected-set select-all?]}]
-   (if select-all?
-     (get-filter-param
+  [{:keys [::spec/select-all?
+           ::spec/selected-set
+           ::spec/additional-filter
+           ::spec/state-selector] :as db}]
+  (if select-all?
+    (get-filter-param
       {:full-text-search  (full-text-search-plugin/filter-text
-                           db [::spec/deployments-search])
+                            db [::spec/deployments-search])
        :additional-filter additional-filter
        :state-selector    (when-not (= "all" state-selector) state-selector)
        :module-id         nil})
-     (->> selected-set
-          (map #(str "id='" % "'"))
-          (apply general-utils/join-or)))))
+    (->> selected-set
+         (map #(str "id='" % "'"))
+         (apply general-utils/join-or))))
 
 (defn deployment-version
   [{{:keys [versions content]} :module :as _deployment}]

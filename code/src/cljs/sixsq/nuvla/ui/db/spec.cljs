@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.db.spec
-  (:require [sixsq.nuvla.ui.apps-application.spec :as apps-application]
+  (:require [sixsq.nuvla.ui.about.spec :as about]
+            [sixsq.nuvla.ui.apps-application.spec :as apps-application]
             [sixsq.nuvla.ui.apps-applications-sets.spec :as apps-applications-sets]
             [sixsq.nuvla.ui.apps-component.spec :as apps-component]
             [sixsq.nuvla.ui.apps-store.spec :as apps-store]
@@ -29,7 +30,8 @@
             [sixsq.nuvla.ui.session.spec :as session]))
 
 (def default-db
-  (merge apps/defaults
+  (merge about/defaults
+         apps/defaults
          apps-component/defaults
          apps-application/defaults
          apps-applications-sets/defaults

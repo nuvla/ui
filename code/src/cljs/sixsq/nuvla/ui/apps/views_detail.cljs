@@ -4,6 +4,8 @@
             [re-frame.core :refer [dispatch dispatch-sync subscribe]]
             [re-frame.db]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
+            [sixsq.nuvla.ui.about.subs :as about-subs]
             [sixsq.nuvla.ui.acl.utils :as acl-utils]
             [sixsq.nuvla.ui.acl.views :as acl-views]
             [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
@@ -12,7 +14,6 @@
             [sixsq.nuvla.ui.apps.subs :as subs]
             [sixsq.nuvla.ui.apps.utils :as utils]
             [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-            [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
@@ -372,7 +373,7 @@
               [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
                          :floated "right"
                          :style   {:width "50px"}}]]]]
-           (when config/debug?
+           (when @(subscribe [::about-subs/feature-flag-enabled? about-utils/feature-applications-sets-key])
              [ui/Card
               {:href     (when parent (pathify [base-path "New Applications Sets?subtype=applications_sets"]))
                :on-click (when parent
@@ -382,9 +383,7 @@
                [:div]
                [ui/Icon {:name  "th large"
                          :size  :massive
-                         :color (when-not parent :grey)}]]
-
-              ])]]]))))
+                         :color (when-not parent :grey)}]]])]]]))))
 
 
 (defn paste-modal

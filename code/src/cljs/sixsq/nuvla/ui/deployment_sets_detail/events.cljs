@@ -28,12 +28,12 @@
 (defn restore-applications
   [modules-by-id db [i {:keys [applications]}]]
   (-> db
-      (assoc-in [::spec/apps-sets i ::spec/applications]
-                (->> applications
-                     (map (fn [{module-id :id}]
-                            [module-id (get modules-by-id module-id
-                                            {:subtype "unknown" :id module-id})]))
-                     (into {})))
+      #_(assoc-in [::spec/apps-sets i ::spec/applications]
+                  (->> applications
+                       (map (fn [{module-id :id}]
+                              [module-id (get modules-by-id module-id
+                                              {:subtype "unknown" :id module-id})]))
+                       (into {})))
       (assoc-in [::spec/apps-sets i ::spec/targets]
                 (target-selector/build-spec))))
 
@@ -213,6 +213,26 @@
         (not (str/blank? create-description)) (assoc :description create-description))
       #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
 
+(defn application-overwrites
+  [db i {:keys [id version] :as application}]
+  (when-let [env-changed (->> id
+                              (module-plugin/db-environment-variables db [::spec/apps-sets i])
+                              module-plugin/changed-env-vars
+                              seq)]
+    {:id                      id
+     :version                 version
+     :environmental-variables env-changed}))
+
+(defn applications-sets->overwrites
+  [db i {:keys [applications] :as applications-sets}]
+  (let [targets                 (map :id (target-selector/db-selected db [::spec/apps-sets i ::spec/targets]))
+        applications-overwrites (->> applications
+                                     (map (partial application-overwrites db i))
+                                     (remove nil?))]
+    (cond-> {}
+            (seq targets) (assoc :targets targets)
+            (seq applications-overwrites) (assoc :applications applications-overwrites))))
+
 (reg-event-fx
   ::create-start
   (fn [{{:keys [::spec/create-name
@@ -220,24 +240,29 @@
                 ::spec/create-start'
                 ::spec/module-applications-sets
                 ::spec/apps-sets] :as db} :db} [_ start?]]
-
     (js/console.info ::create-start
                      "id" (:id module-applications-sets)
                      "version" (apps-utils/module-version module-applications-sets)
                      "start" start?
                      "name " create-name
                      "descr" create-description
-                     "apps-sets targets" apps-sets)
-    {::cimi-api-fx/add
-     [:deployment-set2
-      (cond->
-        {:name create-name
-         :applications-sets [{:id (:id module-applications-sets)
-                              :version (apps-utils/module-version module-applications-sets)
-                              :overwrites [{} {} {}]}]
-         :start        start?}
-        (not (str/blank? create-description)) (assoc :description create-description))
-      #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
+                     "apps-sets targets" apps-sets
+                     "module-applications-sets" module-applications-sets
+                     "applications-sets" (-> module-applications-sets :content :applications-sets))
+    (let [body (cond->
+                 {:name              create-name
+                  :applications-sets [{:id         (:id module-applications-sets)
+                                       :version    (apps-utils/module-version module-applications-sets)
+                                       :overwrites (map-indexed (partial applications-sets->overwrites db)
+                                                                (-> module-applications-sets :content :applications-sets))
+                                       }]
+                  :start             start?}
+                 (not (str/blank? create-description)) (assoc :description create-description))]
+      (js/console.info ::create-start "body" body)
+      {::cimi-api-fx/add
+       [:deployment-set2 body
+        #(dispatch [::routing-events/navigate routes/deployment-sets-details
+                    {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
 
 (reg-event-db
   ::set

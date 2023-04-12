@@ -34,17 +34,10 @@
 
 ;; Serialization functions: db->module
 
-(defn changed-env-vars
-  [env-vars]
-  (keep (fn [{:keys [::module-plugin/new-value :value :name]}]
-          (when (some-> new-value (not= value))
-            {:name  name
-             :value new-value})
-          ) env-vars))
-
 (defn app-selected->application
   [db id {app-id :id :as _app-selected}]
-  (let [env-vars (changed-env-vars (module-plugin/db-environment-variables
+  (let [env-vars (module-plugin/changed-env-vars
+                   (module-plugin/db-environment-variables
                                      db [::spec/apps-sets id] app-id))]
     (cond-> {:id      app-id
              :version (module-plugin/db-selected-version

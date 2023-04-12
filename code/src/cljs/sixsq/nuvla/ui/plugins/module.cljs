@@ -83,6 +83,14 @@
   [db db-path href]
   (get-in db (conj db-path ::modules href :content :environmental-variables)))
 
+(defn changed-env-vars
+  [env-vars]
+  (keep (fn [{:keys [::new-value :value :name]}]
+          (when (some-> new-value (not= value))
+            {:name  name
+             :value new-value})
+          ) env-vars))
+
 (defn db-license-accepted?
   [db db-path href]
   (let [license (get-in db (conj db-path ::modules href :license))]

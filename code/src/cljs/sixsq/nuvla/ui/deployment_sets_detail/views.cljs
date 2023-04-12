@@ -206,9 +206,9 @@
                     {:db-path [::spec/events]
                      :href    (:id @deployment-set)})
 
-                  {:menuItem {:key         :configure-sets-detail
-                              :icon        "configure"
-                              :content       (str/capitalize (tr [:configure]))}
+                  {:menuItem {:key     :configure-sets-detail
+                              :icon    "configure"
+                              :content (str/capitalize (tr [:configure]))}
                    :render   #(r/as-element [:h1 "configure same as new"])}
                   {:menuItem {:content (str/capitalize (tr [:deployments]))
                               :key     :deployments
@@ -347,7 +347,7 @@
   []
   (let [create-name (subscribe [::subs/get ::spec/create-name])
         disabled?   (str/blank? @create-name)
-        on-click #(dispatch [::events/create-start %])]
+        on-click    #(dispatch [::events/create-start %])]
     [ui/ButtonGroup {:floated  "right"
                      :positive true}
      [ui/Button {:content  "Create"
@@ -382,37 +382,34 @@
 
 (defn ConfigureApps
   [i applications]
-  [tab/Tab
-   {:db-path [::spec/apps-sets i ::spec/configure-set-tab]
-    :panes   (map
-               (fn [{:keys [id]}]
-                 (let [app @(subscribe [::module-plugin/module
-                                        [::spec/apps-sets i] id])]
-                   {:menuItem {:content (or (:name app) (:id app))
-                               :icon    "cubes"
-                               :key     (keyword (str "configure-set-" i "-app-" id))}
-                    :render   #(r/as-element
-                                 [ui/TabPane
-                                  [module-plugin/EnvVariables
-                                   {:db-path [::spec/apps-sets i]
-                                    :href    id}]])})
-                 ) applications)}])
+  [ui/Tab
+   {:menu  {:attached false}
+    :panes (map
+             (fn [{:keys [id]}]
+               (let [app @(subscribe [::module-plugin/module
+                                      [::spec/apps-sets i] id])]
+                 {:menuItem {:content (or (:name app) (:id app))
+                             :icon    "cubes"
+                             :key     (keyword (str "configure-set-" i "-app-" id))}
+                  :render   #(r/as-element
+                               [ui/TabPane
+                                [module-plugin/EnvVariables
+                                 {:db-path [::spec/apps-sets i]
+                                  :href    id}]])})
+               ) applications)}])
 
 (defn ConfigureSets
   []
-  (let [panes (map-indexed
-                (fn [i {:keys [name applications]}]
-                  {:menuItem {:content (str (inc i) " | " name)
-                              :key     (keyword (str "configure-set-" i))}
-                   :render   #(r/as-element
-                                [ConfigureApps i applications])}
-                  ) @(subscribe [::subs/applications-sets]))]
-    [tab/Tab
-     {:db-path                 [::spec/tab-configure-sets]
-      :menu                    {:secondary true
-                                :pointing  true}
-      :panes                   panes
-      :ignore-chng-protection? true}]))
+  [ui/Tab
+   {:menu  {:secondary true
+            :pointing  true}
+    :panes (map-indexed
+             (fn [i {:keys [name applications]}]
+               {:menuItem {:content (str (inc i) " | " name)
+                           :key     (keyword (str "configure-set-" i))}
+                :render   #(r/as-element
+                             [ConfigureApps i applications])}
+               ) @(subscribe [::subs/applications-sets]))}])
 
 (defn Summary
   []

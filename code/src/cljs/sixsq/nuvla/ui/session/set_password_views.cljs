@@ -50,7 +50,7 @@
                       [ui/FormInput {:name          :username
                                      :label         (@tr [:username])
                                      :default-value username
-                                     :summary-page  true}]
+                                     :read-only     true}]
                       [ui/FormGroup {:widths 2}
                        [ui/FormInput {:name          :new-password
                                       :icon          "key"

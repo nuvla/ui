@@ -68,7 +68,7 @@
                         :error   (and validate? (not (s/valid? ::spec/file-content file-content)))}
           [ui/Form
            [ui/TextArea {:rows          10
-                         :summary-page  (not @editable?)
+                         :read-only     (not @editable?)
                          :default-value file-content
                          :on-change     (ui-callback/value
                                           #(do
@@ -179,12 +179,12 @@
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml {:value        @docker-compose
-                           :on-change    (fn [value]
+          [uix/EditorYaml {:value     @docker-compose
+                           :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form]))
-                           :summary-page (not @editable?)}]
+                           :read-only (not @editable?)}]
           (when @validate-form?
             (dispatch [::events/set-docker-validation-error
                        apps-utils/subtype-application-k8s (not valid?)])
@@ -214,12 +214,12 @@
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility compatibility unsupp-opts]]
-          [uix/EditorYaml {:value        @docker-compose
-                           :on-change    (fn [value]
+          [uix/EditorYaml {:value     @docker-compose
+                           :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form]))
-                           :summary-page (not @editable?)}]
+                           :read-only (not @editable?)}]
           (when @validate-form?
             (dispatch [::events/set-docker-validation-error apps-utils/subtype-application (not valid?)])
             (when (not valid?)

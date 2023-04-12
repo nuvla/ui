@@ -181,7 +181,7 @@
         [:<>
          ^{:key id}
          [acl/AclButton {:default-value (:acl @infra-service)
-                         :summary-page  (not @can-edit?)
+                         :read-only     (not @can-edit?)
                          :on-change     (partial on-change :acl)}]
 
          [ui/Message {:hidden @form-valid?

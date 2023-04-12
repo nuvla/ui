@@ -1244,13 +1244,13 @@
            (when (and @acl editable?)
              [ui/TableHeaderCell
               [acl-views/AclButtonOnly {:default-value @acl
-                                        :summary-page  (not editable?)
+                                        :read-only     (not editable?)
                                         :active?       show-acl?}]])]
           (when @show-acl?
             [ui/TableRow
              [ui/TableCell {:colSpan 4}
               [acl-views/AclSection {:default-value @acl
-                                     :summary-page  (not editable?)
+                                     :read-only     (not editable?)
                                      :active?       show-acl?
                                      :on-change     #(do
                                                        (reset! acl %)

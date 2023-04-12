@@ -360,7 +360,7 @@
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))
-                         :summary-page  (not @editable?)}]
+                         :read-only     (not @editable?)}]
          [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [Details]

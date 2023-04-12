@@ -1865,11 +1865,11 @@
 
                    [ui/Container {:text-align "left"}
                     "Shell script: "
-                    [uix/EditorShell {:value        (:run @selected-playbook)
-                                      :on-change    (fn [value]
+                    [uix/EditorShell {:value     (:run @selected-playbook)
+                                      :on-change (fn [value]
                                                    (reset! run value)
                                                    (reset! run-changed? true))
-                                      :summary-page (not @can-edit?)}]]
+                                      :read-only (not @can-edit?)}]]
 
                    [uix/Button {:primary  true
                                 :text     (@tr [:save])
@@ -1894,8 +1894,8 @@
                        "Output"]
                       [ui/Segment {:attached   true
                                    :text-align "left"}
-                       [uix/EditorCode {:value        (:output @selected-playbook)
-                                        :summary-page true}]]]
+                       [uix/EditorCode {:value     (:output @selected-playbook)
+                                        :read-only true}]]]
                      [ui/Segment {:vertical true}
                       (@tr [:nuvlabox-playbooks-no-outputs])])]]]]
                (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))

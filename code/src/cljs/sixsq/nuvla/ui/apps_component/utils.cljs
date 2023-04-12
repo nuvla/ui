@@ -27,11 +27,11 @@
   [mounts]
   (into
     (sorted-map)
-    (for [[id {:keys [source target summary-page mount-type]}] (map-indexed vector mounts)]
+    (for [[id {:keys [source target read-only mount-type]}] (map-indexed vector mounts)]
       [id {:id                    id
            ::spec/mount-source    source
            ::spec/mount-target    target
-           ::spec/mount-read-only (boolean summary-page)
+           ::spec/mount-read-only (boolean read-only)
            ::spec/mount-type      mount-type}])))
 
 
@@ -82,7 +82,7 @@
         (conj {:source mount-source}
               {:target mount-target}
               {:mount-type mount-type}
-              (when (not (nil? mount-read-only)) {:summary-page mount-read-only}))))))
+              (when (not (nil? mount-read-only)) {:read-only mount-read-only}))))))
 
 
 (defn db->module

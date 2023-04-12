@@ -84,7 +84,7 @@
         {:type          "text"
          :name          env-name
          :default-value (or env-value "")
-         :summary-page  false
+         :read-only     false
          :fluid         true
          :on-change     (ui-callback/input-callback
                           #(dispatch [::events/set-deployment (assoc-in

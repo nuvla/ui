@@ -429,7 +429,7 @@
             [ui/Checkbox {:style           {:margin-right 2}
                           :label           (some->> (metric-name->use-other-translation-key metric-name) (@tr))
                           :default-checked @use-other-than-default?
-                          :summary-page    disabled?
+                          :read-only       disabled?
                           :on-change       (ui-callback/checked
                                              (fn [checked?]
                                                (when (not checked?)
@@ -439,7 +439,7 @@
               [ui/Input {:type          :text
                          :placeholder   (@tr [(keyword (str "subs-notif-name-of-" metric-name "-to-monitor"))])
                          :name          :other-disk-name
-                         :summary-page  disabled?
+                         :read-only     disabled?
                          :default-value (or (:dev-name @criteria) "")
                          :on-change     (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
                          :style         {:flex 1}}])]])))))
@@ -464,11 +464,11 @@
                   :class "grid-2-cols-responsive"}
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-monthly-reset]))
                    :style    {:display :flex :align-items :center}}
-             [:input {:type         :radio
-                      :name         :reset
-                      :checked      monthly-reset?
-                      :summary-page true
-                      :id           :monthly}]
+             [:input {:type      :radio
+                      :name      :reset
+                      :checked   monthly-reset?
+                      :read-only true
+                      :id        :monthly}]
              [:label {:for   :monthly
                       :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
              [ui/Input {:type           :number
@@ -477,7 +477,7 @@
                                              (not (s/valid? ::spec/reset-start-date start-date-of-month)))
                         :default-value  start-date-of-month
                         :disabled       custom-reset?
-                        :summary-page   disabled?
+                        :read-only      disabled?
                         :min            1
                         :max            31
                         :style          {:justify-self :start
@@ -493,18 +493,18 @@
              [:div (ff/help-popup "min: 1, max: 31")]]
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-custom-reset]))
                    :style    {:display :flex :align-items :center :align-self "end"}}
-             [:input {:type         :radio
-                      :name         :reset
-                      :checked      custom-reset?
-                      :summary-page true
-                      :id           :custom}]
+             [:input {:type      :radio
+                      :name      :reset
+                      :checked   custom-reset?
+                      :read-only true
+                      :id        :custom}]
              [:label {:for   :custom
                       :style {:margin-left "0.5rem"}} [:span (@tr [:subs-notif-custom-reset-after])]]
              [ui/Input {:type           :number
                         :error          (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
                         :default-value  (or custom-interval-days 1)
                         :disabled       monthly-reset?
-                        :summary-page   disabled?
+                        :read-only      disabled?
                         :min            1
                         :max            999
                         :style          {:justify-self :start
@@ -686,11 +686,11 @@
                                     :style      {:padding-bottom 8}} "Value"]
                      [ui/TableCell
                       [ui/Input
-                       {:type         "text"
-                        :name         "Value"
-                        :error        (and @validate-form? (not (seq value)))
-                        :summary-page false
-                        :on-change    (ui-callback/value #(on-change :criteria {:value %}))}]]]]
+                       {:type      "text"
+                        :name      "Value"
+                        :error     (and @validate-form? (not (seq value)))
+                        :read-only false
+                        :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]]
               :numeric [:<>
                         [ConditionRow @metric-name condition @collection on-change @validate-form?]
                         [ui/TableRow
@@ -698,12 +698,12 @@
                                         :style      {:padding-bottom 8}} "Value"]
                          [ui/TableCell
                           [ui/Input
-                           {:type         "text"
-                            :name         "Value"
-                            :error        (and @validate-form? (js/isNaN (js/parseInt value)))
-                            :placeholder  (@tr [:number])
-                            :summary-page false
-                            :on-change    (ui-callback/value #(on-change :criteria {:value %}))}]
+                           {:type        "text"
+                            :name        "Value"
+                            :error       (and @validate-form? (js/isNaN (js/parseInt value)))
+                            :placeholder (@tr [:number])
+                            :read-only   false
+                            :on-change   (ui-callback/value #(on-change :criteria {:value %}))}]
                           [NetworkUnit criteria]]]]
               :boolean nil
               nil)
@@ -836,11 +836,11 @@
                               :style      {:padding-bottom 8}} "Value"]
                [ui/TableCell
                 [ui/Input
-                 {:type         "text"
-                  :name         "Value"
-                  :summary-page false
-                  :value        (:value criteria)
-                  :on-change    (ui-callback/value #(on-change :criteria {:value %}))}]
+                 {:type      "text"
+                  :name      "Value"
+                  :read-only false
+                  :value     (:value criteria)
+                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]
                 [NetworkUnit criteria]]])
             [ui/TableRow
              [ResetIntervalOptions {:disabled? true}]]

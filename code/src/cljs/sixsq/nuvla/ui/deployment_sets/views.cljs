@@ -78,22 +78,11 @@
            :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector
            :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector)])]]))
 
-
-(defn AddButton
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/MenuItem
-     {:name     (@tr [:add])
-      :icon     "add"
-      :on-click #(dispatch
-                   [::routing-events/navigate (str-pathify (name->href routes/deployment-sets) "New")])}]))
-
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true :stackable true}
-        [AddButton]
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]

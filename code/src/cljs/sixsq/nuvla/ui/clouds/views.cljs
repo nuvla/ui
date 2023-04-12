@@ -48,7 +48,7 @@
 
 (defn ServiceCard
   [{:keys [id name description path subtype logo-url online]
-    :as infra-service}]
+    :as   infra-service}]
   (let [status (cond
                  (true? online) true
                  (false? online) false
@@ -238,7 +238,7 @@
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
-                         :summary-page  (not editable?)
+                         :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
          [ui/Table style/definition
@@ -371,7 +371,7 @@
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
-                         :summary-page  (not editable?)
+                         :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
          [ui/Table style/definition
@@ -400,7 +400,7 @@
             {:keys [name description endpoint]} @service]
         [:<>
          [acl/AclButton {:default-value (:acl @service)
-                         :summary-page  (not editable?)
+                         :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
          [ui/Table style/definition

@@ -15,7 +15,7 @@
 (def sidebar-width "10rem")
 
 (defn Item
-  [{:keys [key label-kw icon protected? iframe-visble? feature-flag-kw]}]
+  [{:keys [key label-kw icon protected? iframe-visible? feature-flag-kw]}]
   (let [tr           (subscribe [::i18n-subs/tr])
         iframe?      (subscribe [::subs/iframe?])
         is-user?     (subscribe [::session-subs/is-user?])
@@ -24,7 +24,7 @@
         auth-needed? (and protected? (not @is-user?))
         auth-url     (name->href routes/sign-in)
         href         (if auth-needed? auth-url url)
-        visible? (and (or (not @iframe?) iframe-visble?)
+        visible? (and (or (not @iframe?) iframe-visible?)
                       (or (nil? feature-flag-kw)
                           @(subscribe [::about-subs/feature-flag-enabled?
                                        feature-flag-kw])))]

@@ -88,11 +88,10 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         files         (subscribe [::subs/files])
         editable?     (subscribe [::apps-subs/editable?])
-        module-app    (subscribe [::apps-subs/module])
-        compatibility (:compatibility @module-app)]
+        compatibility (subscribe [::subs/compatibility])]
     (fn []
       [uix/Accordion
-       (if (not= compatibility "docker-compose")
+       (if (not= @compatibility "docker-compose")
          [:<>
           [:div (@tr [:module-files])
            [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
@@ -145,32 +144,29 @@
 
 
 (defn DockerComposeCompatibility
-  [compatibility unsupp-opts]
-  (let [popup-disabled? (empty? unsupp-opts)]
-    [:div {:style {:float "right"}}
-     [:span {:style {:font-variant "small-caps"}} "compatibility: "]
-     [ui/Label {:color      "blue"
-                :horizontal true} compatibility]
-     (when-not popup-disabled?
-       [ui/Popup
-        {:trigger        (r/as-element [ui/Icon {:color "yellow"
-                                                 :name  "exclamation triangle"}])
-         :header         "Unsupported options"
-         :content        (str "Swarm doesn't support and will ignore the following options: "
-                              (str/join "; " unsupp-opts))
-
-         :on             "hover"
-         :position       "top right"
-         :wide           true
-         :hide-on-scroll true}])]))
+  []
+  (let [editable? @(subscribe [::apps-subs/editable?])
+        value     @(subscribe [::subs/compatibility])
+        v-labels  {"docker-compose" "compose"
+                   "swarm"          "swarm"}
+        options   (map (fn [[v l]] {:key v :value v :text l}) v-labels)
+        on-change #(do
+                     (dispatch [::main-events/changes-protection? true])
+                     (dispatch [::events/update-compatibility %]))]
+    [:span {:style {:float "right"}}
+     "Run with docker "
+     (if editable?
+       [ui/Dropdown
+        {:inline        true
+         :default-value value
+         :options       options
+         :on-change     (ui-callback/value on-change)}]
+       [:b (get v-labels value)])]))
 
 
 (defn KubernetesSection []
   (let [tr             (subscribe [::i18n-subs/tr])
         docker-compose (subscribe [::subs/docker-compose])
-        module-app     (subscribe [::apps-subs/module])
-        unsupp-opts    (:unsupported-options (:content @module-app))
-        compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
         editable?      (subscribe [::apps-subs/editable?])]
     (fn []
@@ -178,8 +174,7 @@
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
-           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
-           [DockerComposeCompatibility compatibility unsupp-opts]]
+           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
           [uix/EditorYaml {:value     @docker-compose
                            :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
@@ -202,9 +197,6 @@
 (defn DockerComposeSection []
   (let [tr             (subscribe [::i18n-subs/tr])
         docker-compose (subscribe [::subs/docker-compose])
-        module-app     (subscribe [::apps-subs/module])
-        unsupp-opts    (:unsupported-options (:content @module-app))
-        compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
         editable?      (subscribe [::apps-subs/editable?])]
     (fn []
@@ -214,7 +206,7 @@
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
-           [DockerComposeCompatibility compatibility unsupp-opts]]
+           [DockerComposeCompatibility]]
           [uix/EditorYaml {:value     @docker-compose
                            :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
@@ -229,7 +221,7 @@
                  (if (str/blank? error-msg)
                    (@tr [:module-docker-compose-error])
                    error-msg)])))]
-         :label [:span "Docker compose" ff/nbsp
+         :label [:span "Compose file" ff/nbsp
                  (when @validate-dc
                    [DockerComposeValidationPopup @validate-dc])]
          :default-open true]))))

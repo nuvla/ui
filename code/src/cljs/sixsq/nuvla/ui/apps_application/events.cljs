@@ -48,6 +48,11 @@
   (fn [db [_ docker-compose]]
     (assoc-in db [::spec/module-application ::spec/docker-compose] docker-compose)))
 
+(reg-event-db
+  ::update-compatibility
+  (fn [db [_ compatibility]]
+    (assoc-in db [::spec/module-application ::spec/compatibility] compatibility)))
+
 
 ; Validation errors
 

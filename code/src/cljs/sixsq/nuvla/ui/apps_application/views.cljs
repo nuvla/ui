@@ -145,7 +145,8 @@
 
 (defn DockerComposeCompatibility
   []
-  (let [editable? @(subscribe [::apps-subs/editable?])
+  (let [tr        @(subscribe [::i18n-subs/tr])
+        editable? @(subscribe [::apps-subs/editable?])
         value     @(subscribe [::subs/compatibility])
         v-labels  {"docker-compose" "compose"
                    "swarm"          "swarm"}
@@ -154,7 +155,8 @@
                      (dispatch [::main-events/changes-protection? true])
                      (dispatch [::events/update-compatibility %]))]
     [:span {:style {:float "right"}}
-     "Run with docker "
+     (tr [:run-with-docker])
+     ff/nbsp
      (if editable?
        [ui/Dropdown
         {:inline        true

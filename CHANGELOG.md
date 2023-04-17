@@ -4,6 +4,8 @@
 
 - Notificaiton subscriptions - Shows GiB unit for network in modal
 - Api Page - Persists and loads all filter parameters
+- About page - Remove personae item
+- About page - Support for feature flags
 
 ## [2.33.3] - 2023-02-27
 

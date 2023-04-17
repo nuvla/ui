@@ -3,6 +3,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.about.subs :as about-subs]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
@@ -13,30 +14,35 @@
 
 (def sidebar-width "10rem")
 
-(defn item
-  [{:keys [label-kw url icon protected? key] }]
+(defn Item
+  [{:keys [key label-kw icon protected? iframe-visible? feature-flag-kw]}]
   (let [tr           (subscribe [::i18n-subs/tr])
+        iframe?      (subscribe [::subs/iframe?])
         is-user?     (subscribe [::session-subs/is-user?])
+        url          (name->href key)
         active?      (subscribe [::route-subs/nav-url-active? url])
         auth-needed? (and protected? (not @is-user?))
         auth-url     (name->href routes/sign-in)
-        href         (if auth-needed? auth-url url)]
-
-    ^{:key (name label-kw)}
-    [uix/MenuItem
-     {:name                     (or (@tr [label-kw]) (name label-kw))
-      :icon                     icon
-      :class                    (str "nuvla-" (name key))
-      :style                    {:min-width  sidebar-width
-                                 :overflow-x "hidden"}
-      :active                   @active?
-      :href                     href
-      :on-click                 (fn [event]
-                                  (.preventDefault event)
-                                  (dispatch (if auth-needed?
-                                              [::routing-events/navigate auth-url]
-                                              [::events/navigate url])))
-      :data-reitit-handle-click false}]))
+        href         (if auth-needed? auth-url url)
+        visible? (and (or (not @iframe?) iframe-visible?)
+                      (or (nil? feature-flag-kw)
+                          @(subscribe [::about-subs/feature-flag-enabled?
+                                       feature-flag-kw])))]
+    (when visible?
+      [uix/MenuItem
+       {:name                     (or (@tr [label-kw]) (name label-kw))
+        :icon                     icon
+        :class                    (str "nuvla-" (name key))
+        :style                    {:min-width  sidebar-width
+                                   :overflow-x "hidden"}
+        :active                   @active?
+        :href                     href
+        :on-click                 (fn [event]
+                                    (.preventDefault event)
+                                    (dispatch (if auth-needed?
+                                                [::routing-events/navigate auth-url]
+                                                [::events/navigate url])))
+        :data-reitit-handle-click false}])))
 
 (defn logo-item
   []
@@ -46,7 +52,7 @@
     [ui/MenuItem (cond-> {:aria-label (@tr [:welcome])
                           :style      {:overflow-x "hidden"
                                        :min-width  sidebar-width
-                                       :padding   "0.5rem 0.5rem 0.2rem 0.5rem"}}
+                                       :padding    "0.5rem 0.5rem 0.2rem 0.5rem"}}
                          @url (assoc :href @url))
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
@@ -55,7 +61,7 @@
                            :margin-bottom "10px"}
                 :centered true}]]))
 
-(defn menu
+(defn Menu
   "Provides the sidebar menu for selecting major components/panels of the
    application."
   []
@@ -71,9 +77,6 @@
               :inverted   true
               :fixed      "left"}
      (when-not iframe? [logo-item])
-     (for [{:keys [key label-kw icon protected? iframe-visble? hidden?]
-            :or   {hidden? false}} pages-list]
-       (when (and (or (not iframe?) iframe-visble?) (not hidden?))
-         ^{:key key}
-         [item {:label-kw label-kw :url (name->href key) :key key
-                :icon icon :protected? protected? }]))]))
+     (for [page pages-list]
+       ^{:key (:key page)}
+       [Item page])]))

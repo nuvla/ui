@@ -260,7 +260,7 @@
                  (not (str/blank? create-description)) (assoc :description create-description))]
       (js/console.info ::create-start "body" body)
       {::cimi-api-fx/add
-       [:deployment-set2 body
+       [:deployment-set body
         #(dispatch [::routing-events/navigate routes/deployment-sets-details
                     {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
 

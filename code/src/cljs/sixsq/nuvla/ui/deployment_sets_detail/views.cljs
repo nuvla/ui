@@ -39,7 +39,7 @@
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
-              :event     [::events/get-deployment-set (str "deployment-set2/" uuid)]}]))
+              :event     [::events/get-deployment-set (str "deployment-set/" uuid)]}]))
 
 (defn StartButton
   [{:keys [id] :as deployment-set}]

@@ -18,18 +18,24 @@
     :on-change (ui-callback/checked
                  #(dispatch [::about-events/set-feature-flag k %]))}])
 
-(defn FeatureFlags
+(defn ExperimentalFeatures
   []
-  [ui/Modal {:trigger    (r/as-element [:a "Feature flags \uD83D\uDEA7"])
-             :close-icon true}
-   [ui/Header {:icon true}
-    [ui/Icon "\uD83D\uDEA7"]
-    "Feature flags"]
-   [ui/ModalContent
-    [ui/Form
-     (for [feature-flag utils/feature-flags]
-       ^{:key (:k feature-flag)}
-       [FeatureFlag feature-flag])]]])
+  (let [tr        @(subscribe [::i18n-subs/tr])
+        icon-code "\uD83D\uDEA7"]
+    [ui/Modal
+     {:trigger    (r/as-element
+                    [:a (str (tr [:experimental-features]) " " icon-code)])
+      :close-icon true}
+     [ui/Header {:icon true}
+      [:<> [ui/Icon icon-code]
+       (tr [:experimental-features])]
+      [ui/HeaderSubheader
+       (tr [:experimental-features-warn])]]
+     [ui/ModalContent
+      [ui/Form
+       (for [feature-flag utils/feature-flags]
+         ^{:key (:k feature-flag)}
+         [FeatureFlag feature-flag])]]]))
 
 (defn About
   [_path]
@@ -67,7 +73,7 @@
                         :target "_blank"}
                     (str/capitalize (@tr [:source-code-on]))
                     " GitHub"]]
-      [ui/ListItem [FeatureFlags]]
+      [ui/ListItem [ExperimentalFeatures]]
       [ui/ListItem (str/capitalize (@tr [:core-license]))
        ": "
        [:a {:href   "https://www.apache.org/licenses/LICENSE-2.0.html"

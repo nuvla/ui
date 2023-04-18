@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.main.views
-  (:require [clojure.string :as str]
-            [re-frame.core :refer [dispatch subscribe]]
+  (:require [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.apps-applications-sets.views]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.cimi.subs :as api-subs]

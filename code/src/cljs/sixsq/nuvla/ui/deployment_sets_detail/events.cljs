@@ -26,16 +26,9 @@
 
 
 (defn restore-applications
-  [modules-by-id db [i {:keys [applications]}]]
-  (-> db
-      #_(assoc-in [::spec/apps-sets i ::spec/applications]
-                  (->> applications
-                       (map (fn [{module-id :id}]
-                              [module-id (get modules-by-id module-id
-                                              {:subtype "unknown" :id module-id})]))
-                       (into {})))
-      (assoc-in [::spec/apps-sets i ::spec/targets]
-                (target-selector/build-spec))))
+  [db [i]]
+  (assoc-in db [::spec/apps-sets i ::spec/targets]
+            (target-selector/build-spec)))
 
 (defn load-module-configurations
   [modules-by-id fx [id {:keys [applications]}]]
@@ -58,7 +51,7 @@
                                  :content
                                  :applications-sets
                                  (map-indexed vector))
-          new-db            (reduce (partial restore-applications modules-by-id)
+          new-db            (reduce restore-applications
                                     db indexed-apps-sets)
           fx                (reduce (partial load-module-configurations modules-by-id)
                                     [] indexed-apps-sets)
@@ -178,8 +171,6 @@
              :application application})
           ) env-vars))
 
-
-;; FIXME
 (reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
@@ -214,7 +205,7 @@
       #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
 
 (defn application-overwrites
-  [db i {:keys [id version] :as application}]
+  [db i {:keys [id version] :as _application}]
   (when-let [env-changed (->> id
                               (module-plugin/db-environment-variables db [::spec/apps-sets i])
                               module-plugin/changed-env-vars
@@ -224,7 +215,7 @@
      :environmental-variables env-changed}))
 
 (defn applications-sets->overwrites
-  [db i {:keys [applications] :as applications-sets}]
+  [db i {:keys [applications] :as _applications-sets}]
   (let [targets                 (map :id (target-selector/db-selected db [::spec/apps-sets i ::spec/targets]))
         applications-overwrites (->> applications
                                      (map (partial application-overwrites db i))
@@ -237,18 +228,7 @@
   ::create-start
   (fn [{{:keys [::spec/create-name
                 ::spec/create-description
-                ::spec/create-start'
-                ::spec/module-applications-sets
-                ::spec/apps-sets] :as db} :db} [_ start?]]
-    (js/console.info ::create-start
-                     "id" (:id module-applications-sets)
-                     "version" (apps-utils/module-version module-applications-sets)
-                     "start" start?
-                     "name " create-name
-                     "descr" create-description
-                     "apps-sets targets" apps-sets
-                     "module-applications-sets" module-applications-sets
-                     "applications-sets" (-> module-applications-sets :content :applications-sets))
+                ::spec/module-applications-sets] :as db} :db} [_ start?]]
     (let [body (cond->
                  {:name              create-name
                   :applications-sets [{:id         (:id module-applications-sets)

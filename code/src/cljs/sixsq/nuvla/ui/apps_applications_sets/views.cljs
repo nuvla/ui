@@ -91,8 +91,7 @@
 
 
 (defn AppsList
-  [id & {:keys [editable?]
-         :or   {editable? true} :as _opts}]
+  [id]
   (let [selected  @(subscribe [::subs/apps-selected id])
         on-delete #(do
                      (dispatch [::events/remove-app id %])
@@ -141,7 +140,7 @@
            :default-value apps-set-description, :on-change (partial on-change id ::events/update-apps-set-description)
            :on-validation ::events/set-apps-validation-error]]]
 
-        [AppsList id :editable? @editable?]
+        [AppsList id]
 
         (when @editable?
           [AddApps id])]

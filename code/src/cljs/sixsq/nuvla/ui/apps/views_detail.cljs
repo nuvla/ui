@@ -24,7 +24,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify str-pathify]]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]

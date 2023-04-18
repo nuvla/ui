@@ -6,6 +6,7 @@
 - Api Page - Persists and loads all filter parameters
 - App - Allow user to choose how to run a docker application
 - App - Rename "Docker compose" accordion to "Compose file"
+- Apps - Validation of compose file renamed and enhanced error message 
 - Deployment modal - Select credential bugfix
 
 ## [2.33.3] - 2023-02-27

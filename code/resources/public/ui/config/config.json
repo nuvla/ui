@@ -7,7 +7,7 @@
   "eula": null,
   "terms-and-conditions": null,
   "mapbox-access-token": null,
-  "stripe": null,
+  "stripe": "xxx",
   "pricing-url": null,
   "nuvla-logo-url": null,
   "totp-apps": [

@@ -57,8 +57,7 @@
         status              (subscribe [::creds-subs/credential-check-status id])
         last-check          (subscribe [::creds-subs/credential-check-last-check id])
         selected?           (= id (:id @selected-credential))]
-    [ui/ListItem (cond-> {:disabled true
-                          :active   selected?
+    [ui/ListItem (cond-> {:active   selected?
                           :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}

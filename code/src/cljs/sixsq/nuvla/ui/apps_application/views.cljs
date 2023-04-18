@@ -132,10 +132,12 @@
                                                        (not valid?) "red"
                                                        valid? "green")
                                             :loading loading?}])
-    :header         "Validation of docker-compose"
+    :header         "Validation of compose file"
     :content        (cond
-                      loading? "Validation of docker-compose in progress..."
-                      (not valid?) (some-> error-msg (str/replace #"^.*is invalid because:" ""))
+                      loading? "Validation of compose file in progress..."
+                      (not valid?) (some-> error-msg
+                                           (str/replace #"^.*is invalid because:" "")
+                                           (str/replace #" in \".*docker-compose.yaml\"" ""))
                       valid? "Docker-compose is valid :)")
     :on             "hover"
     :position       "top center"
@@ -149,7 +151,7 @@
         editable? @(subscribe [::apps-subs/editable?])
         value     @(subscribe [::subs/compatibility])
         v-labels  {"docker-compose" "compose"
-                   "swarm"          "swarm"}
+                   "swarm"          "stack"}
         options   (map (fn [[v l]] {:key v :value v :text l}) v-labels)
         on-change #(do
                      (dispatch [::main-events/changes-protection? true])

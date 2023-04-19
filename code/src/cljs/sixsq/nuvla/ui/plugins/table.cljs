@@ -552,6 +552,7 @@
                                             ::wide?])))
 
 (defn LegacyTable
+  "Deprecated: Will be removed as soon as bulk-edit plugin is used on deployments page."
   [{:keys [cell-props columns rows
            row-click-handler row-props row-render
            sort-config]

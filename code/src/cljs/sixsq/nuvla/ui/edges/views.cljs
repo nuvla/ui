@@ -889,7 +889,7 @@
            (when (<= 1 not-editable @selected-count)
              [:<>
               [:div
-               (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " " (@tr [:tags-not-updated-no-rights]))]
+               (str not-editable " " (@tr [:tags-not-updated-no-rights]))]
               [:div [:a {:style {:cursor :pointer}
                          :target :_blank
                          :on-click

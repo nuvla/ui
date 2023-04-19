@@ -828,7 +828,7 @@
         :tags-set                                      "Set tags"
         :tags-bulk-you-have-selected                   "you have selected"
         :tags-bulk-only-editable                       "only items where you have edit rights will be edited."
-        :tags-not-updated-no-rights                    "will not be updated, because you lack the required access rights"
+        :tags-not-updated-no-rights                    "won't be updated as you lack required access rights."
         :take-coffee-back-soon                         "Have a coffee \u2615, it will be back soon! \uD83D\uDE09"
         :targets                                       "Targets"
         :terminate                                     "terminate"

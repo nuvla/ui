@@ -211,8 +211,3 @@
   ::reset-selected-set
   (fn [db]
     (assoc db ::spec/selected-set #{})))
-
-(reg-event-db
-  ::add-bulk-job-monitored
-  (fn [db [_ {:keys [id] :as job}]]
-    (update db ::spec/bulk-jobs-monitored assoc id job)))

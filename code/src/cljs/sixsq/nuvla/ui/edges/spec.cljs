@@ -2,8 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]
-            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
+            [sixsq.nuvla.ui.plugins.table :refer [build-ordering] :as table-plugin]))
 
 (def resource-name "nuvlabox")
 
@@ -48,6 +47,8 @@
   (s/cat :field (set columns) :order #{"desc" "asc"}))
 
 (def default-ordering {:field :created :order "desc"})
+
+(s/def ::select (s/nilable any?))
 
 (def local-storage-key "nuvla.ui.edges-preferences")
 

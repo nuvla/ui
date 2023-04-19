@@ -302,7 +302,7 @@
   (let [view        (subscribe [::subs/view])
         deployments (subscribe deployments-resources-subs-key)]
     (fn []
-      [ui/Segment {:basic true :class "table-wrapper"}
+      [:div
        [BulkUpdateModal]
        (if (= @view "cards")
          [CardsDataTable @deployments]

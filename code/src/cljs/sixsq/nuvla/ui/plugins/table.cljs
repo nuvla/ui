@@ -357,8 +357,7 @@
         nothing-selected?           (= :none @selection-status)
         bulk-edit-success-message   (subscribe [::bulk-edit-success-message-sub db-path])]
     [:div
-     {:style  {:position :sticky :top "40px" :z-index 998
-               }
+     {:style  {:position :sticky :top "40px" :z-index 998}
       :class [(if selectable? :visible :invisible)]}
      [:div {:style {:display :flex
                     :border "1px solid rgb(230 230 230)"
@@ -385,7 +384,7 @@
                           {:style {:border :none}
                            :disabled nothing-selected?
                            :key idx}
-                          [icon]
+                          (when icon [icon])
                           [component]]
                          [ui/MenuItem
                           {:disabled nothing-selected?
@@ -393,7 +392,7 @@
                                        (if (fn? event) (event payload)
                                            (dispatch event)))
                            :key idx}
-                          [icon]
+                          (when icon [icon])
                           name]))]])
                   :basic    true
                   :disabled (not= :none @selection-status)
@@ -415,12 +414,6 @@
                  :class [:select-all]}
         button-text]]]]))
 
-
-(defn get-bulk-select-subscriptions
-  [select-db-path resources-sub-key rights-needed]
-  [(subscribe [::selected-set-sub select-db-path])
-   (subscribe [::select-all?-sub select-db-path])
-   (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed])])
 
 (defn Table
   "Expects a single config map with a required `:rows` vector of documents.
@@ -468,23 +461,22 @@
         selectable?    (and select-config (s/valid? ::select-config select-config)
                             (or (not rights-needed)
                                 (some (partial general-utils/can-operation? rights-needed) rows)))
-        [selected-set
-         select-all?
-         page-selected?] (if selectable?
-                           (get-bulk-select-subscriptions select-db-path resources-sub-key rights-needed)
-                           [])
+        selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))
+        select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
+        page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed]))
         get-row-props  (fn [row] (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
+
     [:div
-     (when
-      selectable? [BulkActionBar {:selectable?         selectable?
-                                  :selected-all-sub    select-all?
-                                  :selected-set-sub    selected-set
-                                  :page-selected?-sub  page-selected?
-                                  :total-count-sub-key total-count-sub-key
-                                  :rows                rows
-                                  :db-path             select-db-path
-                                  :bulk-actions        bulk-actions
-                                  :resources-sub-key   resources-sub-key}])
+     (when selectable?
+       [BulkActionBar {:selectable?         selectable?
+                       :selected-all-sub    select-all?
+                       :selected-set-sub    selected-set
+                       :page-selected?-sub  page-selected?
+                       :total-count-sub-key total-count-sub-key
+                       :rows                rows
+                       :db-path             select-db-path
+                       :bulk-actions        bulk-actions
+                       :resources-sub-key   resources-sub-key}])
      [:div {:style {:overflow :auto
                     :padding 0}}
       [ui/Table (:table-props props)
@@ -567,59 +559,3 @@
                                             ::sort-config
                                             ::select-config
                                             ::wide?])))
-
-(defn LegacyTable
-  "Deprecated: Will be removed as soon as bulk-edit plugin is used on deployments page."
-  [{:keys [cell-props columns rows
-           row-click-handler row-props row-render
-           sort-config]
-    :as   props}]
-  (let [tr            @(subscribe [::i18n-subs/tr])
-        columns       (or columns (map (fn [[k _]] {:field-key k}) (first rows)))]
-    [:div {:style {:overflow :auto
-                   :padding 0}}
-     [ui/Table (:table-props props)
-      [ui/TableHeader (:header-props props)
-       [ui/TableRow
-        (for [col columns
-              :when col
-              :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
-          ^{:key (or field-key (random-uuid))}
-          [ui/TableHeaderCell
-           (merge (:header cell-props) header-cell-props)
-           [:div
-            (cond
-              (fn? header-content)
-              (header-content)
-
-              header-content
-              header-content
-
-              :else
-              (or (tr [field-key]) field-key))
-            (when (and
-                   sort-config
-                   (not no-sort?))
-              [Sort (merge
-                     sort-config
-                     (select-keys col [:field-key :disable-sort :sort-key]))])]])]]
-      [ui/TableBody (:body-props props)
-       (doall
-        (for [row rows
-              :let [id (:id row)]]
-          (cond
-            row-render
-            ^{:key id}
-            [row-render row]
-            :else
-            ^{:key id}
-            [ui/TableRow (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row))
-             (for [{:keys [field-key accessor cell cell-props]} columns
-                   :let [cell-data ((or accessor field-key) row)]]
-               ^{:key (str id "-" field-key)}
-               [ui/TableCell
-                cell-props
-                (cond
-                  cell [cell {:row-data  row
-                              :cell-data cell-data}]
-                  :else (str cell-data))])])))]]]))

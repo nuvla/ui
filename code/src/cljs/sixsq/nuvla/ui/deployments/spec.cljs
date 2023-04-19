@@ -3,7 +3,7 @@
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
+            [sixsq.nuvla.ui.plugins.table :refer [build-ordering] :as table-plugin]))
 
 (def resource-name "deployment")
 
@@ -44,7 +44,8 @@
                ::select-all?             false
                ::bulk-jobs-monitored     (sorted-map)
                ::bulk-jobs               (bulk-progress-plugin/build-spec)
-               ::ordering                (build-ordering)})
+               ::ordering                (build-ordering)
+               ::select                  (table-plugin/build-bulk-edit-spec)})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
-                                        :default-items-per-page 25)})
+                                        :default-items-per-page 2)})

@@ -1,14 +1,14 @@
 (ns sixsq.nuvla.ui.utils.bulk-edit-modal
   (:require [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-sub subscribe]]
+            [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.edges.events :as events]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (def modal-tags-set-id ::tags-set)
 (def modal-tags-add-id ::tags-add)
@@ -28,14 +28,23 @@
 (reg-sub
   ::bulk-modal-visible?
   (fn [_ [_ db-path]]
-    (subscribe [::opened-modal db-path]))
+    (subscribe [::edit-mode db-path]))
   (fn [opened-modal]
     (boolean ((set tags-modal-ids) opened-modal))))
 
 (reg-sub
-  ::opened-modal
+  ::edit-mode
   (fn [db [_ db-path]]
-    (::spec/open-modal db)))
+    (get-in db [::edit-mode db-path])))
+
+(reg-event-fx
+  ::open-modal
+  (fn [{db :db} [_ {:keys [modal-id db-path fx]}]]
+    (let [fx (when (and ((set tags-modal-ids) modal-id)
+                        (not ((set tags-modal-ids) (get-in db [::edit-mode db-path]))))
+               [:dispatch [::get-edges-without-edit-rights]])]
+      {:db (assoc-in db [::edit-mode db-path] modal-id)
+       :fx [fx]})))
 
 (defn- translate-from-qkey
   [tr q-key]
@@ -57,7 +66,7 @@
   [_form-tags close-fn db-path update-event]
   (let [tr               (subscribe [::i18n-subs/tr])
         selected-count   (subscribe [::selected-count db-path])
-        edit-mode        (subscribe [::opened-modal db-path])
+        edit-mode        (subscribe [::edit-mode db-path])
         mode             (r/atom :idle)
         edit-mode->color {modal-tags-add-id     :green
                           modal-tags-remove-all :red
@@ -98,19 +107,19 @@
                       :name "fa-xmark"}]]])))))
 
 (defn BulkEditTagsModal
-  [db-path {:keys [tags-sub-key edit-rights-sub-key
+  [db-path {:keys [tags-sub-key no-edit-rights-sub-key
                    update-event open-modal-event]} {:keys [singular plural]}]
   (let [tr               (subscribe [::i18n-subs/tr])
         selected-count   (subscribe [::selected-count db-path])
-        opened-modal     (subscribe [::opened-modal db-path])
-        open?            (subscribe [::bulk-modal-visible?])
+        opened-modal     (subscribe [::edit-mode db-path])
+        open?            (subscribe [::bulk-modal-visible? db-path])
         used-tags        (subscribe [tags-sub-key])
-        view-only-edges  (subscribe [edit-rights-sub-key])
+        view-only-edges  (subscribe [no-edit-rights-sub-key])
         form-tags        (r/atom [])
         mode->tag-color  (zipmap tags-modal-ids [:teal :teal :red :red])]
     (fn []
       (let [close-fn     (fn []
-                           (dispatch [::open-modal db-path nil])
+                           (dispatch [open-modal-event db-path nil])
                            (reset! form-tags []))
             change-mode  (fn [edit-mode]
                            (when (= modal-tags-remove-all edit-mode)

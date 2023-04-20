@@ -796,7 +796,7 @@
 (defn- ButtonAskingForConfirmation
   [_form-tags close-fn]
   (let [tr               (subscribe [::i18n-subs/tr])
-        selected-count   (subscribe [::subs/selected-count ::spec/select])
+        selected-count   (subscribe [::subs/selected-count])
         edit-mode        (subscribe [::subs/opened-modal])
         mode             (r/atom :idle)
         edit-mode->color {spec/modal-tags-add-id     :green
@@ -840,7 +840,7 @@
 (defn BulkUpdateModal
   []
   (let [tr               (subscribe [::i18n-subs/tr])
-        selected-count   (subscribe [::subs/selected-count ::spec/select])
+        selected-count   (subscribe [::subs/selected-count])
         opened-modal     (subscribe [::subs/opened-modal])
         open?            (subscribe [::subs/bulk-modal-visible?])
         used-tags        (subscribe [::subs/edges-tags])

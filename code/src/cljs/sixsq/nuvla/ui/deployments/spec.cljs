@@ -48,4 +48,4 @@
                ::select                  (table-plugin/build-bulk-edit-spec)})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
-                                        :default-items-per-page 2)})
+                                        :default-items-per-page 25)})

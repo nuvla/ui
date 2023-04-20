@@ -374,6 +374,7 @@
                        (if component
                          [ui/MenuItem
                           {:style {:border :none}
+                           :class :bulk-action-bar-item
                            :disabled nothing-selected?}
                           (when icon [icon])
                           [component]]

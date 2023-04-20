@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.utils.bulk-edit-modal
   (:require [clojure.string :as str]
-            [re-frame.core :refer [dispatch subscribe]]
+            [re-frame.core :refer [dispatch reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.edges.events :as events]
             [sixsq.nuvla.ui.edges.spec :as spec]
@@ -8,13 +8,23 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
 
 (def modal-tags-set-id ::tags-set)
 (def modal-tags-add-id ::tags-add)
 (def modal-tags-remove-id ::tags-remove)
 (def modal-tags-remove-all ::tags-remove-all)
 (def tags-modal-ids [modal-tags-add-id modal-tags-set-id modal-tags-remove-id modal-tags-remove-all])
+
+(reg-sub
+  ::selected-count
+  (fn [_ [_ db-path]]
+    [(subscribe [::table-plugin/selected-set-sub db-path])
+     (subscribe [::table-plugin/select-all?-sub db-path])
+     (subscribe [::nuvlaboxes-count])])
+  (fn [[selected-set selected-all? total-count]]
+    (if selected-all? total-count (count selected-set))))
 
 (defn- get-name-as-keyword
   [tr q-key]

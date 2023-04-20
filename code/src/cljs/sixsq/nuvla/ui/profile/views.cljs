@@ -10,6 +10,7 @@
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
@@ -23,6 +24,7 @@
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as utils-spec]
             [sixsq.nuvla.ui.utils.spec :as us]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -1087,8 +1089,6 @@
                 [AddCouponButton]])]])]))))
 
 
-
-
 (defn DashboardVendor
   []
   (let [tr     (subscribe [::i18n-subs/tr])
@@ -1102,15 +1102,130 @@
 
 (defn StripeConnect
   []
-  [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/vendor")
-            :method "post"
-            :style  {:color "grey"}}
-   [:input {:hidden        true
-            :name          "redirect-url"
-            :default-value (str @config/path-prefix "/profile")}]
-   [:input {:type "image"
-            :src  "/ui/images/stripe-connect.png"
-            :alt  "Stripe connect"}]])
+  (let [tr       (subscribe [::i18n-subs/tr])
+        loading? (subscribe [::subs/loading? :vendor-stripe-connect])
+        error    (subscribe [::subs/error-message])
+        open?    (subscribe [::subs/modal-open? :vendor-stripe-connect])
+        email!   (r/atom "")]
+    (fn []
+      [:<>
+       [ui/Modal
+        {:open       @open?
+         :size       "small"
+         :on-close   #(dispatch [::events/close-modal])
+         :close-icon true}
+        [uix/ModalHeader {:header "Stripe connect"}]
+        [ui/ModalContent
+         [ui/Form {:id     "form-stripe-connect"
+                   :action (str @cimi-fx/NUVLA_URL "/api/vendor")
+                   :method "post"
+                   :style  {:color "grey"}}
+          [ui/Message {:positive true
+                       :header   "Welcome to our vendor program"
+                       :content  "We are happy that you choose to join our vendor program."}]
+
+          [:input {:hidden        true
+                   :name          "redirect-url"
+                   :default-value (str @config/path-prefix "/profile")}]
+          [ui/FormInput {:name        "email"
+                         :icon        "mail"
+                         :placeholder "vendor@example.com"
+                         :auto-focus  true
+                         :required    true
+                         :label       (r/as-element
+                                        [:span "Provide a customer service email"
+                                         [ff/help-popup "This email will be presented to potential customer's of your paying applications."]])
+                         :focus       true}]]]
+        [ui/ModalActions
+         [ui/Button {:type    "submit"
+                     :form    "form-stripe-connect"
+                     :primary true
+                     :content "Proceed"}]]]
+       [:input {:type     "image"
+                :src      "/ui/images/stripe-connect.png"
+                :on-click #(dispatch [::events/open-modal :vendor-stripe-connect])
+                :alt      "Stripe connect"}]])))
+
+(defn VendorCustomerEmail
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        loading? (subscribe [::subs/loading? :vendor-set-email])
+        error    (subscribe [::subs/error-message])
+        open?    (subscribe [::subs/modal-open? :vendor-set-email])
+        vendor   (subscribe [::subs/vendor])
+        email!   (r/atom "")]
+    (fn []
+      (let [value (or (:email @vendor) "")
+            {:keys [txt icon]} (if (str/blank? value)
+                                 {:txt  :add
+                                  :icon "plus square outline"}
+                                 {:txt  :update
+                                  :icon "pencil"})]
+        [:<>
+         [ui/Modal
+          {:open       @open?
+           :size       "small"
+           :on-close   #(dispatch [::events/close-modal])
+           :close-icon true}
+          [uix/ModalHeader {:header "Customer service email"}]
+          [ui/ModalContent
+           [ui/Form {:error   (boolean @error)
+                     :loading @loading?}
+            [ui/Message {:error   true
+                         :header  (@tr [:something-went-wrong])
+                         :content @error}]
+
+            [ui/FormInput {:icon          "mail"
+                           :default-value value
+                           :placeholder   "vendor@example.com"
+                           :on-change     (ui-callback/value #(reset! email! %))
+                           :auto-focus    true
+                           :focus         true}]]]
+          [ui/ModalActions
+           [ui/Button {:primary  true
+                       :on-click #(dispatch [::events/vendor-set-email @email!])
+                       :disabled (or @loading?
+                                     (str/blank? @email!))}
+            (str/capitalize (@tr [:save]))]]]
+         [ui/Button {:primary  true
+                     :circular true
+                     :basic    true
+                     :size     "small"
+                     :on-click #(dispatch [::events/open-modal :vendor-set-email])}
+          [ui/Icon {:name icon}]
+          (str/capitalize (@tr [txt]))]]))))
+
+(defn IconHeader
+  [{:keys [icon header subheader]}]
+  [ui/Header {:as :h3, :icon true, :disabled true}
+   [ui/Icon {:className icon}]
+   header
+   [ui/HeaderSubheader (or subheader ff/nbsp)]])
+
+(def icon-envelope-dollar "fad fa-envelope-open-dollar")
+
+(defn CreateVendor
+  []
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [ui/GridColumn
+     [IconHeader {:icon   icon-envelope-dollar
+                  :header (tr [:vendor-getting-paid])}]
+     [StripeConnect]]))
+
+(defn ExistingVendor
+  []
+  (let [tr     @(subscribe [::i18n-subs/tr])
+        vendor @(subscribe [::subs/vendor])]
+    [:<>
+     [ui/GridColumn
+      [IconHeader {:icon   icon-envelope-dollar
+                   :header (tr [:sales-dashboard])}]
+      [DashboardVendor]]
+     [ui/GridColumn
+      [IconHeader {:icon      "fad fa-envelope"
+                   :header    "Customer service"
+                   :subheader (:email vendor)}]
+      [VendorCustomerEmail]]]))
 
 
 
@@ -1128,18 +1243,12 @@
        [ui/Header {:as :h2 :dividing true} (@tr [:vendor])]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
+                 :columns        2
+                 :stackable      true
                  :style          {:height "100%"}}
-        [ui/GridColumn
-         [ui/Header {:as :h3, :icon true, :disabled true}
-          [ui/Icon {:className "fad fa-envelope-open-dollar"}]
-          (when-not @vendor
-            (@tr [:vendor-getting-paid]))]
-         [:br]
-         (if @vendor
-           [DashboardVendor]
-           [StripeConnect])
-         ]]]
-      )))
+        (if @vendor
+          [ExistingVendor]
+          [CreateVendor])]])))
 
 
 (defn BillingContact

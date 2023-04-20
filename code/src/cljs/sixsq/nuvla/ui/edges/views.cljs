@@ -901,7 +901,7 @@
                              (str/join " or "
                                        (map #(str "id='" % "'")
                                             (->> @view-only-edges :resources (map :id))))]))}
-                     (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
+                      (@tr [:show-me-in-new-tab])]]])]
           [ButtonAskingForConfirmation @form-tags close-fn]]]))))
 
 

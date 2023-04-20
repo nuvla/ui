@@ -758,6 +758,7 @@
         :share                                         "Share"
         :should-not-be-empty                           "Should not be empty."
         :show-me                                       "show me"
+        :show-me-in-new-tab                            "Show me in a new tab"
         :show-versions                                 "show versions"
         :shutdown                                      "shutdown"
         :shutdown-deployment                           "Shut down deployment?"
@@ -973,8 +974,7 @@
         :yes                                           "yes"
         }
 
-   :fr {
-        :swarm-app-cant-be-deployed-compose-node       "Une application Swarm ne peut pas être déployée sur un noeud sans Docker Swarm ! Pour la déployer, vous devez créer un cluster Swarm sur ce noeud."
+   :fr {:swarm-app-cant-be-deployed-compose-node       "Une application Swarm ne peut pas être déployée sur un noeud sans Docker Swarm ! Pour la déployer, vous devez créer un cluster Swarm sur ce noeud."
         :swarm-app-cant-be-deployed-worker-node        "Une application Swarm ne peut pas être déployée sur noeud Swarm Worker! Pour la déployer, vous devez sélectionner un noeud Swarm Manager faisant partie de ce cluster."
         :compose-app-deployed-swarm-node               "Une application Docker compose Docker déployée sur un noeud Swarm. Cette application ne sera disponible que sur ce noeud spécifique."
         :about                                         "à propos"
@@ -1559,6 +1559,7 @@
         :share                                         "Partage"
         :should-not-be-empty                           "Ne doit pas être vide."
         :show-me                                       "montrez-moi"
+        :show-me-in-new-tab                            "M'afficher dans un nouvel onglet"
         :show-versions                                 "montrer les versions"
         :shutdown                                      "arrêter"
         :shutdown-deployment                           "Arrêter le déploiement ?"
@@ -1745,5 +1746,4 @@
         :welcome-video-subheader-pre                   "Accèder à notre"
         :will-do-it-later                              "Je le ferai plus tard"
         :working-directory                             "Dossier de travail"
-        :yes                                           "oui"
-        }})
+        :yes                                           "oui"}})

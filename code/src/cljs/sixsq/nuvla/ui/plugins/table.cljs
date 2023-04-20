@@ -383,11 +383,13 @@
                          [ui/MenuItem
                           {:style {:border :none}
                            :disabled nothing-selected?
+                           :class :bulk-action-bar-item
                            :key idx}
                           (when icon [icon])
                           [component]]
                          [ui/MenuItem
                           {:disabled nothing-selected?
+                           :class :bulk-action-bar-item
                            :on-click (fn []
                                        (if (fn? event) (event payload)
                                            (dispatch event)))

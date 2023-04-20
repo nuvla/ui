@@ -607,10 +607,7 @@
                    :name     spec/local-storage-key
                    :value    (merge (edn/read-string storage) preference)}}))
 
-;; TODO: Implement this:
-;;   1. Store in localstorage under UUID key -> done
-;;   2. Open new edges page tab with query param storage-key=UUID -> done
-;;   3. Use this filter in ::init of edges page
+;; TODO: Refactor/move to additional filter or main fx
 (reg-event-fx
   ::store-filter-and-open-in-new-tab
   (fn [_ [_ filter-string]]

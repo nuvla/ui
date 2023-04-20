@@ -4,7 +4,6 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.edges.events :as events]
             [sixsq.nuvla.ui.edges.spec :as spec]
-            [sixsq.nuvla.ui.edges.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -26,7 +25,19 @@
   (fn [[selected-set selected-all? total-count]]
     (if selected-all? total-count (count selected-set))))
 
-(defn- get-name-as-keyword
+(reg-sub
+  ::bulk-modal-visible?
+  (fn [_ [_ db-path]]
+    (subscribe [::opened-modal db-path]))
+  (fn [opened-modal]
+    (boolean ((set tags-modal-ids) opened-modal))))
+
+(reg-sub
+  ::opened-modal
+  (fn [db [_ db-path]]
+    (::spec/open-modal db)))
+
+(defn- translate-from-qkey
   [tr q-key]
   (tr [(-> q-key name keyword)]))
 
@@ -37,32 +48,32 @@
         font-weight      (if active? 700 400)
         setting-tags?    (= modal-tags-set-id edit-mode)]
     [ui/Radio {:style     {:font-weight font-weight}
-               :label     (str (get-name-as-keyword @tr edit-mode)
+               :label     (str (translate-from-qkey @tr edit-mode)
                                (when setting-tags? (str " (" (@tr [:tags-overwrite]) "!)")))
                :checked   active?
                :on-change #(change-mode edit-mode)}]))
 
 (defn- ButtonAskingForConfirmation
-  [_form-tags close-fn]
+  [_form-tags close-fn db-path update-event]
   (let [tr               (subscribe [::i18n-subs/tr])
-        selected-count   (subscribe [::subs/selected-count ::spec/select])
-        edit-mode        (subscribe [::subs/opened-modal])
+        selected-count   (subscribe [::selected-count db-path])
+        edit-mode        (subscribe [::opened-modal db-path])
         mode             (r/atom :idle)
         edit-mode->color {modal-tags-add-id     :green
                           modal-tags-remove-all :red
                           modal-tags-remove-id  :red
                           modal-tags-set-id     :red}]
     (fn [form-tags _close-fn]
-      (let [text      (get-name-as-keyword @tr @edit-mode)
+      (let [text      (translate-from-qkey @tr @edit-mode)
             call-back (fn [] (close-fn))
             update-fn (fn []
-                        (dispatch [::events/update-tags
+                        (dispatch [update-event
                                    @edit-mode
                                    {:tags         form-tags
                                     :call-back-fn call-back
                                     :text text}]))
             disabled? (or (= @selected-count 0)
-                          (and  (not= spec/modal-tags-remove-all @edit-mode)
+                          (and  (not= modal-tags-remove-all @edit-mode)
                                 (= 0 (count form-tags))))]
         (if (= :idle @mode)
           [:div
@@ -86,24 +97,25 @@
             [ui/Icon {:style {:margin 0}
                       :name "fa-xmark"}]]])))))
 
-(defn BulkEditModal
-  [db-path]
+(defn BulkEditTagsModal
+  [db-path {:keys [tags-sub-key edit-rights-sub-key
+                   update-event open-modal-event]} {:keys [singular plural]}]
   (let [tr               (subscribe [::i18n-subs/tr])
-        selected-count   (subscribe [::subs/selected-count ::spec/select])
-        opened-modal     (subscribe [::subs/opened-modal])
-        open?            (subscribe [::subs/bulk-modal-visible?])
-        used-tags        (subscribe [::subs/edges-tags])
-        view-only-edges  (subscribe [::subs/edges-without-edit-rights])
+        selected-count   (subscribe [::selected-count db-path])
+        opened-modal     (subscribe [::opened-modal db-path])
+        open?            (subscribe [::bulk-modal-visible?])
+        used-tags        (subscribe [tags-sub-key])
+        view-only-edges  (subscribe [edit-rights-sub-key])
         form-tags        (r/atom [])
-        mode->tag-color  (zipmap spec/tags-modal-ids [:teal :teal :red :red])]
+        mode->tag-color  (zipmap tags-modal-ids [:teal :teal :red :red])]
     (fn []
       (let [close-fn     (fn []
-                           (dispatch [::events/open-modal nil])
+                           (dispatch [::open-modal db-path nil])
                            (reset! form-tags []))
             change-mode  (fn [edit-mode]
-                           (when (= spec/modal-tags-remove-all edit-mode)
+                           (when (= modal-tags-remove-all edit-mode)
                              (reset! form-tags []))
-                           (dispatch [::events/open-modal edit-mode]))
+                           (dispatch [open-modal-event edit-mode]))
             not-editable (:count @view-only-edges)]
         [ui/Modal {:open       @open?
                    :close-icon true
@@ -113,11 +125,11 @@
           [ui/Form
            [:div {:style {:display :flex
                           :gap     "1.5rem"}}
-            (doall (for [edit-mode spec/tags-modal-ids]
+            (doall (for [edit-mode tags-modal-ids]
                      ^{:key edit-mode}
                      [TagsEditModeRadio edit-mode @opened-modal change-mode]))]
            [:div {:style {:margin-top "1.5rem"}}
-            (when-not (= spec/modal-tags-remove-all @opened-modal)
+            (when-not (= modal-tags-remove-all @opened-modal)
               [components/TagsDropdown {:initial-options @used-tags
                                         :on-change-fn    (fn [tags] (reset! form-tags tags))
                                         :tag-color       (mode->tag-color @opened-modal)}])]]]
@@ -132,12 +144,12 @@
                       " "
                       @selected-count
                       " "
-                      (@tr [(if (= @selected-count 0) :edge :edges)])
+                      (@tr [(if (= @selected-count 0) singular plural)])
                       ". ")]
            (when (<= 1 not-editable @selected-count)
              [:<>
               [:div
-               (str not-editable " " (@tr [(if (= not-editable 1) :edge :edges)]) " " (@tr [:tags-not-updated-no-rights]))]
+               (str not-editable " " (@tr [(if (= not-editable 1) singular plural)]) " " (@tr [:tags-not-updated-no-rights]))]
               [:div [:a {:style {:cursor :pointer}
                          :target :_blank
                          :on-click
@@ -148,4 +160,4 @@
                                        (map #(str "id='" % "'")
                                             (->> @view-only-edges :resources (map :id))))]))}
                      (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
-          [ButtonAskingForConfirmation @form-tags close-fn]]]))))
+          [ButtonAskingForConfirmation @form-tags close-fn db-path update-event]]]))))

@@ -8,6 +8,8 @@
 - App - Rename "Docker compose" accordion to "Compose file"
 - Apps - Validation of compose file renamed and enhanced error message
 - Deployment modal - Select credential bugfix
+- About page - Remove personae item
+- About page - Support for feature flags
 
 ## [2.33.3] - 2023-02-27
 

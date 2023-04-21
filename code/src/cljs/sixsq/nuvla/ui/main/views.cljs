@@ -266,7 +266,7 @@
          [router-component]
          [:<>
           [intercom/widget]
-          [sidebar/menu]
+          [sidebar/Menu]
           [:div {:class (str "nuvla-" (first @resource-path))
                  :style {:transition  "0.5s"
                          :margin-left (if (and (not @is-small-device?) @show?)

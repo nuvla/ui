@@ -3,6 +3,7 @@
 
 (def dictionary
   {:en {
+        :run-with-docker                               "Run with docker"
         :experimental-features                         "Experimental features"
         :experimental-features-warn                    "Experimental features may cause unexpected behaviors. Use them at your own risk."
         :swarm-app-cant-be-deployed-compose-node       "Swarm application can't be deployed on a node without Docker Swarm! To deploy it, you need to create a Swarm cluster on this node."
@@ -958,9 +959,9 @@
         }
 
    :fr {
+        :run-with-docker                               "Exécuter avec docker"
         :experimental-features                         "Fonctionnalités expérimentales"
         :experimental-features-warn                    "Les fonctionnalités expérimentales peuvent entraîner des comportements inattendus. Utilisez-les à vos risques et périls."
-
         :swarm-app-cant-be-deployed-compose-node       "Une application Swarm ne peut pas être déployée sur un noeud sans Docker Swarm ! Pour la déployer, vous devez créer un cluster Swarm sur ce noeud."
         :swarm-app-cant-be-deployed-worker-node        "Une application Swarm ne peut pas être déployée sur noeud Swarm Worker! Pour la déployer, vous devez sélectionner un noeud Swarm Manager faisant partie de ce cluster."
         :compose-app-deployed-swarm-node               "Une application Docker compose Docker déployée sur un noeud Swarm. Cette application ne sera disponible que sur ce noeud spécifique."

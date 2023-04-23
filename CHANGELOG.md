@@ -4,6 +4,10 @@
 
 - Notificaiton subscriptions - Shows GiB unit for network in modal
 - Api Page - Persists and loads all filter parameters
+- App - Allow user to choose how to run a docker application
+- App - Rename "Docker compose" accordion to "Compose file"
+- Apps - Validation of compose file renamed and enhanced error message
+- Deployment modal - Select credential bugfix
 - About page - Remove personae item
 - About page - Support for feature flags
 

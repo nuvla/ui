@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+
+### Changed
+
+## [2.33.4] - 2023-04-24
+
+### Changed
+
 - Notification subscriptions - Shows GiB unit for network in modal
 - Api Page - Persists and loads all filter parameters
 - App - Allow user to choose how to run a docker application

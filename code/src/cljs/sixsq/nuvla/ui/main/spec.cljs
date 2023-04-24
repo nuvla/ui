@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.main.spec
-  (:require [sixsq.nuvla.ui.about.utils :as about-utils]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]))
 
 (s/def ::loading? boolean?)

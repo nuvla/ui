@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.about.subs :as about-subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
-            [sixsq.nuvla.ui.about.subs :as about-subs]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]

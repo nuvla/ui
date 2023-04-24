@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.views
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.apps-applications-sets.views]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.cimi.subs :as api-subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]

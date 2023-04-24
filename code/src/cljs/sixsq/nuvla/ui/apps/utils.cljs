@@ -5,6 +5,11 @@
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
+(def subtype-project "project")
+(def subtype-component "component")
+(def subtype-application "application")
+(def subtype-application-k8s "application_kubernetes")
+(def subtype-applications-sets "applications_sets")
 
 (def publish-icon
   "check circle outline")
@@ -89,36 +94,60 @@
   [nav-path]
   (some->> nav-path rest last))
 
+(defn module-version
+  [{{:keys [id]} :content versions :versions}]
+  (->> versions
+       (map-indexed vector)
+       (some (fn [[idx elm]] (when (= (:href elm) id) idx)))))
+
+(defn subtype?
+  [subtype]
+  (fn [module-subtype]
+    (= module-subtype subtype)))
+
+(def project? (subtype? subtype-project))
+(def component? (subtype? subtype-component))
+(def application? (subtype? subtype-application))
+(def application-k8s? (subtype? subtype-application-k8s))
+(def applications-sets? (subtype? subtype-applications-sets))
+
+(defn IconK8s
+  [selected]
+  [ui/Image {:src   (if selected
+                      "/ui/images/kubernetes.svg"
+                      "/ui/images/kubernetes-grey.svg")
+             :style {:width   "1.18em"
+                     :margin  "0 .25rem 0 0"
+                     :display :inline-block}}])
 
 (defn subtype-icon
   [subtype]
-  (case subtype
-    "project" "folder"
-    "component" "grid layout"
-    "application" "cubes"
-    "application_kubernetes" "cubes"
+  (condp = subtype
+    subtype-project "folder"
+    subtype-component "grid layout"
+    subtype-application "cubes"
+    subtype-application-k8s "cubes"
+    subtype-applications-sets "th large"
     "question circle"))
 
-(defn subtype-icon-infra
+(defn SubtypeIconInfra
   [subtype selected]
-  (case subtype
-    "project" [ui/Icon {:name "folder"}]
-    "component" [ui/Icon {:name "docker"}]
-    "application" [ui/Icon {:name "docker"}]
-    "application_kubernetes" [ui/Image {:src   (if selected
-                                                 "/ui/images/kubernetes.svg"
-                                                 "/ui/images/kubernetes-grey.svg")
-                                        :style {:width   "1.18em"
-                                                :margin  "0 .25rem 0 0"
-                                                :display :inline-block}}]
+  (condp = subtype
+    subtype-project [ui/Icon {:name "folder"}]
+    subtype-component [ui/Icon {:name "docker"}]
+    subtype-application [ui/Icon {:name "docker"}]
+    subtype-application-k8s [IconK8s selected]
     [ui/Icon {:name "question circle"}]))
 
-
-(defn meta-subtype-icon
+(defn SubtypeDockerK8sListIcon
   [subtype]
-  (if (= "project" subtype)
-    "folder open"
-    (subtype-icon subtype)))
+  (let [unknown-icon [ui/ListIcon {:name "question circle"}]
+        docker-icon  [ui/ListIcon {:name "docker"}]]
+    (condp = subtype
+      subtype-application-k8s [IconK8s false]
+      subtype-application docker-icon
+      subtype-component docker-icon
+      unknown-icon)))
 
 
 (defn contruct-path [parent name]

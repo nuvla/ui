@@ -2,6 +2,8 @@
   (:require [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
             [sixsq.nuvla.ui.apps-application.views :as apps-application-views]
+            [sixsq.nuvla.ui.apps-applications-sets.events :as apps-applications-sets-events]
+            [sixsq.nuvla.ui.apps-applications-sets.views :as apps-applications-sets-views]
             [sixsq.nuvla.ui.apps-component.events :as apps-component-events]
             [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
             [sixsq.nuvla.ui.apps-project.events :as apps-project-events]
@@ -26,7 +28,8 @@
     (dispatch [::events/clear-module new-name new-parent new-subtype])
     (dispatch [::apps-component-events/clear-apps-component])
     (dispatch [::apps-application-events/clear-apps-application])
-    (dispatch [::apps-project-events/clear-apps-project])))
+    (dispatch [::apps-project-events/clear-apps-project])
+    (dispatch [::apps-applications-sets-events/clear-apps-applications-sets])))
 
 
 (defn ModuleDetails
@@ -35,10 +38,11 @@
         new-subtype (subscribe [::route-subs/query-param :subtype])]
     (fn []
       (let [subtype (or (:subtype @module) @new-subtype)]
-        (case subtype
-          "component" [apps-component-views/view-edit]
-          "application" [apps-application-views/ViewEdit]
-          "application_kubernetes" [apps-application-views/ViewEdit]
+        (condp = subtype
+          utils/subtype-component [apps-component-views/view-edit]
+          utils/subtype-application [apps-application-views/ViewEdit]
+          utils/subtype-application-k8s [apps-application-views/ViewEdit]
+          utils/subtype-applications-sets [apps-applications-sets-views/ViewEdit]
           ^{:key subtype}
           [apps-project-views/ViewEdit])))))
 

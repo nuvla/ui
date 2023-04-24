@@ -37,8 +37,7 @@
 
 
 (defn SingleFile
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id ::spec/file-name ::spec/file-content]}]
+  [_file]
   (let [tr              (subscribe [::i18n-subs/tr])
         validate-form?  (subscribe [::apps-subs/validate-form?])
         editable?       (subscribe [::apps-subs/editable?])
@@ -187,7 +186,7 @@
                            :read-only (not @editable?)}]
           (when @validate-form?
             (dispatch [::events/set-docker-validation-error
-                       apps-views-detail/application-kubernetes-subtype (not valid?)])
+                       apps-utils/subtype-application-k8s (not valid?)])
             (when (not valid?)
               (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
                 [ui/Label {:pointing "above", :basic true, :color "red"}
@@ -218,7 +217,7 @@
                                         (dispatch [::apps-events/validate-form]))
                            :read-only (not @editable?)}]
           (when @validate-form?
-            (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
+            (dispatch [::events/set-docker-validation-error apps-utils/subtype-application (not valid?)])
             (when (not valid?)
               (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
                 [ui/Label {:pointing "above", :basic true, :color "red"}
@@ -408,8 +407,8 @@
      ^{:key (random-uuid)}
      [:div
       (cond
-        (= @module-subtype apps-views-detail/docker-compose-subtype) [DockerComposeSection]
-        (= @module-subtype apps-views-detail/application-kubernetes-subtype) [KubernetesSection])]]))
+        (= @module-subtype apps-utils/subtype-application) [DockerComposeSection]
+        (= @module-subtype apps-utils/subtype-application-k8s) [KubernetesSection])]]))
 
 
 (defn RequiresUserRightsCheckbox
@@ -432,9 +431,9 @@
 
 (defn subtype->pretty
   [subtype]
-  (case subtype
-    "application" "Docker"
-    "application_kubernetes" "Kubernetes"
+  (condp = subtype
+    apps-utils/subtype-application "Docker"
+    apps-utils/subtype-application-k8s "Kubernetes"
     "Docker"))
 
 

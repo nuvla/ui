@@ -264,7 +264,7 @@
         :deployment-fleets                             "Deployment fleets"
         :deployment-run-private-ip                     "This deployment runs on a NuvlaEdge/Cloud with a Private/VPN IP"
         :deployment-set                                "Deployment set"
-        :deployment-sets                               "Deployment sets"
+        :deployment-sets                               "Deployment sets (preview)"
         :deployment-shutdown-msg                       "Shut down the deployment. Deployment resources like containers, configs and secrets are removed."
         :deployment-start-msg                          "Starts the deployment."
         :deployment-state                              "Each deployment goes through a set state machine."

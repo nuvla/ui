@@ -341,9 +341,9 @@
                                  :read-only       (not can-edit?)
                                  :owner-read-only owner-read-only
                                  :on-change       #(dispatch
-                                                    [edit-event
-                                                     (:id @e) (assoc @e :acl %)
-                                                     (@tr [:acl-updated])])}
+                                                     [edit-event
+                                                      (:id @e) (assoc @e :acl %)
+                                                      (@tr [:acl-updated])])}
                       ui-acl])))}))
 
 
@@ -370,7 +370,7 @@
                                 :else nil)]
           [:<>
            [ui/Button {:floated  "right"
-                       :style    {:padding-left "0.8rem" :padding-right "0.8rem"
+                       :style    {:padding-left  "0.8rem" :padding-right "0.8rem"
                                   :margin-bottom "5px"}
                        :basic    true
                        :on-click #(accordion-utils/toggle active?)}
@@ -378,13 +378,13 @@
              [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
                         :position "bottom center"
                         :content  (@tr [:access-rights])
-                        :style {:margin 0}}]
+                        :style    {:margin 0}}]
              (when icon-right
-               [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right
+               [ui/Popup {:trigger  (r/as-element [ui/Icon {:name  icon-right
                                                             :style {:margin 0}}])
                           :position "bottom center"
                           :content  (@tr [:access-rights])}])
-             [ui/Icon {:name (if @active? "caret down" "caret left")
+             [ui/Icon {:name  (if @active? "caret down" "caret left")
                        :style {:margin 0}}]]]])))))
 
 

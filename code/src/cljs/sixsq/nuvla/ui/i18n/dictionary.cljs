@@ -3,6 +3,8 @@
 
 (def dictionary
   {:en {
+        :customer-service                              "Customer service"
+        :customer-service-email                        "Customer service email"
         :run-with-docker                               "Run with docker"
         :experimental-features                         "Experimental features"
         :experimental-features-warn                    "Experimental features may cause unexpected behaviors. Use them at your own risk."
@@ -959,6 +961,9 @@
         }
 
    :fr {
+        :customer-service                              "Service client"
+        :customer-service-email                        "Courriel service client"
+        :author                                        "auteur"
         :run-with-docker                               "Exécuter avec docker"
         :experimental-features                         "Fonctionnalités expérimentales"
         :experimental-features-warn                    "Les fonctionnalités expérimentales peuvent entraîner des comportements inattendus. Utilisez-les à vos risques et périls."

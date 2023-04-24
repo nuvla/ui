@@ -10,6 +10,7 @@
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
+            [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
@@ -23,6 +24,7 @@
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as utils-spec]
             [sixsq.nuvla.ui.utils.spec :as us]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -1087,8 +1089,6 @@
                 [AddCouponButton]])]])]))))
 
 
-
-
 (defn DashboardVendor
   []
   (let [tr     (subscribe [::i18n-subs/tr])
@@ -1112,6 +1112,94 @@
             :src  "/ui/images/stripe-connect.png"
             :alt  "Stripe connect"}]])
 
+(defn VendorCustomerEmail
+  []
+  (let [tr        (subscribe [::i18n-subs/tr])
+        loading?  (subscribe [::subs/loading? :vendor-set-email])
+        error     (subscribe [::subs/error-message])
+        open?     (subscribe [::subs/modal-open? :vendor-set-email])
+        vendor    (subscribe [::subs/vendor])
+        form-conf {:form-spec    (s/keys :req-un [::utils-spec/email])
+                   :names->value {:email (or (:email @vendor) "")}}
+        form!     (fv/init-form form-conf)]
+    (fn []
+      (let [spec->msg {::utils-spec/email (@tr [:email-invalid-format])}
+            value     (-> @form! :names->value :email)
+            {:keys [txt icon]} (if (str/blank? value)
+                                 {:txt  :add
+                                  :icon "plus square outline"}
+                                 {:txt  :update
+                                  :icon "pencil"})]
+        [:<>
+         [ui/Modal
+          {:open       @open?
+           :size       "small"
+           :on-close   #(do
+                          (reset! form! @(fv/init-form form-conf))
+                          (dispatch [::events/close-modal]))
+           :close-icon true}
+          [uix/ModalHeader {:header (@tr [:customer-service-email])}]
+          [ui/ModalContent
+           [ui/Form {:error   (boolean @error)
+                     :loading @loading?}
+            [ui/Message {:error   true
+                         :header  (@tr [:something-went-wrong])
+                         :content @error}]
+            [ui/FormInput {:name          :email
+                           :icon          "mail"
+                           :default-value value
+                           :label         (str/capitalize (@tr [:email]))
+                           :placeholder   "vendor@example.com"
+                           :auto-focus    true
+                           :auto-complete "email"
+                           :on-change     (partial fv/event->names->value! form!)
+                           :on-blur       (partial fv/event->show-message form!)
+                           :error         (fv/?show-message form! :email spec->msg)}]]]
+          [ui/ModalActions
+           [ui/Button {:primary  true
+                       :on-click #(when (fv/validate-form-and-show? form!)
+                                    (dispatch [::events/vendor-set-email value]))}
+            (str/capitalize (@tr [:save]))]]]
+         [ui/Button {:primary  true
+                     :circular true
+                     :basic    true
+                     :size     "small"
+                     :on-click #(dispatch [::events/open-modal :vendor-set-email])}
+          [ui/Icon {:name icon}]
+          (str/capitalize (@tr [txt]))]]))))
+
+(defn IconHeader
+  [{:keys [icon header subheader]}]
+  [ui/Header {:as :h3, :icon true, :disabled true}
+   [ui/Icon {:className icon}]
+   header
+   [ui/HeaderSubheader (or subheader ff/nbsp)]])
+
+(def icon-envelope-dollar "fad fa-envelope-open-dollar")
+
+(defn CreateVendor
+  []
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [ui/GridColumn
+     [IconHeader {:icon   icon-envelope-dollar
+                  :header (tr [:vendor-getting-paid])}]
+     [StripeConnect]]))
+
+(defn ExistingVendor
+  []
+  (let [tr     @(subscribe [::i18n-subs/tr])
+        vendor @(subscribe [::subs/vendor])]
+    [:<>
+     [ui/GridColumn
+      [IconHeader {:icon   icon-envelope-dollar
+                   :header (tr [:sales-dashboard])}]
+      [DashboardVendor]]
+     [ui/GridColumn
+      [IconHeader {:icon      "fad fa-envelope"
+                   :header    (tr [:customer-service])
+                   :subheader (:email vendor)}]
+      [VendorCustomerEmail]]]))
+
 
 
 (defn Vendor
@@ -1128,18 +1216,12 @@
        [ui/Header {:as :h2 :dividing true} (@tr [:vendor])]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
+                 :columns        2
+                 :stackable      true
                  :style          {:height "100%"}}
-        [ui/GridColumn
-         [ui/Header {:as :h3, :icon true, :disabled true}
-          [ui/Icon {:className "fad fa-envelope-open-dollar"}]
-          (when-not @vendor
-            (@tr [:vendor-getting-paid]))]
-         [:br]
-         (if @vendor
-           [DashboardVendor]
-           [StripeConnect])
-         ]]]
-      )))
+        (if @vendor
+          [ExistingVendor]
+          [CreateVendor])]])))
 
 
 (defn BillingContact

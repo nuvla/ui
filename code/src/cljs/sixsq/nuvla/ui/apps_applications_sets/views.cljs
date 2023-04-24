@@ -272,7 +272,7 @@
   (let [error? (subscribe [::subs/apps-error?])]
     [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [:<>
-      [uix/Icon {:name "list layout"}]
+      [uix/Icon {:name "fa-light fa-list"}]
       "Applications"]]))
 
 
@@ -281,7 +281,7 @@
   [:<>
    [:h2
     [:<>
-     [uix/Icon {:name "list layout"}]
+     [uix/Icon {:name "fa-light fa-list"}]
      "Applications"]]
    [AppsSetsSection]])
 
@@ -349,7 +349,8 @@
        {:panes (map
                  (fn [{:keys [name subtype] module-id :id}]
                    {:menuItem {:content (or name id)
-                               :icon    (apps-utils/subtype-icon subtype)
+                               :icon    (r/as-element
+                                          [uix/Icon {:name (apps-utils/subtype-icon subtype)}])
                                :key     (str id "-" module-id)}
                     :render   #(r/as-element
                                  [ui/TabPane

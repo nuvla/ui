@@ -56,19 +56,19 @@
         [ui/StatisticGroup {:widths (when-not clickable? 4)
                             :size   "tiny"}
          (for [statistic-opts [{:value          total
-                                :icons          ["fal fa-box"]
+                                :icons          ["fa-light fa-box"]
                                 :label          "TOTAL"
                                 :positive-color nil}
                                {:value          online
-                                :icons          ["fal fa-power-off"]
+                                :icons          ["fa-light fa-power-off"]
                                 :label          utils/status-online
                                 :positive-color "green"}
                                {:value          offline
-                                :icons          ["fal fa-power-off"]
+                                :icons          ["fa-light fa-power-off"]
                                 :label          utils/status-offline
                                 :positive-color "red"}
                                {:value          unknown
-                                :icons          ["fal fa-power-off"]
+                                :icons          ["fa-light fa-power-off"]
                                 :label          utils/status-unknown
                                 :positive-color "orange"}]]
            ^{:key (str "stat-state-" (:label statistic-opts))}

@@ -419,6 +419,20 @@ div.search.dropdown > input {
 
 /** Misc End **/
 
+.cimi-filter-search-header {
+  display: flex !important;
+  gap: 1rem;
+  flex-direction: column !important;
+}
+
+@media only screen and (min-width: 766px) {
+  .cimi-filter-search-header {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr);
+    grid-row-gap: 1rem;
+  }
+}
+
 @media only screen and (min-width: 600px) {
   .grid-2-cols-responsive {
     display: grid;

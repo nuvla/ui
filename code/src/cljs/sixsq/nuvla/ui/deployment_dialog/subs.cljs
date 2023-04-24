@@ -41,7 +41,7 @@
           (when (seq env-variables) :env-variables)
           (when (and
                   start?
-                  (= module-subtype "application")
+                  (= module-subtype apps-utils/subtype-application)
                   (seq files)) :files)
           (when license :license)
           (when price :pricing)
@@ -197,8 +197,8 @@
 (reg-sub
   ::is-application?
   :<- [::module]
-  (fn [module]
-    (= (:subtype module) "application")))
+  (fn [{:keys [subtype]}]
+    (= subtype apps-utils/subtype-application)))
 
 (reg-sub
   ::price

@@ -49,61 +49,40 @@
         total    (:count @summary)]
     [ui/GridColumn {:width 8}
      [ui/StatisticGroup {:size  "tiny"
-                         :style {:justify-content "center"
-                                 :padding-top     "20px"
-                                 :padding-bottom  "20px"}}
-      [components/StatisticState {:value total,
-                                  :icons ["fal fa-bullseye"],
-                                  :label "TOTAL",
-                                  :clickable? clickable?,
-                                  :positive-color nil,
-                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
-                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]
-      [components/StatisticState {:value created,
-                                  :icons [(str "fal " (state->icon CREATED))],
-                                  :label CREATED,
-                                  :clickable? clickable?,
-                                  :positive-color "blue",
-                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
-                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]
-      [components/StatisticState {:value started,
-                                  :icons [(str "fal " (state->icon STARTED))],
-                                  :label STARTED,
-                                  :clickable? clickable?,
-                                  :positive-color "green",
-                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
-                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]
-      [components/StatisticState {:value stopped,
-                                  :icons [(str "fal " (state->icon STOPPED))],
-                                  :label STOPPED,
-                                  :clickable? clickable?,
-                                  :positive-color "red",
-                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
-                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]
-      [components/StatisticState {:value pending,
-                                  :icons [(str "fal " (state->icon PENDING))],
-                                  :label PENDING,
-                                  :clickable? clickable?,
-                                  :positive-color "brown",
-                                  :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector,
-                                  :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector}]]]))
-
-
-(defn AddButton
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/MenuItem
-     {:name     (@tr [:add])
-      :icon     "add"
-      :on-click #(dispatch
-                   [::routing-events/navigate (str-pathify (name->href routes/deployment-sets) "New")])}]))
+                         :style {:justify-content "center"}}
+      (for [stat-props [{:value          total
+                         :icons          ["fal fa-bullseye"]
+                         :label          "TOTAL"
+                         :positive-color nil}
+                        {:value          created
+                         :icons          [(str "fal " (state->icon CREATED))]
+                         :label          CREATED
+                         :positive-color "blue"}
+                        {:value          started
+                         :icons          [(str "fal " (state->icon STARTED))]
+                         :label          STARTED
+                         :positive-color "green"}
+                        {:value          stopped
+                         :icons          [(str "fal " (state->icon STOPPED))]
+                         :label          STOPPED
+                         :positive-color "red"}
+                        {:value          pending
+                         :icons          [(str "fal " (state->icon PENDING))]
+                         :label          PENDING
+                         :positive-color "brown"}]]
+        ^{:key (str "stat-" (:label stat-props))}
+        [components/StatisticState
+         (assoc stat-props
+           :stacked? true
+           :clickable? clickable?
+           :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector
+           :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector)])]]))
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
     (fn []
       [components/StickyBar
-       [ui/Menu {:borderless true, :stackable true}
-        [AddButton]
+       [ui/Menu {:borderless true :stackable true}
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
@@ -138,7 +117,7 @@
   []
   (let [deployment-sets (subscribe [::subs/deployment-sets])]
     [:div style/center-items
-     [ui/Table {:compact "very", :selectable true}
+     [ui/Table {:compact "very" :selectable true}
       [ui/TableHeader
        [ui/TableRow
         [ui/TableHeaderCell "name"]
@@ -157,7 +136,7 @@
   [{:keys [id created name state description tags] :as _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
-        href   (name->href :deployment-sets-details {:uuid (general-utils/id->uuid id)})]
+        href   (name->href routes/deployment-sets-details {:uuid (general-utils/id->uuid id)})]
     ^{:key id}
     [uix/Card
      {:href        href
@@ -195,9 +174,10 @@
       [uix/PageHeader "bullseye"
        (@tr [:deployment-sets])]
       [MenuBar]
-      [ui/Grid {:columns   3
-                :stackable true
-                :reversed  "mobile"}
+      [ui/Grid {:stackable true
+                :reversed  "mobile"
+                :style     {:margin-top    0
+                            :margin-bottom 0}}
        [ControlBar]
        [StatisticStates true]]
       (case @view-type

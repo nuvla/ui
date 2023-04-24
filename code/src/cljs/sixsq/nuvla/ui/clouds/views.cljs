@@ -48,7 +48,7 @@
 
 (defn ServiceCard
   [{:keys [id name description path subtype logo-url online]
-    :as infra-service}]
+    :as   infra-service}]
   (let [status (cond
                  (true? online) true
                  (false? online) false

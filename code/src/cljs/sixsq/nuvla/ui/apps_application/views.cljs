@@ -298,7 +298,7 @@
        [apps-views-detail/AuthorVendor]
        (when (:vendor-email price)
          [ui/TableRow
-          [ui/TableCell (str/capitalize "Customer service")]
+          [ui/TableCell (@tr [:customer-service])]
           [ui/TableCell (:vendor-email price)]])
        [Tags @module]]]]))
 

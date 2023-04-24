@@ -1167,7 +1167,7 @@
            :size       "small"
            :on-close   #(dispatch [::events/close-modal])
            :close-icon true}
-          [uix/ModalHeader {:header "Customer service email"}]
+          [uix/ModalHeader {:header (@tr [:customer-service-email])}]
           [ui/ModalContent
            [ui/Form {:error   (boolean @error)
                      :loading @loading?}
@@ -1223,7 +1223,7 @@
       [DashboardVendor]]
      [ui/GridColumn
       [IconHeader {:icon      "fad fa-envelope"
-                   :header    "Customer service"
+                   :header    (tr [:customer-service])
                    :subheader (:email vendor)}]
       [VendorCustomerEmail]]]))
 

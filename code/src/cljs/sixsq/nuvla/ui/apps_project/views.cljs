@@ -31,7 +31,7 @@
           icon-name (apps-utils/subtype-icon subtype)
           summary   (values/markdown->summary description)]
       [ui/ListItem {:on-click on-click}
-       [ui/ListIcon {:name           icon-name
+       [ui/ListIcon {:class          icon-name
                      :size           "large"
                      :vertical-align "middle"}]
        [ui/ListContent
@@ -59,9 +59,8 @@
     (fn []
       (let [children (:children @module)]
         [ui/Segment {:secondary true
-                     :color     "blue"
                      :raised    true}
-         [:h4 (str/capitalize (@tr [:content]))]
+         [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:content]))]
          (if (empty? children)
            [ui/Message {:warning true}
             [ui/Icon {:name "warning sign"}]
@@ -76,10 +75,9 @@
         module (subscribe [::apps-subs/module])
         {:keys [id created updated name parent-path path]} @module]
     [ui/Segment {:secondary true
-                 :color     "blue"
                  :raised    true}
-     [:h4 (str/capitalize (@tr [:project]))]
-     [ui/Grid {:columns 2}
+     [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:project]))]
+     [ui/Grid
       [ui/GridColumn
        [ui/Table {:basic  "very"
                   :padded false}
@@ -121,20 +119,19 @@
 (defn OverviewPane
   []
   (let [device (subscribe [::main-subs/device])]
-    [ui/TabPane
-     [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
-               :stackable true
-               :padded    true
-               :centered  true}
-      [ui/GridRow {:centered true}
-       [ui/GridColumn
-        [apps-views-detail/OverviewDescription [::spec/tab]]]]
-      [ui/GridRow
-       [ui/GridColumn
-        [ModulesView]]]
-      [ui/GridRow
-       [ui/GridColumn
-        [OverviewModuleSummary]]]]]))
+    [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
+              :stackable true
+              :padded    true
+              :centered  true}
+     [ui/GridRow {:centered true}
+      [ui/GridColumn
+       [apps-views-detail/OverviewDescription [::spec/tab]]]]
+     [ui/GridRow
+      [ui/GridColumn
+       [ModulesView]]]
+     [ui/GridRow
+      [ui/GridColumn
+       [OverviewModuleSummary]]]]))
 
 
 (defn module-detail-panes
@@ -143,7 +140,7 @@
         editable? (subscribe [::apps-subs/editable?])]
     [{:menuItem {:content (r/as-element [:span "Overview"])
                  :key     :overview
-                 :icon    "info"}
+                 :icon    (r/as-element [uix/Icon {:name "fa-light fa-eye"}])}
       :pane     {:content (r/as-element [OverviewPane])
                  :key     :overview-pane}}
      {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
@@ -166,14 +163,14 @@
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
-         [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader "fa-light fa-folder" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path          [::spec/tab]
            :menu             {:secondary true
                               :pointing  true
-                              :style     {:display        "flex"
+                              :style     {:display       "flex"
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}}
            :panes            panes

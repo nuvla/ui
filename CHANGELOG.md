@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Notificaiton subscriptions - Shows GiB unit for network in modal
+- Notification subscriptions - Shows GiB unit for network in modal
 - Api Page - Persists and loads all filter parameters
 - App - Allow user to choose how to run a docker application
 - App - Rename "Docker compose" accordion to "Compose file"
@@ -10,6 +10,12 @@
 - Deployment modal - Select credential bugfix
 - About page - Remove personae item
 - About page - Support for feature flags
+- Tabs - New design
+- Apps Store, Navigate apps tab - New design
+- Apps Project Details, Overview tab - New design
+- Apps Project Details, Details tab - New design
+- Apps Project Details, Share tab - New design
+- Apps Applications Details - New design, icons
 
 ## [2.33.3] - 2023-02-27
 

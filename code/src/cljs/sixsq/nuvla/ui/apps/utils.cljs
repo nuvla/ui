@@ -16,7 +16,7 @@
 
 
 (def un-publish-icon
-  "times circle outline")
+  "fa-light fa-link-simple-slash")
 
 
 (defn find-current-version
@@ -123,11 +123,11 @@
 (defn subtype-icon
   [subtype]
   (condp = subtype
-    subtype-project "folder"
-    subtype-component "grid layout"
-    subtype-application "cubes"
-    subtype-application-k8s "cubes"
-    subtype-applications-sets "th large"
+    subtype-project "fa-light fa-folder"
+    subtype-component "fa-light fa-grid"
+    subtype-application "fa-light fa-cubes"
+    subtype-application-k8s "fa-light fa-cubes"
+    subtype-applications-sets "fa-light fa-table-cells-large"
     "question circle"))
 
 (defn SubtypeIconInfra

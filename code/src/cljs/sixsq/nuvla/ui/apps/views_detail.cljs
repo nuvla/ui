@@ -42,7 +42,7 @@
   [{:keys [full] :or {full false}}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "book"}]
+     [uix/Icon {:name "fa-light fa-book"}]
      (@tr [(if full :eula-full :eula)])]))
 
 
@@ -50,7 +50,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "euro"}]
+     [uix/Icon {:name "fa-light fa-euro-sign"}]
      (str/capitalize (@tr [:pricing]))]))
 
 
@@ -58,16 +58,14 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "rocket"}]
+     [uix/Icon {:name "fa-rocket-launch fal"}]
      (str/capitalize (@tr [:deployments]))]))
 
 
 (defn DetailsTitle
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [:<>
-     [uix/Icon {:name "info"}]
-     (str/capitalize (@tr [:details]))]))
+    (str/capitalize (@tr [:details]))))
 
 
 (defn DockerTitle
@@ -75,7 +73,7 @@
   (let [module-subtype (subscribe [::subs/module-subtype])
         tab-name       (if (= utils/subtype-application-k8s @module-subtype) "Kubernetes" "Docker")]
     [:<>
-     [uix/Icon {:name "docker"}]
+     [uix/Icon {:name "fa-light fa-file-code"}]
      (str/capitalize tab-name)]))
 
 
@@ -83,7 +81,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "cog"}]
+     [uix/Icon {:name "fa-light fa-gear"}]
      (str/capitalize (@tr [:configuration]))]))
 
 
@@ -92,7 +90,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         error? (subscribe [::subs/details-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
-     [uix/Icon {:name "info"}]
+     [uix/Icon {:name "fa-light fa-circle-info"}]
      (str/capitalize (@tr [:details]))]))
 
 
@@ -124,7 +122,7 @@
     [uix/ModalDanger
      {:on-confirm  (fn [] (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [ui/Icon {:name "trash"}]
+                                  [uix/Icon {:name "fa-light fa-trash"}]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
       :header      (@tr [:delete-module])
@@ -155,7 +153,7 @@
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/un-publish id])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name utils/un-publish-icon}]
+                                  [uix/Icon {:name utils/un-publish-icon}]
                                   (str/capitalize (@tr [:un-publish]))])
       :content     [:p (@tr [:un-publish-confirmation-message])]
       :header      (@tr [:un-publish-module])
@@ -194,21 +192,21 @@
         (when @editable?
           [uix/MenuItem
            {:name     (@tr [:save])
-            :icon     "save"
+            :icon     "fa-light fa-floppy-disk"
             :disabled (edit-button-disabled? @page-changed? @form-valid?)
             :on-click save-callback}])
 
         (when @is-app?
           [uix/MenuItem
            {:name     (@tr [:deploy])
-            :icon     "rocket"
+            :icon     "fa-light fa-rocket-launch"
             :disabled @deploy-disabled?
             :on-click #(deploy-click @module-id @is-apps-sets?)}])
 
         (when @is-project?
-          [uix/MenuItem
+          [ui/MenuItem
            {:name     (@tr [:add])
-            :icon     "add"
+            :icon     (r/as-element [uix/Icon {:name "fa-light fa-plus-large"}])
             :disabled @deploy-disabled?
             :on-click #(dispatch [::events/open-add-modal])}])
         (when @can-copy?
@@ -216,7 +214,7 @@
            {:trigger        (r/as-element
                               [ui/MenuItem
                                {:name     (@tr [:copy])
-                                :icon     "copy"
+                                :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy"}])
                                 :disabled @is-new?
                                 :on-click #(dispatch [::events/copy])}])
             :content        (@tr [:module-copied])
@@ -226,9 +224,9 @@
             :hide-on-scroll true}])
 
         (when @is-project?
-          [uix/MenuItem
+          [ui/MenuItem
            {:name     (@tr [:paste])
-            :icon     "paste"
+            :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy icon"}])
             :disabled @paste-disabled?
             :on-click #(dispatch [::events/open-paste-modal])}])
 
@@ -527,7 +525,9 @@
            [ui/GridColumn
             [:h4 "Preview"]
             [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
-         :label (str/capitalize (@tr [:description]))
+         :title-size   :h4
+         :title-class  :tab-app-detail
+         :label        (str/capitalize (@tr [:description]))
          :default-open true]))))
 
 
@@ -561,7 +561,7 @@
                        logo-url @default-logo-url
                        subtype  utils/subtype-project}} @module-common]
         [:div {:class :uix-apps-details-details}
-         [:h2 [DetailsTitle]]
+         [:h4 {:class :tab-app-detail} [DetailsTitle]]
          [ui/Grid {:stackable true, :reversed :mobile}
           [ui/GridRow
            [ui/GridColumn {:width 13}
@@ -591,7 +591,8 @@
                           :fluid    true
                           :on-click #(dispatch [::events/open-logo-url-modal])}
                (@tr [:module-change-logo])])]]]
-         [Description validation-event]]))))
+         [:div {:style {:margin-top "30px"}}
+          [Description validation-event]]]))))
 
 
 (defn input
@@ -1205,14 +1206,13 @@
         device      (subscribe [::main-subs/device])
         {:keys [logo-url]} @(subscribe [::subs/module])]
     [ui/Segment {:secondary true
-                 :color     "purple"
                  :raised    true
                  :padded    true}
      [ui/Grid {:columns   1
                :stackable true}
       [ui/GridRow {:columns 2}
        [ui/GridColumn {:floated "left"}
-        [:h4 (str/capitalize (@tr [:description]))]]
+       [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:description]))]]
        (when @editable?
          [ui/GridColumn {:style {:text-align "right"}}
           [ui/Button {:icon     "pencil"
@@ -1232,10 +1232,10 @@
 
 
 (defn ShareTitle
-  []
+  [{:keys [icon?]}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "users"}]
+     (when icon? [uix/Icon {:name "fa-light fa-user-group"}])
      (str/capitalize (@tr [:share]))]))
 
 
@@ -1247,11 +1247,11 @@
                                                   @(subscribe [::session-subs/active-claim]))]
                             {:owners [user-id]}))
         ui-acl        (r/atom (when acl (acl-utils/acl->ui-acl-format acl)))]
-    {:menuItem {:content (r/as-element [ShareTitle])
+    {:menuItem {:content (r/as-element [ShareTitle {:icon? true}])
                 :key     :share}
      :pane     {:content (r/as-element
                            [:div {:class :uix-apps-details-share}
-                            [:h2 [ShareTitle]]
+                            [:h4 {:class :tab-app-share} [ShareTitle]]
                             ^{:key (:updated @e)}
                             [acl-views/AclWidget {:default-value default-value
                                                   :read-only     (not can-edit?)

@@ -1197,7 +1197,8 @@
       [IconHeader {:icon      "fad fa-envelope"
                    :header    (tr [:customer-service])
                    :subheader (:email vendor)}]
-      [VendorCustomerEmail]]]))
+      [:div {:style {:display "block"}}
+       [VendorCustomerEmail]]]]))
 
 
 

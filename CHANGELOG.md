@@ -5,6 +5,12 @@
 
 ### Changed
 
+## [2.33.5] - 2023-04-24
+
+### Changed
+
+- Profile - Button add vendor email misalignment fix
+
 ## [2.33.4] - 2023-04-24
 
 ### Changed

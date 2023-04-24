@@ -1102,60 +1102,29 @@
 
 (defn StripeConnect
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading? :vendor-stripe-connect])
-        error    (subscribe [::subs/error-message])
-        open?    (subscribe [::subs/modal-open? :vendor-stripe-connect])
-        email!   (r/atom "")]
-    (fn []
-      [:<>
-       [ui/Modal
-        {:open       @open?
-         :size       "small"
-         :on-close   #(dispatch [::events/close-modal])
-         :close-icon true}
-        [uix/ModalHeader {:header "Stripe connect"}]
-        [ui/ModalContent
-         [ui/Form {:id     "form-stripe-connect"
-                   :action (str @cimi-fx/NUVLA_URL "/api/vendor")
-                   :method "post"
-                   :style  {:color "grey"}}
-          [ui/Message {:positive true
-                       :header   "Welcome to our vendor program"
-                       :content  "We are happy that you choose to join our vendor program."}]
-
-          [:input {:hidden        true
-                   :name          "redirect-url"
-                   :default-value (str @config/path-prefix "/profile")}]
-          [ui/FormInput {:name        "email"
-                         :icon        "mail"
-                         :placeholder "vendor@example.com"
-                         :auto-focus  true
-                         :required    true
-                         :label       (r/as-element
-                                        [:span "Provide a customer service email"
-                                         [ff/help-popup "This email will be presented to potential customer's of your paying applications."]])
-                         :focus       true}]]]
-        [ui/ModalActions
-         [ui/Button {:type    "submit"
-                     :form    "form-stripe-connect"
-                     :primary true
-                     :content "Proceed"}]]]
-       [:input {:type     "image"
-                :src      "/ui/images/stripe-connect.png"
-                :on-click #(dispatch [::events/open-modal :vendor-stripe-connect])
-                :alt      "Stripe connect"}]])))
+  [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/vendor")
+            :method "post"
+            :style  {:color "grey"}}
+   [:input {:hidden        true
+            :name          "redirect-url"
+            :default-value (str @config/path-prefix "/profile")}]
+   [:input {:type "image"
+            :src  "/ui/images/stripe-connect.png"
+            :alt  "Stripe connect"}]])
 
 (defn VendorCustomerEmail
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading? :vendor-set-email])
-        error    (subscribe [::subs/error-message])
-        open?    (subscribe [::subs/modal-open? :vendor-set-email])
-        vendor   (subscribe [::subs/vendor])
-        email!   (r/atom "")]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        loading?  (subscribe [::subs/loading? :vendor-set-email])
+        error     (subscribe [::subs/error-message])
+        open?     (subscribe [::subs/modal-open? :vendor-set-email])
+        vendor    (subscribe [::subs/vendor])
+        form-conf {:form-spec    (s/keys :req-un [::utils-spec/email])
+                   :names->value {:email (or (:email @vendor) "")}}
+        form!     (fv/init-form form-conf)]
     (fn []
-      (let [value (or (:email @vendor) "")
+      (let [spec->msg {::utils-spec/email (@tr [:email-invalid-format])}
+            value     (-> @form! :names->value :email)
             {:keys [txt icon]} (if (str/blank? value)
                                  {:txt  :add
                                   :icon "plus square outline"}
@@ -1165,7 +1134,9 @@
          [ui/Modal
           {:open       @open?
            :size       "small"
-           :on-close   #(dispatch [::events/close-modal])
+           :on-close   #(do
+                          (reset! form! @(fv/init-form form-conf))
+                          (dispatch [::events/close-modal]))
            :close-icon true}
           [uix/ModalHeader {:header (@tr [:customer-service-email])}]
           [ui/ModalContent
@@ -1174,18 +1145,20 @@
             [ui/Message {:error   true
                          :header  (@tr [:something-went-wrong])
                          :content @error}]
-
-            [ui/FormInput {:icon          "mail"
+            [ui/FormInput {:name          :email
+                           :icon          "mail"
                            :default-value value
+                           :label         (str/capitalize (@tr [:email]))
                            :placeholder   "vendor@example.com"
-                           :on-change     (ui-callback/value #(reset! email! %))
                            :auto-focus    true
-                           :focus         true}]]]
+                           :auto-complete "email"
+                           :on-change     (partial fv/event->names->value! form!)
+                           :on-blur       (partial fv/event->show-message form!)
+                           :error         (fv/?show-message form! :email spec->msg)}]]]
           [ui/ModalActions
            [ui/Button {:primary  true
-                       :on-click #(dispatch [::events/vendor-set-email @email!])
-                       :disabled (or @loading?
-                                     (str/blank? @email!))}
+                       :on-click #(when (fv/validate-form-and-show? form!)
+                                    (dispatch [::events/vendor-set-email value]))}
             (str/capitalize (@tr [:save]))]]]
          [ui/Button {:primary  true
                      :circular true

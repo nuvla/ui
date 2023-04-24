@@ -45,7 +45,8 @@
 ; create an initial entry for new application
 
 (def defaults {::module-application               {::docker-compose       nil
-                                                   ::requires-user-rights false}
+                                                   ::requires-user-rights false
+                                                   ::compatibility        "docker-compose"}
                ::license-validation-errors        #{}
                ::docker-compose-validation-errors #{}
                ::configuration-validation-errors  #{}})

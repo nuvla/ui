@@ -12,7 +12,7 @@
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.profile.events :as events]
             [sixsq.nuvla.ui.profile.spec :as spec]
             [sixsq.nuvla.ui.profile.subs :as subs]
@@ -1475,7 +1475,7 @@
   (dispatch [::events/init])
   (fn []
     (let [panes (profile-panes)]
-      [tab-plugin/Tab
+      [nav-tab/Tab
        {:db-path [::spec/tab]
         :menu    {:secondary true
                   :pointing  true

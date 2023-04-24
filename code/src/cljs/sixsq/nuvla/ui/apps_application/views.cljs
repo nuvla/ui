@@ -37,8 +37,7 @@
 
 
 (defn SingleFile
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id ::spec/file-name ::spec/file-content]}]
+  [_file]
   (let [tr              (subscribe [::i18n-subs/tr])
         validate-form?  (subscribe [::apps-subs/validate-form?])
         editable?       (subscribe [::apps-subs/editable?])
@@ -88,11 +87,10 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         files         (subscribe [::subs/files])
         editable?     (subscribe [::apps-subs/editable?])
-        module-app    (subscribe [::apps-subs/module])
-        compatibility (:compatibility @module-app)]
+        compatibility (subscribe [::subs/compatibility])]
     (fn []
       [uix/Accordion
-       (if (not= compatibility "docker-compose")
+       (if (not= @compatibility "docker-compose")
          [:<>
           [:div (@tr [:module-files])
            [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
@@ -133,10 +131,12 @@
                                                        (not valid?) "red"
                                                        valid? "green")
                                             :loading loading?}])
-    :header         "Validation of docker-compose"
+    :header         "Validation of compose file"
     :content        (cond
-                      loading? "Validation of docker-compose in progress..."
-                      (not valid?) (some-> error-msg (str/replace #"^.*is invalid because:" ""))
+                      loading? "Validation of compose file in progress..."
+                      (not valid?) (some-> error-msg
+                                           (str/replace #"^.*is invalid because:" "")
+                                           (str/replace #" in \".*docker-compose.yaml\"" ""))
                       valid? "Docker-compose is valid :)")
     :on             "hover"
     :position       "top center"
@@ -145,32 +145,31 @@
 
 
 (defn DockerComposeCompatibility
-  [compatibility unsupp-opts]
-  (let [popup-disabled? (empty? unsupp-opts)]
-    [:div {:style {:float "right"}}
-     [:span {:style {:font-variant "small-caps"}} "compatibility: "]
-     [ui/Label {:color      "blue"
-                :horizontal true} compatibility]
-     (when-not popup-disabled?
-       [ui/Popup
-        {:trigger        (r/as-element [ui/Icon {:color "yellow"
-                                                 :name  "exclamation triangle"}])
-         :header         "Unsupported options"
-         :content        (str "Swarm doesn't support and will ignore the following options: "
-                              (str/join "; " unsupp-opts))
-
-         :on             "hover"
-         :position       "top right"
-         :wide           true
-         :hide-on-scroll true}])]))
+  []
+  (let [tr        @(subscribe [::i18n-subs/tr])
+        editable? @(subscribe [::apps-subs/editable?])
+        value     @(subscribe [::subs/compatibility])
+        v-labels  {"docker-compose" "compose"
+                   "swarm"          "stack"}
+        options   (map (fn [[v l]] {:key v :value v :text l}) v-labels)
+        on-change #(do
+                     (dispatch [::main-events/changes-protection? true])
+                     (dispatch [::events/update-compatibility %]))]
+    [:span {:style {:float "right"}}
+     (tr [:run-with-docker])
+     ff/nbsp
+     (if editable?
+       [ui/Dropdown
+        {:inline        true
+         :default-value value
+         :options       options
+         :on-change     (ui-callback/value on-change)}]
+       [:b (get v-labels value)])]))
 
 
 (defn KubernetesSection []
   (let [tr             (subscribe [::i18n-subs/tr])
         docker-compose (subscribe [::subs/docker-compose])
-        module-app     (subscribe [::apps-subs/module])
-        unsupp-opts    (:unsupported-options (:content @module-app))
-        compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
         editable?      (subscribe [::apps-subs/editable?])]
     (fn []
@@ -178,8 +177,7 @@
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
-           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
-           [DockerComposeCompatibility compatibility unsupp-opts]]
+           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
           [uix/EditorYaml {:value     @docker-compose
                            :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
@@ -188,7 +186,7 @@
                            :read-only (not @editable?)}]
           (when @validate-form?
             (dispatch [::events/set-docker-validation-error
-                       apps-views-detail/application-kubernetes-subtype (not valid?)])
+                       apps-utils/subtype-application-k8s (not valid?)])
             (when (not valid?)
               (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
                 [ui/Label {:pointing "above", :basic true, :color "red"}
@@ -202,9 +200,6 @@
 (defn DockerComposeSection []
   (let [tr             (subscribe [::i18n-subs/tr])
         docker-compose (subscribe [::subs/docker-compose])
-        module-app     (subscribe [::apps-subs/module])
-        unsupp-opts    (:unsupported-options (:content @module-app))
-        compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
         editable?      (subscribe [::apps-subs/editable?])]
     (fn []
@@ -214,7 +209,7 @@
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
-           [DockerComposeCompatibility compatibility unsupp-opts]]
+           [DockerComposeCompatibility]]
           [uix/EditorYaml {:value     @docker-compose
                            :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
@@ -222,14 +217,14 @@
                                         (dispatch [::apps-events/validate-form]))
                            :read-only (not @editable?)}]
           (when @validate-form?
-            (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
+            (dispatch [::events/set-docker-validation-error apps-utils/subtype-application (not valid?)])
             (when (not valid?)
               (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
                 [ui/Label {:pointing "above", :basic true, :color "red"}
                  (if (str/blank? error-msg)
                    (@tr [:module-docker-compose-error])
                    error-msg)])))]
-         :label [:span "Docker compose" ff/nbsp
+         :label [:span "Compose file" ff/nbsp
                  (when @validate-dc
                    [DockerComposeValidationPopup @validate-dc])]
          :default-open true]))))
@@ -412,8 +407,8 @@
      ^{:key (random-uuid)}
      [:div
       (cond
-        (= @module-subtype apps-views-detail/docker-compose-subtype) [DockerComposeSection]
-        (= @module-subtype apps-views-detail/application-kubernetes-subtype) [KubernetesSection])]]))
+        (= @module-subtype apps-utils/subtype-application) [DockerComposeSection]
+        (= @module-subtype apps-utils/subtype-application-k8s) [KubernetesSection])]]))
 
 
 (defn RequiresUserRightsCheckbox
@@ -436,9 +431,9 @@
 
 (defn subtype->pretty
   [subtype]
-  (case subtype
-    "application" "Docker"
-    "application_kubernetes" "Kubernetes"
+  (condp = subtype
+    apps-utils/subtype-application "Docker"
+    apps-utils/subtype-application-k8s "Kubernetes"
     "Docker"))
 
 
@@ -502,7 +497,7 @@
         stripe    (subscribe [::main-subs/stripe])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
-                              :icon    "fal fa-eye"}
+                              :icon    (r/as-element [uix/Icon {:name "fa-light fa-eye"}])}
                    :pane     {:content (r/as-element [OverviewPane])
                               :key     :overview-pane}}
                   {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
@@ -556,7 +551,7 @@
             panes  (module-detail-panes)]
         [ui/Container {:fluid true
                        :class :uix-apps-details}
-         [uix/PageHeader "fal fa-layer-group" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader "fa-light fa-layer-group" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

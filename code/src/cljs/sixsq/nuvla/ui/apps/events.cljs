@@ -3,6 +3,8 @@
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
             [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
+            [sixsq.nuvla.ui.apps-applications-sets.spec :as apps-applications-sets-spec]
+            [sixsq.nuvla.ui.apps-applications-sets.utils :as apps-applications-sets-utils]
             [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
             [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
             [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
@@ -60,12 +62,14 @@
   [module-subtype db]
   (let [component   (get db ::apps-component-spec/module-component)
         project     (get db ::apps-project-spec/module-project)
-        application (get db ::apps-application-spec/module-application)]
-    (case module-subtype
-      "component" component
-      "project" project
-      "application" application
-      "application_kubernetes" application
+        application (get db ::apps-application-spec/module-application)
+        apps-sets   (get db ::apps-applications-sets-spec/apps-sets)]
+    (condp = module-subtype
+      utils/subtype-component component
+      utils/subtype-project project
+      utils/subtype-application application
+      utils/subtype-application-k8s application
+      utils/subtype-applications-sets apps-sets
       project)))
 
 
@@ -146,12 +150,15 @@
                             ::spec/module-not-found? (nil? module)
                             ::main-spec/loading? false)
           subtype (:subtype module)]
-      {:db (case subtype
-             "component" (apps-component-utils/module->db db module)
-             "project" (apps-project-utils/module->db db module)
-             "application" (apps-application-utils/module->db db module)
-             "application_kubernetes" (apps-application-utils/module->db db module)
-             db)})))
+      (cond-> {:db (condp = subtype
+                     utils/subtype-component (apps-component-utils/module->db db module)
+                     utils/subtype-project (apps-project-utils/module->db db module)
+                     utils/subtype-application (apps-application-utils/module->db db module)
+                     utils/subtype-application-k8s (apps-application-utils/module->db db module)
+                     utils/subtype-applications-sets (apps-applications-sets-utils/module->db db module)
+                     db)}
+              (= subtype utils/subtype-applications-sets)
+              (assoc :fx (apps-applications-sets-utils/module->fx module))))))
 
 
 (reg-event-db
@@ -227,7 +234,8 @@
 (reg-event-fx
   ::set-active-tab
   (fn [_ [_ active-tab db-path]]
-    {:fx [[:dispatch [::nav-tab/change-tab {:db-path (or db-path [::spec/tab]) :tab-key active-tab}]]]}))
+    {:fx [[:dispatch [::nav-tab/change-tab {:db-path (or db-path [::spec/tab])
+                                            :tab-key active-tab}]]]}))
 
 (reg-event-fx
   ::set-default-tab
@@ -611,12 +619,13 @@
   ::edit-module
   (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
     (let [id (:id module)
-          {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)]
+          {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)
+          is-app? (= subtype utils/subtype-application)]
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
                             #(do
                                (dispatch [::set-module sanitized-module]) ;Needed?
-                               (when (= subtype "application")
+                               (when is-app?
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
                                (dispatch [::main-events/reset-changes-protection
                                           [::routing-events/navigate
@@ -637,7 +646,7 @@
                                               :content message
                                               :type    :error}]))
                                 (do (dispatch [::get-module (version-id->index %)])
-                                    (when (= subtype "application")
+                                    (when is-app?
                                       (dispatch [::validate-docker-compose %]))
                                     (dispatch [::main-events/reset-changes-protection])))]}))))
 

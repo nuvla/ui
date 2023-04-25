@@ -1,18 +1,11 @@
 (ns sixsq.nuvla.ui.cimi-detail.subs
   (:require [re-frame.core :refer [reg-sub]]
-            [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]))
-
+            [sixsq.nuvla.ui.cimi-detail.spec :as spec]))
 
 (reg-sub
   ::loading?
-  ::cimi-detail-spec/loading?)
-
-
-(reg-sub
-  ::resource-id
-  ::cimi-detail-spec/resource-id)
-
+  :-> ::spec/loading?)
 
 (reg-sub
   ::resource
-  ::cimi-detail-spec/resource)
+  :-> ::spec/resource)

@@ -320,7 +320,8 @@
        :on-click (fn [event]
                    (when-not (.-metaKey event)              ;;cmd key not pressed
                      (dispatch [::routing-events/navigate href])
-                     (.preventDefault event)))}
+                     (.preventDefault event)
+                     (.stopPropagation event)))}
    (or label href)])
 
 

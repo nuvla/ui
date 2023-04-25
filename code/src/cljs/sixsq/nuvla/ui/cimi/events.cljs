@@ -32,32 +32,34 @@
 (reg-event-fx
   ::persist-cimi-query-params
   (fn [{{:keys [::spec/query-params]} :db}]
-    {:fx [[:dispatch [::route-events/change-query-param {:query-params query-params
-                                                         :push-state?  false}]]]}))
+    {:fx [[:dispatch [::route-events/change-query-param
+                      {:query-params query-params
+                       :push-state?  false}]]]}))
 
 (reg-event-fx
   ::set-collection-name
   (fn [{{:keys [::spec/cloud-entry-point
                 ::spec/collection-name] :as db} :db} [_ coll-name uuid]]
-    (let [coll-changed? (not= coll-name collection-name)
-          found?        (and cloud-entry-point
-                             (-> cloud-entry-point
-                                 :collection-key
-                                 (get coll-name)))]
-      (cond
-
-        (and coll-name (nil? uuid) found? coll-changed?)
-        {:db (assoc db ::spec/collection-name coll-name
-                       ::spec/selected-rows #{}
-                       ::spec/collection nil)
-         :fx [[:dispatch [::get-results]]]}
-
-        (and coll-name (not found?))
-        {:dispatch [::messages-events/add
-                    {:header  (cond-> (str "Invalid resource type: " coll-name))
-                     :content (str "The resource type '" coll-name "' is not valid. "
-                                   "Please choose another resource type.")
-                     :type    :error}]}))))
+    (let [master-page?  (nil? uuid)
+          found?        (-> cloud-entry-point
+                            :collection-key
+                            (get coll-name))
+          changed-coll? (and coll-name
+                             master-page?
+                             (not= coll-name collection-name)
+                             found?)
+          unknown-coll? (and coll-name (not found?))]
+      {:db (cond-> (assoc db ::spec/collection-name coll-name)
+                   changed-coll? (merge spec/default-params))
+       :fx [(when changed-coll?
+              [:dispatch [::get-results]])
+            (when unknown-coll?
+              [:dispatch [::messages-events/add
+                          {:header  (str "Invalid resource type: " coll-name)
+                           :content (str "The resource type '" coll-name
+                                         "' is not valid. "
+                                         "Please choose another resource type.")
+                           :type    :error}]])]})))
 
 (reg-event-db
   ::set-selected-fields

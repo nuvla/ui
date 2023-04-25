@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.cimi-detail.events
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]
+            [sixsq.nuvla.ui.cimi-detail.spec :as spec]
             [sixsq.nuvla.ui.cimi.events :as cimi-events]
             [sixsq.nuvla.ui.cimi.spec :as cimi-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -14,8 +14,7 @@
 (reg-event-fx
   ::get
   (fn [{{:keys [::cimi-spec/collection-name] :as db} :db} [_ resource-id]]
-    {:db               (assoc db ::cimi-detail-spec/loading? true
-                                 ::cimi-detail-spec/resource-id resource-id)
+    {:db               (assoc db ::spec/loading? true)
      ::cimi-api-fx/get [resource-id #(dispatch [::set-resource %])
                         :on-error #(do
                                      (cimi-api-fx/default-get-on-error resource-id %)
@@ -25,10 +24,9 @@
 
 (reg-event-db
   ::set-resource
-  (fn [db [_ {:keys [id] :as resource}]]
-    (assoc db ::cimi-detail-spec/loading? false
-              ::cimi-detail-spec/resource-id id
-              ::cimi-detail-spec/resource resource)))
+  (fn [db [_ resource]]
+    (assoc db ::spec/loading? false
+              ::spec/resource resource)))
 
 
 (reg-event-fx

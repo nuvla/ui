@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.about.subs :as subs]
             [sixsq.nuvla.ui.about.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -39,7 +40,8 @@
 
 (defn About
   [_path]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        terms (subscribe [::main-subs/config :terms-and-conditions])]
     [ui/Container
      [ui/Header {:as        "h1"
                  :textAlign "center"}
@@ -60,6 +62,10 @@
       [ui/ListItem [:a {:href   "https://sixsq.com/nuvla"
                         :target "_blank"}
                     (str/capitalize (@tr [:product-info]))]]
+      (when @terms
+        [ui/ListItem [:a {:href   @terms
+                          :target "_blank"}
+                      (str/capitalize (@tr [:terms-and-conditions]))]])
       [ui/ListItem [:a {:href   "https://docs.nuvla.io"
                         :target "_blank"}
                     (str/capitalize (@tr [:documentation]))]]

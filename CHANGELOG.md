@@ -2,8 +2,16 @@
 
 ## Unreleased
 
-
 ### Changed
+
+- Api - Resource list not cleaning when changing to a different tab, resulting
+  in impossibility of searching #1191
+- Api - Query params should not be kept when changing collection and browsing in
+  history
+- Api - Double navigation fired when clicking on id
+- Sementic extensions - Link component stop propagation on click event
+- Api detail - Browsing history show empty page even if resource is cached
+- About page - Terms and conditions link added
 
 ## [2.33.5] - 2023-04-24
 

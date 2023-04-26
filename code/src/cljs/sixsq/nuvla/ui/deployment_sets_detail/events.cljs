@@ -238,7 +238,6 @@
                                        }]
                   :start             start?}
                  (not (str/blank? create-description)) (assoc :description create-description))]
-      (js/console.info ::create-start "body" body)
       {::cimi-api-fx/add
        [:deployment-set body
         #(dispatch [::routing-events/navigate routes/deployment-sets-details

@@ -4,6 +4,7 @@
 
 ### Changed
 
+- About page - Terms and conditions link added
 - Api - Resource list not cleaning when changing to a different tab, resulting
   in impossibility of searching #1191
 - Api - Query params should not be kept when changing collection and browsing in

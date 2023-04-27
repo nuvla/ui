@@ -7,16 +7,20 @@
     [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]))
 
+(def app-set-app-subtypes
+  {spec/app-set-docker-subtype #{apps-utils/subtype-component apps-utils/subtype-application}
+   spec/app-set-k8s-subtype    #{apps-utils/subtype-application-k8s}})
 
 ;; Deserialization functions: module->db
 
 (defn apps-sets->db
   [applications-sets]
   (into (sorted-map)
-        (for [[id {:keys [name description]}] (map-indexed vector applications-sets)]
+        (for [[id {:keys [name description subtype]}] (map-indexed vector applications-sets)]
           [id {:id                         id
                ::spec/apps-set-name        name
                ::spec/apps-set-description description
+               ::spec/apps-set-subtype     subtype
                ::spec/apps-selector        (module-selector/build-spec)}])))
 
 (defn module->db
@@ -38,7 +42,7 @@
   [db id {app-id :id :as _app-selected}]
   (let [env-vars (module-plugin/changed-env-vars
                    (module-plugin/db-environment-variables
-                                     db [::spec/apps-sets id] app-id))]
+                     db [::spec/apps-sets id] app-id))]
     (cond-> {:id      app-id
              :version (module-plugin/db-selected-version
                         db [::spec/apps-sets id] app-id)}
@@ -58,11 +62,15 @@
        (map (fn [{:keys [:id
                          ::spec/apps-set-name
                          ::spec/apps-set-description
+                         ::spec/apps-set-subtype
                          ::spec/apps-selected]}]
-              (cond-> {:name apps-set-name}
+              (cond-> {:name    apps-set-name}
 
                       (not (str/blank? apps-set-description))
                       (assoc :description apps-set-description)
+
+                      apps-set-subtype
+                      (assoc :subtype apps-set-subtype)
 
                       (seq apps-selected)
                       (assoc :applications (db->applications-set db id apps-selected)))))))

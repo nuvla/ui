@@ -171,7 +171,7 @@
              :application application})
           ) env-vars))
 
-(reg-event-fx
+#_(reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
                 ::spec/apps-selected

@@ -274,7 +274,7 @@
    [AppsList i applications]])
 
 (defn SelectTargetsModal
-  [i]
+  [i subtype]
   (let [targets-selected @(subscribe [::subs/targets-selected i])
         db-path          [::spec/apps-sets i ::spec/targets]
         on-open          #(dispatch [::target-selector/restore-selected
@@ -290,7 +290,8 @@
       :content    (r/as-element
                     [ui/ModalContent
                      [target-selector/TargetsSelectorSection
-                      {:db-path db-path}]])
+                      {:db-path db-path
+                       :subtype subtype}]])
       :actions    [{:key "cancel", :content "Cancel"}
                    {:key     "done", :content "Done" :positive true
                     :onClick on-done}]}]))
@@ -330,7 +331,7 @@
    [TargetsList i :editable? editable?]
    (when (and (-> apps-set count pos?)
               editable?)
-     [SelectTargetsModal i])])
+     [SelectTargetsModal i (:subtype apps-set)])])
 
 (defn AppsSetRow
   [{:keys [i apps-set summary-page]}]

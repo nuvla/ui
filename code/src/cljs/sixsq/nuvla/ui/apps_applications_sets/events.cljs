@@ -120,6 +120,11 @@
                 selected)})))
 
 (reg-event-db
+  ::set-apps-set-subtype
+  (fn [db [_ id subtype]]
+    (assoc-in db [::spec/apps-sets id ::spec/apps-set-subtype] subtype)))
+
+(reg-event-db
   ::remove-app
   (fn [db [_ id module-id]]
     (update-in db [::spec/apps-sets id ::spec/apps-selected] dissoc module-id)))

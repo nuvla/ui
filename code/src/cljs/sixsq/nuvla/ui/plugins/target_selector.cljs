@@ -11,8 +11,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
-; "infrastructure-service-swarm" "infrastructure-service-kubernetes"
-;(s/def ::subtype (s/nilable #{"swarm" "kubernetes"}))
+(s/def ::subtype (s/nilable #{"docker" "kubernetes"}))
 
 (defn build-spec
   [& {:keys [default-items-per-page]
@@ -72,6 +71,18 @@
                    :filter filter-str}
       #(dispatch [::set-credentials db-path %])]}))
 
+(defn build-infra-filter-subtype
+  [db db-path]
+  (let [subtype        (get-in db (conj db-path ::subtype))
+        docker-subtype "subtype='swarm'"
+        k8s-subtype    "subtype='kubernetes'"]
+    (case subtype
+      "docker" docker-subtype
+      "kubernetes" k8s-subtype
+      (general-utils/join-or
+        docker-subtype
+        k8s-subtype))))
+
 (reg-event-fx
   ::set-infrastructures
   (fn [{db :db} [_ db-path {:keys [resources] :as response}]]
@@ -82,8 +93,7 @@
                             (general-utils/join-and
                               (general-utils/join-or
                                 "subtype='infrastructure-service-swarm'"
-                                "subtype='infrastructure-service-kubernetes'"
-                                )))]
+                                "subtype='infrastructure-service-kubernetes'")))]
         {:db (assoc-in db (conj db-path ::infrastructures) response)
          :fx [[:dispatch [::search-credentials db-path filter-str]]]})
       {:db (-> db
@@ -110,12 +120,7 @@
       (->> {:select  "id, name, description, subtype, parent"
             :orderby "name:asc,id:asc"
             :filter  (general-utils/join-and
-                       (general-utils/join-or
-                         "tags!='nuvlabox=True'"
-                         "tags!='nuvlaedge=True'")
-                       (general-utils/join-or
-                         "subtype='swarm'"
-                         "subtype='kubernetes'")
+                       (build-infra-filter-subtype db db-path)
                        (full-text-search/filter-text
                          db (conj db-path ::clouds-search)))}
            (pagination/first-last-params db (conj db-path ::clouds-pagination)))
@@ -131,9 +136,7 @@
                                        "'"))
                             (apply general-utils/join-or)
                             (general-utils/join-and
-                              (general-utils/join-or
-                                "subtype='swarm'"
-                                "subtype='kubernetes'")))]
+                              (build-infra-filter-subtype db db-path)))]
         {:db (assoc-in db (conj db-path ::edges) response)
          :fx [[:dispatch [::search-infrastructures db-path filter-str]]]})
       {:db (-> db
@@ -282,7 +285,8 @@
                                :change-event [::search-clouds db-path]}]])))
 
 (defn TargetsSelectorSection
-  [{:keys [db-path] :as opts}]
+  [{:keys [db-path subtype] :as opts}]
+  (dispatch [::helpers/set db-path ::subtype subtype])
   [nav-tab/Tab
    {:db-path                 db-path
     :panes                   [{:menuItem {:content "Edges"
@@ -299,5 +303,4 @@
 (s/fdef TargetsSelectorSection
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]
                                    :opt-un [::helpers/change-event
-                                            ;::subtype
-                                            ])))
+                                            ::subtype])))

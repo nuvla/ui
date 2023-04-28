@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.33.6] - 2023-04-28
+
 ### Changed
 
 - About page - Terms and conditions link added
@@ -12,6 +14,10 @@
 - Api - Double navigation fired when clicking on id
 - Sementic extensions - Link component stop propagation on click event
 - Api detail - Browsing history show empty page even if resource is cached
+- Applications sets details - Use explicit subtype instead of guessing from apps
+  selected #1213
+- Deployment set detail - For each applications sets select targets depending on
+  subtype #2356
 
 ## [2.33.5] - 2023-04-24
 

@@ -4,6 +4,7 @@
             [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
             [reagent.core :as r]
             [reagent.dom :as rdom]
+            [sixsq.nuvla.ui.about.events :as about-events]
             [sixsq.nuvla.ui.cimi.events :as api-events]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.db.events :as db-events]
@@ -76,6 +77,7 @@
   (dispatch-sync [::main-events/check-ui-version-polling])
   (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
+  (dispatch-sync [::about-events/init-feature-flags])
   (visibility-watcher)
   (screen-size-watcher)
   (swap! fv/conf #(merge % {:atom r/atom}))

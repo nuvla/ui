@@ -11,29 +11,57 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
+
+(defn- overwrite-env
+  [environment-variables env]
+  (mapv (fn [{env-name :name env-value :value :as environment-variable}]
+          (assoc environment-variable :value (get env env-name env-value)))
+        environment-variables))
+
+(defn- overwrite-module
+  [module {:keys [env] :as _overwrite}]
+  (cond-> module
+          (seq env) (update-in [:content :environmental-variables] overwrite-env env)))
+
 (reg-event-fx
   ::load-module
-  (fn [_ [_ db-path href]]
-    (let [module-id (some-> href (str/split "_") first)]
-      {::cimi-api-fx/get
-       [href #(dispatch [::helpers/set (conj db-path ::modules)
-                         module-id %])]})))
+  (fn [{db :db} [_ db-path href overwrite]]
+    (let [path-overwrite (conj db-path ::overwrite)
+          overwrite-map  (or overwrite (get-in db path-overwrite))
+          module-id      (some-> href (str/split "_") first)]
+      (cond-> {::cimi-api-fx/get
+               [href #(dispatch [::helpers/set (conj db-path ::modules)
+                                 module-id (if overwrite-map
+                                             (overwrite-module % overwrite-map)
+                                             %)])]}
+              overwrite (assoc :db (assoc-in db path-overwrite overwrite))))))
+
+(reg-event-fx
+  ::change-version
+  (fn [{db :db} [_ db-path href]]
+    (let [change-event (get-in db (conj db-path ::change-event))]
+      {:fx [[:dispatch [::load-module db-path href]]
+            (when change-event
+              [:dispatch change-event])]})))
+
+(reg-event-fx
+  ::update-env
+  (fn [{db :db} [_ db-path href index new-value]]
+    (let [change-event (get-in db (conj db-path ::change-event))]
+      {:db (assoc-in db (conj db-path
+                              ::modules href :content :environmental-variables
+                              index ::new-value) new-value)
+       :fx [(when change-event [:dispatch change-event])]})))
 
 (defn get-version-id
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
 
-(defn module-content-id->version-url
-  [versions-indexed id module-content-id]
-  (->> module-content-id
-       (get-version-id versions-indexed)
-       (str id "_")))
-
-(defn module-db
+(defn- module-db
   [db db-path href]
   (get-in db (conj db-path ::modules href)))
 
-(defn module-versions-indexed
+(defn- module-versions-indexed
   [module]
   (-> module :versions apps-utils/map-versions-index))
 
@@ -48,12 +76,20 @@
         versions-indexed  (-> db
                               (module-db db-path href)
                               module-versions-indexed)]
-    (module-content-id->version-url versions-indexed href module-content-id)))
+    (get-version-id versions-indexed module-content-id)))
 
 
 (defn db-environment-variables
   [db db-path href]
   (get-in db (conj db-path ::modules href :content :environmental-variables)))
+
+(defn changed-env-vars
+  [env-vars]
+  (keep (fn [{:keys [::new-value :value :name]}]
+          (when (some-> new-value (not= value))
+            {:name  name
+             :value new-value})
+          ) env-vars))
 
 (defn db-license-accepted?
   [db db-path href]
@@ -112,7 +148,7 @@
     (filter #(when (= (get cred-env-var-map env-name) (:subtype %)) %) creds)))
 
 (defn AsFormInput
-  [db-path href
+  [db-path href read-only?
    index {env-name        :name
           env-description :description
           env-value       :value
@@ -121,26 +157,27 @@
     [ui/FormField {:required env-required}
      [:label env-name ff/nbsp (ff/help-popup env-description)]
      [ui/Input
-      {:type      "text"
-       :name      env-name
-       :value     (or updated-env-value env-value "")
-       :read-only false
-       :fluid     true
-       :on-change (ui-callback/input-callback
-                    #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index)
-                                ::new-value %])
-                    )}]]))
+      {:type          "text"
+       :name          env-name
+       :default-value (or updated-env-value env-value "")
+       :read-only     read-only?
+       :fluid         true
+       :on-change     (ui-callback/input-callback
+                        #(dispatch [::update-env db-path href index %]))}]]))
 
 (defn EnvVariables
-  [{:keys [db-path href] :as _opts}]
+  [{:keys [db-path href change-event read-only?]
+    :or   {read-only? false}
+    :as   _opts}]
   (let [module        @(subscribe [::module db-path href])
         env-variables (get-in module [:content :environmental-variables])]
+    (dispatch [::helpers/set db-path ::change-event change-event])
     (if (seq env-variables)
       [ui/Form
        (map-indexed
          (fn [i env-variable]
            ^{:key (str (:name env-variable) "_" i)}
-           [AsFormInput db-path href i env-variable])
+           [AsFormInput db-path href read-only? i env-variable])
          env-variables)]
       [ui/Message "No environment variables defined"])))
 
@@ -153,8 +190,8 @@
       [ui/Container
        [ui/Header {:as      :h4
                    :icon    "book"
-                   :content (@tr [:eula-full])}]
-       [:h4 [:b (str (str/capitalize (@tr [:eula])) ": ")
+                   :content (tr [:eula-full])}]
+       [:h4 [:b (str (str/capitalize (tr [:eula])) ": ")
              [:u [:a {:href url :target "_blank"} name]]]]
        (when description
          [:p [:i description]])
@@ -198,27 +235,40 @@
                                       ::coupon %]))}]]
       [ui/Message (tr [:free-app])])))
 
+(defn ModuleNameIcon
+  [{:keys [db-path href]
+    :as   _opts}]
+  (let [{:keys [id name subtype content]} @(subscribe [::module db-path href])
+        versions-indexed (subscribe [::module-versions-indexed db-path href])]
+    [ui/ListItem
+     [apps-utils/SubtypeDockerK8sListIcon subtype]
+     [ui/ListContent
+      (str (or name id) " v" (get-version-id @versions-indexed (:id content)))]]))
+
 (defn ModuleVersions
-  [{:keys [db-path href] :as _opts}]
+  [{:keys [db-path href change-event read-only?]
+    :or   {read-only? false}
+    :as   _opts}]
   (let [module           (subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         options          (subscribe [::module-versions-options db-path href])]
-    (fn [{:keys [db-path] :as _opts}]
-      (let [{:keys [id content]} @module]
-        [ui/FormDropdown
-         {:value     (:id content)
-          :scrolling true
-          :upward    false
-          :selection true
-          :on-change (ui-callback/value
-                       #(dispatch [::load-module db-path
-                                   (module-content-id->version-url
-                                     @versions-indexed id %)]))
-          :fluid     true
-          :options   @options}]))))
+    (dispatch [::helpers/set db-path ::change-event change-event])
+    (let [{:keys [id content]} @module]
+      [ui/FormDropdown
+       {:value     (:id content)
+        :scrolling true
+        :upward    false
+        :selection true
+        :on-change (ui-callback/value
+                     #(dispatch [::change-version db-path
+                                 (str id "_" (get-version-id @versions-indexed %))]))
+        :fluid     true
+        :options   @options
+        :disabled  read-only?}])))
 
 (s/def ::href string?)
 
 (s/fdef ModuleVersions
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
-                                            ::href])))
+                                            ::href]
+                                   :opt-un [::helpers/read-only?])))

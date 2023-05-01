@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.main.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.config :as config]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]))
 
 (s/def ::loading? boolean?)
@@ -82,13 +82,13 @@
                                                           :icon       "fa-light fa-rocket-launch"
                                                           :protected? true
                                                           :order      30}
-                                       "deployment-sets" {:key        routes/deployment-sets
-                                                          :label-kw   :deployment-sets
-                                                          :name       "deployments-sets"
-                                                          :icon       "fa-light fa-bullseye"
-                                                          :protected? true
-                                                          :hidden?    (not config/debug?)
-                                                          :order      31}
+                                       "deployment-sets" {:key             routes/deployment-sets
+                                                          :label-kw        :deployment-sets
+                                                          :name            "deployments-sets"
+                                                          :icon            "fa-light fa-bullseye"
+                                                          :protected?      true
+                                                          :feature-flag-kw about-utils/feature-deployment-set-key
+                                                          :order           31}
                                        "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"

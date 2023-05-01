@@ -42,15 +42,15 @@
 (reg-sub
   ::is-deployment-application?
   :<- [::deployment-module]
-  (fn [module]
-    (= (:subtype module) "application")))
+  (fn [{:keys [subtype]}]
+    (= subtype apps-utils/subtype-application)))
 
 
 (reg-sub
   ::is-deployment-application-kubernetes?
   :<- [::deployment-module]
-  (fn [module]
-    (= (:subtype module) "application_kubernetes")))
+  (fn [{:keys [subtype]}]
+    (= subtype apps-utils/subtype-application-k8s)))
 
 
 (defn parse-application-yaml

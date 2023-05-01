@@ -16,10 +16,10 @@
         more? state-atom]
     (fn [_state-atom]
       (let [label     (@tr (if @more? [:less-details] [:more-details]))
-            icon-name (if @more? "caret down" "caret right")]
+            icon-name (if @more? "fa-light fa-angle-down" "fa-light fa-angle-right")]
         [:a {:style    {:cursor "pointer"}
              :on-click #(reset! more? (not @more?))}
-         [ui/Icon {:name icon-name}]
+         [uix/Icon {:name icon-name}]
          label]))))
 
 

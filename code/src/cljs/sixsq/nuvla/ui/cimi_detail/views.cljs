@@ -265,30 +265,25 @@
   []
   (let [path               (subscribe [::route-subs/nav-path])
         loading?           (subscribe [::subs/loading?])
-        cached-resource-id (subscribe [::subs/resource-id])
         resource           (subscribe [::subs/resource])]
     (fn []
       (let [resource-id       (path->resource-id @path)
-            correct-resource? (= resource-id @cached-resource-id)
-            {:keys [updated acl] :as resource-value} @resource]
-
-        ;; forces a refresh when the correct resource isn't cached
-        (when-not correct-resource?
-          (dispatch [::events/get (path->resource-id @path)]))
-
-        ;; render the (possibly empty) detail
-        [:<>
-         (when acl
-           ^{:key (str resource-id "-" updated)}
-           [:div {:style {:min-height "30px"}}
-            [acl-views/AclButton {:default-value   acl
-                                  :read-only       (not (general-utils/can-edit? resource-value))
-                                  :on-change       #(dispatch [::events/edit
-                                                               resource-id
-                                                               (assoc resource-value :acl %)])
-                                  :margin-override {:margin-top 0}}]])
-         [resource-detail
-          [components/RefreshMenu
-           {:on-refresh #(dispatch [::events/get resource-id])
-            :loading?   @loading?}]
-          (when (and (not @loading?) correct-resource?) @resource)]]))))
+            {:keys [id updated acl] :as resource-value} @resource
+            correct-resource? (= resource-id id)]
+        (if (= resource-id id)
+          [:<>
+           (when acl
+             ^{:key (str resource-id "-" updated)}
+             [:div {:style {:min-height "30px"}}
+              [acl-views/AclButton {:default-value   acl
+                                    :read-only       (not (general-utils/can-edit? resource-value))
+                                    :on-change       #(dispatch [::events/edit
+                                                                 resource-id
+                                                                 (assoc resource-value :acl %)])
+                                    :margin-override {:margin-top 0}}]])
+           [resource-detail
+            [components/RefreshMenu
+             {:on-refresh #(dispatch [::events/get resource-id])
+              :loading?   @loading?}]
+            (when (and (not @loading?) correct-resource?) @resource)]]
+          (dispatch [::events/get (path->resource-id @path)]))))))

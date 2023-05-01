@@ -45,13 +45,13 @@
 (defn state->icon
   "Commissioning state"
   [state]
-  (let [icons-map {state-activated       "fal fa-handshake"
-                   state-new             "fal fa-dolly"
-                   state-commissioned    "fal fa-check"
-                   state-decommissioning "fal fa-eraser"
-                   state-decommissioned  "fal fa-ban"
-                   state-suspended       "fal fa-pause"
-                   state-error           "fal fa-exclamation"}]
+  (let [icons-map {state-activated       "fa-light fa-handshake"
+                   state-new             "fa-light fa-dolly"
+                   state-commissioned    "fa-light fa-check"
+                   state-decommissioning "fa-light fa-eraser"
+                   state-decommissioned  "fa-light fa-ban"
+                   state-suspended       "fa-light fa-pause"
+                   state-error           "fa-light fa-exclamation"}]
     (get icons-map state)))
 
 

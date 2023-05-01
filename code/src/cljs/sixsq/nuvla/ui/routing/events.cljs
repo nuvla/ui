@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.routing.events
-  (:require [re-frame.core :refer [reg-event-db reg-event-fx]]
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [reitit.frontend :refer [match-by-path]]
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -16,8 +16,8 @@
 
 (reg-event-fx
   ::push-state-by-path
-  (fn [{ {:keys [current-route
-                 router]} :db} [_ new-path]]
+  (fn [{{:keys [current-route
+                router]} :db} [_ new-path]]
     (let [new-match (dissoc (match-by-path router new-path) :controllers)]
       (when-not (= new-match (dissoc current-route :controllers))
         {::fx/push-state new-path}))))
@@ -69,18 +69,20 @@
                ;; disables the protection.
                ::ignore-changes-protection true)}
         (merge {:db (assoc db ::ignore-changes-protection false)}
-          event)))))
+               event)))))
 
 (reg-event-fx
   ::navigate
-  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ navigate-to path-params query-params
-                                                               {change-event :change-event
-                                                                ignore-chng-protection? :ignore-chng-protection?}]]
-    (let [nav-effect {:db (assoc db ::ignore-changes-protection ignore-chng-protection?)
-                      :fx [[:dispatch [::push-state-by-path (if (string? navigate-to)
-                                                              (utils/add-base-path navigate-to)
-                                                              (utils/name->href navigate-to path-params query-params))]]
-                           (when change-event [:dispatch change-event])]}]
+  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db}
+       [_ navigate-to path-params query-params
+        {change-event            :change-event
+         ignore-chng-protection? :ignore-chng-protection?}]]
+    (let [nav-effect {:db (cond-> (assoc db ::ignore-changes-protection ignore-chng-protection?)
+                                  change-event (assoc after-nav-cb-key #(dispatch change-event)))
+                      :fx [[:dispatch [::push-state-by-path
+                                       (if (string? navigate-to)
+                                         (utils/add-base-path navigate-to)
+                                         (utils/name->href navigate-to path-params query-params))]]]}]
       (if (and changes-protection? (not ignore-chng-protection?))
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect
                        ::ignore-changes-protection ignore-chng-protection?)}
@@ -92,12 +94,12 @@
   ::navigate-partial
   (fn [{{:keys [current-route]} :db} [_ {:keys [change-event
                                                 ignore-chng-protection?]
-                                         :as new-partial-route-data}]]
+                                         :as   new-partial-route-data}]]
     (let [{:keys [route-name
                   path-params
                   query-params]} (utils/new-route-data current-route new-partial-route-data)]
       {:fx [[:dispatch [::navigate route-name path-params query-params
-                        {:change-event change-event
+                        {:change-event            change-event
                          :ignore-chng-protection? ignore-chng-protection?}]]]})))
 
 (reg-event-fx

@@ -15,7 +15,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "tag"}]
+     [uix/Icon {:name "fa-light fa-tag"}]
      (str/capitalize (@tr [:versions]))]))
 
 

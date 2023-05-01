@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
@@ -8,22 +9,89 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination]
-            [sixsq.nuvla.ui.plugins.tab :as tab]
+            [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
+            [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
-
 (reg-event-fx
   ::new
-  (fn [{db :db}]
-    {:db (merge db spec/defaults)}))
+  (fn [{{:keys [current-route] :as db} :db}]
+    (let [id (routing-utils/get-query-param current-route :applications-sets)]
+      {:db               (merge db spec/defaults)
+       ::cimi-api-fx/get [id #(dispatch [::set-applications-sets %])]})))
+
+
+(defn restore-applications
+  [db [i]]
+  (assoc-in db [::spec/apps-sets i ::spec/targets]
+            (target-selector/build-spec)))
+
+(defn load-module-configurations
+  [modules-by-id fx [id {:keys [applications]}]]
+  (->> applications
+       (map (fn [{module-id :id :keys [version environmental-variables]}]
+              (when (get modules-by-id module-id)
+                [:dispatch [::module-plugin/load-module
+                            [::spec/apps-sets id]
+                            (str module-id "_" version)
+                            (when (seq environmental-variables)
+                              {:env (->> environmental-variables
+                                         (map (juxt :name :value))
+                                         (into {}))})]])))
+       (concat fx)))
+(reg-event-fx
+  ::load-apps-sets-response
+  (fn [{:keys [db]} [_ module apps-count {:keys [resources]}]]
+    (let [modules-by-id     (->> resources (map (juxt :id identity)) (into {}))
+          indexed-apps-sets (->> module
+                                 :content
+                                 :applications-sets
+                                 (map-indexed vector))
+          new-db            (reduce restore-applications
+                                    db indexed-apps-sets)
+          fx                (reduce (partial load-module-configurations modules-by-id)
+                                    [] indexed-apps-sets)
+          all-apps-visible? (= apps-count (count resources))]
+      (if all-apps-visible?
+        {:db new-db
+         :fx fx}
+        {:fx [[:dispatch [::messages-events/add
+                          {:header  "Unable to load selected applications sets"
+                           :content (str "Loaded " (count resources) " out of " apps-count ".")
+                           :type    :error}]]]}))))
+
+(reg-event-fx
+  ::load-apps-sets
+  (fn [_ [_ module]]
+    (let [apps-urls  (->> module
+                          :content
+                          :applications-sets
+                          (mapcat :applications)
+                          (map :id)
+                          distinct)
+          filter-str (apply general-utils/join-or (map #(str "id='" % "'") apps-urls))
+          params     {:filter filter-str
+                      :last   1000}
+          callback   #(if (instance? js/Error %)
+                        (cimi-api-fx/default-error-message % "load applications sets failed")
+                        (dispatch [::load-apps-sets-response module (count apps-urls) %]))]
+      (when (seq apps-urls)
+        {::cimi-api-fx/search [:module params callback]}))))
+
+(reg-event-fx
+  ::set-applications-sets
+  (fn [{:keys [db]} [_ {:keys [subtype] :as module}]]
+    (if (apps-utils/applications-sets? subtype)
+      {:db (assoc db ::spec/module-applications-sets module)
+       :fx [[:dispatch [::load-apps-sets module]]]}
+      {:dispatch [::messages-events/add
+                  {:header  "Wrong module subtype"
+                   :content (str "Selected module subtype:" subtype)
+                   :type    :error}]})))
 
 (reg-event-fx
   ::set-deployment-set
@@ -64,9 +132,9 @@
   ::get-deployments-for-deployment-sets
   (fn [_ [_ id]]
     (when id
-      {:fx [:dispatch [::deployments-events/get-deployments
-                       {:filter-external-arg (str "deployment-set='" id "'")
-                        :external-filter-only? true}]]})))
+      {:fx [[:dispatch [::deployments-events/get-deployments
+                        {:filter-external-arg   (str "deployment-set='" id "'")
+                         :external-filter-only? true}]]]})))
 
 (reg-event-fx
   ::edit
@@ -94,147 +162,6 @@
     (let [id (:id deployment-set)]
       {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate routes/deployment-sets])]})))
 
-(reg-event-db
-  ::set-apps
-  (fn [db [_ apps]]
-    (assoc db ::spec/apps apps
-              ::spec/apps-loading? false)))
-
-(reg-event-fx
-  ::search-apps
-  (fn [{{:keys [::spec/tab-new-apps
-                ::session-spec/session] :as db} :db}]
-    {:db (assoc db ::spec/apps-loading? true)
-     ::cimi-api-fx/search
-     [:module (->>
-                {:select  "id, name, description, parent-path, subtype"
-                 :orderby "path:asc"
-                 :filter  (general-utils/join-and
-                            (full-text-search/filter-text db [::spec/apps-search])
-                            (case (::tab/active-tab tab-new-apps)
-                              :my-apps (str "acl/owners='" (get-active-claim session) "'")
-                              :app-store "published=true"
-                              nil)
-                            "subtype!='project'")}
-                (pagination/first-last-params db [::spec/apps-pagination]))
-      #(dispatch [::set-apps %])]}))
-
-(reg-event-fx
-  ::toggle-select-app
-  (fn [{{:keys [::spec/apps-selected] :as db} :db} [_ {:keys [id] :as module}]]
-    (let [select? (nil? (apps-selected module))
-          op      (if select? conj disj)]
-      (cond-> {:db (update db ::spec/apps-selected op module)}
-              select? (assoc :fx [[:dispatch [::module-plugin/load-module [::spec/module-versions] id]]])))))
-
-(reg-event-db
-  ::toggle-select-target
-  (fn [{:keys [::spec/targets-selected] :as db} [_ credential credentials]]
-    (let [select? (nil? (targets-selected credential))
-          op      (if select? conj disj)]
-      (-> db
-          (assoc ::spec/targets-selected
-                 (apply disj targets-selected credentials))
-          (update ::spec/targets-selected op credential)))))
-
-(reg-event-fx
-  ::set-credentials
-  (fn [{db :db} [_ response]]
-    {:db (assoc db ::spec/targets-loading? false
-                   ::spec/credentials response)}))
-
-(reg-event-fx
-  ::search-credentials
-  (fn [_ [_ filter-str]]
-    {::cimi-api-fx/search
-     [:credential {:last   10000
-                   :select "id, name, description, parent, subtype"
-                   :filter filter-str}
-      #(dispatch [::set-credentials %])]}))
-
-(reg-event-fx
-  ::set-infrastructures
-  (fn [{db :db} [_ {:keys [resources] :as response}]]
-    (if (seq resources)
-      (let [filter-str (->> resources
-                            (map #(str "parent='" (:id %) "'"))
-                            (apply general-utils/join-or)
-                            (general-utils/join-and
-                              (general-utils/join-or
-                                "subtype='infrastructure-service-swarm'"
-                                "subtype='infrastructure-service-kubernetes'"
-                                )))]
-        {:db (assoc db ::spec/infrastructures response)
-         :fx [[:dispatch [::search-credentials filter-str]]]})
-      {:db (assoc db ::spec/targets-loading? false
-                     ::spec/infrastructures response
-                     ::spec/credentials nil)})))
-
-(reg-event-fx
-  ::search-infrastructures
-  (fn [_ [_ filter-str]]
-    {::cimi-api-fx/search
-     [:infrastructure-service
-      {:last   10000
-       :select "id, name, description, subtype, parent"
-       :filter filter-str}
-      #(dispatch [::set-infrastructures %])]}))
-
-(reg-event-fx
-  ::search-clouds
-  (fn [{db :db}]
-    {:db (assoc db ::spec/targets-loading? true)
-     ::cimi-api-fx/search
-     [:infrastructure-service
-      (->> {:select  "id, name, description, subtype, parent"
-            :orderby "name:asc,id:asc"
-            :filter  (general-utils/join-and
-                       (general-utils/join-or
-                         "tags!='nuvlabox=True'"
-                         "tags!='nuvlaedge=True'")
-                       (general-utils/join-or
-                         "subtype='swarm'"
-                         "subtype='kubernetes'")
-                       (full-text-search/filter-text
-                         db [::spec/clouds-search]))}
-           (pagination/first-last-params db [::spec/clouds-pagination]))
-      #(dispatch [::set-infrastructures %])]}))
-
-(reg-event-fx
-  ::set-edges
-  (fn [{db :db} [_ {:keys [resources] :as response}]]
-    (if (seq resources)
-      (let [filter-str (->> resources
-                            (map #(str "parent='"
-                                       (:infrastructure-service-group %)
-                                       "'"))
-                            (apply general-utils/join-or)
-                            (general-utils/join-and
-                              (general-utils/join-or
-                                "subtype='swarm'"
-                                "subtype='kubernetes'")))]
-        {:db (assoc db ::spec/edges response)
-         :fx [[:dispatch [::search-infrastructures filter-str]]]})
-      {:db (assoc db ::spec/targets-loading? false
-                     ::spec/edges response
-                     ::spec/infrastrutures nil
-                     ::spec/credentials nil)})))
-
-(reg-event-fx
-  ::search-edges
-  (fn [{db :db}]
-    {:db (assoc db ::spec/targets-loading? true)
-     ::cimi-api-fx/search
-     [:nuvlabox
-      (->> {:select  "id, name, description, infrastructure-service-group"
-            :orderby "name:asc,id:asc"
-            :filter  (general-utils/join-and
-                       (full-text-search/filter-text db [::spec/edges-search])
-                       "state='COMMISSIONED'"
-                       "infrastructure-service-group!=null")}
-           (pagination/first-last-params db [::spec/edges-pagination]))
-      #(dispatch [::set-edges %])]}))
-
 (defn changed-env-vars
   [application env-vars]
   (keep (fn [{:keys [::module-plugin/new-value :value :name]}]
@@ -244,8 +171,7 @@
              :application application})
           ) env-vars))
 
-
-(reg-event-fx
+#_(reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
                 ::spec/apps-selected
@@ -255,8 +181,9 @@
     {::cimi-api-fx/add
      [:deployment-set
       (cond->
-        {:spec {:applications (map #(module-plugin/db-selected-version
-                                      db [::spec/module-versions] (:id %))
+        {:spec {:applications (map #(str (:id %) "_"
+                                         (module-plugin/db-selected-version
+                                           db [::spec/module-versions] (:id %)))
                                    apps-selected)
                 :targets      (map :id targets-selected)
                 :env          (mapcat (fn [{:keys [id]}]
@@ -277,7 +204,60 @@
         (not (str/blank? create-description)) (assoc :description create-description))
       #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
 
+(defn application-overwrites
+  [db i {:keys [id version] :as _application}]
+  (when-let [env-changed (->> id
+                              (module-plugin/db-environment-variables db [::spec/apps-sets i])
+                              module-plugin/changed-env-vars
+                              seq)]
+    {:id                      id
+     :version                 version
+     :environmental-variables env-changed}))
+
+(defn applications-sets->overwrites
+  [db i {:keys [applications] :as _applications-sets}]
+  (let [targets                 (map :id (target-selector/db-selected db [::spec/apps-sets i ::spec/targets]))
+        applications-overwrites (->> applications
+                                     (map (partial application-overwrites db i))
+                                     (remove nil?))]
+    (cond-> {}
+            (seq targets) (assoc :targets targets)
+            (seq applications-overwrites) (assoc :applications applications-overwrites))))
+
+(reg-event-fx
+  ::create-start
+  (fn [{{:keys [::spec/create-name
+                ::spec/create-description
+                ::spec/module-applications-sets] :as db} :db} [_ start?]]
+    (let [body (cond->
+                 {:name              create-name
+                  :applications-sets [{:id         (:id module-applications-sets)
+                                       :version    (apps-utils/module-version module-applications-sets)
+                                       :overwrites (map-indexed (partial applications-sets->overwrites db)
+                                                                (-> module-applications-sets :content :applications-sets))
+                                       }]
+                  :start             start?}
+                 (not (str/blank? create-description)) (assoc :description create-description))]
+      {::cimi-api-fx/add
+       [:deployment-set body
+        #(dispatch [::routing-events/navigate routes/deployment-sets-details
+                    {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
+
 (reg-event-db
   ::set
   (fn [db [_ k v]]
     (assoc db k v)))
+
+(reg-event-db
+  ::remove-target
+  (fn [db [_ i target-id]]
+    (update-in db [::spec/apps-sets i ::spec/targets-selected] dissoc target-id)))
+
+(reg-event-fx
+  ::set-targets-selected
+  (fn [{db :db} [_ i db-path]]
+    (let [selected (target-selector/db-selected db db-path)]
+      {:db (->> selected
+                (map (juxt :id identity))
+                (into {})
+                (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))

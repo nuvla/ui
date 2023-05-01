@@ -9,6 +9,11 @@
   (fn [module]
     (::spec/docker-compose module)))
 
+(reg-sub
+  ::compatibility
+  :<- [::module-application]
+  :-> ::spec/compatibility)
+
 
 (reg-sub
   ::files

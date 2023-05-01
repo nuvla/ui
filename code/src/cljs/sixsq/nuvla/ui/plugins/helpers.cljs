@@ -2,8 +2,9 @@
   (:require [cljs.spec.alpha :as s]
             [re-frame.core :refer [reg-event-db reg-sub]]))
 
-(s/def ::db-path (s/* keyword?))
+(s/def ::db-path (s/* any?))
 (s/def ::change-event (s/cat :dispatch-key keyword? :data (s/* any?)))
+(s/def ::read-only? boolean?)
 
 (reg-sub
   ::retrieve

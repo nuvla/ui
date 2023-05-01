@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.views
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.apps-applications-sets.views]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.cimi.subs :as api-subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -266,7 +267,7 @@
          [router-component]
          [:<>
           [intercom/widget]
-          [sidebar/menu]
+          [sidebar/Menu]
           [:div {:class (str "nuvla-" (first @resource-path))
                  :style {:transition  "0.5s"
                          :margin-left (if (and (not @is-small-device?) @show?)

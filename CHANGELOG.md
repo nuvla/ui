@@ -2,10 +2,52 @@
 
 ## Unreleased
 
-- Notificaiton subscriptions - Shows GiB unit for network in modal
 - Enables bulk actions in table plugin - Moves deployments bulk action feature to table plugin, #1180
 - Edges overview, table view - Enables bulk editing of tags, #1194
+
+## Released
+
+## [2.33.6] - 2023-04-28
+
+### Changed
+
+- About page - Terms and conditions link added
+- Api - Resource list not cleaning when changing to a different tab, resulting
+  in impossibility of searching #1191
+- Api - Query params should not be kept when changing collection and browsing in
+  history
+- Api - Double navigation fired when clicking on id
+- Sementic extensions - Link component stop propagation on click event
+- Api detail - Browsing history show empty page even if resource is cached
+- Applications sets details - Use explicit subtype instead of guessing from apps
+  selected #1213
+- Deployment set detail - For each applications sets select targets depending on
+  subtype #2356
+
+## [2.33.5] - 2023-04-24
+
+### Changed
+
+- Profile - Button add vendor email misalignment fix
+
+## [2.33.4] - 2023-04-24
+
+### Changed
+
+- Notification subscriptions - Shows GiB unit for network in modal
 - Api Page - Persists and loads all filter parameters
+- App - Allow user to choose how to run a docker application
+- App - Rename "Docker compose" accordion to "Compose file"
+- Apps - Validation of compose file renamed and enhanced error message
+- Deployment modal - Select credential bugfix
+- About page - Remove personae item
+- About page - Support for feature flags
+- Tabs - New design
+- Apps Store, Navigate apps tab - New design
+- Apps Project Details, Overview tab - New design
+- Apps Project Details, Details tab - New design
+- Apps Project Details, Share tab - New design
+- Apps Applications Details - New design, icons
 
 ## [2.33.3] - 2023-02-27
 

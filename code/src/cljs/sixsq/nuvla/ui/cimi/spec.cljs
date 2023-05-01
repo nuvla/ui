@@ -48,21 +48,24 @@
 
 (s/def ::resource-metadata any?)
 
-(def defaults {::cloud-entry-point           nil
-               ::cloud-entry-point-error?    false
-               ::query-params                {:first       0
-                                              :last        20
-                                              :filter      nil
-                                              :orderby     nil
-                                              :select      nil
-                                              :aggregation nil}
-               ::loading?                    false
-               ::aggregations                nil
-               ::collection                  nil
-               ::collection-name             nil
-               ::selected-fields             ["id", "name"]
-               ::available-fields            ["id", "name"]
-               ::show-add-modal?             false
-               ::collections-templates-cache {}
-               ::selected-rows               #{}
-               ::resource-metadata           {}})
+(def default-params {::query-params     {:first       0
+                                         :last        20
+                                         :filter      nil
+                                         :orderby     nil
+                                         :select      nil
+                                         :aggregation nil}
+                     ::aggregations     nil
+                     ::selected-fields  ["id", "name"]
+                     ::available-fields ["id", "name"]
+                     ::selected-rows    #{}})
+
+(def defaults (merge
+                {::cloud-entry-point           nil
+                 ::cloud-entry-point-error?    false
+                 ::loading?                    false
+                 ::collection                  nil
+                 ::collection-name             nil
+                 ::show-add-modal?             false
+                 ::collections-templates-cache {}
+                 ::resource-metadata           {}}
+                default-params))

@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.apps-store.subs :as subs]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.apps.subs :as apps-subs]
+            [sixsq.nuvla.ui.apps.utils :as utils]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
             [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
@@ -42,9 +43,7 @@
                             (@tr [:day]))
         button-content (if price deploy-price (@tr [:deploy]))
         on-click       (fn [event]
-                         (dispatch [::main-events/subscription-required-dispatch
-                                    [::deployment-dialog-events/create-deployment
-                                     module-id :infra-services]])
+                         (apps-views-detail/deploy-click module-id (utils/applications-sets? subtype))
                          (.preventDefault event)
                          (.stopPropagation event))
         button-ops     {:fluid    true
@@ -56,7 +55,7 @@
     [uix/Card
      {:image         logo-url
       :header        [:<>
-                      [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
+                      [uix/Icon {:name (apps-utils/subtype-icon subtype)}]
                       (or name id)]
       :description   (utils-general/truncate desc-summary 180)
       :content       [uix/Tags tags]
@@ -105,7 +104,7 @@
     [ui/Menu {:borderless true}
      [uix/MenuItem
       {:name     (@tr [:add])
-       :icon     "add"
+       :icon     "fa-light fa-plus-large"
        :on-click #(dispatch [::apps-events/open-add-modal])}]
      [RefreshButton active-tab]]))
 
@@ -140,19 +139,19 @@
   (let [tr     @(subscribe [::i18n-subs/tr]) ]
     [{:menuItem {:content (utils-general/capitalize-words (tr [:appstore]))
                  :key     spec/appstore-key
-                 :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+                 :icon    (r/as-element [ui/Icon {:className "fa-light fa-store"}])}
       :render   #(r/as-element [TabDefault spec/appstore-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:all-apps]))
                  :key     spec/allapps-key
-                 :icon    "grid layout"}
+                 :icon    (r/as-element [ui/Icon {:className "fa-light fa-layer-group"}])}
       :render   #(r/as-element [TabDefault spec/allapps-key ])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:my-apps]))
                  :key     spec/myapps-key
-                 :icon    "user"}
+                 :icon    (r/as-element [ui/Icon {:className "fa-light fa-star"}])}
       :render   #(r/as-element [TabDefault spec/myapps-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:navigate-apps]))
                  :key     spec/navigate-key
-                 :icon    "folder open"}
+                 :icon    (r/as-element [ui/Icon {:className "fa-light fa-folder"}])}
       :render   #(r/as-element [TabNavigator spec/navigate-key])}]))
 
 (defn RootView

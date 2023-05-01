@@ -18,7 +18,6 @@
             [sixsq.nuvla.ui.plugins.table :refer [Table] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :as route-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
@@ -31,8 +30,7 @@
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            [sixsq.nuvla.ui.utils.zip :as zip]
-            [sixsq.nuvla.ui.messages.events :as messages-events]))
+            [sixsq.nuvla.ui.utils.zip :as zip]))
 
 (def show-state-statistics (r/atom false))
 

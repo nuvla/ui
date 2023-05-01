@@ -111,6 +111,7 @@
   [{:keys [::spec/state-selector
            ::spec/additional-filter] :as db}]
   (general-utils/join-and
+   "id!=null"
    (when state-selector (utils/state-filter state-selector))
    additional-filter
    (full-text-search-plugin/filter-text

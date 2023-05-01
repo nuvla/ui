@@ -377,19 +377,22 @@
                                       :background-color :transparent}
                               :borderless (= 1 (count bulk-actions))
                               :stackable  true}
-                     (for [action bulk-actions
+                     (for [[idx action ] (map-indexed vector bulk-actions)
                            :let [{:keys [component name event icon]} action]]
+
                        (if component
                          [ui/MenuItem
                           {:style {:border :none}
-                           :disabled nothing-selected?}
+                           :disabled nothing-selected?
+                           :key idx}
                           [icon]
                           [component]]
                          [ui/MenuItem
                           {:disabled nothing-selected?
                            :on-click (fn []
                                        (if (fn? event) (event payload)
-                                           (dispatch event)))}
+                                           (dispatch event)))
+                           :key idx}
                           [icon]
                           name]))]])
                   :basic    true

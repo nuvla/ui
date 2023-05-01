@@ -3,6 +3,7 @@
 
 (def dictionary
   {:en {
+        :software-versions                             "Software versions"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -701,7 +702,6 @@
         :register-swarm-note                           "Choose the service you want to add."
         :registries                                    "Registries"
         :registry-services                             "Registry Services"
-        :release-notes                                 "release notes"
         :repeat                                        "Repeat"
         :repeat-info                                   "Repeat step 2 for as many NuvlaEdge OS machines as you want"
         :report-interval                               "Report interval"
@@ -961,6 +961,7 @@
         }
 
    :fr {
+        :software-versions                             "Versions logicielles"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
@@ -1496,7 +1497,6 @@
         :reactivate-subscription-need-pm               "Pour réactiver votre inscription, vous devez d'abord ajouter un mode de paiement"
         :reduction-off                                 "de réduction"
         :refresh                                       "actualiser"
-        :release-notes                                 "notes de version"
         :repeat                                        "Répéter"
         :repeat-info                                   "Répéter la deuxième étape pour autant de machines NuvlaEdge OS que vous le souhaitez"
         :report-interval                               "Interval de rapport"

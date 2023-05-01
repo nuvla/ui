@@ -738,7 +738,6 @@
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
     [:<>
-
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
@@ -806,7 +805,7 @@
                           spec/modal-tags-set-id     :red}]
     (fn [form-tags _close-fn]
       (let [text      (get-name-as-keyword @tr @edit-mode)
-            call-back (fn [] (close-fn))
+            call-back close-fn
             update-fn (fn []
                         (dispatch [::events/update-tags
                                    @edit-mode
@@ -819,8 +818,7 @@
         (if (= :idle @mode)
           [:div
            [:span (str text "?")]
-           [ui/Button {
-                      ;;  :icon
+           [ui/Button {:aria-label "edit tags"
                        :color    (edit-mode->color @edit-mode)
                        :disabled disabled?
                        :active   true
@@ -834,7 +832,8 @@
                         :disabled disabled?
                         :color    (edit-mode->color @edit-mode)
                         :on-click update-fn}]
-           [ui/Button {:on-click (fn [] (reset! mode :idle))}
+           [ui/Button {:aria-label "do not confirm editing tags"
+                       :on-click (fn [] (reset! mode :idle))}
             [ui/Icon {:style {:margin 0}
                       :name "fa-xmark"}]]])))))
 

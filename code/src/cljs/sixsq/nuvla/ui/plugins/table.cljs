@@ -105,9 +105,10 @@
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
 (s/def ::select-db-path (s/* keyword?))
 (s/def ::rights-needed keyword?)
+(s/def ::select-label-accessor (s/nilable fn?))
 (s/def ::select-config (s/nilable (s/keys :req-un [::bulk-actions ::select-db-path
                                                    ::total-count-sub-key ::resources-sub-key]
-                                          :opt-un [::rights-needed ])))
+                                          :opt-un [::rights-needed ::select-label-accessor])))
 ;; Bulk selection db entries
 (s/def ::bulk-edit-success-msg (s/nilable string?))
 (s/def ::select-all? (s/nilable boolean?))
@@ -286,24 +287,30 @@
    (if-not rights-needed resources
            (filter (partial general-utils/can-operation? rights-needed) resources))))
 
-(defn CellCeckbox
-  [{:keys [can-edit? id selected-all-sub selected-set-sub db-path resources-sub-key rights-needed]}]
+(defn CellCheckbox
+  [{:keys [can-edit? id selected-all-sub selected-set-sub db-path
+           resources-sub-key rights-needed edge-name idx]}]
   (let [resources (subscribe [::editable-resources-on-page resources-sub-key rights-needed])
         select-fn (fn [] (dispatch [::select-id id db-path (map :id @resources)]))
         checked?  (or @selected-all-sub (is-selected? @selected-set-sub id))]
-    [ui/TableCell {:on-click (fn [event]
+    [ui/TableCell {:aria-label (str "select row " idx)
+                   :on-click (fn [event]
                                (when can-edit?
                                  (select-fn)
                                  (.stopPropagation event)))}
      (when can-edit?
-       [ui/Checkbox {:checked checked?}])]))
+       [:<>
+        [ui/Checkbox {:id idx
+                      :aria-label (str "select " edge-name)
+                      :checked checked?}]])]))
 
 
 (defn HeaderCellCeckbox
   [{:keys [db-path resources-sub-key page-selected?-sub rights-needed]}]
   (let [resources @(subscribe [::editable-resources-on-page resources-sub-key rights-needed])]
-    [ui/Checkbox {:checked  @page-selected?-sub
-                  :on-click #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
+    [ui/Checkbox {:aria-label "select all on page"
+                  :checked    @page-selected?-sub
+                  :on-click   #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
 
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub
@@ -403,7 +410,7 @@
        [:button {:style {:width "120px" :text-align :center :border :none}
                  :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
                  :class [:select-all]}
-        (str button-text)]]]]))
+        button-text]]]]))
 
 
 (defn get-bulk-select-subscriptions
@@ -451,7 +458,8 @@
            row-click-handler row-props row-render
            sort-config select-config]
     :as   props}]
-  (let [{:keys [bulk-actions select-db-path total-count-sub-key resources-sub-key rights-needed]} select-config
+  (let [{:keys [bulk-actions select-db-path total-count-sub-key
+                resources-sub-key rights-needed select-label-accessor]} select-config
         tr             @(subscribe [::i18n-subs/tr])
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
         selectable?    (and select-config (s/valid? ::select-config select-config)
@@ -508,19 +516,25 @@
                       (select-keys col [:field-key :disable-sort :sort-key]))])]])]]
        [ui/TableBody (:body-props props)
         (doall
-         (for [row rows
+         (for [[idx row] (map-indexed vector rows)
                :let [id (:id row)]]
            (cond
              row-render
              ^{:key id}
              [ui/TableRow (get-row-props row)
               (when selectable?
-                [CellCeckbox {:can-edit? (if rights-needed
-                                           (general-utils/can-operation? rights-needed row)
-                                           true)
-                              :id id :selected-set-sub selected-set :db-path select-db-path
-                              :selected-all-sub select-all? :resources-sub-key resources-sub-key
-                              :rights-needed rights-needed}])
+                [CellCheckbox {:can-edit? (if rights-needed
+                                            (general-utils/can-operation? rights-needed row)
+                                            true)
+                               :id id :selected-set-sub selected-set :db-path select-db-path
+                               :selected-all-sub select-all? :resources-sub-key resources-sub-key
+                               :rights-needed rights-needed
+                               :edge-name (or
+                                           (and select-label-accessor
+                                                (select-label-accessor row))
+                                           (:name row)
+                                           (:id row))
+                               :idx idx}])
               [row-render row]]
              :else
              ^{:key id}

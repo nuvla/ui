@@ -10,7 +10,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await expect(page).toHaveURL(edgesPageRegex);
 
-  await page.getByText('Add').click();
+  await page.getByText('Add', { exact: true }).click();
 
   await page.getByText('bluetooth').click();
 

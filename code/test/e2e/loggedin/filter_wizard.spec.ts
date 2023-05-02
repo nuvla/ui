@@ -20,9 +20,8 @@ test('Additional filter wizard', async ({ page }, { config }) => {
   await page.waitForURL(`${baseURL}/ui/edges?view=table&nuvlabox=name=%27e2e-Test-Do_not_delete%27`);
 
   await page.waitForResponse('/api/nuvlabox');
-  await page.waitForTimeout(50);
 
-  expect(await page.locator('tr[role=link]').count()).toBe(1);
+  expect(page.locator('tr[role=link]')).toHaveCount(1, { timeout: 200 });
 
   await page.getByRole('button', { name: 'remove filter' }).click();
   await page.waitForResponse('/api/nuvlabox');

@@ -48,13 +48,13 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   // Open modal
   await openModal();
   await page.locator('.close').click();
-  expectModalHidden(page, 'Modal still hides after clicking X?');
+  expectModalHidden(page, 'Modal still hides after clicking X 1st time?');
   await page.goBack();
   await page.locator('.close').click({ timeout: 2000 });
   expectModalHidden(page, 'Modal still after navigating back 2nd time?');
 
   await openModal();
-  expectModalHidden(page, 'Modal still hides after clicking X?', 200);
+  expectModalHidden(page, 'Modal still hides after clicking X 3rd time?', 200);
   await page.getByRole('button', { name: 'ignore changes' }).click();
   await page.waitForURL(`${baseURL}/ui/deployments`);
 });

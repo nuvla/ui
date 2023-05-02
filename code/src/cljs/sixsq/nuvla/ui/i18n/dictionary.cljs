@@ -3,12 +3,12 @@
 
 (def dictionary
   {:en {
+        :accept-eulas                                  "I accept all the End-User License Agreements"
         :software-versions                             "Software versions"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
-        :accept-applications-licenses                  "You have to accept all applications licenses!"
-        :accept-applications-prices                    "You have to accept all applications prices!"
+        :accept-applications-eulas                     "Accept all applications End-User License Agreements"
         :accept-costs                                  "I accept the costs"
         :accept-eula                                   "I accept the End-User License Agreement"
         :access-deployment                             "access deployment"
@@ -965,8 +965,7 @@
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
-        :accept-applications-licenses                  "Vous devez accepter toutes les licences d'applications !"
-        :accept-applications-prices                    "Vous devez accepter tous les prix des applications !"
+        :accept-applications-eulas                     "Vous devez accepter toutes les licences d'applications !"
         :accept-costs                                  "J'accepte les coûts"
         :accept-eula                                   "J'accepte le Contrat de Licence Utilisateur Final"
         :access-deployment                             "accéder déploiement"

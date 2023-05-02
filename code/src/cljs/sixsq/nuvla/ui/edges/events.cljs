@@ -163,9 +163,16 @@
  (fn [_ _]
    {::cimi-api-fx/search
     [:nuvlabox
-     {:select "tags"}
+     {:first        0
+      :last        0
+      :aggregation "terms:tags"}
      (fn [response]
-        (dispatch [::set-edges-tags (->> response :resources (mapcat :tags) distinct)]))]}))
+       (dispatch [::set-edges-tags
+                  (->> response
+                       :aggregations
+                       :terms:tags
+                       :buckets
+                       (map :key))]))]}))
 
 (reg-event-db
   ::set-edges-tags

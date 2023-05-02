@@ -1,6 +1,9 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
-  (:require [re-frame.core :refer [reg-sub]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub subscribe]]
+            [re-frame.interop :refer [reactive?]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
@@ -37,11 +40,39 @@
   (fn [db [_ k]]
     (get db k)))
 
-(reg-sub
-  ::module-applications-sets
-  :-> ::spec/module-applications-sets)
+(defn applications-sets
+  [db]
+  (get-in db [::spec/module-applications-sets :content :applications-sets]))
 
 (reg-sub
   ::applications-sets
-  :<- [::module-applications-sets]
-  :-> (comp :applications-sets :content))
+  :-> applications-sets)
+
+(reg-sub
+  ::applications-sets-all-applications
+  (fn [db]
+    (->> (applications-sets db)
+         (map-indexed
+           (fn [i {:keys [applications]}]
+             (map (fn [{:keys [id]}]
+                    (module-plugin/module-db db [::spec/apps-sets i] id)
+                    ) applications)))
+         (apply concat))))
+
+(reg-sub
+  ::deployment-set-licenses
+  :<- [::applications-sets-all-applications]
+  (fn [all-applications]
+    (keep (fn [{:keys [license]}]
+            (when license license))
+          all-applications)))
+
+(reg-sub
+  ::create-start-disabled?
+  :<- [::get ::spec/create-name]
+  :<- [::deployment-set-licenses]
+  :<- [::get ::spec/licenses-accepted?]
+  (fn [[create-name licenses licenses-accepted?]]
+    (or (str/blank? create-name)
+        (and (seq licenses)
+             (not licenses-accepted?)))))

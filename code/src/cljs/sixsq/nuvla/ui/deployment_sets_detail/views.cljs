@@ -346,9 +346,8 @@
 
 (defn CreateStartButton
   []
-  (let [create-name (subscribe [::subs/get ::spec/create-name])
-        disabled?   (str/blank? @create-name)
-        on-click    #(dispatch [::events/create-start %])]
+  (let [disabled? @(subscribe [::subs/create-start-disabled?])
+        on-click  #(dispatch [::events/create-start %])]
     [ui/ButtonGroup {:floated  "right"
                      :positive true}
      [ui/Button {:content  "Create"
@@ -399,6 +398,35 @@
                                   :href    id}]])})
                ) applications)}])
 
+
+(defn Licenses
+  []
+  (let [tr       @(subscribe [::i18n-subs/tr])
+        licenses @(subscribe [::subs/deployment-set-licenses])
+        checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
+    (if (seq licenses)
+      [ui/Segment
+       [ui/ListSA
+        (for [{:keys [name description url] :as license} licenses]
+          ^{:key (str "accept-eula-" license)}
+          [ui/ListItem
+           [ui/ListIcon {:name "book"}]
+           [ui/ListContent
+            [ui/ListHeader {:as     :a
+                            :target "_blank"
+                            :href   url
+                            } name]
+            (when description
+              [ui/ListDescription description])]])]
+       [ui/Form
+        [ui/FormCheckbox {:label     (tr [:accept-eulas])
+                          :required  true
+                          :checked   checked?
+                          :on-change (ui-callback/checked
+                                       #(dispatch [::events/set
+                                                   ::spec/licenses-accepted? %]))}]]]
+      [ui/Message (tr [:eula-not-defined])])))
+
 (defn ConfigureSets
   []
   [ui/Tab
@@ -417,16 +445,44 @@
   [ui/Segment (merge style/basic {:clearing true})
    [AppsSets {:summary-page true}]
    [ui/Segment
-    [:p "Section to accept apps distinct licenses. Each license list concerned apps.
-   Accept all license checkbox shortcut. User can't create deployment set if accept all licenses is not checked."]]
-   [ui/Segment
     [:p "Section to accept prices. List apps with price multiply by number of targets. Estimated total price per day. User can't create deployment accept estimated price not checked."]]
    [CreateStartButton]]
   )
 
+(defn StepDescription
+  [description]
+  [:div {:style {:overflow-wrap "break-word"
+                 :width         "16ch"}}
+   description])
+
 (defn AddPage
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        items [{:key         :name
+                :icon        "bullseye"
+                :content     [NameDescriptionStep]
+                :title       "New deployment set"
+                :description "Give it a name"}
+               {:key         :select-apps-targets
+                :icon        "list"
+                :content     [AppsSets]
+                :title       "Apps / Targets"
+                :description (@tr [:select-applications-targets])}
+               {:key         :configure-sets
+                :icon        "configure"
+                :content     [ConfigureSets]
+                :title       (str/capitalize (@tr [:configure]))
+                :description (@tr [:configure-applications])}
+               {:key         :eula
+                :icon        "book"
+                :content     [Licenses]
+                :title       (@tr [:eula])
+                :description (@tr [:eula-full])}
+               {:key         :summary
+                :icon        "info"
+                :content     [Summary]
+                :title       (str/capitalize (@tr [:summary]))
+                :description (@tr [:overall-summary])}]]
     (dispatch [::events/new])
     (fn []
       [ui/Container {:fluid true}
@@ -434,27 +490,13 @@
        [step-group/StepGroup
         {:db-path [::spec/steps]
          :size    :mini
+         :style   {:flex-wrap "wrap"}
          :fluid   true
-         :items   [{:key         :name
-                    :icon        "bullseye"
-                    :content     [NameDescriptionStep]
-                    :title       "New deployment set"
-                    :description "Give it a name"}
-                   {:key         :select-apps-targets
-                    :icon        "list"
-                    :content     [AppsSets]
-                    :title       "Apps / Targets"
-                    :description (@tr [:select-applications-targets])}
-                   {:key         :configure-sets
-                    :icon        "configure"
-                    :content     [ConfigureSets]
-                    :title       (str/capitalize (@tr [:configure]))
-                    :description (@tr [:configure-applications])}
-                   {:key         :summary
-                    :icon        "info"
-                    :content     [Summary]
-                    :title       (str/capitalize (@tr [:summary]))
-                    :description (@tr [:overall-summary])}]}]])))
+         :items   (mapv #(assoc %
+                           :description
+                           (r/as-element
+                             [StepDescription (:description %)]))
+                        items)}]])))
 
 (defn DeploymentSet
   [uuid]

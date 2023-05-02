@@ -68,9 +68,6 @@
     {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
                                                            :frequency 10000
                                                            :event     [::get-nuvlaboxes]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-id-non-edit
-                                                           :frequency 10000
-                                                           :event     [::get-edges-without-edit-rights]}]]
           [:dispatch [::main-events/action-interval-start {:id        refresh-id-locations
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-locations]}]]

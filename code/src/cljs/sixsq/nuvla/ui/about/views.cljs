@@ -72,9 +72,9 @@
       [ui/ListItem [:a {:href   "https://docs.nuvla.io/nuvla/api"
                         :target "_blank"}
                     (@tr [:api-doc])]]
-      [ui/ListItem [:a {:href   "https://github.com/nuvla/deployment/blob/master/CHANGELOG.md"
+      [ui/ListItem [:a {:href   "https://github.com/nuvla/nuvla#latest-releases-and-artifacts"
                         :target "_blank"}
-                    (str/capitalize (@tr [:release-notes]))]]
+                    (str/capitalize (@tr [:software-versions]))]]
       [ui/ListItem [:a {:href   "https://github.com/nuvla"
                         :target "_blank"}
                     (str/capitalize (@tr [:source-code-on]))

@@ -3,11 +3,12 @@
 
 (def dictionary
   {:en {
+        :accept-eulas                                  "I accept all the End-User License Agreements"
+        :software-versions                             "Software versions"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
-        :accept-applications-licenses                  "You have to accept all applications licenses!"
-        :accept-applications-prices                    "You have to accept all applications prices!"
+        :accept-applications-eulas                     "Accept all applications End-User License Agreements"
         :accept-costs                                  "I accept the costs"
         :accept-eula                                   "I accept the End-User License Agreement"
         :access-deployment                             "access deployment"
@@ -708,7 +709,6 @@
         :register-swarm-note                           "Choose the service you want to add."
         :registries                                    "Registries"
         :registry-services                             "Registry Services"
-        :release-notes                                 "release notes"
         :repeat                                        "Repeat"
         :repeat-info                                   "Repeat step 2 for as many NuvlaEdge OS machines as you want"
         :report-interval                               "Report interval"
@@ -979,11 +979,11 @@
         }
 
    :fr {
+        :software-versions                             "Versions logicielles"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
-        :accept-applications-licenses                  "Vous devez accepter toutes les licences d'applications !"
-        :accept-applications-prices                    "Vous devez accepter tous les prix des applications !"
+        :accept-applications-eulas                     "Vous devez accepter toutes les licences d'applications !"
         :accept-costs                                  "J'accepte les coûts"
         :accept-eula                                   "J'accepte le Contrat de Licence Utilisateur Final"
         :access-deployment                             "accéder déploiement"
@@ -1520,7 +1520,6 @@
         :reactivate-subscription-need-pm               "Pour réactiver votre inscription, vous devez d'abord ajouter un mode de paiement"
         :reduction-off                                 "de réduction"
         :refresh                                       "actualiser"
-        :release-notes                                 "notes de version"
         :repeat                                        "Répéter"
         :repeat-info                                   "Répéter la deuxième étape pour autant de machines NuvlaEdge OS que vous le souhaitez"
         :report-interval                               "Interval de rapport"

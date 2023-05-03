@@ -23,4 +23,5 @@
    ::targets-selected          #{}
    ::bulk-jobs                 (bulk-progress-plugin/build-spec)
    ::create-name               ""
-   ::create-description        ""})
+   ::create-description        ""
+   ::licenses-accepted?        false})

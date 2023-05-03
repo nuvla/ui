@@ -812,9 +812,9 @@
                                    {:tags         form-tags
                                     :call-back-fn call-back
                                     :text text}]))
-            disabled? (or (= @selected-count 0)
+            disabled? (or (zero? @selected-count)
                           (and  (not= spec/modal-tags-remove-all @edit-mode)
-                                (= 0 (count form-tags))))]
+                                (zero? (count form-tags))))]
         (if (= :idle @mode)
           [:div
            [:span (str text "?")]
@@ -883,7 +883,7 @@
                       " "
                       @selected-count
                       " "
-                      (@tr [(if (= @selected-count 0) :edge :edges)])
+                      (@tr [(if (zero? @selected-count) :edge :edges)])
                       ". ")]
            (when (<= 1 not-editable @selected-count)
              [:<>

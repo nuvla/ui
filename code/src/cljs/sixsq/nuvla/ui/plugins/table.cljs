@@ -259,7 +259,7 @@
        (or select-all? (= total-count number-of-selected))
        :all
 
-       (= 0 number-of-selected)
+       (zero? number-of-selected)
        :none
 
        (and
@@ -273,7 +273,7 @@
         is-all-page-selected?)
        :page-plus
 
-       (< 0 number-of-selected)
+       (pos? number-of-selected)
        :some
 
        :else
@@ -323,7 +323,7 @@
         off-page-selected           (if @selected-all-sub
                                       (- @total-count (count rows))
                                       (count @(subscribe [::off-page-selected-set db-path resources-sub-key])))
-        off-page-selection?         (< 0 off-page-selected)
+        off-page-selection?         (pos? off-page-selected)
         off-page-selection-text     (when off-page-selection?
                                       (str/join " " [off-page-selected
                                                      (@tr [:on-other-pages])]))
@@ -334,7 +334,7 @@
                                                      (@tr [:are-selected])
                                                      (when off-page-selection-text
                                                        (str "(" off-page-selection-text ")"))]))
-        on-page-selection?          (< 0 on-page-selected)
+        on-page-selection?          (pos? on-page-selected)
         manual-selection-text       (str/join " " [(when (#{:all :page :page-plus} @selection-status)
                                                      (str/capitalize (@tr [:all])))
                                                    (when on-page-selection?

@@ -8,8 +8,7 @@
 
 (reg-sub
   ::loading?
-  (fn [db]
-    (::spec/loading? db)))
+  :-> ::spec/loading?)
 
 (reg-sub
   ::view-type
@@ -19,14 +18,12 @@
 
 (reg-sub
   ::nuvlaboxes
-  (fn [db]
-    (::spec/nuvlaboxes db)))
+  :-> ::spec/nuvlaboxes)
 
 (reg-sub
   ::nuvlaboxes-resources
   :<- [::nuvlaboxes]
-  (fn [nuvlaboxes]
-    (:resources nuvlaboxes)))
+  :-> :resources)
 
 (reg-sub
   ::nuvlaboxes-count
@@ -36,20 +33,17 @@
 
 (reg-sub
   ::edges-without-edit-rights
-  (fn [db]
-    (::spec/edges-without-edit-rights db)))
+  :-> ::spec/edges-without-edit-rights)
 
 
 (reg-sub
   ::edges-tags
-  (fn [db]
-    (::spec/edges-tags db)))
+  :-> ::spec/edges-tags)
 
 
 (reg-sub
   ::edges-status
-  (fn [db]
-    (::spec/nuvlaedges-select-status db)))
+  :-> ::spec/nuvlaedges-select-status)
 
 (reg-sub
   ::next-heartbeat-moment
@@ -73,32 +67,27 @@
 
 (reg-sub
   ::nuvlabox-locations
-  ::spec/nuvlabox-locations)
+  :-> ::spec/nuvlabox-locations)
 
 (reg-sub
   ::nuvlaboxes-summary
-  (fn [db]
-    (::spec/nuvlaboxes-summary db)))
+  :-> ::spec/nuvlaboxes-summary)
 
 (reg-sub
   ::nuvlaboxes-summary-all
-  (fn [db]
-    (::spec/nuvlaboxes-summary-all db)))
+  :-> ::spec/nuvlaboxes-summary-all)
 
 (reg-sub
   ::state-selector
-  (fn [db]
-    (::spec/state-selector db)))
+  :-> ::spec/state-selector)
 
 (reg-sub
   ::state-nuvlaboxes
-  (fn [db]
-    (::spec/state-nuvlaboxes db)))
+  :-> ::spec/state-nuvlaboxes)
 
 (reg-sub
   ::opened-modal
-  (fn [db]
-    (::spec/open-modal db)))
+  :-> ::spec/open-modal)
 
 (reg-sub
   ::modal-visible?
@@ -114,23 +103,19 @@
 
 (reg-sub
   ::nuvlabox-created-id
-  (fn [db]
-    (::spec/nuvlabox-created-id db)))
+  :-> ::spec/nuvlabox-created-id)
 
 (reg-sub
   ::nuvlabox-ssh-key
-  (fn [db]
-    (::spec/nuvlabox-ssh-key db)))
+  :-> ::spec/nuvlabox-ssh-key)
 
 (reg-sub
   ::nuvlabox-private-ssh-key
-  (fn [db]
-    (::spec/nuvlabox-private-ssh-key db)))
+  :-> ::spec/nuvlabox-private-ssh-key)
 
 (reg-sub
   ::nuvlabox-usb-api-key
-  (fn [db]
-    (::spec/nuvlabox-usb-api-key db)))
+  :-> ::spec/nuvlabox-usb-api-key)
 
 (reg-sub
   ::vpn-infra-options
@@ -141,8 +126,7 @@
 
 (reg-sub
   ::nuvlabox-releases
-  (fn [db]
-    (::spec/nuvlabox-releases db)))
+  :-> ::spec/nuvlabox-releases)
 
 (reg-sub
   ::nuvlabox-releases-by-id
@@ -174,18 +158,15 @@
 
 (reg-sub
   ::ssh-keys-available
-  (fn [db]
-    (::spec/ssh-keys-available db)))
+  :-> ::spec/ssh-keys-available)
 
 (reg-sub
   ::nuvlabox-clusters
-  (fn [db]
-    (::spec/nuvlabox-clusters db)))
+  :-> ::spec/nuvlabox-clusters)
 
 (reg-sub
   ::nuvlabox-cluster
-  (fn [db]
-    (::spec/nuvlabox-cluster db)))
+  :-> ::spec/nuvlabox-cluster)
 
 (reg-sub
   ::can-edit-cluster?
@@ -195,23 +176,19 @@
 
 (reg-sub
   ::nuvlabox-not-found?
-  (fn [db]
-    (::spec/nuvlabox-not-found? db)))
+  :-> ::spec/nuvlabox-not-found?)
 
 (reg-sub
   ::nuvlabox-playbooks-cronjob
-  (fn [db]
-    (::spec/nuvlabox-playbooks-cronjob db)))
+  :-> ::spec/nuvlabox-playbooks-cronjob)
 
 (reg-sub
   ::nuvlaboxes-in-clusters
-  (fn [db]
-    (::spec/nuvlaboxes-in-clusters db)))
+  :-> ::spec/nuvlaboxes-in-clusters)
 
 (reg-sub
   ::additional-filter
-  (fn [db]
-    (::spec/additional-filter db)))
+  :-> ::spec/additional-filter)
 
 (reg-sub
   ::selected-count

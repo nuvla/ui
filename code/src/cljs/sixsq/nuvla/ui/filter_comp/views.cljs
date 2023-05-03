@@ -329,7 +329,7 @@
   [(inject-cofx :storage/all)]
   (fn [{{:keys [current-route]} :db
         storage :storage/all} [_ fn filter-query]]
-    (let [filter-storage-key (get-query-param current-route (keyword :filter-storage-key))
+    (let [filter-storage-key (get-query-param current-route :filter-storage-key)
           storage-filter     (get storage filter-storage-key)]
       (fn (or storage-filter filter-query))
       (when filter-storage-key

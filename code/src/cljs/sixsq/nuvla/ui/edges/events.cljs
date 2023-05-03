@@ -34,10 +34,10 @@
   ::init
   [(inject-cofx :storage/all)]
   (fn [{{:keys [current-route] :as db} :db
-        storage :storage/all}]
-    (let [db-path           ::spec/state-selector
-          search-query      (get-stored-db-value-from-query-param current-route [db-path])
-          filter-storage-key (get-query-param current-route (keyword :filter-storage-key))
+        storage                        :storage/all}]
+    (let [db-path            ::spec/state-selector
+          search-query       (get-stored-db-value-from-query-param current-route [db-path])
+          filter-storage-key (get-query-param current-route :filter-storage-key)
           storage-filter     (get storage filter-storage-key)
           filter-query       (get-query-param current-route (keyword spec/resource-name))]
       {:db (-> db
@@ -53,7 +53,7 @@
   ::init-view
   [(inject-cofx :storage/get {:name spec/local-storage-key})]
   (fn [{{current-route :current-route} :db
-        storage :storage/get}]
+        storage                        :storage/get}]
     (let [view-query (-> current-route :query-params :view)]
       (when-not view-query
         {:fx [[:dispatch [::routing-events/change-query-param
@@ -108,11 +108,11 @@
   [{:keys [::spec/state-selector
            ::spec/additional-filter] :as db}]
   (general-utils/join-and
-   "id!=null"
-   (when state-selector (utils/state-filter state-selector))
-   additional-filter
-   (full-text-search-plugin/filter-text
-    db [::spec/edges-search])))
+    "id!=null"
+    (when state-selector (utils/state-filter state-selector))
+    additional-filter
+    (full-text-search-plugin/filter-text
+      db [::spec/edges-search])))
 
 (reg-event-fx
   ::get-nuvlaboxes
@@ -121,58 +121,58 @@
       {::cimi-api-fx/search
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)
-              :filter   (get-full-filter-string db)}
+              :filter  (get-full-filter-string db)}
              (pagination-plugin/first-last-params
-              db [::spec/pagination]))
+               db [::spec/pagination]))
         #(dispatch [::set-nuvlaboxes %])]})))
 
 (reg-event-fx
- ::get-edges-without-edit-rights
+  ::get-edges-without-edit-rights
   (fn [{{:keys [::spec/select
                 ::session-spec/session] :as db} :db} _]
     (let [selected-filter (table-plugin/build-bulk-filter
-                           select
-                           (get-full-filter-string db))
-          filter (general-utils/join-and
-                  (apply
-                   general-utils/join-and
-                   (map (fn [role]
-                          (str "acl/edit-meta!='" role "'"))
-                        (session-utils/get-roles session)))
-                  selected-filter)]
+                            select
+                            (get-full-filter-string db))
+          filter          (general-utils/join-and
+                            (apply
+                              general-utils/join-and
+                              (map (fn [role]
+                                     (str "acl/edit-meta!='" role "'"))
+                                   (session-utils/get-roles session)))
+                            selected-filter)]
       {::cimi-api-fx/search
        [:nuvlabox
         {:filter filter :select "id"}
         #(dispatch [::set-edges-without-edit-rights %])]})))
 
 (reg-event-fx
- ::set-edges-without-edit-rights
- (fn [{:keys [db]} [_ nuvlaboxes]]
-   (if (instance? js/Error nuvlaboxes)
-     (dispatch [::messages-events/add
-                (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                  {:header  (cond-> (str "failure getting nuvlaboxes")
-                              status (str " (" status ")"))
-                   :content message
-                   :type    :error})])
-     {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
+  ::set-edges-without-edit-rights
+  (fn [{:keys [db]} [_ nuvlaboxes]]
+    (if (instance? js/Error nuvlaboxes)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                                     status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
 
 
 (reg-event-fx
- ::get-edges-tags
- (fn [_ _]
-   {::cimi-api-fx/search
-    [:nuvlabox
-     {:first        0
-      :last        0
-      :aggregation "terms:tags"}
-     (fn [response]
-       (dispatch [::set-edges-tags
-                  (->> response
-                       :aggregations
-                       :terms:tags
-                       :buckets
-                       (map :key))]))]}))
+  ::get-edges-tags
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:first       0
+       :last        0
+       :aggregation "terms:tags"}
+      (fn [response]
+        (dispatch [::set-edges-tags
+                   (->> response
+                        :aggregations
+                        :terms:tags
+                        :buckets
+                        (map :key))]))]}))
 
 (reg-event-db
   ::set-edges-tags
@@ -189,7 +189,7 @@
                                 spec/modal-tags-remove-all "set-tags"
                                 spec/modal-tags-set-id     "set-tags"
                                 spec/modal-tags-remove-id  "remove-tags"}
-          filter                (table-plugin/build-bulk-filter select (get-full-filter-string db))
+          filter               (table-plugin/build-bulk-filter select (get-full-filter-string db))
           operation            (edit-mode->operation edit-mode)
           updated-tags         (if (= spec/modal-tags-remove-all edit-mode) [] tags)]
       {::cimi-api-fx/operation-bulk [:nuvlabox
@@ -226,7 +226,7 @@
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
                    {:header  (cond-> (str "failure getting nuvlaboxes")
-                               status (str " (" status ")"))
+                                     status (str " (" status ")"))
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
@@ -510,7 +510,7 @@
       {:db                  (assoc db ::spec/nuvlabox-releases nil)
        ::cimi-api-fx/search [:nuvlabox-release
                              {:select  "id, release, pre-release, release-notes, url, compose-files, published"
-                              :filter   (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" (get-active-claim session) "'"))
+                              :filter  (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" (get-active-claim session) "'"))
                               :orderby "release:desc"
                               :last    10000}
                              #(dispatch [::set-nuvlabox-releases %])]})))
@@ -596,7 +596,7 @@
 (reg-event-fx
   ::change-view-type
   (fn [{{:keys [current-route]} :db} [_ new-view-type]]
-    (let [current-view  (keyword (-> current-route :query-params :view))
+    (let [current-view   (keyword (-> current-route :query-params :view))
           preferred-view {:view new-view-type}]
       {:fx [(when (#{new-view-type current-view} spec/cluster-view)
               [:dispatch [::pagination-plugin/change-page
@@ -620,8 +620,8 @@
       {:storage/set {:session? false
                      :name     uuid
                      :value    filter-string}
-       :fx [[:dispatch
-             [::main-events/open-link
-              (route-utils/name->href
-               {:route-name   ::routes/edges
-                :query-params {:filter-storage-key uuid}})]]]})))
+       :fx          [[:dispatch
+                      [::main-events/open-link
+                       (route-utils/name->href
+                         {:route-name   ::routes/edges
+                          :query-params {:filter-storage-key uuid}})]]]})))

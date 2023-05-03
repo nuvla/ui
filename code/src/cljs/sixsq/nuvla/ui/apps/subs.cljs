@@ -10,12 +10,6 @@
 
 
 (reg-sub
-  ::loading?
-  (fn [db]
-    (::spec/loading? db)))
-
-
-(reg-sub
   ::module-common
   (fn [db]
     (::spec/module-common db)))
@@ -135,11 +129,6 @@
 
 
 (reg-sub
-  ::active-input
-  ::spec/active-input)
-
-
-(reg-sub
   ::is-new?
   ::spec/is-new?)
 
@@ -227,11 +216,6 @@
 (reg-sub
   ::add-modal-visible?
   ::spec/add-modal-visible?)
-
-
-(reg-sub
-  ::add-data
-  ::spec/add-data)
 
 
 (reg-sub
@@ -344,19 +328,6 @@
 
 (reg-sub
   ::module-id-version
-  :<- [::module]
-  :<- [::versions]
-  :<- [::is-latest-version?]
-  :<- [::module-content-id]
-  (fn [[module versions is-latest? current]]
-    (let [id (:id module)]
-      (if is-latest?
-        id
-        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))))))
-
-
-(reg-sub
-  ::version
   :<- [::module]
   :<- [::versions]
   :<- [::is-latest-version?]

@@ -278,6 +278,7 @@
         :describe-deployment-set                       "Describe your deployment set"
         :description                                   "description"
         :description-cannot-be-empty                   "Description cannot be empty."
+        :description-cannot-be-template                "Please change the description before saving."
         :destination                                   "destination"
         :destination-not-found                         "Destination not found!"
         :detach                                        "detach"

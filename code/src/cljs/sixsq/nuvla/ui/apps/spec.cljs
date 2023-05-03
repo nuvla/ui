@@ -16,7 +16,30 @@
 
 (s/def ::name nonblank-string)
 
-(s/def ::description nonblank-string)
+(def apps-description-template "# App Description Placeholder
+
+This is a generic placeholder that you should replace with your own app description.
+Be sure to provide a clear and concise overview of your app, its features, and its benefits.
+
+## Licenses
+Please include information about the licenses under which that software is distributed, including any third-party or
+open-source software used by your app.
+
+## Documentation
+You can also provide a link to your app's external documentation, which should include a comprehensive guide to getting
+started with your app, as well as detailed information on how to use its various features.
+Here is an [example link](https://example.com/docs) to external documentation.
+
+## Companion apps
+If you offer companion apps, please mention them and provide links for users to install them.
+
+For more information on how to format your app description using Markdown syntax, please see the [Basic Syntax Guide](https://www.markdownguide.org/basic-syntax/) and the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/).
+
+![App Screenshot](https://sos-ch-gva-2.exo.io/nuvla-images/bb-overview-blured.png)
+
+")
+
+(s/def ::description (s/and nonblank-string #(not= apps-description-template %)))
 
 (s/def ::parent-path any?)
 

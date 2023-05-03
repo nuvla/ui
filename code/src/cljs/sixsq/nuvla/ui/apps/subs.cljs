@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.apps.subs
   (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.apps.utils :as utils]
@@ -26,6 +27,14 @@
   :<- [::module-common]
   (fn [module-common]
     (::spec/description module-common)))
+
+(reg-sub
+  ::description-or-default
+  :<- [::description]
+  (fn [description]
+    (if (str/blank? description)
+      spec/apps-description-template
+      description)))
 
 
 (reg-sub

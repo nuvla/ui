@@ -34,7 +34,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as utils-values]))
+            [sixsq.nuvla.ui.utils.values :as utils-values]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 (def edit-cell-left-padding 24)
 
@@ -496,17 +497,23 @@
 (defn Description
   [validation-event]
   (let [tr             (subscribe [::i18n-subs/tr])
-        description    (subscribe [::subs/description])
+        description    (subscribe [::subs/description-or-default])
         editable?      (subscribe [::subs/editable?])
         validate-form? (subscribe [::subs/validate-form?])]
     (fn []
-      (let [valid? (s/valid? ::spec/description @description)]
+      (let [valid?        (s/valid? ::spec/description @description)
+            templ-unchgd? (= spec/apps-description-template @description)
+            blank?        (spec-utils/nonblank-string @description)]
         [uix/Accordion
          [:<>
           [ui/Grid {:centered true
                     :columns  2}
            [ui/GridColumn
-            [:h4 "Markdown" [general-utils/mandatory-icon]]
+            [:div {:style {:display :flex
+                           :justify-content :space-between}}
+             [:h4 "Markdown" [general-utils/mandatory-icon]]
+             (when templ-unchgd? [:span {:style {:color :red}}
+                                  "Please change the description"])]
             [ui/Segment
              [uix/EditorMarkdown
               {:value     @description
@@ -521,7 +528,9 @@
                (when (not valid?)
                  [:<>
                   [ui/Label {:pointing "above", :basic true, :color "red"}
-                   (@tr [:description-cannot-be-empty])]]))]]
+                   (@tr [(if blank?
+                           :description-cannot-be-template
+                           :description-cannot-be-template)])]]))]]
            [ui/GridColumn
             [:h4 "Preview"]
             [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]

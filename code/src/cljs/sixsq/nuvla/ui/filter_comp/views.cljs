@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.filter-comp.views
   (:require [clojure.string :as str]
-            [re-frame.core :refer [dispatch subscribe]]
+            [re-frame.cofx :refer [inject-cofx]]
+            [re-frame.core :refer [dispatch reg-event-fx subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi.events :as cimi-events]
             [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
@@ -9,6 +10,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -322,6 +324,19 @@
                    (close-fn))}
      (@tr [:clear-filter])]))
 
+(reg-event-fx
+  ::call-filter-fn
+  [(inject-cofx :storage/all)]
+  (fn [{{:keys [current-route]} :db
+        storage :storage/all} [_ fn filter-query]]
+    (let [filter-storage-key (get-query-param current-route :filter-storage-key)
+          storage-filter     (get storage filter-storage-key)]
+      (fn (or storage-filter filter-query))
+      (when filter-storage-key
+        {:storage/remove {:name filter-storage-key}
+         :fx [[:dispatch [::route-events/store-in-query-param
+                          {:query-key :filter-storage-key :value nil}]]]}))))
+
 (defn ButtonFilter
   [{:keys [resource-name open? default-filter show-clear-button-outside-modal? persist? trigger-style]
     :or   {persist? true}}]
@@ -339,7 +354,7 @@
     (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
     (fn [{:keys [resource-name open? _default-filter on-done]}]
       (when (and persist? (not= @filter-query default-filter))
-        (on-done @filter-query))
+        (dispatch [::call-filter-fn on-done @filter-query]))
       (let [filter-string  (utils/data->filter-str @data)
             error         (utils/filter-syntax-error filter-string)
             active-filter? (boolean (some-> filter-string (utils/filter-str->data)))

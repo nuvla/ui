@@ -17,3 +17,7 @@
   [session]
   (or (:active-claim session)
       (:user session)))
+
+(defn get-roles
+  [session]
+  (set (some-> session :roles (str/split #"\s+"))))

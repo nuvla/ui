@@ -3,6 +3,8 @@
 
 (def dictionary
   {:en {
+        :total-price                                   "Total price"
+        :accept-prices                                 "I accept total price"
         :accept-eulas                                  "I accept all the End-User License Agreements"
         :software-versions                             "Software versions"
         :about                                         "about"

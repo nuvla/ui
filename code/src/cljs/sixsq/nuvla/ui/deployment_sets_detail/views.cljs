@@ -427,6 +427,36 @@
                                                    ::spec/licenses-accepted? %]))}]]]
       [ui/Message (tr [:eula-not-defined])])))
 
+
+(defn Prices
+  []
+  (let [tr       @(subscribe [::i18n-subs/tr])
+        prices @(subscribe [::subs/deployment-set-prices])
+        checked? @(subscribe [::subs/get ::spec/prices-accepted?])]
+    (if (seq prices)
+      [ui/Segment
+       prices
+       #_[ui/ListSA
+        (for [{:keys [name description url] :as license} prices]
+          ^{:key (str "accept-eula-" license)}
+          [ui/ListItem
+           [ui/ListIcon {:name "book"}]
+           [ui/ListContent
+            [ui/ListHeader {:as     :a
+                            :target "_blank"
+                            :href   url
+                            } name]
+            (when description
+              [ui/ListDescription description])]])]
+       [ui/Form
+        [ui/FormCheckbox {:label     (tr [:accept-prices])
+                          :required  true
+                          :checked   checked?
+                          :on-change (ui-callback/checked
+                                       #(dispatch [::events/set
+                                                   ::spec/prices-accepted? %]))}]]]
+      [ui/Message (tr [:eula-not-defined])])))
+
 (defn ConfigureSets
   []
   [ui/Tab
@@ -478,6 +508,11 @@
                 :content     [Licenses]
                 :title       (@tr [:eula])
                 :description (@tr [:eula-full])}
+               {:key         :price
+                :icon        "eur"
+                :content     [Prices]
+                :title       (str/capitalize (@tr [:price]))
+                :description (@tr [:total-price])}
                {:key         :summary
                 :icon        "info"
                 :content     [Summary]

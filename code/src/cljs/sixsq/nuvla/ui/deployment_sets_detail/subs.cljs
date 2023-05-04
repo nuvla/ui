@@ -68,11 +68,23 @@
           all-applications)))
 
 (reg-sub
+  ::deployment-set-prices
+  :<- [::applications-sets-all-applications]
+  (fn [all-applications]
+    (keep (fn [{:keys [price]}]
+            (when price price))
+          all-applications)))
+
+(reg-sub
   ::create-start-disabled?
   :<- [::get ::spec/create-name]
   :<- [::deployment-set-licenses]
   :<- [::get ::spec/licenses-accepted?]
-  (fn [[create-name licenses licenses-accepted?]]
+  :<- [::deployment-set-prices]
+  :<- [::get ::spec/prices-accepted?]
+  (fn [[create-name licenses licenses-accepted? prices prices-accepted?]]
     (or (str/blank? create-name)
         (and (seq licenses)
-             (not licenses-accepted?)))))
+             (not licenses-accepted?))
+        (and (seq prices)
+             (not prices-accepted?)))))

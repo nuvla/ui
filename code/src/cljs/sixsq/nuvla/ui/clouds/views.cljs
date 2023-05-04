@@ -47,19 +47,15 @@
        {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]]))
 
 (defn ServiceCard
-  [{:keys [id name description path subtype logo-url online]
+  [{:keys [id name description path subtype logo-url state]
     :as   infra-service}]
-  (let [status (cond
-                 (true? online) true
-                 (false? online) false
-                 :else nil)
-        href   (name->href routes/clouds-details {:uuid (general-utils/id->uuid id)})]
+  (let [href   (name->href routes/clouds-details {:uuid (general-utils/id->uuid id)})]
     [uix/Card
      {:href        href
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}
-                     [OnlineStatusIcon status]]
+                     [OnlineStatusIcon state]]
                     [edges-detail/ServiceIcon subtype]
                     (or name id)]
       :meta        path

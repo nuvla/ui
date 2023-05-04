@@ -229,13 +229,13 @@
   []
   (let [infra-service (subscribe [::subs/infrastructure-service])]
     (fn []
-      (let [{:keys [state online name id]} @infra-service]
+      (let [{:keys [state name id]} @infra-service]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
           [ui/Icon {:name "cloud"}]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
-          [OnlineStatusIcon online]
+          [OnlineStatusIcon state]
           [CompatibilityLabel @infra-service]
           [:span {:style {:font-weight "bold"}}
            "State: "]

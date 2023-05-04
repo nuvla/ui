@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- App creation - Provides a description template when creating a new app #1194
+
 ## Released
 
 ## [2.33.6] - 2023-04-28

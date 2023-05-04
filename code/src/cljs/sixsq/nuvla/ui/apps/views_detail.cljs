@@ -505,7 +505,6 @@
       (let [valid? (and
                      (s/valid? ::spec/description @description)
                      (not @is-template?))]
-(tap> ["valid?" valid?])
         [uix/Accordion
          [:<>
           [ui/Grid {:centered true

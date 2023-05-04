@@ -79,12 +79,6 @@
     (assoc db ::spec/validate-form? validate-form?)))
 
 
-(reg-event-db
-  ::set-module-spec
-  (fn [db [_ module-spec]]
-    (assoc db ::spec/module-spec module-spec)))
-
-
 ; Perform form validation if validate-form? is true.
 (reg-event-db
   ::validate-form
@@ -97,13 +91,11 @@
           valid?         (if validate-form?
                            (and
                              (s/valid? ::spec/module-common module-common)
+                             (not=
+                               (utils/subtype->descr-template module-subtype)
+                               (::spec/description module-common))
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
-      ; Helpful to debug validation issues
-      ;(log/error "module-common validate: "
-      ;           (s/explain-str ::spec/module-common module-common))
-      ;(log/error "optional form validate: "
-      ;           (s/explain-str form-spec module))
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -118,12 +110,6 @@
   ::active-input
   (fn [db [_ input-name]]
     (assoc db ::spec/active-input input-name)))
-
-
-(reg-event-db
-  ::form-invalid
-  (fn [db [_]]
-    (assoc db ::spec/form-valid? false)))
 
 
 (reg-event-db

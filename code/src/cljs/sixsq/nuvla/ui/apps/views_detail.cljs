@@ -496,50 +496,48 @@
 
 (defn Description
   [validation-event]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        description      (subscribe [::subs/description])
-        editable?        (subscribe [::subs/editable?])
-        validate-form?   (subscribe [::subs/validate-form?])
-        is-template?     (subscribe [::subs/is-description-template?])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        description    (subscribe [::subs/description])
+        editable?      (subscribe [::subs/editable?])
+        validate-form? (subscribe [::subs/validate-form?])
+        is-template?   (subscribe [::subs/is-description-template?])
+        descr-valid?   (subscribe [::subs/is-description-valid?])]
     (fn []
-      (let [valid? (and
-                     (s/valid? ::spec/description @description)
-                     (not @is-template?))]
-        [uix/Accordion
-         [:<>
-          [ui/Grid {:centered true
-                    :columns  2}
-           [ui/GridColumn
-            [:div {:style {:display :flex
-                           :justify-content :space-between}}
-             [:h4 "Markdown" [general-utils/mandatory-icon]]
-             [:span {:style {:color :red}}
-              (when @is-template?
-                (@tr [:description-change-please]))]]
-            [ui/Segment
-             [uix/EditorMarkdown
-              {:value     @description
-               :on-change (fn [value]
-                            (dispatch [::events/description value])
-                            (dispatch [::main-events/changes-protection? true])
-                            (dispatch [::events/validate-form]))
-               :read-only (not @editable?)}]
-             (when @validate-form?
-               (when validation-event
-                 (dispatch [validation-event "description" (not valid?)]))
-               (when (not valid?)
-                 [:<>
-                  [ui/Label {:pointing "above", :basic true, :color "red"}
-                   (@tr [(if (spec-utils/nonblank-string @description)
-                           :description-cannot-be-template
-                           :description-cannot-be-empty)])]]))]]
-           [ui/GridColumn
-            [:h4 "Preview"]
-            [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
-         :title-size   :h4
-         :title-class  :tab-app-detail
-         :label        (str/capitalize (@tr [:description]))
-         :default-open true]))))
+      [uix/Accordion
+       [:<>
+        [ui/Grid {:centered true
+                  :columns  2}
+         [ui/GridColumn
+          [:div {:style {:display :flex
+                         :justify-content :space-between}}
+           [:h4 "Markdown" [general-utils/mandatory-icon]]
+           [:span {:style {:color :red}}
+            (when @is-template?
+              (@tr [:description-change-please]))]]
+          [ui/Segment
+           [uix/EditorMarkdown
+            {:value     @description
+             :on-change (fn [value]
+                          (dispatch [::events/description value])
+                          (dispatch [::main-events/changes-protection? true])
+                          (dispatch [::events/validate-form]))
+             :read-only (not @editable?)}]
+           (when @validate-form?
+             (when validation-event
+               (dispatch [validation-event "description" (not @descr-valid?)]))
+             (when (not @descr-valid?)
+               [:<>
+                [ui/Label {:pointing "above", :basic true, :color "red"}
+                 (@tr [(if (spec-utils/nonblank-string @description)
+                         :description-cannot-be-template
+                         :description-cannot-be-empty)])]]))]]
+         [ui/GridColumn
+          [:h4 "Preview"]
+          [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
+       :title-size   :h4
+       :title-class  :tab-app-detail
+       :label        (str/capitalize (@tr [:description]))
+       :default-open true])))
 
 
 (defn Tags

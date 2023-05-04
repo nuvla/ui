@@ -23,10 +23,10 @@
 
 (reg-sub
   ::is-description-template?
-  :<- [::description]
   :<- [::module-subtype]
-  (fn [[description module-subtype]]
-    (= description (utils/subtype->descr-template module-subtype))))
+  :<- [::description]
+  (fn [[module-subtype description]]
+    (not (utils/descr-not-template? module-subtype description))))
 
 (reg-sub
   ::module-subtype
@@ -119,6 +119,13 @@
   (fn [db]
     #_:clj-kondo/ignore
     (not (empty? (::spec/details-validation-errors db)))))
+
+(reg-sub
+  ::is-description-valid?
+  :<- [::module-subtype]
+  :<- [::description]
+  (fn [[sub-type description]]
+    (utils/description-valid? sub-type description)))
 
 ; Is the form valid?
 

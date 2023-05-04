@@ -90,10 +90,8 @@
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form?
                            (and
-                             (s/valid? ::spec/module-common module-common)
-                             (not=
-                               (utils/subtype->descr-template module-subtype)
-                               (::spec/description module-common))
+                             (utils/module-common-valid?
+                               module-common module-subtype)
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
       (assoc db ::spec/form-valid? valid?))))

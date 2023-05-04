@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployments.events
-  (:require [clojure.set :as set]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.spec :as spec]
@@ -183,29 +182,6 @@
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
 
-(reg-event-db
-  ::select-id
-  (fn [{:keys [::spec/selected-set] :as db} [_ id]]
-    (let [fn (if (utils/is-selected? selected-set id) disj conj)]
-      (update db ::spec/selected-set fn id))))
-
-(reg-event-db
-  ::select-all-page
-  (fn [{:keys [::spec/selected-set
-               ::spec/deployments] :as db} _]
-    (let [visible-dep-ids    (utils/visible-deployment-ids deployments)
-          all-page-selected? (utils/all-page-selected? selected-set visible-dep-ids)
-          fn                 (if all-page-selected? set/difference set/union)]
-      (-> db
-          (update ::spec/selected-set fn visible-dep-ids)
-          (assoc ::spec/select-all? false)))))
-
-(reg-event-db
-  ::select-all
-  (fn [db]
-    (-> db
-        (update ::spec/select-all? not)
-        (assoc ::spec/selected-set #{}))))
 
 (reg-event-db
   ::reset-selected-set

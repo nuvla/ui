@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- App creation - Provides a description template when creating a new app #1194
+- App creation - Provides a description template when creating a new app or project #1194
 
 ## Released
 

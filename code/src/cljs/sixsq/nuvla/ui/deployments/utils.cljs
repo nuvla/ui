@@ -9,7 +9,8 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
 
 (def ^:const STARTED "STARTED")
 (def ^:const STARTING "STARTING")
@@ -94,20 +95,34 @@
 
 (defn state-filter
   [state]
-  (if (= state STARTING)
-    "state='RUNNING' or state='PENDING' or state='CREATED'"
+  (case state
+    ("all" nil) nil
+    STARTING "state='RUNNING' or state='PENDING' or state='CREATED'"
     (str "state='" state "'")))
 
 (defn get-filter-param
-  [{:keys [full-text-search additional-filter state-selector filter-external]
-    :as   _args}]
-  (let [filter-state (when state-selector (state-filter state-selector))]
+  [{:keys [full-text-search additional-filter state-selector filter-external]}]
+  (let [filter-state (state-filter state-selector)]
     (general-utils/join-and
       "id!=null"
       filter-state
       filter-external
       full-text-search
       additional-filter)))
+
+(defn build-bulk-filter
+  ([{:keys [::spec/additional-filter
+            ::spec/state-selector
+            ::spec/select] :as db}]
+   (table-plugin/build-bulk-filter
+     select
+     (get-filter-param
+       {:full-text-search  (full-text-search-plugin/filter-text
+                             db [::spec/deployments-search])
+        :additional-filter additional-filter
+        :state-selector    (when-not (= "all" state-selector) state-selector)
+        :module-id         nil}))))
+
 
 (defn get-query-params-summary
   [full-text-search additional-filter]
@@ -159,23 +174,6 @@
                       :else nil)]
          label)])))
 
-(defn build-bulk-filter
-  ([{:keys [::spec/select-all?
-            ::spec/selected-set] :as db}]
-   (build-bulk-filter db {:select-all? select-all? :selected-set selected-set}))
-  ([{:keys [::spec/additional-filter
-            ::spec/state-selector] :as db}
-    {:keys [selected-set select-all?]}]
-   (if select-all?
-     (get-filter-param
-      {:full-text-search  (full-text-search-plugin/filter-text
-                           db [::spec/deployments-search])
-       :additional-filter additional-filter
-       :state-selector    (when-not (= "all" state-selector) state-selector)
-       :module-id         nil})
-     (->> selected-set
-          (map #(str "id='" % "'"))
-          (apply general-utils/join-or)))))
 
 (defn deployment-version
   [{{:keys [versions content]} :module :as _deployment}]

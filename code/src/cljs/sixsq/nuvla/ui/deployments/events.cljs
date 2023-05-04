@@ -71,14 +71,13 @@
                 ::spec/filter-external
                 ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path external-filter-only?]}]]
     (let [filter-external (or filter-external-arg filter-external)
-          state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param
                             (if external-filter-only?
                               {:filter-external filter-external}
                               {:full-text-search  (full-text-search-plugin/filter-text
                                                     db [::spec/deployments-search])
                                :additional-filter additional-filter
-                               :state-selector   state
+                               :state-selector   state-selector
                                :filter-external   filter-external}))]
       {:db                  (assoc db ::spec/filter-external filter-external)
        ::cimi-api-fx/search [:deployment
@@ -164,7 +163,7 @@
       {::cimi-api-fx/search
        [:deployment {:last        0
                      :aggregation "terms:module/id"
-                     :filter      (utils/build-bulk-filter db)}
+                     :filter      filter-str}
         #(let [buckets      (get-in % [:aggregations :terms:module/id :buckets])
                same-module? (= (count buckets) 1)
                module-href  (when same-module? (-> buckets first :key))]

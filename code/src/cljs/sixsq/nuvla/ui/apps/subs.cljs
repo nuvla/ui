@@ -21,6 +21,12 @@
   (fn [module-common]
     (::spec/description module-common)))
 
+(reg-sub
+  ::is-description-template?
+  :<- [::description]
+  :<- [::module-subtype]
+  (fn [[description module-subtype]]
+    (= description (utils/subtype->descr-template module-subtype))))
 
 (reg-sub
   ::module-subtype

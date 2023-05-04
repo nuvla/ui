@@ -496,16 +496,16 @@
 
 (defn Description
   [validation-event]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        description    (subscribe [::subs/description])
-        editable?      (subscribe [::subs/editable?])
-        validate-form? (subscribe [::subs/validate-form?])
-        untouched?     (r/atom true)]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        description      (subscribe [::subs/description])
+        editable?        (subscribe [::subs/editable?])
+        validate-form?   (subscribe [::subs/validate-form?])
+        is-template?     (subscribe [::subs/is-description-template?])]
     (fn []
-      (let [descr-text    (if (and (str/blank? @description) @untouched?)
-                            spec/apps-description-template
-                            @description)
-            valid?        (s/valid? ::spec/description descr-text)]
+      (let [valid? (and
+                     (s/valid? ::spec/description @description)
+                     (not @is-template?))]
+(tap> ["valid?" valid?])
         [uix/Accordion
          [:<>
           [ui/Grid {:centered true
@@ -515,13 +515,12 @@
                            :justify-content :space-between}}
              [:h4 "Markdown" [general-utils/mandatory-icon]]
              [:span {:style {:color :red}}
-              (when (= spec/apps-description-template descr-text)
+              (when @is-template?
                 (@tr [:description-change-please]))]]
             [ui/Segment
              [uix/EditorMarkdown
-              {:value     descr-text
+              {:value     @description
                :on-change (fn [value]
-                            (reset! untouched? false)
                             (dispatch [::events/description value])
                             (dispatch [::main-events/changes-protection? true])
                             (dispatch [::events/validate-form]))
@@ -532,12 +531,12 @@
                (when (not valid?)
                  [:<>
                   [ui/Label {:pointing "above", :basic true, :color "red"}
-                   (@tr [(if (spec-utils/nonblank-string descr-text)
-                           :description-cannot-be-empty
-                           :description-cannot-be-template)])]]))]]
+                   (@tr [(if (spec-utils/nonblank-string @description)
+                           :description-cannot-be-template
+                           :description-cannot-be-empty)])]]))]]
            [ui/GridColumn
             [:h4 "Preview"]
-            [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} descr-text]]]]]
+            [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
          :title-size   :h4
          :title-class  :tab-app-detail
          :label        (str/capitalize (@tr [:description]))

@@ -451,8 +451,9 @@
          [ui/TableHeader
           [ui/TableRow
            [ui/TableHeaderCell (str/capitalize (tr [:application]))]
-           [ui/TableHeaderCell {:text-align "right"} (str/capitalize (tr [:count]))]
-           [ui/TableHeaderCell {:text-align "right"} (tr [:amount])]]]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-unit-price])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:quantity])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-price])]]]
          [ui/TableBody
           (for [{:keys [i targets-count total-price application]} apps-targets-total-price]
             ^{:key (str "price-" i "-" (:id application))}
@@ -460,10 +461,13 @@
              [ui/TableCell [values/AsLink (:path application)
                             :label (or (:name application)
                                        (:id application)) :page "apps"]]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money
+                                                   (/ (get-in application [:price :cent-amount-daily]) 100))]
              [ui/TableCell {:text-align "right"} targets-count]
              [ui/TableCell {:text-align "right"} (general-utils/format-money (/ total-price 100))]])
           [ui/TableRow {:active true}
            [ui/TableCell [:b (str/capitalize (tr [:total]))]]
+           [ui/TableCell]
            [ui/TableCell]
            [ui/TableCell {:text-align "right"}
             [:b (str (tr [:total-price]) ": " (general-utils/format-money (/ dep-set-total-price 100)) "/" (tr [:day]))]]]]]
@@ -493,8 +497,6 @@
   []
   [ui/Segment (merge style/basic {:clearing true})
    [AppsSets {:summary-page true}]
-   [ui/Segment
-    [:p "Section to accept prices. List apps with price multiply by number of targets. Estimated total price per day. User can't create deployment accept estimated price not checked."]]
    [CreateStartButton]]
   )
 

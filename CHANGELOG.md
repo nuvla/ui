@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Clouds page - Fixes colours of state icon, bugfix #1223
 - Enables bulk actions in table plugin - Moves deployments bulk action feature
   to table plugin #1180
 - Edges overview, table view - Enables bulk editing of tags #1194

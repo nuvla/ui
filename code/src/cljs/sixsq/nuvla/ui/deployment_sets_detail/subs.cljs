@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub subscribe]]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]))

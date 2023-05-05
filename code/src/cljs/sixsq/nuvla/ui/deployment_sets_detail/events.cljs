@@ -4,6 +4,7 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -216,7 +217,7 @@
 
 (defn applications-sets->overwrites
   [db i {:keys [applications] :as _applications-sets}]
-  (let [targets                 (map :id (target-selector/db-selected db [::spec/apps-sets i ::spec/targets]))
+  (let [targets                 (subs/get-db-targets-selected-ids db i)
         applications-overwrites (->> applications
                                      (map (partial application-overwrites db i))
                                      (remove nil?))]

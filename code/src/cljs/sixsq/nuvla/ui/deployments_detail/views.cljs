@@ -104,7 +104,6 @@
                (@tr [:copy-to-clipboard]))
         :else url-pattern)]]))
 
-
 (defn url-to-button
   ([url-name url-pattern] (url-to-button url-name url-pattern false))
   ([url-name url-pattern primary?]

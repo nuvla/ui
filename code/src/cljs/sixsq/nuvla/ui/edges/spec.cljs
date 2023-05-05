@@ -2,7 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [build-ordering]]))
+            [sixsq.nuvla.ui.plugins.table :refer [build-ordering] :as table-plugin]))
 
 (def resource-name "nuvlabox")
 
@@ -25,6 +25,9 @@
 (s/def ::state-selector #{"all" "new" "activated" "commissioned"
                           "decommissioning" "decommissioned" "error"})
 (s/def ::vpn-infra any?)
+(s/def ::edges-tags (s/nilable (s/* string?)))
+(s/def ::select (s/nilable any?))
+(s/def ::edges-without-edit-rights any?)
 
 ; ssh key association
 (s/def ::ssh-keys-available any?)
@@ -54,6 +57,16 @@
 
 (def view-types [cards-view table-view map-view cluster-view])
 
+
+(def modal-add-id ::add)
+(def modal-tags-set-id ::tags-set)
+(def modal-tags-add-id ::tags-add)
+(def modal-tags-remove-id ::tags-remove)
+(def modal-tags-remove-all ::tags-remove-all)
+
+(def tags-modal-ids [modal-tags-add-id modal-tags-set-id modal-tags-remove-id modal-tags-remove-all])
+
+
 (def defaults
   {::nuvlaboxes                    nil
    ::next-heartbeats-offline-edges nil
@@ -76,7 +89,9 @@
    ::nuvlabox-playbooks-cronjob    nil
    ::ordering                      (build-ordering)
    ::edges-search                  (full-text-search-plugin/build-spec)
-   ::additional-filter              nil})
+   ::additional-filter             nil
+   ::select                        (table-plugin/build-bulk-edit-spec)
+   })
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 25)})

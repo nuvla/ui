@@ -46,7 +46,7 @@
                        (dissoc :text)
                        (dissoc :icon)
                        (assoc :aria-label text))]
-    [ui/Button final-opts (when icon [ui/Icon {:name icon}]) text]))
+    [ui/Button final-opts (when icon [Icon {:name icon}]) text]))
 
 
 (defn MenuItem

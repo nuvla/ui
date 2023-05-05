@@ -10,7 +10,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await expect(page).toHaveURL(edgesPageRegex);
 
-  await page.getByText('Add').click();
+  await page.getByText('Add', { exact: true }).click();
 
   await page.getByText('bluetooth').click();
 
@@ -39,6 +39,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page
     .locator('span:has-text("Enabled and ready to be used. Please copy this cronjob and add it to your system") i')
     .click();
+  await page.pause();
 
   await page.locator('.close').click();
 

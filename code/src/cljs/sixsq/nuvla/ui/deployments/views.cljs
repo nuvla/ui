@@ -16,7 +16,7 @@
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.plugins.table :refer [LegacyTable]]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -218,32 +218,33 @@
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
-        [Table {:columns     [(when show-options?
-                                {:no-sort? true
-                                 :header-content
-                                 [ui/Checkbox
-                                  {:checked  @is-all-page-selected?
-                                   :on-click #(dispatch [::events/select-all-page])}]})
-                              {:field-key :id}
-                              (when-not no-module-name
-                                {:field-key      :module.name
-                                 :header-content (@tr [:module])})
-                              {:field-key :version :no-sort? true}
-                              {:field-key :status
-                               :sort-key  :state}
-                              {:field-key :url
-                               :no-sort?  true}
-                              {:field-key :created}
-                              {:field-key :created-by}
-                              {:field-key :infrastructure
-                               :no-sort?  true}
-                              (when show-options? {:field-key :actions
-                                                   :no-sort?  true})]
-                :rows        deployments-list
-                :sort-config {:db-path     ::spec/ordering
-                             :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                :row-render  (fn [deployment] [RowFn deployment options])
-                :table-props (merge style/single-line {:stackable true})}]))))
+        [LegacyTable
+         {:columns     [(when show-options?
+                          {:no-sort? true
+                           :header-content
+                           [ui/Checkbox
+                            {:checked  @is-all-page-selected?
+                             :on-click #(dispatch [::events/select-all-page])}]})
+                        {:field-key :id}
+                        (when-not no-module-name
+                          {:field-key      :module.name
+                           :header-content (@tr [:module])})
+                        {:field-key :version :no-sort? true}
+                        {:field-key :status
+                         :sort-key  :state}
+                        {:field-key :url
+                         :no-sort?  true}
+                        {:field-key :created}
+                        {:field-key :created-by}
+                        {:field-key :infrastructure
+                         :no-sort?  true}
+                        (when show-options? {:field-key :actions
+                                             :no-sort?  true})]
+          :rows        deployments-list
+          :sort-config {:db-path     ::spec/ordering
+                        :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+          :row-render  (fn [deployment] [RowFn deployment options])
+          :table-props (merge style/single-line {:stackable true})}]))))
 
 
 (defn DeploymentCard

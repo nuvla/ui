@@ -2,7 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
 - App creation - Provides a description template when creating a new app or project #1194
+- Enables bulk actions in table plugin - Moves deployments bulk action feature
+  to table plugin #1180
+- Edges overview, table view - Enables bulk editing of tags #1194
 
 ## Released
 

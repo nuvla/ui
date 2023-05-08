@@ -90,13 +90,16 @@
                (doall
                  (for [[i {:keys [value text icon level]}] (map-indexed vector visible-opts)]
                    ^{:key value}
-                   [ui/DropdownItem {:on-click #(on-click value)
-                                     :selected (= i @cursor)}
-                    [:span (str/join (repeat (* level 5) ff/nbsp))]
-                    [ui/Icon {:name icon}]
-                    (if (= @active-claim value)
-                      [:b {:style {:color "#c10e12"}} text]
-                      text)]))]
+                   [:<>
+                    (when (and (zero? level) (pos? i))
+                      [ui/DropdownDivider])
+                    [ui/DropdownItem {:on-click #(on-click value)
+                                      :selected (= i @cursor)}
+                     [:span (str/join (repeat (* level 5) ff/nbsp))]
+                     [ui/Icon {:name icon}]
+                     (if (= @active-claim value)
+                       [:b {:style {:color "#c10e12"}} text]
+                       text)]]))]
               [ui/DropdownDivider]
               [ui/DropdownItem
                {:text     "show subgroups resources"

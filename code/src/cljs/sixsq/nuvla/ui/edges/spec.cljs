@@ -48,6 +48,8 @@
 
 (def default-ordering {:field :created :order "desc"})
 
+(s/def ::select (s/nilable any?))
+
 (def local-storage-key "nuvla.ui.edges-preferences")
 
 (def cards-view :cards)

@@ -484,6 +484,15 @@ body .nuvla-deployments a {
   --accent-color: var(--edges-color);
 }
 
+.bulk-action-bar-item {
+  background-color: rgb(249 250 251) !important;
+}
+
+.bulk-action-bar-item:hover {
+  background-color: rgb(242 243 244) !important;
+  cursor: pointer;
+}
+
 button.select-all {
   all: unset;
   cursor: pointer;

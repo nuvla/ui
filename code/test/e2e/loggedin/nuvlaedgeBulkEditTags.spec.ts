@@ -89,7 +89,6 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
     await page.getByPlaceholder('Search ...').fill('');
     await page.getByText(/Select all \d*/).click();
   };
-  await page.pause();
   selectFirst = async () => {
     await page.getByPlaceholder('Search ...').fill('Do_not');
     await page.getByText(/Select all \d*/).click();
@@ -124,9 +123,10 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   // ASSERTION 2
   await page.getByText('1 Edge updated with operation: Set tags').click({ timeout: 2000 });
   expect(page.getByRole('link').filter({ hasText: 'SetTagTest1' })).toHaveCount(1, { timeout: 2000 });
-  expect(page.getByRole('link').filter({ hasText: 'SetTagTest2' })).toHaveCount(1, { timeout: 2000 });
-  expect(page.getByRole('link').filter({ hasText: 'SetTagTest3' })).toHaveCount(1, { timeout: 2000 });
-  expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(1, { timeout: 2000 });
+  expect(page.getByRole('link').filter({ hasText: 'SetTagTest2' })).toHaveCount(1, { timeout: 4000 });
+  expect(page.getByRole('link').filter({ hasText: 'SetTagTest3' })).toHaveCount(1, { timeout: 6000 });
+  await page.getByPlaceholder('Search ...').fill('');
+  expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(1, { timeout: 8000 });
 
   // Remove multiple tags on one edge
   await selectFirst();

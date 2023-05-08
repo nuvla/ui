@@ -24,4 +24,5 @@
    ::bulk-jobs                 (bulk-progress-plugin/build-spec)
    ::create-name               ""
    ::create-description        ""
-   ::licenses-accepted?        false})
+   ::licenses-accepted?        false
+   ::prices-accepted?          false})

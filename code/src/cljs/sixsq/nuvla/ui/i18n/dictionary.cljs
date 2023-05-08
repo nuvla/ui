@@ -3,6 +3,11 @@
 
 (def dictionary
   {:en {
+        :daily-price                                   "Daily price"
+        :daily-unit-price                              "Daily unit price"
+        :quantity                                      "Quantity"
+        :total-price                                   "Total price"
+        :accept-prices                                 "I accept total price"
         :accept-eulas                                  "I accept all the End-User License Agreements"
         :software-versions                             "Software versions"
         :about                                         "about"
@@ -979,6 +984,9 @@
         }
 
    :fr {
+        :daily-price                                   "Prix journalier"
+        :daily-unit-price                              "Prix unitaire journalier"
+        :quantity                                      "Quantité"
         :software-versions                             "Versions logicielles"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"

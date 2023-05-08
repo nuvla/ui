@@ -436,7 +436,7 @@
                   :color "teal"
                   :style {:margin-top 10, :max-height 150, :overflow "auto"}}
    (for [tag tags]
-     ^{:key (str uuid "_" tag)}
+     ^{:key (random-uuid)}
      [ui/Popup
       {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
                                       (utils-general/truncate tag 20)])

@@ -33,9 +33,9 @@
     (let [pattern-in-params (re-seq #"\$\{([^}]+)\}+" url-pattern)
           pattern-value     (map (fn [[param-pattern param-name]]
                                    (some->> (get deployment-parameters param-name)
-                                            :value
-                                            (conj [param-pattern])))
-                                 pattern-in-params)]
+                                     :value
+                                     (conj [param-pattern])))
+                              pattern-in-params)]
       (when (every? some? pattern-value)
         (reduce
           (fn [url [param-pattern param-value]]
@@ -56,10 +56,10 @@
 (defn is-value-positive?
   [entry]
   (->> entry
-       second
-       :value
-       general-utils/str->int
-       positive-number?))
+    second
+    :value
+    general-utils/str->int
+    positive-number?))
 
 (defn running-replicas?
   "Extracts the number of running replicas and returns true if the number is
@@ -67,9 +67,9 @@
   [deployment-parameters]
   (if (seq deployment-parameters)
     (->> deployment-parameters
-         (filter is-replicas-running?)
-         (map is-value-positive?)
-         (every? true?))                                    ;; careful, this returns true for an empty collection!
+      (filter is-replicas-running?)
+      (map is-value-positive?)
+      (every? true?))                                    ;; careful, this returns true for an empty collection!
     false))
 
 (defn deployment-in-transition?
@@ -117,11 +117,11 @@
    (table-plugin/build-bulk-filter
      select
      (get-filter-param
-       {:full-text-search  (full-text-search-plugin/filter-text
-                             db [::spec/deployments-search])
+       {:full-text-search (full-text-search-plugin/filter-text
+                            db [::spec/deployments-search])
         :additional-filter additional-filter
-        :state-selector    (when-not (= "all" state-selector) state-selector)
-        :module-id         nil}))))
+        :state-selector   state-selector
+        :module-id        nil}))))
 
 
 (defn get-query-params-summary
@@ -133,7 +133,7 @@
              :aggregation aggregate
              :first       0
              :last        0}
-            (not (str/blank? filter-str)) (assoc :filter filter-str))))
+      (not (str/blank? filter-str)) (assoc :filter filter-str))))
 
 (defn is-selected?
   [selected-set id]
@@ -142,9 +142,9 @@
 (defn visible-deployment-ids
   [deployments]
   (->> deployments
-       :resources
-       (map :id)
-       set))
+    :resources
+    (map :id)
+    set))
 
 (defn all-page-selected?
   [selected-set visible-deps-ids-set]
@@ -156,28 +156,28 @@
    & {:keys [link] :or {link true}}]
   (let [href  (or nuvlabox infrastructure-service parent)
         label (or nuvlabox-name
-                  infrastructure-service-name
-                  credential-name
-                  (some-> href general-utils/id->short-uuid))]
+                infrastructure-service-name
+                credential-name
+                (some-> href general-utils/id->short-uuid))]
     (when href
       [:<>
        [ui/Icon {:name (cond nuvlabox "box"
-                             infrastructure-service "cloud"
-                             parent "key"
-                             :else nil)}]
+                         infrastructure-service "cloud"
+                         parent "key"
+                         :else nil)}]
        (if link
          [values/AsLink (general-utils/id->uuid href)
           :label label
           :page (cond nuvlabox "edges"
-                      infrastructure-service "clouds"
-                      parent "api/credential"
-                      :else nil)]
+                  infrastructure-service "clouds"
+                  parent "api/credential"
+                  :else nil)]
          label)])))
 
 
 (defn deployment-version
   [{{:keys [versions content]} :module :as _deployment}]
   (when-let [version (some-> versions
-                             apps-utils/map-versions-index
-                             (apps-utils/find-current-version (:id content)))]
+                       apps-utils/map-versions-index
+                       (apps-utils/find-current-version (:id content)))]
     (str "v" version)))

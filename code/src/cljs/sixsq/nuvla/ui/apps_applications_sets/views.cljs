@@ -84,10 +84,12 @@
                                  :onClick on-done}]}]))))
 
 (defn AppNameIcon
-  [{:keys [subtype name] module-id :id} on-delete]
+  [{:keys [subtype name path] module-id :id} on-delete]
   [ui/ListItem
    [apps-utils/SubtypeDockerK8sListIcon subtype]
-   [ui/ListContent (or name module-id) " "
+   [ui/ListContent
+    [values/AsLink path :label (or name module-id) :page "apps"]
+    " "
     (when on-delete
       [ui/Icon {:name     "close" :color "red" :link true
                 :on-click #(on-delete module-id)}])]])

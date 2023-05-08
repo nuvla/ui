@@ -398,6 +398,9 @@
                                   :href    id}]])})
                ) applications)}])
 
+(defn BoldLabel
+  [txt]
+  [:label [:b txt]])
 
 (defn Licenses
   []
@@ -406,8 +409,8 @@
         checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
     (if (seq licenses)
       [ui/Segment
-       [ui/ListSA
-        (for [{:keys [name description url] :as license} licenses]
+       [ui/ListSA {:bulleted true}
+        (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
           ^{:key (str "accept-eula-" license)}
           [ui/ListItem
            [ui/ListIcon {:name "book"}]
@@ -417,15 +420,65 @@
                             :href   url
                             } name]
             (when description
-              [ui/ListDescription description])]])]
+              [ui/ListDescription description])
+            [ui/ListList
+             (for [{i                      :i
+                    {:keys [id name path]} :application} sets-apps-targets]
+               ^{:key (str "license-" i "-" id)}
+               [ui/ListItem
+                [ui/ListContent
+                 [ui/ListHeader
+                  [values/AsLink path :label (or name id) :page "apps"]]]])]]])]
        [ui/Form
-        [ui/FormCheckbox {:label     (tr [:accept-eulas])
+        [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
                           :required  true
                           :checked   checked?
                           :on-change (ui-callback/checked
                                        #(dispatch [::events/set
                                                    ::spec/licenses-accepted? %]))}]]]
       [ui/Message (tr [:eula-not-defined])])))
+
+(defn Prices
+  []
+  (let [tr                       @(subscribe [::i18n-subs/tr])
+        apps-targets-total-price @(subscribe [::subs/deployment-set-apps-targets-total-price])
+        checked?                 @(subscribe [::subs/get ::spec/prices-accepted?])
+        dep-set-total-price      @(subscribe [::subs/deployment-set-total-price])]
+    [ui/Segment
+     (if (seq apps-targets-total-price)
+       [:<>
+        [ui/Table
+         [ui/TableHeader
+          [ui/TableRow
+           [ui/TableHeaderCell (str/capitalize (tr [:application]))]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-unit-price])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:quantity])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-price])]]]
+         [ui/TableBody
+          (for [{:keys [i targets-count total-price application]} apps-targets-total-price]
+            ^{:key (str "price-" i "-" (:id application))}
+            [ui/TableRow
+             [ui/TableCell [values/AsLink (:path application)
+                            :label (or (:name application)
+                                       (:id application)) :page "apps"]]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money
+                                                   (/ (get-in application [:price :cent-amount-daily]) 100))]
+             [ui/TableCell {:text-align "right"} targets-count]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money (/ total-price 100))]])
+          [ui/TableRow {:active true}
+           [ui/TableCell [:b (str/capitalize (tr [:total]))]]
+           [ui/TableCell]
+           [ui/TableCell]
+           [ui/TableCell {:text-align "right"}
+            [:b (str (tr [:total-price]) ": " (general-utils/format-money (/ dep-set-total-price 100)) "/" (tr [:day]))]]]]]
+        [ui/Form {:size "big"}
+         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-prices])])
+                           :required  true
+                           :checked   checked?
+                           :on-change (ui-callback/checked
+                                        #(dispatch [::events/set
+                                                    ::spec/prices-accepted? %]))}]]]
+       [ui/Message (tr [:free-app])])]))
 
 (defn ConfigureSets
   []
@@ -444,8 +497,6 @@
   []
   [ui/Segment (merge style/basic {:clearing true})
    [AppsSets {:summary-page true}]
-   [ui/Segment
-    [:p "Section to accept prices. List apps with price multiply by number of targets. Estimated total price per day. User can't create deployment accept estimated price not checked."]]
    [CreateStartButton]]
   )
 
@@ -478,6 +529,11 @@
                 :content     [Licenses]
                 :title       (@tr [:eula])
                 :description (@tr [:eula-full])}
+               {:key         :price
+                :icon        "eur"
+                :content     [Prices]
+                :title       (str/capitalize (@tr [:price]))
+                :description (@tr [:total-price])}
                {:key         :summary
                 :icon        "info"
                 :content     [Summary]

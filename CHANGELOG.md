@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+
+- App creation - Provides a description template when creating a new app or project #1194
 - Clouds page - Fixes colours of state icon, bugfix #1223
 - Enables bulk actions in table plugin - Moves deployments bulk action feature
   to table plugin #1180

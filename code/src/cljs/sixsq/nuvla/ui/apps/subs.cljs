@@ -10,12 +10,6 @@
 
 
 (reg-sub
-  ::loading?
-  (fn [db]
-    (::spec/loading? db)))
-
-
-(reg-sub
   ::module-common
   (fn [db]
     (::spec/module-common db)))
@@ -27,6 +21,12 @@
   (fn [module-common]
     (::spec/description module-common)))
 
+(reg-sub
+  ::is-description-template?
+  :<- [::module-subtype]
+  :<- [::description]
+  (fn [[module-subtype description]]
+    (not (utils/descr-not-template? module-subtype description))))
 
 (reg-sub
   ::module-subtype
@@ -120,6 +120,13 @@
     #_:clj-kondo/ignore
     (not (empty? (::spec/details-validation-errors db)))))
 
+(reg-sub
+  ::is-description-valid?
+  :<- [::module-subtype]
+  :<- [::description]
+  (fn [[sub-type description]]
+    (utils/description-valid? sub-type description)))
+
 ; Is the form valid?
 
 (reg-sub
@@ -132,11 +139,6 @@
 (reg-sub
   ::validate-form?
   ::spec/validate-form?)
-
-
-(reg-sub
-  ::active-input
-  ::spec/active-input)
 
 
 (reg-sub
@@ -227,11 +229,6 @@
 (reg-sub
   ::add-modal-visible?
   ::spec/add-modal-visible?)
-
-
-(reg-sub
-  ::add-data
-  ::spec/add-data)
 
 
 (reg-sub
@@ -344,19 +341,6 @@
 
 (reg-sub
   ::module-id-version
-  :<- [::module]
-  :<- [::versions]
-  :<- [::is-latest-version?]
-  :<- [::module-content-id]
-  (fn [[module versions is-latest? current]]
-    (let [id (:id module)]
-      (if is-latest?
-        id
-        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))))))
-
-
-(reg-sub
-  ::version
   :<- [::module]
   :<- [::versions]
   :<- [::is-latest-version?]

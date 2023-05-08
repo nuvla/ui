@@ -3,7 +3,6 @@
             [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.edges.events :as events]
-            [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.table :as table-plugin]
@@ -114,7 +113,7 @@
         opened-modal     (subscribe [::edit-mode db-path])
         open?            (subscribe [::bulk-modal-visible? db-path])
         used-tags        (subscribe [tags-sub-key])
-        view-only-edges  (subscribe [no-edit-rights-sub-key])
+        view-only-items  (subscribe [no-edit-rights-sub-key])
         form-tags        (r/atom [])
         mode->tag-color  (zipmap tags-modal-ids [:teal :teal :red :red])]
     (fn []
@@ -125,7 +124,7 @@
                            (when (= modal-tags-remove-all edit-mode)
                              (reset! form-tags []))
                            (dispatch [open-modal-event edit-mode]))
-            not-editable (:count @view-only-edges)]
+            not-editable (:count @view-only-items)]
         [ui/Modal {:open       @open?
                    :close-icon true
                    :on-close   close-fn}
@@ -167,6 +166,6 @@
                             [::events/store-filter-and-open-in-new-tab
                              (str/join " or "
                                        (map #(str "id='" % "'")
-                                            (->> @view-only-edges :resources (map :id))))]))}
+                                            (->> @view-only-items :resources (map :id))))]))}
                      (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
           [ButtonAskingForConfirmation @form-tags close-fn db-path update-event]]]))))

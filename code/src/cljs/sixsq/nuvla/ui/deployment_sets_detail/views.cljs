@@ -409,7 +409,7 @@
         checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
     (if (seq licenses)
       [ui/Segment
-       [ui/ListSA {:bulleted true}
+       [ui/ListSA {:divided true }
         (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
           ^{:key (str "accept-eula-" license)}
           [ui/ListItem
@@ -427,8 +427,7 @@
                ^{:key (str "license-" i "-" id)}
                [ui/ListItem
                 [ui/ListContent
-                 [ui/ListHeader
-                  [values/AsLink path :label (or name id) :page "apps"]]]])]]])]
+                 [values/AsLink path :label (or name id) :page "apps"]]])]]])]
        [ui/Form
         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
                           :required  true

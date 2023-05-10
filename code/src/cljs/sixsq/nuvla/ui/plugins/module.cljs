@@ -9,7 +9,8 @@
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn- overwrite-env
@@ -181,69 +182,95 @@
          env-variables)]
       [ui/Message "No environment variables defined"])))
 
-(defn AcceptLicense
-  [{:keys [db-path href] :as _opts}]
-  (let [tr     @(subscribe [::i18n-subs/tr])
-        module @(subscribe [::module db-path href])
-        {:keys [name description url] :as license} (:license module)]
-    (if license
-      [ui/Container
-       [ui/Header {:as      :h4
-                   :icon    "book"
-                   :content (tr [:eula-full])}]
-       [:h4 [:b (str (str/capitalize (tr [:eula])) ": ")
-             [:u [:a {:href url :target "_blank"} name]]]]
-       (when description
-         [:p [:i description]])
-       [ui/Checkbox {:label     (tr [:accept-eula])
-                     :checked   (get license ::accepted? false)
-                     :on-change (ui-callback/checked
-                                  #(dispatch [::helpers/set (conj db-path ::modules href :license)
-                                              ::accepted? %]))}]]
-      [ui/Message (tr [:eula-not-defined])])))
+#_(defn RegistriesCredentials
+    [{:keys [db-path href change-event read-only?]
+      :or   {read-only? false}
+      :as   _opts}]
+    (let [module           @(subscribe [::module db-path href])
+          registries-creds (:registries-creds module)]
+      (dispatch [::helpers/set db-path ::change-event change-event])
+      (if (seq registries-creds)
+        [ui/Form
+         (map-indexed
+           (fn [i env-variable]
+             ^{:key (str (:name env-variable) "_" i)}
+             [AsFormInput db-path href read-only? i env-variable])
+           env-variables)]
+        [ui/Message "No environment variables defined"])
 
-(defn AcceptPrice
-  [{:keys [db-path href] :as _opts}]
-  (let [tr           @(subscribe [::i18n-subs/tr])
-        module       @(subscribe [::module db-path href])
-        price        (:price module)
-        format-price #(if (>= (:cent-amount-daily %) 100)
-                        (str (float (/ (:cent-amount-daily %) 100)) "€/" (tr [:day]))
-                        (str (:cent-amount-daily %) "ct€/" (tr [:day])))]
-    (if price
-      [:<>
-       [ui/Segment
-        [:p
-         (str (if (:follow-customer-trial price)
-                (tr [:trial-deployment-follow])
-                (tr [:trial-deployment]))
-              (tr [:deployment-will-cost]))
+      [ui/Form {:loading @loading?}
+       (for [[private-registry-id info] @registries-creds]
+         ^{:key private-registry-id}
+         [dropdown-creds private-registry-id info])]))
 
-         [:b (format-price price)]]
-        [ui/Checkbox {:label     (tr [:accept-costs])
-                      :checked   (get price ::accepted? false)
-                      :on-change (ui-callback/checked
-                                   #(dispatch [::helpers/set (conj db-path ::modules href :price)
-                                               ::accepted? %]))}]]
-       ^{:key href}
-       [ui/Input
-        {:label         (tr [:coupon])
-         :placeholder   (tr [:code])
-         :default-value (get price ::coupon "")
-         :on-change     (ui-callback/input-callback
-                          #(dispatch [::helpers/set (conj db-path ::modules href :price)
-                                      ::coupon %]))}]]
-      [ui/Message (tr [:free-app])])))
+#_(defn AcceptLicense
+    [{:keys [db-path href] :as _opts}]
+    (let [tr     @(subscribe [::i18n-subs/tr])
+          module @(subscribe [::module db-path href])
+          {:keys [name description url] :as license} (:license module)]
+      (if license
+        [ui/Container
+         [ui/Header {:as      :h4
+                     :icon    "book"
+                     :content (tr [:eula-full])}]
+         [:h4 [:b (str (str/capitalize (tr [:eula])) ": ")
+               [:u [:a {:href url :target "_blank"} name]]]]
+         (when description
+           [:p [:i description]])
+         [ui/Checkbox {:label     (tr [:accept-eula])
+                       :checked   (get license ::accepted? false)
+                       :on-change (ui-callback/checked
+                                    #(dispatch [::helpers/set (conj db-path ::modules href :license)
+                                                ::accepted? %]))}]]
+        [ui/Message (tr [:eula-not-defined])])))
+
+#_(defn AcceptPrice
+    [{:keys [db-path href] :as _opts}]
+    (let [tr           @(subscribe [::i18n-subs/tr])
+          module       @(subscribe [::module db-path href])
+          price        (:price module)
+          format-price #(if (>= (:cent-amount-daily %) 100)
+                          (str (float (/ (:cent-amount-daily %) 100)) "€/" (tr [:day]))
+                          (str (:cent-amount-daily %) "ct€/" (tr [:day])))]
+      (if price
+        [:<>
+         [ui/Segment
+          [:p
+           (str (if (:follow-customer-trial price)
+                  (tr [:trial-deployment-follow])
+                  (tr [:trial-deployment]))
+                (tr [:deployment-will-cost]))
+
+           [:b (format-price price)]]
+          [ui/Checkbox {:label     (tr [:accept-costs])
+                        :checked   (get price ::accepted? false)
+                        :on-change (ui-callback/checked
+                                     #(dispatch [::helpers/set (conj db-path ::modules href :price)
+                                                 ::accepted? %]))}]]
+         ^{:key href}
+         [ui/Input
+          {:label         (tr [:coupon])
+           :placeholder   (tr [:code])
+           :default-value (get price ::coupon "")
+           :on-change     (ui-callback/input-callback
+                            #(dispatch [::helpers/set (conj db-path ::modules href :price)
+                                        ::coupon %]))}]]
+        [ui/Message (tr [:free-app])])))
 
 (defn ModuleNameIcon
-  [{:keys [db-path href]
+  [{:keys [db-path href children show-version?]
     :as   _opts}]
-  (let [{:keys [id name subtype content]} @(subscribe [::module db-path href])
-        versions-indexed (subscribe [::module-versions-indexed db-path href])]
+  (let [{:keys [id path name subtype content]} @(subscribe [::module db-path href])
+        versions-indexed (subscribe [::module-versions-indexed db-path href])
+        version-id       (get-version-id @versions-indexed (:id content))
+        label            (cond-> (or name id)
+                                 show-version? (str " v" version-id))
+        href             (str path "?version=" version-id)]
     [ui/ListItem
      [apps-utils/SubtypeDockerK8sListIcon subtype]
      [ui/ListContent
-      (str (or name id) " v" (get-version-id @versions-indexed (:id content)))]]))
+      [values/AsLink href :label label :page "apps"]
+      children]]))
 
 (defn ModuleVersions
   [{:keys [db-path href change-event read-only?]

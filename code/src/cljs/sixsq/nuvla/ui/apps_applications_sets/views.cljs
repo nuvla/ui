@@ -84,15 +84,16 @@
                                  :onClick on-done}]}]))))
 
 (defn AppNameIcon
-  [{:keys [subtype name path] module-id :id} on-delete]
-  [ui/ListItem
-   [apps-utils/SubtypeDockerK8sListIcon subtype]
-   [ui/ListContent
-    [values/AsLink path :label (or name module-id) :page "apps"]
-    " "
-    (when on-delete
-      [ui/Icon {:name     "close" :color "red" :link true
-                :on-click #(on-delete module-id)}])]])
+  [id {module-id :id} on-delete]
+  [module-plugin/ModuleNameIcon
+   {:db-path       [::spec/apps-sets id]
+    :href          module-id
+    :show-version? true
+    :children      (when on-delete
+                     [:<>
+                      " "
+                      [ui/Icon {:name     "close" :color "red" :link true
+                                :on-click #(on-delete module-id)}]])}])
 
 
 (defn AppsList
@@ -105,7 +106,7 @@
     [ui/ListSA
      (for [module selected]
        ^{:key (:id module)}
-       [AppNameIcon module on-delete])]))
+       [AppNameIcon id module on-delete])]))
 
 (defn AddApps
   [id]

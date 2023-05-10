@@ -382,6 +382,7 @@
 
 (defn ConfigureApps
   [i applications]
+  ^{:key (str "set-" i)}
   [ui/Tab
    {:menu  {:attached false}
     :panes (map

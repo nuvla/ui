@@ -389,14 +389,14 @@
        :href    module-id}]
      :label (@tr [:env-variables])]))
 
-#_(defn RegistriesCredsApp
+(defn RegistriesCredsApp
   [i module-id]
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/Accordion
-     #_[module-plugin/RegistriesCredentials
+     [module-plugin/RegistriesCredentials
       {:db-path [::spec/apps-sets i]
        :href    module-id}]
-     :label "Registries creds"]))
+     :label (@tr [:private-registries])]))
 
 (defn ConfigureApps
   [i applications]
@@ -413,7 +413,7 @@
                   :render   #(r/as-element
                                [ui/TabPane
                                 [EnvVariablesApp i id]
-                                #_[RegistriesCredsApp i id]])})
+                                [RegistriesCredsApp i id]])})
                ) applications)}])
 
 (defn BoldLabel
@@ -440,7 +440,7 @@
             (when description
               [ui/ListDescription description])
             [ui/ListList
-             (for [{i                      :i
+             (for [{i            :i
                     {:keys [id]} :application} sets-apps-targets]
                ^{:key (str "license-" i "-" id)}
                [module-plugin/ModuleNameIcon

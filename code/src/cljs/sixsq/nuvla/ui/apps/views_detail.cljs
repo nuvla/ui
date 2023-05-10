@@ -721,7 +721,7 @@
          [:span ff/nbsp (ff/help-popup (@tr [:module-env-variables-help]))]]
         (if (empty? @env-variables)
           [ui/Message
-           (str/capitalize (str (@tr [:module-no-env-variables]) "."))]
+           (@tr [:module-no-env-variables])]
           [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow

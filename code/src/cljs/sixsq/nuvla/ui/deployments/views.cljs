@@ -20,6 +20,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.bulk-edit-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -209,36 +210,44 @@
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
-        (let [selectable? (or (nil? show-options?) show-options?)]
-          [Table {:columns     [{:field-key :id}
-                                (when-not no-module-name
-                                  {:field-key      :module.name
-                                   :header-content (@tr [:module])})
-                                {:field-key :version :no-sort? true}
-                                {:field-key :status
-                                 :sort-key  :state}
-                                {:field-key :url
-                                 :no-sort?  true}
-                                {:field-key :created}
-                                {:field-key :created-by}
-                                {:field-key :infrastructure
-                                 :no-sort?  true}
-                                (when selectable? {:field-key :actions
-                                                   :no-sort?  true})]
-                  :rows        deployments-list
-                  :sort-config {:db-path     ::spec/ordering
-                                :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                  :row-render  (fn [deployment] [RowFn deployment options])
-                  :table-props (merge style/single-line {:stackable true})
-                  :select-config (when selectable?
-                                   {:bulk-actions [{:event [::events/bulk-update-params]
-                                                    :name (str/capitalize (@tr [:update]))}
-                                                   {:component (r/as-element BulkStopModal)}
-                                                   {:component (r/as-element BulkForceDeleteModal)}]
-                                    :select-db-path [::spec/select]
-                                    :total-count-sub-key [::subs/deployments-count]
-                                    :resources-sub-key deployments-resources-subs-key
-                                    :rights-needed :edit})}])))))
+        (let [selectable?                (or (nil? show-options?) show-options?)
+              {trigger :trigger-config
+               BulkEditTagsModal :modal} (bulk-edit-modal/create-bulk-edit-modal
+                                           {:db-path             [::spec/select]
+                                            :resource-key        :deployment
+                                            :update-event        ::events/update-tags
+                                            :total-count-sub-key ::subs/deployments-count})]
+          [:<> [BulkEditTagsModal]
+           [Table {:columns     [{:field-key :id}
+                                 (when-not no-module-name
+                                   {:field-key      :module.name
+                                    :header-content (@tr [:module])})
+                                 {:field-key :version :no-sort? true}
+                                 {:field-key :status
+                                  :sort-key  :state}
+                                 {:field-key :url
+                                  :no-sort?  true}
+                                 {:field-key :created}
+                                 {:field-key :created-by}
+                                 {:field-key :infrastructure
+                                  :no-sort?  true}
+                                 (when selectable? {:field-key :actions
+                                                    :no-sort?  true})]
+                   :rows        deployments-list
+                   :sort-config {:db-path     ::spec/ordering
+                                 :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+                   :row-render  (fn [deployment] [RowFn deployment options])
+                   :table-props (merge style/single-line {:stackable true})
+                   :select-config (when selectable?
+                                    {:bulk-actions [{:event [::events/bulk-update-params]
+                                                     :name (str/capitalize (@tr [:update]))}
+                                                    {:component (r/as-element BulkStopModal)}
+                                                    {:component (r/as-element BulkForceDeleteModal)}
+                                                    trigger]
+                                     :select-db-path [::spec/select]
+                                     :total-count-sub-key [::subs/deployments-count]
+                                     :resources-sub-key deployments-resources-subs-key
+                                     :rights-needed :edit})}]])))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]

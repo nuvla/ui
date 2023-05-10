@@ -163,7 +163,7 @@
   (fn [_ _]
     {::cimi-api-fx/search
      [:nuvlabox
-      {:first       0
+      {:first        0
        :last        0
        :aggregation "terms:tags"}
       (fn [response]

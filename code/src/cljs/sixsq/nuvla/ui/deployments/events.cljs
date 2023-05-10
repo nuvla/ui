@@ -12,7 +12,11 @@
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
             [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
-                                                  get-stored-db-value-from-query-param]]))
+                                                  get-stored-db-value-from-query-param]]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
@@ -180,6 +184,30 @@
                 (dispatch [::reset-selected-set]))
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
+
+(reg-event-fx
+  ::update-tags
+  (fn [{{:keys [::i18n-spec/tr] :as db} :db}
+       [_ {:keys [updated-tags call-back-fn
+                  text operation]}]]
+    (let [filter (utils/build-bulk-filter db)]
+      {::cimi-api-fx/operation-bulk [:nuvlabox
+                                     (fn [result]
+                                       (let [updated     (-> result :updated)
+                                             success-msg (str updated " " (tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)]
+                                         (dispatch [::messages-events/add
+                                                    {:header  "Bulk edit operation successful"
+                                                     :content success-msg
+                                                     :type    :success}])
+                                         (dispatch [::table-plugin/set-bulk-edit-success-message
+                                                    success-msg
+                                                    [::spec/select]])
+                                         (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]])
+                                         (dispatch [::get-nuvlaboxes])
+                                         (when (fn? call-back-fn) (call-back-fn (-> result :updated)))))
+                                     operation
+                                     (when (seq filter) filter)
+                                     {:doc {:tags updated-tags}}]})))
 
 
 (reg-event-db

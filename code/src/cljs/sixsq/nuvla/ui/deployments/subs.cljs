@@ -66,3 +66,7 @@
   :<- [::deployments]
   (fn [deployments]
     (get deployments :count 0)))
+
+(reg-sub
+  ::deployments-without-edit-rights
+  :-> ::spec/deployments-without-edit-rights)

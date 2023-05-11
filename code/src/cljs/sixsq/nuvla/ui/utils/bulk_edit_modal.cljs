@@ -146,20 +146,26 @@
 ;; - open-modal -> db-path
 
 (s/def ::db-path (s/* keyword?))
+(s/def ::update-event keyword?)
 (s/def ::resource-key keyword?)
 (s/def ::no-edit-rights-sub-key keyword?)
 (s/def ::total-count-sub-key keyword?)
-
+(s/def ::on-open-modal-event keyword?)
+(s/def ::singular keyword?)
+(s/def ::plural keyword?)
 
 (defn BulkEditTagsModal
   [{:keys [resource-key no-edit-rights-sub-key
-           update-event db-path total-count-sub-key]} {:keys [singular plural]}]
+           update-event db-path total-count-sub-key
+           singular plural]}]
   (let [tr               (subscribe [::i18n-subs/tr])
         selected-count   (subscribe [::selected-count db-path total-count-sub-key])
         opened-modal     (subscribe [::edit-mode db-path])
         open?            (subscribe [::bulk-modal-visible? db-path])
         used-tags        (subscribe [::tags resource-key])
         view-only-avlbl? (keyword? no-edit-rights-sub-key)
+        _ (tap> [ "no-edit-rights-sub-key" no-edit-rights-sub-key])
+        _ (tap> [ "view-only-avlbl?" view-only-avlbl?])
         view-only-items  (when view-only-avlbl?
                            (subscribe [no-edit-rights-sub-key]))
         form-tags        (r/atom [])
@@ -232,14 +238,17 @@
                                 :resource-key        resource-key}]))}
    :modal         (fn [] [BulkEditTagsModal opts])})
 
-(s/fdef BulkEditTagsModal :args (s/cat :opts (s/keys
-                                               :req-un [::db-path
-                                                        ::resource-key
-                                                        ::update-event]
-                                               :opt-un [::no-edit-rights-sub-key])))
+(s/def ::bulk-edit-modal-interface
+  (s/cat :opts (s/keys
+                 :req-un [::db-path
+                          ::resource-key
+                          ::total-count-sub-key
+                          ::update-event]
+                 :opt-un [::no-edit-rights-sub-key
+                          ::on-open-modal-event])))
 
-(s/fdef create-bulk-edit-modal :args (s/cat :opts (s/keys
-                                               :req-un [::db-path
-                                                        ::resource-key
-                                                        ::update-event]
-                                               :opt-un [::no-edit-rights-sub-key])))
+(s/fdef BulkEditTagsModal :args
+  ::bulk-edit-modal-interface)
+
+(s/fdef create-bulk-edit-modal :args
+  ::bulk-edit-modal-interface)

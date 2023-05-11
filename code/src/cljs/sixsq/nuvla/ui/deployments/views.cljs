@@ -217,29 +217,32 @@
                                            {:db-path             [::spec/select]
                                             :resource-key        :deployment
                                             :update-event        ::events/update-tags
-                                            :total-count-sub-key ::subs/deployments-count})]
-          [:<> [BulkEditTagsModal]
-           [Table {:columns     [{:field-key :id}
-                                 (when-not no-module-name
-                                   {:field-key      :module.name
-                                    :header-content (@tr [:module])})
-                                 {:field-key :version :no-sort? true}
-                                 {:field-key :status
-                                  :sort-key  :state}
-                                 {:field-key :url
-                                  :no-sort?  true}
-                                 {:field-key :created}
-                                 {:field-key :created-by}
-                                 {:field-key :tags}
-                                 {:field-key :infrastructure
-                                  :no-sort?  true}
-                                 (when selectable? {:field-key :actions
-                                                    :no-sort?  true})]
-                   :rows        deployments-list
-                   :sort-config {:db-path     ::spec/ordering
-                                 :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                   :row-render  (fn [deployment] [RowFn deployment options])
-                   :table-props (merge style/single-line {:stackable true})
+                                            :total-count-sub-key ::subs/deployments-count
+                                            :on-open-modal-event ::events/get-deployments-without-edit-rights
+                                            :no-edit-rights-sub-key ::subs/deployments-without-edit-rights})]
+          [:<>
+           [BulkEditTagsModal]
+           [Table {:columns      [{:field-key :id}
+                                  (when-not no-module-name
+                                    {:field-key      :module.name
+                                     :header-content (@tr [:module])})
+                                  {:field-key :version :no-sort? true}
+                                  {:field-key :status
+                                   :sort-key  :state}
+                                  {:field-key :url
+                                   :no-sort?  true}
+                                  {:field-key :created}
+                                  {:field-key :created-by}
+                                  {:field-key :tags}
+                                  {:field-key :infrastructure
+                                   :no-sort?  true}
+                                  (when selectable? {:field-key :actions
+                                                     :no-sort?  true})]
+                   :rows         deployments-list
+                   :sort-config   {:db-path     ::spec/ordering
+                                   :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+                   :row-render   (fn [deployment] [RowFn deployment options])
+                   :table-props  (merge style/single-line {:stackable true})
                    :select-config (when selectable?
                                     {:bulk-actions [{:event [::events/bulk-update-params]
                                                      :name (str/capitalize (@tr [:update]))}

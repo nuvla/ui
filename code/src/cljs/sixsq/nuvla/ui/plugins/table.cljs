@@ -113,6 +113,7 @@
 (s/def ::bulk-edit-success-msg (s/nilable string?))
 (s/def ::select-all? (s/nilable boolean?))
 (s/def ::selected-set (s/nilable set?))
+
 (defn build-bulk-edit-spec
   []
   {::select-all?           false

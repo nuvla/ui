@@ -181,7 +181,7 @@
               (fn [{:keys [location] :as _response}]
                 (dispatch [::bulk-progress-plugin/monitor
                            [::spec/bulk-jobs] location])
-                (dispatch [::reset-selected-set]))
+                (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]))
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
 
@@ -208,9 +208,3 @@
                                      operation
                                      (when (seq filter) filter)
                                      {:doc {:tags updated-tags}}]})))
-
-
-(reg-event-db
-  ::reset-selected-set
-  (fn [db]
-    (assoc db ::spec/selected-set #{})))

@@ -43,11 +43,11 @@
 
 (reg-event-fx
   ::open-modal
-  (fn [{db :db} [_ {:keys [modal-id db-path on-open-modal-event]}]]
+  (fn [{db :db} [_ {:keys [resource-key modal-id db-path on-open-modal-event]}]]
     (let [fx [(when (and ((set tags-modal-ids) modal-id)
                      (not ((set tags-modal-ids) (get-in db [::edit-mode db-path]))))
                (when on-open-modal-event [:dispatch [on-open-modal-event]])
-                [:dispatch [::fetch-tags]])]]
+                [:dispatch [::fetch-tags resource-key]])]]
       {:db (assoc-in db [::edit-mode db-path] modal-id)
        :fx fx})))
 
@@ -220,7 +220,7 @@
           [ButtonAskingForConfirmation @form-tags close-fn db-path update-event total-count-sub-key]]]))))
 
 (defn create-bulk-edit-modal
-  [{:keys [db-path on-open-modal-event] :as opts}]
+  [{:keys [db-path on-open-modal-event resource-key] :as opts}]
   {:trigger-config {:icon (fn [] [ui/Icon {:className "fal fa-tags"}])
                    :name "Edit Tags"
                    :event (fn []
@@ -228,7 +228,8 @@
                               [::open-modal
                                {:modal-id            modal-tags-add-id
                                 :db-path             db-path
-                                :on-open-modal-event on-open-modal-event}]))}
+                                :on-open-modal-event on-open-modal-event
+                                :resource-key        resource-key}]))}
    :modal         (fn [] [BulkEditTagsModal opts])})
 
 (s/fdef BulkEditTagsModal :args (s/cat :opts (s/keys

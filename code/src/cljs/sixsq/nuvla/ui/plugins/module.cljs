@@ -16,24 +16,57 @@
 (def change-event-module-version ::change-event-module-version)
 (def change-event-env-variables ::change-event-env-variables)
 
+(def module-env-vars-path [:content :environmental-variables])
 
-(defn base-path
+(def module-private-registries-path [:content :private-registries])
+
+(defn- base-path
   [db-path href]
   (conj db-path ::modules (some-> href (str/split "_") first)))
 
-(defn module-path
+(defn- module-db-path
   [db-path href]
   (conj (base-path db-path href) ::module))
 
-(defn module-overwrite-path
+(defn- db-module-overwrite-path
   [db-path href]
   (conj (base-path db-path href) ::overwrite))
 
-(def module-environment-variables-path [:content :environmental-variables])
+(defn- db-module-loading-registries-path
+  [db-path href]
+  (conj (base-path db-path href) ::loading?))
 
-(defn environment-index-new-value-path
-  [i]
-  [i ::new-value])
+(defn- db-module
+  [db db-path href]
+  (get-in db (module-db-path db-path href)))
+
+(defn- update-db-module
+  [db db-path href f]
+  (update-in db (module-db-path db-path href) f))
+
+(defn- set-db-module
+  [module db db-path href]
+  (assoc-in db (module-db-path db-path href) module))
+
+(defn- module-env-vars
+  [module]
+  (get-in module module-env-vars-path))
+
+(defn- env-vars-value-by-index
+  [env-vars index]
+  (get-in env-vars [index ::new-value]))
+
+(defn update-module-env-vars
+  [module f]
+  (update-in module module-env-vars-path f))
+
+(defn update-env-value-by-index
+  [env-vars index value]
+  (assoc-in env-vars [index ::new-value] value))
+
+(defn- module-private-registries
+  [module]
+  (get-in module module-private-registries-path))
 
 (defn- overwrite-env
   [environment-variables env]
@@ -41,23 +74,25 @@
           (assoc environment-variable :value (get env env-name env-value)))
         environment-variables))
 
-(defn- overwrite-module
-  [module {:keys [env] :as _overwrite}]
-  (cond-> module
-          (seq env) (update-in module-environment-variables-path overwrite-env env)))
+(defn- set-db-loading-registries
+  [db db-path href loading?]
+  (assoc-in db (db-module-loading-registries-path db-path href) loading?))
 
 (reg-event-db
   ::set-module
   (fn [db [_ db-path href module]]
-    (let [path-module   (module-path db-path href)
-          overwrite-map (get-in db (module-overwrite-path db-path href))]
-      (assoc-in db path-module (overwrite-module module overwrite-map)))))
+    (let [overwrite-map        (get-in db (db-module-overwrite-path db-path href))
+          update-env-vars      #(overwrite-env % (:env overwrite-map))
+          overwrite-module-env #(update-module-env-vars % update-env-vars)]
+      (-> module
+          overwrite-module-env
+          (set-db-module db db-path href)))))
 
 (reg-event-fx
   ::load-module
   (fn [{db :db} [_ db-path href overwrite]]
     {::cimi-api-fx/get [href #(dispatch [::set-module db-path href %])]
-     :db               (assoc-in db (module-overwrite-path db-path href) overwrite)}))
+     :db               (assoc-in db (db-module-overwrite-path db-path href) overwrite)}))
 
 
 ;(reg-event-fx
@@ -77,34 +112,37 @@
 (reg-event-fx
   ::resolve-infra-registries
   (fn [{db :db} [_ db-path href private-registries]]
-    #_{::cimi-api-fx/search [:infrastructure-service
-                             {:filter  (general-utils/join-and
-                                         "subtype='registry'"
-                                         (apply general-utils/join-or
-                                                (map #(str "id='" % "'") private-registries))),
-                              :select  "id, name, description"
-                              :orderby "name:asc,id:asc"}
-                             #(js/console.info ::resolve-infra-registries %)]}))
+    {::cimi-api-fx/search [:infrastructure-service
+                           {:filter  (general-utils/join-and
+                                       "subtype='registry'"
+                                       (apply general-utils/join-or
+                                              (map #(str "id='" % "'") private-registries))),
+                            :select  "id, name, description"
+                            :orderby "name:asc,id:asc"}
+                           #(js/console.info ::resolve-infra-registries %)]}))
 
-#_(reg-event-fx
-    ::resolve-infra-registries-creds
-    (fn [{db :db} [_ db-path href private-registries]]
-      {::cimi-api-fx/search [:credential
-                             {:filter  (general-utils/join-and
-                                         "subtype='registry'"
-                                         (apply general-utils/join-or
-                                                (map #(str "id='" % "'") private-registries))),
-                              :select  "id, name, description"
-                              :orderby "name:asc,id:asc"}
-                             #(js/console.info ::resolve-infra-registries-creds %)]}))
+(reg-event-fx
+  ::resolve-infra-registries-creds
+  (fn [{db :db} [_ db-path href private-registries]]
+    {:db                  (set-db-loading-registries db db-path href false)
+     ::cimi-api-fx/search [:credential
+                           {:filter  (general-utils/join-and
+                                       "subtype='registry'"
+                                       (apply general-utils/join-or
+                                              (map #(str "id='" % "'") private-registries))),
+                            :select  "id, name, description"
+                            :orderby "name:asc,id:asc"}
+                           #(js/console.info ::resolve-infra-registries-creds %)]}))
 
-#_(reg-event-fx
-    ::load-infra-registries
-    (fn [{db :db} [_ db-path href]]
-      (when-let [private-registries (seq (get-in db (conj db-path ::modules href :content :private-registries)))]
-        {:db (assoc (conj db-path))
-         :fx [[:dispatch [::load-infra-registries db-path href private-registries]]
-              [:dispatch [::resolve-infra-registries-creds db-path href private-registries]]]})))
+(reg-event-fx
+  ::load-infra-registries
+  (fn [{db :db} [_ db-path href]]
+    (when-let [private-registries (-> (db-module db db-path href)
+                                      module-private-registries
+                                      seq)]
+      {:db (set-db-loading-registries db db-path href true)
+       :fx [[:dispatch [::resolve-infra-registries db-path href private-registries]]
+            [:dispatch [::resolve-infra-registries-creds db-path href private-registries]]]})))
 
 
 ;#_(reg-event-fx
@@ -130,21 +168,15 @@
 (reg-event-fx
   ::update-env
   (fn [{db :db} [_ db-path href index new-value]]
-    (let [change-event (get-in db (conj db-path change-event-env-variables))]
-      {:db (assoc-in db
-                     (concat
-                       (module-path db-path href)
-                       module-environment-variables-path
-                       (environment-index-new-value-path index)) new-value)
+    (let [change-event          (get-in db (conj db-path change-event-env-variables))
+          update-env-vars       #(update-env-value-by-index % index new-value)
+          update-module-env-var #(update-module-env-vars % update-env-vars)]
+      {:db (update-db-module db db-path href update-module-env-var)
        :fx [(when change-event [:dispatch change-event])]})))
 
 (defn get-version-id
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
-
-(defn- module-db
-  [db db-path href]
-  (get-in db (module-path db-path href)))
 
 (defn- module-versions-indexed
   [module]
@@ -153,21 +185,20 @@
 (reg-sub
   ::module
   (fn [db [_ db-path href]]
-    (module-db db db-path href)))
+    (db-module db db-path href)))
 
 (defn db-selected-version
   [db db-path href]
-  (let [module            (module-db db db-path href)
+  (let [module            (db-module db db-path href)
         module-content-id (-> module :content :id)
         versions-indexed  (module-versions-indexed module)]
     (get-version-id versions-indexed module-content-id)))
 
 
-(defn db-environment-variables
+(defn db-module-env-vars
   [db db-path href]
-  (-> db
-      (module-db db-path href)
-      (get-in module-environment-variables-path)))
+  (-> (db-module db db-path href)
+      module-env-vars))
 
 (defn changed-env-vars
   [env-vars]
@@ -176,6 +207,11 @@
             {:name  name
              :value new-value})
           ) env-vars))
+
+(defn db-changed-env-vars
+  [db db-path href]
+  (-> (db-module-env-vars db db-path href)
+      changed-env-vars))
 
 #_(defn db-license-accepted?
     [db db-path href]
@@ -204,9 +240,8 @@
 (reg-sub
   ::module-env-value
   (fn [db [_ db-path href index]]
-    (-> db
-        (db-environment-variables db-path href)
-        (get-in (environment-index-new-value-path index)))))
+    (-> (db-module-env-vars db db-path href)
+        (env-vars-value-by-index index))))
 
 (reg-sub
   ::module-versions-options
@@ -259,7 +294,7 @@
     :as   _opts}]
   (let [tr            @(subscribe [::i18n-subs/tr])
         module        @(subscribe [::module db-path href])
-        env-variables (get-in module module-environment-variables-path)]
+        env-variables (module-env-vars module)]
     (dispatch [::helpers/set db-path change-event-env-variables change-event])
     (if (seq env-variables)
       [ui/Form
@@ -275,8 +310,8 @@
     :or   {read-only? false}
     :as   _opts}]
   (let [module             @(subscribe [::module db-path href])
-        private-registries (:private-registries (:content module))]
-    #_(dispatch [::load-infra-registries db-path href])
+        private-registries (module-private-registries module)]
+    (dispatch [::load-infra-registries db-path href])
     (if (seq private-registries)
       #_[ui/Form
          (map-indexed

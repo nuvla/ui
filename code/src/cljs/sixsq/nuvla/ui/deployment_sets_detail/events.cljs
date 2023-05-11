@@ -173,54 +173,50 @@
           ) env-vars))
 
 #_(reg-event-fx
-  ::create
-  (fn [{{:keys [::spec/targets-selected
-                ::spec/apps-selected
-                ::spec/create-name
-                ::spec/create-description
-                ::spec/create-start] :as db} :db}]
-    {::cimi-api-fx/add
-     [:deployment-set
-      (cond->
-        {:spec {:applications (map #(str (:id %) "_"
-                                         (module-plugin/db-selected-version
-                                           db [::spec/module-versions] (:id %)))
-                                   apps-selected)
-                :targets      (map :id targets-selected)
-                :env          (mapcat (fn [{:keys [id]}]
-                                        (->> id
-                                             (module-plugin/db-environment-variables
-                                               db [::spec/module-versions])
-                                             (changed-env-vars id)))
+    ::create
+    (fn [{{:keys [::spec/targets-selected
+                  ::spec/apps-selected
+                  ::spec/create-name
+                  ::spec/create-description
+                  ::spec/create-start] :as db} :db}]
+      {::cimi-api-fx/add
+       [:deployment-set
+        (cond->
+          {:spec {:applications (map #(str (:id %) "_"
+                                           (module-plugin/db-selected-version
+                                             db [::spec/module-versions] (:id %)))
+                                     apps-selected)
+                  :targets      (map :id targets-selected)
+                  :env          (mapcat (fn [{:keys [id]}]
+                                          (->> id
+                                               (module-plugin/db-module-env-vars
+                                                 db [::spec/module-versions])
+                                               (changed-env-vars id)))
+                                        apps-selected)
+                  :coupons      (keep (fn [{:keys [id]}]
+                                        (when-let [coupon (->> id
+                                                               (module-plugin/db-coupon
+                                                                 db [::spec/module-versions]))]
+                                          {:application id
+                                           :code        coupon}))
                                       apps-selected)
-                :coupons      (keep (fn [{:keys [id]}]
-                                      (when-let [coupon (->> id
-                                                             (module-plugin/db-coupon
-                                                               db [::spec/module-versions]))]
-                                        {:application id
-                                         :code        coupon}))
-                                    apps-selected)
-                :start        create-start}}
-        (not (str/blank? create-name)) (assoc :name create-name)
-        (not (str/blank? create-description)) (assoc :description create-description))
-      #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
+                  :start        create-start}}
+          (not (str/blank? create-name)) (assoc :name create-name)
+          (not (str/blank? create-description)) (assoc :description create-description))
+        #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
 
 (defn application-overwrites
   [db i {:keys [id version] :as _application}]
-  (when-let [env-changed (->> id
-                              (module-plugin/db-environment-variables db [::spec/apps-sets i])
-                              module-plugin/changed-env-vars
-                              seq)]
-    {:id                      id
-     :version                 version
-     :environmental-variables env-changed}))
+  (when-let [env-changed (module-plugin/db-changed-env-vars db [::spec/apps-sets i] id)]
+    (cond-> {:id      id
+             :version version}
+            (seq env-changed) (assoc :environmental-variables env-changed))))
 
 (defn applications-sets->overwrites
   [db i {:keys [applications] :as _applications-sets}]
   (let [targets                 (subs/get-db-targets-selected-ids db i)
-        applications-overwrites (->> applications
-                                     (map (partial application-overwrites db i))
-                                     (remove nil?))]
+        applications-overwrites (map (partial application-overwrites db i)
+                                     applications)]
     (cond-> {}
             (seq targets) (assoc :targets targets)
             (seq applications-overwrites) (assoc :applications applications-overwrites))))

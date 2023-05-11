@@ -64,7 +64,7 @@
              (map (fn [{:keys [id]}]
                     (let [targets (get-db-targets-selected-ids db i)]
                       {:i             i
-                       :application   (module-plugin/module-db db [::spec/apps-sets i] id)
+                       :application   (module-plugin/db-module db [::spec/apps-sets i] id)
                        :targets       targets
                        :targets-count (count targets)})
                     ) applications)))

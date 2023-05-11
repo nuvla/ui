@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as utils]
+            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -17,9 +18,8 @@
                                                   get-stored-db-value-from-query-param] :as route-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]
-            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]))
+            [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-non-edit :edges-without-edit-rights)
@@ -133,13 +133,7 @@
     (let [selected-filter (table-plugin/build-bulk-filter
                             select
                             (get-full-filter-string db))
-          filter          (general-utils/join-and
-                            (apply
-                              general-utils/join-and
-                              (map (fn [role]
-                                     (str "acl/edit-meta!='" role "'"))
-                                   (session-utils/get-roles session)))
-                            selected-filter)]
+          filter          (create-filter-for-read-only-resources session selected-filter)]
       {::cimi-api-fx/search
        [:nuvlabox
         {:filter filter :select "id"}

@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [goog.string :as gstring]
             [goog.string.format]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
@@ -329,6 +330,15 @@
   (when-not (str/blank? tag)
     (str "tags=='" tag "'")))
 
+(defn create-filter-for-read-only-resources
+  [session selected-filter]
+  (join-and
+    (apply
+      join-and
+      (map (fn [role]
+             (str "acl/edit-meta!='" role "'"))
+        (session-utils/get-roles session)))
+    selected-filter))
 
 ;; Math
 

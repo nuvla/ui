@@ -21,8 +21,7 @@
 
 (reg-sub
   ::selected-count
-  (fn [_ [_ db-path total-count-sub-key]]
-    (tap> [ "selected-count" total-count-sub-key])
+  (fn [[_ db-path total-count-sub-key]]
     [(subscribe [::table-plugin/selected-set-sub db-path])
      (subscribe [::table-plugin/select-all?-sub db-path])
      (subscribe [total-count-sub-key])])
@@ -31,7 +30,7 @@
 
 (reg-sub
   ::bulk-modal-visible?
-  (fn [_ [_ db-path]]
+  (fn [[_ db-path]]
     (subscribe [::edit-mode db-path]))
   (fn [opened-modal]
     (tap> opened-modal)
@@ -94,8 +93,6 @@
 
 (defn- ButtonAskingForConfirmation
   [_form-tags close-fn db-path update-event total-count-sub-key]
-  (js/console.error "HIHIHIHIHIHI")
-  (tap> ["ButtonAskingForConfirmation" total-count-sub-key])
   (let [edit-mode->color     {modal-tags-add-id     :green
                               modal-tags-remove-all :red
                               modal-tags-remove-id  :red
@@ -105,7 +102,7 @@
                               modal-tags-set-id     "set-tags"
                               modal-tags-remove-id  "remove-tags"}
         tr                   (subscribe [::i18n-subs/tr])
-        ;; selected-count       (subscribe [::selected-count db-path total-count-sub-key])
+        selected-count       (subscribe [::selected-count db-path total-count-sub-key])
         edit-mode            (subscribe [::edit-mode db-path])
         mode                 (r/atom :idle)]
     (fn [form-tags _close-fn]
@@ -119,14 +116,13 @@
                                        :operation    (edit-mode->operation @edit-mode)
                                        :call-back-fn close-fn
                                        :text         text}]))
-            disabled? (or (= 0 0)
+            disabled? (or (= @selected-count 0)
                         (and  (not= modal-tags-remove-all @edit-mode)
                           (= 0 (count form-tags))))]
         (if (= :idle @mode)
           [:div
            [:span (str text "?")]
-           [ui/Button {;;  :icon
-                       :color    (edit-mode->color @edit-mode)
+           [ui/Button {:color    (edit-mode->color @edit-mode)
                        :disabled disabled?
                        :active   true
                        :style    {:margin-left "2rem"}
@@ -158,9 +154,8 @@
 (defn BulkEditTagsModal
   [{:keys [resource-key no-edit-rights-sub-key
            update-event db-path total-count-sub-key]} {:keys [singular plural]}]
-  (tap> ["total-count-sub-key" total-count-sub-key])
   (let [tr               (subscribe [::i18n-subs/tr])
-        ;; selected-count   (subscribe [::selected-count db-path total-count-sub-key])
+        selected-count   (subscribe [::selected-count db-path total-count-sub-key])
         opened-modal     (subscribe [::edit-mode db-path])
         open?            (subscribe [::bulk-modal-visible? db-path])
         used-tags        (subscribe [::tags resource-key])
@@ -171,12 +166,13 @@
         mode->tag-color  (zipmap tags-modal-ids [:teal :teal :red :red])]
     (fn []
       (let [close-fn     (fn []
-                           (dispatch [::open-modal db-path nil])
+                           (dispatch [::open-modal {:db-path db-path}])
                            (reset! form-tags []))
-            change-mode  (fn [edit-mode]
-                           (when (= modal-tags-remove-all edit-mode)
+            change-mode  (fn [modal-id]
+                           (when (= modal-tags-remove-all modal-id)
                              (reset! form-tags []))
-                           (dispatch [::open-modal edit-mode]))
+                           (dispatch [::open-modal {:db-path  db-path
+                                                    :modal-id modal-id}]))
             not-editable (when view-only-avlbl? (:count @view-only-items))]
         [ui/Modal {:open       @open?
                    :close-icon true
@@ -203,11 +199,11 @@
            {:style {:line-height "1.2rem"}}
            [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
                    " "
-                  ;;  @selected-count
+                   @selected-count
                    " "
-                  ;;  (@tr [(if (= @selected-count 0) singular plural)])
+                   (@tr [(if (= @selected-count 0) singular plural)])
                    ". ")]
-           (when (and view-only-avlbl? (<= 1 not-editable 0 #_@selected-count))
+           (when (and view-only-avlbl? (<= 1 not-editable @selected-count))
              [:<>
               [:div
                (str not-editable " " (@tr [(if (= not-editable 1) singular plural)]) " " (@tr [:tags-not-updated-no-rights]))]
@@ -221,18 +217,18 @@
                                 (map #(str "id='" % "'")
                                   (->> @view-only-items :resources (map :id))))]))}
                      (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
-          #_[ButtonAskingForConfirmation @form-tags close-fn db-path update-event total-count-sub-key]]]))))
+          [ButtonAskingForConfirmation @form-tags close-fn db-path update-event total-count-sub-key]]]))))
 
 (defn create-bulk-edit-modal
   [{:keys [db-path on-open-modal-event] :as opts}]
   {:trigger-config {:icon (fn [] [ui/Icon {:className "fal fa-tags"}])
-                    :name "Edit Tags"
-                    :event (fn []
-                             (dispatch
-                               [::open-modal
-                                {:modal-id            modal-tags-add-id
-                                 :db-path             db-path
-                                 :on-open-modal-event on-open-modal-event}]))}
+                   :name "Edit Tags"
+                   :event (fn []
+                            (dispatch
+                              [::open-modal
+                               {:modal-id            modal-tags-add-id
+                                :db-path             db-path
+                                :on-open-modal-event on-open-modal-event}]))}
    :modal         (fn [] [BulkEditTagsModal opts])})
 
 (s/fdef BulkEditTagsModal :args (s/cat :opts (s/keys

@@ -191,10 +191,10 @@
        [_ {:keys [updated-tags call-back-fn
                   text operation]}]]
     (let [filter (utils/build-bulk-filter db)]
-      {::cimi-api-fx/operation-bulk [:nuvlabox
+      {::cimi-api-fx/operation-bulk [:deployment
                                      (fn [result]
                                        (let [updated     (-> result :updated)
-                                             success-msg (str updated " " (tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)]
+                                             success-msg (str updated " " (tr [(if (< 1 updated) :deployments :deployment)]) " updated with operation: " text)]
                                          (dispatch [::messages-events/add
                                                     {:header  "Bulk edit operation successful"
                                                      :content success-msg
@@ -203,7 +203,7 @@
                                                     success-msg
                                                     [::spec/select]])
                                          (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]])
-                                         (dispatch [::get-nuvlaboxes])
+                                         (dispatch [::get-deployments])
                                          (when (fn? call-back-fn) (call-back-fn (-> result :updated)))))
                                      operation
                                      (when (seq filter) filter)

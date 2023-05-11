@@ -163,7 +163,7 @@
 
 
 (defn RowFn
-  [{:keys [id state module created-by] :as deployment}
+  [{:keys [id state module tags created-by] :as deployment}
    {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
@@ -191,6 +191,7 @@
                       primary-url-name])]
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell @creator]
+     [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
@@ -229,6 +230,7 @@
                                   :no-sort?  true}
                                  {:field-key :created}
                                  {:field-key :created-by}
+                                 {:field-key :tags}
                                  {:field-key :infrastructure
                                   :no-sort?  true}
                                  (when selectable? {:field-key :actions

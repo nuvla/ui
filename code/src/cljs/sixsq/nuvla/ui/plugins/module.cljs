@@ -2,6 +2,7 @@
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub subscribe]]
+            [reagent.core :as r]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -24,29 +25,41 @@
   [db-path href]
   (conj db-path ::modules (some-> href (str/split "_") first)))
 
-(defn- module-db-path
+(defn- db-module-subpath
+  [db-path href k]
+  (conj (base-path db-path href) k))
+
+(defn- db-module-path
   [db-path href]
-  (conj (base-path db-path href) ::module))
+  (db-module-subpath db-path href ::module))
 
 (defn- db-module-overwrite-path
   [db-path href]
-  (conj (base-path db-path href) ::overwrite))
+  (db-module-subpath db-path href ::overwrite))
 
 (defn- db-module-loading-registries-path
   [db-path href]
-  (conj (base-path db-path href) ::loading?))
+  (db-module-subpath db-path href ::loading?))
+
+(defn- db-module-private-registries-path
+  [db-path href]
+  (db-module-subpath db-path href ::private-registries))
+
+(defn- db-module-registries-creds-path
+  [db-path href]
+  (db-module-subpath db-path href ::registries-creds))
 
 (defn- db-module
   [db db-path href]
-  (get-in db (module-db-path db-path href)))
+  (get-in db (db-module-path db-path href)))
 
 (defn- update-db-module
   [db db-path href f]
-  (update-in db (module-db-path db-path href) f))
+  (update-in db (db-module-path db-path href) f))
 
 (defn- set-db-module
   [module db db-path href]
-  (assoc-in db (module-db-path db-path href) module))
+  (assoc-in db (db-module-path db-path href) module))
 
 (defn- module-env-vars
   [module]
@@ -56,11 +69,11 @@
   [env-vars index]
   (get-in env-vars [index ::new-value]))
 
-(defn update-module-env-vars
+(defn- update-module-env-vars
   [module f]
   (update-in module module-env-vars-path f))
 
-(defn update-env-value-by-index
+(defn- update-env-value-by-index
   [env-vars index value]
   (assoc-in env-vars [index ::new-value] value))
 
@@ -94,45 +107,50 @@
     {::cimi-api-fx/get [href #(dispatch [::set-module db-path href %])]
      :db               (assoc-in db (db-module-overwrite-path db-path href) overwrite)}))
 
-
-;(reg-event-fx
-;    ::set-infra-registries
-;    (fn [{db :db} [_ db-path href]]
-;
-;      {:db
-;       ::cimi-api-fx/search [:infrastructure-service
-;                             {:filter  (general-utils/join-and
-;                                         "subtype='registry'"
-;                                         (apply general-utils/join-or
-;                                                (map #(str "id='" % "'") private-registries))),
-;                              :select  "id, name, description"
-;                              :orderby "name:asc,id:asc"}
-;                             #(dispatch [::set-infra-registries %])]}))
+(reg-event-db
+  ::set-private-registries
+  (fn [db [_ db-path href private-registries]]
+    (->> private-registries
+         (map (juxt :id identity))
+         (into {})
+         (assoc-in db (db-module-private-registries-path db-path href)))))
 
 (reg-event-fx
-  ::resolve-infra-registries
-  (fn [{db :db} [_ db-path href private-registries]]
-    {::cimi-api-fx/search [:infrastructure-service
-                           {:filter  (general-utils/join-and
-                                       "subtype='registry'"
-                                       (apply general-utils/join-or
-                                              (map #(str "id='" % "'") private-registries))),
-                            :select  "id, name, description"
-                            :orderby "name:asc,id:asc"}
-                           #(js/console.info ::resolve-infra-registries %)]}))
+  ::resolve-private-registries
+  (fn [_ [_ db-path href private-registries]]
+    {::cimi-api-fx/search
+     [:infrastructure-service
+      {:filter  (general-utils/join-and
+                  "subtype='registry'"
+                  (apply general-utils/join-or
+                         (map #(str "id='" % "'") private-registries))),
+       :select  "id, name, description"
+       :orderby "name:asc,id:asc"
+       :last    10000}
+      #(dispatch [::set-private-registries db-path href (:resources %)])]}))
+
+(reg-event-db
+  ::set-registries-creds
+  (fn [db [_ db-path href registries-creds]]
+    (->> registries-creds
+         (group-by :parent)
+         (assoc-in db (db-module-registries-creds-path db-path href)))))
 
 (reg-event-fx
-  ::resolve-infra-registries-creds
+  ::resolve-registries-creds
   (fn [{db :db} [_ db-path href private-registries]]
-    {:db                  (set-db-loading-registries db db-path href false)
-     ::cimi-api-fx/search [:credential
-                           {:filter  (general-utils/join-and
-                                       "subtype='registry'"
-                                       (apply general-utils/join-or
-                                              (map #(str "id='" % "'") private-registries))),
-                            :select  "id, name, description"
-                            :orderby "name:asc,id:asc"}
-                           #(js/console.info ::resolve-infra-registries-creds %)]}))
+    {:db (set-db-loading-registries db db-path href false)
+     ::cimi-api-fx/search
+     [:credential
+      {:filter  (general-utils/join-and
+                  "subtype='infrastructure-service-registry'"
+                  (apply general-utils/join-or
+                         (map #(str "parent='" % "'")
+                              private-registries)))
+       :select  "id, parent, name, description, last-check, status, subtype"
+       :orderby "name:asc,id:asc"
+       :last    10000}
+      #(dispatch [::set-registries-creds db-path href (:resources %)])]}))
 
 (reg-event-fx
   ::load-infra-registries
@@ -141,8 +159,8 @@
                                       module-private-registries
                                       seq)]
       {:db (set-db-loading-registries db db-path href true)
-       :fx [[:dispatch [::resolve-infra-registries db-path href private-registries]]
-            [:dispatch [::resolve-infra-registries-creds db-path href private-registries]]]})))
+       :fx [[:dispatch [::resolve-private-registries db-path href private-registries]]
+            [:dispatch [::resolve-registries-creds db-path href private-registries]]]})))
 
 
 ;#_(reg-event-fx
@@ -174,7 +192,7 @@
       {:db (update-db-module db db-path href update-module-env-var)
        :fx [(when change-event [:dispatch change-event])]})))
 
-(defn get-version-id
+(defn- get-version-id
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
 
@@ -187,7 +205,7 @@
   (fn [db [_ db-path href]]
     (db-module db db-path href)))
 
-(defn db-selected-version
+(defn- db-selected-version
   [db db-path href]
   (let [module            (db-module db db-path href)
         module-content-id (-> module :content :id)
@@ -195,12 +213,12 @@
     (get-version-id versions-indexed module-content-id)))
 
 
-(defn db-module-env-vars
+(defn- db-module-env-vars
   [db db-path href]
   (-> (db-module db db-path href)
       module-env-vars))
 
-(defn changed-env-vars
+(defn- changed-env-vars
   [env-vars]
   (keep (fn [{:keys [::new-value :value :name]}]
           (when (some-> new-value (not= value))
@@ -242,6 +260,27 @@
   (fn [db [_ db-path href index]]
     (-> (db-module-env-vars db db-path href)
         (env-vars-value-by-index index))))
+
+(reg-sub
+  ::registries-loading?
+  (fn [db [_ db-path href]]
+    (get-in db (db-module-loading-registries-path db-path href) false)))
+
+(reg-sub
+  ::private-registry
+  (fn [db [_ db-path href private-registry-id]]
+    (-> db
+        (get-in (db-module-private-registries-path db-path href))
+        (get private-registry-id))))
+
+(reg-sub
+  ::private-registry-creds-options
+  (fn [db [_ db-path href private-registry-id]]
+    (-> db
+        (get-in (db-module-registries-creds-path db-path href))
+        (get private-registry-id)
+        (->> (map (fn [{:keys [id name]}]
+                    {:key id :text (or name id) :value id}))))))
 
 (reg-sub
   ::module-versions-options
@@ -305,13 +344,72 @@
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 
+(defn dropdown-creds
+  [db-path href private-registry]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} @(subscribe [::private-registry db-path href private-registry])
+        options @(subscribe [::private-registry-creds-options db-path href private-registry])
+        ;registry       (subscribe [::subs/infra-registry private-registry-id])
+        ;registry-name  (or (:name @registry) private-registry-id)
+        ;creds-options  (subscribe [::subs/infra-registries-creds-by-parent-options
+        ;                           private-registry-id])
+        ;registry-descr (:description @registry)
+        ;{:keys [cred-id preselected?]} info
+        ]
+    [ui/FormDropdown
+     (cond->
+       {:required    true
+        :label       (r/as-element
+                       [:label (or name id) ff/nbsp
+                        (when description (ff/help-popup description))])
+        :selection   true
+        ;:default-value cred-id
+        :placeholder (@tr [:select-credential])
+        :options     options
+        ;:on-change     (ui-callback/value
+        ;                 #(dispatch [::events/set-credential-registry private-registry-id %]))
+        }
+       #_(empty? @creds-options) #_(assoc :error (@tr [:no-available-creds-registry])))]
+    ;(if (and preselected?
+    ;         (not (some #(= cred-id (:value %)) @creds-options)))
+    ;  [ui/FormInput
+    ;   {:disabled      true
+    ;    :label         (r/as-element [:label registry-name ff/nbsp
+    ;                                  (when registry-descr (ff/help-popup registry-descr))])
+    ;    :default-value (@tr [:preselected])}]
+    ;  [ui/FormDropdown
+    ;   (cond->
+    ;     {:required      true
+    ;      :label         (r/as-element [:label registry-name ff/nbsp
+    ;                                    (when registry-descr (ff/help-popup registry-descr))
+    ;                                    (when cred-id
+    ;                                      [:span " "
+    ;                                       [creds-comp/CredentialCheckPopup cred-id]])])
+    ;      :selection     true
+    ;      :default-value cred-id
+    ;      :placeholder   (@tr [:select-credential])
+    ;      :options       @creds-options
+    ;      :on-change     (ui-callback/value
+    ;                       #(dispatch [::events/set-credential-registry private-registry-id %]))}
+    ;     (empty? @creds-options) (assoc :error (@tr [:no-available-creds-registry])))]
+    ;  )
+    ))
+
 (defn RegistriesCredentials
   [{:keys [db-path href read-only?]
     :or   {read-only? false}
     :as   _opts}]
   (let [module             @(subscribe [::module db-path href])
-        private-registries (module-private-registries module)]
+        private-registries (module-private-registries module)
+        loading?           @(subscribe [::registries-loading? db-path href])]
     (dispatch [::load-infra-registries db-path href])
+    ; load infra reg, help name resolution
+    ; load cred reg group by parent needed for options
+    ; look at module preselected and create
+    ; for each infra reg, when only one cred select it
+    ; deployment-set creds-registries
+    ; dropdown value preselected or choice to user
+    (js/console.info "@loading?" loading?)
     (if (seq private-registries)
       #_[ui/Form
          (map-indexed
@@ -319,7 +417,11 @@
              ^{:key (str (:name env-variable) "_" i)}
              [AsFormInput db-path href read-only? i env-variable])
            env-variables)]
-      [:div (str private-registries)]
+      #_[:div (str private-registries)]
+      [ui/Form {:loading loading?}
+       (for [private-registry private-registries]
+         ^{:key private-registry}
+         [dropdown-creds db-path href private-registry])]
       [ui/Message "No container registries defined"])
 
     #_[ui/Form {:loading @loading?}

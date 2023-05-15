@@ -10,7 +10,8 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.messages.events :as messages-events]))
 
 
 (def modal-tags-set-id ::tags-set)
@@ -47,8 +48,6 @@
                      (not ((set tags-modal-ids) (get-in db [::edit-mode db-path]))))
                [[:dispatch [on-open-modal-event]]
                 [:dispatch [::fetch-tags resource-key]]])]
-      (tap> ["open-modal fx" fx])
-      (tap> ["on-open-modal-event" on-open-modal-event])
       {:db (assoc-in db [::edit-mode db-path] modal-id)
        :fx fx})))
 
@@ -78,7 +77,7 @@
 
 (defn- translate-from-qkey
   [tr q-key]
-  (tr [(-> q-key name keyword)]))
+  (when (keyword? q-key) (tr [(-> q-key name keyword)])))
 
 (defn- TagsEditModeRadio
   [edit-mode opened-modal change-mode]
@@ -93,52 +92,28 @@
                :on-change #(change-mode edit-mode)}]))
 
 (defn- ButtonAskingForConfirmation
-  [_form-tags close-fn db-path update-event total-count-sub-key]
-  (let [edit-mode->color     {modal-tags-add-id     :green
-                              modal-tags-remove-all :red
-                              modal-tags-remove-id  :red
-                              modal-tags-set-id     :red}
-        edit-mode->operation {modal-tags-add-id     "add-tags"
-                              modal-tags-remove-all "set-tags"
-                              modal-tags-set-id     "set-tags"
-                              modal-tags-remove-id  "remove-tags"}
-        tr                   (subscribe [::i18n-subs/tr])
-        selected-count       (subscribe [::selected-count db-path total-count-sub-key])
-        edit-mode            (subscribe [::edit-mode db-path])
-        mode                 (r/atom :idle)]
-    (fn [form-tags _close-fn]
-      (let [text         (translate-from-qkey @tr @edit-mode)
-            updated-tags (if (= modal-tags-remove-all edit-mode)
-                           []
-                           form-tags)
-            update-fn    (fn []
-                           (dispatch [update-event
-                                      {:updated-tags updated-tags
-                                       :operation    (edit-mode->operation @edit-mode)
-                                       :call-back-fn close-fn
-                                       :text         text}]))
-            disabled? (or (= @selected-count 0)
-                        (and  (not= modal-tags-remove-all @edit-mode)
-                          (= 0 (count form-tags))))]
-        (if (= :idle @mode)
-          [:div
-           [:span (str text "?")]
-           [ui/Button {:color    (edit-mode->color @edit-mode)
-                       :disabled disabled?
-                       :active   true
-                       :style    {:margin-left "2rem"}
-                       :on-click (fn [] (reset! mode :confirming))}
-            [uix/Icon {:style {:margin 0}
-                       :name "fa-check"}]]]
-          [:div
-           [:span "Are you sure? "]
-           [uix/Button {:text     (str "Yes, " text)
-                        :disabled disabled?
-                        :color    (edit-mode->color @edit-mode)
-                        :on-click update-fn}]
-           [ui/Button {:on-click (fn [] (reset! mode :idle))}
-            [ui/Icon {:style {:margin 0}
-                      :name "fa-xmark"}]]])))))
+  [_]
+  (let [mode (r/atom :idle)]
+    (fn [{:keys [color text update-event disabled?]}]
+      (if (= :idle @mode)
+        [:div
+         [:span (str text "?")]
+         [ui/Button {:color    color
+                     :disabled disabled?
+                     :active   true
+                     :style    {:margin-left "2rem"}
+                     :on-click (fn [] (reset! mode :confirming))}
+          [uix/Icon {:style {:margin 0}
+                     :name "fa-check"}]]]
+        [:div
+         [:span "Are you sure? "]
+         [uix/Button {:text     (str "Yes, " text)
+                      :disabled disabled?
+                      :color    color
+                      :on-click (fn [] (dispatch update-event))}]
+         [ui/Button {:on-click (fn [] (reset! mode :idle))}
+          [ui/Icon {:style {:margin 0}
+                    :name "fa-xmark"}]]]))))
 
 ;; Needs
 ;; - available tags -> through resource-key, fetched from here
@@ -147,30 +122,62 @@
 ;; - open-modal -> db-path
 
 (s/def ::db-path (s/* keyword?))
-(s/def ::update-event keyword?)
 (s/def ::resource-key keyword?)
 (s/def ::no-edit-rights-sub-key keyword?)
 (s/def ::total-count-sub-key keyword?)
 (s/def ::on-open-modal-event keyword?)
 (s/def ::singular keyword?)
 (s/def ::plural keyword?)
+(s/def ::filter-fn fn?)
+(s/def ::refetch-event keyword?)
+
+(reg-event-fx
+  ::update-tags
+  (fn [{db :db} [_ {:keys [resource-key updated-tags call-back-fn refetch-event
+                           text operation filter-fn
+                           db-path singular plural]}]]
+    {::cimi-api-fx/operation-bulk [resource-key
+                                   (fn [result]
+                                     (let [updated     (-> result :updated)
+                                           success-msg (str updated " " (if (= 1 updated) singular plural) " updated with operation: " text)]
+                                       (dispatch [::messages-events/add
+                                                  {:header  "Bulk edit operation successful"
+                                                   :content success-msg
+                                                   :type    :success}])
+                                       (dispatch [::table-plugin/set-bulk-edit-success-message
+                                                  success-msg
+                                                  db-path])
+                                       (dispatch [refetch-event])
+                                       (when (fn? call-back-fn) (call-back-fn (-> result :updated)))))
+                                   operation
+                                   (filter-fn db)
+                                   {:doc {:tags updated-tags}}]}))
 
 (defn BulkEditTagsModal
-  [{:keys [resource-key no-edit-rights-sub-key
-           update-event db-path total-count-sub-key
-           singular plural]}]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        selected-count   (subscribe [::selected-count db-path total-count-sub-key])
-        opened-modal     (subscribe [::edit-mode db-path])
-        open?            (subscribe [::bulk-modal-visible? db-path])
-        used-tags        (subscribe [::tags resource-key])
-        view-only-avlbl? (keyword? no-edit-rights-sub-key)
-        view-only-items  (when view-only-avlbl?
-                           (subscribe [no-edit-rights-sub-key]))
-        form-tags        (r/atom [])
-        mode->tag-color  (zipmap tags-modal-ids [:teal :teal :red :red])]
+  [{:keys [resource-key no-edit-rights-sub-key refetch-event
+           db-path total-count-sub-key singular plural filter-fn]}]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        selected-count       (subscribe [::selected-count db-path total-count-sub-key])
+        edit-mode            (subscribe [::edit-mode db-path])
+        open?                (subscribe [::bulk-modal-visible? db-path])
+        used-tags            (subscribe [::tags resource-key])
+        view-only-avlbl?     (keyword? no-edit-rights-sub-key)
+        view-only-items      (when view-only-avlbl?
+                               (subscribe [no-edit-rights-sub-key]))
+        form-tags            (r/atom [])
+        mode->tag-color      (zipmap tags-modal-ids [:teal :teal :red :red])
+        edit-mode->color     {modal-tags-add-id     :green
+                              modal-tags-remove-all :red
+                              modal-tags-remove-id  :red
+                              modal-tags-set-id     :red}
+        edit-mode->operation {modal-tags-add-id     "add-tags"
+                              modal-tags-remove-all "set-tags"
+                              modal-tags-set-id     "set-tags"
+                              modal-tags-remove-id  "remove-tags"}]
     (fn []
-      (let [close-fn     (fn []
+      (let [action-text  (translate-from-qkey @tr @edit-mode)
+            color        (edit-mode->color @edit-mode)
+            close-fn     (fn []
                            (dispatch [::open-modal {:db-path db-path}])
                            (reset! form-tags []))
             change-mode  (fn [modal-id]
@@ -178,7 +185,21 @@
                              (reset! form-tags []))
                            (dispatch [::open-modal {:db-path  db-path
                                                     :modal-id modal-id}]))
-            not-editable (when view-only-avlbl? (:count @view-only-items))]
+            not-editable (when view-only-avlbl? (:count @view-only-items))
+            updated-tags (if (= modal-tags-remove-all @edit-mode)
+                           []
+                           @form-tags)
+            update-event [::update-tags {:resource-key resource-key
+                                         :refetch-event refetch-event
+                                         :updated-tags updated-tags
+                                         :operation    (edit-mode->operation @edit-mode)
+                                         :call-back-fn close-fn
+                                         :text         action-text
+                                         :filter-fn     filter-fn
+                                         :db-path      db-path}]
+            disabled? (or (= @selected-count 0)
+                        (and  (not= modal-tags-remove-all @edit-mode)
+                          (= 0 (count @form-tags))))]
         [ui/Modal {:open       @open?
                    :close-icon true
                    :on-close   close-fn}
@@ -187,14 +208,14 @@
           [ui/Form
            [:div {:style {:display :flex
                           :gap     "1.5rem"}}
-            (doall (for [edit-mode tags-modal-ids]
-                     ^{:key edit-mode}
-                     [TagsEditModeRadio edit-mode @opened-modal change-mode]))]
+            (doall (for [mode tags-modal-ids]
+                     ^{:key mode}
+                     [TagsEditModeRadio mode @edit-mode change-mode]))]
            [:div {:style {:margin-top "1.5rem"}}
-            (when-not (= modal-tags-remove-all @opened-modal)
+            (when-not (= modal-tags-remove-all @edit-mode)
               [components/TagsDropdown {:initial-options @used-tags
                                         :on-change-fn    (fn [tags] (reset! form-tags tags))
-                                        :tag-color       (mode->tag-color @opened-modal)}])]]]
+                                        :tag-color       (mode->tag-color @edit-mode)}])]]]
          [ui/ModalActions
           {:style {:display         :flex
                    :align-items     :center
@@ -222,7 +243,9 @@
                                 (map #(str "id='" % "'")
                                   (->> @view-only-items :resources (map :id))))]))}
                      (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
-          [ButtonAskingForConfirmation @form-tags close-fn db-path update-event total-count-sub-key]]]))))
+          [ButtonAskingForConfirmation {:disabled? disabled? :db-path db-path
+                                        :update-event update-event :total-count-sub-key total-count-sub-key
+                                        :text action-text :color color}]]]))))
 
 (defn create-bulk-edit-modal
   [{:keys [db-path on-open-modal-event resource-key] :as opts}]
@@ -242,9 +265,12 @@
                  :req-un [::db-path
                           ::resource-key
                           ::total-count-sub-key
-                          ::update-event]
+                          ::filter-fn
+                          ::refetch-event]
                  :opt-un [::no-edit-rights-sub-key
-                          ::on-open-modal-event])))
+                          ::on-open-modal-event
+                          ::singular
+                          ::plural])))
 
 (s/fdef BulkEditTagsModal :args
   ::bulk-edit-modal-interface)

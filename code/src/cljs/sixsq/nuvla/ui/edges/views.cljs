@@ -4,7 +4,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
-            [sixsq.nuvla.ui.edges.events :as events]
+            [sixsq.nuvla.ui.edges.events :as events :refer [build-bulk-filter]]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.subs :as subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.bulk-edit-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -907,12 +908,12 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                           (apply concat
-                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                            (apply concat
+                              (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                       (:nuvlabox-workers @current-cluster))]
+                                                 (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
@@ -930,26 +931,36 @@
                             :header-content [:<> (@tr [:version])
                                              (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
                            {:field-key :tags :no-sort? true}
-                           {:field-key :manager :no-sort? true}]]
-    [Table {:sort-config        {:db-path     ::spec/ordering
-                                 :fetch-event [::events/get-nuvlaboxes]}
-            :columns           columns
-            :rows              selected-nbs
-            :table-props       {:compact "very" :selectable true}
-            :cell-props        {:header {:single-line true}}
-            :row-render        (fn [row-data] [NuvlaboxRow row-data managers])
-            :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
-            :row-props         {:role  "link"
-                                :style {:cursor "pointer"}}
-            :select-config      {:bulk-actions [{:icon (fn [] [ui/Icon {:className "fal fa-tags"}])
-                                                 :name "Edit Tags"
-                                                 :event (fn []
-                                                          (dispatch [::events/get-edges-tags])
-                                                          (dispatch [::events/open-modal spec/modal-tags-add-id]))}]
-                                 :total-count-sub-key [::subs/nuvlaboxes-count]
-                                 :resources-sub-key [::subs/nuvlaboxes-resources]
-                                 :select-db-path [::spec/select]
-                                 :rights-needed :edit}}]))
+                           {:field-key :manager :no-sort? true}]
+        {trigger :trigger-config
+         BulkEditTagsModal :modal} (bulk-edit-modal/create-bulk-edit-modal
+                                           {:db-path                [::spec/select]
+                                            :refetch-event          ::events/get-nuvlaboxes
+                                            :resource-key           :nuvlabox
+                                            :update-event           ::events/update-tags
+                                            :total-count-sub-key    ::subs/nuvlaboxes-count
+                                            :on-open-modal-event    ::events/get-edges-without-edit-rights
+                                            :no-edit-rights-sub-key ::subs/edges-without-edit-rights
+                                            :singular               (@tr [:edge])
+                                            :plural                 (@tr [:edges])
+                                            :filter-fn               (partial build-bulk-filter [::spec/select])})]
+    [:<>
+     [BulkEditTagsModal]
+     [Table {:sort-config        {:db-path     ::spec/ordering
+                                  :fetch-event [::events/get-nuvlaboxes]}
+             :columns           columns
+             :rows              selected-nbs
+             :table-props       {:compact "very" :selectable true}
+             :cell-props        {:header {:single-line true}}
+             :row-render        (fn [row-data] [NuvlaboxRow row-data managers])
+             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+             :row-props         {:role  "link"
+                                 :style {:cursor "pointer"}}
+             :select-config      {:bulk-actions [trigger]
+                                  :total-count-sub-key [::subs/nuvlaboxes-count]
+                                  :resources-sub-key [::subs/nuvlaboxes-resources]
+                                  :select-db-path [::spec/select]
+                                  :rights-needed :edit}}]]))
 
 
 (defn NuvlaboxMapPoint
@@ -1058,4 +1069,4 @@
   [:<>
    [ui/Segment style/basic [NuvlaBoxesOrClusters]]
    [AddModalWrapper]
-   [BulkUpdateModal]])
+   ])

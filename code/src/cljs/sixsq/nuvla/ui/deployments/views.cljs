@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.deployments.events :as events]
             [sixsq.nuvla.ui.deployments.spec :as spec]
             [sixsq.nuvla.ui.deployments.subs :as subs]
-            [sixsq.nuvla.ui.deployments.utils :as utils]
+            [sixsq.nuvla.ui.deployments.utils :as utils :refer [build-bulk-filter]]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
@@ -17,6 +17,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -26,8 +27,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.routing.events :as routing-events]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 
@@ -215,13 +215,14 @@
               {trigger :trigger-config
                BulkEditTagsModal :modal} (bulk-edit-modal/create-bulk-edit-modal
                                            {:db-path                [::spec/select]
+                                            :refetch-event          ::events/get-deployments
                                             :resource-key           :deployment
-                                            :update-event           ::events/update-tags
                                             :total-count-sub-key    ::subs/deployments-count
                                             :on-open-modal-event    ::events/get-deployments-without-edit-rights
                                             :no-edit-rights-sub-key ::subs/deployments-without-edit-rights
                                             :singular               (@tr [:deployment])
-                                            :plural                 (@tr [:deployments])})]
+                                            :plural                 (@tr [:deployments])
+                                            :filter-fn               build-bulk-filter})]
           [:<>
            [BulkEditTagsModal]
            [Table {:columns      [{:field-key :id}

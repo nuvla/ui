@@ -152,40 +152,15 @@
       {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
 
 
-(reg-event-fx
-  ::get-edges-tags
-  (fn [_ _]
-    {::cimi-api-fx/search
-     [:nuvlabox
-      {:first        0
-       :last        0
-       :aggregation "terms:tags"}
-      (fn [response]
-        (dispatch [::set-edges-tags
-                   (->> response
-                        :aggregations
-                        :terms:tags
-                        :buckets
-                        (map :key))]))]}))
-
-(reg-event-db
-  ::set-edges-tags
-  (fn [db [_ tags]]
-    (assoc db ::spec/edges-tags tags)))
-
+(defn build-bulk-filter
+  [db-path db]
+  (table-plugin/build-bulk-filter (get-in db db-path) (get-full-filter-string db)))
 
 (reg-event-fx
   ::update-tags
-  (fn [{{:keys [::spec/select
-                ::i18n-spec/tr] :as db} :db}
-       [_ edit-mode {:keys [tags call-back-fn text]}]]
-    (let [edit-mode->operation {spec/modal-tags-add-id     "add-tags"
-                                spec/modal-tags-remove-all "set-tags"
-                                spec/modal-tags-set-id     "set-tags"
-                                spec/modal-tags-remove-id  "remove-tags"}
-          filter               (table-plugin/build-bulk-filter select (get-full-filter-string db))
-          operation            (edit-mode->operation edit-mode)
-          updated-tags         (if (= spec/modal-tags-remove-all edit-mode) [] tags)]
+  (fn [{{:keys [::i18n-spec/tr] :as db} :db}
+       [_ {:keys [updated-tags call-back-fn text operation]}]]
+    (let [filter (build-bulk-filter db [::spec/select])]
       {::cimi-api-fx/operation-bulk [:nuvlabox
                                      (fn [result]
                                        (let [updated     (-> result :updated)

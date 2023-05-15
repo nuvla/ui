@@ -4,8 +4,7 @@
                                    reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.edges.spec :as spec]
-            [sixsq.nuvla.ui.edges.utils :as utils]
-            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
+            [sixsq.nuvla.ui.edges.utils :as utils :refer [get-full-filter-string]]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -22,9 +21,7 @@
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
-(def refresh-id-non-edit :edges-without-edit-rights)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
-(def refresh-id-inferred-locations :nuvlabox-get-nuvlabox-inferred-locations)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
 (def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
@@ -78,21 +75,6 @@
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-clusters]}]]]}))
 
-
-(reg-event-fx
-  ::refresh-clusters
-  (fn [_ _]
-    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlaboxes]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlaboxes-summary]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-id-clusters
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlabox-clusters]}]]]}))
-
-
 (reg-event-fx
   ::refresh-cluster
   (fn [_ [_ cluster-id]]
@@ -103,16 +85,6 @@
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
-
-(defn- get-full-filter-string
-  [{:keys [::spec/state-selector
-           ::spec/additional-filter] :as db}]
-  (general-utils/join-and
-    "id!=null"
-    (when state-selector (utils/state-filter state-selector))
-    additional-filter
-    (full-text-search-plugin/filter-text
-      db [::spec/edges-search])))
 
 (reg-event-fx
   ::get-nuvlaboxes
@@ -152,32 +124,6 @@
       {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
 
 
-(defn build-bulk-filter
-  [db-path db]
-  (table-plugin/build-bulk-filter (get-in db db-path) (get-full-filter-string db)))
-
-(reg-event-fx
-  ::update-tags
-  (fn [{{:keys [::i18n-spec/tr] :as db} :db}
-       [_ {:keys [updated-tags call-back-fn text operation]}]]
-    (let [filter (build-bulk-filter db [::spec/select])]
-      {::cimi-api-fx/operation-bulk [:nuvlabox
-                                     (fn [result]
-                                       (let [updated     (-> result :updated)
-                                             success-msg (str updated " " (tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)]
-                                         (dispatch [::messages-events/add
-                                                    {:header  "Bulk edit operation successful"
-                                                     :content success-msg
-                                                     :type    :success}])
-                                         (dispatch [::table-plugin/set-bulk-edit-success-message
-                                                    success-msg
-                                                    [::spec/select]])
-                                         (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]])
-                                         (dispatch [::get-nuvlaboxes])
-                                         (when (fn? call-back-fn) (call-back-fn (-> result :updated)))))
-                                     operation
-                                     (when (seq filter) filter)
-                                     {:doc {:tags updated-tags}}]})))
 
 (reg-event-fx
   ::set-additional-filter
@@ -275,27 +221,6 @@
                              "terms:online,terms:state"
                              nil)
                            #(dispatch [::set-nuvlaboxes-summary %])]}))
-
-
-(reg-event-fx
-  ::set-nuvlabox-cluster-summary
-  (fn [{db :db} [_ nuvlaboxes-summary]]
-    {:db (assoc db ::spec/nuvlabox-cluster-summary nuvlaboxes-summary)}))
-
-
-(reg-event-fx
-  ::get-nuvlabox-cluster-summary
-  (fn [{{:keys [::spec/nuvlabox-cluster] :as db} :db} _]
-    {::cimi-api-fx/search [:nuvlabox
-                           (utils/get-query-aggregation-params
-                             (full-text-search-plugin/filter-text
-                               db [::spec/edges-search])
-                             "terms:online,terms:state"
-                             (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
-                                  (map #(str "id='" % "'"))
-                                  (apply general-utils/join-or)))
-                           #(dispatch [::set-nuvlabox-cluster-summary %])]}))
-
 
 (reg-event-fx
   ::set-nuvlabox-clusters

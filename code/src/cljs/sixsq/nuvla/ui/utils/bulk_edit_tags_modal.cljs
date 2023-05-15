@@ -94,11 +94,12 @@
 (defn- ButtonAskingForConfirmation
   [_]
   (let [mode (r/atom :idle)]
-    (fn [{:keys [color text update-event disabled?]}]
+    (fn [{:keys [color text update-event disabled? action-aria-label]}]
       (if (= :idle @mode)
         [:div
          [:span (str text "?")]
-         [ui/Button {:color    color
+         [ui/Button {:aria-label action-aria-label
+                     :color    color
                      :disabled disabled?
                      :active   true
                      :style    {:margin-left "2rem"}
@@ -147,6 +148,7 @@
                                        (dispatch [::table-plugin/set-bulk-edit-success-message
                                                   success-msg
                                                   db-path])
+                                       (dispatch [::table-plugin/reset-bulk-edit-selection db-path])
                                        (dispatch [refetch-event])
                                        (when (fn? call-back-fn) (call-back-fn (-> result :updated)))))
                                    operation
@@ -196,7 +198,9 @@
                                          :call-back-fn close-fn
                                          :text         action-text
                                          :filter-fn     filter-fn
-                                         :db-path      db-path}]
+                                         :db-path      db-path
+                                         :plural       plural
+                                         :singular     singular}]
             disabled? (or (= @selected-count 0)
                         (and  (not= modal-tags-remove-all @edit-mode)
                           (= 0 (count @form-tags))))]
@@ -244,8 +248,8 @@
                                   (->> @view-only-items :resources (map :id))))]))}
                      (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
           [ButtonAskingForConfirmation {:disabled? disabled? :db-path db-path
-                                        :update-event update-event :total-count-sub-key total-count-sub-key
-                                        :text action-text :color color}]]]))))
+                                       :update-event update-event :total-count-sub-key total-count-sub-key
+                                       :text action-text :color color :action-aria-label "edit tags"}]]]))))
 
 (defn create-bulk-edit-modal
   [{:keys [db-path on-open-modal-event resource-key] :as opts}]

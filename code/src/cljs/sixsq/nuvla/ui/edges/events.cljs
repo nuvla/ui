@@ -141,11 +141,11 @@
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
                    {:header  (cond-> (str "failure getting nuvlaboxes")
-                                     status (str " (" status ")"))
+                               status (str " (" status ")"))
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                     ::main-spec/loading? false)
+                  ::main-spec/loading? false)
        :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
 
 

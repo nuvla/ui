@@ -1,11 +1,10 @@
 (ns sixsq.nuvla.ui.edges.utils
   (:require [clojure.string :as str]
-            [sixsq.nuvla.ui.edges-detail.spec :as edges-spec]
+            [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
-            [sixsq.nuvla.ui.session.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -250,7 +249,7 @@
     (when state-selector (state-filter state-selector))
     additional-filter
     (full-text-search-plugin/filter-text
-      db [::edges-spec/edges-search])))
+      db [::spec/edges-search])))
 
 (defn build-bulk-filter
   [db-path db]

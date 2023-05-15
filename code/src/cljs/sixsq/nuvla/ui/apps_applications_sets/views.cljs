@@ -434,7 +434,6 @@
         is-new?       (subscribe [::apps-subs/is-new?])]
     (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
                          (dispatch [::apps-events/set-active-tab :overview]))
-    (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/set-form-spec ::spec/apps-sets])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)

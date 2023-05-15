@@ -21,6 +21,8 @@
 
 (def module-private-registries-path [:content :private-registries])
 
+(def module-registries-credentials-path [:content :registries-credentials])
+
 (defn- base-path
   [db-path href]
   (conj db-path ::modules (some-> href (str/split "_") first)))
@@ -41,13 +43,18 @@
   [db-path href]
   (db-module-subpath db-path href ::loading?))
 
-(defn- db-module-private-registries-path
+(defn- db-module-resolved-private-registries-path
   [db-path href]
-  (db-module-subpath db-path href ::private-registries))
+  (db-module-subpath db-path href ::resolved-private-registries))
 
-(defn- db-module-registries-creds-path
+(defn- db-module-resolved-registries-creds-path
   [db-path href]
-  (db-module-subpath db-path href ::registries-creds))
+  (db-module-subpath db-path href ::resolved-registries-creds))
+
+(defn- db-module-registries-credentials-path
+  [db-path href]
+  (db-module-subpath db-path href ::registries-credentials))
+
 
 (defn- db-module
   [db db-path href]
@@ -73,13 +80,28 @@
   [module f]
   (update-in module module-env-vars-path f))
 
+(defn- update-module-registries-credentials
+  [module f]
+  (update-in module module-registries-credentials-path f))
+
 (defn- update-env-value-by-index
   [env-vars index value]
   (assoc-in env-vars [index ::new-value] value))
 
+(defn- update-registry-credential-by-index
+  [registries-credentials index value]
+  (if (seq registries-credentials)
+    (assoc registries-credentials index value)
+
+    ))
+
 (defn- module-private-registries
   [module]
   (get-in module module-private-registries-path))
+
+(defn- module-registries-credentials
+  [module]
+  (get-in module module-registries-credentials-path))
 
 (defn- overwrite-env
   [environment-variables env]
@@ -91,29 +113,35 @@
   [db db-path href loading?]
   (assoc-in db (db-module-loading-registries-path db-path href) loading?))
 
-(reg-event-db
+(reg-event-fx
   ::set-module
-  (fn [db [_ db-path href module]]
-    (let [overwrite-map        (get-in db (db-module-overwrite-path db-path href))
-          update-env-vars      #(overwrite-env % (:env overwrite-map))
-          overwrite-module-env #(update-module-env-vars % update-env-vars)]
-      (-> module
-          overwrite-module-env
-          (set-db-module db db-path href)))))
+  (fn [{db :db} [_ db-path href module]]
+    (let [overwrite-map               (get-in db (db-module-overwrite-path db-path href))
+          update-env-vars             #(overwrite-env % (:env overwrite-map))
+          overwrite-module-env        #(update-module-env-vars % update-env-vars)
+          overwrite-module-regs-creds #(if-let [registries-credentials (:registries-credentials overwrite-map)]
+                                         (update-module-registries-credentials % (constantly registries-credentials))
+                                         %)]
+      {:db (-> module
+               overwrite-module-env
+               overwrite-module-regs-creds
+               (set-db-module db db-path href))
+       :fx [[:dispatch [::load-infra-registries db-path href]]]})))
 
 (reg-event-fx
   ::load-module
   (fn [{db :db} [_ db-path href overwrite]]
-    {::cimi-api-fx/get [href #(dispatch [::set-module db-path href %])]
-     :db               (assoc-in db (db-module-overwrite-path db-path href) overwrite)}))
+    (js/console.info ::load-module "ICI" overwrite)
+    {:db               (assoc-in db (db-module-overwrite-path db-path href) overwrite)
+     ::cimi-api-fx/get [href #(dispatch [::set-module db-path href %])]}))
 
 (reg-event-db
-  ::set-private-registries
+  ::set-resolved-private-registries
   (fn [db [_ db-path href private-registries]]
     (->> private-registries
          (map (juxt :id identity))
          (into {})
-         (assoc-in db (db-module-private-registries-path db-path href)))))
+         (assoc-in db (db-module-resolved-private-registries-path db-path href)))))
 
 (reg-event-fx
   ::resolve-private-registries
@@ -127,14 +155,14 @@
        :select  "id, name, description"
        :orderby "name:asc,id:asc"
        :last    10000}
-      #(dispatch [::set-private-registries db-path href (:resources %)])]}))
+      #(dispatch [::set-resolved-private-registries db-path href (:resources %)])]}))
 
 (reg-event-db
-  ::set-registries-creds
+  ::set-resolved-registries-creds
   (fn [db [_ db-path href registries-creds]]
     (->> registries-creds
          (group-by :parent)
-         (assoc-in db (db-module-registries-creds-path db-path href)))))
+         (assoc-in db (db-module-resolved-registries-creds-path db-path href)))))
 
 (reg-event-fx
   ::resolve-registries-creds
@@ -150,7 +178,7 @@
        :select  "id, parent, name, description, last-check, status, subtype"
        :orderby "name:asc,id:asc"
        :last    10000}
-      #(dispatch [::set-registries-creds db-path href (:resources %)])]}))
+      #(dispatch [::set-resolved-registries-creds db-path href (:resources %)])]}))
 
 (reg-event-fx
   ::load-infra-registries
@@ -191,6 +219,16 @@
           update-module-env-var #(update-module-env-vars % update-env-vars)]
       {:db (update-db-module db db-path href update-module-env-var)
        :fx [(when change-event [:dispatch change-event])]})))
+
+#_(reg-event-fx
+  ::update-registry-credential
+  (fn [{db :db} [_ db-path href index new-value]]
+    (let [
+          ;change-event          (get-in db (conj db-path change-event-env-variables))
+          update-regs-creds      #(update-env-value-by-index % index new-value)
+          update-module-reg-cred #(update-module-registries-credentials % update-regs-creds)]
+      {:db (update-db-module db db-path href update-module-reg-cred)
+       :fx [#_(when change-event [:dispatch change-event])]})))
 
 (defn- get-version-id
   [module-versions version]
@@ -267,17 +305,25 @@
     (get-in db (db-module-loading-registries-path db-path href) false)))
 
 (reg-sub
-  ::private-registry
+  ::resolved-private-registry
   (fn [db [_ db-path href private-registry-id]]
     (-> db
-        (get-in (db-module-private-registries-path db-path href))
+        (get-in (db-module-resolved-private-registries-path db-path href))
         (get private-registry-id))))
+
+(reg-sub
+  ::selected-registry-credential
+  (fn [db [_ db-path href i]]
+    (-> db
+        (db-module db-path href)
+        module-registries-credentials
+        (nth i nil))))
 
 (reg-sub
   ::private-registry-creds-options
   (fn [db [_ db-path href private-registry-id]]
     (-> db
-        (get-in (db-module-registries-creds-path db-path href))
+        (get-in (db-module-resolved-registries-creds-path db-path href))
         (get private-registry-id)
         (->> (map (fn [{:keys [id name]}]
                     {:key id :text (or name id) :value id}))))))
@@ -344,11 +390,17 @@
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 
-(defn dropdown-creds
-  [db-path href private-registry]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        {:keys [id name description]} @(subscribe [::private-registry db-path href private-registry])
-        options @(subscribe [::private-registry-creds-options db-path href private-registry])
+(defn DropdownContainerRegistry
+  [db-path href i private-registry]
+  (let [tr             @(subscribe [::i18n-subs/tr])
+        {:keys [id name description]} @(subscribe [::resolved-private-registry db-path href private-registry])
+        options        @(subscribe [::private-registry-creds-options db-path href private-registry])
+        value          @(subscribe [::selected-registry-credential db-path href i])
+        preselected?   (and (some? value)
+                            (zero? (count options)))
+        registry-label (r/as-element
+                         [:label (or name id) ff/nbsp
+                          (when description (ff/help-popup description))])
         ;registry       (subscribe [::subs/infra-registry private-registry-id])
         ;registry-name  (or (:name @registry) private-registry-id)
         ;creds-options  (subscribe [::subs/infra-registries-creds-by-parent-options
@@ -356,20 +408,26 @@
         ;registry-descr (:description @registry)
         ;{:keys [cred-id preselected?]} info
         ]
-    [ui/FormDropdown
-     (cond->
-       {:required    true
-        :label       (r/as-element
-                       [:label (or name id) ff/nbsp
-                        (when description (ff/help-popup description))])
-        :selection   true
-        ;:default-value cred-id
-        :placeholder (@tr [:select-credential])
-        :options     options
-        ;:on-change     (ui-callback/value
-        ;                 #(dispatch [::events/set-credential-registry private-registry-id %]))
-        }
-       #_(empty? @creds-options) #_(assoc :error (@tr [:no-available-creds-registry])))]
+    (if preselected?
+      [ui/FormInput
+       {:disabled      true
+        :label         registry-label
+        :default-value (@tr [:preselected])}]
+      [ui/FormDropdown
+       (cond->
+         {:required    true
+          :label       registry-label
+          :selection   true
+          :value       value
+          ;:default-value cred-id
+          :error       (when-not (seq options)
+                         (tr [:no-available-creds-registry]))
+          :placeholder (tr [:select-credential])
+          :options     options
+          ;:on-change     (ui-callback/value
+          ;                 #(dispatch [::events/set-credential-registry private-registry-id %]))
+          }
+         #_(empty? @creds-options) #_(assoc :error (@tr [:no-available-creds-registry])))])
     ;(if (and preselected?
     ;         (not (some #(= cred-id (:value %)) @creds-options)))
     ;  [ui/FormInput
@@ -402,14 +460,12 @@
   (let [module             @(subscribe [::module db-path href])
         private-registries (module-private-registries module)
         loading?           @(subscribe [::registries-loading? db-path href])]
-    (dispatch [::load-infra-registries db-path href])
     ; load infra reg, help name resolution
     ; load cred reg group by parent needed for options
     ; look at module preselected and create
     ; for each infra reg, when only one cred select it
     ; deployment-set creds-registries
     ; dropdown value preselected or choice to user
-    (js/console.info "@loading?" loading?)
     (if (seq private-registries)
       #_[ui/Form
          (map-indexed
@@ -419,15 +475,15 @@
            env-variables)]
       #_[:div (str private-registries)]
       [ui/Form {:loading loading?}
-       (for [private-registry private-registries]
-         ^{:key private-registry}
-         [dropdown-creds db-path href private-registry])]
+       (for [[i private-registry] (map-indexed vector private-registries)]
+         ^{:key (str href "-" private-registry)}
+         [DropdownContainerRegistry db-path href i private-registry])]
       [ui/Message "No container registries defined"])
 
     #_[ui/Form {:loading @loading?}
        (for [[private-registry-id info] @private-registries]
          ^{:key private-registry-id}
-         [dropdown-creds private-registry-id info])]))
+         [DropdownContainerRegistry private-registry-id info])]))
 
 #_(defn AcceptLicense
     [{:keys [db-path href] :as _opts}]

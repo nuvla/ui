@@ -75,6 +75,7 @@
   (let [version      (subscribe [::route-subs/query-param :version])
         sub-type     (subscribe [::route-subs/query-param :subtype])]
     (fn []
+      (dispatch [::events/reset-version])
       (let [is-new?  (boolean (seq @sub-type))]
         (dispatch [::events/is-new? is-new?])
         (if is-new?

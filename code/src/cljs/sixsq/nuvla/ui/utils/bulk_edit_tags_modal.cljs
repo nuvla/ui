@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.utils.bulk-edit-modal
+(ns sixsq.nuvla.ui.utils.bulk-edit-tags-modal
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub

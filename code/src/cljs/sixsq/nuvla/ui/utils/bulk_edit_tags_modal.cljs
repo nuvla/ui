@@ -126,8 +126,8 @@
 (s/def ::no-edit-rights-sub-key keyword?)
 (s/def ::total-count-sub-key keyword?)
 (s/def ::on-open-modal-event keyword?)
-(s/def ::singular keyword?)
-(s/def ::plural keyword?)
+(s/def ::singular string?)
+(s/def ::plural string?)
 (s/def ::filter-fn fn?)
 (s/def ::refetch-event keyword?)
 

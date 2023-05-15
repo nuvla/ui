@@ -335,8 +335,10 @@
   (join-and
     (apply
       join-and
-      (map (fn [role]
-             (str "acl/edit-meta!='" role "'"))
+      (mapcat
+        (fn [role]
+          [(str "acl/owners!='" role "'")
+           (str "acl/edit-meta!='" role "'")])
         (session-utils/get-roles session)))
     selected-filter))
 

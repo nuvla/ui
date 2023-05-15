@@ -214,12 +214,14 @@
         (let [selectable?                (or (nil? show-options?) show-options?)
               {trigger :trigger-config
                BulkEditTagsModal :modal} (bulk-edit-modal/create-bulk-edit-modal
-                                           {:db-path             [::spec/select]
-                                            :resource-key        :deployment
-                                            :update-event        ::events/update-tags
-                                            :total-count-sub-key ::subs/deployments-count
-                                            :on-open-modal-event ::events/get-deployments-without-edit-rights
-                                            :no-edit-rights-sub-key ::subs/deployments-without-edit-rights})]
+                                           {:db-path                [::spec/select]
+                                            :resource-key           :deployment
+                                            :update-event           ::events/update-tags
+                                            :total-count-sub-key    ::subs/deployments-count
+                                            :on-open-modal-event    ::events/get-deployments-without-edit-rights
+                                            :no-edit-rights-sub-key ::subs/deployments-without-edit-rights
+                                            :singular               (@tr [:deployment])
+                                            :plural                 (@tr [:deployments])})]
           [:<>
            [BulkEditTagsModal]
            [Table {:columns      [{:field-key :id}

@@ -165,8 +165,6 @@
         open?            (subscribe [::bulk-modal-visible? db-path])
         used-tags        (subscribe [::tags resource-key])
         view-only-avlbl? (keyword? no-edit-rights-sub-key)
-        _ (tap> [ "no-edit-rights-sub-key" no-edit-rights-sub-key])
-        _ (tap> [ "view-only-avlbl?" view-only-avlbl?])
         view-only-items  (when view-only-avlbl?
                            (subscribe [no-edit-rights-sub-key]))
         form-tags        (r/atom [])
@@ -208,7 +206,7 @@
                    " "
                    @selected-count
                    " "
-                   (@tr [(if (= @selected-count 0) singular plural)])
+                   (@tr [(if (= @selected-count 1) singular plural)])
                    ". ")]
            (when (and view-only-avlbl? (<= 1 not-editable @selected-count))
              [:<>

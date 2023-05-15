@@ -33,7 +33,6 @@
   (fn [[_ db-path]]
     (subscribe [::edit-mode db-path]))
   (fn [opened-modal]
-    (tap> opened-modal)
     (boolean ((set tags-modal-ids) opened-modal))))
 
 (reg-sub
@@ -44,10 +43,12 @@
 (reg-event-fx
   ::open-modal
   (fn [{db :db} [_ {:keys [resource-key modal-id db-path on-open-modal-event]}]]
-    (let [fx [(when (and ((set tags-modal-ids) modal-id)
+    (let [fx (when (and ((set tags-modal-ids) modal-id)
                      (not ((set tags-modal-ids) (get-in db [::edit-mode db-path]))))
-               (when on-open-modal-event [:dispatch [on-open-modal-event]])
-                [:dispatch [::fetch-tags resource-key]])]]
+               [[:dispatch [on-open-modal-event]]
+                [:dispatch [::fetch-tags resource-key]]])]
+      (tap> ["open-modal fx" fx])
+      (tap> ["on-open-modal-event" on-open-modal-event])
       {:db (assoc-in db [::edit-mode db-path] modal-id)
        :fx fx})))
 

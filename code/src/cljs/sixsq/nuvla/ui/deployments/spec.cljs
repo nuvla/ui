@@ -28,7 +28,6 @@
 (s/def ::bulk-jobs-monitored any?)
 (s/def ::bulk-jobs any?)
 
-
 (def default-ordering {:field :created :order "desc"})
 
 (def defaults {::deployments-search      (full-text-search-plugin/build-spec)

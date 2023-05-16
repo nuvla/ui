@@ -186,29 +186,6 @@
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
 
-(reg-event-fx
-  ::update-tags
-  (fn [{{:keys [::i18n-spec/tr] :as db} :db}
-       [_ {:keys [updated-tags call-back-fn
-                  text operation]}]]
-    (let [filter (utils/build-bulk-filter db)]
-      {::cimi-api-fx/operation-bulk [:deployment
-                                     (fn [result]
-                                       (let [updated     (-> result :updated)
-                                             success-msg (str updated " " (tr [(if (< 1 updated) :deployments :deployment)]) " updated with operation: " text)]
-                                         (dispatch [::messages-events/add
-                                                    {:header  "Bulk edit operation successful"
-                                                     :content success-msg
-                                                     :type    :success}])
-                                         (dispatch [::table-plugin/set-bulk-edit-success-message
-                                                    success-msg
-                                                    [::spec/select]])
-                                         (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]])
-                                         (dispatch [::get-deployments])
-                                         (when (fn? call-back-fn) (call-back-fn (-> result :updated)))))
-                                     operation
-                                     (when (seq filter) filter)
-                                     {:doc {:tags updated-tags}}]})))
 
 (reg-event-fx
   ::get-deployments-without-edit-rights

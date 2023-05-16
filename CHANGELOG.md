@@ -9,6 +9,7 @@
 - Enables bulk actions in table plugin - Moves deployments bulk action feature
   to table plugin #1180
 - Edges overview, table view - Enables bulk editing of tags #1194
+- Edges details, overview tab - Adds node labels to Cluster status card, #1207
 
 ## Released
 

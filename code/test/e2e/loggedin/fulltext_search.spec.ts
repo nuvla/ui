@@ -6,7 +6,8 @@ async function delay(ms = 1000) {
 
 test.describe('Full text search', () => {
   for (const pageName of [
-    // 'apps', 'deployments',
+    // 'apps',
+    'deployments',
     'edges',
     'data',
   ]) {

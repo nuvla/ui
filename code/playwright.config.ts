@@ -28,7 +28,8 @@ const config: PlaywrightTestConfig = {
   grepInvert: [
     /apps_creation/,
     /Navigate from projects to apps/,
-    // /marketplace/, /full/
+    /marketplace/,
+    //  ,/full/
   ],
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,

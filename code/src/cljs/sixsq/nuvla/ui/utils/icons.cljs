@@ -9,9 +9,17 @@
      (-> opts (dissoc :name) (assoc :class name))
      opts)])
 
+(defn- I
+  [opts fa-class]
+  [Icon (merge (dissoc opts :name)
+               {:name fa-class})])
+
 (def rocket "fal fa-rocket-launch")
-
-
 (defn RocketIcon
-  []
-  [Icon {:name rocket}])
+  [opts]
+  [I opts rocket])
+
+(def folder "fal fa-folder")
+(defn FolderIcon
+  [opts]
+  [I opts folder])

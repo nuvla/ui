@@ -149,7 +149,7 @@
       :render   #(r/as-element [TabDefault spec/myapps-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:navigate-apps]))
                  :key     spec/navigate-key
-                 :icon    (r/as-element [ui/Icon {:className "fa-light fa-folder"}])}
+                 :icon    (r/as-element [icons/FolderIcon])}
       :render   #(r/as-element [TabNavigator spec/navigate-key])}]))
 
 (defn RootView

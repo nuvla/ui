@@ -16,6 +16,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
@@ -163,7 +164,7 @@
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
-         [uix/PageHeader "fa-light fa-folder" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader icons/folder (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab

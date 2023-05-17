@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as utils-general]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def subtype-project "project")
 (def subtype-component "component")
@@ -165,7 +166,7 @@ For more information on how to format your app description using Markdown syntax
 (defn subtype-icon
   [subtype]
   (condp = subtype
-    subtype-project "fa-light fa-folder"
+    subtype-project icons/folder
     subtype-component "fa-light fa-grid"
     subtype-application "fa-light fa-cubes"
     subtype-application-k8s "fa-light fa-cubes"
@@ -175,7 +176,7 @@ For more information on how to format your app description using Markdown syntax
 (defn SubtypeIconInfra
   [subtype selected]
   (condp = subtype
-    subtype-project [ui/Icon {:name "folder"}]
+    subtype-project [icons/FolderIcon]
     subtype-component [ui/Icon {:name "docker"}]
     subtype-application [ui/Icon {:name "docker"}]
     subtype-application-k8s [IconK8s selected]

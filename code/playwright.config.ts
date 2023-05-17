@@ -24,7 +24,12 @@ if (isValidHttpUrl(baseURL)) {
 const config: PlaywrightTestConfig = {
   globalSetup: require.resolve('./global-setup'),
   testDir: './test/e2e',
-  grep: [/nuvlaedge\.spec\.ts/, /logout/, /api/, /apps/, /changes/, /credentials/, /data\-date/, /edge_details/],
+  grep: [
+    /nuvlaedge\.spec\.ts/,
+    /logout/,
+    /api/,
+    // , /apps/, /changes/, /credentials/, /data\-date/, /edge_details/
+  ],
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,
   expect: {

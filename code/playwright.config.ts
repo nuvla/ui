@@ -28,7 +28,6 @@ const config: PlaywrightTestConfig = {
     /nuvlaedge\.spec\.ts/,
     /logout/,
     /api/,
-    ,
     /apps/,
     // , /changes/, /credentials/, /data\-date/, /edge_details/
   ],

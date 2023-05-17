@@ -546,7 +546,6 @@
         active-tab    (sub-apps-tab)
         is-new?       (subscribe [::apps-subs/is-new?])]
     (dispatch [::apps-events/init-view {:tab-key (when (true? @is-new?) :details)}])
-    (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))

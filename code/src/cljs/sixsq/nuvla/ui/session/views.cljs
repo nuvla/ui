@@ -88,15 +88,24 @@
                 :on-click      #(.stopPropagation %)}]
               [ui/DropdownMenu {:scrolling true}
                (doall
-                 (for [[i {:keys [value text icon level]}] (map-indexed vector visible-opts)]
-                   ^{:key value}
-                   [ui/DropdownItem {:on-click #(on-click value)
-                                     :selected (= i @cursor)}
-                    [:span (str/join (repeat (* level 5) ff/nbsp))]
-                    [ui/Icon {:name icon}]
-                    (if (= @active-claim value)
-                      [:b {:style {:color "#c10e12"}} text]
-                      text)]))]
+                 (for [{:keys [i value text icon level] :as opt}
+                       (->> visible-opts
+                            (map-indexed #(assoc %2 :i %1))
+                            (partition-by :root)
+                            (interpose [:-])
+                            (apply concat))]
+                   (if (= opt :-)
+                     ^{:key (random-uuid)}
+                     [ui/DropdownDivider]
+                     ^{:key value}
+                     [ui/DropdownItem {:on-click #(on-click value)
+                                       :selected (= i @cursor)}
+                      [:span (str/join (repeat (* level 5) ff/nbsp))]
+                      [ui/Icon {:name icon}]
+                      (if (= @active-claim value)
+                        [:b {:style {:color "#c10e12"}} text]
+                        text)]
+                     )))]
               [ui/DropdownDivider]
               [ui/DropdownItem
                {:text     "show subgroups resources"

@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.acl.utils
   (:require [clojure.set :as set]
-            [sixsq.nuvla.ui.utils.general :as general-utils]))
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def rights-hierarchy (-> (make-hierarchy)
 
@@ -170,5 +171,5 @@
     "group" "fa-light fa-users"
     "nuvlabox" "fa-light fa-box"
     "infrastructure-service" "fa-light fa-cloud"
-    "deployment" "fa-light  fa-rocket"
+    "deployment" icons/rocket
     "question circle outline"))

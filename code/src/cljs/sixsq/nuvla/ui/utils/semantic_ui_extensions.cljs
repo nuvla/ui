@@ -10,10 +10,10 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
             [sixsq.nuvla.ui.utils.form-fields :as form-fields]
             [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -29,12 +29,7 @@
        :else msg-or-key))))
 
 
-(defn Icon
-  [{:keys [name] :as opts}]
-  [ui/Icon
-   (if (some #(str/starts-with? name %) ["fa-" "fal " "fad " "fas "])
-     (-> opts (dissoc :name) (assoc :class name))
-     opts)])
+(def Icon icons/Icon)
 
 
 (defn Button
@@ -319,7 +314,7 @@
        :target   "_blank"
        :on-click (fn [event]
                    (when-not (.-metaKey event)              ;;cmd key not pressed
-                     (dispatch [::routing-events/navigate href])
+                     (dispatch [:sixsq.nuvla.ui.routing.events/navigate href])
                      (.preventDefault event)
                      (.stopPropagation event)))}
    (or label href)])

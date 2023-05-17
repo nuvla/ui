@@ -32,7 +32,8 @@
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -797,7 +798,7 @@
             uuid        (:id @deployment "")]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [ui/Icon {:name "rocket"}]
+          [icons/RocketIcon]
           module-name " (" (general-utils/id->uuid uuid) ")"]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [StatusIcon (depl-state->status state)]

@@ -97,6 +97,7 @@
   ::pages-list
   :<- [::pages]
   (fn [pages]
+(tap> pages)
     (->> pages vals (filter :order) (sort-by :order))))
 
 

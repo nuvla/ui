@@ -28,7 +28,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (def refresh-action-id :deployment-set-get-deployment-set)
@@ -212,7 +213,7 @@
                    :render   #(r/as-element [:h1 "configure same as new"])}
                   {:menuItem {:content (str/capitalize (tr [:deployments]))
                               :key     :deployments
-                              :icon    "rocket"}
+                              :icon    #(r/as-element [icons/RocketIcon])}
                    :render   #(r/as-element [deployments-views/DeploymentTable
                                              {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
                                               :no-actions  true

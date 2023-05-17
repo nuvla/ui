@@ -15,7 +15,8 @@
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn refresh
@@ -129,7 +130,7 @@
       :on-confirm  #(dispatch [::events/operation "start"])
       :danger-msg  (@tr [:infrastructure-start-warning])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "rocket"}]
+                                  [icons/RocketIcon]
                                   (@tr [:start])])
       :header      (@tr [:start-infrastructure])
       :content     [:h3 content]}]))

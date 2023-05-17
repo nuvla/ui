@@ -7,19 +7,17 @@
             [sixsq.nuvla.ui.apps-store.subs :as subs]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.apps.subs :as apps-subs]
-            [sixsq.nuvla.ui.apps.utils :as utils]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
-            [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.utils.general :as utils-general :refer [format-money]]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]
@@ -34,7 +32,7 @@
         module-index   (apps-utils/latest-published-index map-versions)
         detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
         follow-trial?  (get price :follow-customer-trial false)
-        button-icon    (if (and price (not follow-trial?)) :cart :rocket)
+        button-icon    (if (and price (not follow-trial?)) :cart icons/rocket)
         button-color   (if follow-trial? "green" "blue")
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
@@ -43,7 +41,7 @@
                             (@tr [:day]))
         button-content (if price deploy-price (@tr [:deploy]))
         on-click       (fn [event]
-                         (apps-views-detail/deploy-click module-id (utils/applications-sets? subtype))
+                         (apps-views-detail/deploy-click module-id (apps-utils/applications-sets? subtype))
                          (.preventDefault event)
                          (.stopPropagation event))
         button-ops     {:fluid    true

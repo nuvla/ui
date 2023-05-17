@@ -17,16 +17,17 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.routing.events :as routing-events]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 
@@ -326,7 +327,7 @@
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
           [components/StatisticState {:value                    total
-                                      :icons                    ["fa-light fa-rocket-launch"]
+                                      :icons                    [icons/rocket]
                                       :label                    "TOTAL"
                                       :stacked?                 true
                                       :clickable?               clickable?
@@ -368,21 +369,20 @@
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
   (let [tr    (subscribe [::i18n-subs/tr])
-        icon  "rocket"
+        icon  icons/rocket
         color "blue"]
     [ui/Segment {:secondary true
-                 :color     color
                  :raised    true
                  :style     {:display         "flex"
                              :flex-direction  "column"
                              :justify-content "space-between"}}
 
-     [:h4 [ui/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
+     [:h4 [uix/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
 
      [StatisticStates false deployment-subs]
 
      [ui/Button {:color    color
-                 :icon     icon
+                 :icon     icons/rocket
                  :style    {:align-self "start"}
                  :content  "Show me"
                  :on-click (or on-click

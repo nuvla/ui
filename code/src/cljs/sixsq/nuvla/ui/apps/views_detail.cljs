@@ -35,7 +35,8 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as utils-values]
-            [sixsq.nuvla.ui.utils.spec :as spec-utils]))
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def edit-cell-left-padding 24)
 
@@ -59,7 +60,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "fa-rocket-launch fal"}]
+     [icons/RocketIcon]
      (str/capitalize (@tr [:deployments]))]))
 
 
@@ -200,7 +201,7 @@
         (when @is-app?
           [uix/MenuItem
            {:name     (@tr [:deploy])
-            :icon     "fa-light fa-rocket-launch"
+            :icon     icons/rocket
             :disabled @deploy-disabled?
             :on-click #(deploy-click @module-id @is-apps-sets?)}])
 

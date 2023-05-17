@@ -25,7 +25,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as utils-values]))
+            [sixsq.nuvla.ui.utils.values :as utils-values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def view-type (r/atom :cards))
 
@@ -179,7 +180,7 @@
                                     deploy-disabled?)
                       :primary  true
                       :on-click deploy-fn}
-           [ui/Icon {:name "rocket"}]
+           [icons/RocketIcon]
            (@tr [:deploy])]]]))))
 
 (defn Pagination

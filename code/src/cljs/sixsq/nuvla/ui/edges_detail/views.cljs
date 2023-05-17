@@ -23,6 +23,7 @@
             [sixsq.nuvla.ui.resource-log.views :as log-views]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.map :as map]
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -1957,7 +1958,7 @@
                                                       :attached "top right"}
                                             (:count deployments)]])
                    :key     :deployments
-                   :icon    "rocket"}
+                   :icon    #(r/as-element [icons/RocketIcon])}
         :render   #(r/as-element
                      [ui/TabPane
                       [deployments-views/DeploymentTable

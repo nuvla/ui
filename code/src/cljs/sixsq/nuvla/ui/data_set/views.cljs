@@ -26,7 +26,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (defn refresh
   []
@@ -275,7 +276,8 @@
         selected-data-records (subscribe [::subs/selected-data-record-ids])
         active-tab            (subscribe [::tab-plugin/default-tab [::data-spec/tab]])
         on-click              #(dispatch [::main-events/subscription-required-dispatch
-                                          [::data-events/open-application-select-modal]])]
+                                          [::data-events/open-application-select-modal]])
+        icon                  icons/rocket]
     (fn [button-type]
       (let [selected  (if (= @active-tab :data-sets)
                         @selected-data-sets
@@ -285,14 +287,14 @@
           [uix/MenuItem
            {:name     (@tr [:process])
             :disabled disabled?
-            :icon     "rocket"
+            :icon     icon
             :on-click on-click}]
           [ui/ButtonGroup {:primary true
                            :style   {:padding-top 10}}
            [ui/Button
             {:content  (@tr [:process])
              :disabled disabled?
-             :icon     "rocket"
+             :icon     icon
              :on-click on-click}]])))))
 
 
@@ -465,7 +467,7 @@
       :content     [:<>
                     (when resource-deployment-id
                       [:div {:style {:padding "10px 0 0 0"}}
-                       [ui/Icon {:name "rocket"}]
+                       [icons/RocketIcon]
                        (values/AsLink resource-deployment-id :page "deployment"
                                       :label (@tr [:deployment]))])
                     (when infrastructure-service-id

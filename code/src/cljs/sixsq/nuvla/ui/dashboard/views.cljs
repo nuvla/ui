@@ -14,6 +14,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]))
@@ -122,7 +123,7 @@
                     :style {:padding "0.2rem"}}
      [ui/StatisticGroup {:size  "tiny"
                          :style {:justify-content "center"}}
-      [Statistic {:value total :icon "fa-light fa-rocket-launch" :label "TOTAL" :color "black"}]
+      [Statistic {:value total :icon icons/rocket :label "TOTAL" :color "black"}]
       [Statistic {:value started :icon (deployments-utils/state->icon deployments-utils/STARTED) :label deployments-utils/STARTED :color "green"}]
       [Statistic {:value starting-plus :icon (deployments-utils/state->icon deployments-utils/STARTING) :label deployments-utils/STARTING :color "orange"}]
       [Statistic {:value stopped :icon (deployments-utils/state->icon deployments-utils/STOPPED) :label deployments-utils/STOPPED :color "orange"}]
@@ -142,7 +143,7 @@
                              :border-radius   "8px"
                              :overflow        :hidden}}
 
-     [:h4 {:class "ui-header"} [uix/Icon {:name "fa-light fa-rocket-launch"}]
+     [:h4 {:class "ui-header"} [uix/Icon {:name icons/rocket}]
       (str/upper-case (@tr [:deployments]))]
 
      [StatisticStates ::deployments-subs/deployments-summary-all]

@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.main.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.about.utils :as about-utils]
-            [sixsq.nuvla.ui.routing.routes :as routes]))
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (s/def ::loading? boolean?)
 
@@ -79,7 +80,7 @@
                                        "deployments"     {:key        routes/deployments
                                                           :label-kw   :deployments
                                                           :name       "deployments"
-                                                          :icon       "fa-light fa-rocket-launch"
+                                                          :icon       icons/rocket
                                                           :protected? true
                                                           :order      30}
                                        "deployment-sets" {:key             routes/deployment-sets

@@ -1171,7 +1171,8 @@
                :on-change (partial on-change ::events/license-description)]
               [uix/TableRowField (@tr [:url]), :key "license-url",
                :editable? is-editable?, :spec (if @is-custom? ::spec/license-url any?), :validate-form? @validate-form?,
-               :required? true, :default-value (:license-url @license),
+               :required? true, :default-value [:a {:href (:license-url @license)
+                                                    :targe :_blank} (:license-url @license)],
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]
            [ui/Message {:info true}

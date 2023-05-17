@@ -59,7 +59,7 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           commitHash: ${{ steps.push-changes.outputs.commit-hash }}
       - name: Run Playwright logged in tests
-        run: npx playwright test loggedin
+        run: npx playwright test loggedin --reporter=dot --trace on
         env:
           UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
           UI_E2E_TEST_USERNAME: ${{ secrets.UI_E2E_TEST_USERNAME }}

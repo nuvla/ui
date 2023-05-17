@@ -56,19 +56,19 @@
         [ui/StatisticGroup {:widths (when-not clickable? 4)
                             :size   "tiny"}
          (for [statistic-opts [{:value          total
-                                :icons          ["fal fa-box"]
+                                :icons          ["fa-light fa-box"]
                                 :label          "TOTAL"
                                 :positive-color nil}
                                {:value          online
-                                :icons          ["fal fa-power-off"]
+                                :icons          ["fa-light fa-power-off"]
                                 :label          utils/status-online
                                 :positive-color "green"}
                                {:value          offline
-                                :icons          ["fal fa-power-off"]
+                                :icons          ["fa-light fa-power-off"]
                                 :label          utils/status-offline
                                 :positive-color "red"}
                                {:value          unknown
-                                :icons          ["fal fa-power-off"]
+                                :icons          ["fa-light fa-power-off"]
                                 :label          utils/status-unknown
                                 :positive-color "orange"}]]
            ^{:key (str "stat-state-" (:label statistic-opts))}
@@ -401,7 +401,7 @@
 
 (defn AddModal
   []
-  (let [modal-id                   :add
+  (let [modal-id                   spec/modal-add-id
         tr                         (subscribe [::i18n-subs/tr])
         visible?                   (subscribe [::subs/modal-visible? modal-id])
         nuvlabox-id                (subscribe [::subs/nuvlabox-created-id])
@@ -582,8 +582,8 @@
                       [ui/Message {:content (str/capitalize
                                               (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]))]
 
-                 (let [{nb-rel                      :nb-rel
-                        nb-assets                   :nb-assets
+                 (let [{nb-rel                     :nb-rel
+                        nb-assets                  :nb-assets
                         {:keys [compose-files url]} :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
@@ -604,8 +604,7 @@
                                        (swap! nuvlabox-release-data
                                               assoc :nb-selected nb-selected)
                                        (swap! nuvlabox-release-data assoc :nb-assets
-                                              (set (map :scope (:compose-files nb-selected)))))
-                                     ))}]
+                                              (set (map :scope (:compose-files nb-selected)))))))}]
 
                     [:a {:href   url
                          :target "_blank"
@@ -738,9 +737,7 @@
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow {:role     "link"
-                  :on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
-                  :style    {:cursor "pointer"}}
+    [:<>
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
@@ -752,8 +749,8 @@
      [ui/TableCell (str refresh-interval "s")]
      [ui/TableCell (when next-heartbeat-moment
                      [uix/TimeAgo (utils/last-time-online
-                                    next-heartbeat-moment
-                                    refresh-interval)])]
+                                   next-heartbeat-moment
+                                   refresh-interval)])]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
@@ -779,13 +776,139 @@
         :i-per-page-multipliers [1 2 4]}])))
 
 
+(defn- get-name-as-keyword
+  [tr q-key]
+  (tr [(-> q-key name keyword)]))
+
+(defn- TagsEditModeRadio
+  [edit-mode opened-modal change-mode]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        active?          (= opened-modal edit-mode)
+        font-weight      (if active? 700 400)
+        setting-tags?    (= spec/modal-tags-set-id edit-mode)]
+    [ui/Radio {:style     {:font-weight font-weight}
+               :label     (str (get-name-as-keyword @tr edit-mode)
+                               (when setting-tags? (str " (" (@tr [:tags-overwrite]) "!)")))
+               :checked   active?
+               :on-change #(change-mode edit-mode)}]))
+
+
+(defn- ButtonAskingForConfirmation
+  [_form-tags close-fn]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        selected-count   (subscribe [::subs/selected-count ::spec/select])
+        edit-mode        (subscribe [::subs/opened-modal])
+        mode             (r/atom :idle)
+        edit-mode->color {spec/modal-tags-add-id     :green
+                          spec/modal-tags-remove-all :red
+                          spec/modal-tags-remove-id  :red
+                          spec/modal-tags-set-id     :red}]
+    (fn [form-tags _close-fn]
+      (let [text      (get-name-as-keyword @tr @edit-mode)
+            call-back close-fn
+            update-fn (fn []
+                        (dispatch [::events/update-tags
+                                   @edit-mode
+                                   {:tags         form-tags
+                                    :call-back-fn call-back
+                                    :text text}]))
+            disabled? (or (zero? @selected-count)
+                          (and  (not= spec/modal-tags-remove-all @edit-mode)
+                                (zero? (count form-tags))))]
+        (if (= :idle @mode)
+          [:div
+           [:span (str text "?")]
+           [ui/Button {:aria-label "edit tags"
+                       :color    (edit-mode->color @edit-mode)
+                       :disabled disabled?
+                       :active   true
+                       :style    {:margin-left "2rem"}
+                       :on-click (fn [] (reset! mode :confirming))}
+            [uix/Icon {:style {:margin 0}
+                       :name "fa-check"}]]]
+          [:div
+           [:span "Are you sure? " ]
+           [uix/Button {:text     (str "Yes, " text)
+                        :disabled disabled?
+                        :color    (edit-mode->color @edit-mode)
+                        :on-click update-fn}]
+           [ui/Button {:aria-label "do not confirm editing tags"
+                       :on-click (fn [] (reset! mode :idle))}
+            [ui/Icon {:style {:margin 0}
+                      :name "fa-xmark"}]]])))))
+
+(defn BulkUpdateModal
+  []
+  (let [tr               (subscribe [::i18n-subs/tr])
+        selected-count   (subscribe [::subs/selected-count ::spec/select])
+        opened-modal     (subscribe [::subs/opened-modal])
+        open?            (subscribe [::subs/bulk-modal-visible?])
+        used-tags        (subscribe [::subs/edges-tags])
+        view-only-edges  (subscribe [::subs/edges-without-edit-rights])
+        form-tags        (r/atom [])
+        mode->tag-color  (zipmap spec/tags-modal-ids [:teal :teal :red :red])]
+    (fn []
+      (let [close-fn     (fn []
+                           (dispatch [::events/open-modal nil])
+                           (reset! form-tags []))
+            change-mode  (fn [edit-mode]
+                           (when (= spec/modal-tags-remove-all edit-mode)
+                             (reset! form-tags []))
+                           (dispatch [::events/open-modal edit-mode]))
+            not-editable (:count @view-only-edges)]
+        [ui/Modal {:open       @open?
+                   :close-icon true
+                   :on-close   close-fn}
+         [uix/ModalHeader {:header (@tr [:bulk-update-tags])}]
+         [ui/ModalContent
+          [ui/Form
+           [:div {:style {:display :flex
+                          :gap     "1.5rem"}}
+            (doall (for [edit-mode spec/tags-modal-ids]
+                     ^{:key edit-mode}
+                     [TagsEditModeRadio edit-mode @opened-modal change-mode]))]
+           [:div {:style {:margin-top "1.5rem"}}
+            (when-not (= spec/modal-tags-remove-all @opened-modal)
+              [components/TagsDropdown {:initial-options @used-tags
+                                        :on-change-fn    (fn [tags] (reset! form-tags tags))
+                                        :tag-color       (mode->tag-color @opened-modal)}])]]]
+         [ui/ModalActions
+          {:style {:display         :flex
+                   :align-items     :center
+                   :justify-content :space-between
+                   :text-align      :left}}
+          [:div
+           {:style {:line-height "1.2rem"}}
+           [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
+                      " "
+                      @selected-count
+                      " "
+                      (@tr [(if (zero? @selected-count) :edge :edges)])
+                      ". ")]
+           (when (<= 1 not-editable @selected-count)
+             [:<>
+              [:div
+               (str not-editable " " (@tr [:tags-not-updated-no-rights]))]
+              [:div [:a {:style {:cursor :pointer}
+                         :target :_blank
+                         :on-click
+                         (fn []
+                           (dispatch
+                            [::events/store-filter-and-open-in-new-tab
+                             (str/join " or "
+                                       (map #(str "id='" % "'")
+                                            (->> @view-only-edges :resources (map :id))))]))}
+                      (@tr [:show-me-in-new-tab])]]])]
+          [ButtonAskingForConfirmation @form-tags close-fn]]]))))
+
+
 (defn NuvlaboxTable
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                            (apply concat
-                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                           (apply concat
+                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
@@ -808,13 +931,25 @@
                                              (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
                            {:field-key :tags :no-sort? true}
                            {:field-key :manager :no-sort? true}]]
-    [Table {:sort-config {:db-path     ::spec/ordering
-                          :fetch-event [::events/get-nuvlaboxes]}
-            :columns     columns
-            :rows        selected-nbs
-            :table-props {:compact "very" :selectable true}
-            :cell-props  {:header {:single-line true}}
-            :row-render  (fn [row-data] [NuvlaboxRow row-data managers])}]))
+    [Table {:sort-config        {:db-path     ::spec/ordering
+                                 :fetch-event [::events/get-nuvlaboxes]}
+            :columns           columns
+            :rows              selected-nbs
+            :table-props       {:compact "very" :selectable true}
+            :cell-props        {:header {:single-line true}}
+            :row-render        (fn [row-data] [NuvlaboxRow row-data managers])
+            :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+            :row-props         {:role  "link"
+                                :style {:cursor "pointer"}}
+            :select-config      {:bulk-actions [{:icon (fn [] [ui/Icon {:className "fal fa-tags"}])
+                                                 :name "Edit Tags"
+                                                 :event (fn []
+                                                          (dispatch [::events/get-edges-tags])
+                                                          (dispatch [::events/open-modal spec/modal-tags-add-id]))}]
+                                 :total-count-sub-key [::subs/nuvlaboxes-count]
+                                 :resources-sub-key [::subs/nuvlaboxes-resources]
+                                 :select-db-path [::spec/select]
+                                 :rights-needed :edit}}]))
 
 
 (defn NuvlaboxMapPoint
@@ -875,16 +1010,16 @@
         ^{:key (random-uuid)}
         [:div {:style {:margin-top "10px"}}
          [filter-comp/ButtonFilter
-          {:resource-name  "nuvlabox"
+          {:resource-name  spec/resource-name
            :default-filter @additional-filter
            :open?          filter-open?
-           :on-done        #(dispatch [::events/set-additional-filter %])}]]]])))
+           :on-done        #(dispatch [::events/set-additional-filter %])
+           :show-clear-button-outside-modal? true}]]]])))
 
 
 (defn NuvlaBoxesOrClusters
   []
   (dispatch [::events/init])
-  (dispatch [::events/refresh-root])
   (dispatch [::events/set-nuvlabox-cluster nil])
   (let [view-type (subscribe [::subs/view-type])]
     (fn []
@@ -922,4 +1057,5 @@
   []
   [:<>
    [ui/Segment style/basic [NuvlaBoxesOrClusters]]
-   [AddModalWrapper]])
+   [AddModalWrapper]
+   [BulkUpdateModal]])

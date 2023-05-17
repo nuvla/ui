@@ -729,48 +729,48 @@
           [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
                                     {:style {:margin-right "0px"
                                              :display      "block"}})
-           [components/StatisticState {:value total
-                                       :icons ["key"]
-                                       :label "TOTAL"
-                                       :clickable? clickable?
+           [components/StatisticState {:value                    total
+                                       :icons                    ["key"]
+                                       :label                    "TOTAL"
+                                       :clickable?               clickable?
                                        :set-state-selector-event ::events/set-state-selector
-                                       :state-selector-subs ::subs/state-selector}]
-           [components/StatisticState {:value coe,
-                                       :icons ["docker"],
-                                       :label "DOCKER/K8S",
-                                       :clickable? clickable?,
+                                       :state-selector-subs      ::subs/state-selector}]
+           [components/StatisticState {:value                    coe,
+                                       :icons                    ["docker"],
+                                       :label                    "DOCKER/K8S",
+                                       :clickable?               clickable?,
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value csp,
-                                       :icons ["cloud"],
-                                       :label "CLOUDS",
-                                       :clickable? clickable?,
+                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
+           [components/StatisticState {:value                    csp,
+                                       :icons                    ["cloud"],
+                                       :label                    "CLOUDS",
+                                       :clickable?               clickable?,
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value access-key,
-                                       :icons ["key"],
-                                       :label "REMOTE ACCESS",
-                                       :clickable? clickable?,
+                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
+           [components/StatisticState {:value                    access-key,
+                                       :icons                    ["key"],
+                                       :label                    "REMOTE ACCESS",
+                                       :clickable?               clickable?,
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value storage,
-                                       :icons ["disk"],
-                                       :label "STORAGE",
-                                       :clickable? clickable?,
+                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
+           [components/StatisticState {:value                    storage,
+                                       :icons                    ["disk"],
+                                       :label                    "STORAGE",
+                                       :clickable?               clickable?,
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value registry,
-                                       :icons ["docker"],
-                                       :label "REGISTRY",
-                                       :clickable? clickable?,
+                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
+           [components/StatisticState {:value                    registry,
+                                       :icons                    ["docker"],
+                                       :label                    "REGISTRY",
+                                       :clickable?               clickable?,
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value api-key,
-                                       :icons ["key"],
-                                       :label "API KEYS",
-                                       :clickable? clickable?,
+                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
+           [components/StatisticState {:value                    api-key,
+                                       :icons                    ["key"],
+                                       :label                    "API KEYS",
+                                       :clickable?               clickable?,
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs :sixsq.nuvla.ui.credentials.subs/state-selector}]
+                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
            (when clickable?
              [components/ClickMeStaticPopup])]])))))
 
@@ -813,7 +813,7 @@
               :active   true
               :on-click #(do (save-callback validation-spec)
                              (dispatch [::tab-plugin/change-tab
-                                        [::spec/tab] tab-key]))}]]])))))
+                                        {:db-path [::spec/tab] :tab-key tab-key}]))}]]])))))
 
 
 (defn AddCredentialModal

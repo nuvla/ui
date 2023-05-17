@@ -11,9 +11,15 @@
   :-> ::spec/query-params)
 
 (reg-sub
-  ::orderby-map
+  ::query-param
   :<- [::query-params]
-  (fn [{:keys [orderby]}]
+  (fn [query-params [_ k]]
+    (k query-params)))
+
+(reg-sub
+  ::orderby-map
+  :<- [::query-param :orderby]
+  (fn [orderby]
     (some->>
       (str/split orderby #"\s*,\s*")
       (remove str/blank?)

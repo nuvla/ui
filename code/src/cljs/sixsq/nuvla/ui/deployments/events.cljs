@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployments.events
-  (:require [clojure.set :as set]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.spec :as spec]
@@ -12,7 +11,8 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
             [sixsq.nuvla.ui.routing.events :as route-events]
-            [sixsq.nuvla.ui.routing.utils :refer [get-stored-db-value-from-query-param]]))
+            [sixsq.nuvla.ui.routing.utils :refer [get-query-param
+                                                  get-stored-db-value-from-query-param]]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
@@ -20,8 +20,12 @@
 (reg-event-fx
   ::init
   (fn [{{:keys [current-route] :as db} :db} _]
-    (let [search-query (get-stored-db-value-from-query-param current-route [::spec/state-selector])]
-      {:db (merge db spec/defaults {::spec/state-selector search-query})
+    (let [search-query (get-stored-db-value-from-query-param current-route [::spec/state-selector])
+          filter-query  (get-query-param current-route (keyword spec/resource-name))
+          ]
+      {:db (merge db spec/defaults
+                  {::spec/state-selector   search-query
+                   ::spec/additional-filter filter-query})
        :fx [[:dispatch [::refresh]]]})))
 
 (reg-event-fx
@@ -67,14 +71,13 @@
                 ::spec/filter-external
                 ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path external-filter-only?]}]]
     (let [filter-external (or filter-external-arg filter-external)
-          state           (when-not (= "all" state-selector) state-selector)
           filter-str      (utils/get-filter-param
                             (if external-filter-only?
                               {:filter-external filter-external}
                               {:full-text-search  (full-text-search-plugin/filter-text
                                                     db [::spec/deployments-search])
                                :additional-filter additional-filter
-                               :state-selector   state
+                               :state-selector   state-selector
                                :filter-external   filter-external}))]
       {:db                  (assoc db ::spec/filter-external filter-external)
        ::cimi-api-fx/search [:deployment
@@ -125,11 +128,6 @@
   (fn [db [_ view-type]]
     (assoc db ::spec/view view-type)))
 
-(reg-event-fx
-  ::stop-deployment
-  (fn [_ [_ href]]
-    (let [on-success #(dispatch [::get-deployments])]
-      {::cimi-api-fx/operation [href "stop" on-success]})))
 
 (reg-event-fx
   ::set-state-selector
@@ -165,7 +163,7 @@
       {::cimi-api-fx/search
        [:deployment {:last        0
                      :aggregation "terms:module/id"
-                     :filter      (utils/build-bulk-filter db)}
+                     :filter      filter-str}
         #(let [buckets      (get-in % [:aggregations :terms:module/id :buckets])
                same-module? (= (count buckets) 1)
                module-href  (when same-module? (-> buckets first :key))]
@@ -183,36 +181,8 @@
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
 
-(reg-event-db
-  ::select-id
-  (fn [{:keys [::spec/selected-set] :as db} [_ id]]
-    (let [fn (if (utils/is-selected? selected-set id) disj conj)]
-      (update db ::spec/selected-set fn id))))
-
-(reg-event-db
-  ::select-all-page
-  (fn [{:keys [::spec/selected-set
-               ::spec/deployments] :as db} _]
-    (let [visible-dep-ids    (utils/visible-deployment-ids deployments)
-          all-page-selected? (utils/all-page-selected? selected-set visible-dep-ids)
-          fn                 (if all-page-selected? set/difference set/union)]
-      (-> db
-          (update ::spec/selected-set fn visible-dep-ids)
-          (assoc ::spec/select-all? false)))))
-
-(reg-event-db
-  ::select-all
-  (fn [db]
-    (-> db
-        (update ::spec/select-all? not)
-        (assoc ::spec/selected-set #{}))))
 
 (reg-event-db
   ::reset-selected-set
   (fn [db]
     (assoc db ::spec/selected-set #{})))
-
-(reg-event-db
-  ::add-bulk-job-monitored
-  (fn [db [_ {:keys [id] :as job}]]
-    (update db ::spec/bulk-jobs-monitored assoc id job)))

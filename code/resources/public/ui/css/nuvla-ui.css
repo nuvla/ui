@@ -2,6 +2,11 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap');
 
+:root {
+  --deployments-color: rgba(122, 101, 255, 1);
+  --edges-color: rgba(22, 173, 146, 1);
+}
+
 body,
 body .menu .item,
 .ui.header,
@@ -152,10 +157,21 @@ body .nuvla-deployments .ui.breadcrumb {
 #nuvla-ui-sidebar a.nuvla-edges:hover,
 body .nuvla-edges .ui.breadcrumb {
   color: #ffffff !important;
-  background-color: rgba(22, 173, 146, 1) !important;
+  background-color: var(--edges-color) !important;
 }
 
 /** Sidebar End **/
+
+.invisible {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.visible {
+  visibility: visible;
+  transition: visibility 0.2s linear, opacity 0.2s linear;
+  opacity: 1;
+}
 
 /** Header **/
 
@@ -419,6 +435,20 @@ div.search.dropdown > input {
 
 /** Misc End **/
 
+.cimi-filter-search-header {
+  display: flex !important;
+  gap: 1rem;
+  flex-direction: column !important;
+}
+
+@media only screen and (min-width: 766px) {
+  .cimi-filter-search-header {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr);
+    grid-row-gap: 1rem;
+  }
+}
+
 @media only screen and (min-width: 600px) {
   .grid-2-cols-responsive {
     display: grid;
@@ -432,20 +462,52 @@ div.search.dropdown > input {
   padding: 2rem 2rem 5rem 2rem !important;
 }
 
-a.card i.massive,i.huge {
+a.card i.massive,
+i.huge {
   color: #4283c4;
 }
 
-a.card:hover i.massive,i.huge {
+a.card:hover i.massive,
+i.huge {
   color: #1e70bf;
 }
 
 body .nuvla-deployments a {
-  color: rgba(122, 101, 255, 1);
+  color: var(--deployments-color);
+}
+
+.nuvla-deployments {
+  --accent-color: var(--deployments-color);
+}
+
+.nuvla-edges {
+  --accent-color: var(--edges-color);
+}
+
+.bulk-action-bar-item {
+  background-color: rgb(249 250 251) !important;
+}
+
+.bulk-action-bar-item:hover {
+  background-color: rgb(242 243 244) !important;
+  cursor: pointer;
+}
+
+button.select-all {
+  all: unset;
+  cursor: pointer;
+  color: var(--accent-color);
+  border: 2px solid #f9fafb;
+  transition: background-color 0.2s ease-in;
+  padding: 0.3rem 0.4rem;
+}
+
+button.select-all:hover {
+  background-color: #efefef;
 }
 
 body .nuvla-edges a {
-  color: rgba(22, 173, 146, 1);
+  color: var(--edges-color);
 }
 
 body .nuvla-apps a {
@@ -526,17 +588,19 @@ body .ui.primary.button:hover,
 
 body .ui.primary.white-button.button,
 .ui.primary.white-button.buttons .button {
-  background-color: #ffffff;
-  color: #c10e12;
+  background-color: #ffffff !important;
+  color: #c10e12 !important;
   border-radius: 50px;
 }
 
 body .ui.primary.white-button.button:hover,
 .ui.primary.white-button.buttons .button:hover {
-  background-color: rgba(237, 43, 43, 1);
-  color: #ffffff;
+  background-color: rgba(237, 43, 43, 1) !important;
+  color: #ffffff !important;
 }
-
+body .ui.inverted.secondary.button{
+  box-shadow: none !important;
+}
 body .ui.secondary.button {
   background-color: #ffffff;
   border: 2px solid #c10e12;
@@ -711,7 +775,7 @@ body .divider-red {
 }
 
 .nuvla-dashboard .statistic.nuvla-edges {
-  background-color: rgba(22, 173, 146, 1);
+  background-color: var(--edges-color);
 }
 
 .nuvla-dashboard .statistic.nuvla-credentials {
@@ -757,6 +821,7 @@ body .divider-red {
   color: #21ba45;
 }
 .nuvla-edges .statistics .icons .icon.large,
+.nuvla-deployment-sets .statistics .icons .icon.large,
 .nuvla-deployments .statistics .icons .icon.large {
   border: 2px solid rgba(148, 130, 255, 0.5) !important;
   background-color: #ffffff;
@@ -775,7 +840,7 @@ body .divider-red {
 }
 
 .nuvla-edges .statistics .icons {
-  color: rgba(22, 173, 146, 1);
+  color: var(--edges-color);
   text-align: center;
 }
 
@@ -786,7 +851,7 @@ body .divider-red {
 
 .nuvla-edges .ui-header,
 .nuvla-edges .button {
-  background-color: rgba(22, 173, 146, 1) !important;
+  background-color: var(--edges-color) !important;
   color: #ffffff;
 }
 
@@ -846,15 +911,15 @@ body .divider-red {
   margin-top: 8px;
 }
 
-.uix-pagination-navigation {
-  align-items: center;
-}
-
 .uix-pagination .pagination {
   border: none !important;
 }
 .uix-pagination .ui.menu {
   box-shadow: none !important;
+}
+
+.uix-pagination-navigation {
+  align-items: center;
 }
 
 .uix-pagination .ui.menu .item:before {
@@ -902,3 +967,93 @@ body .divider-red {
   }
 }
 /** Pagination **/
+
+/** apps **/
+
+.ui.list .list > .item .header,
+.ui.list > .item .header {
+  font-family: 'Poppins' !important;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.ui.list .list > .item .description,
+.ui.list > .item .description {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+}
+
+.ui.relaxed.list:not(.horizontal) > .item:not(:last-child) {
+  padding-bottom: 0.7em;
+}
+
+.ui.relaxed.list:not(.horizontal) > .item:not(:first-child) {
+  padding-top: 0.7em;
+}
+
+.ui.menu {
+  border: 0px solid rgba(34, 36, 38, 0.15);
+  box-shadow: 1px 1px 8px 0 rgb(34 36 38 / 15%);
+}
+
+.ui.menu.item {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.ui.secondary.pointing.menu .active.item {
+  border-color: #c10e12;
+}
+
+.ui.segment[class*='bottom attached'] {
+  border-radius: 0.3rem;
+}
+
+.ui.attached.segment {
+  border: 1px solid rgba(34, 36, 38, 0.15);
+}
+
+.nuvla-apps .ui.secondary.segment h1 {
+  color: rgba(0, 0, 0, 0.87) !important;
+  margin-top: 0 !important;
+}
+
+.nuvla-apps .ui.secondary.segment img {
+  background-color: #ffffff;
+  border-radius: 0.6rem;
+  overflow: hidden;
+}
+
+.nuvla-apps .ui.secondary.segment h4.tab-app-detail,
+.nuvla-apps .uix-apps-details-details h4.tab-app-detail,
+.nuvla-apps .uix-apps-details-share h4.tab-app-share{
+  color: rgba(0, 0, 0, 0.87) !important;
+  font-weight: 400;
+  font-size: 1rem;
+  padding: 0.4rem 0.6rem;
+  display: inline-block;
+  background-color: rgba(73, 135, 250, 0.3) !important;
+  border-radius: 0.25rem;
+}
+
+
+.nuvla-apps .uix-apps-details-details .ui.styled.accordion > .active.title {
+    background-color: transparent;
+    border-bottom :  1px solid rgba(34, 36, 38, 0.15);
+    margin-bottom: 15px;
+}
+
+
+i.link.icon, i.link.icons {
+    opacity: .4;
+    font-size: .8rem;
+}
+
+.uix-apps-details h2{
+    font-size: 1.2rem;
+}
+.uix-apps-details > h2:first-child{
+     display: block !important;
+    padding: 20px 0 5px 0;
+}
+
+/** apps end **/

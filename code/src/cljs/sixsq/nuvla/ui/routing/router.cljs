@@ -5,9 +5,9 @@
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
             [reitit.frontend.history :as rfh]
-            [sixsq.nuvla.ui.about.views :refer [about]]
+            [sixsq.nuvla.ui.about.views :refer [About]]
             [sixsq.nuvla.ui.apps.views :as app-views]
-            [sixsq.nuvla.ui.cimi.views :refer [api-view]]
+            [sixsq.nuvla.ui.cimi.views :refer [ApiView]]
             [sixsq.nuvla.ui.clouds.views :refer [clouds-view]]
             [sixsq.nuvla.ui.config :refer [base-path]]
             [sixsq.nuvla.ui.credentials.views :refer [credentials-view]]
@@ -122,7 +122,7 @@
       :link-text "sign in token"}]
     ["about"
      {:name      ::routes/about
-      :view      about
+      :view      About
       :link-text "About"}]
     ["welcome"
      {:name      ::routes/home
@@ -142,7 +142,7 @@
      ["/" ::routes/apps-slashed]
      ["/*sub-path"
       {:name ::routes/apps-details
-       :view app-views/AppDetails}]]
+       :view app-views/AppDetailsRoute}]]
     ["credentials"
      {:name      ::routes/credentials
       :view      credentials-view
@@ -178,7 +178,7 @@
      ["/*sub-path" ::routes/documentation-sub-page]]
     ["api"
      {:name      ::routes/api
-      :view      api-view
+      :view      ApiView
       :link-text "api"}
      [""]
      ["/" ::routes/api-slashed]

@@ -1,5 +1,10 @@
 (ns sixsq.nuvla.ui.utils.semantic-ui-extensions
-  (:require [cljs.spec.alpha :as s]
+  (:require ["@codemirror/lang-json" :as lang-json]
+            ["@codemirror/lang-markdown" :as lang-markdown]
+            ["@codemirror/language" :as language]
+            ["@codemirror/legacy-modes/mode/shell" :as shell]
+            ["@codemirror/legacy-modes/mode/yaml" :as yaml]
+            [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
@@ -41,7 +46,7 @@
                        (dissoc :text)
                        (dissoc :icon)
                        (assoc :aria-label text))]
-    [ui/Button final-opts (when icon [ui/Icon {:name icon}]) text]))
+    [ui/Button final-opts (when icon [Icon {:name icon}]) text]))
 
 
 (defn MenuItem
@@ -92,41 +97,6 @@
    (when icon
      [ui/Icon {:name icon}])
    (utils-general/capitalize-first-letter header)])
-
-(defn Pagination
-  "Provide pagination element with more visible icons. Note: :totalitems is in lowercase not to
-   interfere with React DOM attributes."
-  [_options]
-  (let [small  8
-        medium 16
-        large  24]
-    (fn [{:keys [totalitems itemnames elementsperpage onElementsPerPageChange] :as options
-          :or   {itemnames       "items"
-                 elementsperpage small}}]
-      [ui/Grid {:vertical-align "middle"
-                :style          {:margin-top "20px"}}
-       [ui/GridColumn {:floated "left", :width 3}
-        [ui/Label {:size :medium}
-         [TR :total #(str (str/capitalize %1) " " itemnames ": " totalitems)]]]
-       [ui/GridColumn {:floated "right", :width 10, :text-align "right"}
-        (when onElementsPerPageChange
-          [:<>
-           [:span "View "]
-           [ui/Dropdown {:default-value elementsperpage
-                         :selection     true
-                         :compact       true
-                         :options       [{:key small :value small :text small}
-                                         {:key medium :value medium :text medium}
-                                         {:key large :value large :text large}]
-                         :on-change     onElementsPerPageChange}]
-           [:span {:style {:padding-right 10}} " " itemnames " per page    "]])
-        [ui/Pagination
-         (merge {:size      "tiny"
-                 :firstItem {:content (r/as-element [ui/Icon {:name "angle double left"}]) :icon true}
-                 :lastItem  {:content (r/as-element [ui/Icon {:name "angle double right"}]) :icon true}
-                 :prevItem  {:content (r/as-element [ui/Icon {:name "angle left"}]) :icon true}
-                 :nextItem  {:content (r/as-element [ui/Icon {:name "angle right"}]) :icon true}}
-                (dissoc options :onElementsPerPageChange))]]])))
 
 
 (defn Message
@@ -182,66 +152,47 @@
          [TR :click-to-copy]])]]]])
 
 (defn EditorCode
-  [{:keys [read-only? options default-options]
-    :or   {default-options {}
-           read-only?      false}
-    :as   props}]
+  [{:keys [value] :as props}]
   [ui/CodeMirror
-   (-> props
-       (dissoc :default-options :read-only?)
-       (assoc :options (-> default-options
-                           (merge options)
-                           (assoc :read-only read-only?))))])
+   (assoc props :value (or value ""))])
 
 (defn EditorJson
   [props]
-  (let [opts {:mode                "application/json"
-              :line-numbers        true
-              :match-brackets      true
-              :auto-close-brackets true
-              :style-active-line   true
-              :fold-gutter         true
-              :gutters             ["CodeMirror-foldgutter"]}]
-    [EditorCode (assoc props :default-options opts)]))
+  [EditorCode
+   (assoc props
+     :extensions [(lang-json/json)])])
 
 (defn EditorYaml
   [props]
-  (let [opts {:mode              "text/x-yaml"
-              :line-numbers      true
-              :style-active-line true}]
-    [EditorCode
-     (assoc props :default-options opts
-                  :class "full-height")]))
+  [EditorCode
+   (assoc props
+     :extensions [(.define language/StreamLanguage yaml/yaml)])])
 
 (defn EditorShell
   [props]
-  (let [opts {:mode              "text/x-sh"
-              :line-numbers      true
-              :style-active-line true}]
-    [EditorCode
-     (assoc props :default-options opts)]))
+  ; autocompletion disabled because doesn't play well with modal
+  [EditorCode
+   (assoc props
+     :basic-setup {:autocompletion false}
+     :extensions [(.define language/StreamLanguage shell/shell)])])
 
 (defn EditorMarkdown
   [props]
-  (let [opts {:mode                "text/x-markdown"
-              :lineWrapping        true
-              :match-brackets      true
-              :auto-close-brackets true
-              :style-active-line   true
-              :fold-gutter         true
-              :gutters             ["CodeMirror-foldgutter"]}]
-    [EditorCode
-     (assoc props :default-options opts)]))
+  [EditorCode
+   (assoc props
+     :basic-setup {:line-numbers false}
+     :extensions [(lang-markdown/markdown)])])
 
 
 (defn Accordion
   [_content & {:keys [_id _label _count default-open _title-size _on-open _on-close !control-open? _icon _styled?]
                :or   {default-open true}}]
   (let [active? (or !control-open? (r/atom default-open))]
-    (fn [content & {:keys [id label count _default-open title-size on-open on-close _!control-open? icon styled?]
+    (fn [content & {:keys [id label count _default-open title-size on-open on-close _!control-open? icon styled?
+                           title-class]
                     :or   {title-size :h3, on-open #(), on-close #(), styled? true}}]
       [ui/Accordion {:id        id
-                     :fluid     true
+                     :fluid      true
                      :styled    styled?
                      :style     {:margin-top    "10px"
                                  :margin-bottom "10px"}
@@ -255,7 +206,9 @@
                                         (accordion-utils/toggle active?)
                                         (if @active? (on-open) (on-close)))}
         [title-size
-         [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+         {:class title-class}
+
+         [Icon {:name (if @active? "fa-light fa-angle-down" "fa-light fa-angle-right")}]
 
          (when icon
            [:<> [Icon {:name icon}] " "])
@@ -367,7 +320,8 @@
        :on-click (fn [event]
                    (when-not (.-metaKey event)              ;;cmd key not pressed
                      (dispatch [::routing-events/navigate href])
-                     (.preventDefault event)))}
+                     (.preventDefault event)
+                     (.stopPropagation event)))}
    (or label href)])
 
 
@@ -482,7 +436,7 @@
                   :color "teal"
                   :style {:margin-top 10, :max-height 150, :overflow "auto"}}
    (for [tag tags]
-     ^{:key (str uuid "_" tag)}
+     ^{:key (random-uuid)}
      [ui/Popup
       {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
                                       (utils-general/truncate tag 20)])

@@ -15,18 +15,8 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "tag"}]
+     [uix/Icon {:name "fa-light fa-tag"}]
      (str/capitalize (@tr [:versions]))]))
-
-
-(defn show-versions [show-versions?]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        label     (@tr (if @show-versions? [:hide-versions] [:show-versions]))
-        icon-name (if @show-versions? "caret down" "caret right")]
-    [:a {:style    {:cursor "pointer"}
-         :on-click #(reset! show-versions? (not @show-versions?))}
-     [ui/Icon {:name icon-name}]
-     label]))
 
 
 (defn version-comparison-modal

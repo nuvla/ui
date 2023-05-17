@@ -10,7 +10,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await expect(page).toHaveURL(edgesPageRegex);
 
-  await page.getByText('Add').click();
+  await page.getByText('Add', { exact: true }).click();
 
   await page.getByText('bluetooth').click();
 
@@ -26,7 +26,8 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await page.getByText('Enable host-level management').click();
 
-  const newEdgeName = `e2e Testing: Edge creation and deletion in ${project.name} ${new Date().toISOString()}`;
+  const newEdgeNameStart = `e2e Testing: Edge creation and deletion in`;
+  const newEdgeName = `${newEdgeNameStart} ${project.name} ${new Date().toISOString()}`;
 
   await page.locator('input[type="input"]').click();
   await page.locator('input[type="input"]').fill(newEdgeName);
@@ -38,6 +39,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page
     .locator('span:has-text("Enabled and ready to be used. Please copy this cronjob and add it to your system") i')
     .click();
+  await page.pause();
 
   await page.locator('.close').click();
 
@@ -46,6 +48,12 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page.getByText(/^delete$/i).click();
   await page.getByRole('button', { name: 'delete' }).click();
   await expect(page).toHaveURL(edgesPageRegex);
+
+  await page.getByPlaceholder('Search ...').click();
+  page.getByPlaceholder('Search ...').fill(newEdgeNameStart);
+  await page.waitForResponse('/api/nuvlabox');
+  await page.waitForTimeout(200);
+  expect(await page.getByRole('link', { name: new RegExp(newEdgeNameStart) }).count()).toBe(0);
 
   // This is a workaround to test clipboard content if cronjob is copied
   // see: https://github.com/microsoft/playwright/issues/8114

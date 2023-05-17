@@ -3,10 +3,13 @@
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
             [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
+            [sixsq.nuvla.ui.apps-applications-sets.spec :as apps-applications-sets-spec]
+            [sixsq.nuvla.ui.apps-applications-sets.utils :as apps-applications-sets-utils]
             [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
             [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
             [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
             [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
+            [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
             [sixsq.nuvla.ui.apps.effects :as apps-fx]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.apps.utils :as utils]
@@ -20,8 +23,8 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify
-                                                  db-path->query-param-key]]
+            [sixsq.nuvla.ui.routing.utils :refer [db-path->query-param-key name->href
+                                                  str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -59,12 +62,14 @@
   [module-subtype db]
   (let [component   (get db ::apps-component-spec/module-component)
         project     (get db ::apps-project-spec/module-project)
-        application (get db ::apps-application-spec/module-application)]
-    (case module-subtype
-      "component" component
-      "project" project
-      "application" application
-      "application_kubernetes" application
+        application (get db ::apps-application-spec/module-application)
+        apps-sets   (get db ::apps-applications-sets-spec/apps-sets)]
+    (condp = module-subtype
+      utils/subtype-component component
+      utils/subtype-project project
+      utils/subtype-application application
+      utils/subtype-application-k8s application
+      utils/subtype-applications-sets apps-sets
       project)))
 
 
@@ -72,12 +77,6 @@
   ::set-validate-form?
   (fn [db [_ validate-form?]]
     (assoc db ::spec/validate-form? validate-form?)))
-
-
-(reg-event-db
-  ::set-module-spec
-  (fn [db [_ module-spec]]
-    (assoc db ::spec/module-spec module-spec)))
 
 
 ; Perform form validation if validate-form? is true.
@@ -91,14 +90,10 @@
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form?
                            (and
-                             (s/valid? ::spec/module-common module-common)
+                             (utils/module-common-valid?
+                               module-common module-subtype)
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
-      ; Helpful to debug validation issues
-      ;(log/error "module-common validate: "
-      ;           (s/explain-str ::spec/module-common module-common))
-      ;(log/error "optional form validate: "
-      ;           (s/explain-str form-spec module))
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -113,12 +108,6 @@
   ::active-input
   (fn [db [_ input-name]]
     (assoc db ::spec/active-input input-name)))
-
-
-(reg-event-db
-  ::form-invalid
-  (fn [db [_]]
-    (assoc db ::spec/form-valid? false)))
 
 
 (reg-event-db
@@ -145,12 +134,15 @@
                             ::spec/module-not-found? (nil? module)
                             ::main-spec/loading? false)
           subtype (:subtype module)]
-      {:db (case subtype
-             "component" (apps-component-utils/module->db db module)
-             "project" (apps-project-utils/module->db db module)
-             "application" (apps-application-utils/module->db db module)
-             "application_kubernetes" (apps-application-utils/module->db db module)
-             db)})))
+      (cond-> {:db (condp = subtype
+                     utils/subtype-component (apps-component-utils/module->db db module)
+                     utils/subtype-project (apps-project-utils/module->db db module)
+                     utils/subtype-application (apps-application-utils/module->db db module)
+                     utils/subtype-application-k8s (apps-application-utils/module->db db module)
+                     utils/subtype-applications-sets (apps-applications-sets-utils/module->db db module)
+                     db)}
+              (= subtype utils/subtype-applications-sets)
+              (assoc :fx (apps-applications-sets-utils/module->fx module))))))
 
 
 (reg-event-db
@@ -178,7 +170,8 @@
           (assoc ::spec/module-common {})
           (assoc ::main-spec/loading? false)
           (assoc-in [::spec/module-common ::spec/name] new-name)
-          (assoc-in [::spec/module-common ::spec/description] "")
+          (assoc-in [::spec/module-common ::spec/description] (or (utils/subtype->descr-template new-subtype)
+                                                                  ""))
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
           (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
           (assoc-in [::spec/module-common ::spec/subtype] new-subtype)
@@ -225,8 +218,9 @@
 
 (reg-event-fx
   ::set-active-tab
-  (fn [_ [_ active-tab]]
-    {:fx [[:dispatch [::nav-tab/change-tab [::spec/tab] active-tab]]]}))
+  (fn [_ [_ active-tab db-path]]
+    {:fx [[:dispatch [::nav-tab/change-tab {:db-path (or db-path [::spec/tab])
+                                            :tab-key active-tab}]]]}))
 
 (reg-event-fx
   ::set-default-tab
@@ -610,16 +604,17 @@
   ::edit-module
   (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
     (let [id (:id module)
-          {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)]
+          {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)
+          is-app? (= subtype utils/subtype-application)]
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
                             #(do
                                (dispatch [::set-module sanitized-module]) ;Needed?
-                               (when (= subtype "application")
+                               (when is-app?
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
-                               (dispatch [::main-events/changes-protection? false])
-                               (dispatch [::routing-events/navigate
-                                          (str-pathify (name->href routes/apps) (:path sanitized-module))]))
+                               (dispatch [::main-events/reset-changes-protection
+                                          [::routing-events/navigate
+                                           (str-pathify (name->href routes/apps) (:path sanitized-module))]]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)
@@ -636,20 +631,21 @@
                                               :content message
                                               :type    :error}]))
                                 (do (dispatch [::get-module (version-id->index %)])
-                                    (when (= subtype "application")
+                                    (when is-app?
                                       (dispatch [::validate-docker-compose %]))
-                                    (dispatch [::main-events/changes-protection? false])))]}))))
+                                    (dispatch [::main-events/reset-changes-protection])))]}))))
 
 
 (reg-event-fx
   ::delete-module
   (fn [{:keys [db]} [_ id]]
-    {:db                  (-> db
-                              (dissoc ::spec/module)
-                              (assoc ::spec/form-valid? true))
-     ::cimi-api-fx/delete [id #(do
-                                 (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::routing-events/navigate routes/apps]))]}))
+    ;; TODO: Add on-error restoring changes-protection
+    (let [query-params {:apps-store-tab (-> db ::apps-store-spec/tab :default-tab)}]
+      {:db                  (-> db
+                                (dissoc ::spec/module)
+                                (assoc  ::spec/form-valid? true))
+       ::cimi-api-fx/delete [id #(dispatch [::main-events/reset-changes-protection
+                                            [::routing-events/navigate routes/apps nil query-params]])]})))
 
 
 (reg-event-db
@@ -680,10 +676,9 @@
                                 (assoc :path (utils/contruct-path paste-parent-path new-module-name)))]
 
       {::cimi-api-fx/add [:module paste-module
-                          #(do
-                             (dispatch [::main-events/changes-protection? false])
-                             (dispatch [::routing-events/navigate
-                                        (str-pathify (name->href routes/apps) (:path paste-module))]))
+                          #(dispatch [::main-events/reset-changes-protection
+                                      [::routing-events/navigate
+                                       (str-pathify (name->href routes/apps) (:path paste-module))]])
                           :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                        (cimi-api-fx/default-add-on-error :module %)
                                        (when (= status 409)

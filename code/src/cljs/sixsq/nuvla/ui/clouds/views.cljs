@@ -5,7 +5,7 @@
             [re-frame.db]
             [reagent.core :as r]
             [sixsq.nuvla.ui.acl.views :as acl]
-            [sixsq.nuvla.ui.clouds-detail.views :as infra-detail]
+            [sixsq.nuvla.ui.clouds-detail.views :as clouds-detail]
             [sixsq.nuvla.ui.clouds.events :as events]
             [sixsq.nuvla.ui.clouds.spec :as spec]
             [sixsq.nuvla.ui.clouds.subs :as subs]
@@ -47,32 +47,20 @@
        {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]]))
 
 (defn ServiceCard
-  [{:keys [id name description path subtype logo-url swarm-enabled online] :as _service}]
-  (let [status (cond
-                 (true? online) true
-                 (false? online) false
-                 :else nil)
-        href   (name->href routes/clouds-details {:uuid (general-utils/id->uuid id)})]
+  [{:keys [id name description path subtype logo-url state]
+    :as   infra-service}]
+  (let [href   (name->href routes/clouds-details {:uuid (general-utils/id->uuid id)})]
     [uix/Card
      {:href        href
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}
-                     [OnlineStatusIcon status]]
+                     [OnlineStatusIcon state]]
                     [edges-detail/ServiceIcon subtype]
                     (or name id)]
       :meta        path
       :description description
-      :content     (when (true? swarm-enabled)
-                     [ui/Label {:image    true
-                                :color    "blue"
-                                :circular true
-                                :basic    true
-                                :style    {:left   "0"
-                                           :margin "0.7em 0 0 0"}}
-                      [ui/Image {:bordered true}
-                       [ui/Icon {:name "docker"}]]
-                      "Swarm enabled"])}]))
+      :content     [clouds-detail/CompatibilityLabel infra-service]}]))
 
 (defn ServiceGroupCard
   [id name]
@@ -559,6 +547,6 @@
         root     [Infrastructures]
         children (case n
                    1 root
-                   2 [infra-detail/InfrastructureDetails uuid]
+                   2 [clouds-detail/InfrastructureDetails uuid]
                    root)]
     [ui/Segment style/basic children]))

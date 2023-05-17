@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.profile.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.utils.spec :as us]))
 
 (s/def ::user any?)
@@ -40,7 +40,7 @@
                ::loading             #{}
                ::vendor              nil
                ::group               nil
-               ::tab                 (tab-plugin/build-spec)
+               ::tab                 (nav-tab/build-spec)
                ::two-factor-step     :install-app
                ::two-factor-enable?  true
                ::two-factor-method   nil

@@ -3,6 +3,7 @@
             [sixsq.nuvla.ui.apps-store.spec :as spec]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.apps.spec :as apps-spec]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
@@ -18,34 +19,42 @@
           [:dispatch [::apps-events/module-not-found false]]]}))
 
 (reg-event-db
+  ::set-default-tab
+  (fn [db [_ active-tab]]
+    (update db ::spec/tab assoc :default-tab active-tab)))
+
+(reg-event-db
   ::set-modules
   (fn [db [_ modules]]
     (assoc db ::spec/modules modules
               ::main-spec/loading? false)))
 
+(def subtypes-apps-or-filter (->> [apps-utils/subtype-component
+                                   apps-utils/subtype-application
+                                   apps-utils/subtype-application-k8s
+                                   apps-utils/subtype-applications-sets]
+                                  (map #(str "subtype='" % "'"))
+                                  (apply general-utils/join-or)))
 
 (reg-event-fx
   ::get-modules
   (fn [{{:keys [::session-spec/session] :as db} :db} [_ active-tab]]
-      (-> {:db (assoc db ::apps-spec/module nil)
-           ::cimi-api-fx/search
-           [:module
-            (->> {:orderby "created:desc"
-                  :filter  (general-utils/join-and
-                             (general-utils/join-or
-                               "subtype='component'"
-                               "subtype='application'"
-                               "subtype='application_kubernetes'")
-                             (case active-tab
-                               :appstore (general-utils/published-query-string)
-                               :myapps (general-utils/owner-like-query-string
-                                         (or (:active-claim session)
+    (-> {:db (assoc db ::apps-spec/module nil)
+         ::cimi-api-fx/search
+         [:module
+          (->> {:orderby "created:desc"
+                :filter  (general-utils/join-and
+                           subtypes-apps-or-filter
+                           (case active-tab
+                             :appstore (general-utils/published-query-string)
+                             :myapps (general-utils/owner-like-query-string
+                                       (or (:active-claim session)
                                            (:user session)))
-                               nil)
-                             (full-text-search-plugin/filter-text
-                               db [::spec/modules-search]))}
-                 (pagination-plugin/first-last-params db [(spec/page-keys->pagination-db-path active-tab)]))
-            #(dispatch [::set-modules %])]})))
+                             nil)
+                           (full-text-search-plugin/filter-text
+                             db [::spec/modules-search]))}
+               (pagination-plugin/first-last-params db [(spec/page-keys->pagination-db-path active-tab)]))
+          #(dispatch [::set-modules %])]})))
 
 (reg-event-fx
   ::get-modules-summary
@@ -58,10 +67,7 @@
        :orderby     "created:desc"
        :aggregation "terms:subtype"
        :filter      (general-utils/join-and
-                      (general-utils/join-or
-                        "subtype='component'"
-                        "subtype='application'"
-                        "subtype='application_kubernetes'")
+                      subtypes-apps-or-filter
                       (general-utils/fulltext-query-string
                         full-text-search))}
       #(dispatch [::set-modules %])]}))

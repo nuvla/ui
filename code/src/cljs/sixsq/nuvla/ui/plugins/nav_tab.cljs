@@ -14,14 +14,18 @@
 
 (defn build-spec
   [& {:keys [default-tab]}]
-  {:default-tab default-tab})
+  {::default-tab default-tab})
 
+(defn active-tab-key
+  [query-param default-tab]
+  (keyword (or query-param default-tab)))
 
 (defn get-active-tab
   [db db-path]
-  (get-in (:current-route db)
-          [:query-params (db-path->query-param-key db-path)]
-          (get-in db (conj db-path ::default-tab))))
+  (active-tab-key
+    (get-in (:current-route db)
+            [:query-params (db-path->query-param-key db-path)])
+    (get-in db (conj db-path ::default-tab))))
 
 (defn- default-db-path
   [db-path]
@@ -47,19 +51,20 @@
     [(subscribe [::route-subs/query-param (db-path->query-param-key db-path)])
      (subscribe [::default-tab db-path])])
   (fn [[query-param default-tab]]
-    (keyword (or query-param default-tab))))
+    (active-tab-key query-param default-tab)))
 
 
 (reg-event-fx
   ::change-tab
-  (fn [{db :db} [_ db-path tab-key]]
+  (fn [{db :db} [_ {:keys [db-path tab-key ignore-chng-protection?]}]]
     (let [change-event (get-in db (conj db-path ::change-event))]
       {:fx [[:dispatch [::route-events/navigate-partial
-                        {:change-event         change-event
-                         :partial-query-params {(db-path->query-param-key db-path) tab-key}}]]]})))
+                        {:change-event            change-event
+                         :partial-query-params    {(db-path->query-param-key db-path) tab-key}
+                         :ignore-chng-protection? ignore-chng-protection?}]]]})))
 
 (defn Tab
-  [{:keys [db-path panes change-event] :as _opts}]
+  [{:keys [db-path panes change-event ignore-chng-protection?] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [default-tab     (subscribe [::helpers/retrieve db-path ::default-tab])
         route           (subscribe [::route-subs/current-route])
@@ -71,20 +76,22 @@
                                 href     (gen-href @route {:partial-query-params {query-param-key k}})
                                 on-click (fn [event]
                                            (.preventDefault event)
-                                           (dispatch [::change-tab db-path k]))]
+                                           (dispatch [::change-tab
+                                                      {:db-path                 db-path :tab-key k
+                                                       :ignore-chng-protection? ignore-chng-protection?}]))]
                             (-> item
                                 (update :menuItem merge {:href                     href :onClick on-click
                                                          :data-reitit-handle-click false}))))]
     (when (nil? @default-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [{:keys [panes] :as opts}]
-      (let [non-nil-panes   (remove nil? panes)
-            key->index      (zipmap (map (comp :key :menuItem) non-nil-panes)
-                              (range (count non-nil-panes)))]
+      (let [non-nil-panes (remove nil? panes)
+            key->index    (zipmap (map (comp :key :menuItem) non-nil-panes)
+                                  (range (count non-nil-panes)))]
         [ui/Tab
-         (-> (dissoc opts :db-path :change-event)
+         (-> (dissoc opts :db-path :change-event :ignore-chng-protection?)
              (assoc :panes (map add-hrefs non-nil-panes)
-               :active-index (get key->index (keyword @cur-view) 0))
+                    :active-index (get key->index (keyword @cur-view) 0))
              (assoc-in [:menu :class] :uix-tab-nav))]))))
 
 (s/fdef Tab

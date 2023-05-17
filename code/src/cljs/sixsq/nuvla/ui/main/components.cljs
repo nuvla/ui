@@ -36,7 +36,7 @@
         on-click (or on-click #())]
     [uix/MenuItem
      {:name     (@tr [:refresh])
-      :icon     "refresh"
+      :icon     "fa-light fa-arrows-rotate"
       :loading? (boolean loading?)
       :on-click on-click
       :style    {:cursor "pointer"
@@ -276,67 +276,69 @@
           ff/nbsp
           [Pencil editing?]])])))
 
+(defn TagsDropdown
+  [{:keys [tags]}]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        value-options (r/atom tags)]
+    (fn [{:keys [on-change-fn initial-options tag-color]}]
+      (let [options (map (fn [v] {:key v :text v :value v})
+                         (distinct (concat (or initial-options tags) @value-options)))]
+        [ui/Dropdown {:selection        true
+                      :placeholder      (@tr [:type-to-add-tags])
+                      :default-value    tags
+                      :name             "tag"
+                      :fluid             true
+                      :allowAdditions   true
+                      :additionLabel    (str (@tr [:add-dropdown]) " ")
+                      :search           true
+                      :noResultsMessage (@tr [:type-to-add-new-tag])
+                      :multiple         true
+                      :on-change        (ui-callback/value (fn [v] (on-change-fn v)))
+                      :on-add-item      (ui-callback/value
+                                         (fn [value] (reset! value-options (conj @value-options value))))
+                      :options          options
+                      :renderLabel      (fn [label]
+                                          (r/as-element
+                                           [ui/Label {:icon    "tag"
+                                                      :size    "mini"
+                                                      :color   (or tag-color "teal")
+                                                      :content (.-value label)
+                                                      :style   {:margin-top 10
+                                                                :max-height 150
+                                                                :overflow   "auto"}}]))}]))))
 
 (defn EditableTags
   "Editable tags component. Allows editing (add, remove) of tags if the element is editable by the user."
-  [{:keys [tags] :as element} _on-change-fn]
+  [element _on-change-fn]
   (let [tr            (subscribe [::i18n-subs/tr])
-        value-options (r/atom tags)
-        new-tags      (r/atom tags)
         editing?      (r/atom false)
         uuid          (random-uuid)
         editable?     (or (utils-general/can-edit? element)
                           (-> element :acl nil?))]
     (fn [{:keys [tags] :as _element} on-change-fn]
-      (let [options (map (fn [v] {:key v :text v :value v}) @value-options)]
-        (if @editing?
-          [:div {:style {:display     "flex"
-                         :align-items "center"}}
-           [ui/Dropdown {:selection        true
-                         :placeholder      (@tr [:type-to-add-tags])
-                         :default-value    @new-tags
-                         :name             "tag"
-                         :fluid            true
-                         :allowAdditions   true
-                         :additionLabel    (str (@tr [:add-dropdown]) " ")
-                         :search           true
-                         :noResultsMessage (@tr [:type-to-add-new-tag])
-                         :multiple         true
-                         :on-change        (ui-callback/value #(do
-                                                                 (reset! new-tags %)
-                                                                 (on-change-fn %)))
-                         :on-add-item      (ui-callback/value
-                                             (fn [value] (swap! value-options #(conj @value-options value))))
-                         :options          options
-                         :renderLabel      (fn [label]
-                                             (r/as-element
-                                               [ui/Label {:icon    "tag"
-                                                          :size    "mini"
-                                                          :color   "teal"
-                                                          :content (.-value label)
-                                                          :style   {:margin-top 10
-                                                                    :max-height 150
-                                                                    :overflow   "auto"}}]))}]
-           [ui/Button {:icon     "check"
-                       :on-click #(reset! editing? false)}]]
-          [ui/LabelGroup {:size  "tiny"
-                          :color "teal"
-                          :style {:margin-top 10, :min-height 30 :max-height 150,
-                                  :overflow   "auto"}}
-           (for [tag tags]
-             ^{:key (str uuid "_" tag)}
-             [ui/Popup
-              {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
-                                              (utils-general/truncate tag 20)])
-               :content        tag
-               :position       "bottom center"
-               :on             "hover"
-               :size           "tiny"
-               :hide-on-scroll true}])
-           (when-not (seq tags)
-             (if editable?
-               (@tr [:add-first-tag])
-               [ui/Message (@tr [:no-items-to-show])]))
-           ff/nbsp
-           (when editable?
-             [Pencil editing?])])))))
+      (if @editing?
+        [:div {:style {:align-items "center"}}
+         [TagsDropdown {:tags tags :on-change-fn on-change-fn}]
+         [ui/Button {:icon     "check"
+                     :on-click #(reset! editing? false)}]]
+        [ui/LabelGroup {:size  "tiny"
+                        :color "teal"
+                        :style {:margin-top 10, :min-height 30 :max-height 150,
+                                :overflow   "auto"}}
+         (for [tag tags]
+           ^{:key (str uuid "_" tag)}
+           [ui/Popup
+            {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+                                            (utils-general/truncate tag 20)])
+             :content        tag
+             :position       "bottom center"
+             :on             "hover"
+             :size           "tiny"
+             :hide-on-scroll true}])
+         (when-not (seq tags)
+           (if editable?
+             (@tr [:add-first-tag])
+             [ui/Message (@tr [:no-items-to-show])]))
+         ff/nbsp
+         (when editable?
+           [Pencil editing?])]))))

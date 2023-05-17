@@ -17,11 +17,10 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
-            [sixsq.nuvla.ui.plugins.tab :as tab]
+            [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -85,7 +84,8 @@
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:delete])}]))
 
-(defn MenuBar [uuid]
+(defn MenuBar
+  [uuid]
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])]
     (fn []
@@ -183,7 +183,8 @@
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
-             #(dispatch [::tab/change-tab [::spec/tab] :deployments])]]]
+             #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                           :tab-key :deployments}])]]]
 
           (when (seq tags)
             [ui/GridColumn
@@ -194,372 +195,350 @@
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set (subscribe [::subs/deployment-set])
         can-edit?      @(subscribe [::subs/can-edit?])]
-    [tab/Tab
-     {:db-path [::spec/tab]
-      :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
-                            :key     :overview
-                            :icon    "info"}
-                 :render   #(r/as-element [TabOverview])}
-                (events-plugin/events-section
-                  {:db-path [::spec/events]
-                   :href    (:id @deployment-set)})
-                {:menuItem {:content (str/capitalize (tr [:deployments]))
-                            :key     :deployments
-                            :icon    "rocket"}
-                 :render   #(r/as-element [deployments-views/DeploymentTable
-                                           {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
-                                            :no-actions true
-                                            :empty-msg  (tr [:empty-deployemnt-msg])}])}
-                (job-views/jobs-section)
-                (acl/TabAcls {:e          deployment-set
-                              :can-edit?  can-edit?
-                              :edit-event ::events/edit})]
-      :menu    {:secondary true
-                :pointing  true}}]))
-
-(defn Application
-  [{:keys [id name subtype description] :as module}]
-  (let [selected? @(subscribe [::subs/apps-selected? module])]
-    [ui/ListItem {:on-click #(dispatch [::events/toggle-select-app module])
-                  :style    {:cursor :pointer}}
-     [ui/ListIcon {:name (if selected?
-                           "check square outline"
-                           "square outline")}]
-     [ui/ListContent
-      [ui/ListHeader (when selected? {:as :a})
-       (apps-utils/subtype-icon-infra subtype selected?)
-       " "
-       (or name id)]
-      [ui/ListDescription
-       (general-utils/truncate description 100)]]]))
-
-(defn Applications
-  [applications]
-  [:<>
-   (for [{:keys [id] :as child} applications]
-     ^{:key id}
-     [Application child])])
-
-(declare Node)
-
-(defn Project
-  [path {:keys [applications] :as content}]
-  [ui/ListItem
-   [ui/ListIcon {:name "folder"}]
-   [ui/ListContent
-    [ui/ListHeader path]
-    [ui/ListList
-     [Node
-      (dissoc content :applications)
-      applications]]]])
-
-(defn Projects
-  [projects]
-  [:<>
-   (for [[path content] projects]
-     ^{:key path}
-     [Project path content])])
-
-(defn Node
-  [projects applications]
-  [:<>
-   [Projects (sort-by first projects)]
-   [Applications (sort-by (juxt :id :name) applications)]])
-
-(defn SelectApps
-  []
-  (dispatch [::events/search-apps])
-  (fn []
-    (let [{:keys [count]} @(subscribe [::subs/apps])
-          apps     @(subscribe [::subs/apps-tree])
-          loading? @(subscribe [::subs/apps-loading?])
-          tr       @(subscribe [::i18n-subs/tr])
-          render   (fn []
-                     (r/as-element
-                       [ui/TabPane {:loading loading?}
-                        [full-text-search-plugin/FullTextSearch
-                         {:db-path      [::spec/apps-search]
-                          :change-event [::events/search-apps]}]
-                        [ui/ListSA
-                         [Node (dissoc apps :applications) (:applications apps)]]
-                        [pagination/Pagination
-                         {:db-path      [::spec/apps-pagination]
-                          :total-items  count
-                          :change-event [::events/search-apps]}]]))]
+    (when @deployment-set
       [tab/Tab
-       {:db-path      [::spec/tab-new-apps]
-        :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
-                                   :key     :app-store
-                                   :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-                        :render   render}
-                       {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
-                                   :key     :all-apps
-                                   :icon    "grid layout"}
-                        :render   render}
-                       {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
-                                   :key     :my-apps
-                                   :icon    "user"}
-                        :render   render}]
-        :change-event [::events/search-apps]}])))
+       {:db-path [::spec/tab]
+        :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
+                              :key     :overview
+                              :icon    "info"}
+                   :render   #(r/as-element [TabOverview])}
+                  (events-plugin/events-section
+                    {:db-path [::spec/events]
+                     :href    (:id @deployment-set)})
 
-(defn CredentialItem
-  [{:keys [id name description] :as credential} credentials]
-  (let [selected? @(subscribe [::subs/targets-selected? [credential]])]
-    [ui/ListItem {:style    {:cursor :pointer}
-                  :on-click #(dispatch [::events/toggle-select-target
-                                        credential credentials])}
-     [ui/ListIcon
-      [ui/Icon {:name (if selected?
-                        "check square outline"
-                        "square outline")}]]
-     [ui/ListContent
-      [ui/ListHeader (when selected? {:as :a})
-       [ui/Icon {:name "key"}] " "
-       (or name id)]
-      (when description
-        [ui/ListDescription (general-utils/truncate description 100)])]]))
+                  {:menuItem {:key     :configure-sets-detail
+                              :icon    "configure"
+                              :content (str/capitalize (tr [:configure]))}
+                   :render   #(r/as-element [:h1 "configure same as new"])}
+                  {:menuItem {:content (str/capitalize (tr [:deployments]))
+                              :key     :deployments
+                              :icon    "rocket"}
+                   :render   #(r/as-element [deployments-views/DeploymentTable
+                                             {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
+                                              :no-actions  true
+                                              :empty-msg   (tr [:empty-deployemnt-msg])}])}
+                  (job-views/jobs-section)
+                  (acl/TabAcls {:e          deployment-set
+                                :can-edit?  can-edit?
+                                :edit-event ::events/edit})]
+        :menu    {:secondary true
+                  :pointing  true}}])))
 
-(defn TargetItem
-  [{:keys [id name description credentials subtype] :as _infrastructure}]
-  (let [selected?      (subscribe [::subs/targets-selected? credentials])
-        multiple-cred? (> (count credentials) 1)]
-    [ui/ListItem (when-not multiple-cred?
-                   {:style    {:cursor :pointer}
-                    :disabled (-> credentials count zero?)
-                    :on-click #(dispatch [::events/toggle-select-target
-                                          (first credentials)])})
-     [ui/ListIcon
-      [ui/Icon {:name (if @selected?
-                        "check square outline"
-                        "square outline")}]]
-     [ui/ListContent
-      [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
-       (case subtype
-         "swarm" [ui/Icon {:name "docker"}]
-         "kubernetes" [ui/Image {:src   (if @selected?
-                                          "/ui/images/kubernetes.svg"
-                                          "/ui/images/kubernetes-grey.svg")
-                                 :style {:width   "1.18em"
-                                         :margin  "0 .25rem 0 0"
-                                         :display :inline-block}}])
-       " " (or name id)]
-      (when description
-        [ui/ListDescription (general-utils/truncate description 100)])
-      (when multiple-cred?
-        [ui/ListList
-         [:<>
-          (for [{:keys [id] :as credential} credentials]
-            ^{:key id}
-            [CredentialItem credential credentials])]])]]))
+(defn on-change-input
+  [k]
+  (ui-callback/input-callback
+    #(dispatch [::events/set k %])))
 
-(defn TargetEdges
+(defn NameInput
   []
-  (dispatch [::events/search-edges])
-  (fn []
-    (let [{:keys [count]} @(subscribe [::subs/edges])
-          infrastructures @(subscribe [::subs/infrastructures-with-credentials])
-          loading?        @(subscribe [::subs/targets-loading?])]
-      [ui/TabPane {:loading loading?}
-       [full-text-search-plugin/FullTextSearch
-        {:db-path      [::spec/edges-search]
-         :change-event [::events/search-edges]}]
-       [ui/ListSA
-        [:<>
-         (for [{:keys [id] :as infrastructures} infrastructures]
-           ^{:key id}
-           [TargetItem infrastructures])]]
-       [pagination/Pagination {:db-path      [::spec/edges-pagination]
-                               :total-items  count
-                               :change-event [::events/search-edges]}]])))
+  (let [tr          (subscribe [::i18n-subs/tr])
+        create-name (subscribe [::subs/get ::spec/create-name])]
+    [ui/FormInput
+     {:label         (str/capitalize (@tr [:name]))
+      :placeholder   (@tr [:name-deployment-set])
+      :required      true
+      :default-value @create-name
+      :on-change     (on-change-input ::spec/create-name)}]))
 
-(defn TargetClouds
+(defn DescriptionInput
   []
-  (dispatch [::events/search-clouds])
-  (fn []
-    (let [{:keys [count]} @(subscribe [::subs/infrastructures])
-          infrastructures @(subscribe [::subs/infrastructures-with-credentials])
-          loading?        @(subscribe [::subs/targets-loading?])]
-      [ui/TabPane {:loading loading?}
-       [full-text-search-plugin/FullTextSearch
-        {:db-path      [::spec/clouds-search]
-         :change-event [::events/search-clouds]}]
-       [ui/ListSA
-        [:<>
-         (for [{:keys [id] :as infrastructures} infrastructures]
-           ^{:key id}
-           [TargetItem infrastructures])]]
-       [pagination/Pagination {:db-path      [::spec/clouds-pagination]
-                               :total-items  count
-                               :change-event [::events/search-clouds]}]])))
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        create-description (subscribe [::subs/get ::spec/create-description])]
+    [ui/FormInput
+     {:label         (str/capitalize (@tr [:description]))
+      :placeholder   (@tr [:describe-deployment-set])
+      :default-value @create-description
+      :on-change     (on-change-input ::spec/create-description)}]))
 
-(defn SelectTargets
+(defn NameDescriptionStep
   []
-  [tab/Tab
-   {:db-path [::spec/tab-new-targets]
-    :panes   [{:menuItem {:content "Edges"
-                          :key     :edges
-                          :icon    "box"}
-               :render   #(r/as-element [TargetEdges])}
-              {:menuItem {:content "Clouds"
-                          :key     :clouds
-                          :icon    "cloud"}
-               :render   #(r/as-element [TargetClouds])}]}])
+  [ui/Form
+   [NameInput]
+   [DescriptionInput]])
 
-(defn StepApplicationsTargets
+(defn AppsList
+  [i applications]
+  [ui/ListSA
+   (for [{:keys [id]} applications]
+     ^{:key (str "apps-set-" i "-" id)}
+     [module-plugin/ModuleNameIcon
+      {:db-path [::spec/apps-sets i]
+       :href    id}])])
+
+(defn AppsSet
+  [i {:keys [name description applications] :as _apps-set}]
+  [:<>
+   [ui/Header {:as "h4"} name
+    (when description
+      [ui/HeaderSubheader description])]
+   [AppsList i applications]])
+
+(defn SelectTargetsModal
+  [i subtype]
+  (let [targets-selected @(subscribe [::subs/targets-selected i])
+        db-path          [::spec/apps-sets i ::spec/targets]
+        on-open          #(dispatch [::target-selector/restore-selected
+                                     db-path (map :id targets-selected)])
+        on-done          #(dispatch [::events/set-targets-selected i db-path])]
+    [ui/Modal
+     {:close-icon true
+      :trigger    (r/as-element
+                    [ui/Icon {:name     "add"
+                              :color    "green"
+                              :on-click on-open}])
+      :header     "New apps set"
+      :content    (r/as-element
+                    [ui/ModalContent
+                     [target-selector/TargetsSelectorSection
+                      {:db-path db-path
+                       :subtype subtype}]])
+      :actions    [{:key "cancel", :content "Cancel"}
+                   {:key     "done", :content "Done" :positive true
+                    :onClick on-done}]}]))
+
+
+(defn TargetIcon
+  [subtype]
+  (condp = subtype
+    "infrastructure-service-swarm" [ui/Icon {:name "docker"}]
+    "infrastructure-service-kubernetes" [apps-utils/IconK8s false]
+    [ui/Icon {:name "question circle"}]))
+(defn TargetNameIcon
+  [{:keys [subtype name] target-id :id} on-delete]
+  [ui/ListItem
+   [TargetIcon subtype]
+   [ui/ListContent (or name target-id) " "
+    (when on-delete
+      [ui/Icon {:name     "close" :color "red" :link true
+                :on-click #(on-delete target-id)}])]])
+
+
+(defn TargetsList
+  [i & {:keys [editable?]
+        :or   {editable? true} :as _opts}]
+  (let [selected  @(subscribe [::subs/targets-selected i])
+        on-delete (when editable?
+                    #(dispatch [::events/remove-target i %]))]
+    (when (seq selected)
+      [ui/ListSA
+       (for [target selected]
+         ^{:key (:id target)}
+         [TargetNameIcon target on-delete])])))
+
+(defn TargetsSet
+  [i apps-set editable?]
+  [:<>
+   [TargetsList i :editable? editable?]
+   (when (and (-> apps-set count pos?)
+              editable?)
+     [SelectTargetsModal i (:subtype apps-set)])])
+
+(defn AppsSetRow
+  [{:keys [i apps-set summary-page]}]
+  [ui/TableRow {:vertical-align :top}
+   [ui/TableCell {:width 2}
+    [ui/Header (inc i)]]
+   [ui/TableCell {:width 6}
+    [AppsSet i apps-set]]
+   [ui/TableCell {:width 2} "➔"]
+   [ui/TableCell {:width 6}
+    [TargetsSet i apps-set (not summary-page)]]])
+
+(defn CreateStartButton
   []
-  (let [tr @(subscribe [::i18n-subs/tr])]
-    [ui/Grid {:stackable true}
-     [ui/GridRow {:columns   2
-                  :stretched true}
-      [ui/GridColumn
-       [ui/Segment
-        [:h2 (tr [:applications])]
-        [SelectApps]]]
-      [ui/GridColumn
-       [ui/Segment
-        [:h2 (tr [:targets])]
-        [SelectTargets]]]]]))
+  (let [disabled? @(subscribe [::subs/create-start-disabled?])
+        on-click  #(dispatch [::events/create-start %])]
+    [ui/ButtonGroup {:floated  "right"
+                     :positive true}
+     [ui/Button {:content  "Create"
+                 :disabled disabled?
+                 :on-click (partial on-click false)}]
+     [ui/ButtonOr]
+     [ui/Button {:icon     "play"
+                 :content  "Start"
+                 :disabled disabled?
+                 :on-click (partial on-click true)}]]))
 
-(defn ConfigureApplications
+(defn AppsSets
+  [{:keys [summary-page]
+    :or   {summary-page false}}]
+  (let [applications-sets (subscribe [::subs/applications-sets])]
+    [ui/Segment (merge style/basic {:clearing true})
+     [ui/Table {:compact    true
+                :definition true}
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell]
+        [ui/TableHeaderCell "Apps sets"]
+        [ui/TableHeaderCell]
+        [ui/TableHeaderCell "Targets sets"]]]
+
+      [ui/TableBody
+       (for [[i apps-set] (map-indexed vector @applications-sets)]
+         ^{:key (str "apps-set-" i)}
+         [AppsSetRow {:i            i
+                      :apps-set     apps-set
+                      :summary-page summary-page}])]]]))
+
+(defn ConfigureApps
+  [i applications]
+  [ui/Tab
+   {:menu  {:attached false}
+    :panes (map
+             (fn [{:keys [id]}]
+               (let [app @(subscribe [::module-plugin/module
+                                      [::spec/apps-sets i] id])]
+                 {:menuItem {:content (or (:name app) (:id app))
+                             :icon    "cubes"
+                             :key     (keyword (str "configure-set-" i "-app-" id))}
+                  :render   #(r/as-element
+                               [ui/TabPane
+                                [module-plugin/EnvVariables
+                                 {:db-path [::spec/apps-sets i]
+                                  :href    id}]])})
+               ) applications)}])
+
+(defn BoldLabel
+  [txt]
+  [:label [:b txt]])
+
+(defn Licenses
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        apps-selected (subscribe [::subs/apps-selected])]
-    [:div
-     [tab/Tab
-      {:db-path [::spec/config-apps-tab]
-       :panes   (map
-                  (fn [{:keys [id name subtype]}]
-                    {:menuItem {:content (or name id)
-                                :key     id
-                                :icon    (r/as-element
-                                           (apps-utils/subtype-icon-infra
-                                             subtype false))}
-                     :render   #(r/as-element
-                                  [ui/TabPane
-                                   [uix/Accordion
-                                    ^{:key id}
-                                    [module-plugin/ModuleVersions
-                                     {:db-path [::spec/module-versions]
-                                      :href    id}]
-                                    :label (@tr [:select-version])
-                                    :default-open true]
-                                   [uix/Accordion
-                                    [module-plugin/EnvVariables
-                                     {:db-path [::spec/module-versions]
-                                      :href    id}]
-                                    :label (@tr [:env-variables])
-                                    :default-open true]
-                                   [uix/Accordion
-                                    [module-plugin/AcceptLicense
-                                     {:db-path [::spec/module-versions]
-                                      :href    id}]
-                                    :label (@tr [:eula-full])
-                                    :default-open true]
-                                   [uix/Accordion
-                                    [module-plugin/AcceptPrice
-                                     {:db-path [::spec/module-versions]
-                                      :href    id}]
-                                    :label (str/capitalize (@tr [:price]))
-                                    :default-open true]
-                                   ])}
-                    ) @apps-selected)}]]))
+  (let [tr       @(subscribe [::i18n-subs/tr])
+        licenses @(subscribe [::subs/deployment-set-licenses])
+        checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
+    (if (seq licenses)
+      [ui/Segment
+       [ui/ListSA {:bulleted true}
+        (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
+          ^{:key (str "accept-eula-" license)}
+          [ui/ListItem
+           [ui/ListIcon {:name "book"}]
+           [ui/ListContent
+            [ui/ListHeader {:as     :a
+                            :target "_blank"
+                            :href   url
+                            } name]
+            (when description
+              [ui/ListDescription description])
+            [ui/ListList
+             (for [{i                      :i
+                    {:keys [id name path]} :application} sets-apps-targets]
+               ^{:key (str "license-" i "-" id)}
+               [ui/ListItem
+                [ui/ListContent
+                 [ui/ListHeader
+                  [values/AsLink path :label (or name id) :page "apps"]]]])]]])]
+       [ui/Form
+        [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
+                          :required  true
+                          :checked   checked?
+                          :on-change (ui-callback/checked
+                                       #(dispatch [::events/set
+                                                   ::spec/licenses-accepted? %]))}]]]
+      [ui/Message (tr [:eula-not-defined])])))
 
-(defn AddSelectedTargetsApps
-  [header apps-names targets-names]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        warning? (not (and (seq apps-names)
-                           (seq targets-names)))]
-    (when (or (seq apps-names)
-              (seq targets-names))
-      [:<>
-       [ui/Header {:as :h4, :attached :top} header]
-       [ui/Segment {:attached (or warning? :bottom)}
-        [ui/Table {:basic :very :celled true}
+(defn Prices
+  []
+  (let [tr                       @(subscribe [::i18n-subs/tr])
+        apps-targets-total-price @(subscribe [::subs/deployment-set-apps-targets-total-price])
+        checked?                 @(subscribe [::subs/get ::spec/prices-accepted?])
+        dep-set-total-price      @(subscribe [::subs/deployment-set-total-price])]
+    [ui/Segment
+     (if (seq apps-targets-total-price)
+       [:<>
+        [ui/Table
+         [ui/TableHeader
+          [ui/TableRow
+           [ui/TableHeaderCell (str/capitalize (tr [:application]))]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-unit-price])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:quantity])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-price])]]]
          [ui/TableBody
-          [ui/TableRow
-           [ui/TableCell {:collapsing true}
-            [ui/Header {:as :h5 :content (str (str/capitalize (@tr [:targets]))
-                                              ":")}]]
-           [ui/TableCell
-            (for [target-name targets-names]
-              ^{:key target-name}
-              [ui/Label {:content target-name}])]]
-          [ui/TableRow
-           [ui/TableCell {:collapsing true}
-            [ui/Header {:as :h5 :content (str (str/capitalize (@tr [:apps]))
-                                              ":")}]]
-           [ui/TableCell
-            (for [app-name apps-names]
-              ^{:key app-name}
-              [ui/Label {:content app-name}])]]]]]
-       (when warning?
-         [ui/Message {:warning true :attached :bottom}
-          [ui/Icon {:name "question"}]
-          (if (seq apps-names)
-            (@tr [:warning-app-selected-not-compatible-targets])
-            (@tr [:warning-target-selected-not-compatible-apps]))])])))
+          (for [{:keys [i targets-count total-price application]} apps-targets-total-price]
+            ^{:key (str "price-" i "-" (:id application))}
+            [ui/TableRow
+             [ui/TableCell [values/AsLink (:path application)
+                            :label (or (:name application)
+                                       (:id application)) :page "apps"]]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money
+                                                   (/ (get-in application [:price :cent-amount-daily]) 100))]
+             [ui/TableCell {:text-align "right"} targets-count]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money (/ total-price 100))]])
+          [ui/TableRow {:active true}
+           [ui/TableCell [:b (str/capitalize (tr [:total]))]]
+           [ui/TableCell]
+           [ui/TableCell]
+           [ui/TableCell {:text-align "right"}
+            [:b (str (tr [:total-price]) ": " (general-utils/format-money (/ dep-set-total-price 100)) "/" (tr [:day]))]]]]]
+        [ui/Form {:size "big"}
+         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-prices])])
+                           :required  true
+                           :checked   checked?
+                           :on-change (ui-callback/checked
+                                        #(dispatch [::events/set
+                                                    ::spec/prices-accepted? %]))}]]]
+       [ui/Message (tr [:free-app])])]))
+
+(defn ConfigureSets
+  []
+  [ui/Tab
+   {:menu  {:secondary true
+            :pointing  true}
+    :panes (map-indexed
+             (fn [i {:keys [name applications]}]
+               {:menuItem {:content (str (inc i) " | " name)
+                           :key     (keyword (str "configure-set-" i))}
+                :render   #(r/as-element
+                             [ConfigureApps i applications])}
+               ) @(subscribe [::subs/applications-sets]))}])
 
 (defn Summary
   []
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        create-disabled?      (subscribe [::subs/create-disabled?])
-        apps-selected         (subscribe [::subs/apps-selected])
-        targets-selected      (subscribe [::subs/targets-selected])
-        license-not-accepted? (subscribe [::subs/some-license-not-accepted?])
-        price-not-accepted?   (subscribe [::subs/some-price-not-accepted?])
-        create-name           (subscribe [::subs/get ::spec/create-name])
-        create-description    (subscribe [::subs/get ::spec/create-description])
-        create-start          (subscribe [::subs/get ::spec/create-start])
-        on-change-input       (fn [k]
-                                (ui-callback/input-callback
-                                  #(dispatch [::events/set k %])))]
-    (fn []
-      (let [resource-names-of-subtype    (fn [resources subtype]
-                                           (map #(or (:name %) (:id %)) (get (group-by :subtype resources)
-                                                                             subtype)))
-            selected-swarm-targets-names (resource-names-of-subtype @targets-selected "infrastructure-service-swarm")
-            selected-swarm-apps-names    (map :name (remove #(= (:subtype %) "application_kubernetes") @apps-selected))
-            selected-k8s-targets-names   (resource-names-of-subtype @targets-selected "infrastructure-service-kubernetes")
-            selected-k8s-apps-names      (resource-names-of-subtype @apps-selected "application_kubernetes")]
-        [ui/Segment (merge style/basic {:clearing true})
-         [ui/Form
-          [ui/FormInput
-           {:label         (str/capitalize (@tr [:name]))
-            :placeholder   (@tr [:name-deployment-set])
-            :required      true
-            :default-value @create-name
-            :on-change     (on-change-input ::spec/create-name)}]
-          [ui/FormInput
-           {:label         (str/capitalize (@tr [:description]))
-            :placeholder   (@tr [:describe-deployment-set])
-            :default-value @create-description
-            :on-change     (on-change-input ::spec/create-description)}]
-          [ui/FormCheckbox
-           {:label     (@tr [:start-deployment-set-after-creation])
-            :checked   @create-start
-            :on-change (ui-callback/checked
-                         #(dispatch [::events/set ::spec/create-start (not @create-start)]))}]]
-         [AddSelectedTargetsApps "Kubernetes" selected-k8s-apps-names selected-k8s-targets-names]
-         [AddSelectedTargetsApps "Docker" selected-swarm-apps-names selected-swarm-targets-names]
-         (when @license-not-accepted?
-           [ui/Message {:error true}
-            [ui/Icon {:name "warning"}]
-            (@tr [:accept-applications-licenses])])
-         (when @price-not-accepted?
-           [ui/Message {:error true}
-            [ui/Icon {:name "warning"}]
-            (@tr [:accept-applications-prices])])
-         [ui/Button
-          {:positive true
-           :on-click #(dispatch [::events/create])
-           :disabled (or @create-disabled?
-                         (str/blank? @create-name))
-           :floated  :right} (str/capitalize (@tr [:create]))]]))))
+  [ui/Segment (merge style/basic {:clearing true})
+   [AppsSets {:summary-page true}]
+   [CreateStartButton]]
+  )
+
+(defn StepDescription
+  [description]
+  [:div {:style {:overflow-wrap "break-word"
+                 :width         "16ch"}}
+   description])
 
 (defn AddPage
   []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        configure-disabled? (subscribe [::subs/configure-disabled?])]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        items [{:key         :name
+                :icon        "bullseye"
+                :content     [NameDescriptionStep]
+                :title       "New deployment set"
+                :description "Give it a name"}
+               {:key         :select-apps-targets
+                :icon        "list"
+                :content     [AppsSets]
+                :title       "Apps / Targets"
+                :description (@tr [:select-applications-targets])}
+               {:key         :configure-sets
+                :icon        "configure"
+                :content     [ConfigureSets]
+                :title       (str/capitalize (@tr [:configure]))
+                :description (@tr [:configure-applications])}
+               {:key         :eula
+                :icon        "book"
+                :content     [Licenses]
+                :title       (@tr [:eula])
+                :description (@tr [:eula-full])}
+               {:key         :price
+                :icon        "eur"
+                :content     [Prices]
+                :title       (str/capitalize (@tr [:price]))
+                :description (@tr [:total-price])}
+               {:key         :summary
+                :icon        "info"
+                :content     [Summary]
+                :title       (str/capitalize (@tr [:summary]))
+                :description (@tr [:overall-summary])}]]
     (dispatch [::events/new])
     (fn []
       [ui/Container {:fluid true}
@@ -567,23 +546,13 @@
        [step-group/StepGroup
         {:db-path [::spec/steps]
          :size    :mini
+         :style   {:flex-wrap "wrap"}
          :fluid   true
-         :items   [{:key         :select-apps-targets
-                    :icon        "bullseye"
-                    :content     [StepApplicationsTargets]
-                    :title       (@tr [:applications-targets])
-                    :description (@tr [:select-applications-targets])}
-                   {:key         :configure
-                    :icon        "configure"
-                    :content     [ConfigureApplications]
-                    :title       (str/capitalize (@tr [:configure]))
-                    :disabled    @configure-disabled?
-                    :description (@tr [:configure-applications])}
-                   {:key         :summary
-                    :icon        "info"
-                    :content     [Summary]
-                    :title       (str/capitalize (@tr [:summary]))
-                    :description (@tr [:overall-summary])}]}]])))
+         :items   (mapv #(assoc %
+                           :description
+                           (r/as-element
+                             [StepDescription (:description %)]))
+                        items)}]])))
 
 (defn DeploymentSet
   [uuid]
@@ -603,7 +572,8 @@
         {:db-path [::spec/bulk-jobs]}]
        [components/ErrorJobsMessage
         ::job-subs/jobs nil nil
-        #(dispatch [::tab/change-tab [::spec/tab] :jobs])]
+        #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                      :tab-key :jobs}])]
        [TabsDeploymentSet]]]]))
 
 

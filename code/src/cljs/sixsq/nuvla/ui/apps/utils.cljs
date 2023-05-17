@@ -1,17 +1,76 @@
 (ns
   sixsq.nuvla.ui.apps.utils
-  (:require [clojure.string :as str]
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
+(def subtype-project "project")
+(def subtype-component "component")
+(def subtype-application "application")
+(def subtype-application-k8s "application_kubernetes")
+(def subtype-applications-sets "applications_sets")
+
+(def apps-description-template "# App Description Placeholder
+
+This is a generic placeholder that you should replace with your own app description.
+Be sure to provide a clear and concise overview of your app, its features, and its benefits.
+
+## Licenses
+Please include information about the licenses under which that software is distributed, including any third-party or
+open-source software used by your app.
+
+## Documentation
+You can also provide a link to your app's external documentation, which should include a comprehensive guide to getting
+started with your app, as well as detailed information on how to use its various features.
+Here is an [example link](https://example.com/docs) to external documentation.
+
+## Companion apps
+If you offer companion apps, please mention them and provide links for users to install them.
+
+For more information on how to format your app description using Markdown syntax, please see the [Basic Syntax Guide](https://www.markdownguide.org/basic-syntax/) and the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/).
+
+![App Screenshot](https://sos-ch-gva-2.exo.io/nuvla-images/bb-overview-blured.png)
+
+")
+
+(def projects-description-template  "# Project Description Placeholder
+
+This is a generic placeholder that you should replace with your own project description.
+Be sure to provide a clear and concise overview of what this project contains (i.e. apps and/or sub-projects). If this is your root project (aka first level project), it's a good idea to introduce your organisation.
+
+For more information on how to format your app description using Markdown syntax, please see the [Basic Syntax Guide](https://www.markdownguide.org/basic-syntax/) and the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/).
+"
+)
+
+(def subtype->descr-template
+  {subtype-application apps-description-template
+   subtype-project     projects-description-template})
+
+(defn descr-not-template?
+  [module-subtype description]
+  (not=
+    (subtype->descr-template module-subtype)
+    description))
+
+(defn description-valid?
+  [module-subtype description]
+  (and
+    (s/valid? ::spec/description description)
+    (descr-not-template? module-subtype description)))
+
+(defn module-common-valid?
+  [module-common module-subtype]
+  (and (s/valid? ::spec/module-common module-common)
+    (description-valid? module-subtype (::spec/description module-common))))
 
 (def publish-icon
   "check circle outline")
 
 
 (def un-publish-icon
-  "times circle outline")
+  "fa-light fa-link-simple-slash")
 
 
 (defn find-current-version
@@ -43,11 +102,6 @@
   (filter #(true? (-> % second :published true?)) map-versions))
 
 
-(defn compose-module-id
-  [module-version]
-  (str (-> module-version second :href) "_" (first module-version)))
-
-
 (defn latest-published-index
   "Return the latest published index. This can be used to append to a module id to fetch a specific
   module version"
@@ -68,13 +122,6 @@
     (str module-id "_" index)))
 
 
-(defn latest-published?
-  "Check if the module version corresponds to the latest published version."
-  [version-id map-versions]
-  (let [lastest (latest-published-version map-versions)]
-    (= (:href lastest) version-id)))
-
-
 (defn nav-path->module-path
   [nav-path]
   (some->> nav-path rest seq (str/join "/")))
@@ -89,36 +136,60 @@
   [nav-path]
   (some->> nav-path rest last))
 
+(defn module-version
+  [{{:keys [id]} :content versions :versions}]
+  (->> versions
+       (map-indexed vector)
+       (some (fn [[idx elm]] (when (= (:href elm) id) idx)))))
+
+(defn subtype?
+  [subtype]
+  (fn [module-subtype]
+    (= module-subtype subtype)))
+
+(def project? (subtype? subtype-project))
+(def component? (subtype? subtype-component))
+(def application? (subtype? subtype-application))
+(def application-k8s? (subtype? subtype-application-k8s))
+(def applications-sets? (subtype? subtype-applications-sets))
+
+(defn IconK8s
+  [selected]
+  [ui/Image {:src   (if selected
+                      "/ui/images/kubernetes.svg"
+                      "/ui/images/kubernetes-grey.svg")
+             :style {:width   "1.18em"
+                     :margin  "0 .25rem 0 0"
+                     :display :inline-block}}])
 
 (defn subtype-icon
   [subtype]
-  (case subtype
-    "project" "folder"
-    "component" "grid layout"
-    "application" "cubes"
-    "application_kubernetes" "cubes"
+  (condp = subtype
+    subtype-project "fa-light fa-folder"
+    subtype-component "fa-light fa-grid"
+    subtype-application "fa-light fa-cubes"
+    subtype-application-k8s "fa-light fa-cubes"
+    subtype-applications-sets "fa-light fa-table-cells-large"
     "question circle"))
 
-(defn subtype-icon-infra
+(defn SubtypeIconInfra
   [subtype selected]
-  (case subtype
-    "project" [ui/Icon {:name "folder"}]
-    "component" [ui/Icon {:name "docker"}]
-    "application" [ui/Icon {:name "docker"}]
-    "application_kubernetes" [ui/Image {:src   (if selected
-                                                 "/ui/images/kubernetes.svg"
-                                                 "/ui/images/kubernetes-grey.svg")
-                                        :style {:width   "1.18em"
-                                                :margin  "0 .25rem 0 0"
-                                                :display :inline-block}}]
+  (condp = subtype
+    subtype-project [ui/Icon {:name "folder"}]
+    subtype-component [ui/Icon {:name "docker"}]
+    subtype-application [ui/Icon {:name "docker"}]
+    subtype-application-k8s [IconK8s selected]
     [ui/Icon {:name "question circle"}]))
 
-
-(defn meta-subtype-icon
+(defn SubtypeDockerK8sListIcon
   [subtype]
-  (if (= "project" subtype)
-    "folder open"
-    (subtype-icon subtype)))
+  (let [unknown-icon [ui/ListIcon {:name "question circle"}]
+        docker-icon  [ui/ListIcon {:name "docker"}]]
+    (condp = subtype
+      subtype-application-k8s [IconK8s false]
+      subtype-application docker-icon
+      subtype-component docker-icon
+      unknown-icon)))
 
 
 (defn contruct-path [parent name]
@@ -352,11 +423,6 @@
   (let [vendors (module->groups module)]
     #_:clj-kondo/ignore
     (not (empty? vendors))))
-
-
-(defn vendor-name
-  [user]
-  (drop 6 user))
 
 
 (defn set-reset-error

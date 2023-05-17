@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.views
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.apps-applications-sets.views]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.cimi.subs :as api-subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -21,8 +22,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [clojure.string :as str]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn crumb
@@ -115,16 +115,17 @@
 
 (defn ignore-changes-modal
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        navigation-info   (subscribe [::subs/ignore-changes-modal])
-        on-apps-page?     (-> @(subscribe [::route-subs/current-route])
-                              :template
-                              (str/includes? "apps"))
-        ignore-changes-fn #(dispatch [::events/ignore-changes false])]
+  (let [tr                       (subscribe [::i18n-subs/tr])
+        navigation-info          (subscribe [::subs/ignore-changes-modal])
+        do-not-ignore-changes-fn #(dispatch [::events/do-not-ignore-changes])]
+    (when @navigation-info
+      (dispatch [::events/opening-protection-modal]))
 
-    [ui/Modal {:open       (some? @navigation-info)
-               :close-icon true
-               :on-close   ignore-changes-fn}
+    [ui/Modal {:open        (some? @navigation-info)
+               :close-icon  true
+               :on-close    do-not-ignore-changes-fn
+                ;; data-testid is used for e2e test
+               :data-testid "protection-modal"}
 
      [uix/ModalHeader {:header (@tr [:ignore-changes?])}]
 
@@ -134,9 +135,8 @@
       [uix/Button {:text     (@tr [:ignore-changes]),
                    :positive true
                    :active   true
-                   :on-click #(do (dispatch [::events/ignore-changes true])
-                                  (dispatch [::apps-events/form-valid])
-                                  (when on-apps-page? (dispatch [::apps-events/set-active-tab :overview])))}]]]))
+                   :on-click #(do (dispatch [::events/ignore-changes])
+                                  (dispatch [::apps-events/form-valid]))}]]]))
 
 (defn subscription-required-modal
   []
@@ -267,7 +267,7 @@
          [router-component]
          [:<>
           [intercom/widget]
-          [sidebar/menu]
+          [sidebar/Menu]
           [:div {:class (str "nuvla-" (first @resource-path))
                  :style {:transition  "0.5s"
                          :margin-left (if (and (not @is-small-device?) @show?)

@@ -1,8 +1,8 @@
 (def parent-version "6.7.12")
 (def sixsq-nuvla-api-version "2.0.11")
-(def version "2.33.2-SNAPSHOT")
+(def version "2.33.7-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "2.33.2-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.33.7-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -31,12 +31,7 @@
                                     "resources/public/ui/css/semantic.min.css"
                                     "resources/public/ui/css/themes"
                                     "resources/public/ui/css/version.css"
-                                    "resources/public/ui/css/codemirror.css"
-                                    "resources/public/ui/css/foldgutter.css"
                                     "resources/public/ui/css/react-datepicker.min.css"
-                                    "resources/public/ui/css/codemirror.css"
-                                    "resources/public/ui/css/dialog.css"
-                                    "resources/public/ui/css/matchesonscrollbar.css"
                                     "resources/public/ui/css/leaflet.css"
                                     "resources/public/ui/css/leaflet.draw.css"
                                     "resources/public/ui/css/images"]
@@ -62,14 +57,6 @@
                {:target-path "resources/public/ui/css/themes"}]
               ["node_modules/react-datepicker/dist/react-datepicker.min.css"
                {:target-path "resources/public/ui/css/react-datepicker.min.css"}]
-              ["node_modules/codemirror/lib/codemirror.css"
-               {:target-path "resources/public/ui/css/codemirror.css"}]
-              ["node_modules/codemirror/addon/fold/foldgutter.css"
-               {:target-path "resources/public/ui/css/foldgutter.css"}]
-              ["node_modules/codemirror/addon/dialog/dialog.css"
-               {:target-path "resources/public/ui/css/dialog.css"}]
-              ["node_modules/codemirror/addon/search/matchesonscrollbar.css"
-               {:target-path "resources/public/ui/css/matchesonscrollbar.css"}]
               ["target/version.css"
                {:target-path "resources/public/ui/css/version.css"}]
               ["node_modules/leaflet/dist/leaflet.css"

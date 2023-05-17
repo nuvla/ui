@@ -8,7 +8,6 @@ test('Additional filter wizard', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.getByRole('link', { name: 'edges' }).click();
-  await page.pause();
   await page.getByRole('button', { name: 'Filter' }).click();
   await page.getByText('attribute name').click();
   await page.getByRole('option', { name: 'name' }).click();

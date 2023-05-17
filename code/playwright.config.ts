@@ -28,7 +28,9 @@ const config: PlaywrightTestConfig = {
     /nuvlaedge\.spec\.ts/,
     /logout/,
     /api/,
-    // , /apps/, /changes/, /credentials/, /data\-date/, /edge_details/
+    ,
+    /apps/,
+    // , /changes/, /credentials/, /data\-date/, /edge_details/
   ],
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,

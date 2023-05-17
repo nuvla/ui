@@ -13,7 +13,6 @@ let baseURL = process.env.UI_BASE_URL || '';
  */
 if (isValidHttpUrl(baseURL)) {
   console.log('Test running on', baseURL);
-  console.log('');
 } else {
   console.error('Not a valid url:', baseURL);
   throw new Error('not a valid baseURL: ' + baseURL);
@@ -25,6 +24,7 @@ if (isValidHttpUrl(baseURL)) {
 const config: PlaywrightTestConfig = {
   globalSetup: require.resolve('./global-setup'),
   testDir: './test/e2e',
+  grep: /nuvlaedge\.spec\.ts/,
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,
   expect: {

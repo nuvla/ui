@@ -24,13 +24,6 @@ if (isValidHttpUrl(baseURL)) {
 const config: PlaywrightTestConfig = {
   globalSetup: require.resolve('./global-setup'),
   testDir: './test/e2e',
-  // grep: /apps/,
-  // grepInvert: [
-  //   /apps_creation/,
-  //   /Navigate from projects to apps/,
-  //   /marketplace/,
-  //   //  ,/full/
-  // ],
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,
   expect: {

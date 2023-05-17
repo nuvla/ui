@@ -8,7 +8,7 @@ test.describe('Full text search', () => {
   for (const pageName of [
     // 'apps', 'deployments',
     'edges',
-    // 'data'
+    'data',
   ]) {
     test('on page ' + pageName, async ({ page }, { config }) => {
       const { baseURL } = config.projects[0].use;

@@ -25,6 +25,8 @@ jobs:
   e2e-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.27.1-jammy
     steps:
       - uses: actions/checkout@v3
       - run: sudo timedatectl set-timezone Europe/Zurich
@@ -43,8 +45,6 @@ jobs:
           node-version: 16
       - name: Install dependencies
         run: npm ci
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
       - name: Run Playwright logged in tests
         run: npx playwright test loggedin
         env:

@@ -24,10 +24,7 @@ if (isValidHttpUrl(baseURL)) {
 const config: PlaywrightTestConfig = {
   globalSetup: require.resolve('./global-setup'),
   testDir: './test/e2e',
-  grep: [
-    /nuvlaedge\.spec\.ts/,
-    /logout/,
-    /api/,
+  grepInvert: [
     /apps/,
     // , /changes/, /credentials/, /data\-date/, /edge_details/
   ],

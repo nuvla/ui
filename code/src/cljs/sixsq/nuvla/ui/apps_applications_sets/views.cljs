@@ -377,6 +377,12 @@
                                       :change-event [::main-events/changes-protection? true]
                                       :read-only?   read-only?}]
                                     :label (@tr [:env-variables])
+                                    :default-open true]
+                                   [uix/Accordion
+                                    [module-plugin/RegistriesCredentials
+                                     {:db-path db-path
+                                      :href    module-id}]
+                                    :label (@tr [:private-registries])
                                     :default-open true]]])})
                  @applications)}]
       [ui/Message {:info true} "No applications for this set yet"])))

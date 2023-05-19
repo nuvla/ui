@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Released
+
+## [2.33.7] - 2023-05-19
+
 ### Changed
 
 - Deployment set - Accept licenses widget #1220
@@ -23,8 +27,6 @@
 - Edges details, overview tab - Adds node labels to Cluster status card #1207
 - Github e2e - Cache NPM packages, use playwright container, optimize order
 - Config.json - Update licenses
-
-## Released
 
 ## [2.33.6] - 2023-04-28
 

@@ -32,10 +32,10 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as utils-values]
-            [sixsq.nuvla.ui.utils.spec :as spec-utils]))
+            [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 (def edit-cell-left-padding 24)
 

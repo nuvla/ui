@@ -17,6 +17,8 @@
 (def change-event-module-version ::change-event-module-version)
 (def change-event-env-variables ::change-event-env-variables)
 
+(def change-event-registries-credentials ::change-event-registries-credentials)
+
 (def module-env-vars-path [:content :environmental-variables])
 
 (def module-private-registries-path [:content :private-registries])
@@ -90,10 +92,7 @@
 
 (defn- update-registry-credential-by-index
   [registries-credentials index value]
-  (if (seq registries-credentials)
-    (assoc registries-credentials index value)
-
-    ))
+  (assoc registries-credentials index value))
 
 (defn- module-private-registries
   [module]
@@ -131,7 +130,6 @@
 (reg-event-fx
   ::load-module
   (fn [{db :db} [_ db-path href overwrite]]
-    (js/console.info ::load-module "ICI" overwrite)
     {:db               (assoc-in db (db-module-overwrite-path db-path href) overwrite)
      ::cimi-api-fx/get [href #(dispatch [::set-module db-path href %])]}))
 
@@ -220,15 +218,18 @@
       {:db (update-db-module db db-path href update-module-env-var)
        :fx [(when change-event [:dispatch change-event])]})))
 
-#_(reg-event-fx
+(reg-event-fx
   ::update-registry-credential
   (fn [{db :db} [_ db-path href index new-value]]
-    (let [
-          ;change-event          (get-in db (conj db-path change-event-env-variables))
-          update-regs-creds      #(update-env-value-by-index % index new-value)
+    (let [change-event           (get-in db (conj db-path change-event-registries-credentials))
+          private-registries-len (-> (db-module db db-path href)
+                                     module-private-registries
+                                     count)
+          update-regs-creds      #(let [regs-creds (or % (take private-registries-len (repeat "")))]
+                                    (update-registry-credential-by-index regs-creds index new-value))
           update-module-reg-cred #(update-module-registries-credentials % update-regs-creds)]
       {:db (update-db-module db db-path href update-module-reg-cred)
-       :fx [#_(when change-event [:dispatch change-event])]})))
+       :fx [(when change-event [:dispatch change-event])]})))
 
 (defn- get-version-id
   [module-versions version]
@@ -255,6 +256,11 @@
   [db db-path href]
   (-> (db-module db db-path href)
       module-env-vars))
+
+(defn- db-module-registries-credentials
+  [db db-path href]
+  (-> (db-module db db-path href)
+      module-registries-credentials))
 
 (defn- changed-env-vars
   [env-vars]
@@ -377,10 +383,10 @@
   [{:keys [db-path href change-event read-only?]
     :or   {read-only? false}
     :as   _opts}]
+  (dispatch [::helpers/set db-path change-event-env-variables change-event])
   (let [tr            @(subscribe [::i18n-subs/tr])
         module        @(subscribe [::module db-path href])
         env-variables (module-env-vars module)]
-    (dispatch [::helpers/set db-path change-event-env-variables change-event])
     (if (seq env-variables)
       [ui/Form
        (map-indexed
@@ -412,7 +418,7 @@
       [ui/FormInput
        {:disabled      true
         :label         registry-label
-        :default-value (@tr [:preselected])}]
+        :default-value (tr [:preselected])}]
       [ui/FormDropdown
        (cond->
          {:required    true
@@ -424,8 +430,8 @@
                          (tr [:no-available-creds-registry]))
           :placeholder (tr [:select-credential])
           :options     options
-          ;:on-change     (ui-callback/value
-          ;                 #(dispatch [::events/set-credential-registry private-registry-id %]))
+          :on-change   (ui-callback/value
+                         #(dispatch [::update-registry-credential db-path href i %]))
           }
          #_(empty? @creds-options) #_(assoc :error (@tr [:no-available-creds-registry])))])
     ;(if (and preselected?
@@ -454,12 +460,13 @@
     ))
 
 (defn RegistriesCredentials
-  [{:keys [db-path href read-only?]
+  [{:keys [db-path href change-event read-only?]
     :or   {read-only? false}
     :as   _opts}]
   (let [module             @(subscribe [::module db-path href])
         private-registries (module-private-registries module)
         loading?           @(subscribe [::registries-loading? db-path href])]
+    (dispatch [::helpers/set db-path change-event-registries-credentials change-event])
     ; load infra reg, help name resolution
     ; load cred reg group by parent needed for options
     ; look at module preselected and create

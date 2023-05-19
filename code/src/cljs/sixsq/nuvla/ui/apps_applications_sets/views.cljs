@@ -380,8 +380,9 @@
                                     :default-open true]
                                    [uix/Accordion
                                     [module-plugin/RegistriesCredentials
-                                     {:db-path db-path
-                                      :href    module-id}]
+                                     {:db-path      db-path
+                                      :href         module-id
+                                      :change-event [::main-events/changes-protection? true]}]
                                     :label (@tr [:private-registries])
                                     :default-open true]]])})
                  @applications)}]

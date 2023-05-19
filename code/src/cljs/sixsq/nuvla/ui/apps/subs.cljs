@@ -262,7 +262,6 @@
              :loading?  false
              :error-msg (get-in db [::spec/module-immutable :validation-message] "")})))))
 
-
 (reg-sub
   ::module-content-updated?
   (fn [{:keys [::spec/module

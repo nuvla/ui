@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.edges.subs
   (:require [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.edges.spec :as spec]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (reg-sub
   ::loading?

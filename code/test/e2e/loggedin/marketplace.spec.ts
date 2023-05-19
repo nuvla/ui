@@ -25,7 +25,6 @@ test('Marketplace shows only published apps', async ({ page }, { project, config
 
   await elements[0].click();
   const appdetails = page.locator('.nuvla-apps');
-  await page.pause();
   await appdetails.getByRole('link', { name: 'Deployments' }).click();
   await page.waitForURL(/apps-tab=deployments$/);
   await page.locator('#nuvla-ui-header-breadcrumb').getByText('Apps').click();

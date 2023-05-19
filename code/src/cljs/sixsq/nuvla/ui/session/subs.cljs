@@ -35,18 +35,23 @@
                  :value    user
                  :level    0
                  :icon     "user"
+                 :root     user
                  :selected (= active-claim user)}]
            h   groups-hierarchies]
       (if (nil? (seq h))
         acc
-        (let [{:keys [id name level children]} (first h)]
-          (recur (conj acc {:text     (or name (general-utils/id->uuid id))
-                            :value    id
-                            :level    (or level 0)
-                            :icon     "group"})
+        (let [{:keys [id name level children root]} (first h)
+              next-level (inc level)
+              root       (or root id)]
+          (recur (conj acc {:text  (or name (general-utils/id->uuid id))
+                            :value id
+                            :level (or level 0)
+                            :root  root
+                            :icon  "group"})
                  (concat
                    (->> children
-                        (map #(assoc % :level (inc level)))
+                        (map #(assoc % :level next-level
+                                       :root root))
                         (sort (juxt :name :id)))
                    (next h))))))))
 

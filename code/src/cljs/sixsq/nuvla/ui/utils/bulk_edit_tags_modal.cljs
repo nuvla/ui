@@ -94,7 +94,8 @@
 
 (defn- ButtonAskingForConfirmation
   [_]
-  (let [mode (r/atom :idle)]
+  (let [mode (r/atom :idle)
+        tr   (subscribe [::i18n-subs/tr])]
     (fn [{:keys [color text update-event disabled? action-aria-label]}]
       (if (= :idle @mode)
         [:div
@@ -108,13 +109,13 @@
           [uix/Icon {:style {:margin 0}
                      :name "fa-check"}]]]
         [:div
-         [:span "Are you sure? "]
+         [:span (str (@tr [:are-you-sure?]) " ")]
          [uix/Button {:text     (str "Yes, " text)
                       :disabled disabled?
                       :color    color
                       :on-click (fn [] (dispatch update-event))}]
          [ui/Button {:on-click (fn [] (reset! mode :idle))}
-          [ui/Icon {:style {:margin 0}
+          [uix/Icon {:style {:margin 0}
                     :name "fa-xmark"}]]]))))
 
 ;; Needs
@@ -243,11 +244,11 @@
                          :on-click
                          (fn []
                            (dispatch
-                             [::events/store-filter-and-open-in-new-tab
-                              (str/join " or "
-                                (map #(str "id='" % "'")
-                                  (->> @view-only-items :resources (map :id))))]))}
-                     (str "Open " (if (= not-editable 1) "it" "them") " in a new tab")]]])]
+                            [::events/store-filter-and-open-in-new-tab
+                             (str/join " or "
+                                       (map #(str "id='" % "'")
+                                            (->> @view-only-items :resources (map :id))))]))}
+                     (@tr [(if (= not-editable 1) :open-it-in-new-tab :open-them-in-new-tab)])]]])]
           [ButtonAskingForConfirmation {:disabled? disabled? :db-path db-path
                                        :update-event update-event :total-count-sub-key total-count-sub-key
                                        :text action-text :color color :action-aria-label "edit tags"}]]]))))

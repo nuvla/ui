@@ -4,7 +4,6 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.spec :as spec]
             [sixsq.nuvla.ui.deployments.utils :as utils :refer [build-bulk-filter]]
-            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -199,12 +198,12 @@
 
 (reg-event-fx
   ::set-deployments-without-edit-rights
-  (fn [{:keys [db]} [_ nuvlaboxes]]
-    (if (instance? js/Error nuvlaboxes)
+  (fn [{:keys [db]} [_ deployments]]
+    (if (instance? js/Error deployments)
       (dispatch [::messages-events/add
-                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                 (let [{:keys [status message]} (response/parse-ex-info deployments)]
+                   {:header  (cond-> (str "failure getting deployments")
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
-      {:db (assoc db ::spec/deployments-without-edit-rights nuvlaboxes)})))
+      {:db (assoc db ::spec/deployments-without-edit-rights deployments)})))

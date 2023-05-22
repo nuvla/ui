@@ -117,7 +117,7 @@
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                   {:header  (cond-> (str "failure getting nuvlaedges")
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
@@ -140,7 +140,7 @@
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                   {:header  (cond-> (str "failure getting nuvlaedges")
                                status (str " (" status ")"))
                     :content message
                     :type    :error})])
@@ -448,7 +448,7 @@
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                   {:header  (cond-> (str "failure getting nuvlaedges")
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])

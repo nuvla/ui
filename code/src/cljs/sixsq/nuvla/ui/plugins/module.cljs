@@ -188,19 +188,6 @@
        :fx [[:dispatch [::resolve-private-registries db-path href private-registries]]
             [:dispatch [::resolve-registries-creds db-path href private-registries]]]})))
 
-
-;#_(reg-event-fx
-;  ::get-infra-registries
-;  (fn [{:keys [db]} [_ registry-ids reg-creds-ids]]
-;    {:db                  (assoc db ::spec/infra-registries-loading? true)
-;     ::cimi-api-fx/search [:infrastructure-service
-;                           {:filter  (general-utils/join-and
-;                                       "subtype='registry'"
-;                                       (apply general-utils/join-or
-;                                              (map #(str "id='" % "'") registry-ids))),
-;                            :select  "id, name, description"
-;                            :orderby "name:asc,id:asc"}
-;                           #(dispatch [::set-infra-registries registry-ids reg-creds-ids %])]}))
 (reg-event-fx
   ::change-version
   (fn [{db :db} [_ db-path href]]
@@ -254,13 +241,11 @@
 
 (defn- db-module-env-vars
   [db db-path href]
-  (-> (db-module db db-path href)
-      module-env-vars))
+  (module-env-vars (db-module db db-path href)))
 
-(defn- db-module-registries-credentials
+(defn db-module-registries-credentials
   [db db-path href]
-  (-> (db-module db db-path href)
-      module-registries-credentials))
+  (module-registries-credentials (db-module db db-path href)))
 
 (defn- changed-env-vars
   [env-vars]
@@ -272,26 +257,7 @@
 
 (defn db-changed-env-vars
   [db db-path href]
-  (-> (db-module-env-vars db db-path href)
-      changed-env-vars))
-
-#_(defn db-license-accepted?
-    [db db-path href]
-    (let [license (get-in db (conj db-path ::modules href :license))]
-      (or (nil? license)
-          (get license ::accepted? false))))
-
-#_(defn db-price-accepted?
-    [db db-path href]
-    (let [price (get-in db (conj db-path ::modules href :price))]
-      (or (nil? price)
-          (get price ::accepted? false))))
-
-#_(defn db-coupon
-    [db db-path href]
-    (let [coupon (get-in db (conj db-path ::modules href :price ::coupon))]
-      (when-not (str/blank? coupon)
-        coupon)))
+  (changed-env-vars (db-module-env-vars db db-path href)))
 
 (reg-sub
   ::module-versions-indexed
@@ -302,8 +268,7 @@
 (reg-sub
   ::module-env-value
   (fn [db [_ db-path href index]]
-    (-> (db-module-env-vars db db-path href)
-        (env-vars-value-by-index index))))
+    (env-vars-value-by-index (db-module-env-vars db db-path href) index)))
 
 (reg-sub
   ::registries-loading?
@@ -347,20 +312,6 @@
                         (when (true? published) (str " | " (tr [:published]))))
             :icon  (when published apps-utils/publish-icon)})
          versions-indexed)))
-
-#_(def cred-env-var-map
-    {"S3_CRED"  "infrastructure-service-minio"
-     "GPG_CRED" "gpg-key"})
-
-#_(defn is-cred-env-var?
-    [env-var-name]
-    (contains? (set (keys cred-env-var-map)) env-var-name))
-
-#_(defn filter-creds
-    [env-name creds]
-    (when (is-cred-env-var? env-name)
-      (filter #(when (= (get cred-env-var-map env-name) (:subtype %)) %) creds)))
-
 (defn AsFormInput
   [db-path href read-only?
    index {env-name        :name
@@ -428,8 +379,7 @@
                      #(dispatch [::update-registry-credential db-path href i %]))}]))
 
 (defn RegistriesCredentials
-  [{:keys [db-path href change-event read-only?]
-    :or   {read-only? false}
+  [{:keys [db-path href change-event]
     :as   opts}]
   (let [module             @(subscribe [::module db-path href])
         private-registries (module-private-registries module)
@@ -440,66 +390,7 @@
        (for [[i private-registry] (map-indexed vector private-registries)]
          ^{:key (str href "-" private-registry)}
          [DropdownContainerRegistry opts i private-registry])]
-      [ui/Message "No container registries defined"])
-
-    #_[ui/Form {:loading @loading?}
-       (for [[private-registry-id info] @private-registries]
-         ^{:key private-registry-id}
-         [DropdownContainerRegistry private-registry-id info])]))
-
-#_(defn AcceptLicense
-    [{:keys [db-path href] :as _opts}]
-    (let [tr     @(subscribe [::i18n-subs/tr])
-          module @(subscribe [::module db-path href])
-          {:keys [name description url] :as license} (:license module)]
-      (if license
-        [ui/Container
-         [ui/Header {:as      :h4
-                     :icon    "book"
-                     :content (tr [:eula-full])}]
-         [:h4 [:b (str (str/capitalize (tr [:eula])) ": ")
-               [:u [:a {:href url :target "_blank"} name]]]]
-         (when description
-           [:p [:i description]])
-         [ui/Checkbox {:label     (tr [:accept-eula])
-                       :checked   (get license ::accepted? false)
-                       :on-change (ui-callback/checked
-                                    #(dispatch [::helpers/set (conj db-path ::modules href :license)
-                                                ::accepted? %]))}]]
-        [ui/Message (tr [:eula-not-defined])])))
-
-#_(defn AcceptPrice
-    [{:keys [db-path href] :as _opts}]
-    (let [tr           @(subscribe [::i18n-subs/tr])
-          module       @(subscribe [::module db-path href])
-          price        (:price module)
-          format-price #(if (>= (:cent-amount-daily %) 100)
-                          (str (float (/ (:cent-amount-daily %) 100)) "€/" (tr [:day]))
-                          (str (:cent-amount-daily %) "ct€/" (tr [:day])))]
-      (if price
-        [:<>
-         [ui/Segment
-          [:p
-           (str (if (:follow-customer-trial price)
-                  (tr [:trial-deployment-follow])
-                  (tr [:trial-deployment]))
-                (tr [:deployment-will-cost]))
-
-           [:b (format-price price)]]
-          [ui/Checkbox {:label     (tr [:accept-costs])
-                        :checked   (get price ::accepted? false)
-                        :on-change (ui-callback/checked
-                                     #(dispatch [::helpers/set (conj db-path ::modules href :price)
-                                                 ::accepted? %]))}]]
-         ^{:key href}
-         [ui/Input
-          {:label         (tr [:coupon])
-           :placeholder   (tr [:code])
-           :default-value (get price ::coupon "")
-           :on-change     (ui-callback/input-callback
-                            #(dispatch [::helpers/set (conj db-path ::modules href :price)
-                                        ::coupon %]))}]]
-        [ui/Message (tr [:free-app])])))
+      [ui/Message "No container registries defined"])))
 
 (defn ModuleNameIcon
   [{:keys [db-path href children show-version?]

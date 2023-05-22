@@ -397,7 +397,10 @@
       [ui/Message (tr [:module-no-env-variables])])))
 
 (defn DropdownContainerRegistry
-  [db-path href i private-registry]
+  [{:keys [db-path href read-only? required?]
+    :or   {read-only? false
+           required?  true}
+    :as   _opts} i private-registry]
   (let [tr             @(subscribe [::i18n-subs/tr])
         {:keys [id name description]} @(subscribe [::resolved-private-registry db-path href private-registry])
         options        @(subscribe [::private-registry-creds-options db-path href private-registry])
@@ -407,84 +410,36 @@
         registry-label (r/as-element
                          [:label (or name id) ff/nbsp
                           (when description (ff/help-popup description))])
-        ;registry       (subscribe [::subs/infra-registry private-registry-id])
-        ;registry-name  (or (:name @registry) private-registry-id)
-        ;creds-options  (subscribe [::subs/infra-registries-creds-by-parent-options
-        ;                           private-registry-id])
-        ;registry-descr (:description @registry)
-        ;{:keys [cred-id preselected?]} info
-        ]
-    (if preselected?
-      [ui/FormInput
-       {:disabled      true
-        :label         registry-label
-        :default-value (tr [:preselected])}]
-      [ui/FormDropdown
-       (cond->
-         {:required    true
-          :label       registry-label
-          :selection   true
-          :value       value
-          ;:default-value cred-id
-          :error       (when-not (seq options)
-                         (tr [:no-available-creds-registry]))
-          :placeholder (tr [:select-credential])
-          :options     options
-          :on-change   (ui-callback/value
-                         #(dispatch [::update-registry-credential db-path href i %]))
-          }
-         #_(empty? @creds-options) #_(assoc :error (@tr [:no-available-creds-registry])))])
-    ;(if (and preselected?
-    ;         (not (some #(= cred-id (:value %)) @creds-options)))
-    ;  [ui/FormInput
-    ;   {:disabled      true
-    ;    :label         (r/as-element [:label registry-name ff/nbsp
-    ;                                  (when registry-descr (ff/help-popup registry-descr))])
-    ;    :default-value (@tr [:preselected])}]
-    ;  [ui/FormDropdown
-    ;   (cond->
-    ;     {:required      true
-    ;      :label         (r/as-element [:label registry-name ff/nbsp
-    ;                                    (when registry-descr (ff/help-popup registry-descr))
-    ;                                    (when cred-id
-    ;                                      [:span " "
-    ;                                       [creds-comp/CredentialCheckPopup cred-id]])])
-    ;      :selection     true
-    ;      :default-value cred-id
-    ;      :placeholder   (@tr [:select-credential])
-    ;      :options       @creds-options
-    ;      :on-change     (ui-callback/value
-    ;                       #(dispatch [::events/set-credential-registry private-registry-id %]))}
-    ;     (empty? @creds-options) (assoc :error (@tr [:no-available-creds-registry])))]
-    ;  )
-    ))
+        disabled?      (or preselected? read-only?)
+        placeholder    (if preselected?
+                         (tr [:preselected])
+                         (tr [:select-credential]))]
+    [ui/FormDropdown
+     {:required    required?
+      :label       registry-label
+      :selection   true
+      :value       value
+      :disabled    disabled?
+      :error       (when-not (seq options)
+                     (tr [:no-available-creds-registry]))
+      :placeholder placeholder
+      :options     options
+      :on-change   (ui-callback/value
+                     #(dispatch [::update-registry-credential db-path href i %]))}]))
 
 (defn RegistriesCredentials
   [{:keys [db-path href change-event read-only?]
     :or   {read-only? false}
-    :as   _opts}]
+    :as   opts}]
   (let [module             @(subscribe [::module db-path href])
         private-registries (module-private-registries module)
         loading?           @(subscribe [::registries-loading? db-path href])]
     (dispatch [::helpers/set db-path change-event-registries-credentials change-event])
-    ; load infra reg, help name resolution
-    ; load cred reg group by parent needed for options
-    ; look at module preselected and create
-    ; for each infra reg, when only one cred select it
-    ; deployment-set creds-registries
-    ; dropdown value preselected or choice to user
     (if (seq private-registries)
-      #_[ui/Form
-         (map-indexed
-           (fn [i env-variable]
-             ^{:key (str (:name env-variable) "_" i)}
-             [AsFormInput db-path href read-only? i env-variable])
-           env-variables)]
-      #_[:div (str private-registries)]
       [ui/Form {:loading loading?}
        (for [[i private-registry] (map-indexed vector private-registries)]
          ^{:key (str href "-" private-registry)}
-         [DropdownContainerRegistry db-path href i private-registry])]
+         [DropdownContainerRegistry opts i private-registry])]
       [ui/Message "No container registries defined"])
 
     #_[ui/Form {:loading @loading?}

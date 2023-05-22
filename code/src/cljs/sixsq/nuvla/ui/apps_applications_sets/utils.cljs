@@ -40,11 +40,11 @@
 
 (defn app-selected->application
   [db id {app-id :id :as _app-selected}]
-  (let [db-apth    [::spec/apps-sets id]
+  (let [db-path    [::spec/apps-sets id]
         env-vars   (module-plugin/db-changed-env-vars
-                     db db-apth app-id)
+                     db db-path app-id)
         regs-creds (module-plugin/db-module-registries-credentials
-                     db db-apth app-id)]
+                     db db-path app-id)]
     (cond-> {:id      app-id
              :version (module-plugin/db-selected-version
                         db [::spec/apps-sets id] app-id)}

@@ -63,10 +63,12 @@
            (fn [i {:keys [applications]}]
              (map (fn [{:keys [id]}]
                     (let [targets (get-db-targets-selected-ids db i)]
-                      {:i             i
-                       :application   (module-plugin/db-module db [::spec/apps-sets i] id)
-                       :targets       targets
-                       :targets-count (count targets)})
+                      {:i                      i
+                       :application            (module-plugin/db-module db [::spec/apps-sets i] id)
+                       :registries-credentials (module-plugin/db-module-registries-credentials
+                                                 db [::spec/apps-sets i] id)
+                       :targets                targets
+                       :targets-count          (count targets)})
                     ) applications)))
          (apply concat))))
 
@@ -87,13 +89,25 @@
          (group-by license-set-apps-targets))))
 
 (reg-sub
+  ::deployment-set-registries-creds-incomplete?
+  :<- [::applications-sets-apps-targets]
+  (fn [sets-apps-targets]
+    (not-every?
+      (fn [{:keys [application registries-credentials]}]
+        (= (count (get-in application [:content :private-registries]))
+           (count (remove str/blank? registries-credentials))))
+      sets-apps-targets)))
+
+(reg-sub
   ::deployment-set-apps-targets-total-price
   :<- [::applications-sets-apps-targets]
   (fn [apps-targets]
     (->> apps-targets
          (filter price-set-apps-targets)
-         (map #(assoc % :total-price (* (get-in % [:application :price :cent-amount-daily])
-                                        (:targets-count %)))))))
+         (map #(assoc %
+                 :total-price
+                 (* (get-in % [:application :price :cent-amount-daily])
+                    (:targets-count %)))))))
 
 (reg-sub
   ::deployment-set-total-price
@@ -108,9 +122,12 @@
   :<- [::get ::spec/licenses-accepted?]
   :<- [::deployment-set-apps-targets-total-price]
   :<- [::get ::spec/prices-accepted?]
-  (fn [[create-name licenses licenses-accepted? prices prices-accepted?]]
+  :<- [::deployment-set-registries-creds-incomplete?]
+  (fn [[create-name licenses licenses-accepted? prices prices-accepted?
+        registries-creds-incomplete?]]
     (or (str/blank? create-name)
         (and (seq licenses)
              (not licenses-accepted?))
         (and (seq prices)
-             (not prices-accepted?)))))
+             (not prices-accepted?))
+        registries-creds-incomplete?)))

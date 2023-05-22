@@ -382,6 +382,7 @@
                                     [module-plugin/RegistriesCredentials
                                      {:db-path      db-path
                                       :href         module-id
+                                      :required?     false
                                       :change-event [::main-events/changes-protection? true]}]
                                     :label (@tr [:private-registries])
                                     :default-open true]]])})

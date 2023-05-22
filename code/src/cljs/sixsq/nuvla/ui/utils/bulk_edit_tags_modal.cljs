@@ -6,12 +6,14 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.utils.events :as events]
+            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.messages.events :as messages-events]))
+            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.main.spec :as main-spec]))
 
 
 (def modal-tags-set-id ::tags-set)
@@ -110,7 +112,7 @@
                      :name "fa-check"}]]]
         [:div
          [:span (str (@tr [:are-you-sure?]) " ")]
-         [uix/Button {:text     (str "Yes, " text)
+         [uix/Button {:text     (str (str/capitalize (@tr [:yes])) ", " text)
                       :disabled disabled?
                       :color    color
                       :on-click (fn [] (dispatch update-event))}]
@@ -136,15 +138,15 @@
 
 (reg-event-fx
   ::update-tags
-  (fn [{db :db} [_ {:keys [resource-key updated-tags call-back-fn refetch-event
+  (fn [{{:keys [::i18n-spec/tr] :as db} :db} [_ {:keys [resource-key updated-tags call-back-fn refetch-event
                            text operation filter-fn
                            db-path singular plural]}]]
     {::cimi-api-fx/operation-bulk [resource-key
                                    (fn [result]
                                      (let [updated     (-> result :updated)
-                                           success-msg (str updated " " (if (= 1 updated) singular plural) " updated with operation: " text)]
+                                           success-msg (str updated " " (if (= 1 updated) singular plural) " " (tr [:updated-with-operation]) ": " text)]
                                        (dispatch [::messages-events/add
-                                                  {:header  "Bulk edit operation successful"
+                                                  {:header  (tr [:bulk-edit-successful])
                                                    :content success-msg
                                                    :type    :success}])
                                        (dispatch [::table-plugin/set-bulk-edit-success-message

@@ -102,6 +102,7 @@
         :bulk-stop-in-progress                         "Bulk stop in progress"
         :bulk-update-in-progress                       "Bulk update in progress"
         :bulk-update-tags                              "Bulk update of tags"
+        :bulk-edit-successful                          "Bulk edit operation successful"
         :by                                            "by"
         :ca                                            "public certificate of the Certificate Authority (CA)"
         :cancel                                        "cancel"
@@ -893,6 +894,7 @@
         :update-force                                  "force update"
         :update-to                                     "Update to: "
         :updated                                       "updated"
+        :updated-with-operation                        "updated with operation"
         :updated-message                               "updated successfully!"
         :updated-successfully                          "Got it! It's now saved."
         :url                                           "URL"
@@ -987,8 +989,7 @@
         :yes                                           "yes"
         }
 
-   :fr {
-        :daily-price                                   "Prix journalier"
+   :fr {:daily-price                                   "Prix journalier"
         :daily-unit-price                              "Prix unitaire journalier"
         :quantity                                      "Quantité"
         :software-versions                             "Versions logicielles"
@@ -1068,6 +1069,7 @@
         :bulk-stop-in-progress                         "Batch d'arrêts en cours"
         :bulk-update-in-progress                       "Batch de mises à jour en cours"
         :bulk-update-tags                              "Mise à jour des tags en batch"
+        :bulk-edit-successful                          "Opération d'édition en bloc réussie"
         :by                                            "par"
         :cancel                                        "annuler"
         :card-number                                   "Numéro de carte"
@@ -1693,6 +1695,7 @@
         :update-force                                  "forcer la mise à jour"
         :update-to                                     "Mettre à jour à : "
         :updated                                       "mis à jour"
+        :updated-with-operation                        "mis à jour avec l'opération"
         :url                                           "URL"
         :urls                                          "URLs"
         :username                                      "Nom d'utilisateur"

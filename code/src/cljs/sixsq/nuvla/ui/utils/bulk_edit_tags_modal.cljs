@@ -52,7 +52,7 @@
                [[:dispatch [on-open-modal-event]]
                 [:dispatch [::fetch-tags resource-key]]])]
       {:db (assoc-in db [::edit-mode db-path] modal-id)
-       :fx fx})))
+       :fx (or fx [])})))
 
 (reg-event-fx
   ::fetch-tags

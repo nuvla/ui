@@ -18,7 +18,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.validation :as utils-validation]))
+            [sixsq.nuvla.ui.utils.validation :as utils-validation]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn in?
@@ -134,7 +135,7 @@
                                               :content  (@tr [:public-key-info])
                                               :trigger  (r/as-element
                                                           [:span (@tr [:public-key])
-                                                           [ui/Icon {:name "info circle"}]])}]),
+                                                           [icons/InfoIconFull]])}]),
             :placeholder (@tr [:public-key]), :editable? editable?, :required? false,
             :default-value public-key, :spec ::spec/public-key-optional, :validate-form? @validate-form?,
             :type :textarea, :on-change (partial on-change :public-key)]

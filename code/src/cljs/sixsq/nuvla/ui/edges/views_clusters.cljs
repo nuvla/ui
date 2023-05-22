@@ -13,7 +13,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn StatisticStates
@@ -78,8 +79,7 @@
                                       :position       "bottom center"
                                       :hide-on-scroll true
                                       :hoverable      true
-                                      :trigger        (r/as-element [ui/Icon {:name  "info circle"
-                                                                              :color "brown"}])}]])
+                                      :trigger        (r/as-element [icons/InfoIconFull {:color "brown"}])}]])
                         (str (@tr [:nuvlabox-cluster-nodes]) cluster-nodes)]}]))))
 
 

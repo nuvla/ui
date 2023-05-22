@@ -38,7 +38,7 @@
   [opts]
   [I opts grid])
 
-(def eye "fa-light fa-eye")
+(def eye "fal fa-eye")
 (defn EyeIcon
   [opts]
   [I opts eye])
@@ -48,7 +48,7 @@
   [opts]
   [I opts info])
 
-(def info-full  "info circle")
+(def info-full "info circle")
 (defn InfoIconFull
   [opts]
   [I opts info-full])

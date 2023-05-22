@@ -151,7 +151,7 @@
 (defn Project
   [db-path path {:keys [applications] :as content}]
   [ui/ListItem
-   [ui/ListIcon {:name "folder"}]
+   [ui/ListIcon {:name icons/folder-full}]
    [ui/ListContent
     [ui/ListHeader path]
     [ui/ListList

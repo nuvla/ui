@@ -20,7 +20,8 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.style :as style]))
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defmulti StepIcon :step-id)
@@ -58,7 +59,7 @@
         is-ok?               (if @is-module-published? @is-latest-published? @is-latest?)]
     (if @completed?
       [ui/Popup {:trigger  (r/as-element
-                             [ui/Icon {:name  (if is-ok? "check" "info circle")
+                             [ui/Icon {:name  (if is-ok? "check" icons/info-full)
                                        :color (if is-ok? "green" "blue")}])
                  :content  (@tr [:new-version-exist])
                  :wide     "very"

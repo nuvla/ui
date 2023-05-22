@@ -9,14 +9,15 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn type->icon-name
   [type]
   (case type
     :error "warning circle"
-    :info "info circle"
+    :info  icons/info-full
     :success "check circle"
     :notif "bullhorn"
     "warning circle"))

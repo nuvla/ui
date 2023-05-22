@@ -12,7 +12,8 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn is-advanced-mode?
@@ -31,7 +32,7 @@
   [help-kw]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Popup {:trigger (r/as-element
-                          [ui/Icon {:name "info circle", :link true}])
+                          [icons/InfoIconFull {:link true}])
                :basic   true
                :content (@tr [help-kw])}]))
 

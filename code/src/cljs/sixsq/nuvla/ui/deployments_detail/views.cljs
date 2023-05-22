@@ -174,7 +174,7 @@
                     (if (some? description)
                       [ui/Popup
                        (cond-> {:content (r/as-element [:p description])
-                                :trigger (r/as-element [:p name " " [ui/Icon {:name "info circle"}]])})]
+                                :trigger (r/as-element [:p name " " [icons/InfoIconFull]])})]
                       name)]
                    [ui/TableCell
                     {:class ["show-on-hover-value"]}

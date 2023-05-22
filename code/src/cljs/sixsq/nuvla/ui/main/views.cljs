@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.utils.general :as utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
@@ -166,7 +167,7 @@
           (@tr [:subscribe]))]
        [:p]
        (when @open-subs-required?
-         [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])])]]]))
+         [:p [icons/InfoIconFull] (@tr [:subscription-required-content-group])])]]]))
 
 
 (defn contents

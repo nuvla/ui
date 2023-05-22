@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as forms]
             [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -181,7 +182,7 @@
 (defn InfoPopup
   [message]
   [ui/Popup {:content message
-             :trigger (r/as-element [ui/Icon {:name "info circle"}])}])
+             :trigger (r/as-element [icons/InfoIconFull])}])
 
 
 (defn NotFoundPortal

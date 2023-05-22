@@ -4,11 +4,25 @@
 
 ### Changed
 
-- App creation - Provides a description template when creating a new app or project #1194
+- Deployment set - Accept licenses widget #1220
+- Deployment set details - Show prices section and require user confirmation
+- Deployment set details - Show licenses concerned applications
+- Application sets - Link to apps
+- Deployments page - bulk actions #1195
+- Session - Switch group add divider between hierarchy #1231
+- App - Navigation version of one app affect another one bugfix #1244
+- App - Makes EULA link clickable
+- App - Provides a description template when creating a new app or project #1194
+- Apps details - Fix SixSq Apps EULA link
+- About page - Replace release notes by software versions link #1218
 - Clouds page - Fixes colours of state icon, bugfix #1223
 - Enables bulk actions in table plugin - Moves deployments bulk action feature
   to table plugin #1180
+- Edges page - Bulk updating tags
 - Edges overview, table view - Enables bulk editing of tags #1194
+- Edges details, overview tab - Adds node labels to Cluster status card #1207
+- Github e2e - Cache NPM packages, use playwright container, optimize order
+- Config.json - Update licenses
 - Deployments overview, table view - Enables bulk editing of tags #1209
 
 ## Released

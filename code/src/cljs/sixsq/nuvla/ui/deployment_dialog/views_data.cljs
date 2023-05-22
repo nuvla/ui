@@ -4,7 +4,8 @@
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn cloud-list-item
@@ -57,7 +58,7 @@
      [ui/TableCell {:collapsing true}
       (if @completed?
         [ui/Icon {:name "database", :size "large"}]
-        [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
+        [icons/WarningIcon {:size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:data])]
      [ui/TableCell [:div
                     [:span (or name key)]

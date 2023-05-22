@@ -264,7 +264,7 @@
              (when (is-old-version? nb-version)
                [ui/Message
                 {:error   true
-                 :icon    {:name "warning sign", :size "large"}
+                 :icon    {:name icons/warning, :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (str (@tr [:nuvlabox-update-error-content])) " "
@@ -274,7 +274,7 @@
              (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
-                 :icon    {:name "warning sign", :size "large"}
+                 :icon    {:name icons/warning, :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (@tr [:nuvlabox-update-warning-content])])}])
@@ -429,7 +429,7 @@
          [ui/ModalContent
           [ui/Message
            {:warning true
-            :icon    {:name "warning sign", :size "large"}
+            :icon    {:name icons/warning, :size "large"}
             :header  (@tr [:nuvlabox-clustering-warning-header])
             :content (r/as-element
                        [:span
@@ -2021,7 +2021,7 @@
        [job-views/ProgressJobAction nb-status]
        (when (and nb-status (not (:online nb-status)))
          [ui/Message {:warning true
-                      :icon    "warning sign"
+                      :icon    icons/warning
                       :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
       [TabsNuvlaBox]
       [AddPlaybookModal]]]))

@@ -64,7 +64,7 @@
          [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:content]))]
          (if (empty? children)
            [ui/Message {:warning true}
-            [ui/Icon {:name "warning sign"}]
+            [icons/WarningIcon]
             (@tr [:no-children-modules])]
            [FormatModuleChildren children])]))))
 

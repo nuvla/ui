@@ -94,3 +94,8 @@
 (defn AppSetsIcon
   [opts]
   [I opts app-sets])
+
+(def warning "warning sign")
+(defn WarningIcon
+  [opts]
+  [I opts warning])

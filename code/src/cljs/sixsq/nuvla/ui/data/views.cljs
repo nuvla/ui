@@ -276,7 +276,7 @@
          [:div style/center-items
           (if (not (seq @data-sets))
             [ui/Message {:warning true}
-             [ui/Icon {:name "warning sign"}]
+             [icons/WarningIcon]
              (@tr [:no-datasets])]
             (vec (concat [ui/CardGroup {:centered    true
                                         :itemsPerRow 4}]

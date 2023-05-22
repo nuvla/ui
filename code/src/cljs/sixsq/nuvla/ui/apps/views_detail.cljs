@@ -486,7 +486,7 @@
       (when (instance? js/Error error)
         [ui/Container
          [ui/Header {:as "h3", :icon true}
-          [ui/Icon {:name "warning sign"}]
+          [icons/WarningIcon]
           (error-text tr error)]]))))
 
 

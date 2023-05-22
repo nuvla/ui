@@ -9,7 +9,8 @@
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.style :as style]))
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (defn summary-row
   []
@@ -28,7 +29,7 @@
         [ui/TableCell {:collapsing true}
          (if @completed?
            [ui/Icon {:name "map marker alternate", :size "large"}]
-           [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
+           [icons/WarningIcon {:size "large", :color "red"}])]
         [ui/TableCell {:collapsing true} (@tr [:infra-services])]
         [ui/TableCell [:div
                        [:span (or name id)]
@@ -42,7 +43,7 @@
         [ui/TableCell {:collapsing true}
          (if @creds-completed?
            [ui/Icon {:name "key", :size "large"}]
-           [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
+           [icons/WarningIcon {:size "large", :color "red"}])]
         [ui/TableCell {:collapsing true} (@tr [:credentials])]
         [ui/TableCell [:div
                        [:span (or name id)]

@@ -358,7 +358,7 @@
         nothing-selected?           (= :none @selection-status)
         bulk-edit-success-message   (subscribe [::bulk-edit-success-message-sub db-path])]
     [:div
-     {:style  {:position :sticky :top "40px" :z-index 998}
+     {:style  {:position :sticky :top "39px" :z-index 998}
       :class [(if selectable? :visible :invisible)]}
      [:div {:style {:display :flex
                     :border "1px solid rgb(230 230 230)"

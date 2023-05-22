@@ -301,7 +301,7 @@
 (defn TargetIcon
   [subtype]
   (condp = subtype
-    "infrastructure-service-swarm" [ui/Icon {:name "docker"}]
+    "infrastructure-service-swarm" [icons/DockerIcon]
     "infrastructure-service-kubernetes" [apps-utils/IconK8s false]
     [ui/Icon {:name "question circle"}]))
 (defn TargetNameIcon

@@ -140,7 +140,7 @@
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish id])
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [icons/PublishIcon]
+                                  [icons/CircleCheck]
                                   (str/capitalize (@tr [:publish]))])
       :content     [:p (@tr [:publish-confirmation-message])]
       :header      (@tr [:publish-module])
@@ -1235,7 +1235,7 @@
   [{:keys [icon?]}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     (when icon? [icons/ShareIcon])
+     (when icon? [icons/GroupIcon])
      (str/capitalize (@tr [:share]))]))
 
 

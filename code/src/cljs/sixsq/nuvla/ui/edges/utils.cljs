@@ -3,6 +3,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
@@ -39,7 +40,7 @@
       (< vulnerability-score 4.0) (set-fn "LOW" vuln-low-color))))
 
 (def orchestration-icons
-  {:swarm      "docker"
+  {:swarm      icons/docker
    :kubernetes "/ui/images/kubernetes.svg"})
 
 (defn state->icon

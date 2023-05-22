@@ -36,10 +36,6 @@
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
 
-(def orchestration-icons
-  {:swarm      "docker"
-   :kubernetes "/ui/images/kubernetes.svg"})
-
 
 (defn refresh
   [uuid]
@@ -1277,7 +1273,7 @@
 
 (defn ServiceIcon
   [subtype]
-  (let [[kind path] (get {:swarm      [:icon "docker"]
+  (let [[kind path] (get {:swarm      [:icon icons/docker]
                           :s3         [:image "/ui/images/s3.png"]
                           :kubernetes [:image "/ui/images/kubernetes.svg"]
                           :registry   [:icon "database"]}
@@ -1327,7 +1323,7 @@
                    :float      "right"
                    :horizontal true
                    :style      {:float "right"}}
-         [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
+         [ui/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
      [ui/Table {:basic "very"}
       [ui/TableBody
        [ui/TableRow
@@ -1816,7 +1812,7 @@
                                                   "emergency"
                                                   "wrench")}) @playbooks)}]
             (when @can-edit?
-              [ui/Button {:icon     "plus"
+              [ui/Button {:icon     icons/info-full
                           :size     "mini"
                           :positive true
                           :circular true

@@ -688,10 +688,10 @@
   [subtype]
   (case subtype
     "infrastructure-service-minio" {:tab-key :storage-services, :icon "disk", :name "S3/Minio"}
-    "infrastructure-service-swarm" {:tab-key :coe-services, :icon "docker", :name "Docker Swarm"}
-    "infrastructure-service-kubernetes" {:tab-key :coe-services, :icon "docker", :name "Kubernetes"}
+    "infrastructure-service-swarm" {:tab-key :coe-services, :icon icons/docker, :name "Docker Swarm"}
+    "infrastructure-service-kubernetes" {:tab-key :coe-services, :icon icons/docker, :name "Kubernetes"}
     "infrastructure-service-registry"
-    {:tab-key :registry-services, :icon "docker", :name "Docker Registry"}
+    {:tab-key :registry-services, :icon icons/docker, :name "Docker Registry"}
     "infrastructure-service-azure" {:tab-key :cloud-services, :icon "cloud", :name "Microsoft Azure"}
     "infrastructure-service-google" {:tab-key :cloud-services, :icon "cloud", :name "Google Compute"}
     "infrastructure-service-amazonec2" {:tab-key :cloud-services, :icon "cloud", :name "AWS EC2"}
@@ -737,7 +737,7 @@
                                        :set-state-selector-event ::events/set-state-selector
                                        :state-selector-subs      ::subs/state-selector}]
            [components/StatisticState {:value                    coe,
-                                       :icons                    ["docker"],
+                                       :icons                    [icons/docker],
                                        :label                    "DOCKER/K8S",
                                        :clickable?               clickable?,
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
@@ -761,7 +761,7 @@
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
                                        :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
            [components/StatisticState {:value                    registry,
-                                       :icons                    ["docker"],
+                                       :icons                    [icons/docker],
                                        :label                    "REGISTRY",
                                        :clickable?               clickable?,
                                        :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
@@ -851,8 +851,7 @@
                                    {:subtype "infrastructure-service-swarm"} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Swarm / Kubernetes"]
-           [ui/Icon {:name "docker"
-                     :size :massive}]
+           [icons/DockerIcon {:size :massive}]
            [ui/Image {:src   "/ui/images/kubernetes.svg"
                       :style {:max-width 112}}]]]
 
@@ -884,7 +883,7 @@
            [ui/Header "Docker registry"]
            [:div]
            [ui/IconGroup {:size "massive"}
-            [ui/Icon {:name "docker"}]
+            [icons/DockerIcon]
             [ui/Icon {:name "database", :corner "bottom right"}]]]]
 
          [ui/Card

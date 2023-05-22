@@ -9,7 +9,8 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (s/def ::subtype (s/nilable #{"docker" "kubernetes"}))
 
@@ -230,7 +231,7 @@
      [ui/ListContent
       [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
        (case subtype
-         "swarm" [ui/Icon {:name "docker"}]
+         "swarm" [icons/DockerIcon]
          "kubernetes" [ui/Image {:src   (if @selected?
                                           "/ui/images/kubernetes.svg"
                                           "/ui/images/kubernetes-grey.svg")

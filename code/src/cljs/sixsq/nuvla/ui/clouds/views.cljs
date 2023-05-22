@@ -28,7 +28,8 @@
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            [taoensso.timbre :as timbre]))
+            [taoensso.timbre :as timbre]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -37,7 +38,7 @@
       [ui/MenuMenu {:position "left"}
        [uix/MenuItem
         {:name     (@tr [:add])
-         :icon     "plus"
+         :icon     icons/plus-full
          :position "right"
          :on-click #(do
                       (dispatch-sync [::events/reset-service-group])
@@ -75,7 +76,7 @@
                              (dispatch-sync [::events/reset-infra-service])
                              (dispatch-sync [::events/update-infra-service :parent id])
                              (dispatch [::events/open-add-service-modal]))}
-      [ui/Icon {:name "plus", :style {:cursor :pointer}}]
+      [icons/InfoIconFull {:style {:cursor :pointer}}]
       ; use content to work around bug in icon in label for cursor
       ]
      [ui/CardContent
@@ -490,8 +491,7 @@
 
           [ui/CardContent {:text-align :center}
            [ui/Header "Docker Swarm"]
-           [ui/Icon {:name "docker"
-                     :size "massive"}]]]
+           [icons/DockerIcon {:size "massive"}]]]
 
          [ui/Card
           {:on-click #(do
@@ -515,7 +515,7 @@
           [ui/CardContent {:text-align :center}
            [ui/Header "Docker Registry"]
            [ui/IconGroup {:size "massive"}
-            [ui/Icon {:name "docker"}]
+            [icons/DockerIcon]
             [ui/Icon {:name "database", :corner "bottom right"}]]]]
 
          [ui/Card

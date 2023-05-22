@@ -19,7 +19,8 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn SwitchGroupMenuItem
@@ -125,7 +126,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [uix/Icon {:name (str "fa-light large" (if @is-group? " fa-user-group" " fa-user-large"))}]
+       (if @is-group? [icons/GroupIcon {:class "large"}] [icons/UserIcon {:class "large"}])
        (-> @user
            utils/remove-group-prefix
            (general-utils/truncate (if @is-mobile? 6 20)))])))

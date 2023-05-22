@@ -129,7 +129,7 @@
                            :margin-right   4
                            :padding-bottom 7}}]
         [:<>
-         [ui/Icon {:name "docker"}]
+         [icons/DockerIcon]
          [clouds-detail/CompatibilityLabel infra-service]])
       ff/nbsp
       (or name id)]

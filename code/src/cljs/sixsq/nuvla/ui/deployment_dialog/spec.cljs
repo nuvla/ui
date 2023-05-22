@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.spec
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (s/def ::deploy-modal-visible? boolean?)
@@ -69,7 +70,7 @@
                   :module-version {:step-id :module-version
                                    :icon    "list ol"}
                   :registries     {:step-id :registries
-                                   :icon    "docker"}
+                                   :icon    icons/docker}
                   :env-variables  {:step-id :env-variables
                                    :icon    "list alternate outline"}
                   :files          {:step-id :files

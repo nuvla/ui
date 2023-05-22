@@ -12,7 +12,20 @@
 (defn- I
   [opts fa-class]
   [Icon (merge (dissoc opts :name)
-               {:name fa-class})])
+               {:name (->> (remove nil?
+                                   [fa-class
+                                    (:name opts)
+                                    (:class opts)
+                                    (:class-name opts)
+                                    (:className opts)])
+                           (str/join " "))})])
+
+(let [opts {}] (str/join " "
+                        (remove nil? ["fa"
+                           (:name opts)
+                           (:class opts)
+                           (:class-name opts)
+                           "bla"])))
 
 (def rocket "fal fa-rocket-launch")
 (defn RocketIcon [opts]
@@ -74,10 +87,10 @@
   [opts]
   [I opts trash-full])
 
-(def publish "check circle outline")
-(defn PublishIcon
+(def circle-check "check circle outline")
+(defn CircleCheck
   [opts]
-  [I opts publish])
+  [I opts circle-check])
 
 (def unpublish "fa-light fa-link-simple-slash")
 (defn UnpublishIcon
@@ -130,6 +143,11 @@
   [I opts euro])
 
 (def user-group "fa-light fa-user-group")
-(defn ShareIcon
+(defn GroupIcon
   [opts]
   [I opts user-group])
+
+(def user "fa-light fa-user-large")
+(defn UserIcon
+  [opts]
+  [I opts user])

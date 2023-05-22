@@ -39,7 +39,7 @@
        {:on-click (partial on-click spec/app-set-docker-subtype)}
        [ui/CardContent {:text-align :center}
         [ui/IconGroup {:size :massive}
-         [ui/Icon {:name "docker"}]]]]
+         [icons/DockerIcon]]]]
       [ui/Card
        {:on-click (partial on-click spec/app-set-k8s-subtype)}
        [ui/CardContent {:text-align :center}

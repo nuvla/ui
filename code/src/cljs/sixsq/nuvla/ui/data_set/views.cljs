@@ -319,7 +319,7 @@
            " "
            [ui/Button
             {:content  (@tr [:create-data-set])
-             :icon     "plus"
+             :icon     icons/info-full
              :primary  true
              :on-click (fn []
                          (dispatch [::data-events/set-modal-open? true])

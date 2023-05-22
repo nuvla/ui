@@ -27,7 +27,8 @@
             [sixsq.nuvla.ui.utils.spec :as us]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 ;;; VALIDATION SPEC
@@ -120,7 +121,7 @@
            {:text     (@tr [:create])
             :primary  true
             :disabled (and @validate? (not form-valid?))
-            :icon     "plus"
+            :icon     icons/info-full
             :loading  @loading?
             :on-click #(if (not form-valid?)
                          (reset! validate? true)

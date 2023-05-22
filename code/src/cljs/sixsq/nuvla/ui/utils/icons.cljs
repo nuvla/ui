@@ -20,13 +20,6 @@
                                     (:className opts)])
                            (str/join " "))})])
 
-(let [opts {}] (str/join " "
-                        (remove nil? ["fa"
-                           (:name opts)
-                           (:class opts)
-                           (:class-name opts)
-                           "bla"])))
-
 (def rocket "fal fa-rocket-launch")
 (defn RocketIcon [opts]
   [I opts rocket])

@@ -5,7 +5,7 @@
                                    subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.edges.events :as events]
+            [sixsq.nuvla.ui.utils.events :as events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.table :as table-plugin]
@@ -19,6 +19,7 @@
 (def modal-tags-remove-id ::tags-remove)
 (def modal-tags-remove-all ::tags-remove-all)
 (def tags-modal-ids [modal-tags-add-id modal-tags-set-id modal-tags-remove-id modal-tags-remove-all])
+(def tags-modal-ids-set (set tags-modal-ids))
 
 (reg-sub
   ::selected-count
@@ -34,7 +35,7 @@
   (fn [[_ db-path]]
     (subscribe [::edit-mode db-path]))
   (fn [opened-modal]
-    (boolean ((set tags-modal-ids) opened-modal))))
+    (boolean (tags-modal-ids-set opened-modal))))
 
 (reg-sub
   ::edit-mode
@@ -44,8 +45,8 @@
 (reg-event-fx
   ::open-modal
   (fn [{db :db} [_ {:keys [resource-key modal-id db-path on-open-modal-event]}]]
-    (let [fx (when (and ((set tags-modal-ids) modal-id)
-                     (not ((set tags-modal-ids) (get-in db [::edit-mode db-path]))))
+    (let [fx (when (and (tags-modal-ids-set modal-id)
+                     (not (tags-modal-ids-set (get-in db [::edit-mode db-path]))))
                [[:dispatch [on-open-modal-event]]
                 [:dispatch [::fetch-tags resource-key]]])]
       {:db (assoc-in db [::edit-mode db-path] modal-id)

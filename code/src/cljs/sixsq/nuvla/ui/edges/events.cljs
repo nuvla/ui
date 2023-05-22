@@ -12,11 +12,11 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
-            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param] :as route-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
+            [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -283,8 +283,8 @@
 (reg-event-fx
   ::open-modal
   (fn [{db :db} [_ modal-id]]
-    (let [fx (when (and ((set spec/tags-modal-ids) modal-id)
-                        (not ((set spec/tags-modal-ids) (::spec/open-modal db))))
+    (let [fx (when (and (tags-modal-ids-set modal-id)
+                        (not (tags-modal-ids-set (::spec/open-modal db))))
                [:dispatch [::get-edges-without-edit-rights]])]
       {:db (assoc db ::spec/open-modal modal-id)
        :fx [fx]})))
@@ -505,17 +505,3 @@
     {:storage/set {:session? false
                    :name     spec/local-storage-key
                    :value    (merge (edn/read-string storage) preference)}}))
-
-;; TODO: Refactor/move to additional filter or main fx
-(reg-event-fx
-  ::store-filter-and-open-in-new-tab
-  (fn [_ [_ filter-string]]
-    (let [uuid (random-uuid)]
-      {:storage/set {:session? false
-                     :name     uuid
-                     :value    filter-string}
-       :fx          [[:dispatch
-                      [::main-events/open-link
-                       (route-utils/name->href
-                         {:route-name   ::routes/edges
-                          :query-params {:filter-storage-key uuid}})]]]})))

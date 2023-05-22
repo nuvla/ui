@@ -141,7 +141,7 @@
         editable? (subscribe [::apps-subs/editable?])]
     [{:menuItem {:content (r/as-element [:span "Overview"])
                  :key     :overview
-                 :icon    (r/as-element [uix/Icon {:name "fa-light fa-eye"}])}
+                 :icon    (r/as-element [icons/EyeIcon])}
       :pane     {:content (r/as-element [OverviewPane])
                  :key     :overview-pane}}
      {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])

@@ -102,7 +102,7 @@
     [ui/Menu {:borderless true}
      [uix/MenuItem
       {:name     (@tr [:add])
-       :icon     "fa-light fa-plus-large"
+       :icon     icons/plus
        :on-click #(dispatch [::apps-events/open-add-modal])}]
      [RefreshButton active-tab]]))
 

@@ -75,7 +75,7 @@
   (let [module-subtype (subscribe [::subs/module-subtype])
         tab-name       (if (= utils/subtype-application-k8s @module-subtype) "Kubernetes" "Docker")]
     [:<>
-     [uix/Icon {:name "fa-light fa-file-code"}]
+     [icons/CodeIcon]
      (str/capitalize tab-name)]))
 
 
@@ -83,7 +83,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "fa-light fa-gear"}]
+     [icons/GearIcon]
      (str/capitalize (@tr [:configuration]))]))
 
 
@@ -92,7 +92,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         error? (subscribe [::subs/details-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
-     [uix/Icon {:name "fa-light fa-circle-info"}]
+     [icons/InfoIcon]
      (str/capitalize (@tr [:details]))]))
 
 
@@ -124,7 +124,7 @@
     [uix/ModalDanger
      {:on-confirm  (fn [] (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [uix/Icon {:name "fa-light fa-trash"}]
+                                  [icons/TrashIcon]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
       :header      (@tr [:delete-module])
@@ -140,7 +140,7 @@
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish id])
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [ui/Icon {:name utils/publish-icon}]
+                                  [icons/PublishIcon]
                                   (str/capitalize (@tr [:publish]))])
       :content     [:p (@tr [:publish-confirmation-message])]
       :header      (@tr [:publish-module])
@@ -155,7 +155,7 @@
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/un-publish id])
       :trigger     (r/as-element [ui/MenuItem
-                                  [uix/Icon {:name utils/un-publish-icon}]
+                                  [icons/UnpublishIcon]
                                   (str/capitalize (@tr [:un-publish]))])
       :content     [:p (@tr [:un-publish-confirmation-message])]
       :header      (@tr [:un-publish-module])
@@ -208,7 +208,7 @@
         (when @is-project?
           [ui/MenuItem
            {:name     (@tr [:add])
-            :icon     (r/as-element [uix/Icon {:name "fa-light fa-plus-large"}])
+            :icon     (r/as-element [icons/AddIcon])
             :disabled @deploy-disabled?
             :on-click #(dispatch [::events/open-add-modal])}])
         (when @can-copy?
@@ -216,7 +216,7 @@
            {:trigger        (r/as-element
                               [ui/MenuItem
                                {:name     (@tr [:copy])
-                                :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy"}])
+                                :icon     (r/as-element [icons/CopyIcon])
                                 :disabled @is-new?
                                 :on-click #(dispatch [::events/copy])}])
             :content        (@tr [:module-copied])
@@ -228,7 +228,7 @@
         (when @is-project?
           [ui/MenuItem
            {:name     (@tr [:paste])
-            :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy icon"}])
+            :icon     (r/as-element [icons/CopyIcon])
             :disabled @paste-disabled?
             :on-click #(dispatch [::events/open-paste-modal])}])
 
@@ -341,8 +341,7 @@
              :on-click #(dispatch [::events/close-add-modal])}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
-             [ui/Icon {:name "folder"
-                       :size :massive}]]]
+             [icons/FolderIconFull {:size :massive}]]]
 
            [ui/Card
             {:href     (when parent (pathify [base-path "New Application?subtype=application"]))
@@ -352,13 +351,11 @@
              [ui/Header (@tr [:application-docker])]
              [:div]
              [ui/IconGroup
-              [ui/Icon {:name  "cubes"
-                        :size  :massive
-                        :color (when-not parent :grey)}]
-              [:div [ui/Icon {:name  "docker"
-                              :size  :huge
-                              :color (when-not parent :grey)
-                              :style {:padding-left "150px"}}]]]]]
+              [icons/CubesIcon {:size  :massive
+                                :color (when-not parent :grey)}]
+              [:div [icons/DockerIcon {:size  :huge
+                                       :color (when-not parent :grey)
+                                       :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
             {:href     (when parent (pathify [base-path "New Application?subtype=application_kubernetes"]))
@@ -368,8 +365,7 @@
              [ui/Header (@tr [:application-kubernetes])]
              [:div]
              [ui/IconGroup {:size :massive}
-              [ui/Icon {:name  "cubes"
-                        :color (when-not parent :grey)}]
+              [icons/CubesIcon {:color (when-not parent :grey)}]
               [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
                          :floated "right"
                          :style   {:width "50px"}}]]]]
@@ -381,9 +377,8 @@
               [ui/CardContent {:text-align :center}
                [ui/Header "Applications sets (preview)"]
                [:div]
-               [ui/Icon {:name  "th large"
-                         :size  :massive
-                         :color (when-not parent :grey)}]]])]]]))))
+               [icons/AppSetsIcon {:size  :massive
+                                   :color (when-not parent :grey)}]]])]]]))))
 
 
 (defn paste-modal

@@ -67,11 +67,11 @@ For more information on how to format your app description using Markdown syntax
     (description-valid? module-subtype (::spec/description module-common))))
 
 (def publish-icon
-  "check circle outline")
+  icons/publish)
 
 
 (def un-publish-icon
-  "fa-light fa-link-simple-slash")
+  icons/unpublish)
 
 
 (defn find-current-version
@@ -167,7 +167,7 @@ For more information on how to format your app description using Markdown syntax
   [subtype]
   (condp = subtype
     subtype-project icons/folder
-    subtype-component "fa-light fa-grid"
+    subtype-component icons/grid
     subtype-application "fa-light fa-cubes"
     subtype-application-k8s "fa-light fa-cubes"
     subtype-applications-sets "fa-light fa-table-cells-large"

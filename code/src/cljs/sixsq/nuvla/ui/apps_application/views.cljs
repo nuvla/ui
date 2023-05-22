@@ -27,7 +27,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def docker-docu-link "https://docs.docker.com/compose/compose-file/compose-file-v3/#not-supported-for-docker-stack-deploy")
 
@@ -501,7 +502,7 @@
         stripe    (subscribe [::main-subs/stripe])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
-                              :icon    (r/as-element [uix/Icon {:name "fa-light fa-eye"}])}
+                              :icon    (r/as-element [icons/EyeIcon])}
                    :pane     {:content (r/as-element [OverviewPane])
                               :key     :overview-pane}}
                   {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])

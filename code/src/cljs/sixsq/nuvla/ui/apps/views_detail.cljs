@@ -44,7 +44,7 @@
   [{:keys [full] :or {full false}}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "fa-light fa-book"}]
+     [icons/BookIcon]
      (@tr [(if full :eula-full :eula)])]))
 
 
@@ -52,7 +52,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "fa-light fa-euro-sign"}]
+     [icons/EuroIcon]
      (str/capitalize (@tr [:pricing]))]))
 
 
@@ -349,7 +349,6 @@
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header (@tr [:application-docker])]
-             [:div]
              [ui/IconGroup
               [icons/CubesIcon {:size  :massive
                                 :color (when-not parent :grey)}]
@@ -363,7 +362,6 @@
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header (@tr [:application-kubernetes])]
-             [:div]
              [ui/IconGroup {:size :massive}
               [icons/CubesIcon {:color (when-not parent :grey)}]
               [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
@@ -376,7 +374,6 @@
                            #(dispatch [::events/close-add-modal]))}
               [ui/CardContent {:text-align :center}
                [ui/Header "Applications sets (preview)"]
-               [:div]
                [icons/AppSetsIcon {:size  :massive
                                    :color (when-not parent :grey)}]]])]]]))))
 
@@ -624,22 +621,20 @@
 
 (defn trash
   [id remove-event]
-  [ui/Icon {:name     "trash"
-            :link     true
-            :on-click #(do (dispatch [::main-events/changes-protection? true])
-                           (dispatch [remove-event id])
-                           (dispatch [::events/validate-form]))
-            :color    :red}])
+  [icons/TrashIconFull {:link     true
+                        :on-click #(do (dispatch [::main-events/changes-protection? true])
+                                       (dispatch [remove-event id])
+                                       (dispatch [::events/validate-form]))
+                        :color    :red}])
 
 
 (defn plus
   [add-event]
-  [ui/Icon {:name     "add"
-            :link     true
-            :color    "green"
-            :on-click #(do (dispatch [::main-events/changes-protection? true])
-                           (dispatch [add-event {}])
-                           (dispatch [::events/validate-form]))}])
+  [icons/AddIconFull {:link     true
+                      :color    "green"
+                      :on-click #(do (dispatch [::main-events/changes-protection? true])
+                                     (dispatch [add-event {}])
+                                     (dispatch [::events/validate-form]))}])
 
 
 (defn SingleEnvVariable
@@ -1085,7 +1080,7 @@
                                                (dispatch [::events/validate-form])))}]
             " "
             [ui/Popup {:content (@tr [:follow-customer-trial-help])
-                       :trigger (r/as-element [ui/Icon {:name "info circle"}])}]])
+                       :trigger (r/as-element [icons/InfoIconFull])}]])
          ]))))
 
 
@@ -1240,7 +1235,7 @@
   [{:keys [icon?]}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     (when icon? [uix/Icon {:name "fa-light fa-user-group"}])
+     (when icon? [icons/ShareIcon])
      (str/capitalize (@tr [:share]))]))
 
 

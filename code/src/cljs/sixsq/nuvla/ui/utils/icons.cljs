@@ -33,6 +33,11 @@
   [opts]
   [I opts grid])
 
+(def grid-layout "grid layout")
+(defn GridLayoutIcon
+  [opts]
+  [I opts grid])
+
 (def eye "fa-light fa-eye")
 (defn EyeIcon
   [opts]
@@ -43,6 +48,10 @@
   [opts]
   [I opts info])
 
+(def info-full  "info circle")
+(defn InfoIconFull
+  [opts]
+  [I opts info-full])
 
 (def gear "fal fa-gear")
 (defn GearIcon
@@ -60,6 +69,11 @@
   [opts]
   [I opts trash])
 
+(def trash-full "fa-trash")
+(defn TrashIconFull
+  [opts]
+  [I opts trash-full])
+
 (def publish "check circle outline")
 (defn PublishIcon
   [opts]
@@ -74,6 +88,11 @@
 (defn AddIcon
   [opts]
   [I opts plus])
+
+(def plus-full "plus")
+(defn AddIconFull
+  [opts]
+  [I opts plus-full])
 
 (def copy "fa-light fa-copy")
 (defn CopyIcon
@@ -99,3 +118,18 @@
 (defn WarningIcon
   [opts]
   [I opts warning])
+
+(def book "fal fa-book")
+(defn BookIcon
+  [opts]
+  [I opts book])
+
+(def euro  "fa-light fa-euro-sign")
+(defn EuroIcon
+  [opts]
+  [I opts euro])
+
+(def user-group "fa-light fa-user-group")
+(defn ShareIcon
+  [opts]
+  [I opts user-group])

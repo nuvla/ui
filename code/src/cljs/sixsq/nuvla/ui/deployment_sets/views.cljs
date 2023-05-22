@@ -17,7 +17,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def view-type (r/atom :cards))
 
@@ -83,7 +84,7 @@
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true :stackable true}
-        [ui/MenuItem {:icon     "grid layout"
+        [ui/MenuItem {:icon     icons/grid-layout
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
         [ui/MenuItem {:icon     "table"

@@ -30,7 +30,8 @@
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            [sixsq.nuvla.ui.utils.zip :as zip]))
+            [sixsq.nuvla.ui.utils.zip :as zip]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def show-state-statistics (r/atom false))
 
@@ -128,7 +129,7 @@
                :stacked?                 true}])]]]))))
 
 (def view->icon-classes
-  {spec/cards-view   "grid layout"
+  {spec/cards-view   icons/grid-layout
    spec/table-view   "table"
    spec/map-view     "map"
    spec/cluster-view "fas fa-chart-network"})

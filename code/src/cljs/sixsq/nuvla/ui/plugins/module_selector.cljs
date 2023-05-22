@@ -13,7 +13,8 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (s/def ::subtypes (s/nilable set?))
@@ -197,7 +198,7 @@
                                    :render   render}
                                   {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
                                               :key     :all-apps
-                                              :icon    "grid layout"}
+                                              :icon    icons/grid-layout}
                                    :render   render}
                                   {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
                                               :key     :my-apps

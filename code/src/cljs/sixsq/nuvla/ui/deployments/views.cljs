@@ -150,7 +150,7 @@
       [:<>
        [components/StickyBar
         [ui/Menu {:borderless true, :stackable true}
-         [ui/MenuItem {:icon     "grid layout"
+         [ui/MenuItem {:icon     icons/grid-layout
                        :active   (= @view "cards")
                        :on-click #(dispatch [::events/set-view "cards"])}]
          [ui/MenuItem {:icon     "table"

@@ -64,7 +64,7 @@
 (s/def ::submit-loading? boolean?)
 
 (def step-states {:data           {:step-id :data
-                                   :icon    "database"}
+                                   :icon    icons/i-db-full}
                   :infra-services {:step-id :infra-services
                                    :icon    "map marker alternate"}
                   :module-version {:step-id :module-version

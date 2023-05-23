@@ -108,7 +108,7 @@
                                                           :order      60}
                                        "data"            {:key             routes/data
                                                           :label-kw        :data
-                                                          :icon            "fa-light fa-database"
+                                                          :icon            icons/i-db
                                                           :protected?      true
                                                           :iframe-visible? true
                                                           :order           70}

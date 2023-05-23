@@ -179,3 +179,13 @@
 (defn BellIcon
   [opts]
   [I opts i-bell])
+
+(def i-db "fal fa-database")
+(defn DbIcon
+  [opts]
+  [I opts i-db])
+
+(def i-db-full "fa-database")
+(defn DbIconFull
+  [opts]
+  [I opts i-db-full])

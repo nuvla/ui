@@ -1276,7 +1276,7 @@
   (let [[kind path] (get {:swarm      [:icon icons/i-docker]
                           :s3         [:image "/ui/images/s3.png"]
                           :kubernetes [:image "/ui/images/kubernetes.svg"]
-                          :registry   [:icon "database"]}
+                          :registry   [:icon icons/i-db-full]}
                          (keyword subtype)
                          [:icon "question circle"])]
     (case kind

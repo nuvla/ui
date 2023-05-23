@@ -26,7 +26,7 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @completed?
-        [ui/Icon {:name "database", :size "large"}]
+        [icons/DbIconFull {:size "large"}]
         [icons/WarningIcon {:size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:registries])]
      [ui/TableCell [:div [:span description]]]]))

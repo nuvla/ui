@@ -516,7 +516,7 @@
            [ui/Header "Docker Registry"]
            [ui/IconGroup {:size "massive"}
             [icons/DockerIcon]
-            [ui/Icon {:name "database", :corner "bottom right"}]]]]
+            [icons/DbIconFull {:corner "bottom right"}]]]]
 
          [ui/Card
           {:on-click #(do

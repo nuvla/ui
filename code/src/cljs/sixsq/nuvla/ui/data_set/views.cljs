@@ -637,7 +637,7 @@
            :no-data-set-message-header
            :no-data-set-message-content]
           [ui/Segment style/basic
-           [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
+           [uix/PageHeader icons/i-db-full (str name " " (@tr [:data-set]))]
            [MenuBar]
            [Summary]
            [ui/Grid {:columns   (columns-per-device @device)

@@ -150,10 +150,10 @@
                :role  :button}
               (for [i icons]
                 [icons/Icon {:key     icon-key
-                           :size    (when (and clickable? selected?) "large")
-                           :loading (and (pos? value) (= "spinner" i))
-                           :style   {:margin-right 0}
-                           :name    i}])]
+                             :size    (when (and clickable? selected?) "large")
+                             :loading (and (pos? value) (= "spinner" i))
+                             :style   {:margin-right 0}
+                             :name    i}])]
          [ui/StatisticValue
           (or value "-")]
          [ui/StatisticLabel label]]
@@ -163,10 +163,10 @@
           "\u2002"
           [ui/IconGroup
            (for [i icons]
-             [uix/Icon {:key     icon-key
-                        :size    (when (and clickable? selected?) "large")
-                        :loading (and (pos? value) (= "spinner" i))
-                        :name    i}])]]
+             [icons/Icon {:key     icon-key
+                          :size    (when (and clickable? selected?) "large")
+                          :loading (and (pos? value) (= "spinner" i))
+                          :name    i}])]]
          [ui/StatisticLabel label]])])))
 
 

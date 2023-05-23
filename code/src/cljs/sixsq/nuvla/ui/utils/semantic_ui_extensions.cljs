@@ -29,9 +29,6 @@
        :else msg-or-key))))
 
 
-(def Icon icons/Icon)
-
-
 (defn Button
   "This button requires a single options map that contains the :text key. The
    value of the :text key is used to define the button text as well as the
@@ -41,7 +38,7 @@
                        (dissoc :text)
                        (dissoc :icon)
                        (assoc :aria-label text))]
-    [ui/Button final-opts (when icon [Icon {:name icon}]) text]))
+    [ui/Button final-opts (when icon [icons/Icon {:name icon}]) text]))
 
 
 (defn MenuItem
@@ -54,7 +51,7 @@
                        (assoc :aria-label name))]
     [ui/MenuItem final-opts
      (when icon
-       [Icon (cond-> {:name icon}
+       [icons/Icon (cond-> {:name icon}
                      (boolean? loading?) (assoc :loading loading?))])
      (str/capitalize name)]))
 
@@ -203,10 +200,10 @@
         [title-size
          {:class title-class}
 
-         [Icon {:name (if @active? icons/i-angle-down icons/i-angle-right)}]
+         [icons/Icon {:name (if @active? icons/i-angle-down icons/i-angle-right)}]
 
          (when icon
-           [:<> [Icon {:name icon}] " "])
+           [:<> [icons/Icon {:name icon}] " "])
 
          label
 
@@ -221,7 +218,7 @@
   [icon title & {:keys [inline]}]
   [:h2 (when inline {:style {:display    :inline
                              :word-break :break-all}})
-   [Icon {:name icon}] " " title])
+   [icons/Icon {:name icon}] " " title])
 
 
 (defn SpanBlockJustified
@@ -379,7 +376,7 @@
                                  (reset! clicked? false))}
                   (some? open) (assoc :open open))
 
-       (when header [ui/ModalHeader (when icon [Icon {:name icon}]) (str/capitalize header)])
+       (when header [ui/ModalHeader (when icon [icons/Icon {:name icon}]) (str/capitalize header)])
 
        [ui/ModalContent {:scrolling false}
         (when content content)]

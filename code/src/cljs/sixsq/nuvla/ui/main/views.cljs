@@ -36,7 +36,7 @@
      [:a {:on-click click-fn
           :style    {:cursor "pointer"}
           :class    (when (zero? index) :parent)}
-      (when page-icon [uix/Icon {:name page-icon :style {:padding-right "10px"
+      (when page-icon [icons/Icon {:name page-icon :style {:padding-right "10px"
                                                          :font-weight   400}}])
       (utils/truncate (str (or (:text segment) segment)))]]))
 

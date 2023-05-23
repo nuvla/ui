@@ -89,12 +89,4 @@
 
 (defn orchestrator-icon
   [orchestrator]
-  [uix/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}])
-
-(defn PreReleaseWarning [{:keys [show? warning-text]}]
-  (when show?
-    [ui/Popup
-     {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
-      :content        warning-text
-      :on             "hover"
-      :hide-on-scroll true}]))
+  [icons/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}])

@@ -20,7 +20,7 @@
             icon-name (if @more? icons/i-angle-down icons/i-angle-right)]
         [:a {:style    {:cursor "pointer"}
              :on-click #(reset! more? (not @more?))}
-         [uix/Icon {:name icon-name}]
+         [icons/Icon {:name icon-name}]
          label]))))
 
 

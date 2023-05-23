@@ -143,7 +143,7 @@
                              :border-radius   "8px"
                              :overflow        :hidden}}
 
-     [:h4 {:class "ui-header"} [uix/Icon {:name icons/i-rocket}]
+     [:h4 {:class "ui-header"} [icons/RocketIcon]
       (str/upper-case (@tr [:deployments]))]
 
      [StatisticStates ::deployments-subs/deployments-summary-all]

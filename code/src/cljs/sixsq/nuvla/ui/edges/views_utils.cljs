@@ -16,7 +16,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn NuvlaboxRow
@@ -68,9 +69,8 @@
                         [ui/IconGroup
                          [ui/Icon {:name "box"}]
                          (when (some #{id} managers)
-                           [ui/Icon {:className "fas fa-crown"
-                                     :corner    true
-                                     :color     "blue"}])]
+                           [icons/CrownIcon {:corner    true
+                                             :color     "blue"}])]
                         (or name id)]
           :meta        [:<>
                         [:div (str (@tr [:created]) " " (date-string->time-ago created))]

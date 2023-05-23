@@ -941,7 +941,7 @@
             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
             :row-props         {:role  "link"
                                 :style {:cursor "pointer"}}
-            :select-config      {:bulk-actions [{:icon (fn [] [ui/Icon {:className "fal fa-tags"}])
+            :select-config      {:bulk-actions [{:icon (fn [] [icons/TagIcon])
                                                  :name "Edit Tags"
                                                  :event (fn []
                                                           (dispatch [::events/get-edges-tags])

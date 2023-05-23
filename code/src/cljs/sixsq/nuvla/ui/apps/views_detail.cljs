@@ -194,7 +194,7 @@
         (when @editable?
           [uix/MenuItem
            {:name     (@tr [:save])
-            :icon     "fa-light fa-floppy-disk"
+            :icon     icons/i-floppy
             :disabled (edit-button-disabled? @page-changed? @form-valid?)
             :on-click save-callback}])
 

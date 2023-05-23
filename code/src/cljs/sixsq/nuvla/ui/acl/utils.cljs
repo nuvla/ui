@@ -171,6 +171,6 @@
     "user" icons/i-user
     "group" icons/i-users
     "nuvlabox" icons/i-box
-    "infrastructure-service" "fa-light fa-cloud"
+    "infrastructure-service" icons/i-cloud
     "deployment" icons/i-rocket
     "question circle outline"))

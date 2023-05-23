@@ -46,7 +46,7 @@
              (utils/swarm-manager? infra-service)
              {:popup-txt  "Swarm Manager"
               :label-txt  "Swarm"
-              :label-icon "fa-solid fa-crown"}
+              :label-icon icons/i-crown}
 
              (utils/swarm-worker? infra-service)
              {:popup-txt  "Swarm Worker"

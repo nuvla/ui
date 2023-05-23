@@ -65,7 +65,7 @@
                               [ui/ListItem
                                [ui/Image {:avatar true}
                                 [ui/Icon {:className (if (some #{nb-id} nuvlabox-managers)
-                                                       "fas fa-crown"
+                                                       icons/i-crown
                                                        "")}]]
                                [ui/ListContent
                                 [ui/ListHeader name

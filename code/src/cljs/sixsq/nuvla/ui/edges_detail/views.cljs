@@ -1339,9 +1339,8 @@
          (when (= cluster-node-role "manager")
            [:<>
             (str " ")
-            [ui/Icon {:className "fas fa-crown"
-                      :corner    true
-                      :color     "blue"}]])]]
+            [icons/CrownIcon {:corner    true
+                              :color     "blue"}]])]]
        (when cluster-join-address
          [ui/TableRow
           [ui/TableCell "Cluster Join Address"]

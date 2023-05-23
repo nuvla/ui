@@ -189,3 +189,28 @@
 (defn DbIconFull
   [opts]
   [I opts i-db-full])
+
+(def i-cloud "fal fa-cloud")
+(defn CloudIcon
+  [opts]
+  [I opts i-cloud])
+
+(def i-table-cells "fal fa-table-cells-large")
+(defn TableCellIcon
+  [opts]
+  [I opts i-table-cells])
+
+(def i-floppy "fal fa-floppy-disk")
+(defn FloppyIcon
+  [opts]
+  [I opts i-floppy])
+
+(def i-tag "fa-light fa-tag")
+(defn TagIcon
+  [opts]
+  [I opts i-tag])
+
+(def i-crown "fas fa-crown")
+(defn CrownIcon
+  [opts]
+  [I opts i-crown])

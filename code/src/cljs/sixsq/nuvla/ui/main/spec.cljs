@@ -114,7 +114,7 @@
                                                           :order           70}
                                        "clouds"          {:key        routes/clouds
                                                           :label-kw   :infra-service-short
-                                                          :icon       "fa-light fa-cloud"
+                                                          :icon       icons/i-cloud
                                                           :protected? true
                                                           :order      80}
                                        "api"             {:key        routes/api

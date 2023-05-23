@@ -170,7 +170,7 @@ For more information on how to format your app description using Markdown syntax
     subtype-component icons/i-grid
     subtype-application icons/i-cubes
     subtype-application-k8s icons/i-cubes
-    subtype-applications-sets "fa-light fa-table-cells-large"
+    subtype-applications-sets icons/i-table-cells
     "question circle"))
 
 (defn SubtypeIconInfra

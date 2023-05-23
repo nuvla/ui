@@ -86,7 +86,7 @@
                                        "deployment-sets" {:key             routes/deployment-sets
                                                           :label-kw        :deployment-sets
                                                           :name            "deployments-sets"
-                                                          :icon            "fa-light fa-bullseye"
+                                                          :icon            icons/i-bullseye
                                                           :protected?      true
                                                           :feature-flag-kw about-utils/feature-deployment-set-key
                                                           :order           31}
@@ -103,7 +103,7 @@
                                                           :order      50}
                                        "notifications"   {:key        routes/notifications
                                                           :label-kw   :notifications
-                                                          :icon       "fa-light fa-bell"
+                                                          :icon       icons/i-bell
                                                           :protected? true
                                                           :order      60}
                                        "data"            {:key             routes/data

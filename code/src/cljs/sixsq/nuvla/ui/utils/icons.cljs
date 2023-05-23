@@ -84,12 +84,12 @@
   [opts]
   [I opts i-circle-check])
 
-(def i-unpublish "fa-light fa-link-simple-slash")
+(def i-unpublish "fal fa-link-simple-slash")
 (defn UnpublishIcon
   [opts]
   [I opts i-unpublish])
 
-(def i-plus "fa-light fa-plus-large")
+(def i-plus "fal fa-plus-large")
 (defn AddIcon
   [opts]
   [I opts i-plus])
@@ -99,7 +99,7 @@
   [opts]
   [I opts i-plus-full])
 
-(def i-copy "fa-light fa-copy")
+(def i-copy "fal fa-copy")
 (defn CopyIcon
   [opts]
   [I opts i-copy])
@@ -129,22 +129,27 @@
   [opts]
   [I opts i-book])
 
-(def i-euro  "fa-light fa-euro-sign")
+(def i-euro  "fal fa-euro-sign")
 (defn EuroIcon
   [opts]
   [I opts i-euro])
 
-(def i-user-group "fa-light fa-user-group")
+(def i-user-group "fal fa-user-group")
 (defn UserGroupIcon
   [opts]
   [I opts i-user-group])
 
-(def i-user-large "fa-light fa-user-large")
+(def i-user-large "fal fa-user-large")
 (defn UserLargeIcon
   [opts]
   [I opts i-user-large])
 
-(def i-user  "fa-light fa-user")
+(def i-users "fal fa-users")
+(defn UsersIcon
+  [opts]
+  [I opts i-users])
+
+(def i-user  "fal fa-user")
 (defn UserIcon
   [opts]
   [I opts i-user])
@@ -160,7 +165,17 @@
   [opts]
   [I opts i-box])
 
-(def i-key "fa-light fa-key")
+(def i-key "fal fa-key")
 (defn KeyIcon
   [opts]
   [I opts i-key])
+
+(def i-bullseye "fal fa-bullseye")
+(defn BullseyeIcon
+  [opts]
+  [I opts i-bullseye])
+
+(def i-bell  "fal fa-bell")
+(defn BellIcon
+  [opts]
+  [I opts i-bell])

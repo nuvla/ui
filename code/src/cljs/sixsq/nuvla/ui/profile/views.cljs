@@ -1290,6 +1290,7 @@
     [ui/ListItem
      [ui/ListContent
       [ui/ListHeader
+       (tap> principal)
        [acl-views/PrincipalIcon principal]
        ff/nbsp
        @principal-name

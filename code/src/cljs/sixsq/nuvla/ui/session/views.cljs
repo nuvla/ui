@@ -67,7 +67,7 @@
                               (reset! search ""))
             :icon          (r/as-element
                              [:<>
-                              [uix/Icon {:name "fa-light fa-user-group large"}]
+                              [icons/UserGroupIcon {:class "large"}]
                               (when-not @is-mobile?
                                 [uix/TR :switch-group])])}
            (when @open

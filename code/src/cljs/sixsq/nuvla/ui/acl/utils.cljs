@@ -166,9 +166,10 @@
 
 (defn id->icon
   [id]
+  (tap> ["id->icon" id])
   (case (general-utils/id->resource-name id)
-    "user" "fa-light fa-user"
-    "group" "fa-light fa-users"
+    "user" icons/i-user
+    "group" icons/i-users
     "nuvlabox" icons/i-box
     "infrastructure-service" "fa-light fa-cloud"
     "deployment" icons/i-rocket

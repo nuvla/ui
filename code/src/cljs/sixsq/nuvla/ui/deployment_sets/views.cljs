@@ -52,7 +52,7 @@
      [ui/StatisticGroup {:size  "tiny"
                          :style {:justify-content "center"}}
       (for [stat-props [{:value          total
-                         :icons          ["fa-light fa-bullseye"]
+                         :icons          [icons/i-bullseye]
                          :label          "TOTAL"
                          :positive-color nil}
                         {:value          created

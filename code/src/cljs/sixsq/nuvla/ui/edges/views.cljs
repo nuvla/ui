@@ -57,7 +57,7 @@
         [ui/StatisticGroup {:widths (when-not clickable? 4)
                             :size   "tiny"}
          (for [statistic-opts [{:value          total
-                                :icons          ["fa-light fa-box"]
+                                :icons          [icons/box]
                                 :label          "TOTAL"
                                 :positive-color nil}
                                {:value          online

@@ -93,12 +93,12 @@
                                        "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"
-                                                          :icon       "fa-light fa-box"
+                                                          :icon       icons/box
                                                           :protected? true
                                                           :order      40}
                                        "credentials"     {:key        routes/credentials
                                                           :label-kw   :credentials
-                                                          :icon       "fa-light fa-key"
+                                                          :icon       icons/i-key
                                                           :protected? true
                                                           :order      50}
                                        "notifications"   {:key        routes/notifications

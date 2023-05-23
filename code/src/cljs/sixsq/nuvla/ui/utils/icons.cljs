@@ -149,3 +149,14 @@
 (defn LayerGroupIcon
   [opts]
   [I opts layer-group])
+
+
+(def box "fal fa-box")
+(defn BoxIcon
+  [opts]
+  [I opts box])
+
+(def i-key "fa-light fa-key")
+(defn KeyIcon
+  [opts]
+  [I opts i-key])

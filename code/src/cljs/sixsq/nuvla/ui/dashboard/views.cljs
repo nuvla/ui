@@ -64,7 +64,7 @@
     [ui/StatisticGroup {:size  "tiny"
                         :style {:padding "0.2rem"}}
      [Statistic {:value total
-                 :icon  "fa-light fa-box"
+                 :icon  icons/box
                  :label "TOTAL"
                  :color "black"}]
      [Statistic {:value          online
@@ -94,7 +94,7 @@
                              :overflow        :hidden}}
 
      [:h4 {:class "ui-header"}
-      [uix/Icon {:name "fa-light fa-box"}]
+      [icons/BoxIcon]
       (str/upper-case "NuvlaEdges")]
 
      [StatisticStatesEdge]

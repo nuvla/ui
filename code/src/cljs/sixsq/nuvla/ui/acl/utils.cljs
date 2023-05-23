@@ -169,7 +169,7 @@
   (case (general-utils/id->resource-name id)
     "user" "fa-light fa-user"
     "group" "fa-light fa-users"
-    "nuvlabox" "fa-light fa-box"
+    "nuvlabox" icons/box
     "infrastructure-service" "fa-light fa-cloud"
     "deployment" icons/rocket
     "question circle outline"))

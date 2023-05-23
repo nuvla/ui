@@ -15,6 +15,6 @@
   [type]
   (let [icons-map {type-apps        icons/layer-group
                    type-deployments icons/rocket
-                   type-nbs         "fa-light fa-box"
+                   type-nbs         icons/box
                    type-creds       "fa-light fa-key"}]
     (get icons-map type)))

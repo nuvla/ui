@@ -56,7 +56,7 @@
                             (count (:nuvlabox-workers @nuvlabox-cluster)))]
     [ui/Header {:as        "h3"
                 :float     "left"
-                :icon      (r/as-element [uix/Icon {:name "fas fa-chart-network"}])
+                :icon      (r/as-element [icons/ChartNetworkIcon])
                 :content   (if name
                              (str name " (" cluster-id ")")
                              cluster-id)
@@ -268,7 +268,7 @@
          ::subs/nuvlabox-not-found?
          :no-nuvlabox-cluster-message-header
          :no-nuvlabox-cluster-message-content]
-        [uix/PageHeader "fas fa-chart-network"
+        [uix/PageHeader icons/i-chart-network
          (str (general-utils/capitalize-first-letter (@tr [:edges])) " "
               (:name @cluster))]
         [MenuBar cluster-id]

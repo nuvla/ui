@@ -194,7 +194,7 @@
        {:db-path                 (conj db-path ::tab)
         :panes                   [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
                                               :key     :app-store
-                                              :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+                                              :icon    (r/as-element [icons/StoreIcon])}
                                    :render   render}
                                   {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
                                               :key     :all-apps

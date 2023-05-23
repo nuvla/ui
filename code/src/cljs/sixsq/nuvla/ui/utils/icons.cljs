@@ -214,3 +214,98 @@
 (defn CrownIcon
   [opts]
   [I opts i-crown])
+
+(def i-power-off "fal fa-power-off")
+(defn PowerOffIcon
+  [opts]
+  [I opts i-power-off])
+
+(def i-store "fal fa-store")
+(defn StoreIcon
+  [opts]
+  [I opts i-store])
+
+(def i-list "fal fa-list")
+(defn ListIcon
+  [opts]
+  [I opts i-list])
+
+(def i-star "fa-light fa-star")
+(defn StarIcon
+  [opts]
+  [I opts i-star])
+
+(def i-robot "fa-solid fa-robot")
+(defn RobotIcon
+  [opts]
+  [I opts i-robot])
+
+(def i-chart-network "fas fa-chart-network")
+(defn ChartNetworkIcon
+  [opts]
+  [I opts i-chart-network])
+
+(def i-check "fal fa-check")
+(defn CheckNetworkIcon
+  [opts]
+  [I opts i-check])
+
+(def i-handshake "fal fa-handshake")
+(defn HandshakeIcon
+  [opts]
+  [I opts i-handshake])
+
+(def i-dolly "fal fa-dolly")
+(defn DollyIcon
+  [opts]
+  [I opts i-dolly])
+
+(def i-eraser "fal fa-eraser")
+(defn EraserIcon
+  [opts]
+  [I opts i-eraser])
+
+(def i-ban "fal fa-ban")
+(defn BanIcon
+  [opts]
+  [I opts i-ban])
+
+(def i-pause "fal fa-pause")
+(defn PauseIcon
+  [opts]
+  [I opts i-pause])
+
+(def i-exclamation "fal fa-exclamation")
+(defn ExclamationIcon
+  [opts]
+  [I opts i-exclamation])
+
+(def i-circle-play "fal fa-circle-play")
+(defn CirclePlayIcon
+  [opts]
+  [I opts i-circle-play])
+
+(def i-loader "fal fa-loader")
+(defn LoaderIcon
+  [opts]
+  [I opts i-loader])
+
+(def i-circle-stop "fal fa-circle-stop")
+(defn CircleStopIcon
+  [opts]
+  [I opts i-circle-stop])
+
+(def i-triangle-exclamation "fal fa-triangle-exclamation")
+(defn TriangleExclamationIcon
+  [opts]
+  [I opts i-triangle-exclamation])
+
+(def i-arrow-down "fa-light fa-arrow-down")
+(defn ArrowDownIcon
+  [opts]
+  [I opts i-arrow-down])
+
+(def i-arrow-right-bracket "fa-light fa-arrow-right-from-bracket")
+(defn ArrowRightFromBracketIcon
+  [opts]
+  [I opts i-arrow-right-bracket])

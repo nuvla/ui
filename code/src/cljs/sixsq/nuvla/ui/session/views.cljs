@@ -139,8 +139,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [uix/Icon {:name "fa-light fa-arrow-right-from-bracket"
-                  :size "large"}]
+       [icons/ArrowRightFromBracketIcon {:size "large"}]
        (when-not @is-mobile?
          [uix/TR :logout])])))
 

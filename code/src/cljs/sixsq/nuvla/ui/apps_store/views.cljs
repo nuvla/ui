@@ -137,7 +137,7 @@
   (let [tr     @(subscribe [::i18n-subs/tr]) ]
     [{:menuItem {:content (utils-general/capitalize-words (tr [:appstore]))
                  :key     spec/appstore-key
-                 :icon    (r/as-element [ui/Icon {:className "fa-light fa-store"}])}
+                 :icon    (r/as-element [icons/StoreIcon])}
       :render   #(r/as-element [TabDefault spec/appstore-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:all-apps]))
                  :key     spec/allapps-key
@@ -145,7 +145,7 @@
       :render   #(r/as-element [TabDefault spec/allapps-key ])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:my-apps]))
                  :key     spec/myapps-key
-                 :icon    (r/as-element [ui/Icon {:className "fa-light fa-star"}])}
+                 :icon    (r/as-element [icons/StarIcon])}
       :render   #(r/as-element [TabDefault spec/myapps-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:navigate-apps]))
                  :key     spec/navigate-key

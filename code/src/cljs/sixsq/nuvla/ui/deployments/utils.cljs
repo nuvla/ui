@@ -10,7 +10,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.plugins.table :as table-plugin]))
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def ^:const STARTED "STARTED")
 (def ^:const STARTING "STARTING")
@@ -19,10 +20,10 @@
 
 (defn state->icon
   [state]
-  (let [icons-map {STARTED  "fa-light fa-circle-play"
-                   STARTING "fa-light fa-loader"
-                   STOPPED  "fa-light fa-circle-stop"
-                   ERROR    "fa-light fa-triangle-exclamation"}]
+  (let [icons-map {STARTED  icons/i-circle-play
+                   STARTING icons/i-loader
+                   STOPPED  icons/i-circle-stop
+                   ERROR    icons/i-triangle-exclamation}]
     (get icons-map state)))
 
 (defn resolve-url-pattern

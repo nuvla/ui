@@ -279,7 +279,7 @@
   (let [error? (subscribe [::subs/apps-error?])]
     [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [:<>
-      [uix/Icon {:name "fa-light fa-list"}]
+      [icons/ListIcon]
       "Applications"]]))
 
 
@@ -288,7 +288,7 @@
   [:<>
    [:h2
     [:<>
-     [uix/Icon {:name "fa-light fa-list"}]
+     [icons/ListIcon]
      "Applications"]]
    [AppsSetsSection]])
 

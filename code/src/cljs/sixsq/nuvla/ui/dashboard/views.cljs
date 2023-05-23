@@ -68,16 +68,16 @@
                  :label "TOTAL"
                  :color "black"}]
      [Statistic {:value          online
-                 :icon           "fa-light fa-power-off"
+                 :icon           icons/i-power-off
                  :label          edges-utils/status-online
                  :positive-color "green"
                  :color          "green"}]
      [Statistic {:value offline
-                 :icon  "fa-light fa-power-off"
+                 :icon  icons/i-power-off
                  :label edges-utils/status-offline
                  :color "red"}]
      [Statistic {:value unknown
-                 :icon  "fa-light fa-power-off"
+                 :icon  icons/i-power-off
                  :label edges-utils/status-unknown
                  :color "orange"}]]))
 

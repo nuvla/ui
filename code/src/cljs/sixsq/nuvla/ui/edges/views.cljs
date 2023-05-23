@@ -61,15 +61,15 @@
                                 :label          "TOTAL"
                                 :positive-color nil}
                                {:value          online
-                                :icons          ["fa-light fa-power-off"]
+                                :icons          [icons/i-power-off]
                                 :label          utils/status-online
                                 :positive-color "green"}
                                {:value          offline
-                                :icons          ["fa-light fa-power-off"]
+                                :icons          [icons/i-power-off]
                                 :label          utils/status-offline
                                 :positive-color "red"}
                                {:value          unknown
-                                :icons          ["fa-light fa-power-off"]
+                                :icons          [icons/i-power-off]
                                 :label          utils/status-unknown
                                 :positive-color "orange"}]]
            ^{:key (str "stat-state-" (:label statistic-opts))}
@@ -87,7 +87,7 @@
                           (reset! show-state-statistics (not @show-state-statistics))
                           (when-not @show-state-statistics
                             (dispatch [::events/set-state-selector nil])))}
-            [uix/Icon {:name "fa-light fa-arrow-down"}]
+            [icons/ArrowDownIcon]
             \u0020
             (@tr [:commissionning-states])])]))))
 
@@ -132,7 +132,7 @@
   {spec/cards-view   icons/i-grid-layout
    spec/table-view   "table"
    spec/map-view     "map"
-   spec/cluster-view "fas fa-chart-network"})
+   spec/cluster-view icons/i-chart-network})
 
 (defn MenuBar []
   (let [loading?  (subscribe [::subs/loading?])

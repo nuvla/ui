@@ -23,7 +23,7 @@
     (fn []
       [ui/StatisticGroup {:widths 4 :size "tiny"}
        [components/StatisticState  {:value (:count @clusters),
-                                    :icons ["fas fa-chart-network"],
+                                    :icons [icons/i-chart-network],
                                     :label "TOTAL",
                                     :clickable? false,
                                     :positive-color "",
@@ -43,7 +43,7 @@
         [uix/Card
          {:href        href
           :header      [:<>
-                        [ui/Icon {:className "fas fa-chart-network"}]
+                        [icons/ChartNetworkIcon]
                         (if (> (count name) 21)
                           (str (apply str (take 20 name)) "...")
                           name)]

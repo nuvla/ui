@@ -51,7 +51,7 @@
              (utils/swarm-worker? infra-service)
              {:popup-txt  "Swarm Worker"
               :label-txt  "Swarm"
-              :label-icon "fa-solid fa-robot"}
+              :label-icon icons/i-robot}
 
              (utils/swarm-disabled? infra-service)
              {:popup-txt   "Swarm Disabled"

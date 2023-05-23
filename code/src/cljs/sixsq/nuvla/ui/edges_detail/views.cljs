@@ -849,9 +849,9 @@
                    "usb" "usb"
                    "bluetooth" "bluetooth b"
                    "bluetooth-le" "bluetooth b"
-                   "ssdp" "fas fa-chart-network"
-                   "ws-discovery" "fas fa-chart-network"
-                   "bonjour/avahi" "fas fa-chart-network"
+                   "ssdp" icons/i-chart-network
+                   "ws-discovery" icons/i-chart-network
+                   "bonjour/avahi" icons/i-chart-network
                    "gpu" "microchip"
                    nil)
                  nil)]))))

@@ -74,7 +74,7 @@
                                                           :order      10}
                                        "apps"            {:key        routes/apps
                                                           :label-kw   :apps
-                                                          :icon       "fa-light fa-layer-group"
+                                                          :icon       icons/layer-group
                                                           :protected? true
                                                           :order      20}
                                        "deployments"     {:key        routes/deployments

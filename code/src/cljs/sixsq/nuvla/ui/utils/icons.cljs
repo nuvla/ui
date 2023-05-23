@@ -144,3 +144,8 @@
 (defn UserLargeIcon
   [opts]
   [I opts user-large])
+
+(def layer-group "fal fa-layer-group")
+(defn LayerGroupIcon
+  [opts]
+  [I opts layer-group])

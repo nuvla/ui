@@ -555,7 +555,7 @@
             panes  (module-detail-panes)]
         [ui/Container {:fluid true
                        :class :uix-apps-details}
-         [uix/PageHeader "fa-light fa-layer-group" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader icons/layer-group (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

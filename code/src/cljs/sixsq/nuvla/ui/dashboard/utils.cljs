@@ -13,7 +13,7 @@
 
 (defn type->icon
   [type]
-  (let [icons-map {type-apps        "fa-light fa-layer-group"
+  (let [icons-map {type-apps        icons/layer-group
                    type-deployments icons/rocket
                    type-nbs         "fa-light fa-box"
                    type-creds       "fa-light fa-key"}]

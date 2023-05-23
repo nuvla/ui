@@ -141,7 +141,7 @@
       :render   #(r/as-element [TabDefault spec/appstore-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:all-apps]))
                  :key     spec/allapps-key
-                 :icon    (r/as-element [ui/Icon {:className "fa-light fa-layer-group"}])}
+                 :icon    (r/as-element [icons/LayerGroupIcon])}
       :render   #(r/as-element [TabDefault spec/allapps-key ])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:my-apps]))
                  :key     spec/myapps-key

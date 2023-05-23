@@ -4,8 +4,7 @@
                                    reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.edges.spec :as spec]
-            [sixsq.nuvla.ui.edges.utils :as utils]
-            [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
+            [sixsq.nuvla.ui.edges.utils :as utils :refer [get-full-filter-string]]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -13,18 +12,16 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
-            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param] :as route-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
+            [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
-(def refresh-id-non-edit :edges-without-edit-rights)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
-(def refresh-id-inferred-locations :nuvlabox-get-nuvlabox-inferred-locations)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
 (def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
@@ -78,21 +75,6 @@
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-clusters]}]]]}))
 
-
-(reg-event-fx
-  ::refresh-clusters
-  (fn [_ _]
-    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlaboxes]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlaboxes-summary]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-id-clusters
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlabox-clusters]}]]]}))
-
-
 (reg-event-fx
   ::refresh-cluster
   (fn [_ [_ cluster-id]]
@@ -103,16 +85,6 @@
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
-
-(defn- get-full-filter-string
-  [{:keys [::spec/state-selector
-           ::spec/additional-filter] :as db}]
-  (general-utils/join-and
-    "id!=null"
-    (when state-selector (utils/state-filter state-selector))
-    additional-filter
-    (full-text-search-plugin/filter-text
-      db [::spec/edges-search])))
 
 (reg-event-fx
   ::get-nuvlaboxes
@@ -133,13 +105,7 @@
     (let [selected-filter (table-plugin/build-bulk-filter
                             select
                             (get-full-filter-string db))
-          filter          (general-utils/join-and
-                            (apply
-                              general-utils/join-and
-                              (map (fn [role]
-                                     (str "acl/edit-meta!='" role "'"))
-                                   (session-utils/get-roles session)))
-                            selected-filter)]
+          filter          (create-filter-for-read-only-resources session selected-filter)]
       {::cimi-api-fx/search
        [:nuvlabox
         {:filter filter :select "id"}
@@ -151,64 +117,13 @@
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                   {:header  (cond-> (str "failure getting nuvlaedges")
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
 
 
-(reg-event-fx
-  ::get-edges-tags
-  (fn [_ _]
-    {::cimi-api-fx/search
-     [:nuvlabox
-      {:first       0
-       :last        0
-       :aggregation "terms:tags"}
-      (fn [response]
-        (dispatch [::set-edges-tags
-                   (->> response
-                        :aggregations
-                        :terms:tags
-                        :buckets
-                        (map :key))]))]}))
-
-(reg-event-db
-  ::set-edges-tags
-  (fn [db [_ tags]]
-    (assoc db ::spec/edges-tags tags)))
-
-
-(reg-event-fx
-  ::update-tags
-  (fn [{{:keys [::spec/select
-                ::i18n-spec/tr] :as db} :db}
-       [_ edit-mode {:keys [tags call-back-fn text]}]]
-    (let [edit-mode->operation {spec/modal-tags-add-id     "add-tags"
-                                spec/modal-tags-remove-all "set-tags"
-                                spec/modal-tags-set-id     "set-tags"
-                                spec/modal-tags-remove-id  "remove-tags"}
-          filter               (table-plugin/build-bulk-filter select (get-full-filter-string db))
-          operation            (edit-mode->operation edit-mode)
-          updated-tags         (if (= spec/modal-tags-remove-all edit-mode) [] tags)]
-      {::cimi-api-fx/operation-bulk [:nuvlabox
-                                     (fn [result]
-                                       (let [updated     (-> result :updated)
-                                             success-msg (str updated " " (tr [(if (< 1 updated) :edges :edge)]) " updated with operation: " text)]
-                                         (dispatch [::messages-events/add
-                                                    {:header  "Bulk edit operation successful"
-                                                     :content success-msg
-                                                     :type    :success}])
-                                         (dispatch [::table-plugin/set-bulk-edit-success-message
-                                                    success-msg
-                                                    [::spec/select]])
-                                         (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]])
-                                         (dispatch [::get-nuvlaboxes])
-                                         (when (fn? call-back-fn) (call-back-fn (-> result :updated)))))
-                                     operation
-                                     (when (seq filter) filter)
-                                     {:doc {:tags updated-tags}}]})))
 
 (reg-event-fx
   ::set-additional-filter
@@ -225,12 +140,12 @@
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
-                                     status (str " (" status ")"))
+                   {:header  (cond-> (str "failure getting nuvlaedges")
+                               status (str " (" status ")"))
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                     ::main-spec/loading? false)
+                  ::main-spec/loading? false)
        :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
 
 
@@ -307,27 +222,6 @@
                              nil)
                            #(dispatch [::set-nuvlaboxes-summary %])]}))
 
-
-(reg-event-fx
-  ::set-nuvlabox-cluster-summary
-  (fn [{db :db} [_ nuvlaboxes-summary]]
-    {:db (assoc db ::spec/nuvlabox-cluster-summary nuvlaboxes-summary)}))
-
-
-(reg-event-fx
-  ::get-nuvlabox-cluster-summary
-  (fn [{{:keys [::spec/nuvlabox-cluster] :as db} :db} _]
-    {::cimi-api-fx/search [:nuvlabox
-                           (utils/get-query-aggregation-params
-                             (full-text-search-plugin/filter-text
-                               db [::spec/edges-search])
-                             "terms:online,terms:state"
-                             (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
-                                  (map #(str "id='" % "'"))
-                                  (apply general-utils/join-or)))
-                           #(dispatch [::set-nuvlabox-cluster-summary %])]}))
-
-
 (reg-event-fx
   ::set-nuvlabox-clusters
   (fn [{:keys [db]} [_ nuvlabox-clusters]]
@@ -389,8 +283,8 @@
 (reg-event-fx
   ::open-modal
   (fn [{db :db} [_ modal-id]]
-    (let [fx (when (and ((set spec/tags-modal-ids) modal-id)
-                        (not ((set spec/tags-modal-ids) (::spec/open-modal db))))
+    (let [fx (when (and (tags-modal-ids-set modal-id)
+                        (not (tags-modal-ids-set (::spec/open-modal db))))
                [:dispatch [::get-edges-without-edit-rights]])]
       {:db (assoc db ::spec/open-modal modal-id)
        :fx [fx]})))
@@ -554,7 +448,7 @@
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                   {:header  (cond-> (str "failure getting nuvlaedges")
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
@@ -611,17 +505,3 @@
     {:storage/set {:session? false
                    :name     spec/local-storage-key
                    :value    (merge (edn/read-string storage) preference)}}))
-
-;; TODO: Refactor/move to additional filter or main fx
-(reg-event-fx
-  ::store-filter-and-open-in-new-tab
-  (fn [_ [_ filter-string]]
-    (let [uuid (random-uuid)]
-      {:storage/set {:session? false
-                     :name     uuid
-                     :value    filter-string}
-       :fx          [[:dispatch
-                      [::main-events/open-link
-                       (route-utils/name->href
-                         {:route-name   ::routes/edges
-                          :query-params {:filter-storage-key uuid}})]]]})))

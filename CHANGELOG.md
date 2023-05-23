@@ -23,6 +23,7 @@
 - Edges details, overview tab - Adds node labels to Cluster status card #1207
 - Github e2e - Cache NPM packages, use playwright container, optimize order
 - Config.json - Update licenses
+- Deployments overview, table view - Enables bulk editing of tags #1209
 
 ## Released
 

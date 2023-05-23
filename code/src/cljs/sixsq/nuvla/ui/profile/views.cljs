@@ -121,7 +121,7 @@
            {:text     (@tr [:create])
             :primary  true
             :disabled (and @validate? (not form-valid?))
-            :icon     icons/info-full
+            :icon     icons/i-info-full
             :loading  @loading?
             :on-click #(if (not form-valid?)
                          (reset! validate? true)

@@ -20,141 +20,145 @@
                                     (:className opts)])
                            (str/join " "))})])
 
-(def rocket "fal fa-rocket-launch")
+(def i-rocket "fal fa-rocket-launch")
 (defn RocketIcon [opts]
-  [I opts rocket])
+  [I opts i-rocket])
 
-(def folder "fal fa-folder")
+(def i-folder "fal fa-folder")
 (defn FolderIcon
   [opts]
-  [I opts folder])
+  [I opts i-folder])
 
-(def folder-full "folder")
+(def i-folder-full "folder")
 (defn FolderIconFull
   [opts]
-  [I opts folder-full])
+  [I opts i-folder-full])
 
-(def grid "fal fa-grid")
+(def i-grid "fal fa-grid")
 (defn GridIcon
   [opts]
-  [I opts grid])
+  [I opts i-grid])
 
-(def grid-layout "grid layout")
+(def i-grid-layout "grid layout")
 (defn GridLayoutIcon
   [opts]
-  [I opts grid])
+  [I opts i-grid])
 
-(def eye "fal fa-eye")
+(def i-eye "fal fa-eye")
 (defn EyeIcon
   [opts]
-  [I opts eye])
+  [I opts i-eye])
 
-(def info "fal fa-circle-info")
+(def i-info "fal fa-circle-info")
 (defn InfoIcon
   [opts]
-  [I opts info])
+  [I opts i-info])
 
-(def info-full "info circle")
+(def i-info-full "info circle")
 (defn InfoIconFull
   [opts]
-  [I opts info-full])
+  [I opts i-info-full])
 
-(def gear "fal fa-gear")
+(def i-gear "fal fa-gear")
 (defn GearIcon
   [opts]
-  [I opts gear])
+  [I opts i-gear])
 
-
-(def code "fal fa-file-code")
+(def i-code "fal fa-file-code")
 (defn CodeIcon
   [opts]
-  [I opts code])
+  [I opts i-code])
 
-(def trash "fal fa-trash")
+(def i-trash "fal fa-trash")
 (defn TrashIcon
   [opts]
-  [I opts trash])
+  [I opts i-trash])
 
-(def trash-full "fa-trash")
+(def i-trash-full "fa-trash")
 (defn TrashIconFull
   [opts]
-  [I opts trash-full])
+  [I opts i-trash-full])
 
-(def circle-check "check circle outline")
+(def i-circle-check "check circle outline")
 (defn CircleCheck
   [opts]
-  [I opts circle-check])
+  [I opts i-circle-check])
 
-(def unpublish "fa-light fa-link-simple-slash")
+(def i-unpublish "fa-light fa-link-simple-slash")
 (defn UnpublishIcon
   [opts]
-  [I opts unpublish])
+  [I opts i-unpublish])
 
-(def plus "fa-light fa-plus-large")
+(def i-plus "fa-light fa-plus-large")
 (defn AddIcon
   [opts]
-  [I opts plus])
+  [I opts i-plus])
 
-(def plus-full "plus")
+(def i-plus-full "plus")
 (defn AddIconFull
   [opts]
-  [I opts plus-full])
+  [I opts i-plus-full])
 
-(def copy "fa-light fa-copy")
+(def i-copy "fa-light fa-copy")
 (defn CopyIcon
   [opts]
-  [I opts copy])
+  [I opts i-copy])
 
-(def cubes "fal fa-cubes")
+(def i-cubes "fal fa-cubes")
 (defn CubesIcon
   [opts]
-  [I opts cubes])
+  [I opts i-cubes])
 
-(def docker "docker")
+(def i-docker "docker")
 (defn DockerIcon
   [opts]
-  [I opts docker])
+  [I opts i-docker])
 
-(def app-sets "th large")
+(def i-app-sets "th large")
 (defn AppSetsIcon
   [opts]
-  [I opts app-sets])
+  [I opts i-app-sets])
 
-(def warning "warning sign")
+(def i-warning "warning sign")
 (defn WarningIcon
   [opts]
-  [I opts warning])
+  [I opts i-warning])
 
-(def book "fal fa-book")
+(def i-book "fal fa-book")
 (defn BookIcon
   [opts]
-  [I opts book])
+  [I opts i-book])
 
-(def euro  "fa-light fa-euro-sign")
+(def i-euro  "fa-light fa-euro-sign")
 (defn EuroIcon
   [opts]
-  [I opts euro])
+  [I opts i-euro])
 
-(def user-group "fa-light fa-user-group")
-(defn GroupIcon
+(def i-user-group "fa-light fa-user-group")
+(defn UserGroupIcon
   [opts]
-  [I opts user-group])
+  [I opts i-user-group])
 
-(def user-large "fa-light fa-user-large")
+(def i-user-large "fa-light fa-user-large")
 (defn UserLargeIcon
   [opts]
-  [I opts user-large])
+  [I opts i-user-large])
 
-(def layer-group "fal fa-layer-group")
+(def i-user  "fa-light fa-user")
+(defn UserIcon
+  [opts]
+  [I opts i-user])
+
+(def i-layer-group "fal fa-layer-group")
 (defn LayerGroupIcon
   [opts]
-  [I opts layer-group])
+  [I opts i-layer-group])
 
 
-(def box "fal fa-box")
+(def i-box "fal fa-box")
 (defn BoxIcon
   [opts]
-  [I opts box])
+  [I opts i-box])
 
 (def i-key "fa-light fa-key")
 (defn KeyIcon

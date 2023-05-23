@@ -70,7 +70,7 @@
                   :module-version {:step-id :module-version
                                    :icon    "list ol"}
                   :registries     {:step-id :registries
-                                   :icon    icons/docker}
+                                   :icon    icons/i-docker}
                   :env-variables  {:step-id :env-variables
                                    :icon    "list alternate outline"}
                   :files          {:step-id :files

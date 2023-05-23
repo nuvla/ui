@@ -362,7 +362,7 @@
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))
                          :read-only     (not @editable?)}]
-         [uix/PageHeader icons/grid-layout (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader icons/i-grid-layout (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [Details]
          [apps-views-detail/registries-section]

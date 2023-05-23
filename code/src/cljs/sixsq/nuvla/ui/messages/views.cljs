@@ -17,7 +17,7 @@
   [type]
   (case type
     :error "warning circle"
-    :info  icons/info-full
+    :info  icons/i-info-full
     :success "check circle"
     :notif "bullhorn"
     "warning circle"))

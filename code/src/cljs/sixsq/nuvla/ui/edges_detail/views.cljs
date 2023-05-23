@@ -260,7 +260,7 @@
              (when (is-old-version? nb-version)
                [ui/Message
                 {:error   true
-                 :icon    {:name icons/warning, :size "large"}
+                 :icon    {:name icons/i-warning, :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (str (@tr [:nuvlabox-update-error-content])) " "
@@ -270,7 +270,7 @@
              (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
-                 :icon    {:name icons/warning, :size "large"}
+                 :icon    {:name icons/i-warning, :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (@tr [:nuvlabox-update-warning-content])])}])
@@ -425,7 +425,7 @@
          [ui/ModalContent
           [ui/Message
            {:warning true
-            :icon    {:name icons/warning, :size "large"}
+            :icon    {:name icons/i-warning, :size "large"}
             :header  (@tr [:nuvlabox-clustering-warning-header])
             :content (r/as-element
                        [:span
@@ -1273,7 +1273,7 @@
 
 (defn ServiceIcon
   [subtype]
-  (let [[kind path] (get {:swarm      [:icon icons/docker]
+  (let [[kind path] (get {:swarm      [:icon icons/i-docker]
                           :s3         [:image "/ui/images/s3.png"]
                           :kubernetes [:image "/ui/images/kubernetes.svg"]
                           :registry   [:icon "database"]}
@@ -1812,7 +1812,7 @@
                                                   "emergency"
                                                   "wrench")}) @playbooks)}]
             (when @can-edit?
-              [ui/Button {:icon     icons/info-full
+              [ui/Button {:icon     icons/i-info-full
                           :size     "mini"
                           :positive true
                           :circular true
@@ -2017,7 +2017,7 @@
        [job-views/ProgressJobAction nb-status]
        (when (and nb-status (not (:online nb-status)))
          [ui/Message {:warning true
-                      :icon    icons/warning
+                      :icon    icons/i-warning
                       :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
       [TabsNuvlaBox]
       [AddPlaybookModal]]]))

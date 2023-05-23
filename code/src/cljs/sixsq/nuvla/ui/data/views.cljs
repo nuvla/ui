@@ -113,7 +113,7 @@
      [ui/Menu {:borderless true, :stackable true}
       [data-set-views/ProcessButton :menu-item]
       (when (= @active-tab :data-sets) [AddDataSet])
-      [ui/MenuItem {:icon     icons/grid-layout
+      [ui/MenuItem {:icon     icons/i-grid-layout
                     :active   (= @view-type :cards)
                     :on-click #(reset! view-type :cards)}]
       [ui/MenuItem {:icon     "table"

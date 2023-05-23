@@ -38,7 +38,7 @@
       [ui/MenuMenu {:position "left"}
        [uix/MenuItem
         {:name     (@tr [:add])
-         :icon     icons/plus-full
+         :icon     icons/i-plus-full
          :position "right"
          :on-click #(do
                       (dispatch-sync [::events/reset-service-group])

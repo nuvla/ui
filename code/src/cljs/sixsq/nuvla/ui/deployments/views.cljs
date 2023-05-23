@@ -150,7 +150,7 @@
       [:<>
        [components/StickyBar
         [ui/Menu {:borderless true, :stackable true}
-         [ui/MenuItem {:icon     icons/grid-layout
+         [ui/MenuItem {:icon     icons/i-grid-layout
                        :active   (= @view "cards")
                        :on-click #(dispatch [::events/set-view "cards"])}]
          [ui/MenuItem {:icon     "table"
@@ -327,7 +327,7 @@
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
           [components/StatisticState {:value                    total
-                                      :icons                    [icons/rocket]
+                                      :icons                    [icons/i-rocket]
                                       :label                    "TOTAL"
                                       :stacked?                 true
                                       :clickable?               clickable?
@@ -369,7 +369,7 @@
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
   (let [tr    (subscribe [::i18n-subs/tr])
-        icon  icons/rocket
+        icon  icons/i-rocket
         color "blue"]
     [ui/Segment {:secondary true
                  :raised    true
@@ -382,7 +382,7 @@
      [StatisticStates false deployment-subs]
 
      [ui/Button {:color    color
-                 :icon     icons/rocket
+                 :icon     icons/i-rocket
                  :style    {:align-self "start"}
                  :content  "Show me"
                  :on-click (or on-click

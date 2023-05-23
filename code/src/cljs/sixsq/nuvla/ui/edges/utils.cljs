@@ -40,7 +40,7 @@
       (< vulnerability-score 4.0) (set-fn "LOW" vuln-low-color))))
 
 (def orchestration-icons
-  {:swarm      icons/docker
+  {:swarm      icons/i-docker
    :kubernetes "/ui/images/kubernetes.svg"})
 
 (defn state->icon

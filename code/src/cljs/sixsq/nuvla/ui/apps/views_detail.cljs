@@ -201,7 +201,7 @@
         (when @is-app?
           [uix/MenuItem
            {:name     (@tr [:deploy])
-            :icon     icons/rocket
+            :icon     icons/i-rocket
             :disabled @deploy-disabled?
             :on-click #(deploy-click @module-id @is-apps-sets?)}])
 
@@ -1235,7 +1235,7 @@
   [{:keys [icon?]}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     (when icon? [icons/GroupIcon])
+     (when icon? [icons/UserGroupIcon])
      (str/capitalize (@tr [:share]))]))
 
 

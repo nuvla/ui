@@ -21,7 +21,7 @@
      [ui/TableCell {:collapsing true}
       (if @license-completed?
         [ui/Icon {:name "book", :size "large"}]
-        [ui/Icon {:name icons/warning, :size "large", :color "red"}])]
+        [ui/Icon {:name icons/i-warning, :size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:eula])]
      [ui/TableCell [:div [:span (:name @license)]]]]))
 

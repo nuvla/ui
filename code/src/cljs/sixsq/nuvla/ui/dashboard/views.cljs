@@ -64,7 +64,7 @@
     [ui/StatisticGroup {:size  "tiny"
                         :style {:padding "0.2rem"}}
      [Statistic {:value total
-                 :icon  icons/box
+                 :icon  icons/i-box
                  :label "TOTAL"
                  :color "black"}]
      [Statistic {:value          online
@@ -123,7 +123,7 @@
                     :style {:padding "0.2rem"}}
      [ui/StatisticGroup {:size  "tiny"
                          :style {:justify-content "center"}}
-      [Statistic {:value total :icon icons/rocket :label "TOTAL" :color "black"}]
+      [Statistic {:value total :icon icons/i-rocket :label "TOTAL" :color "black"}]
       [Statistic {:value started :icon (deployments-utils/state->icon deployments-utils/STARTED) :label deployments-utils/STARTED :color "green"}]
       [Statistic {:value starting-plus :icon (deployments-utils/state->icon deployments-utils/STARTING) :label deployments-utils/STARTING :color "orange"}]
       [Statistic {:value stopped :icon (deployments-utils/state->icon deployments-utils/STOPPED) :label deployments-utils/STOPPED :color "orange"}]
@@ -143,7 +143,7 @@
                              :border-radius   "8px"
                              :overflow        :hidden}}
 
-     [:h4 {:class "ui-header"} [uix/Icon {:name icons/rocket}]
+     [:h4 {:class "ui-header"} [uix/Icon {:name icons/i-rocket}]
       (str/upper-case (@tr [:deployments]))]
 
      [StatisticStates ::deployments-subs/deployments-summary-all]

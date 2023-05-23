@@ -67,11 +67,11 @@ For more information on how to format your app description using Markdown syntax
     (description-valid? module-subtype (::spec/description module-common))))
 
 (def publish-icon
-  icons/circle-check)
+  icons/i-circle-check)
 
 
 (def un-publish-icon
-  icons/unpublish)
+  icons/i-unpublish)
 
 
 (defn find-current-version
@@ -166,10 +166,10 @@ For more information on how to format your app description using Markdown syntax
 (defn subtype-icon
   [subtype]
   (condp = subtype
-    subtype-project icons/folder
-    subtype-component icons/grid
-    subtype-application icons/cubes
-    subtype-application-k8s icons/cubes
+    subtype-project icons/i-folder
+    subtype-component icons/i-grid
+    subtype-application icons/i-cubes
+    subtype-application-k8s icons/i-cubes
     subtype-applications-sets "fa-light fa-table-cells-large"
     "question circle"))
 
@@ -185,7 +185,7 @@ For more information on how to format your app description using Markdown syntax
 (defn SubtypeDockerK8sListIcon
   [subtype]
   (let [unknown-icon [ui/ListIcon {:name "question circle"}]
-        docker-icon  [ui/ListIcon {:name icons/docker}]]
+        docker-icon  [ui/ListIcon {:name icons/i-docker}]]
     (condp = subtype
       subtype-application-k8s [IconK8s false]
       subtype-application docker-icon

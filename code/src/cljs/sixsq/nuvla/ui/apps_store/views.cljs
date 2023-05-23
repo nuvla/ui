@@ -32,7 +32,7 @@
         module-index   (apps-utils/latest-published-index map-versions)
         detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
         follow-trial?  (get price :follow-customer-trial false)
-        button-icon    (if (and price (not follow-trial?)) :cart icons/rocket)
+        button-icon    (if (and price (not follow-trial?)) :cart icons/i-rocket)
         button-color   (if follow-trial? "green" "blue")
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
@@ -102,7 +102,7 @@
     [ui/Menu {:borderless true}
      [uix/MenuItem
       {:name     (@tr [:add])
-       :icon     icons/plus
+       :icon     icons/i-plus
        :on-click #(dispatch [::apps-events/open-add-modal])}]
      [RefreshButton active-tab]]))
 

@@ -164,7 +164,7 @@
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
-         [uix/PageHeader icons/folder (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader icons/i-folder (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab

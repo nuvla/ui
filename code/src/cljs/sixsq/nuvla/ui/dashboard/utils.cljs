@@ -13,8 +13,8 @@
 
 (defn type->icon
   [type]
-  (let [icons-map {type-apps        icons/layer-group
-                   type-deployments icons/rocket
-                   type-nbs         icons/box
-                   type-creds       "fa-light fa-key"}]
+  (let [icons-map {type-apps        icons/i-layer-group
+                   type-deployments icons/i-rocket
+                   type-nbs         icons/i-box
+                   type-creds       icons/i-key}]
     (get icons-map type)))

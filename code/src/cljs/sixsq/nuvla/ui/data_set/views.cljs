@@ -277,7 +277,7 @@
         active-tab            (subscribe [::tab-plugin/default-tab [::data-spec/tab]])
         on-click              #(dispatch [::main-events/subscription-required-dispatch
                                           [::data-events/open-application-select-modal]])
-        icon                  icons/rocket]
+        icon                  icons/i-rocket]
     (fn [button-type]
       (let [selected  (if (= @active-tab :data-sets)
                         @selected-data-sets
@@ -319,7 +319,7 @@
            " "
            [ui/Button
             {:content  (@tr [:create-data-set])
-             :icon     icons/info-full
+             :icon     icons/i-info-full
              :primary  true
              :on-click (fn []
                          (dispatch [::data-events/set-modal-open? true])

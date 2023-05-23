@@ -69,7 +69,7 @@
   ::modal-action-button-icon
   :<- [::deployment-start?]
   (fn [start?]
-    (if start? icons/rocket "redo")))
+    (if start? icons/i-rocket "redo")))
 
 (reg-sub
   ::modal-operation

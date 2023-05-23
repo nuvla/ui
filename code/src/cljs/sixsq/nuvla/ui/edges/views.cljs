@@ -57,7 +57,7 @@
         [ui/StatisticGroup {:widths (when-not clickable? 4)
                             :size   "tiny"}
          (for [statistic-opts [{:value          total
-                                :icons          [icons/box]
+                                :icons          [icons/i-box]
                                 :label          "TOTAL"
                                 :positive-color nil}
                                {:value          online
@@ -129,7 +129,7 @@
                :stacked?                 true}])]]]))))
 
 (def view->icon-classes
-  {spec/cards-view   icons/grid-layout
+  {spec/cards-view   icons/i-grid-layout
    spec/table-view   "table"
    spec/map-view     "map"
    spec/cluster-view "fas fa-chart-network"})

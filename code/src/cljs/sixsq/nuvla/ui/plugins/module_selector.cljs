@@ -151,7 +151,7 @@
 (defn Project
   [db-path path {:keys [applications] :as content}]
   [ui/ListItem
-   [ui/ListIcon {:name icons/folder-full}]
+   [ui/ListIcon {:name icons/i-folder-full}]
    [ui/ListContent
     [ui/ListHeader path]
     [ui/ListList
@@ -198,7 +198,7 @@
                                    :render   render}
                                   {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
                                               :key     :all-apps
-                                              :icon    icons/grid-layout}
+                                              :icon    icons/i-grid-layout}
                                    :render   render}
                                   {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
                                               :key     :my-apps

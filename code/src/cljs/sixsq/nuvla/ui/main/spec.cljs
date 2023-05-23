@@ -74,13 +74,13 @@
                                                           :order      10}
                                        "apps"            {:key        routes/apps
                                                           :label-kw   :apps
-                                                          :icon       icons/layer-group
+                                                          :icon       icons/i-layer-group
                                                           :protected? true
                                                           :order      20}
                                        "deployments"     {:key        routes/deployments
                                                           :label-kw   :deployments
                                                           :name       "deployments"
-                                                          :icon       icons/rocket
+                                                          :icon       icons/i-rocket
                                                           :protected? true
                                                           :order      30}
                                        "deployment-sets" {:key             routes/deployment-sets
@@ -93,7 +93,7 @@
                                        "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"
-                                                          :icon       icons/box
+                                                          :icon       icons/i-box
                                                           :protected? true
                                                           :order      40}
                                        "credentials"     {:key        routes/credentials

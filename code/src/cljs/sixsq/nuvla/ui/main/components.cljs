@@ -37,7 +37,7 @@
         on-click (or on-click #())]
     [uix/MenuItem
      {:name     (@tr [:refresh])
-      :icon     "fa-light fa-arrows-rotate"
+      :icon     icons/i-arrow-rotate
       :loading? (boolean loading?)
       :on-click on-click
       :style    {:cursor "pointer"
@@ -149,7 +149,7 @@
                        :margin-left  "auto"}
                :role  :button}
               (for [i icons]
-                [uix/Icon {:key     icon-key
+                [icons/Icon {:key     icon-key
                            :size    (when (and clickable? selected?) "large")
                            :loading (and (pos? value) (= "spinner" i))
                            :style   {:margin-right 0}

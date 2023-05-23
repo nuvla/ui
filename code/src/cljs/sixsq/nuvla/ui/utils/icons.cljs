@@ -64,10 +64,10 @@
   [opts]
   [I opts i-gear])
 
-(def i-code "fal fa-file-code")
+(def i-file-code "fal fa-file-code")
 (defn CodeIcon
   [opts]
-  [I opts i-code])
+  [I opts i-file-code])
 
 (def i-trash "fal fa-trash")
 (defn TrashIcon
@@ -246,9 +246,14 @@
   [I opts i-chart-network])
 
 (def i-check "fal fa-check")
-(defn CheckNetworkIcon
+(defn CheckIcon
   [opts]
   [I opts i-check])
+
+(def i-check-full "fa-check")
+(defn CheckIconFull
+  [opts]
+  [I opts i-check-full])
 
 (def i-handshake "fal fa-handshake")
 (defn HandshakeIcon
@@ -309,3 +314,109 @@
 (defn ArrowRightFromBracketIcon
   [opts]
   [I opts i-arrow-right-bracket])
+
+(def i-arrow-rotate "fa-light fa-arrows-rotate")
+(defn ArrowRotateIcon
+  [opts]
+  [I opts i-arrow-rotate])
+
+(def i-angle-down "fa-light fa-angle-down")
+(defn AngleDownIcon
+  [opts]
+  [I opts i-angle-down])
+
+(def i-angle-right "fa-light fa-angle-right")
+(defn AngleRightIcon
+  [opts]
+  [I opts i-angle-right])
+
+(def i-medal "fas fa-medal")
+(defn MedalIcon
+  [opts]
+  [I opts i-medal])
+
+(def i-xmark "fa-xmark")
+(defn XMarkIcon
+  [opts]
+  [I opts i-xmark])
+
+(def i-filter-full "fa-filter")
+(defn FilterIconFull
+  [opts]
+  [I opts i-filter-full])
+
+(def i-filter "fal fa-filter")
+(defn FilterIcon
+  [opts]
+  [I opts i-filter])
+
+(def i-spell-check "fad fa-spell-check")
+(defn SpellCheckIcon
+  [opts]
+  [I opts i-spell-check])
+
+(def i-globe "fa-light fa-globe")
+(defn GlobeIcon
+  [opts]
+  [I opts i-globe])
+
+(def i-house "fa-light fa-house")
+(defn HouseIcon
+  [opts]
+  [I opts i-house])
+
+(def i-gauge "fa-light fa-gauge-min")
+(defn GaugeIcon
+  [opts]
+  [I opts i-gauge])
+
+(def i-code "fa-light fa-code")
+(defn CodeIcon
+  [opts]
+  [I opts i-code])
+
+(def i-bars "fa-light fa-bars")
+(defn BarsIcon
+  [opts]
+  [I opts i-bars])
+
+(def i-sign-in-alt "fad fa-sign-in-alt")
+(defn SigninIcon
+  [opts]
+  [I opts i-sign-in-alt])
+
+(def i-money-check-edit "fad fa-money-check-edit")
+(defn MoneyCheckEditIcon
+  [opts]
+  [I opts i-money-check-edit])
+
+(def i-credit-card "fad fa-credit-card")
+(defn CreditCardIcon
+  [opts]
+  [I opts i-credit-card])
+
+(def i-file-invoice "fad fa-file-invoice")
+(defn FileInvoiceIcon
+  [opts]
+  [I opts i-file-invoice])
+
+
+(def i-file-invoice-dollar "fad fa-file-invoice-dollar")
+(defn FileInvoiceDollarIcon
+  [opts]
+  [I opts i-file-invoice-dollar])
+
+(def i-ticket "fad fa-ticket")
+(defn TicketIcon
+  [opts]
+  [I opts i-ticket])
+
+(def i-envelope-open-dollar "fad fa-envelope-open-dollar")
+(defn EnvelopeOpenDollarIcon
+  [opts]
+  [I opts i-envelope-open-dollar])
+
+(def i-envelop "fad fa-envelope")
+(defn EnvelopeOpenDollarIcon
+  [opts]
+  [I opts i-envelop])

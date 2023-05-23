@@ -405,7 +405,7 @@
                   :style          {:height "100%"}}
          [ui/GridColumn
           [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
-           [ui/Icon {:className "fad fa-sign-in-alt"}]
+           [icons/SigninIcon]
            (@tr [:no-session])]]])]
      ;[ui/Segment {:padded true :color "blue"}
      ; [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:access-rights]))]
@@ -691,7 +691,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-money-check-edit"}]
+              [icons/MoneyCheckEditIcon]
               (if canceled?
                 [uix/TR
                  (if @pm?
@@ -848,7 +848,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-credit-card"}]
+              [icons/CreditCardIcon]
               (@tr [:payment-method])]
              (when customer
                [:<>
@@ -933,7 +933,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-file-invoice"}]
+              [icons/FileInvoiceIcon]
               (@tr [:not-any])]]])]))))
 
 
@@ -977,7 +977,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-file-invoice-dollar"}]
+              [icons/FileInvoiceDollarIcon]
               (@tr [:not-any])]]])]))))
 
 
@@ -1080,7 +1080,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-ticket"}]
+              [icons/TicketIcon]
               (@tr [:not-any])]
              (when @subscription
                [:<>
@@ -1175,7 +1175,7 @@
    header
    [ui/HeaderSubheader (or subheader ff/nbsp)]])
 
-(def icon-envelope-dollar "fad fa-envelope-open-dollar")
+(def icon-envelope-dollar icons/i-envelope-open-dollar)
 
 (defn CreateVendor
   []
@@ -1195,7 +1195,7 @@
                    :header (tr [:sales-dashboard])}]
       [DashboardVendor]]
      [ui/GridColumn
-      [IconHeader {:icon      "fad fa-envelope"
+      [IconHeader {:icon      icons/i-envelop
                    :header    (tr [:customer-service])
                    :subheader (:email vendor)}]
       [:div {:style {:display "block"}}

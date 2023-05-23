@@ -357,7 +357,7 @@
                  (fn [{:keys [name subtype] module-id :id}]
                    {:menuItem {:content (or name id)
                                :icon    (r/as-element
-                                          [uix/Icon {:name (apps-utils/subtype-icon subtype)}])
+                                          [icons/Icon {:name (apps-utils/subtype-icon subtype)}])
                                :key     (str id "-" module-id)}
                     :render   #(r/as-element
                                  [ui/TabPane

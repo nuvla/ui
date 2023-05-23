@@ -11,7 +11,6 @@
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 
@@ -85,7 +84,7 @@
 
 (defn PrincipalIcon
   [principal]
-  [uix/Icon {:name (utils/id->icon principal)}])
+  [icons/Icon {:name (utils/id->icon principal)}])
 
 
 (defn OwnerItem

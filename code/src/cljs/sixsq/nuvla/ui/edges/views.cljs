@@ -824,8 +824,7 @@
                        :active   true
                        :style    {:margin-left "2rem"}
                        :on-click (fn [] (reset! mode :confirming))}
-            [uix/Icon {:style {:margin 0}
-                       :name "fa-check"}]]]
+            [icons/CheckIconFull {:style {:margin 0}}]]]
           [:div
            [:span "Are you sure? " ]
            [uix/Button {:text     (str "Yes, " text)
@@ -834,8 +833,7 @@
                         :on-click update-fn}]
            [ui/Button {:aria-label "do not confirm editing tags"
                        :on-click (fn [] (reset! mode :idle))}
-            [ui/Icon {:style {:margin 0}
-                      :name "fa-xmark"}]]])))))
+            [icons/XMarkIcon {:style {:margin 0}}]]])))))
 
 (defn BulkUpdateModal
   []

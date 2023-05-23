@@ -68,7 +68,7 @@
                               :basic    true
                               :style    {:float "right"}}
                     (when label-icon
-                      [uix/Icon {:name label-icon}])
+                      [icons/Icon {:name label-icon}])
                     label-txt])}])))
 
 

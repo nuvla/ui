@@ -18,6 +18,7 @@
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.forms :as forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -197,7 +198,7 @@
         documentation-page @(subscribe [::main-subs/page-info "documentation"])]
     [ui/MenuItem
      {:on-click #(dispatch [::routing-events/navigate (:key documentation-page)])}
-     [uix/Icon {:name (:icon documentation-page)}]
+     [icons/Icon {:name (:icon documentation-page)}]
      (tr [(:label-kw documentation-page)])]))
 
 (def search-header-fields [{:k         :first

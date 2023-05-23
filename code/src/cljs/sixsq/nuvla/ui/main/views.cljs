@@ -224,7 +224,7 @@
     [ui/MenuItem {:aria-label "toggle sidebar"
                   :link       true
                   :on-click   #(dispatch [::events/toggle-sidebar])}
-     [uix/Icon {:name "fa-light fa-bars"}]]
+     [icons/BarsIcon]]
 
     [ui/MenuItem [breadcrumbs]]
 

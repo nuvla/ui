@@ -203,7 +203,7 @@
         [title-size
          {:class title-class}
 
-         [Icon {:name (if @active? "fa-light fa-angle-down" "fa-light fa-angle-right")}]
+         [Icon {:name (if @active? icons/i-angle-down icons/i-angle-right)}]
 
          (when icon
            [:<> [Icon {:name icon}] " "])

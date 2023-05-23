@@ -60,7 +60,7 @@
                ::content-key          (random-uuid)
                ::pages                {"welcome"         {:key        routes/home
                                                           :label-kw   :home
-                                                          :icon       "fa-light fa-house"
+                                                          :icon       icons/i-house
                                                           :protected? false
                                                           :order      0}
                                        "documentation"   {:key        routes/documentation
@@ -69,7 +69,7 @@
                                                           :protected? false}
                                        "dashboard"       {:key        routes/dashboard
                                                           :label-kw   :dashboard
-                                                          :icon       "fa-light fa-gauge-min"
+                                                          :icon       icons/i-gauge
                                                           :protected? true
                                                           :order      10}
                                        "apps"            {:key        routes/apps
@@ -119,7 +119,7 @@
                                                           :order      80}
                                        "api"             {:key        routes/api
                                                           :label-kw   :api
-                                                          :icon       "fa-light fa-code"
+                                                          :icon       icons/i-code
                                                           :protected? false
                                                           :order      90}}
                ::open-modal           nil

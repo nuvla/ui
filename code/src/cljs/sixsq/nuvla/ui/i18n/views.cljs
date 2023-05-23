@@ -5,7 +5,8 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.i18n.utils :as utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn LocaleDropdownItem
@@ -17,7 +18,7 @@
 (defn LocaleDropdown
   []
   (let [locale (subscribe [::i18n-subs/locale])
-        Icon   [:span [uix/Icon {:name "fa-light fa-globe"}] @locale]]
+        Icon   [:span [icons/GlobeIcon] @locale]]
     [ui/Dropdown {:close-on-change true
                   :item            true
                   :icon            nil

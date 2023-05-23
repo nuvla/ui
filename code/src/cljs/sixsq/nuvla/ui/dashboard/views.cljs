@@ -46,7 +46,7 @@
                                   (dispatch tab-event))
                                 (when resource
                                   (dispatch [::routing-events/navigate resource])))}
-     [uix/Icon (merge {:name icon} (when icon-color {:color icon-color}))]
+     [icons/Icon (merge {:name icon} (when icon-color {:color icon-color}))]
      [ui/StatisticValue (or value "-")]
      [ui/StatisticLabel label]]))
 

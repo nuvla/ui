@@ -377,7 +377,7 @@
                              :flex-direction  "column"
                              :justify-content "space-between"}}
 
-     [:h4 [uix/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
+     [:h4 [icons/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
 
      [StatisticStates false deployment-subs]
 

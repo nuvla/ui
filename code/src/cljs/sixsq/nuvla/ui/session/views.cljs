@@ -126,7 +126,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       (if @is-group? [icons/GroupIcon {:class "large"}] [icons/UserIcon {:class "large"}])
+       (if @is-group? [icons/GroupIcon {:class "large"}] [icons/UserLargeIcon {:class "large"}])
        (-> @user
            utils/remove-group-prefix
            (general-utils/truncate (if @is-mobile? 6 20)))])))

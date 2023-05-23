@@ -140,7 +140,7 @@
   [opts]
   [I opts user-group])
 
-(def user "fa-light fa-user-large")
-(defn UserIcon
+(def user-large "fa-light fa-user-large")
+(defn UserLargeIcon
   [opts]
-  [I opts user])
+  [I opts user-large])

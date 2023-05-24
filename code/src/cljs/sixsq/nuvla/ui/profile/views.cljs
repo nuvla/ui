@@ -91,7 +91,7 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name "users"}]
+                         [icons/UsersIcon]
                          (str/capitalize (@tr [:add-group]))])}
          [uix/ModalHeader {:header (str/capitalize (@tr [:add-group]))}]
          [ui/ModalContent
@@ -170,7 +170,7 @@
            :id            "current-password"
            :label         (str/capitalize (@tr [:current-password]))
            :required      true
-           :icon          "key"
+           :icon          icons/i-key
            :icon-position "left"
            :auto-focus    "on"
            :auto-complete "off"
@@ -180,7 +180,7 @@
            :error         (fv/?show-message form :current-password spec->msg)}]
          [ui/FormGroup {:widths 2}
           [ui/FormInput {:name          :new-password
-                         :icon          "key"
+                         :icon          icons/i-key
                          :icon-position "left"
                          :required      true
                          :auto-complete "new-password"
@@ -969,9 +969,9 @@
                   [ui/TableCell (format-currency currency total)]
                   [ui/TableCell
                    (when invoice-pdf
-                     [ui/Button {:basic true
-                                 :icon  "download"
-                                 :href  invoice-pdf}])]]))]]
+                     [uix/Button {:basic true
+                                  :icon  "download"
+                                  :href  invoice-pdf}])]]))]]
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"
                      :style          {:height "100%"}}
@@ -1129,7 +1129,7 @@
                                  {:txt  :add
                                   :icon "plus square outline"}
                                  {:txt  :update
-                                  :icon "pencil"})]
+                                  :icon icons/i-pencil})]
         [:<>
          [ui/Modal
           {:open       @open?
@@ -1542,15 +1542,15 @@
   []
   [{:menuItem {:content (r/as-element [TabMenuSubscription])
                :key     :subscription
-               :icon    "credit card"}
+               :icon    icons/i-credit-card}
     :render   #(r/as-element [SubscriptionPane])}
    {:menuItem {:content (r/as-element [TabMenuGroups])
                :key     :groups
-               :icon    "users"}
+               :icon    icons/i-users}
     :render   #(r/as-element [GroupsPane])}
    {:menuItem {:content (r/as-element [TabMenuDetails])
                :key     :details
-               :icon    "info"}
+               :icon    icons/i-info}
     :render   #(r/as-element [DetailsPane])}])
 
 
@@ -1563,7 +1563,7 @@
        {:db-path [::spec/tab]
         :menu    {:secondary true
                   :pointing  true
-                  :style     {:display        "flex"
+                  :style     {:display       "flex"
                               :flex-direction "row"
                               :flex-wrap      "wrap"}}
         :panes   panes}])))

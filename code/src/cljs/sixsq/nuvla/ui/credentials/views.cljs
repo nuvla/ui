@@ -542,7 +542,7 @@
   [uix/Message
    {:header  [uix/TR header-key]
     :content [uix/TR :warning-secret-displayed-once]
-    :icon    "circle check outline"
+    :icon    icons/i-circle-check
     :type    :success}])
 
 
@@ -687,93 +687,23 @@
 (defn subtype->info
   [subtype]
   (case subtype
-    "infrastructure-service-minio" {:tab-key :storage-services, :icon "disk", :name "S3/Minio"}
+    "infrastructure-service-minio" {:tab-key :storage-services, :icon icons/i-hard-drive, :name "S3/Minio"}
     "infrastructure-service-swarm" {:tab-key :coe-services, :icon icons/i-docker, :name "Docker Swarm"}
     "infrastructure-service-kubernetes" {:tab-key :coe-services, :icon icons/i-docker, :name "Kubernetes"}
     "infrastructure-service-registry"
     {:tab-key :registry-services, :icon icons/i-docker, :name "Docker Registry"}
-    "infrastructure-service-azure" {:tab-key :cloud-services, :icon "cloud", :name "Microsoft Azure"}
-    "infrastructure-service-google" {:tab-key :cloud-services, :icon "cloud", :name "Google Compute"}
-    "infrastructure-service-amazonec2" {:tab-key :cloud-services, :icon "cloud", :name "AWS EC2"}
-    "infrastructure-service-exoscale" {:tab-key :cloud-services, :icon "cloud", :name "Exoscale"}
-    "infrastructure-service-openstack" {:tab-key :cloud-services, :icon "cloud", :name "OpenStack"}
-    "infrastructure-service-vpn" {:tab-key :access-services, :icon "key", :name "VPN"}
-    "gpg-key" {:tab-key :access-services, :icon "key", :name "GPG keys"}
-    "api-key" {:tab-key :api-keys, :icon "key", :name "API keys"}
-    "generate-api-key" {:tab-key :api-keys, :icon "key", :name "API keys"}
-    "ssh-key" {:tab-key :access-services, :icon "key", :name "SSH keys"}
-    "generate-ssh-key" {:tab-key :access-services, :icon "key", :name "SSH keys"}
-    {:tab-key :cloud-services, :icon "cloud", :name ""}))
-
-
-(defn extract-metrics
-  [terms subtypes]
-  (apply + (-> terms (select-keys (map keyword subtypes)) vals)))
-
-(defn StatisticStates
-  ([] [StatisticStates true])
-  ([_clickable?]
-   (let [summary (subscribe [::subs/credentials-summary])]
-     (fn [clickable?]
-       (let [terms      (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:subtype :buckets]))
-             coe        (extract-metrics terms coe-subtypes)
-             csp        (extract-metrics terms infrastructure-service-csp-subtypes)
-             access-key (extract-metrics terms access-keys-subtypes)
-             storage    (extract-metrics terms infrastructure-service-storage-subtypes)
-             registry   (extract-metrics terms registry-service-subtypes)
-             api-key    (extract-metrics terms api-key-subtypes)
-             total      (:count @summary)
-             ]
-         [:div {:style {:margin     "10px auto 10px auto"
-                        :text-align "center"
-                        :width      "100%"}}
-          [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
-                                    {:style {:margin-right "0px"
-                                             :display      "block"}})
-           [components/StatisticState {:value                    total
-                                       :icons                    ["key"]
-                                       :label                    "TOTAL"
-                                       :clickable?               clickable?
-                                       :set-state-selector-event ::events/set-state-selector
-                                       :state-selector-subs      ::subs/state-selector}]
-           [components/StatisticState {:value                    coe,
-                                       :icons                    [icons/i-docker],
-                                       :label                    "DOCKER/K8S",
-                                       :clickable?               clickable?,
-                                       :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value                    csp,
-                                       :icons                    ["cloud"],
-                                       :label                    "CLOUDS",
-                                       :clickable?               clickable?,
-                                       :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value                    access-key,
-                                       :icons                    ["key"],
-                                       :label                    "REMOTE ACCESS",
-                                       :clickable?               clickable?,
-                                       :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value                    storage,
-                                       :icons                    ["disk"],
-                                       :label                    "STORAGE",
-                                       :clickable?               clickable?,
-                                       :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value                    registry,
-                                       :icons                    [icons/i-docker],
-                                       :label                    "REGISTRY",
-                                       :clickable?               clickable?,
-                                       :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           [components/StatisticState {:value                    api-key,
-                                       :icons                    ["key"],
-                                       :label                    "API KEYS",
-                                       :clickable?               clickable?,
-                                       :set-state-selector-event :sixsq.nuvla.ui.credentials.events/set-state-selector,
-                                       :state-selector-subs      :sixsq.nuvla.ui.credentials.subs/state-selector}]
-           (when clickable?
-             [components/ClickMeStaticPopup])]])))))
+    "infrastructure-service-azure" {:tab-key :cloud-services, :icon icons/i-cloud, :name "Microsoft Azure"}
+    "infrastructure-service-google" {:tab-key :cloud-services, :icon icons/i-cloud, :name "Google Compute"}
+    "infrastructure-service-amazonec2" {:tab-key :cloud-services, :icon icons/i-cloud, :name "AWS EC2"}
+    "infrastructure-service-exoscale" {:tab-key :cloud-services, :icon icons/i-cloud, :name "Exoscale"}
+    "infrastructure-service-openstack" {:tab-key :cloud-services, :icon icons/i-cloud, :name "OpenStack"}
+    "infrastructure-service-vpn" {:tab-key :access-services, :icon icons/i-key, :name "VPN"}
+    "gpg-key" {:tab-key :access-services, :icon icons/i-key, :name "GPG keys"}
+    "api-key" {:tab-key :api-keys, :icon icons/i-key, :name "API keys"}
+    "generate-api-key" {:tab-key :api-keys, :icon icons/i-key, :name "API keys"}
+    "ssh-key" {:tab-key :access-services, :icon icons/i-key, :name "SSH keys"}
+    "generate-ssh-key" {:tab-key :access-services, :icon icons/i-key, :name "SSH keys"}
+    {:tab-key :cloud-services, :icon icons/i-cloud, :name ""}))
 
 
 (defn CredentialModal
@@ -827,7 +757,7 @@
                  :close-icon true
                  :on-close   #(dispatch [::events/close-add-credential-modal])}
 
-       [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
+       [uix/ModalHeader {:header (@tr [:add]) :icon icons/i-plus-full}]
 
        [ui/ModalContent {:scrolling false}
         [:div {:style {:padding-bottom 20}} (@tr [:credential-choose-type])]
@@ -1026,7 +956,7 @@
      [ui/Menu {:borderless true}
       [uix/MenuItem
        {:name     (@tr [:add])
-        :icon     "add"
+        :icon     icons/i-plus
         :on-click #(dispatch [::events/open-add-credential-modal])}]
       [components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-credentials])}]]]))
@@ -1127,12 +1057,12 @@
         api-key-creds          (filter #(in? api-key-subtypes (:subtype %))
                                        @credentials)]
 
-    [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text "docker")
-     (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text "cloud")
-     (credential access-key-creds :access-services :credential-ssh-keys-section-sub-text "key")
-     (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text "disk")
-     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text "docker")
-     (credential api-key-creds :api-keys :api-keys-section-sub-text "key")]))
+    [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text icons/i-docker)
+     (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text icons/i-cloud)
+     (credential access-key-creds :access-services :credential-ssh-keys-section-sub-text icons/i-key)
+     (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text icons/i-hard-drive)
+     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text icons/i-docker)
+     (credential api-key-creds :api-keys :api-keys-section-sub-text icons/i-key)]))
 
 
 (defn TabsCredentials

@@ -38,7 +38,7 @@
       [ui/MenuMenu {:position "left"}
        [uix/MenuItem
         {:name     (@tr [:add])
-         :icon     icons/i-plus-full
+         :icon     icons/i-plus
          :position "right"
          :on-click #(do
                       (dispatch-sync [::events/reset-service-group])
@@ -475,7 +475,7 @@
                  :close-icon true
                  :on-close   #(dispatch [::events/close-add-service-modal])}
 
-       [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
+       [uix/ModalHeader {:header (@tr [:add]) :icon icons/i-plus-full}]
 
        [ui/ModalContent {:scrolling false}
         [:div {:style {:padding-bottom 20}} (@tr [:register-swarm-note])]

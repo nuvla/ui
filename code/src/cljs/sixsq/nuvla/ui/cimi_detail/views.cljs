@@ -19,7 +19,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.table :as table]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn path->resource-id
@@ -203,7 +204,7 @@
      {:title       (or name id)
       :subtitle    (when name id)
       :description description
-      :icon        "file"
+      :icon        icons/i-file
       :updated     updated
       :acl         acl
       :properties  properties}

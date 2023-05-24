@@ -65,9 +65,14 @@
   [I opts i-gear])
 
 (def i-file-code "fal fa-file-code")
-(defn CodeIcon
+(defn FileCodeIcon
   [opts]
   [I opts i-file-code])
+
+(def i-file "fal fa-file")
+(defn FileIcon
+  [opts]
+  [I opts i-file])
 
 (def i-trash "fal fa-trash")
 (defn TrashIcon
@@ -79,7 +84,7 @@
   [opts]
   [I opts i-trash-full])
 
-(def i-circle-check "check circle outline")
+(def i-circle-check "circle check outline")
 (defn CircleCheck
   [opts]
   [I opts i-circle-check])
@@ -103,6 +108,11 @@
 (defn CopyIcon
   [opts]
   [I opts i-copy])
+
+(def i-paste "fa-paste")
+(defn PasteIcon
+  [opts]
+  [I opts i-paste])
 
 (def i-cubes "fal fa-cubes")
 (defn CubesIcon
@@ -149,7 +159,7 @@
   [opts]
   [I opts i-users])
 
-(def i-user  "fal fa-user")
+(def i-user "fal fa-user")
 (defn UserIcon
   [opts]
   [I opts i-user])
@@ -199,6 +209,11 @@
 (defn TableCellIcon
   [opts]
   [I opts i-table-cells])
+
+(def i-table "fa-table")
+(defn TableIcon
+  [opts]
+  [I opts i-table])
 
 (def i-floppy "fal fa-floppy-disk")
 (defn FloppyIcon
@@ -390,7 +405,7 @@
   [opts]
   [I opts i-money-check-edit])
 
-(def i-credit-card "fad fa-credit-card")
+(def i-credit-card "fal fa-credit-card")
 (defn CreditCardIcon
   [opts]
   [I opts i-credit-card])
@@ -417,6 +432,21 @@
   [I opts i-envelope-open-dollar])
 
 (def i-envelop "fad fa-envelope")
-(defn EnvelopeOpenDollarIcon
+(defn EnvelopeIcon
   [opts]
   [I opts i-envelop])
+
+(def i-pencil "fa-pencil")
+(defn PencilIcon
+  [opts]
+  [I opts i-pencil])
+
+(def i-columns "fa-columns")
+(defn ColumnIcon
+  [opts]
+  [I opts i-columns])
+
+(def i-hard-drive "fal fa-hard-drive")
+(defn HardDriveIcon
+  [opts]
+  [I opts i-hard-drive])

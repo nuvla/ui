@@ -328,7 +328,7 @@
         :trigger   (r/as-element
                      [uix/MenuItem
                       {:name     (@tr [:columns])
-                       :icon     "columns"
+                       :icon     icons/i-columns
                        :disabled (nil? @selected-id)
                        :on-click (fn []
                                    (reset! selections (set @selected-fields))
@@ -426,7 +426,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
      {:name     (@tr [:add])
-      :icon     "add"
+      :icon     icons/i-plus-full
       :on-click #(dispatch [::events/show-add-modal])}]))
 
 (defn DeleteResourcesButton

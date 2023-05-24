@@ -75,7 +75,7 @@
   (let [module-subtype (subscribe [::subs/module-subtype])
         tab-name       (if (= utils/subtype-application-k8s @module-subtype) "Kubernetes" "Docker")]
     [:<>
-     [icons/CodeIcon]
+     [icons/FileCodeIcon]
      (str/capitalize tab-name)]))
 
 
@@ -330,7 +330,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}
 
-         [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
+         [uix/ModalHeader {:header (@tr [:add]) :icon icons/i-plus-full}]
 
          [ui/ModalContent {:scrolling false}
           [ui/CardGroup {:centered    true
@@ -396,7 +396,7 @@
                    :on-close   #(dispatch [::events/close-paste-modal])}
 
          [uix/ModalHeader {:header (str (@tr [:paste-modal-header]))
-                           :icon   "paste"}]
+                           :icon   icons/i-paste}]
 
          [ui/ModalContent
           [:div (@tr [:paste-modal-content])]
@@ -1215,7 +1215,7 @@
        [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:description]))]]
        (when @editable?
          [ui/GridColumn {:style {:text-align "right"}}
-          [ui/Button {:icon     "pencil"
+          [ui/Button {:icon     icons/i-pencil
                       :compact  true
                       :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
       [ui/GridRow

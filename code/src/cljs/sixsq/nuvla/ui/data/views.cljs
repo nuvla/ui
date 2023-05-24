@@ -51,7 +51,7 @@
           :on-close  #(dispatch [::events/set-modal-open? false])}
 
          [uix/ModalHeader {:header (@tr [:new-dataset])
-                           :icon   "add"}]
+                           :icon   icons/i-plus-full}]
          [ui/ModalContent
           [ui/Form {:noValidate true}
            [ui/FormInput
@@ -103,7 +103,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
      {:name     (@tr [:add])
-      :icon     "add"
+      :icon     icons/i-plus
       :on-click #(dispatch [::events/set-modal-open? true])}]))
 
 (defn MenuBar
@@ -116,7 +116,7 @@
       [ui/MenuItem {:icon     icons/i-grid-layout
                     :active   (= @view-type :cards)
                     :on-click #(reset! view-type :cards)}]
-      [ui/MenuItem {:icon     "table"
+      [ui/MenuItem {:icon     icons/i-table
                     :active   (= @view-type :table)
                     :on-click #(reset! view-type :table)}]
       [components/RefreshMenu
@@ -254,7 +254,7 @@
       :tags        tags
       :extra       [:<>
                     [ui/Label
-                     [ui/Icon {:name "file"}]
+                     [icons/FileIcon]
                      [:span (str count " " (@tr [:objects]))]]
                     [ui/Label
                      [ui/Icon {:name "expand arrows alternate"}]
@@ -308,7 +308,7 @@
     :render   #(r/as-element [DataSets])}
    {:menuItem {:content (r/as-element [:span "Data records"])
                :key     :data-records
-               :icon    "file"}
+               :icon    icons/i-file}
     :render   #(r/as-element [DataRecords])}])
 
 (defn data-view

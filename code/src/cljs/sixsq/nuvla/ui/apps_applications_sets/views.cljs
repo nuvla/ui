@@ -402,7 +402,7 @@
         editable? (subscribe [::apps-subs/editable?])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
-                              :icon    "info"}
+                              :icon    icons/i-eye}
                    :pane     {:content (r/as-element [OverviewPane])
                               :key     :overview-pane}}
                   {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])

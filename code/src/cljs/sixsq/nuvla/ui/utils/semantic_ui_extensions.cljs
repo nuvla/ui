@@ -33,12 +33,15 @@
   "This button requires a single options map that contains the :text key. The
    value of the :text key is used to define the button text as well as the
    accessibility label :aria-label. The button may not specify children."
-  [{:keys [text icon] :as options}]
-  (let [final-opts (-> options
+  [{:keys [text icon content] :as options}]
+  (let [cntn      (or text content)
+        final-opts (-> options
                        (dissoc :text)
+                       (assoc  :content cntn)
                        (dissoc :icon)
-                       (assoc :aria-label text))]
-    [ui/Button final-opts (when icon [icons/Icon {:name icon}]) text]))
+                       (assoc :aria-label (when (string? cntn) cntn))
+                       (assoc :icon (when icon (r/as-element [icons/Icon {:name icon}]))))]
+    [ui/Button final-opts]))
 
 
 (defn MenuItem
@@ -66,8 +69,8 @@
                        (assoc :aria-label name))]
     [ui/MenuItem final-opts
      (if loading?
-       [ui/Icon {:name "refresh", :loading loading?}]
-       [ui/Icon {:name "search"}])
+       [icons/Icon {:name "refresh", :loading loading?}]
+       [icons/Icon {:name "search"}])
      name]))
 
 
@@ -80,14 +83,14 @@
                        (dissoc :visible?))
         icon-name  (if visible? "chevron down" "chevron up")]
     [ui/MenuItem final-opts
-     [ui/Icon {:name icon-name}]]))
+     [icons/Icon {:name icon-name}]]))
 
 
 (defn ModalHeader
   [{:keys [header icon]}]
   [ui/ModalHeader
    (when icon
-     [ui/Icon {:name icon}])
+     [icons/Icon {:name icon}])
    (utils-general/capitalize-first-letter header)])
 
 
@@ -97,7 +100,7 @@
    (cond-> {}
            type (assoc type true)
            icon (assoc :icon true))
-   (when icon [ui/Icon {:name icon}])
+   (when icon [icons/Icon {:name icon}])
    [ui/MessageContent
     [ui/MessageHeader
      (when header header)]
@@ -129,7 +132,7 @@
                                          (js/encodeURIComponent value))
                           :target   "_blank"
                           :download filename}
-                      [ui/Icon {:link true
+                      [icons/Icon {:link true
                                 :size "large"
                                 :name "download"}]])}
          [TR :click-to-download]])
@@ -137,7 +140,7 @@
         [ui/Popup
          {:trigger (r/as-element
                      [ui/CopyToClipboard {:text value}
-                      [ui/Icon {:style {:margin-left 10}
+                      [icons/Icon {:style {:margin-left 10}
                                 :link  true
                                 :size  "large"
                                 :name  "clone"}]])}
@@ -249,7 +252,7 @@
                                              (reset! local-validate? true)
                                              (on-change text)))}
             icon        (cond
-                          (= :password type) [ui/Icon {:name     (if @show "eye slash" :eye)
+                          (= :password type) [icons/Icon {:name     (if @show "eye slash" :eye)
                                                        :link     true
                                                        :on-click #(swap! show not)}]
                           @active-input? :pencil)]
@@ -271,7 +274,7 @@
               [ui/FormField {:error error?}
                [:div {:className "ui input icon"}
                 [ui/TextArea common-opts]
-                (when @active-input? [ui/Icon {:name "pencil"}])]]])
+                (when @active-input? [icons/Icon {:name "pencil"}])]]])
            [SpanBlockJustified default-value])]))))
 
 
@@ -297,7 +300,7 @@
 
 (defn LinkIcon
   [{:keys [name on-click]}]
-  [:a [ui/Icon {:name name, :link true, :on-click on-click}]])
+  [:a [icons/Icon {:name name, :link true, :on-click on-click}]])
 
 
 (defn Link
@@ -430,7 +433,7 @@
    (for [tag tags]
      ^{:key (random-uuid)}
      [ui/Popup
-      {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+      {:trigger        (r/as-element [ui/Label [icons/Icon {:name "tag"}]
                                       (utils-general/truncate tag 20)])
        :content        tag
        :position       "bottom center"

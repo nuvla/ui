@@ -7,7 +7,8 @@
             [sixsq.nuvla.ui.session.components :as comp]
             [sixsq.nuvla.ui.session.events :as events]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.spec :as us]))
+            [sixsq.nuvla.ui.utils.spec :as us]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 ;; VALIDATION SPEC
 (s/def ::new-password us/acceptable-password?)
@@ -53,7 +54,7 @@
                                      :read-only     true}]
                       [ui/FormGroup {:widths 2}
                        [ui/FormInput {:name          :new-password
-                                      :icon          "key"
+                                      :icon          icons/i-key
                                       :icon-position "left"
                                       :required      true
                                       :auto-complete "new-password"

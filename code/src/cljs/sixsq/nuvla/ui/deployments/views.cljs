@@ -381,12 +381,12 @@
 
      [StatisticStates false deployment-subs]
 
-     [ui/Button {:color    color
-                 :icon     icons/i-rocket
-                 :style    {:align-self "start"}
-                 :content  "Show me"
-                 :on-click (or on-click
-                               #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
+     [uix/Button {:color    color
+                  :icon     icons/i-rocket
+                  :style    {:align-self "start"}
+                  :content  "Show me"
+                  :on-click (or on-click
+                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
 (defn Pagination
   [db-path-arg]

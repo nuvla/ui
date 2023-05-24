@@ -1215,9 +1215,9 @@
        [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:description]))]]
        (when @editable?
          [ui/GridColumn {:style {:text-align "right"}}
-          [ui/Button {:icon     icons/i-pencil
-                      :compact  true
-                      :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
+          [uix/Button {:icon     icons/i-pencil
+                       :compact  true
+                       :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
                        :only      "mobile"}

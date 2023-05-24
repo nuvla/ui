@@ -5,7 +5,7 @@
 (defn Icon
   [{:keys [name] :as opts}]
   [ui/Icon
-   (if (some #(str/starts-with? name %) ["fa-" "fal " "fad " "fas "])
+   (if (some #(str/starts-with? (str (symbol name)) %) ["fa-" "fal " "fad " "fas "])
      (-> opts (dissoc :name) (assoc :class name))
      opts)])
 

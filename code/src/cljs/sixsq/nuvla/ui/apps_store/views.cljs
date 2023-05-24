@@ -60,7 +60,7 @@
       :corner-button (when (and published show-published-tick?)
                        [ui/Label {:corner true} [icons/Icon {:name apps-utils/publish-icon}]])
       :href          detail-href
-      :button        [ui/Button button-ops]}]))
+      :button        [uix/Button button-ops]}]))
 
 
 (defn ModulesCardsGroup

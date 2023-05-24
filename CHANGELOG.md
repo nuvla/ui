@@ -25,6 +25,7 @@
 - Config.json - Update licenses
 - Deployments overview, table view - Enables bulk editing of tags #1209
 - About page - Updates logos and text, #1262
+- App, new projects - Hide paste button, #1270
 
 ## Released
 

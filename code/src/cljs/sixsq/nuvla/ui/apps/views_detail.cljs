@@ -224,7 +224,7 @@
             :wide           true
             :hide-on-scroll true}])
 
-        (when @is-project?
+        (when (and (not @is-new?) @is-project?)
           [ui/MenuItem
            {:name     (@tr [:paste])
             :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy icon"}])

@@ -550,11 +550,10 @@
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true
                        :class :uix-apps-details}
-         [uix/PageHeader "fa-light fa-layer-group" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader "fa-light fa-layer-group" name :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

@@ -24,6 +24,7 @@
 - Github e2e - Cache NPM packages, use playwright container, optimize order
 - Config.json - Update licenses
 - Deployments overview, table view - Enables bulk editing of tags #1209
+- About page - Updates logos and text, #1262
 
 ## Released
 

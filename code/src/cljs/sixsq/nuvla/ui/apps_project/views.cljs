@@ -174,5 +174,5 @@
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}}
            :panes            panes
-           :renderActiveOnly false}]])
-      )))
+           :renderActiveOnly false
+           :ignore-chng-protection? true}]]))))

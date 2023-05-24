@@ -28,6 +28,11 @@
 - App, new projects - Hide paste button, #1270
 - App details - Show only app name without parent project in title, #1235
 - Deployments overview and details - Changes display of "STARTED" state to "RUNNING"
+- Welcome page - Always show house icon as default in breadcrumbs, #1255
+- App details, projects - Tab changes ignores changes protection, #1258
+- App details - Resets active tab to default when changing apps, #1240
+
+
 
 ## Released
 

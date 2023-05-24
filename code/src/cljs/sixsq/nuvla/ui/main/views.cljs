@@ -46,12 +46,13 @@
 (defn format-first-crumb
   [nav-path]
   (let [tr            (subscribe [::i18n-subs/tr])
-        first-segment (first nav-path)
+        first-segment  (first nav-path)
         page-info     (subscribe [::subs/page-info first-segment])]
     {:text       (if (seq first-segment)
                    (format-path-segment tr first-segment)
                    (format-path-segment tr "welcome"))
-     :icon-class (:icon @page-info)}))
+     :icon-class (or (:icon @page-info)
+                     "fa-light fa-house")}))
 
 
 (defn decorate-breadcrumbs

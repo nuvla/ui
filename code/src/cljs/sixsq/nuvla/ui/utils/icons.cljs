@@ -94,6 +94,11 @@
   [opts]
   [I opts i-unpublish])
 
+(def i-link "fal fa-link")
+(defn LinkIcon
+  [opts]
+  [I opts i-link])
+
 (def i-plus "fal fa-plus-large")
 (defn AddIcon
   [opts]
@@ -475,3 +480,14 @@
 (defn StopIcon
   [opts]
   [I opts i-stop])
+
+(def i-bolt "fal fa-bolt")
+(defn BoltIcon
+  [opts]
+  [I opts i-bolt])
+
+
+(def i-sliders "fal fa-sliders")
+(defn SlidersIcon
+  [opts]
+  [I opts i-sliders])

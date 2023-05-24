@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]))
@@ -94,7 +95,7 @@
                                          :attached "top right"}
                                events-count])])
                 :key     :events
-                :icon    "bolt"}
+                :icon    icons/i-bolt}
      :render   #(r/as-element [EventsTabPane opts])}))
 
 (s/fdef events-section

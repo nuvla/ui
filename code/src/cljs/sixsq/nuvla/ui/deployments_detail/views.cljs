@@ -136,7 +136,7 @@
                                                      :attached "top right"}
                                            url-count])])
                 :key     :urls
-                :icon    "linkify"}
+                :icon    icons/i-link}
      :render   #(r/as-element
                   (if (empty? urls)
                     [uix/WarningMsgNoElements (@tr [:no-urls])]
@@ -160,7 +160,7 @@
         module-content-id (subscribe [::subs/current-module-content-id])]
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
                 :key     :versions
-                :icon    "linkify"}
+                :icon    icons/i-layer-group}
      :render   #(r/as-element
                   [ui/TabPane [views-versions/versions-table
                                module-versions module-content-id]])}))
@@ -187,7 +187,9 @@
 
 (defn list-section
   [items section-key section-name]
-  (let [tr          (subscribe [::i18n-subs/tr])
+  (let [key->icon   {:parameters icons/i-sliders
+                     :env-vars   icons/i-gear}
+        tr          (subscribe [::i18n-subs/tr])
         items-count (count items)]
     {:menuItem {:content (r/as-element
                            [:span (@tr [section-name])
@@ -197,7 +199,7 @@
                                          :attached "top right"}
                                items-count])])
                 :key     section-key
-                :icon    "list ol"}
+                :icon    (key->icon section-key)}
      :render   #(r/as-element
                   (if (empty? items)
                     [uix/WarningMsgNoElements]
@@ -279,7 +281,7 @@
         deployment (subscribe [::subs/deployment])]
     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
                 :key     :logs
-                :icon    "file code"}
+                :icon    icons/i-file-code}
      :render   (fn [] (r/as-element
                         [log-views/TabLogs
                          (:id @deployment)
@@ -718,7 +720,7 @@
   []
   {:menuItem {:content (r/as-element [:span "Overview"])
               :key     :overview
-              :icon    "info"}
+              :icon    icons/i-eye}
    :render   #(r/as-element [OverviewPane])})
 
 

@@ -18,7 +18,7 @@
         status    (subscribe [::subs/credential-check-status cred-id])]
     (when (and @status (or @loading? (not @valid?)))
       [ui/Popup {:trigger  (r/as-element
-                             [ui/Icon {:name    (cond
+                             [ui/Icon {:class    (cond
                                                   @loading? "circle notched"
                                                   (not @valid?) (if @invalid? "window close" icons/i-warning)
                                                   :else "world")

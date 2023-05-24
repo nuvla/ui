@@ -1546,7 +1546,7 @@
                     vulnerability-id
                     " "
                     [ui/Popup
-                     {:trigger        (r/as-element [icons/InfoIconFull])
+                     {:trigger        (r/as-element [ui/Icon {:class icons/i-info}])
                       :header         vulnerability-id
                       :content        (r/as-element [:div
                                                      [:span (:description matching-vuln-db)]
@@ -1588,7 +1588,7 @@
               [ui/LabelDetail (:total summary)]]
              [ui/Label {:basic true}
               [ui/Popup
-               {:trigger        (r/as-element [icons/InfoIconFull])
+               {:trigger        (r/as-element [ui/Icon {:class icons/i-info}])
                 :content        (r/as-element
                                   [ui/ListSA {:bulleted true}
                                    (map (fn [k]
@@ -1742,7 +1742,7 @@
             [ui/FormInput {:label ["Enabled " (when @disabled-by-default?
                                                 (r/as-element
                                                   [ui/Popup
-                                                   {:trigger (r/as-element [icons/InfoIconFull])
+                                                   {:trigger (r/as-element [ui/Icon {:class icons/i-info}])
                                                     :content (@tr [:nuvlabox-playbook-emergency-info])}]))]}
              [ui/Radio {:toggle    true
                         :disabled  @disabled-by-default?

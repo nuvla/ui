@@ -375,7 +375,7 @@
              [:h5 {:style {:margin "0.5em 0 1em 0"}}
               (@tr [:nuvlabox-modal-usb-copy])
               [ui/Popup {:content (@tr [:nuvlabox-modal-usb-copy-warning])
-                         :trigger (r/as-element [icons/InfoIconFull])}]]]
+                         :trigger (r/as-element [ui/Icon {:class icons/i-info}])}]]]
 
             [ui/Segment {:text-align :center
                          :raised     true}
@@ -667,7 +667,8 @@
                                      :checked   @playbooks-toggle
                                      :on-change #(swap! playbooks-toggle not)}]
                        [ui/Popup
-                        {:trigger        (r/as-element [icons/InfoIconFull {:style {:margin-left "1em"}}])
+                        {:trigger        (r/as-element [ui/Icon {:class icons/i-info
+                                                                 :style {:margin-left "1em"}}])
                          :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
                          :on             "hover"
                          :hide-on-scroll true}]]

@@ -1080,7 +1080,7 @@
                                                (dispatch [::events/validate-form])))}]
             " "
             [ui/Popup {:content (@tr [:follow-customer-trial-help])
-                       :trigger (r/as-element [icons/InfoIconFull])}]])
+                       :trigger (r/as-element [ui/Icon {:class icons/i-info}])}]])
          ]))))
 
 

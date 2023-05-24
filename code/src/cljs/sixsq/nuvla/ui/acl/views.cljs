@@ -31,7 +31,8 @@
   [help-kw]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Popup {:trigger (r/as-element
-                          [icons/InfoIconFull {:link true}])
+                          [ui/Icon {:class icons/i-info
+                                    :link  true}])
                :basic   true
                :content (@tr [help-kw])}]))
 

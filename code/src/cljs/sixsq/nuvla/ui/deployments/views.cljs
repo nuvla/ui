@@ -351,7 +351,7 @@
                                       :state-selector-subs      ::subs/state-selector}]
           [components/StatisticState {:value                    started,
                                       :icons                    [(utils/state->icon utils/STARTED)],
-                                      :label                    utils/STARTED,
+                                      :label                    utils/RUNNING,
                                       :stacked?                 true
                                       :clickable?               clickable?,
                                       :positive-color           "green",

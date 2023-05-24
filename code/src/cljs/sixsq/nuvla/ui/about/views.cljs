@@ -49,14 +49,14 @@
      [:div
       [ui/Image {:centered true
                  :size     :large
-                 :src      "/ui/images/nuvla_logo_red_on_transparent_1000px.png"}]]
+                 :src      "/ui/images/nuvla_logo_red_on_transparent_400px.png"}]]
      [ui/Header {:as        "h3"
                  :textAlign "center"}
       (@tr [:about-subtitle])]
      [:div
       [ui/Image {:centered true
                  :size     :small
-                 :src      "/ui/images/by_sixsq_mark_red_on_transparent_128px.png"}]]
+                 :src      "/ui/images/by_sixsq_mark_red_on_transparent_300px.png"}]]
      [ui/ListSA
       [ui/ListItem (@tr [:version-number]) ": " [:span#release-version "v"]]
       [ui/ListItem [:a {:href   "https://sixsq.com/nuvla"

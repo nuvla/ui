@@ -13,6 +13,7 @@
             [sixsq.nuvla.ui.utils.values :as values]))
 
 (def ^:const STARTED "STARTED")
+(def ^:const RUNNING "RUNNING")
 (def ^:const STARTING "STARTING")
 (def ^:const STOPPED "STOPPED")
 (def ^:const ERROR "ERROR")

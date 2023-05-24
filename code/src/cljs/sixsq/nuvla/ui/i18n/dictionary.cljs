@@ -4,7 +4,7 @@
 (def dictionary
   {:en {
         :about                                         "about"
-        :about-subtitle                                "This software is brought to you"
+        :about-subtitle                                "This software is brought to you by"
         :accept                                        "Accept "
         :accept-applications-eulas                     "Accept all applications End-User License Agreements"
         :accept-costs                                  "I accept the costs"
@@ -992,7 +992,7 @@
 
    :fr {
         :about                                         "à propos"
-        :about-subtitle                                "Ce logiciel vous est fournit"
+        :about-subtitle                                "Ce logiciel vous est fournit par"
         :accept                                        "Accepter l'"
         :accept-applications-eulas                     "Vous devez accepter toutes les licences d'applications !"
         :accept-costs                                  "J'accepte les coûts"

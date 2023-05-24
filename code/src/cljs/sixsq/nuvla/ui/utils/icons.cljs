@@ -104,6 +104,11 @@
   [opts]
   [I opts i-plus-full])
 
+(def i-clone "fal fa-clone")
+(defn CloneIcon
+  [opts]
+  [I opts i-clone])
+
 (def i-copy "fal fa-copy")
 (defn CopyIcon
   [opts]

@@ -406,7 +406,7 @@
         button     (action-button
                      {:menu-item?  true
                       :button-text (@tr [:clone])
-                      :icon-name   "code branch"
+                      :icon-name   icons/i-clone
                       :popup-text  (@tr [:deployment-clone-msg])
                       :on-click    #(dispatch [::deployment-dialog-events/create-deployment
                                                id first-step])

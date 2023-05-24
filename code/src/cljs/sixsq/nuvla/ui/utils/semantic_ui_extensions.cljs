@@ -53,7 +53,7 @@
      (when icon
        [icons/Icon (cond-> {:name icon}
                      (boolean? loading?) (assoc :loading loading?))])
-     (str/capitalize name)]))
+     (when (string? name) (str/capitalize name))]))
 
 
 (defn MenuItemForSearch

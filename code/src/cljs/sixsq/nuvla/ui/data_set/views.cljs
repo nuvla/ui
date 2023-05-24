@@ -291,8 +291,8 @@
             :on-click on-click}]
           [ui/ButtonGroup {:primary true
                            :style   {:padding-top 10}}
-           [ui/Button
-            {:content  (@tr [:process])
+           [uix/Button
+            {:text  (@tr [:process])
              :disabled disabled?
              :icon     icon
              :on-click on-click}]])))))

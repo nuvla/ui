@@ -182,8 +182,7 @@
 (defn InfoPopup
   [message]
   [ui/Popup {:content message
-             :trigger (r/as-element [icons/InfoIconFull])}])
-
+             :trigger (r/as-element [ui/Icon {:class icons/i-info}])}])
 
 (defn NotFoundPortal
   [subs message-header message-content]
@@ -238,7 +237,7 @@
 
 (defn Pencil
   [editing?]
-  [ui/Icon {:name     "pencil"
+  [ui/Icon {:name     icons/i-pencil
             :on-click #(reset! editing? true)
             :style    {:cursor "pointer"}}])
 

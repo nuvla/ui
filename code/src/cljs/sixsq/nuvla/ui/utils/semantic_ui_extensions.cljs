@@ -255,7 +255,7 @@
                           (= :password type) [icons/Icon {:name     (if @show "eye slash" :eye)
                                                        :link     true
                                                        :on-click #(swap! show not)}]
-                          @active-input? :pencil)]
+                          @active-input? icons/i-pencil)]
         (when on-validation
           (dispatch [on-validation key error?]))
 
@@ -274,7 +274,7 @@
               [ui/FormField {:error error?}
                [:div {:className "ui input icon"}
                 [ui/TextArea common-opts]
-                (when @active-input? [icons/Icon {:name "pencil"}])]]])
+                (when @active-input? [icons/Icon {:name icons/i-pencil}])]]])
            [SpanBlockJustified default-value])]))))
 
 

@@ -366,8 +366,8 @@
                                 :else nil)
               rights-keys     (utils/acl-get-all-used-rights-set @ui-acl)
               icon-right      (cond
-                                (some #(str/starts-with? (name %) "edit") rights-keys) "pencil"
-                                (some #(str/starts-with? (name %) "view") rights-keys) "eye"
+                                (some #(str/starts-with? (name %) "edit") rights-keys) icons/i-pencil
+                                (some #(str/starts-with? (name %) "view") rights-keys) icons/i-eye
                                 :else nil)]
           [:<>
            [ui/Button {:floated  "right"
@@ -381,7 +381,7 @@
                         :content  (@tr [:access-rights])
                         :style    {:margin 0}}]
              (when icon-right
-               [ui/Popup {:trigger  (r/as-element [ui/Icon {:name  icon-right
+               [ui/Popup {:trigger  (r/as-element [ui/Icon {:class icon-right
                                                             :style {:margin 0}}])
                           :position "bottom center"
                           :content  (@tr [:access-rights])}])

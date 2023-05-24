@@ -436,7 +436,7 @@
   [opts]
   [I opts i-envelop])
 
-(def i-pencil "fa-pencil")
+(def i-pencil "fal fa-pen")
 (defn PencilIcon
   [opts]
   [I opts i-pencil])

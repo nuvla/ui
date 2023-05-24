@@ -81,7 +81,7 @@
       [action-button-icon
        (@tr [:raw])
        (@tr [:save])
-       "pencil"
+       icons/i-pencil
        (str (@tr [:editing]) " " id)
        [forms/resource-editor id text]
        (fn []

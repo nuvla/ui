@@ -368,7 +368,7 @@
   [_deployment & _opts]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
-        icon-name "trash"]
+        icon-name icons/i-trash]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module]} deployment
             text-1 (str (or name id) (when description " - ") description)

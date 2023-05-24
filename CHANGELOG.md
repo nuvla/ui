@@ -26,6 +26,7 @@
 - Deployments overview, table view - Enables bulk editing of tags #1209
 - App, new projects - Hide paste button, #1270
 - App details - Show only app name without parent project in title, #1235
+- Deployments overview and details - Changes display of "STARTED" state to "RUNNING"
 
 ## Released
 

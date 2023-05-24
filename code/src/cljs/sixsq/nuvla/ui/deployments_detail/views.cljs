@@ -229,18 +229,6 @@
     (list-section env-vars :env-vars :env-variables)))
 
 
-(defn job-map-to-row
-  [{:keys [id action time-of-status-change state progress return-code status-message]}]
-  [ui/TableRow
-   [ui/TableCell [values/AsLink id :label (general-utils/id->short-uuid id)]]
-   [ui/TableCell action]
-   [ui/TableCell time-of-status-change]
-   [ui/TableCell state]
-   [ui/TableCell progress]
-   [ui/TableCell return-code]
-   [ui/TableCell {:style {:white-space "pre"}} status-message]])
-
-
 (defn billing-section
   []
   (let [tr               (subscribe [::i18n-subs/tr])

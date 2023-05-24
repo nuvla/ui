@@ -26,6 +26,7 @@
 - Deployments overview, table view - Enables bulk editing of tags #1209
 - App, new projects - Hide paste button, #1270
 - Welcome page - Always show house icon as default in breadcrumbs, #1255
+- App details, projects - Tab changes ignores changes protection, #1258
 
 ## Released
 

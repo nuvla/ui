@@ -774,7 +774,7 @@
    {:position corner
     :content  status
     :trigger  (r/as-element
-                [ui/Icon {:class icons/i-power-off
+                [ui/Icon {:class icons/i-power
                           :color (values/status->color status)}])}])
 
 

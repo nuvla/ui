@@ -333,7 +333,7 @@
         ui-acl        (->ui-acl default-value can-edit?)]
     {:menuItem {:content "Share"
                 :key     :share
-                :icon    icons/i-users}
+                :icon    icons/i-user-group}
      :render   (fn []
                  (r/as-element
                    (when default-value

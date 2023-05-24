@@ -99,15 +99,24 @@
   [opts]
   [I opts i-link])
 
-(def i-plus "fal fa-plus-large")
-(defn AddIcon
+(def i-plus-large "fal fa-plus-large")
+(defn AddIconLarge
   [opts]
-  [I opts i-plus])
+  [I opts i-plus-large])
+
+(def i-plus "fal fa-plus")
+(defn AddIcon  [opts]
+  [I opts i-plus-large])
 
 (def i-plus-full "plus")
 (defn AddIconFull
   [opts]
   [I opts i-plus-full])
+
+(def i-minus "fal fa-minus")
+(defn MinusIcon
+  [opts]
+  [I opts i-minus])
 
 (def i-clone "fal fa-clone")
 (defn CloneIcon
@@ -240,10 +249,15 @@
   [opts]
   [I opts i-crown])
 
-(def i-power-off "fal fa-power-off")
-(defn PowerOffIcon
+(def i-power "fal fa-power-off")
+(defn PowerIcon
   [opts]
-  [I opts i-power-off])
+  [I opts i-power])
+
+(def i-power-full "fa-power-off")
+(defn PowerIconFull
+  [opts]
+  [I opts i-power-full])
 
 (def i-store "fal fa-store")
 (defn StoreIcon
@@ -491,3 +505,23 @@
 (defn SlidersIcon
   [opts]
   [I opts i-sliders])
+
+(def i-clipboard "fal fa-clipboard")
+(defn ClipboardIcon
+  [opts]
+  [I opts i-clipboard])
+
+(def i-location-dot "fal fa-location-dot")
+(defn LocationDotIcon
+  [opts]
+  [I opts i-location-dot])
+
+(def i-usb-drive "fal fa-usb-drive")
+(defn USBIcon
+  [opts]
+  [I opts i-usb-drive])
+
+(def i-shield "fal fa-shield-check")
+(defn ShieldIcon
+  [opts]
+  [I opts i-shield])

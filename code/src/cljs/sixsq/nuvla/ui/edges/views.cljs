@@ -61,15 +61,15 @@
                                 :label          "TOTAL"
                                 :positive-color nil}
                                {:value          online
-                                :icons          [icons/i-power-off]
+                                :icons          [icons/i-power]
                                 :label          utils/status-online
                                 :positive-color "green"}
                                {:value          offline
-                                :icons          [icons/i-power-off]
+                                :icons          [icons/i-power]
                                 :label          utils/status-offline
                                 :positive-color "red"}
                                {:value          unknown
-                                :icons          [icons/i-power-off]
+                                :icons          [icons/i-power]
                                 :label          utils/status-unknown
                                 :positive-color "orange"}]]
            ^{:key (str "stat-state-" (:label statistic-opts))}

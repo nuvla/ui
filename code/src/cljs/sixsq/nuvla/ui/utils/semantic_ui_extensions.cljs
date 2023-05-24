@@ -133,17 +133,17 @@
                           :target   "_blank"
                           :download filename}
                       [icons/Icon {:link true
-                                :size "large"
-                                :name "download"}]])}
+                                   :size "large"
+                                   :name "download"}]])}
          [TR :click-to-download]])
       (when copy
         [ui/Popup
          {:trigger (r/as-element
                      [ui/CopyToClipboard {:text value}
                       [icons/Icon {:style {:margin-left 10}
-                                :link  true
-                                :size  "large"
-                                :name  "clone"}]])}
+                                   :link  true
+                                   :size  "large"
+                                   :name  "clone"}]])}
          [TR :click-to-copy]])]]]])
 
 (defn EditorCode

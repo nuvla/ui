@@ -956,7 +956,7 @@
      [ui/Menu {:borderless true}
       [uix/MenuItem
        {:name     (@tr [:add])
-        :icon     icons/i-plus
+        :icon     icons/i-plus-large
         :on-click #(dispatch [::events/open-add-credential-modal])}]
       [components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-credentials])}]]]))

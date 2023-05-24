@@ -208,7 +208,7 @@
         (when @is-project?
           [ui/MenuItem
            {:name     (@tr [:add])
-            :icon     (r/as-element [icons/AddIcon])
+            :icon     (r/as-element [icons/AddIconLarge])
             :disabled @deploy-disabled?
             :on-click #(dispatch [::events/open-add-modal])}])
         (when @can-copy?

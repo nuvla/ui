@@ -54,7 +54,7 @@
       :on-confirm  #(dispatch [::events/decommission])
       :danger-msg  (@tr [:nuvlabox-decommission-warning])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "eraser"}]
+                                  [icons/EraserIcon]
                                   (@tr [:decommission])])
       :header      (@tr [:decommission-nuvlabox])
       :content     [:h3 content]}]))
@@ -611,7 +611,7 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "add-ssh-button" @show?)}
-      [AddRevokeSSHButton resource operation show? "Add ssh key" "add" (@tr [:add])])))
+      [AddRevokeSSHButton resource operation show? "Add ssh key" icons/i-plus (@tr [:add])])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
@@ -619,7 +619,7 @@
   (let [show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "revoke-ssh-button" @show?)}
-      [AddRevokeSSHButton resource operation show? "Revoke ssh key" "minus" "revoke"])))
+      [AddRevokeSSHButton resource operation show? "Revoke ssh key" icons/i-minus "revoke"])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
@@ -1906,14 +1906,14 @@
         deployments @(subscribe [::deployments-subs/deployments])
         overview    {:menuItem {:content "Overview"
                                 :key     :overview
-                                :icon    "info"}
+                                :icon    icons/i-eye}
                      :render   #(r/as-element [TabOverview])}]
     (case (:state @nuvlabox)
       "SUSPENDED" [overview]
       [overview
        {:menuItem {:content "Location"
                    :key     :location
-                   :icon    "map"}
+                   :icon    icons/i-location-dot}
         :render   #(r/as-element [TabLocation])}
        {:menuItem {:content (r/as-element
                               [ui/Popup
@@ -1927,11 +1927,11 @@
                                 :size           "tiny"
                                 :hide-on-scroll true}])
                    :key     :consumption
-                   :icon    "thermometer half"}
+                   :icon    icons/i-gauge}
         :render   #(r/as-element [TabLoad])}
        {:menuItem {:content (r/as-element [:span (str/capitalize (tr [:logs]))])
                    :key     :logs
-                   :icon    "file code"}
+                   :icon    icons/i-file-code}
         :render   (fn [] (r/as-element [log-views/TabLogs
                                         (:id @nuvlabox)
                                         #(subscribe [::subs/nuvlabox-components])
@@ -1942,7 +1942,7 @@
                                                       :attached "top right"}
                                             (count peripherals)]])
                    :key     :peripherals
-                   :icon    "usb"}
+                   :icon    icons/i-usb-drive}
         :render   #(r/as-element [TabPeripherals])}
        (events-plugin/events-section
          {:db-path [::spec/events]
@@ -1963,11 +1963,11 @@
                         :fetch-event        [::events/get-deployments-for-edge]}]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
-                   :icon    "shield"}
+                   :icon    icons/i-shield}
         :render   #(r/as-element [TabVulnerabilities])}
        {:menuItem {:content "Playbooks"
                    :key     :playbooks
-                   :icon    "book"}
+                   :icon    icons/i-book}
         :render   #(r/as-element [TabPlaybooks])}
        (job-views/jobs-section)
        (acl/TabAcls {:e               nuvlabox
@@ -1992,8 +1992,8 @@
   (let [{:keys [id name online]} @(subscribe [::subs/nuvlabox])]
     [:h2
      [ui/IconGroup
-      [ui/Icon {:name "box"}]
-      [OnlineStatusIcon online true]]
+      [ui/Icon {:name icons/i-box}]
+      [OnlineStatusIcon online true true]]
      (or name id)]))
 
 

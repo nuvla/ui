@@ -103,7 +103,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
      {:name     (@tr [:add])
-      :icon     icons/i-plus
+      :icon     icons/i-plus-large
       :on-click #(dispatch [::events/set-modal-open? true])}]))
 
 (defn MenuBar

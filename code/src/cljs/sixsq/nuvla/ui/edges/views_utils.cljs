@@ -44,7 +44,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
      {:name     (@tr [:add])
-      :icon     icons/i-plus
+      :icon     icons/i-plus-large
       :on-click #(dispatch
                    [::main-events/subscription-required-dispatch
                     [::events/open-modal spec/modal-add-id]])}]))

@@ -105,7 +105,7 @@
   (fn [{db :db} [_ group-id username]]
     (let [on-error   #(let [{:keys [status message]} (response/parse-ex-info %)]
                         (dispatch [::messages-events/add
-                                   {:header  (cond-> (str "Invitation to " group-id " for " username "failed!")
+                                   {:header  (cond-> (str "Invitation to " group-id " for " username " failed!")
                                                      status (str " (" status ")"))
                                     :content message
                                     :type    :error}]))

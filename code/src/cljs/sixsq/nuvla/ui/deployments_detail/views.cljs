@@ -295,15 +295,15 @@
                  label? [ui/Label {:corner   true
                                    :size     "small"
                                    :on-click on-click}
-                         [ui/Icon {:name  icon-name
+                         [ui/Icon {:class  icon-name
                                    :style {:cursor "pointer"}
                                    :color "red"}]]
                  menu-item? [ui/MenuItem
                              {:on-click on-click
                               :disabled disabled?}
-                             [ui/Icon {:name icon-name}]
+                             [ui/Icon {:class icon-name}]
                              button-text]
-                 :else [ui/Icon {:name     icon-name
+                 :else [ui/Icon {:class     icon-name
                                  :style    {:cursor "pointer"}
                                  :color    "red"
                                  :on-click on-click}])]
@@ -322,7 +322,7 @@
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         checked?  (r/atom false)
-        icon-name "stop"]
+        icon-name icons/i-stop]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module parent]} deployment
             cred-loading?     (subscribe [::creds-subs/credential-check-loading? parent])
@@ -457,7 +457,7 @@
                                      (@tr [:update]))
                       :popup-text  (@tr [(if start :deployment-start-msg
                                                    :deployment-update-msg)])
-                      :icon-name   (if start "play" "redo")
+                      :icon-name   (if start icons/i-play icons/i-redo)
                       :menu-item?  true
                       :disabled?   (if start
                                      (not (general-utils/can-operation? "start" deployment))
@@ -772,7 +772,7 @@
    {:position corner
     :content  status
     :trigger  (r/as-element
-                [ui/Icon {:name  "power"
+                [ui/Icon {:class icons/i-power-off
                           :color (values/status->color status)}])}])
 
 
@@ -793,7 +793,7 @@
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:name "question circle"}])
+            {:trigger        (r/as-element [ui/Icon {:class icons/i-circle-question}])
              :content        (@tr [:deployment-state])
              :position       "bottom center"
              :on             "hover"

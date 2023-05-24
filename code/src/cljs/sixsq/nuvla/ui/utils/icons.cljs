@@ -450,3 +450,23 @@
 (defn HardDriveIcon
   [opts]
   [I opts i-hard-drive])
+
+(def i-circle-question "fal fa-circle-question")
+(defn QuestionCircleIcon
+  [opts]
+  [I opts i-circle-question])
+
+(def i-redo "fal fa-redo")
+(defn RedoIcon
+  [opts]
+  [I opts i-redo])
+
+(def i-play "fal fa-play")
+(defn PlayIcon
+  [opts]
+  [I opts i-play])
+
+(def i-stop "fal fa-stop")
+(defn StopIcon
+  [opts]
+  [I opts i-stop])

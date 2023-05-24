@@ -25,6 +25,7 @@
 - Config.json - Update licenses
 - Deployments overview, table view - Enables bulk editing of tags #1209
 - App, new projects - Hide paste button, #1270
+- Welcome page - Always show house icon as default in breadcrumbs, #1255
 
 ## Released
 

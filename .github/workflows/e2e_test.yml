@@ -11,6 +11,9 @@ on:
     tags:
       - '*'
   pull_request:
+    paths:
+      - 'code/**'
+      # - '.github/workflows/e2e_test.yml'
   workflow_dispatch:
     inputs:
       baseUrl:

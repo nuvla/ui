@@ -11,6 +11,9 @@ on:
     tags:
       - '*'
   pull_request:
+    paths:
+      - 'code/**'
+      # - '.github/workflows/unit_tests.yml'
   workflow_dispatch:
 
 defaults:

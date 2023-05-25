@@ -11,6 +11,9 @@ on:
     tags:
       - '*'
   pull_request:
+    paths:
+      - 'code/**'
+      - '.github/workflows/bundle_size.yml'
   workflow_dispatch:
 
 defaults:

@@ -25,10 +25,13 @@ defaults:
     working-directory: ./code
 
 jobs:
-  paths-filter:
+  e2e-test:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
-    outputs:
-      output1: ${{ steps.filter.outputs.code }}
+    container:
+      image: mcr.microsoft.com/playwright:v1.27.1-jammy
+      env:
+        TZ: Europe/Zurich
     steps:
       - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
@@ -37,18 +40,9 @@ jobs:
           filters: |
             code:
               - 'code/**'
-  e2e-test:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    needs: paths-filter
-    if: needs.paths-filter.code.output1 == 'true'
-    container:
-      image: mcr.microsoft.com/playwright:v1.27.1-jammy
-      env:
-        TZ: Europe/Zurich
-    steps:
-      - uses: actions/checkout@v3
+              # - '.github/workflows/e2e_test.yml'
       - name: Cache node modules
+        if: steps.filter.outputs.code == 'true'
         id: cache-npm
         uses: actions/cache@v3
         env:
@@ -61,12 +55,14 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
       - uses: actions/setup-node@v3
+        if: steps.filter.outputs.code == 'true'
         with:
           node-version: 18
       - name: Install dependencies
+        if: steps.filter.outputs.code == 'true'
         run: npm ci
       - name: Await CF Pages
-        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        if: steps.filter.outputs.code == 'true' && github.event_name == 'pull_request' || github.event_name == 'push'
         uses: WalshyDev/cf-pages-await@v1
         id: pages-action
         with:
@@ -76,6 +72,7 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           commitHash: ${{ steps.push-changes.outputs.commit-hash }}
       - name: Run Playwright logged in tests
+        if: steps.filter.outputs.code == 'true'
         run: npx playwright test loggedin
         env:
           UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
@@ -84,12 +81,13 @@ jobs:
           CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
           CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: steps.filter.outputs.code == 'true'
         with:
           name: playwright
           path: code/playwright-report/
           retention-days: 30
       - name: Run Playwright logout tests
+        if: steps.filter.outputs.code == 'true'
         run: npx playwright test logout
         env:
           UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
@@ -98,7 +96,7 @@ jobs:
           CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
           CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: steps.filter.outputs.code == 'true'
         with:
           name: playwright-logout
           path: code/playwright-report/

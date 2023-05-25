@@ -22,6 +22,12 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting for sonar
           fetch-depth: 0
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'code/**'
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
@@ -52,11 +58,13 @@ jobs:
           java-version: '11'
 
       - name: Setup Sonar Scanner
+        if: steps.filter.outputs.code == 'true'
         uses: warchant/setup-sonar-scanner@v3
         with:
           version: 4.6.2.2472
 
       - name: Run Sonar Scanner
+        if: steps.filter.outputs.code == 'true'
         env:
           # provide GITHUB_TOKEN to get access to secrets.SONAR_TOKEN
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -66,6 +74,7 @@ jobs:
           -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
 
       - name: SonarQube Quality Gate check
+        if: steps.filter.outputs.code == 'true'
         uses: sonarsource/sonarqube-quality-gate-action@v1.0.0
         # Force to fail step after specific time
         timeout-minutes: 5

@@ -11,9 +11,9 @@ on:
     tags:
       - '*'
   pull_request:
-    paths:
-      - 'code/**'
-      # - '.github/workflows/e2e_test.yml'
+    # paths:
+    # - 'code/**'
+    # - '.github/workflows/e2e_test.yml'
   workflow_dispatch:
     inputs:
       baseUrl:
@@ -25,9 +25,23 @@ defaults:
     working-directory: ./code
 
 jobs:
+  paths-filter:
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'code/**'
   e2e-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    needs: paths-filter
+    if: needs.paths-filter.code.output1 == 'true'
     container:
       image: mcr.microsoft.com/playwright:v1.27.1-jammy
       env:

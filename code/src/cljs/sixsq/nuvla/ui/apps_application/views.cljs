@@ -546,16 +546,15 @@
   (let [module-common (subscribe [::apps-subs/module-common])
         active-tab    (sub-apps-tab)
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (dispatch [::apps-events/init-view {:tab-key (when (true? @is-new?) :details)}])
+    (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
     (dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true
                        :class :uix-apps-details}
-         [uix/PageHeader icons/i-layer-group (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader icons/i-layer-group name :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

@@ -1309,7 +1309,8 @@
 
 (defn TabOverviewCluster
   [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
-           cluster-node-role cluster-managers cluster-nodes orchestrator] :as _nuvlabox}]
+           cluster-node-role cluster-managers cluster-nodes orchestrator cluster-node-labels]
+    :as _nuvlabox}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :color     "black"
@@ -1377,7 +1378,22 @@
        (when swarm-node-cert-expiry-date
          [ui/TableRow
           [ui/TableCell "Swarm Certificate Expiry Date"]
-          [ui/TableCell swarm-node-cert-expiry-date]])]]]))
+          [ui/TableCell swarm-node-cert-expiry-date]])
+
+       [ui/TableRow
+        [ui/TableCell "Node Labels"]
+        [ui/TableCell]]
+       [:div
+        (if (seq cluster-node-labels)
+          (for [{:keys [name value]} cluster-node-labels]
+            ^{:key (str name value)}
+            [ui/Label {:style {:margin-top "0.2rem"}
+                       :image true}
+             name
+             [ui/LabelDetail {:color :grey} value]])
+          [:span {:style {:font-size "0.8rem"
+                          :font-style "italic"}}
+           (@tr [:no-labels-defined])])]]]]))
 
 
 (defn TabOverview

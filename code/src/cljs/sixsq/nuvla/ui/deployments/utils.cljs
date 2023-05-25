@@ -4,16 +4,17 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.deployments.spec :as spec]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def ^:const STARTED "STARTED")
+(def ^:const RUNNING "RUNNING")
 (def ^:const STARTING "STARTING")
 (def ^:const STOPPED "STOPPED")
 (def ^:const ERROR "ERROR")

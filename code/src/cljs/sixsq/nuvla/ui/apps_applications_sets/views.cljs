@@ -437,10 +437,9 @@
     (dispatch [::apps-events/set-form-spec ::spec/apps-sets])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
-         [uix/PageHeader icons/i-app-sets (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader icons/i-app-sets name :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

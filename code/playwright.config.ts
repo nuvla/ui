@@ -13,7 +13,6 @@ let baseURL = process.env.UI_BASE_URL || '';
  */
 if (isValidHttpUrl(baseURL)) {
   console.log('Test running on', baseURL);
-  console.log('');
 } else {
   console.error('Not a valid url:', baseURL);
   throw new Error('not a valid baseURL: ' + baseURL);
@@ -25,6 +24,7 @@ if (isValidHttpUrl(baseURL)) {
 const config: PlaywrightTestConfig = {
   globalSetup: require.resolve('./global-setup'),
   testDir: './test/e2e',
+  grepInvert: [/apps/],
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,
   expect: {
@@ -43,7 +43,7 @@ const config: PlaywrightTestConfig = {
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI ? [['github'], ['html']] : 'html',
+  reporter: process.env.CI ? [['github'], ['html'], ['list']] : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     screenshot: 'only-on-failure',

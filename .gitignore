@@ -34,3 +34,4 @@ package-lock.json
 .scannerwork
 .eastwood
 code/out
+code/test/e2e/loggedin/local_dev.spec.ts

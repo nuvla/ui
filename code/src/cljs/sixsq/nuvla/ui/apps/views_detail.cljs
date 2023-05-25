@@ -32,10 +32,10 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as utils-values]
-            [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def edit-cell-left-padding 24)
@@ -225,7 +225,7 @@
             :wide           true
             :hide-on-scroll true}])
 
-        (when @is-project?
+        (when (and (not @is-new?) @is-project?)
           [ui/MenuItem
            {:name     (@tr [:paste])
             :icon     (r/as-element [icons/CopyIcon])
@@ -1162,7 +1162,8 @@
                :on-change (partial on-change ::events/license-description)]
               [uix/TableRowField (@tr [:url]), :key "license-url",
                :editable? is-editable?, :spec (if @is-custom? ::spec/license-url any?), :validate-form? @validate-form?,
-               :required? true, :default-value (:license-url @license),
+               :required? true, :default-value [:a {:href (:license-url @license)
+                                                    :targe :_blank} (:license-url @license)],
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]
            [ui/Message {:info true}

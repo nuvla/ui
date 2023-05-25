@@ -13,7 +13,7 @@ on:
   pull_request:
     paths:
       - 'code/**'
-      # - '.github/workflows/unit_tests.yml'
+      - '.github/workflows/unit_tests.yml'
   workflow_dispatch:
 
 defaults:

@@ -108,7 +108,7 @@
                      )))]
               [ui/DropdownDivider]
               [ui/DropdownItem
-               {:text     "show subgroups resources"
+               {:text     (@tr [:show-subgroups-resources])
                 :icon     (str (when @extended? "check ")
                                "square outline")
                 :on-click #(do (swap! extended? not)

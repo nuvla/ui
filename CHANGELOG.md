@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Released
+
+## [2.33.7] - 2023-05-19
+
 ### Changed
 
 - Deployment set - Accept licenses widget #1220
@@ -31,8 +35,6 @@
 - App details, projects - Tab changes ignores changes protection, #1258
 - App details - Resets active tab to default when changing apps, #1240
 
-
-## Released
 
 ## [2.33.6] - 2023-04-28
 

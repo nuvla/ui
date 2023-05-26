@@ -88,15 +88,6 @@ For more information on how to format your app description using Markdown syntax
   (-> module-id (str/split #"/") last (str/split #"_") second))
 
 
-(defn published?
-  "Check if the module version is published"
-  [module module-id]
-  (let [versions (:versions module)
-        index    (extract-version module-id)
-        version  (if (nil? index) (dec (count versions)) (js/parseInt index))]
-    (-> versions (nth version) :published true?)))
-
-
 (defn filter-published-versions
   [map-versions]
   (filter #(true? (-> % second :published true?)) map-versions))

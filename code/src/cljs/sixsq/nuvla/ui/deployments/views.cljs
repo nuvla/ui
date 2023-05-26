@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.deployments.events :as events]
             [sixsq.nuvla.ui.deployments.spec :as spec]
             [sixsq.nuvla.ui.deployments.subs :as subs]
-            [sixsq.nuvla.ui.deployments.utils :as utils]
+            [sixsq.nuvla.ui.deployments.utils :as utils :refer [build-bulk-filter]]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
@@ -17,16 +17,17 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.routing.events :as routing-events]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 
@@ -162,7 +163,7 @@
 
 
 (defn RowFn
-  [{:keys [id state module created-by] :as deployment}
+  [{:keys [id state module tags created-by] :as deployment}
    {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
@@ -190,6 +191,7 @@
                       primary-url-name])]
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell @creator]
+     [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
@@ -209,36 +211,51 @@
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
-        (let [selectable? (or (nil? show-options?) show-options?)]
-          [Table {:columns     [{:field-key :id}
-                                (when-not no-module-name
-                                  {:field-key      :module.name
-                                   :header-content (@tr [:module])})
-                                {:field-key :version :no-sort? true}
-                                {:field-key :status
-                                 :sort-key  :state}
-                                {:field-key :url
-                                 :no-sort?  true}
-                                {:field-key :created}
-                                {:field-key :created-by}
-                                {:field-key :infrastructure
-                                 :no-sort?  true}
-                                (when selectable? {:field-key :actions
-                                                   :no-sort?  true})]
-                  :rows        deployments-list
-                  :sort-config {:db-path     ::spec/ordering
-                                :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                  :row-render  (fn [deployment] [RowFn deployment options])
-                  :table-props (merge style/single-line {:stackable true})
-                  :select-config (when selectable?
-                                   {:bulk-actions [{:event [::events/bulk-update-params]
-                                                    :name (str/capitalize (@tr [:update]))}
-                                                   {:component (r/as-element BulkStopModal)}
-                                                   {:component (r/as-element BulkForceDeleteModal)}]
-                                    :select-db-path [::spec/select]
-                                    :total-count-sub-key [::subs/deployments-count]
-                                    :resources-sub-key deployments-resources-subs-key
-                                    :rights-needed :edit})}])))))
+        (let [selectable?                (or (nil? show-options?) show-options?)
+              {trigger :trigger-config
+               BulkEditTagsModal :modal} (bulk-edit-modal/create-bulk-edit-modal
+                                           {:db-path                [::spec/select]
+                                            :refetch-event          ::events/get-deployments
+                                            :resource-key           :deployment
+                                            :total-count-sub-key    ::subs/deployments-count
+                                            :on-open-modal-event    ::events/get-deployments-without-edit-rights
+                                            :no-edit-rights-sub-key ::subs/deployments-without-edit-rights
+                                            :singular               (@tr [:deployment])
+                                            :plural                 (@tr [:deployments])
+                                            :filter-fn               build-bulk-filter})]
+          [:<>
+           [BulkEditTagsModal]
+           [Table {:columns      [{:field-key :id}
+                                  (when-not no-module-name
+                                    {:field-key      :module.name
+                                     :header-content (@tr [:module])})
+                                  {:field-key :version :no-sort? true}
+                                  {:field-key :status
+                                   :sort-key  :state}
+                                  {:field-key :url
+                                   :no-sort?  true}
+                                  {:field-key :created}
+                                  {:field-key :created-by}
+                                  {:field-key :tags}
+                                  {:field-key :infrastructure
+                                   :no-sort?  true}
+                                  (when selectable? {:field-key :actions
+                                                     :no-sort?  true})]
+                   :rows         deployments-list
+                   :sort-config   {:db-path     ::spec/ordering
+                                   :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+                   :row-render   (fn [deployment] [RowFn deployment options])
+                   :table-props  (merge style/single-line {:stackable true})
+                   :select-config (when selectable?
+                                    {:bulk-actions [{:event [::events/bulk-update-params]
+                                                     :name (str/capitalize (@tr [:update]))}
+                                                    {:component (r/as-element BulkStopModal)}
+                                                    {:component (r/as-element BulkForceDeleteModal)}
+                                                    trigger]
+                                     :select-db-path [::spec/select]
+                                     :total-count-sub-key [::subs/deployments-count]
+                                     :resources-sub-key deployments-resources-subs-key
+                                     :rights-needed :edit})}]])))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]
@@ -334,7 +351,7 @@
                                       :state-selector-subs      ::subs/state-selector}]
           [components/StatisticState {:value                    started,
                                       :icons                    [(utils/state->icon utils/STARTED)],
-                                      :label                    utils/STARTED,
+                                      :label                    utils/RUNNING,
                                       :stacked?                 true
                                       :clickable?               clickable?,
                                       :positive-color           "green",

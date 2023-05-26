@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.apps-application.spec
   (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.spec :as spec-utils]))
@@ -41,6 +42,7 @@
                                     :opt [::files
                                           ::requires-user-rights]))
 
+(s/def ::tab any?)
 
 ; create an initial entry for new application
 
@@ -49,7 +51,8 @@
                                                    ::compatibility        "docker-compose"}
                ::license-validation-errors        #{}
                ::docker-compose-validation-errors #{}
-               ::configuration-validation-errors  #{}})
+               ::configuration-validation-errors   #{}
+               ::tab (nav-tab/build-spec :default-tab :overview)})
 
 (s/def ::deployment-pagination any?)
 

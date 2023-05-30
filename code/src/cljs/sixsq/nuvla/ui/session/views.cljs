@@ -102,7 +102,7 @@
                      [ui/DropdownItem {:on-click #(on-click value)
                                        :selected (= i @cursor)}
                       [:span (str/join (repeat (* level 5) ff/nbsp))]
-                      [ui/Icon {:name icon}]
+                      [ui/Icon {:class icon}]
                       (if (= @active-claim value)
                         [:b {:style {:color "#c10e12"}} text]
                         text)]
@@ -200,7 +200,7 @@
              :href   url
              :target "_blank"
              :style  {:color "white"}}
-         [ui/Icon {:name icon}]])]]))
+         [icons/Icon {:class icon}]])]]))
 
 
 (defn LeftPanel

@@ -833,7 +833,7 @@
                                     [uix/ModalDanger
                                      {:on-confirm  #(dispatch [::events/detach-payment-method payment-method])
                                       :trigger     (r/as-element [ui/Button
-                                                                  [ui/Icon {:name "trash", :color "red"}]])
+                                                                  [ui/Icon {:class icons/i-trash-full, :color "red"}]])
                                       :header      (@tr [:delete-payment-method])
                                       :content     (@tr [:are-you-sure?])
                                       :button-text (@tr [:delete])
@@ -1071,7 +1071,7 @@
                                               [ui/Button {:basic true
                                                           :size  "small"
                                                           :icon  true}
-                                               [ui/Icon {:name "trash", :color "red"}]])
+                                               [icons/TrashIconFull {:color "red"}]])
                                :header      (@tr [:delete-coupon])
                                :content     (@tr [:are-you-sure?])
                                :button-text (@tr [:delete])}])}]]]]]
@@ -1296,13 +1296,12 @@
        @principal-name
        ff/nbsp
        (when editable?
-         [ui/Icon {:name     "close"
-                   :link     true
-                   :size     "small"
-                   :color    "red"
-                   :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
-                               (dispatch [::main-events/changes-protection? true])
-                               (set-group-changed! id))}])]]]))
+         [icons/CloseIcon {:link     true
+                           :size     "small"
+                           :color    "red"
+                           :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
+                                       (dispatch [::main-events/changes-protection? true])
+                                       (set-group-changed! id))}])]]]))
 
 
 (defn GroupMembers

@@ -205,12 +205,12 @@
                   :on-click #(dispatch [::toggle-select-target db-path
                                         credential credentials])}
      [ui/ListIcon
-      [ui/Icon {:name (if selected?
+      [ui/Icon {:class (if selected?
                         "check square outline"
                         "square outline")}]]
      [ui/ListContent
       [ui/ListHeader (when selected? {:as :a})
-       [ui/Icon {:name "key"}] " "
+       [icons/KeyIcon] " "
        (or name id)]
       (when description
         [ui/ListDescription (general-utils/truncate description 100)])]]))

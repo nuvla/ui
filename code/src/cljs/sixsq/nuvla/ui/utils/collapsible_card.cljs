@@ -52,7 +52,7 @@
         (when logo
           [ui/Image {:floated "right", :size :tiny, :src logo}])
         [ui/CardHeader
-         [ui/Icon {:name icon}]
+         [ui/Icon {:class icon}]
          (cond-> title
                  (not (str/blank? subtitle)) (str " (" subtitle ")"))]
         [ui/CardMeta

@@ -12,7 +12,7 @@
    [ui/Segment style/autoscroll-x
     (when title
       [ui/Header {:size "tiny", :style {:padding-top "2ex"}}
-       (when icon [ui/Icon {:name icon, :size "tiny"}])
+       (when icon [ui/Icon {:class icon, :size "tiny"}])
        title])
     table]))
 

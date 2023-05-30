@@ -6,8 +6,8 @@
 (defn status->color
   [status]
   (case status
-    (true "STARTED" "started")        "green"
-    (false "ERROR" "error") "red"
+    (true "STARTED" "started") "green"
+    (false "ERROR" "error")    "red"
     "yellow"))
 
 

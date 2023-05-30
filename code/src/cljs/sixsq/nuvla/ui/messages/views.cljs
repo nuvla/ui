@@ -62,7 +62,7 @@
            [ui/Message (merge (type->message-type type)
                               {:style      top-right
                                :on-dismiss #(dispatch [::events/hide])})
-            [ui/MessageHeader [ui/Icon {:name icon-name}] header "\u2001\u00a0"]
+            [ui/MessageHeader [ui/Icon {:class icon-name}] header "\u2001\u00a0"]
             [:a {:on-click #(dispatch [::events/open-modal])} (@tr [:more-info])]]])))))
 
 
@@ -119,7 +119,7 @@
     [ui/ListItem {:on-click #(dispatch [::events/show message])}
      [ui/Message message-options
       [ui/MessageHeader
-       [ui/Icon {:name icon-name}]
+       [ui/Icon {:class icon-name}]
        header]
       [ui/MessageContent
        (time/ago timestamp locale)]]]))

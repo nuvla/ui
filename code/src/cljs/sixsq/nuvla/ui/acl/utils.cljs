@@ -166,7 +166,6 @@
 
 (defn id->icon
   [id]
-  (tap> ["id->icon" id])
   (case (general-utils/id->resource-name id)
     "user" icons/i-user
     "group" icons/i-users

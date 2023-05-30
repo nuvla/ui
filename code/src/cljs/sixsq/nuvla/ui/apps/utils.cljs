@@ -171,7 +171,7 @@ For more information on how to format your app description using Markdown syntax
     subtype-application icons/i-cubes
     subtype-application-k8s icons/i-cubes
     subtype-applications-sets icons/i-table-cells
-    "question circle"))
+    icons/i-circle-question))
 
 (defn SubtypeIconInfra
   [subtype selected]
@@ -180,7 +180,7 @@ For more information on how to format your app description using Markdown syntax
     subtype-component [icons/DockerIcon]
     subtype-application [icons/DockerIcon]
     subtype-application-k8s [IconK8s selected]
-    [ui/Icon {:name "question circle"}]))
+    [icons/QuestionCircleIcon]))
 
 (defn SubtypeDockerK8sListIcon
   [subtype]
@@ -390,9 +390,9 @@ For more information on how to format your app description using Markdown syntax
 
 (defn mandatory-name
   [name]
-  [:span name [:sup " " [ui/Icon {:name  "asterisk"
-                                  :size  :tiny
-                                  :color :red}]]])
+  [:span name [:sup " " [icons/AsteriskIcon
+                         {:size  :tiny
+                          :color :red}]]])
 
 (defn sorted-map-new-idx
   [sorted-map-elemts]

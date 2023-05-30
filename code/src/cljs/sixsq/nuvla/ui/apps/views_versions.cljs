@@ -110,7 +110,7 @@
                (str "v" i)]
               (str "v" i))
             (when is-current? " <<")]
-           [ui/TableCell (when (true? published) [ui/Icon {:name "check" :color "teal"}])]
+           [ui/TableCell (when (true? published) [icons/CheckIconFull {:color "teal"}])]
            [ui/TableCell author]
            [ui/TableCell commit]])))]])
 

@@ -150,12 +150,12 @@
 
      [ui/TableCell
       (when-not read-only
-        [ui/Icon {:link     true
-                  :name     "trash"
-                  :color    "red"
-                  :on-click #(do
-                               (swap! ui-acl utils/acl-remove-principle-from-rights principal)
-                               (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]))
+        [icons/TrashIconFull
+         {:link     true
+          :color    "red"
+          :on-click #(do
+                       (swap! ui-acl utils/acl-remove-principle-from-rights principal)
+                       (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]))
 
 
 (defn DropdownPrincipals
@@ -242,10 +242,10 @@
             (str/capitalize (@tr [:owners]))
             [InfoIcon :acl-owners]
 
-            [ui/Icon {:name     (if is-advanced? "compress" "expand")
-                      :style    {:float "right"}
-                      :link     true
-                      :on-click #(reset! mode (if is-advanced? :simple :advanced))}]]]]
+            [icons/Icon {:name     (if is-advanced? icons/i-compress icons/i-expand)
+                         :style    {:float "right"}
+                         :link     true
+                         :on-click #(reset! mode (if is-advanced? :simple :advanced))}]]]]
 
          [ui/TableBody
           [ui/TableRow
@@ -360,9 +360,9 @@
 
               icon-principals (cond
                                 (and owners (= (count owners) 1) (empty? principals-set)) "lock"
-                                (contains? principals-set "group/nuvla-anon") "world"
-                                some-groups? "users"
-                                (not some-groups?) "user"
+                                (contains? principals-set "group/nuvla-anon") icons/i-world
+                                some-groups? icons/i-users
+                                (not some-groups?) icons/i-user
                                 :else nil)
               rights-keys     (utils/acl-get-all-used-rights-set @ui-acl)
               icon-right      (cond
@@ -376,7 +376,7 @@
                        :basic    true
                        :on-click #(accordion-utils/toggle active?)}
             [:div
-             [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
+             [ui/Popup {:trigger  (r/as-element [icons/Icon {:name icon-principals}])
                         :position "bottom center"
                         :content  (@tr [:access-rights])
                         :style    {:margin 0}}]
@@ -385,8 +385,8 @@
                                                             :style {:margin 0}}])
                           :position "bottom center"
                           :content  (@tr [:access-rights])}])
-             [ui/Icon {:name  (if @active? "caret down" "caret left")
-                       :style {:margin 0}}]]]])))))
+             [icons/Icon {:name  (if @active? icons/i-caret-down icons/i-caret-left)
+                          :style {:margin 0}}]]]])))))
 
 
 (defn AclSection

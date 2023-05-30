@@ -530,3 +530,33 @@
 (defn CloseIcon
   [opts]
   [I opts i-close])
+
+(def i-compress "fal fa-compress")
+(defn CompressIcon
+  [opts]
+  [I opts i-compress])
+
+(def i-expand "fal fa-expand")
+(defn ExpandIcon
+  [opts]
+  [I opts i-expand])
+
+(def i-world "fal world")
+(defn WorldIcon
+  [opts]
+  [I opts i-world])
+
+(def i-caret-down "caret down")
+(defn CaretDownIcon
+  [opts]
+  [I opts i-caret-down])
+
+(def i-caret-left "caret left")
+(defn CaretUpIcon
+  [opts]
+  [I opts i-caret-left])
+
+(def i-asterisk "asterisk")
+(defn AsteriskIcon
+  [opts]
+  [I opts i-asterisk])

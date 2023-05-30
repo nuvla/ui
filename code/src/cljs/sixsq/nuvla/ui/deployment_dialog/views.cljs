@@ -184,5 +184,5 @@
                       :disabled @button-disabled?
                       :loading  @submit-loading?
                       :on-click submit-fn}
-           [ui/Icon {:name @button-icon}]
+           [ui/Icon {:class @button-icon}]
            @button-text]]]))))

@@ -245,7 +245,7 @@
     (when (some? (:subscription-id @deployment))
       {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:billing]))])
                   :key     :billing
-                  :icon    "eur"}
+                  :icon    icons/i-euro}
        :render   #(r/as-element
                     [ui/Segment
                      [ui/Table {:collapsing true

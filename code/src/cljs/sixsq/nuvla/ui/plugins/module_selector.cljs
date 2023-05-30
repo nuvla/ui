@@ -129,8 +129,8 @@
     [ui/ListItem {:on-click #(dispatch [::toggle-app db-path module])
                   :style    {:cursor :pointer}}
      [ui/ListIcon {:name (if selected?
-                           "check square outline"
-                           "square outline")}]
+                           icons/i-check-square-outline
+                           icons/i-square-outline)}]
      [ui/ListContent
       [ui/ListHeader (when selected? {:as :a})
        [apps-utils/SubtypeIconInfra subtype selected?]

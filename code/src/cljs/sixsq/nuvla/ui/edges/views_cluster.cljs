@@ -110,7 +110,7 @@
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
        [ui/TableRow
-        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+        [ui/TableHeaderCell [icons/HeartbeatIcon]]
         [ui/TableHeaderCell "state"]
         [ui/TableHeaderCell "name"]
         [ui/TableHeaderCell "description"]
@@ -209,7 +209,7 @@
             [ui/Message {:color "brown"
                          :size  "tiny"}
              [ui/MessageHeader
-              [ui/Icon {:name "sticky note"}]
+              [icons/StickyNoteIcon]
               "Notes"]
              [ui/MessageList {:items status-notes}]]]]])]]
      [ui/Segment

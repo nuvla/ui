@@ -151,7 +151,7 @@
               (for [i icons]
                 [icons/Icon {:key     icon-key
                              :size    (when (and clickable? selected?) "large")
-                             :loading (and (pos? value) (= "spinner" i))
+                             :loading (and (pos? value) (= icons/i-spinner i))
                              :style   {:margin-right 0}
                              :name    i}])]
          [ui/StatisticValue
@@ -165,7 +165,7 @@
            (for [i icons]
              [icons/Icon {:key     icon-key
                           :size    (when (and clickable? selected?) "large")
-                          :loading (and (pos? value) (= "spinner" i))
+                          :loading (and (pos? value) (= icons/i-spinner i))
                           :name    i}])]]
          [ui/StatisticLabel label]])])))
 

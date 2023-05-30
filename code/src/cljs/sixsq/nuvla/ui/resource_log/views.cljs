@@ -72,13 +72,13 @@
           :color    (if @go-live? "green" "black")
           :on-click #(swap! go-live? not)}
          [ui/IconGroup {:size "large"}
-          [ui/Icon {:name "bars"}]
+          [icons/BarsIcon]
           [ui/Icon {:name "chevron circle down", :corner true}]]
          (@tr [:go-live])]
 
         [ui/MenuItem {:on-click #(dispatch [::events/clear current-log])}
          [ui/IconGroup {:size "large"}
-          [ui/Icon {:name "bars"}]
+          [icons/BarsIcon]
           [icons/TrashIconFull {:corner true}]]
          (str/capitalize (@tr [:clear]))]]])))
 

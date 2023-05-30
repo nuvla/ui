@@ -220,8 +220,8 @@
            [ui/Segment {:basic true}
             (when playbooks-toggle
               [ui/Message {:icon true}
-               [ui/Icon {:name    (if @playbooks-cronjob icons/i-circle-check "spinner")
-                         :loading (if @playbooks-cronjob false true)}]
+               [icons/Icon {:name   (if @playbooks-cronjob icons/i-circle-check icons/i-spinner)
+                            :loading (if @playbooks-cronjob false true)}]
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
                                    (when @playbooks-cronjob
@@ -317,7 +317,7 @@
 
          [ui/Segment {:basic true}
           [ui/Message {:icon true}
-           [ui/Icon {:name (if apikey icons/i-circle-check "spinner")}]
+           [icons/Icon {:name (if apikey icons/i-circle-check icons/i-spinner)}]
            [ui/MessageContent
             [ui/MessageHeader
              (@tr [:nuvlabox-usb-key])]
@@ -340,7 +340,7 @@
              [ui/CardContent {:text-align :center}
               [ui/Header [:span {:style {:overflow-wrap "break-word"}}
                           (@tr [:nuvlabox-modal-usb-trigger-file])]]
-              [icons/Icon {:name    (if apikey icons/i-file-code "spinner")
+              [icons/Icon {:name    (if apikey icons/i-file-code icons/i-spinner)
                            :loading (nil? apikey)
                            :color   "green"
                            :size    :massive}]]
@@ -792,7 +792,7 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])
-        columns           [{:field-key :online :header-content [ui/Icon {:name "heartbeat"}]}
+        columns           [{:field-key :online :header-content [icons/HeartbeatIcon]}
                            {:field-key :state}
                            {:field-key :name}
                            {:field-key :description}

@@ -1211,7 +1211,7 @@
     [ui/Message {:color "brown"
                  :size  "tiny"}
      [ui/MessageHeader
-      [ui/Icon {:name "sticky note"}]
+      [icons/StickyNoteIcon]
       "Notes"]
      [ui/MessageList {:items status-notes}]]))
 

@@ -206,8 +206,8 @@
                                         credential credentials])}
      [ui/ListIcon
       [ui/Icon {:class (if selected?
-                        "check square outline"
-                        "square outline")}]]
+                        icons/i-check-square-outline
+                        icons/i-square-outline)}]]
      [ui/ListContent
       [ui/ListHeader (when selected? {:as :a})
        [icons/KeyIcon] " "
@@ -226,8 +226,8 @@
                                           (first credentials)])})
      [ui/ListIcon
       [ui/Icon {:name (if @selected?
-                        "check square outline"
-                        "square outline")}]]
+                        icons/i-check-square-outline
+                        icons/i-square-outline)}]]
      [ui/ListContent
       [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
        (case subtype

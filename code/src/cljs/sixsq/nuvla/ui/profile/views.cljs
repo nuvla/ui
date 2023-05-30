@@ -766,7 +766,7 @@
                    :on-click #(do
                                 (dispatch [::events/create-setup-intent])
                                 (dispatch [::events/open-modal :add-payment-method]))}
-        [ui/Icon {:name "plus square outline"}]
+        [icons/PlusSquareIcon]
         (str/capitalize (@tr [:add]))]])))
 
 
@@ -1018,7 +1018,7 @@
                    :basic    true
                    :size     "small"
                    :on-click #(dispatch [::events/open-modal :add-coupon])}
-        [ui/Icon {:name "plus square outline"}]
+        [icons/PlusSquareIcon]
         (str/capitalize (@tr [:add]))]])))
 
 
@@ -1127,7 +1127,7 @@
             value     (-> @form! :names->value :email)
             {:keys [txt icon]} (if (str/blank? value)
                                  {:txt  :add
-                                  :icon "plus square outline"}
+                                  :icon icons/i-plus-square-icon}
                                  {:txt  :update
                                   :icon icons/i-pencil})]
         [:<>

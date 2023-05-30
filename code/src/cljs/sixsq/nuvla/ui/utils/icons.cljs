@@ -615,3 +615,33 @@
 (defn MapIcon
   [opts]
   [I opts i-map])
+
+(def i-plus-square-icon "plus square outline")
+(defn PlusSquareIcon
+  [opts]
+  [I opts i-plus-square-icon])
+
+(def i-square-outline "square outline")
+(defn SquareOutlineIcon
+  [opts]
+  [I opts i-square-outline])
+
+(def i-check-square-outline "check square outline")
+(defn CheckSquareOutlineIcon
+  [opts]
+  [I opts i-check-square-outline])
+
+(def i-sticky-note "sticky note")
+(defn StickyNoteIcon
+  [opts]
+  [I opts i-sticky-note])
+
+(def i-heartbeat "heartbeat")
+(defn HeartbeatIcon
+  [opts]
+  [I opts i-heartbeat])
+
+(def i-spinner "spinner")
+(defn SpinnerIcon
+  [opts]
+  [I opts i-spinner])

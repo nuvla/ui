@@ -95,23 +95,13 @@
      (str/capitalize (@tr [:details]))]))
 
 
-(defn edit-button-disabled?
-  [page-changed? form-valid?]
-  (or (not page-changed?) (not form-valid?)))
-
-
 (defn save-callback
-  []
+  [form-valid?]
   (dispatch-sync [::events/set-validate-form? true])
   (dispatch-sync [::events/validate-form])
-  (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)
-        {:keys [subtype]} (get @re-frame.db/app-db ::spec/module)
-        new-subtype (:subtype @(subscribe [::route-subs/nav-query-params]))]
-    (when form-valid?
-      (dispatch [::events/set-validate-form? false])
-      (if (= (or subtype new-subtype) utils/subtype-project)
-        (dispatch [::events/open-save-modal])
-        (dispatch [::events/open-save-modal])))))
+  (when form-valid?
+    (dispatch [::events/set-validate-form? false])
+    (dispatch [::events/open-save-modal])))
 
 
 (defn DeleteButton
@@ -186,7 +176,8 @@
         paste-disabled?  (subscribe [::subs/paste-disabled?])
         deploy-disabled? (subscribe [::subs/deploy-disabled?])
         can-publish?     (subscribe [::subs/can-publish?])
-        can-unpublish?   (subscribe [::subs/can-unpublish?])]
+        can-unpublish?   (subscribe [::subs/can-unpublish?])
+        save-disabled?   (subscribe [::subs/save-btn-disabled?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true}
@@ -194,8 +185,10 @@
           [uix/MenuItem
            {:name     (@tr [:save])
             :icon     "fa-light fa-floppy-disk"
-            :disabled (edit-button-disabled? @page-changed? @form-valid?)
-            :on-click save-callback}])
+            :class    (when-not @save-disabled? "primary-menu-item")
+            :disabled @save-disabled?
+            :primary  true
+            :on-click #(save-callback @form-valid?)}])
 
         (when @is-app?
           [uix/MenuItem
@@ -508,7 +501,7 @@
         [ui/Grid {:centered true
                   :columns  2}
          [ui/GridColumn
-          [:div {:style {:display :flex
+          [:div {:style {:display         :flex
                          :justify-content :space-between}}
            [:h4 "Markdown" [general-utils/mandatory-icon]]
            [:span {:style {:color :red}}
@@ -534,9 +527,9 @@
          [ui/GridColumn
           [:h4 "Preview"]
           [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
-       :title-size   :h4
-       :title-class  :tab-app-detail
-       :label        (str/capitalize (@tr [:description]))
+       :title-size :h4
+       :title-class :tab-app-detail
+       :label (str/capitalize (@tr [:description]))
        :default-open true])))
 
 
@@ -1171,7 +1164,7 @@
                :on-change (partial on-change ::events/license-description)]
               [uix/TableRowField (@tr [:url]), :key "license-url",
                :editable? is-editable?, :spec (if @is-custom? ::spec/license-url any?), :validate-form? @validate-form?,
-               :required? true, :default-value [:a {:href (:license-url @license)
+               :required? true, :default-value [:a {:href  (:license-url @license)
                                                     :targe :_blank} (:license-url @license)],
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]
@@ -1222,7 +1215,7 @@
                :stackable true}
       [ui/GridRow {:columns 2}
        [ui/GridColumn {:floated "left"}
-       [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:description]))]]
+        [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:description]))]]
        (when @editable?
          [ui/GridColumn {:style {:text-align "right"}}
           [ui/Button {:icon     "pencil"

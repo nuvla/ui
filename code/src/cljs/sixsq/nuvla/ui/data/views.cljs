@@ -174,7 +174,7 @@
           [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
                       :on-click #(configure-fn @selected-app-id)}
-           [ui/Icon {:name "settings"}]
+           [icons/SettingsIcon]
            (@tr [:configure])]
           [ui/Button {:disabled (or (nil? @selected-app-id)
                                     deploy-disabled?)
@@ -257,7 +257,7 @@
                      [icons/FileIcon]
                      [:span (str count " " (@tr [:objects]))]]
                     [ui/Label
-                     [ui/Icon {:name "expand arrows alternate"}]
+                     [icons/ExpandingArrowsIcon]
                      [:span (utils/format-bytes size)]]]
       :on-select   #(dispatch [::events/toggle-data-set-id id])
       :selected?   selected?

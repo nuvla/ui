@@ -59,7 +59,7 @@
         is-ok?               (if @is-module-published? @is-latest-published? @is-latest?)]
     (if @completed?
       [ui/Popup {:trigger  (r/as-element
-                             [ui/Icon {:class (if is-ok? "check" icons/i-info-full)
+                             [ui/Icon {:class (if is-ok? icons/i-check-full icons/i-info-full)
                                        :color (if is-ok? "green" "blue")}])
                  :content  (@tr [:new-version-exist])
                  :wide     "very"

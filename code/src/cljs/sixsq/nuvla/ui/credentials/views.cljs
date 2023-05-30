@@ -533,8 +533,7 @@
             :disabled (not config)}
            [ui/CardContent {:text-align :center}
             [ui/Header (@tr [:credential-save])]
-            [ui/Icon {:name "file text"
-                      :size :massive}]]]]]))))
+            [icons/TextFileIcon {:size :massive}]]]]]))))
 
 
 (defn MessageKeyGenerated
@@ -969,9 +968,9 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete-credential id])
-      :trigger     (r/as-element [ui/Icon {:name  "trash"
-                                           :style {:cursor "pointer"}
-                                           :color "red"}])
+      :trigger     (r/as-element [icons/TrashIconFull
+                                  {:style {:cursor "pointer"}
+                                   :color "red"}])
       :content     [:h3 content]
       :header      (@tr [:delete-credential])
       :danger-msg  (@tr [:credential-delete-warning])
@@ -999,10 +998,9 @@
       [DeleteButton credential])
 
     (when (utils-general/can-edit? credential)
-      [ui/Icon {:name     :cog
-                :color    :blue
-                :style    {:cursor :pointer}
-                :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
+      [icons/GearIcon {:color    :blue
+                       :style    {:cursor :pointer}
+                       :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
 
 
 (defn CredentialsPane

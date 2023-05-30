@@ -42,7 +42,7 @@
                      :on-click on-click-fn}
         [ui/TableCell {:collapsing true}
          (if @creds-completed?
-           [ui/Icon {:name "key", :size "large"}]
+           [icons/KeyIcon {:size "large"}]
            [icons/WarningIcon {:size "large", :color "red"}])]
         [ui/TableCell {:collapsing true} (@tr [:credentials])]
         [ui/TableCell [:div
@@ -62,7 +62,7 @@
                           :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}
-       [ui/Icon {:name "key"}]
+       [icons/KeyIcon]
        (when (some? @status)
          [ui/Icon {:corner true
                    :name   (cond
@@ -106,7 +106,7 @@
       [ui/Message {:size    "tiny"
                    :info    compatible?
                    :warning (not compatible?)}
-       [ui/Icon {:name (if compatible? "info" "warning")}]
+       (if compatible? [icons/InfoIcon] [icons/WarningIcon])
        @compatibility-msg])))
 
 (defn InfraServiceItem

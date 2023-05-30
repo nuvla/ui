@@ -20,8 +20,8 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @license-completed?
-        [ui/Icon {:name "book", :size "large"}]
-        [ui/Icon {:name icons/i-warning, :size "large", :color "red"}])]
+        [icons/BookIcon {:size "large"}]
+        [icons/WarningIcon {:size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:eula])]
      [ui/TableCell [:div [:span (:name @license)]]]]))
 

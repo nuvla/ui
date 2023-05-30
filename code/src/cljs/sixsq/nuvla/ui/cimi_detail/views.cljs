@@ -62,7 +62,7 @@
                                       :name       menu-item-label
                                       :on-click   #(reset! show? true)}
                          (when icon
-                           [ui/Icon {:name icon}])
+                           [icons/Icon {:name icon}])
                          (str/capitalize menu-item-label)])}
          [uix/ModalHeader {:header title-text}]
          [ui/ModalContent {:scrolling (boolean scrolling?)} body]

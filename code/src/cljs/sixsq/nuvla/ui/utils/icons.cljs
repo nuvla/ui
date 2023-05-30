@@ -495,6 +495,11 @@
   [opts]
   [I opts i-stop])
 
+(def i-stop-full "fas fa-stop")
+(defn StopIconFull
+  [opts]
+  [I opts i-stop-full])
+
 (def i-bolt "fal fa-bolt")
 (defn BoltIcon
   [opts]
@@ -551,8 +556,13 @@
   [opts]
   [I opts i-caret-down])
 
-(def i-caret-left "caret left")
+(def i-caret-up "caret up")
 (defn CaretUpIcon
+  [opts]
+  [I opts i-caret-up])
+
+(def i-caret-left "caret left")
+(defn CaretLeftIcon
   [opts]
   [I opts i-caret-left])
 
@@ -560,3 +570,27 @@
 (defn AsteriskIcon
   [opts]
   [I opts i-asterisk])
+
+(def i-delete "delete")
+(defn DeleteIcon
+  [opts]
+  [I opts i-delete])
+
+(def i-text-file "file text")
+(defn TextFileIcon
+  [opts]
+  [I opts i-text-file])
+
+(def i-settings "settings")
+(defn SettingsIcon
+  [opts]
+  [I opts i-settings])
+
+(def i-expanding-arrows "expand arrows alternate")
+(defn ExpandingArrowsIcon
+  [opts]
+  [I opts i-expanding-arrows])
+
+(defn CloudDownloadIcon
+  [opts]
+  [I opts (str i-cloud "-download")])

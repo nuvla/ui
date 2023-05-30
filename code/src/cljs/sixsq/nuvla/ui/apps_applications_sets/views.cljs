@@ -68,9 +68,8 @@
                                (or saved-subtype @subtype!))]
         [ui/Modal {:close-icon true
                    :trigger    (r/as-element
-                                 [ui/Icon {:name     "add"
-                                           :color    "green"
-                                           :on-click on-open}])
+                                 [icons/AddIconFull {:color    "green"
+                                                     :on-click on-open}])
                    :header     "New apps set"
                    :content    (r/as-element
                                  [ui/ModalContent
@@ -92,8 +91,8 @@
     [values/AsLink path :label (or name module-id) :page "apps"]
     " "
     (when on-delete
-      [ui/Icon {:name     "close" :color "red" :link true
-                :on-click #(on-delete module-id)}])]])
+      [icons/CloseIcon {:color "red" :link true
+                        :on-click #(on-delete module-id)}])]])
 
 
 (defn AppsList
@@ -157,14 +156,13 @@
        :label [:<>
                (str i " | " apps-set-name)
                (when @editable?
-                 [ui/Icon {:name     "trash"
-                           :color    "red"
-                           :style    {:cursor :pointer
-                                      :float  "right"}
-                           :on-click #(do
-                                        (dispatch [::events/remove-apps-set id])
-                                        (dispatch [::main-events/changes-protection? true])
-                                        (dispatch [::apps-events/validate-form]))}])]
+                 [icons/TrashIconFull {:color    "red"
+                                       :style    {:cursor :pointer
+                                                  :float  "right"}
+                                       :on-click #(do
+                                                    (dispatch [::events/remove-apps-set id])
+                                                    (dispatch [::main-events/changes-protection? true])
+                                                    (dispatch [::apps-events/validate-form]))}])]
        :default-open true]
       )))
 
@@ -195,12 +193,12 @@
           last-published-version (apps-utils/latest-published-index versions)]
       (if published?
         (if (= v last-published-version)
-          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-published]) ")"]
-          [:span [ui/Icon {:name "warning", :color "orange"}]
+          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-published]) ")"]
+          [:span [icons/WarningIcon {:color "orange"}]
            (str (@tr [:not-up-to-date-published]))])
         (if (= v last-version)
-          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-          [:span [ui/Icon {:name "warning", :color "orange"}]
+          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
+          [:span [icons/WarningIcon {:color "orange"}]
            (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
 
 

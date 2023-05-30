@@ -21,7 +21,7 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @price-completed?
-        [ui/Icon {:name "eur", :size "large"}]
+        [icons/EuroIcon {:size "large"}]
         [icons/WarningIcon {:size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:price])]
      [ui/TableCell [:div (str
@@ -57,8 +57,8 @@
        (when @new-price
          (if (> (:cent-amount-daily @new-price)
                 (:cent-amount-daily @price))
-           [ui/Icon {:name "caret up" :color "red"}]
-           [ui/Icon {:name "caret down" :color "green"}]))
+           [icons/CaretUpIcon {:color "red"}]
+           [icons/CaretDownIcon {:color "green"}]))
 
        [:b (format-price (or @new-price @price))]]
       (when @new-price

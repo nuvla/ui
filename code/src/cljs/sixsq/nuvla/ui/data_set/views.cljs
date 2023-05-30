@@ -347,7 +347,7 @@
      {:button-text (@tr [:delete])
       :on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "trash"}]
+                                  [icons/TrashIconFull]
                                   (@tr [:delete])])
       :header      (@tr [:delete-data-set])
       :content     content}]))
@@ -472,7 +472,7 @@
                                       :label (@tr [:deployment]))])
                     (when infrastructure-service-id
                       [:div {:style {:padding "10px 0 0 0"}}
-                       [ui/Icon {:name "cloud"}]
+                       [icons/CloudIcon]
                        [values/AsLink infrastructure-service-id
                         :page "clouds" :label (@tr [:storage-service])]])]
       :tags        tags
@@ -486,7 +486,7 @@
                            :target   "_blank"
                            :style    {:color "white"}
                            :download (when filename filename)}
-                       [ui/Icon {:name "cloud download"}] " "
+                       [icons/CloudDownloadIcon] " "
                        (@tr [:download])]])}]))
 
 (defn cards-per-device
@@ -533,7 +533,7 @@
                               :on-click #(dispatch
                                            [::data-events/search-application
                                             module-filter])}
-                    [ui/Icon {:name "eye"}]
+                    [icons/EyeIcon]
                     (@tr [:preview])])
         :header  (str/capitalize (@tr [:application]))
         :content [ApplicationList {:selectable? false}]}])))

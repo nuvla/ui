@@ -31,9 +31,9 @@
   [state]
   (if (str/ends-with? state "ING")
     "sync"
-    (get {STARTED "play"
-          STOPPED "stop"
-          CREATED "circle outline"} state)))
+    (get {STARTED icons/i-play
+          STOPPED icons/i-stop
+          CREATED icons/i-circle-outline} state)))
 
 (defn StatisticStates
   [clickable?]

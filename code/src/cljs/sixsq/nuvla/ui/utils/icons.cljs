@@ -349,6 +349,11 @@
   [opts]
   [I opts i-arrow-down])
 
+(def i-arrow-left "fa-light fa-arrow-left")
+(defn ArrowLeftIcon
+  [opts]
+  [I opts i-arrow-left])
+
 (def i-arrow-right-bracket "fa-light fa-arrow-right-from-bracket")
 (defn ArrowRightFromBracketIcon
   [opts]
@@ -363,6 +368,11 @@
 (defn AngleDownIcon
   [opts]
   [I opts i-angle-down])
+
+(def i-angle-up "fa-light fa-angle-up")
+(defn AngleUpIcon
+  [opts]
+  [I opts i-angle-up])
 
 (def i-angle-right "fa-light fa-angle-right")
 (defn AngleRightIcon
@@ -594,3 +604,13 @@
 (defn CloudDownloadIcon
   [opts]
   [I opts (str i-cloud "-download")])
+
+(def i-circle-outline "circle outline")
+(defn CircleOutlineIcon
+  [opts]
+  [I opts i-circle-outline])
+
+(def i-map "fa-map")
+(defn MapIcon
+  [opts]
+  [I opts i-map])

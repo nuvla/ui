@@ -36,7 +36,7 @@
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
-        [ui/Icon {:name "check"}])]]))
+        [icons/CheckIconFull])]]))
 
 
 (defn AddButton
@@ -67,7 +67,7 @@
                         [:div {:style {:float "right"}}
                          [OnlineStatusIcon online :corner "top right"]]
                         [ui/IconGroup
-                         [ui/Icon {:name "box"}]
+                         [icons/BoxIcon]
                          (when (some #{id} managers)
                            [icons/CrownIcon {:corner    true
                                              :color     "blue"}])]

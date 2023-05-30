@@ -108,7 +108,7 @@
                      :active   true
                      :style    {:margin-left "2rem"}
                      :on-click (fn [] (reset! mode :confirming))}
-          [icons/CheckIcon {:style {:margin 0}}]]]
+          [icons/CheckIconFull {:style {:margin 0}}]]]
         [:div
          [:span (str (@tr [:are-you-sure?]) " ")]
          [uix/Button {:text     (str (str/capitalize (@tr [:yes])) ", " text)

@@ -22,7 +22,7 @@
 
 (defn DeleteIcon
   [{:keys [on-click]}]
-  [ui/Icon {:name     "delete"
+  [ui/Icon {:name     icons/i-delete
             :link     true
             :style    {:margin-right ".5em"}
             :on-click on-click}])

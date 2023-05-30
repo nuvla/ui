@@ -53,7 +53,7 @@
                              #()]))
       :disabled (not (general-utils/can-operation?
                        "start" deployment-set))}
-     [ui/Icon {:name "play"}]
+     [icons/PlayIcon]
      (@tr [:start])]))
 
 (defn StopButton
@@ -67,7 +67,7 @@
                              #()]))
       :disabled (not (general-utils/can-operation?
                        "stop" deployment-set))}
-     [ui/Icon {:name "stop"}]
+     [icons/StopIcon]
      (@tr [:stop])]))
 
 
@@ -78,7 +78,7 @@
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "trash"}]
+                                  [icons/TrashIconFull]
                                   (@tr [:delete])])
       :content     [:h3 content]
       :header      (@tr [:delete-deployment-set])
@@ -284,9 +284,8 @@
     [ui/Modal
      {:close-icon true
       :trigger    (r/as-element
-                    [ui/Icon {:name     "add"
-                              :color    "green"
-                              :on-click on-open}])
+                    [icons/AddIconFull {:color    "green"
+                                        :on-click on-open}])
       :header     "New apps set"
       :content    (r/as-element
                     [ui/ModalContent
@@ -303,15 +302,15 @@
   (condp = subtype
     "infrastructure-service-swarm" [icons/DockerIcon]
     "infrastructure-service-kubernetes" [apps-utils/IconK8s false]
-    [ui/Icon {:name "question circle"}]))
+    [icons/QuestionCircleIcon]))
 (defn TargetNameIcon
   [{:keys [subtype name] target-id :id} on-delete]
   [ui/ListItem
    [TargetIcon subtype]
    [ui/ListContent (or name target-id) " "
     (when on-delete
-      [ui/Icon {:name     "close" :color "red" :link true
-                :on-click #(on-delete target-id)}])]])
+      [icons/CloseIcon {:color "red" :link true
+                        :on-click #(on-delete target-id)}])]])
 
 
 (defn TargetsList

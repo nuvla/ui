@@ -69,7 +69,7 @@
      {:button-text (@tr [:delete])
       :on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "trash"}]
+                                  [ui/Icon {:class icons/i-trash-full}]
                                   (@tr [:delete])])
       :header      (@tr [:delete-nuvlabox])
       :content     [:h3 content]}]))
@@ -114,7 +114,7 @@
                      opts)]
          (when (:pre-release @selected-release) [:span {:style {:margin "1em"
                                                                 :color  "darkorange"}}
-                                                 (r/as-element [ui/Icon {:name "exclamation triangle"}])
+                                                 (r/as-element [ui/Icon {:class icons/i-triangle-exclamation}])
                                                  (@tr [:nuvlabox-pre-release])])]))))
 
 
@@ -147,7 +147,7 @@
         :on-close   close-fn
         :trigger    (r/as-element
                       [ui/MenuItem {:on-click #(reset! show? true)}
-                       [ui/Icon {:name icon}]
+                       [ui/Icon {:class icon}]
                        title])}
        [uix/ModalHeader {:header title}]
        [ui/ModalContent
@@ -251,7 +251,7 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name icon}]
+                         [ui/Icon {:class icon}]
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
@@ -419,7 +419,7 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name "linkify"}]
+                         [ui/Icon {:class "linkify"}]
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
@@ -543,7 +543,7 @@
       :on-close   close-fn
       :trigger    (r/as-element
                     [ui/MenuItem {:on-click #(reset! show? true)}
-                     [ui/Icon {:name icon}]
+                     [ui/Icon {:class icon}]
                      title])}
      [uix/ModalHeader {:header title}]
      [ui/ModalContent
@@ -582,7 +582,7 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name icon}]
+                         [ui/Icon {:class icon}]
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
@@ -942,7 +942,7 @@
               "Raw sample: "
               [ui/LabelDetail
                [ui/Popup
-                {:trigger        (r/as-element [ui/Icon {:name "eye"}])
+                {:trigger        (r/as-element [ui/Icon {:class icons/i-eye}])
                  :content        (last (:data-gateway stat))
                  :position       "right center"
                  :inverted       true
@@ -1139,10 +1139,10 @@
                                     (or (:name sshkey) (:id sshkey))]]
                                   [ui/ListDescription
                                    (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                :trigger   (r/as-element [ui/Icon {:name   "key"
+                :trigger   (r/as-element [ui/Icon {:class icons/i-key
                                                    :fitted true}
                                           (@tr [:nuvlabox-detail-ssh-enabled])
-                                          [ui/Icon {:name   "angle down"
+                                          [ui/Icon {:class icons/i-angle-down
                                                     :fitted true}]])}]]])
           (when docker-server-version
             [ui/TableRow
@@ -1169,7 +1169,7 @@
                  [:div {:style {:display         :flex
                                 :justify-content :space-between}}
                   [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs")]
-                  [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
+                  [ui/Icon {:class (if @show-ips icons/i-angle-up icons/i-angle-down)}]]]])
              (when @show-ips
                [IpsRow {:ips (map (fn [{:keys [interface ips]}]
                                     {:name interface
@@ -2008,7 +2008,7 @@
   (let [{:keys [id name online]} @(subscribe [::subs/nuvlabox])]
     [:h2
      [ui/IconGroup
-      [ui/Icon {:name icons/i-box}]
+      [icons/BoxIcon]
       [OnlineStatusIcon online true true]]
      (or name id)]))
 

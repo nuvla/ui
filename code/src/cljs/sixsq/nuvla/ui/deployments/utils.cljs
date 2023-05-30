@@ -163,10 +163,10 @@
                 (some-> href general-utils/id->short-uuid))]
     (when href
       [:<>
-       [ui/Icon {:name (cond nuvlabox "box"
-                         infrastructure-service "cloud"
-                         parent "key"
-                         :else nil)}]
+       (cond nuvlabox [icons/BoxIcon]
+             infrastructure-service [icons/CloudIcon]
+             parent [icons/KeyIcon]
+             :else nil)
        (if link
          [values/AsLink (general-utils/id->uuid href)
           :label label

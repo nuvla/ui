@@ -176,7 +176,7 @@
         is-small-device? (subscribe [::subs/is-small-device?])]
     (when-not @is-small-device?
       [ui/Segment {:raised true :compact true}
-       [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]])))
+       [:span [ui/Icon {:name icons/i-arrow-left}] (@tr [:statistics-select-info])]])))
 
 
 (defn InfoPopup
@@ -237,7 +237,7 @@
 
 (defn Pencil
   [editing?]
-  [ui/Icon {:name     icons/i-pencil
+  [ui/Icon {:clas     icons/i-pencil
             :on-click #(reset! editing? true)
             :style    {:cursor "pointer"}}])
 
@@ -328,7 +328,7 @@
          (for [tag tags]
            ^{:key (str uuid "_" tag)}
            [ui/Popup
-            {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+            {:trigger        (r/as-element [ui/Label [ui/Icon {:class icons/i-tag}]
                                             (utils-general/truncate tag 20)])
              :content        tag
              :position       "bottom center"

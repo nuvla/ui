@@ -500,8 +500,8 @@
     (let [tr           (subscribe [::i18n-subs/tr])
           last-version (ffirst versions)]
       (if (= v last-version)
-        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-        [:span [ui/Icon {:name "warning", :color "orange"}]
+        [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
+        [:span [icons/WarningIcon {:color "orange"}]
          (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
 
@@ -603,7 +603,7 @@
       [ui/CardDescription
 
        (when cred
-         [:div [ui/Icon {:name "key"}] cred])]
+         [:div [icons/KeyIcon] cred])]
 
       [ui/LabelGroup {:size  "tiny"
                       :color "teal"
@@ -614,7 +614,7 @@
                             :overflow      "hidden"
                             :text-overflow "ellipsis"
                             :white-space   "nowrap"}}
-          [ui/Icon {:name "tag"}] tag])]]
+          [icons/TagIcon] tag])]]
 
      (when (and (deployments-utils/started? state)
                 @primary-url)
@@ -691,7 +691,7 @@
            [ui/TableCell (str/capitalize (@tr [:deployment-set]))]
            [ui/TableCell
             [:<>
-             [ui/Icon {:name "bullseye"}]
+             [icons/BullseyeIcon]
              [values/AsLink (general-utils/id->uuid deployment-set) :label
               (or deployment-set-name
                   (general-utils/id->uuid deployment-set))

@@ -99,13 +99,12 @@
        @principal-name
        ff/nbsp
        (when removable?
-         [ui/Icon {:name     "close"
-                   :link     true
-                   :size     "small"
-                   :color    "red"
-                   :on-click #(do
-                                (swap! ui-acl utils/acl-remove-owner principal)
-                                (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]]))
+         [icons/CloseIcon {:link     true
+                           :size     "small"
+                           :color    "red"
+                           :on-click #(do
+                                        (swap! ui-acl utils/acl-remove-owner principal)
+                                        (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]]))
 
 
 (defn RightCheckbox

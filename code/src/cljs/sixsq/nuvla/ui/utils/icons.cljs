@@ -525,3 +525,8 @@
 (defn ShieldIcon
   [opts]
   [I opts i-shield])
+
+(def i-close "fa-close")
+(defn CloseIcon
+  [opts]
+  [I opts i-close])

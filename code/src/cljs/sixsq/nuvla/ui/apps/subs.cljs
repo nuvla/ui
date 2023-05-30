@@ -108,13 +108,6 @@
     (and is-app? unpublish-op is-published?)))
 
 (reg-sub
-  ::save-btn-disabled?
-  :<- [::form-valid?]
-  :<- [::main-subs/changes-protection?]
-  (fn [[form-valid? page-changed?]]
-    (or (not page-changed?) (not form-valid?))))
-
-(reg-sub
   ::module-license
   :<- [::module-common]
   (fn [module-common]

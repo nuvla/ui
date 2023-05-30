@@ -78,11 +78,6 @@ i.icon.fas {
   font-weight: 400 !important;
 }
 
-.primary-menu-item {
-  color: #fff !important;
-  background-color: #2185d0 !important;
-}
-
 .ui.labeled.icon.menu .item > .icon:not(.dropdown) {
   margin: 0 auto 0.4rem !important;
 }

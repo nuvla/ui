@@ -385,21 +385,21 @@
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
   (let [tr    (subscribe [::i18n-subs/tr])
-        icon  "rocket"
-        color "blue"]
-    [ui/Segment {:secondary true
-                 :color     color
+        icon  "rocket"]
+    [ui/Segment {:class     :nuvla-deployments
+                 :secondary true
                  :raised    true
                  :style     {:display         "flex"
-                             :flex-direction  "column"
+                             :flex-direction   "column"
                              :justify-content "space-between"}}
 
-     [:h4 [ui/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
+     [:h4 {:class :ui-header
+           :style {:border-radius ".28571429rem .28571429rem 0 0"}}
+      [ui/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
 
      [StatisticStates false deployment-subs]
 
-     [ui/Button {:color    color
-                 :icon     icon
+     [ui/Button {:class    "center"
                  :style    {:align-self "start"}
                  :content  "Show me"
                  :on-click (or on-click

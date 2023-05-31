@@ -584,7 +584,7 @@ body .ui.primary.white-button.button:hover,
   background-color: rgba(237, 43, 43, 1) !important;
   color: #ffffff !important;
 }
-body .ui.inverted.secondary.button{
+body .ui.inverted.secondary.button {
   box-shadow: none !important;
 }
 body .ui.secondary.button {
@@ -1011,7 +1011,7 @@ body .divider-red {
 
 .nuvla-apps .ui.secondary.segment h4.tab-app-detail,
 .nuvla-apps .uix-apps-details-details h4.tab-app-detail,
-.nuvla-apps .uix-apps-details-share h4.tab-app-share{
+.nuvla-apps .uix-apps-details-share h4.tab-app-share {
   color: rgba(0, 0, 0, 0.87) !important;
   font-weight: 400;
   font-size: 1rem;
@@ -1021,25 +1021,30 @@ body .divider-red {
   border-radius: 0.25rem;
 }
 
-
 .nuvla-apps .uix-apps-details-details .ui.styled.accordion > .active.title {
-    background-color: transparent;
-    border-bottom :  1px solid rgba(34, 36, 38, 0.15);
-    margin-bottom: 15px;
+  background-color: transparent;
+  border-bottom: 1px solid rgba(34, 36, 38, 0.15);
+  margin-bottom: 15px;
 }
 
-
-i.link.icon, i.link.icons {
-    opacity: .4;
-    font-size: .8rem;
+i.link.icon,
+i.link.icons {
+  opacity: 0.4;
+  font-size: 0.8rem;
 }
 
-.uix-apps-details h2{
-    font-size: 1.2rem;
+.uix-apps-details h2 {
+  font-size: 1.2rem;
 }
-.uix-apps-details > h2:first-child{
-     display: block !important;
-    padding: 20px 0 5px 0;
+.uix-apps-details > h2:first-child {
+  display: block !important;
+  padding: 20px 0 5px 0;
 }
 
 /** apps end **/
+
+/** general **/
+.ui.input > input {
+  font-family: 'Poppins' !important;
+}
+/**  general **/

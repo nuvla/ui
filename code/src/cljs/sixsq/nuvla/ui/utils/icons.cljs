@@ -611,6 +611,11 @@
   [opts]
   [I opts i-circle-outline])
 
+(def i-question-circle-outline "question circle outline")
+(defn QuestionCircleOutlineIcon
+  [opts]
+  [I opts i-question-circle-outline])
+
 (def i-map "fa-map")
 (defn MapIcon
   [opts]

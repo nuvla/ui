@@ -172,4 +172,4 @@
     "nuvlabox" icons/i-box
     "infrastructure-service" icons/i-cloud
     "deployment" icons/i-rocket
-    "question circle outline"))
+    icons/i-question-circle-outline))

@@ -3,6 +3,7 @@
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.edges.events :as events]
+            [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.subs :as subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -45,7 +46,7 @@
       :icon     "add"
       :on-click #(dispatch
                    [::main-events/subscription-required-dispatch
-                    [::events/open-modal :add]])}]))
+                    [::events/open-modal spec/modal-add-id]])}]))
 
 (defn- date-string->time-ago [created]
   (-> created time/parse-iso8601 time/ago))

@@ -79,12 +79,6 @@
     (assoc db ::spec/validate-form? validate-form?)))
 
 
-(reg-event-db
-  ::set-module-spec
-  (fn [db [_ module-spec]]
-    (assoc db ::spec/module-spec module-spec)))
-
-
 ; Perform form validation if validate-form? is true.
 (reg-event-db
   ::validate-form
@@ -96,14 +90,10 @@
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form?
                            (and
-                             (s/valid? ::spec/module-common module-common)
+                             (utils/module-common-valid?
+                               module-common module-subtype)
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
-      ; Helpful to debug validation issues
-      ;(log/error "module-common validate: "
-      ;           (s/explain-str ::spec/module-common module-common))
-      ;(log/error "optional form validate: "
-      ;           (s/explain-str form-spec module))
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -118,12 +108,6 @@
   ::active-input
   (fn [db [_ input-name]]
     (assoc db ::spec/active-input input-name)))
-
-
-(reg-event-db
-  ::form-invalid
-  (fn [db [_]]
-    (assoc db ::spec/form-valid? false)))
 
 
 (reg-event-db
@@ -186,7 +170,8 @@
           (assoc ::spec/module-common {})
           (assoc ::main-spec/loading? false)
           (assoc-in [::spec/module-common ::spec/name] new-name)
-          (assoc-in [::spec/module-common ::spec/description] "")
+          (assoc-in [::spec/module-common ::spec/description] (or (utils/subtype->descr-template new-subtype)
+                                                                  ""))
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
           (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
           (assoc-in [::spec/module-common ::spec/subtype] new-subtype)

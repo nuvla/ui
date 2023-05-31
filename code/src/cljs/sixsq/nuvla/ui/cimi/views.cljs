@@ -97,7 +97,8 @@
      ^{:key (str "row-" i)}
      [results-table-row row-fn entry i])])
 
-(defn results-table [selected-fields entries]
+(defn results-table
+  [selected-fields entries]
   (when (and (pos? (count entries))
              (pos? (count selected-fields)))
     (let [row-fn (results-table-row-fn selected-fields)]
@@ -477,18 +478,15 @@
       (let [[_ resource-type uuid] @path]
         (dispatch [::events/set-collection-name resource-type uuid])
         (when @query-params
-          (dispatch [::events/set-query-params @query-params])))
-      (let [n        (count @path)
-            children (case n
-                       1 [MenuBar]
-                       2 [:<>
-                          [MenuBar]
-                          [ResultsDisplay]]
-                       3 [cimi-detail-views/cimi-detail]
-                       [MenuBar])]
-
+          (dispatch [::events/set-query-params @query-params]))
         [ui/Segment style/basic
-         children]))))
+         (case (count @path)
+           1 [MenuBar]
+           2 [:<>
+              [MenuBar]
+              [ResultsDisplay]]
+           3 [cimi-detail-views/cimi-detail]
+           [MenuBar])]))))
 
 (defn ApiView
   [_path]

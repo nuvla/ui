@@ -4,24 +4,24 @@
                                    reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.edges.spec :as spec]
-            [sixsq.nuvla.ui.edges.utils :as utils]
+            [sixsq.nuvla.ui.edges.utils :as utils :refer [get-full-filter-string]]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
-                                                  get-stored-db-value-from-query-param]]
+                                                  get-stored-db-value-from-query-param] :as route-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
+            [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
+            [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
-(def refresh-id-inferred-locations :nuvlabox-get-nuvlabox-inferred-locations)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
 (def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
@@ -29,15 +29,19 @@
 
 (reg-event-fx
   ::init
-  (fn [{{:keys [current-route] :as db} :db}]
-    (let [db-path      ::spec/state-selector
-          search-query (get-stored-db-value-from-query-param current-route [db-path])
-          filter-query  (get-query-param current-route (keyword spec/resource-name))]
+  [(inject-cofx :storage/all)]
+  (fn [{{:keys [current-route] :as db} :db
+        storage                        :storage/all}]
+    (let [db-path            ::spec/state-selector
+          search-query       (get-stored-db-value-from-query-param current-route [db-path])
+          filter-storage-key (get-query-param current-route :filter-storage-key)
+          storage-filter     (get storage filter-storage-key)
+          filter-query       (get-query-param current-route (keyword spec/resource-name))]
       {:db (-> db
                (merge spec/defaults)
                (assoc ::main-spec/loading? true)
                (assoc db-path search-query)
-               (assoc ::spec/additional-filter filter-query))
+               (assoc ::spec/additional-filter (or storage-filter filter-query)))
        :fx [[:dispatch [::init-view]]
             [:dispatch [::refresh-root]]
             [:dispatch [::get-nuvlabox-releases]]]})))
@@ -46,7 +50,7 @@
   ::init-view
   [(inject-cofx :storage/get {:name spec/local-storage-key})]
   (fn [{{current-route :current-route} :db
-        storage :storage/get}]
+        storage                        :storage/get}]
     (let [view-query (-> current-route :query-params :view)]
       (when-not view-query
         {:fx [[:dispatch [::routing-events/change-query-param
@@ -71,21 +75,6 @@
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-clusters]}]]]}))
 
-
-(reg-event-fx
-  ::refresh-clusters
-  (fn [_ _]
-    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlaboxes]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlaboxes-summary]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-id-clusters
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlabox-clusters]}]]]}))
-
-
 (reg-event-fx
   ::refresh-cluster
   (fn [_ [_ cluster-id]]
@@ -97,24 +86,43 @@
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
-
 (reg-event-fx
   ::get-nuvlaboxes
-  (fn [{{:keys [::spec/state-selector
-                ::spec/ordering
-                ::spec/additional-filter] :as db} :db} _]
+  (fn [{{:keys [::spec/ordering] :as db} :db} _]
     (let [ordering (or ordering spec/default-ordering)]
       {::cimi-api-fx/search
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)
-              :filter  (general-utils/join-and
-                         (when state-selector (utils/state-filter state-selector))
-                         additional-filter
-                         (full-text-search-plugin/filter-text
-                           db [::spec/edges-search]))}
+              :filter  (get-full-filter-string db)}
              (pagination-plugin/first-last-params
                db [::spec/pagination]))
         #(dispatch [::set-nuvlaboxes %])]})))
+
+(reg-event-fx
+  ::get-edges-without-edit-rights
+  (fn [{{:keys [::spec/select
+                ::session-spec/session] :as db} :db} _]
+    (let [selected-filter (table-plugin/build-bulk-filter
+                            select
+                            (get-full-filter-string db))
+          filter          (create-filter-for-read-only-resources session selected-filter)]
+      {::cimi-api-fx/search
+       [:nuvlabox
+        {:filter filter :select "id"}
+        #(dispatch [::set-edges-without-edit-rights %])]})))
+
+(reg-event-fx
+  ::set-edges-without-edit-rights
+  (fn [{:keys [db]} [_ nuvlaboxes]]
+    (if (instance? js/Error nuvlaboxes)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                   {:header  (cond-> (str "failure getting nuvlaedges")
+                                     status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
+
 
 
 (reg-event-fx
@@ -123,7 +131,8 @@
     {:db (-> db
              (assoc ::spec/additional-filter filter)
              (assoc-in [::spec/pagination :active-page] 1))
-     :fx [[:dispatch [::get-nuvlaboxes]]]}))
+     :fx [[:dispatch [::get-nuvlaboxes]]
+          [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]]}))
 
 (reg-event-fx
   ::set-nuvlaboxes
@@ -131,12 +140,12 @@
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
-                                     status (str " (" status ")"))
+                   {:header  (cond-> (str "failure getting nuvlaedges")
+                               status (str " (" status ")"))
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                     ::main-spec/loading? false)
+                  ::main-spec/loading? false)
        :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
 
 
@@ -213,27 +222,6 @@
                              nil)
                            #(dispatch [::set-nuvlaboxes-summary %])]}))
 
-
-(reg-event-fx
-  ::set-nuvlabox-cluster-summary
-  (fn [{db :db} [_ nuvlaboxes-summary]]
-    {:db (assoc db ::spec/nuvlabox-cluster-summary nuvlaboxes-summary)}))
-
-
-(reg-event-fx
-  ::get-nuvlabox-cluster-summary
-  (fn [{{:keys [::spec/nuvlabox-cluster] :as db} :db} _]
-    {::cimi-api-fx/search [:nuvlabox
-                           (utils/get-query-aggregation-params
-                             (full-text-search-plugin/filter-text
-                               db [::spec/edges-search])
-                             "terms:online,terms:state"
-                             (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
-                                  (map #(str "id='" % "'"))
-                                  (apply general-utils/join-or)))
-                           #(dispatch [::set-nuvlabox-cluster-summary %])]}))
-
-
 (reg-event-fx
   ::set-nuvlabox-clusters
   (fn [{:keys [db]} [_ nuvlabox-clusters]]
@@ -287,14 +275,19 @@
        :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]
             [:dispatch [::get-nuvlabox-locations]]
             [:dispatch [::routing-events/store-in-query-param {:db-path [db-path]
-                                                               :value   state-selector}]]]})))
+                                                               :value   state-selector}]]
+            [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]
+             ]]})))
 
 
-(reg-event-db
+(reg-event-fx
   ::open-modal
-  (fn [db [_ modal-id]]
-    (assoc db ::spec/open-modal modal-id)))
-
+  (fn [{db :db} [_ modal-id]]
+    (let [fx (when (and (tags-modal-ids-set modal-id)
+                        (not (tags-modal-ids-set (::spec/open-modal db))))
+               [:dispatch [::get-edges-without-edit-rights]])]
+      {:db (assoc db ::spec/open-modal modal-id)
+       :fx [fx]})))
 
 (reg-event-fx
   ::create-ssh-key
@@ -411,7 +404,7 @@
       {:db                  (assoc db ::spec/nuvlabox-releases nil)
        ::cimi-api-fx/search [:nuvlabox-release
                              {:select  "id, release, pre-release, release-notes, url, compose-files, published"
-                              :filter   (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" (get-active-claim session) "'"))
+                              :filter  (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" (get-active-claim session) "'"))
                               :orderby "release:desc"
                               :last    10000}
                              #(dispatch [::set-nuvlabox-releases %])]})))
@@ -455,7 +448,7 @@
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                   {:header  (cond-> (str "failure getting nuvlaedges")
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
@@ -497,7 +490,7 @@
 (reg-event-fx
   ::change-view-type
   (fn [{{:keys [current-route]} :db} [_ new-view-type]]
-    (let [current-view  (keyword (-> current-route :query-params :view))
+    (let [current-view   (keyword (-> current-route :query-params :view))
           preferred-view {:view new-view-type}]
       {:fx [(when (#{new-view-type current-view} spec/cluster-view)
               [:dispatch [::pagination-plugin/change-page

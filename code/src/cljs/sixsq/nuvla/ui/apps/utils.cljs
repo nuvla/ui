@@ -1,6 +1,7 @@
 (ns
   sixsq.nuvla.ui.apps.utils
-  (:require [clojure.string :as str]
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
@@ -10,6 +11,59 @@
 (def subtype-application "application")
 (def subtype-application-k8s "application_kubernetes")
 (def subtype-applications-sets "applications_sets")
+
+(def apps-description-template "# App Description Placeholder
+
+This is a generic placeholder that you should replace with your own app description.
+Be sure to provide a clear and concise overview of your app, its features, and its benefits.
+
+## Licenses
+Please include information about the licenses under which that software is distributed, including any third-party or
+open-source software used by your app.
+
+## Documentation
+You can also provide a link to your app's external documentation, which should include a comprehensive guide to getting
+started with your app, as well as detailed information on how to use its various features.
+Here is an [example link](https://example.com/docs) to external documentation.
+
+## Companion apps
+If you offer companion apps, please mention them and provide links for users to install them.
+
+For more information on how to format your app description using Markdown syntax, please see the [Basic Syntax Guide](https://www.markdownguide.org/basic-syntax/) and the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/).
+
+![App Screenshot](https://sos-ch-gva-2.exo.io/nuvla-images/bb-overview-blured.png)
+
+")
+
+(def projects-description-template  "# Project Description Placeholder
+
+This is a generic placeholder that you should replace with your own project description.
+Be sure to provide a clear and concise overview of what this project contains (i.e. apps and/or sub-projects). If this is your root project (aka first level project), it's a good idea to introduce your organisation.
+
+For more information on how to format your app description using Markdown syntax, please see the [Basic Syntax Guide](https://www.markdownguide.org/basic-syntax/) and the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/).
+"
+)
+
+(def subtype->descr-template
+  {subtype-application apps-description-template
+   subtype-project     projects-description-template})
+
+(defn descr-not-template?
+  [module-subtype description]
+  (not=
+    (subtype->descr-template module-subtype)
+    description))
+
+(defn description-valid?
+  [module-subtype description]
+  (and
+    (s/valid? ::spec/description description)
+    (descr-not-template? module-subtype description)))
+
+(defn module-common-valid?
+  [module-common module-subtype]
+  (and (s/valid? ::spec/module-common module-common)
+    (description-valid? module-subtype (::spec/description module-common))))
 
 (def publish-icon
   "check circle outline")
@@ -34,23 +88,9 @@
   (-> module-id (str/split #"/") last (str/split #"_") second))
 
 
-(defn published?
-  "Check if the module version is published"
-  [module module-id]
-  (let [versions (:versions module)
-        index    (extract-version module-id)
-        version  (if (nil? index) (dec (count versions)) (js/parseInt index))]
-    (-> versions (nth version) :published true?)))
-
-
 (defn filter-published-versions
   [map-versions]
   (filter #(true? (-> % second :published true?)) map-versions))
-
-
-(defn compose-module-id
-  [module-version]
-  (str (-> module-version second :href) "_" (first module-version)))
 
 
 (defn latest-published-index
@@ -71,13 +111,6 @@
   [module-id map-versions]
   (let [index (-> map-versions filter-published-versions ffirst)]
     (str module-id "_" index)))
-
-
-(defn latest-published?
-  "Check if the module version corresponds to the latest published version."
-  [version-id map-versions]
-  (let [lastest (latest-published-version map-versions)]
-    (= (:href lastest) version-id)))
 
 
 (defn nav-path->module-path
@@ -381,11 +414,6 @@
   (let [vendors (module->groups module)]
     #_:clj-kondo/ignore
     (not (empty? vendors))))
-
-
-(defn vendor-name
-  [user]
-  (drop 6 user))
 
 
 (defn set-reset-error

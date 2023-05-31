@@ -2,6 +2,67 @@
 
 ## Unreleased
 
+## Released
+
+## [2.33.7] - 2023-05-19
+
+### Changed
+
+- Deployment set - Accept licenses widget #1220
+- Deployment set details - Show prices section and require user confirmation
+- Deployment set details - Show licenses concerned applications
+- Application sets - Link to apps
+- Deployments page - bulk actions #1195
+- Session - Switch group add divider between hierarchy #1231
+- App - Navigation version of one app affect another one bugfix #1244
+- App - Makes EULA link clickable
+- App - Provides a description template when creating a new app or project #1194
+- Apps details - Fix SixSq Apps EULA link
+- About page - Replace release notes by software versions link #1218
+- Clouds page - Fixes colours of state icon, bugfix #1223
+- Enables bulk actions in table plugin - Moves deployments bulk action feature
+  to table plugin #1180
+- Edges page - Bulk updating tags
+- Edges overview, table view - Enables bulk editing of tags #1194
+- Edges details, overview tab - Adds node labels to Cluster status card #1207
+- Github e2e - Cache NPM packages, use playwright container, optimize order
+- Config.json - Update licenses
+- Deployments overview, table view - Enables bulk editing of tags #1209
+- About page - Updates logos and text, #1262
+- App, new projects - Hide paste button, #1270
+- App details - Show only app name without parent project in title, #1235
+- Welcome page - Always show house icon as default in breadcrumbs, #1255
+- App details, projects - Tab changes ignores changes protection, #1258
+- App details - Resets active tab to default when changing apps, #1240
+
+
+## [2.33.6] - 2023-04-28
+
+### Changed
+
+- About page - Terms and conditions link added
+- Api - Resource list not cleaning when changing to a different tab, resulting
+  in impossibility of searching #1191
+- Api - Query params should not be kept when changing collection and browsing in
+  history
+- Api - Double navigation fired when clicking on id
+- Sementic extensions - Link component stop propagation on click event
+- Api detail - Browsing history show empty page even if resource is cached
+- Applications sets details - Use explicit subtype instead of guessing from apps
+  selected #1213
+- Deployment set detail - For each applications sets select targets depending on
+  subtype #2356
+
+## [2.33.5] - 2023-04-24
+
+### Changed
+
+- Profile - Button add vendor email misalignment fix
+
+## [2.33.4] - 2023-04-24
+
+### Changed
+
 - Notification subscriptions - Shows GiB unit for network in modal
 - Api Page - Persists and loads all filter parameters
 - App - Allow user to choose how to run a docker application

@@ -46,7 +46,7 @@
                        (dissoc :text)
                        (dissoc :icon)
                        (assoc :aria-label text))]
-    [ui/Button final-opts (when icon [ui/Icon {:name icon}]) text]))
+    [ui/Button final-opts (when icon [Icon {:name icon}]) text]))
 
 
 (defn MenuItem
@@ -320,7 +320,8 @@
        :on-click (fn [event]
                    (when-not (.-metaKey event)              ;;cmd key not pressed
                      (dispatch [::routing-events/navigate href])
-                     (.preventDefault event)))}
+                     (.preventDefault event)
+                     (.stopPropagation event)))}
    (or label href)])
 
 
@@ -435,7 +436,7 @@
                   :color "teal"
                   :style {:margin-top 10, :max-height 150, :overflow "auto"}}
    (for [tag tags]
-     ^{:key (str uuid "_" tag)}
+     ^{:key (random-uuid)}
      [ui/Popup
       {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
                                       (utils-general/truncate tag 20)])

@@ -1,8 +1,10 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -11,10 +13,9 @@
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
-            [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-fx
@@ -33,16 +34,20 @@
 (defn load-module-configurations
   [modules-by-id fx [id {:keys [applications]}]]
   (->> applications
-       (map (fn [{module-id :id :keys [version environmental-variables]}]
+       (map (fn [{module-id :id :keys [version
+                                       environmental-variables
+                                       registries-credentials]}]
               (when (get modules-by-id module-id)
                 [:dispatch [::module-plugin/load-module
                             [::spec/apps-sets id]
                             (str module-id "_" version)
-                            (when (seq environmental-variables)
-                              {:env (->> environmental-variables
-                                         (map (juxt :name :value))
-                                         (into {}))})]])))
+                            {:env                    (when (seq environmental-variables)
+                                                       (->> environmental-variables
+                                                            (map (juxt :name :value))
+                                                            (into {})))
+                             :registries-credentials registries-credentials}]])))
        (concat fx)))
+
 (reg-event-fx
   ::load-apps-sets-response
   (fn [{:keys [db]} [_ module apps-count {:keys [resources]}]]
@@ -171,55 +176,22 @@
              :application application})
           ) env-vars))
 
-(reg-event-fx
-  ::create
-  (fn [{{:keys [::spec/targets-selected
-                ::spec/apps-selected
-                ::spec/create-name
-                ::spec/create-description
-                ::spec/create-start] :as db} :db}]
-    {::cimi-api-fx/add
-     [:deployment-set
-      (cond->
-        {:spec {:applications (map #(str (:id %) "_"
-                                         (module-plugin/db-selected-version
-                                           db [::spec/module-versions] (:id %)))
-                                   apps-selected)
-                :targets      (map :id targets-selected)
-                :env          (mapcat (fn [{:keys [id]}]
-                                        (->> id
-                                             (module-plugin/db-environment-variables
-                                               db [::spec/module-versions])
-                                             (changed-env-vars id)))
-                                      apps-selected)
-                :coupons      (keep (fn [{:keys [id]}]
-                                      (when-let [coupon (->> id
-                                                             (module-plugin/db-coupon
-                                                               db [::spec/module-versions]))]
-                                        {:application id
-                                         :code        coupon}))
-                                    apps-selected)
-                :start        create-start}}
-        (not (str/blank? create-name)) (assoc :name create-name)
-        (not (str/blank? create-description)) (assoc :description create-description))
-      #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid (general-utils/id->uuid (:resource-id %))}])]}))
-
 (defn application-overwrites
   [db i {:keys [id version] :as _application}]
-  (when-let [env-changed (->> id
-                              (module-plugin/db-environment-variables db [::spec/apps-sets i])
-                              module-plugin/changed-env-vars
-                              seq)]
-    {:id                      id
-     :version                 version
-     :environmental-variables env-changed}))
+  (let [db-path     [::spec/apps-sets i]
+        env-changed (module-plugin/db-changed-env-vars db db-path id)
+        regs-creds  (module-plugin/db-module-registries-credentials
+                      db db-path id)]
+    (cond-> {:id      id
+             :version version}
+            (seq env-changed) (assoc :environmental-variables env-changed)
+            (seq regs-creds) (assoc :registries-credentials regs-creds))))
 
 (defn applications-sets->overwrites
   [db i {:keys [applications] :as _applications-sets}]
-  (let [targets                 (map :id (target-selector/db-selected db [::spec/apps-sets i ::spec/targets]))
-        applications-overwrites (->> applications
-                                     (map (partial application-overwrites db i))
-                                     (remove nil?))]
+  (let [targets                 (subs/get-db-targets-selected-ids db i)
+        applications-overwrites (map (partial application-overwrites db i)
+                                     applications)]
     (cond-> {}
             (seq targets) (assoc :targets targets)
             (seq applications-overwrites) (assoc :applications applications-overwrites))))
@@ -238,7 +210,6 @@
                                        }]
                   :start             start?}
                  (not (str/blank? create-description)) (assoc :description create-description))]
-      (js/console.info ::create-start "body" body)
       {::cimi-api-fx/add
        [:deployment-set body
         #(dispatch [::routing-events/navigate routes/deployment-sets-details

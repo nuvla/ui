@@ -105,7 +105,7 @@
   (fn [{db :db} [_ group-id username]]
     (let [on-error   #(let [{:keys [status message]} (response/parse-ex-info %)]
                         (dispatch [::messages-events/add
-                                   {:header  (cond-> (str "Invitation to " group-id " for " username "failed!")
+                                   {:header  (cond-> (str "Invitation to " group-id " for " username " failed!")
                                                      status (str " (" status ")"))
                                     :content message
                                     :type    :error}]))
@@ -395,19 +395,10 @@
               ::spec/loading (disj loading :vendor))))
 
 (reg-event-fx
-  ::get-vendor
-  (fn [{db :db} [_ id]]
-    {:db               (-> db
-                           (update ::spec/loading conj :vendor))
-     ::cimi-api-fx/get [id #(dispatch [::set-vendor %])]}))
-
-(reg-event-fx
   ::search-existing-vendor
   (fn [{{:keys [::session-spec/session]} :db}]
     {::cimi-api-fx/search [:vendor {:filter (str "parent='" (get-active-claim session) "'")}
-                           #(if-let [id (-> % :resources first :id)]
-                              (dispatch [::get-vendor id])
-                              (dispatch [::set-vendor nil]))]}))
+                           #(dispatch [::set-vendor (-> % :resources first)])]}))
 
 (reg-event-fx
   ::code-validation-2fa-failed
@@ -516,3 +507,21 @@
              (assoc ::spec/two-factor-step :disable)
              (assoc ::spec/two-factor-method (:auth-method-2fa user)))
      :fx [[:dispatch [::two-factor-operation-call]]]}))
+
+(reg-event-fx
+  ::vendor-set-email
+  (fn [{{:keys [::spec/vendor
+                ::i18n-spec/tr]} :db} [_ email]]
+    (let [on-success #(let [{:keys [status message]} %]
+                        (if (= status 200)
+                          (do
+                            (dispatch [::close-modal])
+                            (dispatch [::messages-events/add
+                                       {:header  (str/capitalize (tr [:success]))
+                                        :content "Customer service email successfully updated"
+                                        :type    :success}])
+                            (dispatch [::search-existing-vendor]))
+                          (dispatch [::set-error (str message " (" status ")")])))
+          on-error   #(dispatch [::set-error (-> % response/parse-ex-info :message)])]
+      {::cimi-api-fx/operation [(:id vendor) "set-email" on-success
+                                :on-error on-error :data {:email email}]})))

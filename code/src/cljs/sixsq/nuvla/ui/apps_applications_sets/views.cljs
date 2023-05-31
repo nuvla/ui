@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.apps-applications-sets.events :as events]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.apps-applications-sets.subs :as subs]
+    [sixsq.nuvla.ui.apps-applications-sets.utils :as utils]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -28,18 +29,18 @@
     [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn SelectSubtype
-  [choosed-subtypes]
-  (let [on-click #(reset! choosed-subtypes %)]
+  [subtype!]
+  (let [on-click #(reset! subtype! %)]
     [:<>
      [:p "Targeting Docker or Kubernetes"]
      [ui/CardGroup {:centered true}
       [ui/Card
-       {:on-click (partial on-click subs/docker-subtypes)}
+       {:on-click (partial on-click spec/app-set-docker-subtype)}
        [ui/CardContent {:text-align :center}
         [ui/IconGroup {:size :massive}
          [ui/Icon {:name "docker"}]]]]
       [ui/Card
-       {:on-click (partial on-click subs/k8s-subtypes)}
+       {:on-click (partial on-click spec/app-set-k8s-subtype)}
        [ui/CardContent {:text-align :center}
         [ui/IconGroup {:size :massive}
          [ui/Image {:src   "/ui/images/kubernetes.svg"
@@ -47,47 +48,52 @@
 
 (defn SelectAppsModal
   [_id]
-  (let [choosed-subtypes (r/atom nil)
-        reset-subtypes   #(reset! choosed-subtypes nil)]
+  (let [subtype!      (r/atom nil)
+        reset-subtype #(reset! subtype! nil)]
     (fn [id]
-      (let [apps-subtypes @(subscribe [::subs/apps-selected-subtypes id])
+      (let [saved-subtype @(subscribe [::subs/apps-set-subtype id])
             apps-selected @(subscribe [::subs/apps-selected id])
             db-path       [::spec/apps-sets id ::spec/apps-selector]
             on-open       #(dispatch [::module-selector/restore-selected
                                       db-path (map :id apps-selected)])
             on-done       #(do
                              (dispatch [::events/set-apps-selected id db-path])
+                             (when @subtype!
+                               (dispatch [::events/set-apps-set-subtype id @subtype!]))
                              (dispatch [::main-events/changes-protection? true])
                              (dispatch [::apps-events/validate-form])
-                             (reset-subtypes))
-            subtypes      (or apps-subtypes @choosed-subtypes)]
+                             (reset-subtype))
+            subtypes      (get utils/app-set-app-subtypes
+                               (or saved-subtype @subtype!))]
         [ui/Modal {:close-icon true
                    :trigger    (r/as-element
                                  [ui/Icon {:name     "add"
                                            :color    "green"
                                            :on-click on-open}])
-                   :on-close   reset-subtypes
                    :header     "New apps set"
                    :content    (r/as-element
                                  [ui/ModalContent
-                                  (if subtypes
+                                  (if (seq subtypes)
                                     [module-selector/AppsSelectorSection
                                      {:db-path  db-path
                                       :subtypes subtypes}]
-                                    [SelectSubtype choosed-subtypes])])
+                                    [SelectSubtype subtype!])])
                    :actions    [{:key     "cancel", :content "Cancel"
-                                 :onClick reset-subtypes}
+                                 :onClick reset-subtype}
                                 {:key     "done", :content "Done" :positive true
                                  :onClick on-done}]}]))))
 
 (defn AppNameIcon
-  [{:keys [subtype name] module-id :id} on-delete]
-  [ui/ListItem
-   [apps-utils/SubtypeDockerK8sListIcon subtype]
-   [ui/ListContent (or name module-id) " "
-    (when on-delete
-      [ui/Icon {:name     "close" :color "red" :link true
-                :on-click #(on-delete module-id)}])]])
+  [id {module-id :id} on-delete]
+  [module-plugin/ModuleNameIcon
+   {:db-path       [::spec/apps-sets id]
+    :href          module-id
+    :show-version? true
+    :children      (when on-delete
+                     [:<>
+                      " "
+                      [ui/Icon {:name     "close" :color "red" :link true
+                                :on-click #(on-delete module-id)}]])}])
 
 
 (defn AppsList
@@ -100,7 +106,7 @@
     [ui/ListSA
      (for [module selected]
        ^{:key (:id module)}
-       [AppNameIcon module on-delete])]))
+       [AppNameIcon id module on-delete])]))
 
 (defn AddApps
   [id]
@@ -138,7 +144,11 @@
           [uix/TableRowField (@tr [:description]), :key "app-set-description", :editable? @editable?,
            :spec ::spec/apps-set-description, :validate-form? @validate-form?, :required? false,
            :default-value apps-set-description, :on-change (partial on-change id ::events/update-apps-set-description)
-           :on-validation ::events/set-apps-validation-error]]]
+           :on-validation ::events/set-apps-validation-error]
+          [ui/TableRow
+           [ui/TableCell {:collapsing true} "subtype"]
+           ^{:key (str/join "-" ["set" id "subtype"])}
+           [ui/TableCell @(subscribe [::subs/apps-set-subtype id])]]]]
 
         [AppsList id]
 
@@ -160,24 +170,21 @@
 
 (defn AppsSetsSection
   []
-  (let [editable? (subscribe [::apps-subs/editable?])
-        apps-sets (subscribe [::subs/apps-sets])]
-    (fn []
-      [:<>
-       (doall
-         (for [[i [id {:keys [::spec/apps-set-name
-                              ::spec/apps-set-description] :as _apps-group}]]
-               (map-indexed vector @apps-sets)]
-           (let [i (inc i)]
-             ^{:key (str "apps-set-" i)}
-             [AccordionAppSet {:i                    i
-                               :id                   id
-                               :apps-set-name        apps-set-name
-                               :apps-set-description apps-set-description}])))
-       (when @editable?
-         [AddAppsSet])]
-
-      )))
+  (let [editable? @(subscribe [::apps-subs/editable?])
+        apps-sets @(subscribe [::subs/apps-sets])]
+    [:<>
+     (doall
+       (for [[i [id {:keys [::spec/apps-set-name
+                            ::spec/apps-set-description] :as _apps-group}]]
+             (map-indexed vector apps-sets)]
+         (let [i (inc i)]
+           ^{:key (str "apps-set-" i)}
+           [AccordionAppSet {:i                    i
+                             :id                   id
+                             :apps-set-name        apps-set-name
+                             :apps-set-description apps-set-description}])))
+     (when editable?
+       [AddAppsSet])]))
 
 
 (defn up-to-date?
@@ -370,6 +377,14 @@
                                       :change-event [::main-events/changes-protection? true]
                                       :read-only?   read-only?}]
                                     :label (@tr [:env-variables])
+                                    :default-open true]
+                                   [uix/Accordion
+                                    [module-plugin/RegistriesCredentials
+                                     {:db-path      db-path
+                                      :href         module-id
+                                      :required?     false
+                                      :change-event [::main-events/changes-protection? true]}]
+                                    :label (@tr [:private-registries])
                                     :default-open true]]])})
                  @applications)}]
       [ui/Message {:info true} "No applications for this set yet"])))
@@ -427,14 +442,12 @@
         is-new?       (subscribe [::apps-subs/is-new?])]
     (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
                          (dispatch [::apps-events/set-active-tab :overview]))
-    (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/set-form-spec ::spec/apps-sets])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
-         [uix/PageHeader "th large" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader "th large" name :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

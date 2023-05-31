@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
-  (:require [re-frame.core :refer [reg-sub]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
@@ -27,21 +29,105 @@
   ::deployment-set-not-found?
   :-> ::spec/deployment-set-not-found?)
 
+(defn get-db-targets-selected
+  [db i]
+  (get-in db [::spec/apps-sets i ::spec/targets-selected]))
+
+(defn get-db-targets-selected-ids
+  [db i]
+  (map first (get-db-targets-selected db i)))
+
 (reg-sub
   ::targets-selected
   (fn [db [_ i]]
-    (vals (get-in db [::spec/apps-sets i ::spec/targets-selected]))))
+    (vals (get-db-targets-selected db i))))
 
 (reg-sub
   ::get
   (fn [db [_ k]]
     (get db k)))
 
-(reg-sub
-  ::module-applications-sets
-  :-> ::spec/module-applications-sets)
+(defn applications-sets
+  [db]
+  (get-in db [::spec/module-applications-sets :content :applications-sets]))
 
 (reg-sub
   ::applications-sets
-  :<- [::module-applications-sets]
-  :-> (comp :applications-sets :content))
+  :-> applications-sets)
+
+(reg-sub
+  ::applications-sets-apps-targets
+  (fn [db]
+    (->> (applications-sets db)
+         (map-indexed
+           (fn [i {:keys [applications]}]
+             (map (fn [{:keys [id]}]
+                    (let [targets (get-db-targets-selected-ids db i)]
+                      {:i                      i
+                       :application            (module-plugin/db-module db [::spec/apps-sets i] id)
+                       :registries-credentials (module-plugin/db-module-registries-credentials
+                                                 db [::spec/apps-sets i] id)
+                       :targets                targets
+                       :targets-count          (count targets)})
+                    ) applications)))
+         (apply concat))))
+
+(defn license-set-apps-targets
+  [sets-apps-targets]
+  (get-in sets-apps-targets [:application :license]))
+
+(defn price-set-apps-targets
+  [sets-apps-targets]
+  (get-in sets-apps-targets [:application :price]))
+
+(reg-sub
+  ::deployment-set-licenses
+  :<- [::applications-sets-apps-targets]
+  (fn [sets-apps-targets]
+    (->> sets-apps-targets
+         (filter license-set-apps-targets)
+         (group-by license-set-apps-targets))))
+
+(reg-sub
+  ::deployment-set-registries-creds-incomplete?
+  :<- [::applications-sets-apps-targets]
+  (fn [sets-apps-targets]
+    (not-every?
+      (fn [{:keys [application registries-credentials]}]
+        (= (count (get-in application [:content :private-registries]))
+           (count (remove str/blank? registries-credentials))))
+      sets-apps-targets)))
+
+(reg-sub
+  ::deployment-set-apps-targets-total-price
+  :<- [::applications-sets-apps-targets]
+  (fn [apps-targets]
+    (->> apps-targets
+         (filter price-set-apps-targets)
+         (map #(assoc %
+                 :total-price
+                 (* (get-in % [:application :price :cent-amount-daily])
+                    (:targets-count %)))))))
+
+(reg-sub
+  ::deployment-set-total-price
+  :<- [::deployment-set-apps-targets-total-price]
+  (fn [apps-targets-total-price]
+    (reduce #(+ %1 (:total-price %2)) 0 apps-targets-total-price)))
+
+(reg-sub
+  ::create-start-disabled?
+  :<- [::get ::spec/create-name]
+  :<- [::deployment-set-licenses]
+  :<- [::get ::spec/licenses-accepted?]
+  :<- [::deployment-set-apps-targets-total-price]
+  :<- [::get ::spec/prices-accepted?]
+  :<- [::deployment-set-registries-creds-incomplete?]
+  (fn [[create-name licenses licenses-accepted? prices prices-accepted?
+        registries-creds-incomplete?]]
+    (or (str/blank? create-name)
+        (and (seq licenses)
+             (not licenses-accepted?))
+        (and (seq prices)
+             (not prices-accepted?))
+        registries-creds-incomplete?)))

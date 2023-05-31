@@ -176,7 +176,7 @@
       (let [valid? (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
-          [:div {:style {:margin-bottom "10px"}} "Env substitution"
+          [:div {:style {:margin-bottom "10px"}} (@tr [:env-substitution])
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
           [uix/EditorYaml {:value     @docker-compose
                            :on-change (fn [value]
@@ -207,7 +207,7 @@
             valid?      (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
-          [:div {:style {:margin-bottom "10px"}} "Env substitution"
+          [:div {:style {:margin-bottom "10px"}} (@tr [:env-substitution])
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
            [DockerComposeCompatibility]]
           [uix/EditorYaml {:value     @docker-compose
@@ -266,7 +266,7 @@
         module-content-id    (subscribe [::apps-subs/module-content-id])
         version-index        (apps-utils/find-current-version @versions-map @module-content-id)
         is-module-published? (subscribe [::apps-subs/is-module-published?])
-        {:keys [id created updated name parent-path]} @module]
+        {:keys [id created updated name parent-path price]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -296,6 +296,10 @@
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
        [apps-views-detail/AuthorVendor]
+       (when (:vendor-email price)
+         [ui/TableRow
+          [ui/TableCell (@tr [:customer-service])]
+          [ui/TableCell (:vendor-email price)]])
        [Tags @module]]]]))
 
 
@@ -541,23 +545,21 @@
   (let [module-common (subscribe [::apps-subs/module-common])
         active-tab    (sub-apps-tab)
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (dispatch [::apps-events/init-view {:tab-key (when (true? @is-new?) :details)}])
-    (dispatch [::apps-events/reset-version])
+    (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
     (dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true
                        :class :uix-apps-details}
-         [uix/PageHeader "fa-light fa-layer-group" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader "fa-light fa-layer-group" name :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]
            :menu                    {:secondary true
                                      :pointing  true
-                                     :style     {:display        "flex"
+                                     :style     {:display       "flex"
                                                  :flex-direction "row"
                                                  :flex-wrap      "wrap"}
                                      :class     :uix-tab-nav}

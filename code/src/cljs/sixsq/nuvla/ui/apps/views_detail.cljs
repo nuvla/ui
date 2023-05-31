@@ -4,8 +4,8 @@
             [re-frame.core :refer [dispatch dispatch-sync subscribe]]
             [re-frame.db]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.about.subs :as about-subs]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.acl.utils :as acl-utils]
             [sixsq.nuvla.ui.acl.views :as acl-views]
             [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
@@ -21,8 +21,8 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
-            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -32,6 +32,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as utils-values]))
@@ -223,7 +224,7 @@
             :wide           true
             :hide-on-scroll true}])
 
-        (when @is-project?
+        (when (and (not @is-new?) @is-project?)
           [ui/MenuItem
            {:name     (@tr [:paste])
             :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy icon"}])
@@ -498,37 +499,45 @@
   (let [tr             (subscribe [::i18n-subs/tr])
         description    (subscribe [::subs/description])
         editable?      (subscribe [::subs/editable?])
-        validate-form? (subscribe [::subs/validate-form?])]
+        validate-form? (subscribe [::subs/validate-form?])
+        is-template?   (subscribe [::subs/is-description-template?])
+        descr-valid?   (subscribe [::subs/is-description-valid?])]
     (fn []
-      (let [valid? (s/valid? ::spec/description @description)]
-        [uix/Accordion
-         [:<>
-          [ui/Grid {:centered true
-                    :columns  2}
-           [ui/GridColumn
-            [:h4 "Markdown" [general-utils/mandatory-icon]]
-            [ui/Segment
-             [uix/EditorMarkdown
-              {:value     @description
-               :on-change (fn [value]
-                            (dispatch [::events/description value])
-                            (dispatch [::main-events/changes-protection? true])
-                            (dispatch [::events/validate-form]))
-               :read-only (not @editable?)}]
-             (when @validate-form?
-               (when validation-event
-                 (dispatch [validation-event "description" (not valid?)]))
-               (when (not valid?)
-                 [:<>
-                  [ui/Label {:pointing "above", :basic true, :color "red"}
-                   (@tr [:description-cannot-be-empty])]]))]]
-           [ui/GridColumn
-            [:h4 "Preview"]
-            [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
-         :title-size   :h4
-         :title-class  :tab-app-detail
-         :label        (str/capitalize (@tr [:description]))
-         :default-open true]))))
+      [uix/Accordion
+       [:<>
+        [ui/Grid {:centered true
+                  :columns  2}
+         [ui/GridColumn
+          [:div {:style {:display :flex
+                         :justify-content :space-between}}
+           [:h4 "Markdown" [general-utils/mandatory-icon]]
+           [:span {:style {:color :red}}
+            (when @is-template?
+              (@tr [:description-change-please]))]]
+          [ui/Segment
+           [uix/EditorMarkdown
+            {:value     @description
+             :on-change (fn [value]
+                          (dispatch [::events/description value])
+                          (dispatch [::main-events/changes-protection? true])
+                          (dispatch [::events/validate-form]))
+             :read-only (not @editable?)}]
+           (when @validate-form?
+             (when validation-event
+               (dispatch [validation-event "description" (not @descr-valid?)]))
+             (when (not @descr-valid?)
+               [:<>
+                [ui/Label {:pointing "above", :basic true, :color "red"}
+                 (@tr [(if (spec-utils/nonblank-string @description)
+                         :description-cannot-be-template
+                         :description-cannot-be-empty)])]]))]]
+         [ui/GridColumn
+          [:h4 "Preview"]
+          [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
+       :title-size   :h4
+       :title-class  :tab-app-detail
+       :label        (str/capitalize (@tr [:description]))
+       :default-open true])))
 
 
 (defn Tags
@@ -712,7 +721,7 @@
          [:span ff/nbsp (ff/help-popup (@tr [:module-env-variables-help]))]]
         (if (empty? @env-variables)
           [ui/Message
-           (str/capitalize (str (@tr [:module-no-env-variables]) "."))]
+           (@tr [:module-no-env-variables])]
           [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
@@ -1162,7 +1171,8 @@
                :on-change (partial on-change ::events/license-description)]
               [uix/TableRowField (@tr [:url]), :key "license-url",
                :editable? is-editable?, :spec (if @is-custom? ::spec/license-url any?), :validate-form? @validate-form?,
-               :required? true, :default-value (:license-url @license),
+               :required? true, :default-value [:a {:href (:license-url @license)
+                                                    :targe :_blank} (:license-url @license)],
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]
            [ui/Message {:info true}

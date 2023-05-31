@@ -13,14 +13,14 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
-            [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
-            [sixsq.nuvla.ui.plugins.step-group :as step-group]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
+            [sixsq.nuvla.ui.plugins.step-group :as step-group]
+            [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -274,7 +274,7 @@
    [AppsList i applications]])
 
 (defn SelectTargetsModal
-  [i]
+  [i subtype]
   (let [targets-selected @(subscribe [::subs/targets-selected i])
         db-path          [::spec/apps-sets i ::spec/targets]
         on-open          #(dispatch [::target-selector/restore-selected
@@ -290,7 +290,8 @@
       :content    (r/as-element
                     [ui/ModalContent
                      [target-selector/TargetsSelectorSection
-                      {:db-path db-path}]])
+                      {:db-path db-path
+                       :subtype subtype}]])
       :actions    [{:key "cancel", :content "Cancel"}
                    {:key     "done", :content "Done" :positive true
                     :onClick on-done}]}]))
@@ -330,7 +331,7 @@
    [TargetsList i :editable? editable?]
    (when (and (-> apps-set count pos?)
               editable?)
-     [SelectTargetsModal i])])
+     [SelectTargetsModal i (:subtype apps-set)])])
 
 (defn AppsSetRow
   [{:keys [i apps-set summary-page]}]
@@ -345,9 +346,8 @@
 
 (defn CreateStartButton
   []
-  (let [create-name (subscribe [::subs/get ::spec/create-name])
-        disabled?   (str/blank? @create-name)
-        on-click    #(dispatch [::events/create-start %])]
+  (let [disabled? @(subscribe [::subs/create-start-disabled?])
+        on-click  #(dispatch [::events/create-start %])]
     [ui/ButtonGroup {:floated  "right"
                      :positive true}
      [ui/Button {:content  "Create"
@@ -380,8 +380,27 @@
                       :apps-set     apps-set
                       :summary-page summary-page}])]]]))
 
+(defn EnvVariablesApp
+  [i module-id]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/Accordion
+     [module-plugin/EnvVariables
+      {:db-path [::spec/apps-sets i]
+       :href    module-id}]
+     :label (@tr [:env-variables])]))
+
+(defn RegistriesCredsApp
+  [i module-id]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/Accordion
+     [module-plugin/RegistriesCredentials
+      {:db-path [::spec/apps-sets i]
+       :href    module-id}]
+     :label (@tr [:private-registries])]))
+
 (defn ConfigureApps
   [i applications]
+  ^{:key (str "set-" i)}
   [ui/Tab
    {:menu  {:attached false}
     :panes (map
@@ -393,10 +412,90 @@
                              :key     (keyword (str "configure-set-" i "-app-" id))}
                   :render   #(r/as-element
                                [ui/TabPane
-                                [module-plugin/EnvVariables
-                                 {:db-path [::spec/apps-sets i]
-                                  :href    id}]])})
+                                [EnvVariablesApp i id]
+                                [RegistriesCredsApp i id]])})
                ) applications)}])
+
+(defn BoldLabel
+  [txt]
+  [:label [:b txt]])
+
+(defn Licenses
+  []
+  (let [tr       @(subscribe [::i18n-subs/tr])
+        licenses @(subscribe [::subs/deployment-set-licenses])
+        checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
+    (if (seq licenses)
+      [ui/Segment
+       [ui/ListSA {:divided true}
+        (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
+          ^{:key (str "accept-eula-" license)}
+          [ui/ListItem
+           [ui/ListIcon {:name "book"}]
+           [ui/ListContent
+            [ui/ListHeader {:as     :a
+                            :target "_blank"
+                            :href   url
+                            } name]
+            (when description
+              [ui/ListDescription description])
+            [ui/ListList
+             (for [{i            :i
+                    {:keys [id]} :application} sets-apps-targets]
+               ^{:key (str "license-" i "-" id)}
+               [module-plugin/ModuleNameIcon
+                {:db-path [::spec/apps-sets i]
+                 :href    id}])]]])]
+       [ui/Form
+        [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
+                          :required  true
+                          :checked   checked?
+                          :on-change (ui-callback/checked
+                                       #(dispatch [::events/set
+                                                   ::spec/licenses-accepted? %]))}]]]
+      [ui/Message (tr [:eula-not-defined])])))
+
+(defn Prices
+  []
+  (let [tr                       @(subscribe [::i18n-subs/tr])
+        apps-targets-total-price @(subscribe [::subs/deployment-set-apps-targets-total-price])
+        checked?                 @(subscribe [::subs/get ::spec/prices-accepted?])
+        dep-set-total-price      @(subscribe [::subs/deployment-set-total-price])]
+    [ui/Segment
+     (if (seq apps-targets-total-price)
+       [:<>
+        [ui/Table
+         [ui/TableHeader
+          [ui/TableRow
+           [ui/TableHeaderCell (str/capitalize (tr [:application]))]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-unit-price])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:quantity])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-price])]]]
+         [ui/TableBody
+          (for [{:keys [i targets-count total-price application]} apps-targets-total-price]
+            ^{:key (str "price-" i "-" (:id application))}
+            [ui/TableRow
+             [ui/TableCell [values/AsLink (:path application)
+                            :label (or (:name application)
+                                       (:id application)) :page "apps"]]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money
+                                                   (/ (get-in application [:price :cent-amount-daily]) 100))]
+             [ui/TableCell {:text-align "right"} targets-count]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money (/ total-price 100))]])
+          [ui/TableRow {:active true}
+           [ui/TableCell [:b (str/capitalize (tr [:total]))]]
+           [ui/TableCell]
+           [ui/TableCell]
+           [ui/TableCell {:text-align "right"}
+            [:b (str (tr [:total-price]) ": " (general-utils/format-money (/ dep-set-total-price 100)) "/" (tr [:day]))]]]]]
+        [ui/Form {:size "big"}
+         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-prices])])
+                           :required  true
+                           :checked   checked?
+                           :on-change (ui-callback/checked
+                                        #(dispatch [::events/set
+                                                    ::spec/prices-accepted? %]))}]]]
+       [ui/Message (tr [:free-app])])]))
 
 (defn ConfigureSets
   []
@@ -415,17 +514,48 @@
   []
   [ui/Segment (merge style/basic {:clearing true})
    [AppsSets {:summary-page true}]
-   [ui/Segment
-    [:p "Section to accept apps distinct licenses. Each license list concerned apps.
-   Accept all license checkbox shortcut. User can't create deployment set if accept all licenses is not checked."]]
-   [ui/Segment
-    [:p "Section to accept prices. List apps with price multiply by number of targets. Estimated total price per day. User can't create deployment accept estimated price not checked."]]
    [CreateStartButton]]
   )
 
+(defn StepDescription
+  [description]
+  [:div {:style {:overflow-wrap "break-word"
+                 :width         "16ch"}}
+   description])
+
 (defn AddPage
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        items [{:key         :name
+                :icon        "bullseye"
+                :content     [NameDescriptionStep]
+                :title       "New deployment set"
+                :description "Give it a name"}
+               {:key         :select-apps-targets
+                :icon        "list"
+                :content     [AppsSets]
+                :title       "Apps / Targets"
+                :description (@tr [:select-applications-targets])}
+               {:key         :configure-sets
+                :icon        "configure"
+                :content     [ConfigureSets]
+                :title       (str/capitalize (@tr [:configure]))
+                :description (@tr [:configure-applications])}
+               {:key         :eula
+                :icon        "book"
+                :content     [Licenses]
+                :title       (@tr [:eula])
+                :description (@tr [:eula-full])}
+               {:key         :price
+                :icon        "eur"
+                :content     [Prices]
+                :title       (str/capitalize (@tr [:price]))
+                :description (@tr [:total-price])}
+               {:key         :summary
+                :icon        "info"
+                :content     [Summary]
+                :title       (str/capitalize (@tr [:summary]))
+                :description (@tr [:overall-summary])}]]
     (dispatch [::events/new])
     (fn []
       [ui/Container {:fluid true}
@@ -433,27 +563,13 @@
        [step-group/StepGroup
         {:db-path [::spec/steps]
          :size    :mini
+         :style   {:flex-wrap "wrap"}
          :fluid   true
-         :items   [{:key         :name
-                    :icon        "bullseye"
-                    :content     [NameDescriptionStep]
-                    :title       "New deployment set"
-                    :description "Give it a name"}
-                   {:key         :select-apps-targets
-                    :icon        "list"
-                    :content     [AppsSets]
-                    :title       "Apps / Targets"
-                    :description (@tr [:select-applications-targets])}
-                   {:key         :configure-sets
-                    :icon        "configure"
-                    :content     [ConfigureSets]
-                    :title       (str/capitalize (@tr [:configure]))
-                    :description (@tr [:configure-applications])}
-                   {:key         :summary
-                    :icon        "info"
-                    :content     [Summary]
-                    :title       (str/capitalize (@tr [:summary]))
-                    :description (@tr [:overall-summary])}]}]])))
+         :items   (mapv #(assoc %
+                           :description
+                           (r/as-element
+                             [StepDescription (:description %)]))
+                        items)}]])))
 
 (defn DeploymentSet
   [uuid]

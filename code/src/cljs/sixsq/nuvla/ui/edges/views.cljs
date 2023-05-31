@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -401,7 +402,7 @@
 
 (defn AddModal
   []
-  (let [modal-id                   :add
+  (let [modal-id                   spec/modal-add-id
         tr                         (subscribe [::i18n-subs/tr])
         visible?                   (subscribe [::subs/modal-visible? modal-id])
         nuvlabox-id                (subscribe [::subs/nuvlabox-created-id])
@@ -582,8 +583,8 @@
                       [ui/Message {:content (str/capitalize
                                               (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]))]
 
-                 (let [{nb-rel                      :nb-rel
-                        nb-assets                   :nb-assets
+                 (let [{nb-rel                     :nb-rel
+                        nb-assets                  :nb-assets
                         {:keys [compose-files url]} :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
@@ -604,8 +605,7 @@
                                        (swap! nuvlabox-release-data
                                               assoc :nb-selected nb-selected)
                                        (swap! nuvlabox-release-data assoc :nb-assets
-                                              (set (map :scope (:compose-files nb-selected)))))
-                                     ))}]
+                                              (set (map :scope (:compose-files nb-selected)))))))}]
 
                     [:a {:href   url
                          :target "_blank"
@@ -738,9 +738,7 @@
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
-    [ui/TableRow {:role     "link"
-                  :on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
-                  :style    {:cursor "pointer"}}
+    [:<>
      [ui/TableCell {:collapsing true}
       [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
@@ -752,8 +750,8 @@
      [ui/TableCell (str refresh-interval "s")]
      [ui/TableCell (when next-heartbeat-moment
                      [uix/TimeAgo (utils/last-time-online
-                                    next-heartbeat-moment
-                                    refresh-interval)])]
+                                   next-heartbeat-moment
+                                   refresh-interval)])]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
@@ -785,11 +783,11 @@
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
                             (apply concat
-                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                              (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                       (:nuvlabox-workers @current-cluster))]
+                                                 (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
@@ -807,14 +805,35 @@
                             :header-content [:<> (@tr [:version])
                                              (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
                            {:field-key :tags :no-sort? true}
-                           {:field-key :manager :no-sort? true}]]
-    [Table {:sort-config {:db-path     ::spec/ordering
-                          :fetch-event [::events/get-nuvlaboxes]}
-            :columns     columns
-            :rows        selected-nbs
-            :table-props {:compact "very" :selectable true}
-            :cell-props  {:header {:single-line true}}
-            :row-render  (fn [row-data] [NuvlaboxRow row-data managers])}]))
+                           {:field-key :manager :no-sort? true}]
+        {trigger :trigger-config
+         BulkEditTagsModal :modal} (bulk-edit-modal/create-bulk-edit-modal
+                                           {:db-path                [::spec/select]
+                                            :refetch-event          ::events/get-nuvlaboxes
+                                            :resource-key           :nuvlabox
+                                            :total-count-sub-key    ::subs/nuvlaboxes-count
+                                            :on-open-modal-event    ::events/get-edges-without-edit-rights
+                                            :no-edit-rights-sub-key ::subs/edges-without-edit-rights
+                                            :singular               (@tr [:edge])
+                                            :plural                 (@tr [:edges])
+                                            :filter-fn               (partial utils/build-bulk-filter [::spec/select])})]
+    [:<>
+     [BulkEditTagsModal]
+     [Table {:sort-config        {:db-path     ::spec/ordering
+                                  :fetch-event [::events/get-nuvlaboxes]}
+             :columns           columns
+             :rows              selected-nbs
+             :table-props       {:compact "very" :selectable true}
+             :cell-props        {:header {:single-line true}}
+             :row-render        (fn [row-data] [NuvlaboxRow row-data managers])
+             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+             :row-props         {:role  "link"
+                                 :style {:cursor "pointer"}}
+             :select-config      {:bulk-actions [trigger]
+                                  :total-count-sub-key [::subs/nuvlaboxes-count]
+                                  :resources-sub-key [::subs/nuvlaboxes-resources]
+                                  :select-db-path [::spec/select]
+                                  :rights-needed :edit}}]]))
 
 
 (defn NuvlaboxMapPoint
@@ -885,7 +904,6 @@
 (defn NuvlaBoxesOrClusters
   []
   (dispatch [::events/init])
-  ;; (dispatch [::events/refresh-root])
   (dispatch [::events/set-nuvlabox-cluster nil])
   (let [view-type (subscribe [::subs/view-type])]
     (fn []

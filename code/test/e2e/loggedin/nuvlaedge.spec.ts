@@ -10,7 +10,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await expect(page).toHaveURL(edgesPageRegex);
 
-  await page.getByText('Add').click();
+  await page.getByText('Add', { exact: true }).click();
 
   await page.getByText('bluetooth').click();
 
@@ -88,7 +88,7 @@ test.skip('NuvlaEdge update to version with security module from unofficial rele
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)) });
   });
-  await page.pause();
+
   // 1. Go to Edges page
   // 2. Go to Click dream big edge
   // 3. Update Edge
@@ -109,7 +109,7 @@ test.skip('NuvlaEdge update to version with security module from official releas
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)) });
   });
-  await page.pause();
+
   // 1. Go to Edges page
   // 2. Go to Click dream big edge
   // 3. Update Edge
@@ -130,7 +130,7 @@ test.skip('NuvlaEdge update from version with security module but not installed'
   await page.route('api/nuvlabox-status/**', async (route) => {
     route.fulfill({ status: 200, body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)) });
   });
-  await page.pause();
+
   // 1. Go to Edges page
   // 2. Go to Click dream big edge
   // 3. Update Edge
@@ -153,7 +153,7 @@ test.skip('NuvlaEdge update from version with security module and installed', as
       body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion, 'docker-compose.security.yml')),
     });
   });
-  await page.pause();
+
   // 1. Go to Edges page
   // 2. Go to Click dream big edge
   // 3. Update Edge
@@ -176,7 +176,7 @@ test.skip('NuvlaEdge update from version with security module and installed, but
       body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion, 'docker-compose.security.yml')),
     });
   });
-  await page.pause();
+
   // 1. Go to Edges page
   // 2. Go to Click dream big edge
   // 3. Update Edge
@@ -199,7 +199,7 @@ test.skip('NuvlaEdge update WITH security installed, but non-standard version nu
       body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion, 'docker-compose.security.yml')),
     });
   });
-  await page.pause();
+
   // 1. Go to Edges page
   // 2. Go to Click dream big edge
   // 3. Update Edge
@@ -222,7 +222,7 @@ test.skip('NuvlaEdge update WITHOUT security installed and not installed, but no
       body: JSON.stringify(getNuvlaBoxStatuForNB(releaseVersion)),
     });
   });
-  await page.pause();
+
   // 1. Go to Edges page
   // 2. Go to Click dream big edge
   // 3. Update Edge

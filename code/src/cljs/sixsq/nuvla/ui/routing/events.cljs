@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.routing.events
-  (:require [re-frame.core :refer [reg-event-db dispatch reg-event-fx]]
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [reitit.frontend :refer [match-by-path]]
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]

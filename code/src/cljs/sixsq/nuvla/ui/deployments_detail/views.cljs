@@ -523,7 +523,6 @@
                 parent-path path logo-url]} module
         desc-short (values/markdown->summary description)]
     [ui/Segment {:secondary true
-                 :color     "blue"
                  :raised    true}
      [ui/Segment (merge style/basic {:floated "right"})
       [ui/Image {:src      (or logo-url "")
@@ -653,7 +652,6 @@
                                :background "#f3f4f5"}
                       :raised true}
      [ui/Segment {:secondary true
-                  :color     "green"
                   :raised    true}
 
       [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:summary]))]

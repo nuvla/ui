@@ -87,7 +87,9 @@
   :<- [::module]
   :<- [::module-id-version]
   (fn [[module module-id]]
-    (utils/published? module module-id)))
+    (let [versions (:versions module)
+          version  (js/parseInt (utils/extract-version module-id))]
+      (-> versions (nth version) :published true?))))
 
 (reg-sub
   ::can-publish?
@@ -260,7 +262,6 @@
              :loading?  false
              :error-msg (get-in db [::spec/module-immutable :validation-message] "")})))))
 
-
 (reg-sub
   ::module-content-updated?
   (fn [{:keys [::spec/module
@@ -343,13 +344,10 @@
   ::module-id-version
   :<- [::module]
   :<- [::versions]
-  :<- [::is-latest-version?]
   :<- [::module-content-id]
-  (fn [[module versions is-latest? current]]
+  (fn [[module versions current]]
     (let [id (:id module)]
-      (if is-latest?
-        id
-        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))))))
+      (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions)))))
 
 
 (reg-sub

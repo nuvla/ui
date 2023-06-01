@@ -14,7 +14,6 @@
             [sixsq.nuvla.ui.deployments-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
-            [sixsq.nuvla.ui.deployments.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
@@ -72,7 +71,7 @@
         parameters (subscribe [::subs/deployment-parameters])
         running    (sum-running-replicas @parameters)
         desired    (sum-desired-replicas @parameters)]
-    (when (and (= state utils/STARTED) running desired (not= running desired))
+    (when (and (= state "STARTED") running desired (not= running desired))
       [ui/Segment
        [ui/Progress {:label    "deployment: started (replicas: running/required)"
                      :total    desired
@@ -452,7 +451,7 @@
 (defn StartUpdateButton
   [{:keys [data state] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
-        start      (#{"CREATED" utils/STOPPED} state)
+        start      (#{"CREATED" "STOPPED"} state)
         first-step (if data :data :infra-services)
         button     (action-button
                      {:button-text (if start
@@ -765,7 +764,7 @@
 (defn depl-state->status
   [state]
   (case (if (some? state) (str/lower-case state) "")
-    utils/STARTED :online
+    "started" :online
     :offline))
 
 
@@ -802,9 +801,7 @@
              :on             "hover"
              :size           "tiny"
              :hide-on-scroll true}] ": "]
-          (if (= state utils/STARTED)
-            utils/RUNNING
-            state)]]))))
+          state]]))))
 
 
 (defn DeploymentDetails

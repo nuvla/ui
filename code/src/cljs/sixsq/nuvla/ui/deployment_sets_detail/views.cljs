@@ -380,8 +380,27 @@
                       :apps-set     apps-set
                       :summary-page summary-page}])]]]))
 
+(defn EnvVariablesApp
+  [i module-id]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/Accordion
+     [module-plugin/EnvVariables
+      {:db-path [::spec/apps-sets i]
+       :href    module-id}]
+     :label (@tr [:env-variables])]))
+
+(defn RegistriesCredsApp
+  [i module-id]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/Accordion
+     [module-plugin/RegistriesCredentials
+      {:db-path [::spec/apps-sets i]
+       :href    module-id}]
+     :label (@tr [:private-registries])]))
+
 (defn ConfigureApps
   [i applications]
+  ^{:key (str "set-" i)}
   [ui/Tab
    {:menu  {:attached false}
     :panes (map
@@ -393,9 +412,8 @@
                              :key     (keyword (str "configure-set-" i "-app-" id))}
                   :render   #(r/as-element
                                [ui/TabPane
-                                [module-plugin/EnvVariables
-                                 {:db-path [::spec/apps-sets i]
-                                  :href    id}]])})
+                                [EnvVariablesApp i id]
+                                [RegistriesCredsApp i id]])})
                ) applications)}])
 
 (defn BoldLabel
@@ -409,7 +427,7 @@
         checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
     (if (seq licenses)
       [ui/Segment
-       [ui/ListSA {:bulleted true}
+       [ui/ListSA {:divided true}
         (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
           ^{:key (str "accept-eula-" license)}
           [ui/ListItem
@@ -422,13 +440,12 @@
             (when description
               [ui/ListDescription description])
             [ui/ListList
-             (for [{i                      :i
-                    {:keys [id name path]} :application} sets-apps-targets]
+             (for [{i            :i
+                    {:keys [id]} :application} sets-apps-targets]
                ^{:key (str "license-" i "-" id)}
-               [ui/ListItem
-                [ui/ListContent
-                 [ui/ListHeader
-                  [values/AsLink path :label (or name id) :page "apps"]]]])]]])]
+               [module-plugin/ModuleNameIcon
+                {:db-path [::spec/apps-sets i]
+                 :href    id}])]]])]
        [ui/Form
         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
                           :required  true

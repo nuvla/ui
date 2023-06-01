@@ -14,7 +14,6 @@
             [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def ^:const STARTED "STARTED")
-(def ^:const RUNNING "RUNNING")
 (def ^:const STARTING "STARTING")
 (def ^:const STOPPED "STOPPED")
 (def ^:const ERROR "ERROR")

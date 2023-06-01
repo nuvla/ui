@@ -26,18 +26,23 @@
 
 
 (defn crumb
-  [index segment]
-  (let [nav-path  (subscribe [::route-subs/nav-path])
-        click-fn  #(dispatch [::routing-events/navigate (trim-path @nav-path index)])
-        page-icon (:icon-class segment)]
+  [index {:keys [text icon-class] :as segment}]
+  (let [nav-path   (subscribe [::route-subs/nav-path])
+        click-fn   #(dispatch [::routing-events/navigate (trim-path @nav-path index)])
+        page-title (utils/truncate (str (or text segment)))]
+    (tap> segment)
     ^{:key (str index "_" segment)}
     [ui/BreadcrumbSection
      [:a {:on-click click-fn
           :style    {:cursor "pointer"}
           :class    (when (zero? index) :parent)}
-      (when page-icon [uix/Icon {:name page-icon :style {:padding-right "10px"
-                                                         :font-weight   400}}])
-      (utils/truncate (str (or (:text segment) segment)))]]))
+      (when icon-class
+        [uix/Icon {:name icon-class
+                   :style {:padding-right "10px"
+                           :font-weight   (when-not
+                                           (= "Deployments" text)
+                                            400)}}])
+      page-title]]))
 
 (defn- format-path-segment [tr first-segment]
   (utils/capitalize-first-letter (@tr [(keyword first-segment)])))

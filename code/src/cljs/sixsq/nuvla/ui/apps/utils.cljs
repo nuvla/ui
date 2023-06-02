@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as utils-general]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def subtype-project "project")
 (def subtype-component "component")
@@ -66,11 +67,11 @@ For more information on how to format your app description using Markdown syntax
     (description-valid? module-subtype (::spec/description module-common))))
 
 (def publish-icon
-  "check circle outline")
+  icons/i-circle-check)
 
 
 (def un-publish-icon
-  "fa-light fa-link-simple-slash")
+  icons/i-unpublish)
 
 
 (defn find-current-version
@@ -156,26 +157,26 @@ For more information on how to format your app description using Markdown syntax
 (defn subtype-icon
   [subtype]
   (condp = subtype
-    subtype-project "fa-light fa-folder"
-    subtype-component "fa-light fa-grid"
-    subtype-application "fa-light fa-cubes"
-    subtype-application-k8s "fa-light fa-cubes"
-    subtype-applications-sets "fa-light fa-table-cells-large"
-    "question circle"))
+    subtype-project icons/i-folder
+    subtype-component icons/i-grid
+    subtype-application icons/i-cubes
+    subtype-application-k8s icons/i-cubes
+    subtype-applications-sets icons/i-table-cells
+    icons/i-circle-question))
 
 (defn SubtypeIconInfra
   [subtype selected]
   (condp = subtype
-    subtype-project [ui/Icon {:name "folder"}]
-    subtype-component [ui/Icon {:name "docker"}]
-    subtype-application [ui/Icon {:name "docker"}]
+    subtype-project [icons/FolderIcon]
+    subtype-component [icons/DockerIcon]
+    subtype-application [icons/DockerIcon]
     subtype-application-k8s [IconK8s selected]
-    [ui/Icon {:name "question circle"}]))
+    [icons/QuestionCircleIcon]))
 
 (defn SubtypeDockerK8sListIcon
   [subtype]
   (let [unknown-icon [ui/ListIcon {:name "question circle"}]
-        docker-icon  [ui/ListIcon {:name "docker"}]]
+        docker-icon  [ui/ListIcon {:name icons/i-docker}]]
     (condp = subtype
       subtype-application-k8s [IconK8s false]
       subtype-application docker-icon
@@ -380,9 +381,9 @@ For more information on how to format your app description using Markdown syntax
 
 (defn mandatory-name
   [name]
-  [:span name [:sup " " [ui/Icon {:name  "asterisk"
-                                  :size  :tiny
-                                  :color :red}]]])
+  [:span name [:sup " " [icons/AsteriskIcon
+                         {:size  :tiny
+                          :color :red}]]])
 
 (defn sorted-map-new-idx
   [sorted-map-elemts]

@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.resource-log.events :as events]
             [sixsq.nuvla.ui.resource-log.subs :as subs]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
@@ -26,7 +27,7 @@
         {:aria-label (if @play? "pause" "play")
          :disabled   (and select-component? (empty? @components))
          :on-click   #(dispatch [::events/set-play? (not @play?)])}
-        [ui/Icon {:name (if @play? "pause" "play")}]]
+        [ui/Icon {:class (if @play? icons/i-pause icons/i-play)}]]
 
        (when (pos? (count @avail-components))
          [ui/Dropdown
@@ -71,14 +72,14 @@
           :color    (if @go-live? "green" "black")
           :on-click #(swap! go-live? not)}
          [ui/IconGroup {:size "large"}
-          [ui/Icon {:name "bars"}]
+          [icons/BarsIcon]
           [ui/Icon {:name "chevron circle down", :corner true}]]
          (@tr [:go-live])]
 
         [ui/MenuItem {:on-click #(dispatch [::events/clear current-log])}
          [ui/IconGroup {:size "large"}
-          [ui/Icon {:name "bars"}]
-          [ui/Icon {:name "trash", :corner true}]]
+          [icons/BarsIcon]
+          [icons/TrashIconFull {:corner true}]]
          (str/capitalize (@tr [:clear]))]]])))
 
 (defn LogsArea

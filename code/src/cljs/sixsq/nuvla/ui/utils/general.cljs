@@ -5,6 +5,7 @@
             [goog.string :as gstring]
             [goog.string.format]
             [sixsq.nuvla.ui.session.utils :as session-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
@@ -288,9 +289,9 @@
 (defn mandatory-icon
   []
   [:sup " "
-   [ui/Icon {:name  :asterisk
-             :size  :tiny
-             :color :red}]])
+   [icons/Icon {:class :cog
+                :size  :tiny
+                :color :red}]])
 
 
 (defn mandatory-name

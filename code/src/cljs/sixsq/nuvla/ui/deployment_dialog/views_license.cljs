@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -19,8 +20,8 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @license-completed?
-        [ui/Icon {:name "book", :size "large"}]
-        [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
+        [icons/BookIcon {:size "large"}]
+        [icons/WarningIcon {:size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:eula])]
      [ui/TableCell [:div [:span (:name @license)]]]]))
 

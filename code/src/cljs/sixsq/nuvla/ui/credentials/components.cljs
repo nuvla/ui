@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.credentials.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
@@ -17,9 +18,9 @@
         status    (subscribe [::subs/credential-check-status cred-id])]
     (when (and @status (or @loading? (not @valid?)))
       [ui/Popup {:trigger  (r/as-element
-                             [ui/Icon {:name    (cond
+                             [ui/Icon {:class    (cond
                                                   @loading? "circle notched"
-                                                  (not @valid?) (if @invalid? "window close" "warning sign")
+                                                  (not @valid?) (if @invalid? "window close" icons/i-warning)
                                                   :else "world")
                                        :color   (cond
                                                   @loading? "black"

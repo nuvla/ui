@@ -67,7 +67,7 @@
 
 (defn- icon
   [icon-name]
-  {:content (r/as-element [ui/Icon {:name icon-name}]) :icon true})
+  {:content (r/as-element [ui/Icon {:class icon-name}]) :icon true})
 
 (defn Pagination
   [{:keys [db-path total-items change-event i-per-page-multipliers] :as _opts}]

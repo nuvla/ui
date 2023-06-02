@@ -23,6 +23,7 @@
             [sixsq.nuvla.ui.resource-log.views :as log-views]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.map :as map]
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -34,10 +35,6 @@
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
-
-(def orchestration-icons
-  {:swarm      "docker"
-   :kubernetes "/ui/images/kubernetes.svg"})
 
 
 (defn refresh
@@ -57,7 +54,7 @@
       :on-confirm  #(dispatch [::events/decommission])
       :danger-msg  (@tr [:nuvlabox-decommission-warning])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "eraser"}]
+                                  [icons/EraserIcon]
                                   (@tr [:decommission])])
       :header      (@tr [:decommission-nuvlabox])
       :content     [:h3 content]}]))
@@ -72,7 +69,7 @@
      {:button-text (@tr [:delete])
       :on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "trash"}]
+                                  [ui/Icon {:class icons/i-trash-full}]
                                   (@tr [:delete])])
       :header      (@tr [:delete-nuvlabox])
       :content     [:h3 content]}]))
@@ -117,7 +114,7 @@
                      opts)]
          (when (:pre-release @selected-release) [:span {:style {:margin "1em"
                                                                 :color  "darkorange"}}
-                                                 (r/as-element [ui/Icon {:name "exclamation triangle"}])
+                                                 (r/as-element [ui/Icon {:class icons/i-triangle-exclamation}])
                                                  (@tr [:nuvlabox-pre-release])])]))))
 
 
@@ -150,7 +147,7 @@
         :on-close   close-fn
         :trigger    (r/as-element
                       [ui/MenuItem {:on-click #(reset! show? true)}
-                       [ui/Icon {:name icon}]
+                       [ui/Icon {:class icon}]
                        title])}
        [uix/ModalHeader {:header title}]
        [ui/ModalContent
@@ -254,7 +251,7 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name icon}]
+                         [ui/Icon {:class icon}]
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
@@ -263,7 +260,7 @@
              (when (is-old-version? nb-version)
                [ui/Message
                 {:error   true
-                 :icon    {:name "warning sign", :size "large"}
+                 :icon    {:name icons/i-warning, :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (str (@tr [:nuvlabox-update-error-content])) " "
@@ -273,7 +270,7 @@
              (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
-                 :icon    {:name "warning sign", :size "large"}
+                 :icon    {:name icons/i-warning, :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (@tr [:nuvlabox-update-warning-content])])}])
@@ -422,13 +419,13 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name "linkify"}]
+                         [ui/Icon {:class "linkify"}]
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
           [ui/Message
            {:warning true
-            :icon    {:name "warning sign", :size "large"}
+            :icon    {:name icons/i-warning, :size "large"}
             :header  (@tr [:nuvlabox-clustering-warning-header])
             :content (r/as-element
                        [:span
@@ -546,7 +543,7 @@
       :on-close   close-fn
       :trigger    (r/as-element
                     [ui/MenuItem {:on-click #(reset! show? true)}
-                     [ui/Icon {:name icon}]
+                     [ui/Icon {:class icon}]
                      title])}
      [uix/ModalHeader {:header title}]
      [ui/ModalContent
@@ -585,7 +582,7 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name icon}]
+                         [ui/Icon {:class icon}]
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
@@ -614,7 +611,7 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "add-ssh-button" @show?)}
-      [AddRevokeSSHButton resource operation show? "Add ssh key" "add" (@tr [:add])])))
+      [AddRevokeSSHButton resource operation show? "Add ssh key" icons/i-plus (@tr [:add])])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
@@ -622,7 +619,7 @@
   (let [show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "revoke-ssh-button" @show?)}
-      [AddRevokeSSHButton resource operation show? "Revoke ssh key" "minus" "revoke"])))
+      [AddRevokeSSHButton resource operation show? "Revoke ssh key" icons/i-minus "revoke"])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
@@ -852,9 +849,9 @@
                    "usb" "usb"
                    "bluetooth" "bluetooth b"
                    "bluetooth-le" "bluetooth b"
-                   "ssdp" "fas fa-chart-network"
-                   "ws-discovery" "fas fa-chart-network"
-                   "bonjour/avahi" "fas fa-chart-network"
+                   "ssdp" icons/i-chart-network
+                   "ws-discovery" icons/i-chart-network
+                   "bonjour/avahi" icons/i-chart-network
                    "gpu" "microchip"
                    nil)
                  nil)]))))
@@ -945,7 +942,7 @@
               "Raw sample: "
               [ui/LabelDetail
                [ui/Popup
-                {:trigger        (r/as-element [ui/Icon {:name "eye"}])
+                {:trigger        (r/as-element [ui/Icon {:class icons/i-eye}])
                  :content        (last (:data-gateway stat))
                  :position       "right center"
                  :inverted       true
@@ -1142,10 +1139,10 @@
                                     (or (:name sshkey) (:id sshkey))]]
                                   [ui/ListDescription
                                    (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                :trigger   (r/as-element [ui/Icon {:name   "key"
+                :trigger   (r/as-element [ui/Icon {:class icons/i-key
                                                    :fitted true}
                                           (@tr [:nuvlabox-detail-ssh-enabled])
-                                          [ui/Icon {:name   "angle down"
+                                          [ui/Icon {:class icons/i-angle-down
                                                     :fitted true}]])}]]])
           (when docker-server-version
             [ui/TableRow
@@ -1172,7 +1169,7 @@
                  [:div {:style {:display         :flex
                                 :justify-content :space-between}}
                   [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs")]
-                  [ui/Icon {:name (str "angle " (if @show-ips "up" "down"))}]]]])
+                  [ui/Icon {:class (if @show-ips icons/i-angle-up icons/i-angle-down)}]]]])
              (when @show-ips
                [IpsRow {:ips (map (fn [{:keys [interface ips]}]
                                     {:name interface
@@ -1214,7 +1211,7 @@
     [ui/Message {:color "brown"
                  :size  "tiny"}
      [ui/MessageHeader
-      [ui/Icon {:name "sticky note"}]
+      [icons/StickyNoteIcon]
       "Notes"]
      [ui/MessageList {:items status-notes}]]))
 
@@ -1276,10 +1273,10 @@
 
 (defn ServiceIcon
   [subtype]
-  (let [[kind path] (get {:swarm      [:icon "docker"]
+  (let [[kind path] (get {:swarm      [:icon icons/i-docker]
                           :s3         [:image "/ui/images/s3.png"]
                           :kubernetes [:image "/ui/images/kubernetes.svg"]
-                          :registry   [:icon "database"]}
+                          :registry   [:icon icons/i-db-full]}
                          (keyword subtype)
                          [:icon "question circle"])]
     (case kind
@@ -1327,7 +1324,7 @@
                    :float      "right"
                    :horizontal true
                    :style      {:float "right"}}
-         [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
+         [ui/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
      [ui/Table {:basic "very"}
       [ui/TableBody
        [ui/TableRow
@@ -1343,9 +1340,8 @@
          (when (= cluster-node-role "manager")
            [:<>
             (str " ")
-            [ui/Icon {:className "fas fa-crown"
-                      :corner    true
-                      :color     "blue"}]])]]
+            [icons/CrownIcon {:corner    true
+                              :color     "blue"}]])]]
        (when cluster-join-address
          [ui/TableRow
           [ui/TableCell "Cluster Join Address"]
@@ -1566,7 +1562,7 @@
                     vulnerability-id
                     " "
                     [ui/Popup
-                     {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
+                     {:trigger        (r/as-element [ui/Icon {:class icons/i-info}])
                       :header         vulnerability-id
                       :content        (r/as-element [:div
                                                      [:span (:description matching-vuln-db)]
@@ -1608,7 +1604,7 @@
               [ui/LabelDetail (:total summary)]]
              [ui/Label {:basic true}
               [ui/Popup
-               {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
+               {:trigger        (r/as-element [ui/Icon {:class icons/i-info}])
                 :content        (r/as-element
                                   [ui/ListSA {:bulleted true}
                                    (map (fn [k]
@@ -1762,7 +1758,7 @@
             [ui/FormInput {:label ["Enabled " (when @disabled-by-default?
                                                 (r/as-element
                                                   [ui/Popup
-                                                   {:trigger (r/as-element [ui/Icon {:name "info circle"}])
+                                                   {:trigger (r/as-element [ui/Icon {:class icons/i-info}])
                                                     :content (@tr [:nuvlabox-playbook-emergency-info])}]))]}
              [ui/Radio {:toggle    true
                         :disabled  @disabled-by-default?
@@ -1831,7 +1827,7 @@
                                                   "emergency"
                                                   "wrench")}) @playbooks)}]
             (when @can-edit?
-              [ui/Button {:icon     "plus"
+              [ui/Button {:icon     icons/i-info-full
                           :size     "mini"
                           :positive true
                           :circular true
@@ -1926,14 +1922,14 @@
         deployments @(subscribe [::deployments-subs/deployments])
         overview    {:menuItem {:content "Overview"
                                 :key     :overview
-                                :icon    "info"}
+                                :icon    icons/i-eye}
                      :render   #(r/as-element [TabOverview])}]
     (case (:state @nuvlabox)
       "SUSPENDED" [overview]
       [overview
        {:menuItem {:content "Location"
                    :key     :location
-                   :icon    "map"}
+                   :icon    icons/i-location-dot}
         :render   #(r/as-element [TabLocation])}
        {:menuItem {:content (r/as-element
                               [ui/Popup
@@ -1947,11 +1943,11 @@
                                 :size           "tiny"
                                 :hide-on-scroll true}])
                    :key     :consumption
-                   :icon    "thermometer half"}
+                   :icon    icons/i-gauge}
         :render   #(r/as-element [TabLoad])}
        {:menuItem {:content (r/as-element [:span (str/capitalize (tr [:logs]))])
                    :key     :logs
-                   :icon    "file code"}
+                   :icon    icons/i-file-code}
         :render   (fn [] (r/as-element [log-views/TabLogs
                                         (:id @nuvlabox)
                                         #(subscribe [::subs/nuvlabox-components])
@@ -1962,7 +1958,7 @@
                                                       :attached "top right"}
                                             (count peripherals)]])
                    :key     :peripherals
-                   :icon    "usb"}
+                   :icon    icons/i-usb-drive}
         :render   #(r/as-element [TabPeripherals])}
        (events-plugin/events-section
          {:db-path [::spec/events]
@@ -1973,7 +1969,7 @@
                                                       :attached "top right"}
                                             (:count deployments)]])
                    :key     :deployments
-                   :icon    "rocket"}
+                   :icon    #(r/as-element [icons/RocketIcon])}
         :render   #(r/as-element
                      [ui/TabPane
                       [deployments-views/DeploymentTable
@@ -1983,11 +1979,11 @@
                         :fetch-event        [::events/get-deployments-for-edge]}]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
-                   :icon    "shield"}
+                   :icon    icons/i-shield}
         :render   #(r/as-element [TabVulnerabilities])}
        {:menuItem {:content "Playbooks"
                    :key     :playbooks
-                   :icon    "book"}
+                   :icon    icons/i-book}
         :render   #(r/as-element [TabPlaybooks])}
        (job-views/jobs-section)
        (acl/TabAcls {:e               nuvlabox
@@ -2012,8 +2008,8 @@
   (let [{:keys [id name online]} @(subscribe [::subs/nuvlabox])]
     [:h2
      [ui/IconGroup
-      [ui/Icon {:name "box"}]
-      [OnlineStatusIcon online true]]
+      [icons/BoxIcon]
+      [OnlineStatusIcon online true true]]
      (or name id)]))
 
 
@@ -2036,7 +2032,7 @@
        [job-views/ProgressJobAction nb-status]
        (when (and nb-status (not (:online nb-status)))
          [ui/Message {:warning true
-                      :icon    "warning sign"
+                      :icon    icons/i-warning
                       :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
       [TabsNuvlaBox]
       [AddPlaybookModal]]]))

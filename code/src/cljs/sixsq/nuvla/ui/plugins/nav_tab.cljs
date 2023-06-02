@@ -1,12 +1,15 @@
 (ns sixsq.nuvla.ui.plugins.nav-tab
   (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub
                                    subscribe]]
+            [reagent.core :as r]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [db-path->query-param-key
                                                   gen-href]]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (s/def ::default-tab keyword?)
@@ -70,27 +73,34 @@
         route           (subscribe [::route-subs/current-route])
         query-param-key (db-path->query-param-key db-path)
         cur-view        (subscribe [::route-subs/query-param query-param-key])
-        add-hrefs       (fn [item]
+        clean-panes     (fn [item]
                           (let [menuItem (:menuItem item)
                                 k        (:key menuItem)
+                                icon     (:icon menuItem)
                                 href     (gen-href @route {:partial-query-params {query-param-key k}})
+                                clean-i  (if (and (string? icon)
+                                                  (some #(str/starts-with? icon %) ["fa-" "fal " "fad " "fas "]))
+                                           (r/as-element [icons/Icon {:name icon}])
+                                           icon)
                                 on-click (fn [event]
                                            (.preventDefault event)
                                            (dispatch [::change-tab
                                                       {:db-path                 db-path :tab-key k
                                                        :ignore-chng-protection? ignore-chng-protection?}]))]
                             (-> item
-                                (update :menuItem merge {:href                     href :onClick on-click
-                                                         :data-reitit-handle-click false}))))]
+                                (update :menuItem merge {:href                     href
+                                                         :onClick                  on-click
+                                                         :data-reitit-handle-click false
+                                                         :icon                     clean-i}))))]
     (when (nil? @default-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [{:keys [panes] :as opts}]
-      (let [non-nil-panes (remove nil? panes)
-            key->index    (zipmap (map (comp :key :menuItem) non-nil-panes)
-                                  (range (count non-nil-panes)))]
+      (let [clean-panes   (map clean-panes (remove nil? panes))
+            key->index    (zipmap (map (comp :key :menuItem) clean-panes)
+                                  (range (count clean-panes)))]
         [ui/Tab
          (-> (dissoc opts :db-path :change-event :ignore-chng-protection?)
-             (assoc :panes (map add-hrefs non-nil-panes)
+             (assoc :panes clean-panes
                     :active-index (get key->index (keyword @cur-view) 0))
              (assoc-in [:menu :class] :uix-tab-nav))]))))
 

@@ -5,7 +5,8 @@
             [markdown-to-hiccup.core :as md]
             [reagent.core :as r]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn href?
@@ -91,8 +92,7 @@
     [:span {:style {:cursor :pointer}} value " "
      [ui/Popup {:content (r/as-element [:p popup-text])
                 :trigger (r/as-element [ui/Icon
-                                        {:class [(when (not show?) "hide")]
-                                         :name  "clipboard outline"
+                                        {:class [icons/i-clipboard (when (not show?) "hide")]
                                          :color "blue"
                                          :style {:color "black"}}])}]]]))
 

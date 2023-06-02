@@ -19,7 +19,8 @@
             [sixsq.nuvla.ui.utils.form-fields :as forms]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn registry-url
@@ -361,7 +362,7 @@
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))
                          :read-only     (not @editable?)}]
-         [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader icons/i-grid-layout (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [Details]
          [apps-views-detail/registries-section]

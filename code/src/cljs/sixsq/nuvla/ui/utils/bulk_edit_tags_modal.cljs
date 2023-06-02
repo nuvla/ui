@@ -5,15 +5,15 @@
                                    subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.utils.events :as events]
             [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.plugins.table :as table-plugin]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.messages.events :as messages-events]
-            [sixsq.nuvla.ui.main.spec :as main-spec]))
+            [sixsq.nuvla.ui.plugins.table :as table-plugin]
+            [sixsq.nuvla.ui.utils.events :as events]
+            [sixsq.nuvla.ui.utils.icons :as icons]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (def modal-tags-set-id ::tags-set)
@@ -108,8 +108,7 @@
                      :active   true
                      :style    {:margin-left "2rem"}
                      :on-click (fn [] (reset! mode :confirming))}
-          [uix/Icon {:style {:margin 0}
-                     :name "fa-check"}]]]
+          [icons/CheckIconFull {:style {:margin 0}}]]]
         [:div
          [:span (str (@tr [:are-you-sure?]) " ")]
          [uix/Button {:text     (str (str/capitalize (@tr [:yes])) ", " text)
@@ -117,8 +116,7 @@
                       :color    color
                       :on-click (fn [] (dispatch update-event))}]
          [ui/Button {:on-click (fn [] (reset! mode :idle))}
-          [uix/Icon {:style {:margin 0}
-                    :name "fa-xmark"}]]]))))
+          [icons/XMarkIcon {:style {:margin 0}}]]]))))
 
 ;; Needs
 ;; - available tags -> through resource-key, fetched from here
@@ -257,7 +255,7 @@
 
 (defn create-bulk-edit-modal
   [{:keys [db-path on-open-modal-event resource-key] :as opts}]
-  {:trigger-config {:icon (fn [] [ui/Icon {:className "fal fa-tags"}])
+  {:trigger-config {:icon (fn [] [icons/TagIcon])
                    :name "Edit Tags"
                    :event (fn []
                             (dispatch

@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.values :as values]))
@@ -52,7 +53,7 @@
                                                 :attached "top right"}
                                       count])])
       :key     :jobs
-      :icon    "clipboard list"}
+      :icon    icons/i-list}
      :render #(r/as-element [JobsTable @jobs])}))
 
 (def filtered-actions #{"dct_check" "stop_deployment_set" "start_deployment_set"})

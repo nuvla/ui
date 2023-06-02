@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.utils.general :as utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
@@ -35,7 +36,7 @@
      [:a {:on-click click-fn
           :style    {:cursor "pointer"}
           :class    (when (zero? index) :parent)}
-      (when page-icon [uix/Icon {:name page-icon :style {:padding-right "10px"
+      (when page-icon [icons/Icon {:name page-icon :style {:padding-right "10px"
                                                          :font-weight   400}}])
       (utils/truncate (str (or (:text segment) segment)))]]))
 
@@ -167,7 +168,7 @@
           (@tr [:subscribe]))]
        [:p]
        (when @open-subs-required?
-         [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])])]]]))
+         [:p [icons/InfoIconFull] (@tr [:subscription-required-content-group])])]]]))
 
 
 (defn contents
@@ -181,7 +182,6 @@
                 :id    "nuvla-ui-content"
                 :fluid true}
                @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
-
        [router-component]])))
 
 
@@ -224,7 +224,7 @@
     [ui/MenuItem {:aria-label "toggle sidebar"
                   :link       true
                   :on-click   #(dispatch [::events/toggle-sidebar])}
-     [uix/Icon {:name "fa-light fa-bars"}]]
+     [icons/BarsIcon]]
 
     [ui/MenuItem [breadcrumbs]]
 

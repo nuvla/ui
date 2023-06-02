@@ -1,4 +1,5 @@
-(ns sixsq.nuvla.ui.dashboard.utils)
+(ns sixsq.nuvla.ui.dashboard.utils
+  (:require [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def type-apps "APPS")
 (def type-deployments "DEPLOYMENTS")
@@ -12,8 +13,8 @@
 
 (defn type->icon
   [type]
-  (let [icons-map {type-apps        "fa-light fa-layer-group"
-                   type-deployments "fa-light fa-rocket-launch"
-                   type-nbs         "fa-light fa-box"
-                   type-creds       "fa-light fa-key"}]
+  (let [icons-map {type-apps        icons/i-layer-group
+                   type-deployments icons/i-rocket
+                   type-nbs         icons/i-box
+                   type-creds       icons/i-key}]
     (get icons-map type)))

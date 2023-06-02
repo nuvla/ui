@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.main.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.about.utils :as about-utils]
-            [sixsq.nuvla.ui.routing.routes :as routes]))
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (s/def ::loading? boolean?)
 
@@ -59,7 +60,7 @@
                ::content-key          (random-uuid)
                ::pages                {"welcome"         {:key        routes/home
                                                           :label-kw   :home
-                                                          :icon       "fa-light fa-house"
+                                                          :icon       icons/i-house
                                                           :protected? false
                                                           :order      0}
                                        "documentation"   {:key        routes/documentation
@@ -68,57 +69,57 @@
                                                           :protected? false}
                                        "dashboard"       {:key        routes/dashboard
                                                           :label-kw   :dashboard
-                                                          :icon       "fa-light fa-gauge-min"
+                                                          :icon       icons/i-gauge
                                                           :protected? true
                                                           :order      10}
                                        "apps"            {:key        routes/apps
                                                           :label-kw   :apps
-                                                          :icon       "fa-light fa-layer-group"
+                                                          :icon       icons/i-layer-group
                                                           :protected? true
                                                           :order      20}
                                        "deployments"     {:key        routes/deployments
                                                           :label-kw   :deployments
                                                           :name       "deployments"
-                                                          :icon       "fa-light fa-rocket-launch"
+                                                          :icon       icons/i-rocket
                                                           :protected? true
                                                           :order      30}
                                        "deployment-sets" {:key             routes/deployment-sets
                                                           :label-kw        :deployment-sets
                                                           :name            "deployments-sets"
-                                                          :icon            "fa-light fa-bullseye"
+                                                          :icon            icons/i-bullseye
                                                           :protected?      true
                                                           :feature-flag-kw about-utils/feature-deployment-set-key
                                                           :order           31}
                                        "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"
-                                                          :icon       "fa-light fa-box"
+                                                          :icon       icons/i-box
                                                           :protected? true
                                                           :order      40}
                                        "credentials"     {:key        routes/credentials
                                                           :label-kw   :credentials
-                                                          :icon       "fa-light fa-key"
+                                                          :icon       icons/i-key
                                                           :protected? true
                                                           :order      50}
                                        "notifications"   {:key        routes/notifications
                                                           :label-kw   :notifications
-                                                          :icon       "fa-light fa-bell"
+                                                          :icon       icons/i-bell
                                                           :protected? true
                                                           :order      60}
                                        "data"            {:key             routes/data
                                                           :label-kw        :data
-                                                          :icon            "fa-light fa-database"
+                                                          :icon            icons/i-db
                                                           :protected?      true
                                                           :iframe-visible? true
                                                           :order           70}
                                        "clouds"          {:key        routes/clouds
                                                           :label-kw   :infra-service-short
-                                                          :icon       "fa-light fa-cloud"
+                                                          :icon       icons/i-cloud
                                                           :protected? true
                                                           :order      80}
                                        "api"             {:key        routes/api
                                                           :label-kw   :api
-                                                          :icon       "fa-light fa-code"
+                                                          :icon       icons/i-code
                                                           :protected? false
                                                           :order      90}}
                ::open-modal           nil

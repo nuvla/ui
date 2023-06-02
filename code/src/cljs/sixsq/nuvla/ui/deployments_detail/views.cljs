@@ -32,7 +32,8 @@
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -135,7 +136,7 @@
                                                      :attached "top right"}
                                            url-count])])
                 :key     :urls
-                :icon    "linkify"}
+                :icon    icons/i-link}
      :render   #(r/as-element
                   (if (empty? urls)
                     [uix/WarningMsgNoElements (@tr [:no-urls])]
@@ -159,7 +160,7 @@
         module-content-id (subscribe [::subs/current-module-content-id])]
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
                 :key     :versions
-                :icon    "linkify"}
+                :icon    icons/i-layer-group}
      :render   #(r/as-element
                   [ui/TabPane [views-versions/versions-table
                                module-versions module-content-id]])}))
@@ -173,7 +174,7 @@
                     (if (some? description)
                       [ui/Popup
                        (cond-> {:content (r/as-element [:p description])
-                                :trigger (r/as-element [:p name " " [ui/Icon {:name "info circle"}]])})]
+                                :trigger (r/as-element [:p name " " [icons/InfoIconFull]])})]
                       name)]
                    [ui/TableCell
                     {:class ["show-on-hover-value"]}
@@ -186,7 +187,9 @@
 
 (defn list-section
   [items section-key section-name]
-  (let [tr          (subscribe [::i18n-subs/tr])
+  (let [key->icon   {:parameters icons/i-sliders
+                     :env-vars   icons/i-gear}
+        tr          (subscribe [::i18n-subs/tr])
         items-count (count items)]
     {:menuItem {:content (r/as-element
                            [:span (@tr [section-name])
@@ -196,7 +199,7 @@
                                          :attached "top right"}
                                items-count])])
                 :key     section-key
-                :icon    "list ol"}
+                :icon    (key->icon section-key)}
      :render   #(r/as-element
                   (if (empty? items)
                     [uix/WarningMsgNoElements]
@@ -228,18 +231,6 @@
     (list-section env-vars :env-vars :env-variables)))
 
 
-(defn job-map-to-row
-  [{:keys [id action time-of-status-change state progress return-code status-message]}]
-  [ui/TableRow
-   [ui/TableCell [values/AsLink id :label (general-utils/id->short-uuid id)]]
-   [ui/TableCell action]
-   [ui/TableCell time-of-status-change]
-   [ui/TableCell state]
-   [ui/TableCell progress]
-   [ui/TableCell return-code]
-   [ui/TableCell {:style {:white-space "pre"}} status-message]])
-
-
 (defn billing-section
   []
   (let [tr               (subscribe [::i18n-subs/tr])
@@ -253,7 +244,7 @@
     (when (some? (:subscription-id @deployment))
       {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:billing]))])
                   :key     :billing
-                  :icon    "eur"}
+                  :icon    icons/i-euro}
        :render   #(r/as-element
                     [ui/Segment
                      [ui/Table {:collapsing true
@@ -290,7 +281,7 @@
         deployment (subscribe [::subs/deployment])]
     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
                 :key     :logs
-                :icon    "file code"}
+                :icon    icons/i-file-code}
      :render   (fn [] (r/as-element
                         [log-views/TabLogs
                          (:id @deployment)
@@ -306,15 +297,15 @@
                  label? [ui/Label {:corner   true
                                    :size     "small"
                                    :on-click on-click}
-                         [ui/Icon {:name  icon-name
+                         [ui/Icon {:class  icon-name
                                    :style {:cursor "pointer"}
                                    :color "red"}]]
                  menu-item? [ui/MenuItem
                              {:on-click on-click
                               :disabled disabled?}
-                             [ui/Icon {:name icon-name}]
+                             [ui/Icon {:class icon-name}]
                              button-text]
-                 :else [ui/Icon {:name     icon-name
+                 :else [ui/Icon {:class     icon-name
                                  :style    {:cursor "pointer"}
                                  :color    "red"
                                  :on-click on-click}])]
@@ -333,7 +324,7 @@
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         checked?  (r/atom false)
-        icon-name "stop"]
+        icon-name icons/i-stop]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module parent]} deployment
             cred-loading?     (subscribe [::creds-subs/credential-check-loading? parent])
@@ -379,7 +370,7 @@
   [_deployment & _opts]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
-        icon-name "trash"]
+        icon-name icons/i-trash]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module]} deployment
             text-1 (str (or name id) (when description " - ") description)
@@ -417,7 +408,7 @@
         button     (action-button
                      {:menu-item?  true
                       :button-text (@tr [:clone])
-                      :icon-name   "code branch"
+                      :icon-name   icons/i-clone
                       :popup-text  (@tr [:deployment-clone-msg])
                       :on-click    #(dispatch [::deployment-dialog-events/create-deployment
                                                id first-step])
@@ -468,7 +459,7 @@
                                      (@tr [:update]))
                       :popup-text  (@tr [(if start :deployment-start-msg
                                                    :deployment-update-msg)])
-                      :icon-name   (if start "play" "redo")
+                      :icon-name   (if start icons/i-play icons/i-redo)
                       :menu-item?  true
                       :disabled?   (if start
                                      (not (general-utils/can-operation? "start" deployment))
@@ -508,8 +499,8 @@
     (let [tr           (subscribe [::i18n-subs/tr])
           last-version (ffirst versions)]
       (if (= v last-version)
-        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-        [:span [ui/Icon {:name "warning", :color "orange"}]
+        [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
+        [:span [icons/WarningIcon {:color "orange"}]
          (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
 
@@ -611,7 +602,7 @@
       [ui/CardDescription
 
        (when cred
-         [:div [ui/Icon {:name "key"}] cred])]
+         [:div [icons/KeyIcon] cred])]
 
       [ui/LabelGroup {:size  "tiny"
                       :color "teal"
@@ -622,7 +613,7 @@
                             :overflow      "hidden"
                             :text-overflow "ellipsis"
                             :white-space   "nowrap"}}
-          [ui/Icon {:name "tag"}] tag])]]
+          [icons/TagIcon] tag])]]
 
      (when (and (deployments-utils/started? state)
                 @primary-url)
@@ -699,7 +690,7 @@
            [ui/TableCell (str/capitalize (@tr [:deployment-set]))]
            [ui/TableCell
             [:<>
-             [ui/Icon {:name "bullseye"}]
+             [icons/BullseyeIcon]
              [values/AsLink (general-utils/id->uuid deployment-set) :label
               (or deployment-set-name
                   (general-utils/id->uuid deployment-set))
@@ -729,7 +720,7 @@
   []
   {:menuItem {:content (r/as-element [:span "Overview"])
               :key     :overview
-              :icon    "info"}
+              :icon    icons/i-eye}
    :render   #(r/as-element [OverviewPane])})
 
 
@@ -783,7 +774,7 @@
    {:position corner
     :content  status
     :trigger  (r/as-element
-                [ui/Icon {:name  "power"
+                [ui/Icon {:class icons/i-power
                           :color (values/status->color status)}])}])
 
 
@@ -797,14 +788,14 @@
             uuid        (:id @deployment "")]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [ui/Icon {:name "rocket"}]
+          [icons/RocketIcon]
           module-name " (" (general-utils/id->uuid uuid) ")"]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [StatusIcon (depl-state->status state)]
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:name "question circle"}])
+            {:trigger        (r/as-element [ui/Icon {:class icons/i-circle-question}])
              :content        (@tr [:deployment-state])
              :position       "bottom center"
              :on             "hover"

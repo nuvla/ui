@@ -16,7 +16,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (def view-type (r/atom :cards))
@@ -28,7 +29,7 @@
       [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
         [views-utils/AddButton]
-        [ui/MenuItem {:icon     "grid layout"
+        [ui/MenuItem {:icon     icons/i-grid-layout
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
         [ui/MenuItem {:icon     "table"
@@ -55,7 +56,7 @@
                             (count (:nuvlabox-workers @nuvlabox-cluster)))]
     [ui/Header {:as        "h3"
                 :float     "left"
-                :icon      (r/as-element [uix/Icon {:name "fas fa-chart-network"}])
+                :icon      (r/as-element [icons/ChartNetworkIcon])
                 :content   (if name
                              (str name " (" cluster-id ")")
                              cluster-id)
@@ -109,7 +110,7 @@
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
        [ui/TableRow
-        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+        [ui/TableHeaderCell [icons/HeartbeatIcon]]
         [ui/TableHeaderCell "state"]
         [ui/TableHeaderCell "name"]
         [ui/TableHeaderCell "description"]
@@ -208,7 +209,7 @@
             [ui/Message {:color "brown"
                          :size  "tiny"}
              [ui/MessageHeader
-              [ui/Icon {:name "sticky note"}]
+              [icons/StickyNoteIcon]
               "Notes"]
              [ui/MessageList {:items status-notes}]]]]])]]
      [ui/Segment
@@ -267,7 +268,7 @@
          ::subs/nuvlabox-not-found?
          :no-nuvlabox-cluster-message-header
          :no-nuvlabox-cluster-message-content]
-        [uix/PageHeader "fas fa-chart-network"
+        [uix/PageHeader icons/i-chart-network
          (str (general-utils/capitalize-first-letter (@tr [:edges])) " "
               (:name @cluster))]
         [MenuBar cluster-id]

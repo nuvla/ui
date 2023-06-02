@@ -31,7 +31,8 @@
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            [sixsq.nuvla.ui.utils.zip :as zip]))
+            [sixsq.nuvla.ui.utils.zip :as zip]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def show-state-statistics (r/atom false))
 
@@ -57,19 +58,19 @@
         [ui/StatisticGroup {:widths (when-not clickable? 4)
                             :size   "tiny"}
          (for [statistic-opts [{:value          total
-                                :icons          ["fa-light fa-box"]
+                                :icons          [icons/i-box]
                                 :label          "TOTAL"
                                 :positive-color nil}
                                {:value          online
-                                :icons          ["fa-light fa-power-off"]
+                                :icons          [icons/i-power]
                                 :label          utils/status-online
                                 :positive-color "green"}
                                {:value          offline
-                                :icons          ["fa-light fa-power-off"]
+                                :icons          [icons/i-power]
                                 :label          utils/status-offline
                                 :positive-color "red"}
                                {:value          unknown
-                                :icons          ["fa-light fa-power-off"]
+                                :icons          [icons/i-power]
                                 :label          utils/status-unknown
                                 :positive-color "orange"}]]
            ^{:key (str "stat-state-" (:label statistic-opts))}
@@ -87,7 +88,7 @@
                           (reset! show-state-statistics (not @show-state-statistics))
                           (when-not @show-state-statistics
                             (dispatch [::events/set-state-selector nil])))}
-            [uix/Icon {:name "fa-light fa-arrow-down"}]
+            [icons/ArrowDownIcon]
             \u0020
             (@tr [:commissionning-states])])]))))
 
@@ -129,10 +130,10 @@
                :stacked?                 true}])]]]))))
 
 (def view->icon-classes
-  {spec/cards-view   "grid layout"
-   spec/table-view   "table"
-   spec/map-view     "map"
-   spec/cluster-view "fas fa-chart-network"})
+  {spec/cards-view   icons/i-grid-layout
+   spec/table-view   icons/i-table
+   spec/map-view     icons/i-map
+   spec/cluster-view icons/i-chart-network})
 
 (defn MenuBar []
   (let [loading?  (subscribe [::subs/loading?])
@@ -147,7 +148,7 @@
             ^{:key view}
             [ui/MenuItem {:active   (= @view-type view)
                           :on-click #(switch-view! view)}
-             [ui/Icon {:className (view->icon-classes view)}]]))
+             [icons/Icon {:name (view->icon-classes view)}]]))
         [components/RefreshMenu
          {:action-id  events/refresh-id
           :loading?   @loading?
@@ -172,7 +173,7 @@
   [new-private-ssh-key private-ssh-key-file tr]
   [ui/Message {:icon    true
                :warning true}
-   [ui/Icon {:name "warning"}]
+   [icons/WarningIcon]
    [ui/MessageContent
     [ui/MessageHeader
      [:span
@@ -219,8 +220,8 @@
            [ui/Segment {:basic true}
             (when playbooks-toggle
               [ui/Message {:icon true}
-               [ui/Icon {:name    (if @playbooks-cronjob "check circle outline" "spinner")
-                         :loading (if @playbooks-cronjob false true)}]
+               [icons/Icon {:name   (if @playbooks-cronjob icons/i-circle-check icons/i-spinner)
+                            :loading (if @playbooks-cronjob false true)}]
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
                                    (when @playbooks-cronjob
@@ -249,9 +250,8 @@
             [ui/Card
              [ui/CardContent {:text-align :center}
               [ui/Header [:span {:style {:overflow-wrap "break-word"}} nuvlabox-name-or-id]]
-              [ui/Icon {:name  "box"
-                        :color "green"
-                        :size  :massive}]]
+              [icons/BoxIcon {:color "green"
+                              :size  :massive}]]
              [ui/CopyToClipboard {:text nuvlabox-id}
               [ui/Button {:positive true
                           :icon     "clipboard"
@@ -317,7 +317,7 @@
 
          [ui/Segment {:basic true}
           [ui/Message {:icon true}
-           [ui/Icon {:name (if apikey "check circle outline" "spinner")}]
+           [icons/Icon {:name (if apikey icons/i-circle-check icons/i-spinner)}]
            [ui/MessageContent
             [ui/MessageHeader
              (@tr [:nuvlabox-usb-key])]
@@ -327,7 +327,7 @@
                     :target "_blank"}
                 apikey] " "
                [ui/Popup {:content (@tr [:nuvlabox-modal-usb-apikey-warning])
-                          :trigger (r/as-element [ui/Icon {:name  "exclamation triangle"
+                          :trigger (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
                                                            :color "orange"}])}]]
               (@tr [:nuvlabox-usb-key-wait]))]]
           (when @new-private-ssh-key
@@ -340,10 +340,10 @@
              [ui/CardContent {:text-align :center}
               [ui/Header [:span {:style {:overflow-wrap "break-word"}}
                           (@tr [:nuvlabox-modal-usb-trigger-file])]]
-              [ui/Icon {:name    (if apikey "file code" "spinner")
-                        :loading (nil? apikey)
-                        :color   "green"
-                        :size    :massive}]]
+              [icons/Icon {:name    (if apikey icons/i-file-code icons/i-spinner)
+                           :loading (nil? apikey)
+                           :color   "green"
+                           :size    :massive}]]
              [:a {:href     (str "data:text/plain;charset=utf-8,"
                                  (js/encodeURIComponent
                                    (general-utils/edn->json nuvlabox-trigger-file)))
@@ -375,7 +375,7 @@
              [:h5 {:style {:margin "0.5em 0 1em 0"}}
               (@tr [:nuvlabox-modal-usb-copy])
               [ui/Popup {:content (@tr [:nuvlabox-modal-usb-copy-warning])
-                         :trigger (r/as-element [ui/Icon {:name "info circle"}])}]]]
+                         :trigger (r/as-element [ui/Icon {:class icons/i-info}])}]]]
 
             [ui/Segment {:text-align :center
                          :raised     true}
@@ -667,7 +667,7 @@
                                      :checked   @playbooks-toggle
                                      :on-change #(swap! playbooks-toggle not)}]
                        [ui/Popup
-                        {:trigger        (r/as-element [ui/Icon {:name  "info circle"
+                        {:trigger        (r/as-element [ui/Icon {:class icons/i-info
                                                                  :style {:margin-left "1em"}}])
                          :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
                          :on             "hover"
@@ -756,7 +756,7 @@
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
-        [ui/Icon {:name "check"}])]]))
+        [icons/CheckIconFull])]]))
 
 (defn Pagination
   [view-type]
@@ -792,7 +792,7 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])
-        columns           [{:field-key :online :header-content [ui/Icon {:name "heartbeat"}]}
+        columns           [{:field-key :online :header-content [icons/HeartbeatIcon]}
                            {:field-key :state}
                            {:field-key :name}
                            {:field-key :description}

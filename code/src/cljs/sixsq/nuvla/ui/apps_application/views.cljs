@@ -27,7 +27,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def docker-docu-link "https://docs.docker.com/compose/compose-file/compose-file-v3/#not-supported-for-docker-stack-deploy")
 
@@ -238,12 +239,12 @@
           last-published-version (apps-utils/latest-published-index versions)]
       (if published?
         (if (= v last-published-version)
-          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-published]) ")"]
-          [:span [ui/Icon {:name "warning", :color "orange"}]
+          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-published]) ")"]
+          [:span [icons/WarningIcon {:color "orange"}]
            (str (@tr [:not-up-to-date-published]))])
         (if (= v last-version)
-          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-          [:span [ui/Icon {:name "warning", :color "orange"}]
+          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
+          [:span [icons/WarningIcon {:color "orange"}]
            (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
 
 
@@ -501,7 +502,7 @@
         stripe    (subscribe [::main-subs/stripe])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
-                              :icon    (r/as-element [uix/Icon {:name "fa-light fa-eye"}])}
+                              :icon    (r/as-element [icons/EyeIcon])}
                    :pane     {:content (r/as-element [OverviewPane])
                               :key     :overview-pane}}
                   {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
@@ -553,7 +554,7 @@
             panes  (module-detail-panes)]
         [ui/Container {:fluid true
                        :class :uix-apps-details}
-         [uix/PageHeader "fa-light fa-layer-group" name :inline true]
+         [uix/PageHeader icons/i-layer-group name :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

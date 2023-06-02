@@ -26,7 +26,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (defn refresh
   []
@@ -275,7 +276,8 @@
         selected-data-records (subscribe [::subs/selected-data-record-ids])
         active-tab            (subscribe [::tab-plugin/default-tab [::data-spec/tab]])
         on-click              #(dispatch [::main-events/subscription-required-dispatch
-                                          [::data-events/open-application-select-modal]])]
+                                          [::data-events/open-application-select-modal]])
+        icon                  icons/i-rocket]
     (fn [button-type]
       (let [selected  (if (= @active-tab :data-sets)
                         @selected-data-sets
@@ -285,14 +287,14 @@
           [uix/MenuItem
            {:name     (@tr [:process])
             :disabled disabled?
-            :icon     "rocket"
+            :icon     icon
             :on-click on-click}]
           [ui/ButtonGroup {:primary true
                            :style   {:padding-top 10}}
-           [ui/Button
-            {:content  (@tr [:process])
+           [uix/Button
+            {:text  (@tr [:process])
              :disabled disabled?
-             :icon     "rocket"
+             :icon     icon
              :on-click on-click}]])))))
 
 
@@ -317,7 +319,7 @@
            " "
            [ui/Button
             {:content  (@tr [:create-data-set])
-             :icon     "plus"
+             :icon     icons/i-info-full
              :primary  true
              :on-click (fn []
                          (dispatch [::data-events/set-modal-open? true])
@@ -345,7 +347,7 @@
      {:button-text (@tr [:delete])
       :on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "trash"}]
+                                  [icons/TrashIconFull]
                                   (@tr [:delete])])
       :header      (@tr [:delete-data-set])
       :content     content}]))
@@ -465,12 +467,12 @@
       :content     [:<>
                     (when resource-deployment-id
                       [:div {:style {:padding "10px 0 0 0"}}
-                       [ui/Icon {:name "rocket"}]
+                       [icons/RocketIcon]
                        (values/AsLink resource-deployment-id :page "deployment"
                                       :label (@tr [:deployment]))])
                     (when infrastructure-service-id
                       [:div {:style {:padding "10px 0 0 0"}}
-                       [ui/Icon {:name "cloud"}]
+                       [icons/CloudIcon]
                        [values/AsLink infrastructure-service-id
                         :page "clouds" :label (@tr [:storage-service])]])]
       :tags        tags
@@ -484,7 +486,7 @@
                            :target   "_blank"
                            :style    {:color "white"}
                            :download (when filename filename)}
-                       [ui/Icon {:name "cloud download"}] " "
+                       [icons/CloudDownloadIcon] " "
                        (@tr [:download])]])}]))
 
 (defn cards-per-device
@@ -531,7 +533,7 @@
                               :on-click #(dispatch
                                            [::data-events/search-application
                                             module-filter])}
-                    [ui/Icon {:name "eye"}]
+                    [icons/EyeIcon]
                     (@tr [:preview])])
         :header  (str/capitalize (@tr [:application]))
         :content [ApplicationList {:selectable? false}]}])))
@@ -635,7 +637,7 @@
            :no-data-set-message-header
            :no-data-set-message-content]
           [ui/Segment style/basic
-           [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
+           [uix/PageHeader icons/i-db-full (str name " " (@tr [:data-set]))]
            [MenuBar]
            [Summary]
            [ui/Grid {:columns   (columns-per-device @device)

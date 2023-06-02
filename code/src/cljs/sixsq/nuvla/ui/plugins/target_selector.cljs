@@ -9,7 +9,8 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (s/def ::subtype (s/nilable #{"docker" "kubernetes"}))
 
@@ -204,12 +205,12 @@
                   :on-click #(dispatch [::toggle-select-target db-path
                                         credential credentials])}
      [ui/ListIcon
-      [ui/Icon {:name (if selected?
-                        "check square outline"
-                        "square outline")}]]
+      [ui/Icon {:class (if selected?
+                        icons/i-check-square-outline
+                        icons/i-square-outline)}]]
      [ui/ListContent
       [ui/ListHeader (when selected? {:as :a})
-       [ui/Icon {:name "key"}] " "
+       [icons/KeyIcon] " "
        (or name id)]
       (when description
         [ui/ListDescription (general-utils/truncate description 100)])]]))
@@ -225,12 +226,12 @@
                                           (first credentials)])})
      [ui/ListIcon
       [ui/Icon {:name (if @selected?
-                        "check square outline"
-                        "square outline")}]]
+                        icons/i-check-square-outline
+                        icons/i-square-outline)}]]
      [ui/ListContent
       [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
        (case subtype
-         "swarm" [ui/Icon {:name "docker"}]
+         "swarm" [icons/DockerIcon]
          "kubernetes" [ui/Image {:src   (if @selected?
                                           "/ui/images/kubernetes.svg"
                                           "/ui/images/kubernetes-grey.svg")

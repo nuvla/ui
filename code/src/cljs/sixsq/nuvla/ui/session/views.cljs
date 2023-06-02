@@ -19,7 +19,8 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn SwitchGroupMenuItem
@@ -66,7 +67,7 @@
                               (reset! search ""))
             :icon          (r/as-element
                              [:<>
-                              [uix/Icon {:name "fa-light fa-user-group large"}]
+                              [icons/UserGroupIcon {:class "large"}]
                               (when-not @is-mobile?
                                 [uix/TR :switch-group])])}
            (when @open
@@ -101,7 +102,7 @@
                      [ui/DropdownItem {:on-click #(on-click value)
                                        :selected (= i @cursor)}
                       [:span (str/join (repeat (* level 5) ff/nbsp))]
-                      [ui/Icon {:name icon}]
+                      [ui/Icon {:class icon}]
                       (if (= @active-claim value)
                         [:b {:style {:color "#c10e12"}} text]
                         text)]
@@ -110,7 +111,7 @@
               [ui/DropdownItem
                {:text     (@tr [:show-subgroups-resources])
                 :icon     (str (when @extended? "check ")
-                               "square outline")
+                               icons/i-square-outline)
                 :on-click #(do (swap! extended? not)
                                (on-click @active-claim)
                                (.stopPropagation %))}]])])))))
@@ -125,7 +126,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [uix/Icon {:name (str "fa-light large" (if @is-group? " fa-user-group" " fa-user-large"))}]
+       (if @is-group? [icons/UserGroupIcon {:class "large"}] [icons/UserLargeIcon {:class "large"}])
        (-> @user
            utils/remove-group-prefix
            (general-utils/truncate (if @is-mobile? 6 20)))])))
@@ -138,8 +139,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [uix/Icon {:name "fa-light fa-arrow-right-from-bracket"
-                  :size "large"}]
+       [icons/ArrowRightFromBracketIcon {:size "large"}]
        (when-not @is-mobile?
          [uix/TR :logout])])))
 
@@ -200,7 +200,7 @@
              :href   url
              :target "_blank"
              :style  {:color "white"}}
-         [ui/Icon {:name icon}]])]]))
+         [icons/Icon {:class icon}]])]]))
 
 
 (defn LeftPanel

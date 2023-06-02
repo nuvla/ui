@@ -25,7 +25,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as utils-values]))
+            [sixsq.nuvla.ui.utils.values :as utils-values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def view-type (r/atom :cards))
 
@@ -50,7 +51,7 @@
           :on-close  #(dispatch [::events/set-modal-open? false])}
 
          [uix/ModalHeader {:header (@tr [:new-dataset])
-                           :icon   "add"}]
+                           :icon   icons/i-plus-full}]
          [ui/ModalContent
           [ui/Form {:noValidate true}
            [ui/FormInput
@@ -102,7 +103,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
      {:name     (@tr [:add])
-      :icon     "add"
+      :icon     icons/i-plus-large
       :on-click #(dispatch [::events/set-modal-open? true])}]))
 
 (defn MenuBar
@@ -112,12 +113,12 @@
      [ui/Menu {:borderless true, :stackable true}
       [data-set-views/ProcessButton :menu-item]
       (when (= @active-tab :data-sets) [AddDataSet])
-      [ui/MenuItem {:icon     "grid layout"
+      [uix/MenuItem {:icon     icons/i-grid-layout
                     :active   (= @view-type :cards)
                     :on-click #(reset! view-type :cards)}]
-      [ui/MenuItem {:icon     "table"
-                    :active   (= @view-type :table)
-                    :on-click #(reset! view-type :table)}]
+      [uix/MenuItem {:icon     icons/i-table
+                     :active   (= @view-type :table)
+                     :on-click #(reset! view-type :table)}]
       [components/RefreshMenu
        {:on-refresh refresh}]]]))
 
@@ -173,13 +174,13 @@
           [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
                       :on-click #(configure-fn @selected-app-id)}
-           [ui/Icon {:name "settings"}]
+           [icons/SettingsIcon]
            (@tr [:configure])]
           [ui/Button {:disabled (or (nil? @selected-app-id)
                                     deploy-disabled?)
                       :primary  true
                       :on-click deploy-fn}
-           [ui/Icon {:name "rocket"}]
+           [icons/RocketIcon]
            (@tr [:deploy])]]]))))
 
 (defn Pagination
@@ -253,10 +254,10 @@
       :tags        tags
       :extra       [:<>
                     [ui/Label
-                     [ui/Icon {:name "file"}]
+                     [icons/FileIcon]
                      [:span (str count " " (@tr [:objects]))]]
                     [ui/Label
-                     [ui/Icon {:name "expand arrows alternate"}]
+                     [icons/ExpandingArrowsIcon]
                      [:span (utils/format-bytes size)]]]
       :on-select   #(dispatch [::events/toggle-data-set-id id])
       :selected?   selected?
@@ -275,7 +276,7 @@
          [:div style/center-items
           (if (not (seq @data-sets))
             [ui/Message {:warning true}
-             [ui/Icon {:name "warning sign"}]
+             [icons/WarningIcon]
              (@tr [:no-datasets])]
             (vec (concat [ui/CardGroup {:centered    true
                                         :itemsPerRow 4}]
@@ -307,7 +308,7 @@
     :render   #(r/as-element [DataSets])}
    {:menuItem {:content (r/as-element [:span "Data records"])
                :key     :data-records
-               :icon    "file"}
+               :icon    icons/i-file}
     :render   #(r/as-element [DataRecords])}])
 
 (defn data-view

@@ -16,7 +16,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn NuvlaboxRow
@@ -35,7 +36,7 @@
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
-        [ui/Icon {:name "check"}])]]))
+        [icons/CheckIconFull])]]))
 
 
 (defn AddButton
@@ -43,7 +44,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
      {:name     (@tr [:add])
-      :icon     "add"
+      :icon     icons/i-plus-large
       :on-click #(dispatch
                    [::main-events/subscription-required-dispatch
                     [::events/open-modal spec/modal-add-id]])}]))
@@ -66,11 +67,10 @@
                         [:div {:style {:float "right"}}
                          [OnlineStatusIcon online :corner "top right"]]
                         [ui/IconGroup
-                         [ui/Icon {:name "box"}]
+                         [icons/BoxIcon]
                          (when (some #{id} managers)
-                           [ui/Icon {:className "fas fa-crown"
-                                     :corner    true
-                                     :color     "blue"}])]
+                           [icons/CrownIcon {:corner    true
+                                             :color     "blue"}])]
                         (or name id)]
           :meta        [:<>
                         [:div (str (@tr [:created]) " " (date-string->time-ago created))]
@@ -89,12 +89,4 @@
 
 (defn orchestrator-icon
   [orchestrator]
-  [uix/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}])
-
-(defn PreReleaseWarning [{:keys [show? warning-text]}]
-  (when show?
-    [ui/Popup
-     {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
-      :content        warning-text
-      :on             "hover"
-      :hide-on-scroll true}]))
+  [icons/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}])

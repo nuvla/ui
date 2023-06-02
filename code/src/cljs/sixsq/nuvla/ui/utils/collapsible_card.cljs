@@ -7,7 +7,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.table :as table]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn more-or-less
@@ -16,10 +17,10 @@
         more? state-atom]
     (fn [_state-atom]
       (let [label     (@tr (if @more? [:less-details] [:more-details]))
-            icon-name (if @more? "fa-light fa-angle-down" "fa-light fa-angle-right")]
+            icon-name (if @more? icons/i-angle-down icons/i-angle-right)]
         [:a {:style    {:cursor "pointer"}
              :on-click #(reset! more? (not @more?))}
-         [uix/Icon {:name icon-name}]
+         [icons/Icon {:name icon-name}]
          label]))))
 
 
@@ -51,7 +52,7 @@
         (when logo
           [ui/Image {:floated "right", :size :tiny, :src logo}])
         [ui/CardHeader
-         [ui/Icon {:name icon}]
+         [ui/Icon {:class icon}]
          (cond-> title
                  (not (str/blank? subtitle)) (str " (" subtitle ")"))]
         [ui/CardMeta

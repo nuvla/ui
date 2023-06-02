@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.spec
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (s/def ::deploy-modal-visible? boolean?)
@@ -63,13 +64,13 @@
 (s/def ::submit-loading? boolean?)
 
 (def step-states {:data           {:step-id :data
-                                   :icon    "database"}
+                                   :icon    icons/i-db-full}
                   :infra-services {:step-id :infra-services
                                    :icon    "map marker alternate"}
                   :module-version {:step-id :module-version
                                    :icon    "list ol"}
                   :registries     {:step-id :registries
-                                   :icon    "docker"}
+                                   :icon    icons/i-docker}
                   :env-variables  {:step-id :env-variables
                                    :icon    "list alternate outline"}
                   :files          {:step-id :files

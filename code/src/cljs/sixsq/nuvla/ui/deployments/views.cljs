@@ -23,6 +23,7 @@
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
@@ -150,7 +151,7 @@
       [:<>
        [components/StickyBar
         [ui/Menu {:borderless true, :stackable true}
-         [ui/MenuItem {:icon     "grid layout"
+         [ui/MenuItem {:icon     icons/i-grid-layout
                        :active   (= @view "cards")
                        :on-click #(dispatch [::events/set-view "cards"])}]
          [ui/MenuItem {:icon     "table"
@@ -343,7 +344,7 @@
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
           [components/StatisticState {:value                    total
-                                      :icons                    ["fa-light fa-rocket-launch"]
+                                      :icons                    [icons/i-rocket]
                                       :label                    "TOTAL"
                                       :stacked?                 true
                                       :clickable?               clickable?
@@ -385,25 +386,24 @@
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
   (let [tr    (subscribe [::i18n-subs/tr])
-        icon  "rocket"
+        icon  icons/i-rocket
         color "blue"]
     [ui/Segment {:secondary true
-                 :color     color
                  :raised    true
                  :style     {:display         "flex"
                              :flex-direction  "column"
                              :justify-content "space-between"}}
 
-     [:h4 [ui/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
+     [:h4 [icons/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
 
      [StatisticStates false deployment-subs]
 
-     [ui/Button {:color    color
-                 :icon     icon
-                 :style    {:align-self "start"}
-                 :content  "Show me"
-                 :on-click (or on-click
-                               #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
+     [uix/Button {:color    color
+                  :icon     icons/i-rocket
+                  :style    {:align-self "start"}
+                  :content  "Show me"
+                  :on-click (or on-click
+                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
 (defn Pagination
   [db-path-arg]

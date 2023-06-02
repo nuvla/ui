@@ -6,7 +6,8 @@
             [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.session.subs :as session-subs]))
+            [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (reg-sub
   ::deploy-modal-visible?
@@ -68,7 +69,7 @@
   ::modal-action-button-icon
   :<- [::deployment-start?]
   (fn [start?]
-    (if start? "rocket" "redo")))
+    (if start? icons/i-rocket "redo")))
 
 (reg-sub
   ::modal-operation
@@ -78,18 +79,16 @@
 
 (reg-sub
   ::execution-mode
-  :<- [::deployment]
   :<- [::selected-infra-service]
   :<- [::selected-credential-id]
-  (fn [[deployment infra-service cred-id]]
-    (or (:execution-mode deployment)
-        (let [cred-unknown? @(subscribe [::creds-subs/credential-check-status-unknown? cred-id])
-              cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])]
-          (if (clouds-utils/infra-support-pull? infra-service)
-            (if (and cred-unknown? (not cred-loading?))
-              "pull"
-              "mixed")
-            "push")))))
+  (fn [[infra-service cred-id]]
+    (let [cred-unknown? @(subscribe [::creds-subs/credential-check-status-unknown? cred-id])
+          cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])]
+      (if (clouds-utils/infra-support-pull? infra-service)
+        (if (and cred-unknown? (not cred-loading?))
+          "pull"
+          "mixed")
+        "push"))))
 
 (reg-sub
   ::modal-action-button-text

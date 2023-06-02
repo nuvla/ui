@@ -28,7 +28,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (def refresh-action-id :deployment-set-get-deployment-set)
@@ -52,7 +53,7 @@
                              #()]))
       :disabled (not (general-utils/can-operation?
                        "start" deployment-set))}
-     [ui/Icon {:name "play"}]
+     [icons/PlayIcon]
      (@tr [:start])]))
 
 (defn StopButton
@@ -66,7 +67,7 @@
                              #()]))
       :disabled (not (general-utils/can-operation?
                        "stop" deployment-set))}
-     [ui/Icon {:name "stop"}]
+     [icons/StopIcon]
      (@tr [:stop])]))
 
 
@@ -77,7 +78,7 @@
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "trash"}]
+                                  [icons/TrashIconFull]
                                   (@tr [:delete])])
       :content     [:h3 content]
       :header      (@tr [:delete-deployment-set])
@@ -212,7 +213,7 @@
                    :render   #(r/as-element [:h1 "configure same as new"])}
                   {:menuItem {:content (str/capitalize (tr [:deployments]))
                               :key     :deployments
-                              :icon    "rocket"}
+                              :icon    #(r/as-element [icons/RocketIcon])}
                    :render   #(r/as-element [deployments-views/DeploymentTable
                                              {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
                                               :no-actions  true
@@ -283,9 +284,8 @@
     [ui/Modal
      {:close-icon true
       :trigger    (r/as-element
-                    [ui/Icon {:name     "add"
-                              :color    "green"
-                              :on-click on-open}])
+                    [icons/AddIconFull {:color    "green"
+                                        :on-click on-open}])
       :header     "New apps set"
       :content    (r/as-element
                     [ui/ModalContent
@@ -300,17 +300,17 @@
 (defn TargetIcon
   [subtype]
   (condp = subtype
-    "infrastructure-service-swarm" [ui/Icon {:name "docker"}]
+    "infrastructure-service-swarm" [icons/DockerIcon]
     "infrastructure-service-kubernetes" [apps-utils/IconK8s false]
-    [ui/Icon {:name "question circle"}]))
+    [icons/QuestionCircleIcon]))
 (defn TargetNameIcon
   [{:keys [subtype name] target-id :id} on-delete]
   [ui/ListItem
    [TargetIcon subtype]
    [ui/ListContent (or name target-id) " "
     (when on-delete
-      [ui/Icon {:name     "close" :color "red" :link true
-                :on-click #(on-delete target-id)}])]])
+      [icons/CloseIcon {:color "red" :link true
+                        :on-click #(on-delete target-id)}])]])
 
 
 (defn TargetsList

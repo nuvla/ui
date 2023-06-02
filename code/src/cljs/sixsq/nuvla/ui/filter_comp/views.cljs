@@ -16,12 +16,13 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn DeleteIcon
   [{:keys [on-click]}]
-  [ui/Icon {:name     "delete"
+  [ui/Icon {:name     icons/i-delete
             :link     true
             :style    {:margin-right ".5em"}
             :on-click on-click}])
@@ -377,10 +378,12 @@
                                       :on-click open-fn
                                       :color    :teal
                                       :style    (merge {:align-items :center
-                                                         :z-index 100
-                                                         :display :flex}
-                                                        trigger-style)}
-                           [uix/Icon {:name (str (when-not active-filter? "fal ") "fa-filter")}]
+                                                        :z-index 100
+                                                        :display :flex}
+                                                       trigger-style)}
+                           (if active-filter?
+                             [icons/FilterIconFull]
+                             [icons/FilterIcon])
                            \u00A0
                            (str/capitalize (@tr [:filter]))]])
             :open       @open?
@@ -401,7 +404,7 @@
                              :toggle   true
                              :active   @show-error?
                              :on-click #(swap! show-error? not)}
-                  [ui/Icon {:className "fad fa-spell-check"}]]]
+                  [ui/Icon {:className icons/i-spell-check}]]]
                 [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
                  (or (and @show-error? error) filter-string)]]]
               [ui/ModalActions

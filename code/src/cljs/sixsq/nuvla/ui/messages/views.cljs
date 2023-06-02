@@ -9,14 +9,15 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn type->icon-name
   [type]
   (case type
     :error "warning circle"
-    :info "info circle"
+    :info  icons/i-info-full
     :success "check circle"
     :notif "bullhorn"
     "warning circle"))
@@ -61,7 +62,7 @@
            [ui/Message (merge (type->message-type type)
                               {:style      top-right
                                :on-dismiss #(dispatch [::events/hide])})
-            [ui/MessageHeader [ui/Icon {:name icon-name}] header "\u2001\u00a0"]
+            [ui/MessageHeader [ui/Icon {:class icon-name}] header "\u2001\u00a0"]
             [:a {:on-click #(dispatch [::events/open-modal])} (@tr [:more-info])]]])))))
 
 
@@ -118,7 +119,7 @@
     [ui/ListItem {:on-click #(dispatch [::events/show message])}
      [ui/Message message-options
       [ui/MessageHeader
-       [ui/Icon {:name icon-name}]
+       [ui/Icon {:class icon-name}]
        header]
       [ui/MessageContent
        (time/ago timestamp locale)]]]))
@@ -162,8 +163,8 @@
                                [ui/MenuItem {:className "nuvla-close-menu-item"
                                              :disabled  disabled?}
                                 n
-                                [uix/Icon {:name "fa-light fa-bell large"
-                                          :size "large"}]])}
+                                [icons/BellIcon {:class "large"
+                                                 :size "large"}]])}
          [ui/PopupHeader (@tr [:notifications])]
          [ui/PopupContent [ui/Divider]]
          [ui/PopupContent [message-feed]]

@@ -26,7 +26,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (defn SelectSubtype
   [subtype!]
@@ -38,7 +39,7 @@
        {:on-click (partial on-click spec/app-set-docker-subtype)}
        [ui/CardContent {:text-align :center}
         [ui/IconGroup {:size :massive}
-         [ui/Icon {:name "docker"}]]]]
+         [icons/DockerIcon]]]]
       [ui/Card
        {:on-click (partial on-click spec/app-set-k8s-subtype)}
        [ui/CardContent {:text-align :center}
@@ -67,9 +68,8 @@
                                (or saved-subtype @subtype!))]
         [ui/Modal {:close-icon true
                    :trigger    (r/as-element
-                                 [ui/Icon {:name     "add"
-                                           :color    "green"
-                                           :on-click on-open}])
+                                 [icons/AddIconFull {:color    "green"
+                                                     :on-click on-open}])
                    :header     "New apps set"
                    :content    (r/as-element
                                  [ui/ModalContent
@@ -92,8 +92,8 @@
     :children      (when on-delete
                      [:<>
                       " "
-                      [ui/Icon {:name     "close" :color "red" :link true
-                                :on-click #(on-delete module-id)}]])}])
+                      [icons/CloseIcon {:color "red" :link true
+                        :on-click #(on-delete module-id)}]])}])
 
 
 (defn AppsList
@@ -157,14 +157,13 @@
        :label [:<>
                (str i " | " apps-set-name)
                (when @editable?
-                 [ui/Icon {:name     "trash"
-                           :color    "red"
-                           :style    {:cursor :pointer
-                                      :float  "right"}
-                           :on-click #(do
-                                        (dispatch [::events/remove-apps-set id])
-                                        (dispatch [::main-events/changes-protection? true])
-                                        (dispatch [::apps-events/validate-form]))}])]
+                 [icons/TrashIconFull {:color    "red"
+                                       :style    {:cursor :pointer
+                                                  :float  "right"}
+                                       :on-click #(do
+                                                    (dispatch [::events/remove-apps-set id])
+                                                    (dispatch [::main-events/changes-protection? true])
+                                                    (dispatch [::apps-events/validate-form]))}])]
        :default-open true]
       )))
 
@@ -195,12 +194,12 @@
           last-published-version (apps-utils/latest-published-index versions)]
       (if published?
         (if (= v last-published-version)
-          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-published]) ")"]
-          [:span [ui/Icon {:name "warning", :color "orange"}]
+          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-published]) ")"]
+          [:span [icons/WarningIcon {:color "orange"}]
            (str (@tr [:not-up-to-date-published]))])
         (if (= v last-version)
-          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-          [:span [ui/Icon {:name "warning", :color "orange"}]
+          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
+          [:span [icons/WarningIcon {:color "orange"}]
            (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
 
 
@@ -279,7 +278,7 @@
   (let [error? (subscribe [::subs/apps-error?])]
     [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [:<>
-      [uix/Icon {:name "fa-light fa-list"}]
+      [icons/ListIcon]
       "Applications"]]))
 
 
@@ -288,7 +287,7 @@
   [:<>
    [:h2
     [:<>
-     [uix/Icon {:name "fa-light fa-list"}]
+     [icons/ListIcon]
      "Applications"]]
    [AppsSetsSection]])
 
@@ -357,7 +356,7 @@
                  (fn [{:keys [name subtype] module-id :id}]
                    {:menuItem {:content (or name id)
                                :icon    (r/as-element
-                                          [uix/Icon {:name (apps-utils/subtype-icon subtype)}])
+                                          [icons/Icon {:name (apps-utils/subtype-icon subtype)}])
                                :key     (str id "-" module-id)}
                     :render   #(r/as-element
                                  [ui/TabPane
@@ -410,7 +409,7 @@
         editable? (subscribe [::apps-subs/editable?])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
-                              :icon    "info"}
+                              :icon    icons/i-eye}
                    :pane     {:content (r/as-element [OverviewPane])
                               :key     :overview-pane}}
                   {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
@@ -447,7 +446,7 @@
       (let [name   (get @module-common ::apps-spec/name)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
-         [uix/PageHeader "th large" name :inline true]
+         [uix/PageHeader icons/i-app-sets name :inline true]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab
           {:db-path                 [::apps-spec/tab]

@@ -16,6 +16,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
@@ -63,7 +64,7 @@
          [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:content]))]
          (if (empty? children)
            [ui/Message {:warning true}
-            [ui/Icon {:name "warning sign"}]
+            [icons/WarningIcon]
             (@tr [:no-children-modules])]
            [FormatModuleChildren children])]))))
 
@@ -140,7 +141,7 @@
         editable? (subscribe [::apps-subs/editable?])]
     [{:menuItem {:content (r/as-element [:span "Overview"])
                  :key     :overview
-                 :icon    (r/as-element [uix/Icon {:name "fa-light fa-eye"}])}
+                 :icon    (r/as-element [icons/EyeIcon])}
       :pane     {:content (r/as-element [OverviewPane])
                  :key     :overview-pane}}
      {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
@@ -163,7 +164,7 @@
             parent (get @module-common ::apps-spec/parent-path)
             panes  (module-detail-panes)]
         [ui/Container {:fluid true}
-         [uix/PageHeader "fa-light fa-folder" (str parent (when (not-empty parent) "/") name) :inline true]
+         [uix/PageHeader icons/i-folder (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
          [apps-views-detail/MenuBar]
          [nav-tab/Tab

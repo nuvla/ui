@@ -27,7 +27,8 @@
             [sixsq.nuvla.ui.utils.spec :as us]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 ;;; VALIDATION SPEC
@@ -90,7 +91,7 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name "users"}]
+                         [icons/UsersIcon]
                          (str/capitalize (@tr [:add-group]))])}
          [uix/ModalHeader {:header (str/capitalize (@tr [:add-group]))}]
          [ui/ModalContent
@@ -120,7 +121,7 @@
            {:text     (@tr [:create])
             :primary  true
             :disabled (and @validate? (not form-valid?))
-            :icon     "plus"
+            :icon     icons/i-info-full
             :loading  @loading?
             :on-click #(if (not form-valid?)
                          (reset! validate? true)
@@ -169,7 +170,7 @@
            :id            "current-password"
            :label         (str/capitalize (@tr [:current-password]))
            :required      true
-           :icon          "key"
+           :icon          icons/i-key
            :icon-position "left"
            :auto-focus    "on"
            :auto-complete "off"
@@ -179,7 +180,7 @@
            :error         (fv/?show-message form :current-password spec->msg)}]
          [ui/FormGroup {:widths 2}
           [ui/FormInput {:name          :new-password
-                         :icon          "key"
+                         :icon          icons/i-key
                          :icon-position "left"
                          :required      true
                          :auto-complete "new-password"
@@ -404,7 +405,7 @@
                   :style          {:height "100%"}}
          [ui/GridColumn
           [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
-           [ui/Icon {:className "fad fa-sign-in-alt"}]
+           [icons/SigninIcon]
            (@tr [:no-session])]]])]
      ;[ui/Segment {:padded true :color "blue"}
      ; [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:access-rights]))]
@@ -690,7 +691,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-money-check-edit"}]
+              [icons/MoneyCheckEditIcon]
               (if canceled?
                 [uix/TR
                  (if @pm?
@@ -765,7 +766,7 @@
                    :on-click #(do
                                 (dispatch [::events/create-setup-intent])
                                 (dispatch [::events/open-modal :add-payment-method]))}
-        [ui/Icon {:name "plus square outline"}]
+        [icons/PlusSquareIcon]
         (str/capitalize (@tr [:add]))]])))
 
 
@@ -832,7 +833,7 @@
                                     [uix/ModalDanger
                                      {:on-confirm  #(dispatch [::events/detach-payment-method payment-method])
                                       :trigger     (r/as-element [ui/Button
-                                                                  [ui/Icon {:name "trash", :color "red"}]])
+                                                                  [ui/Icon {:class icons/i-trash-full, :color "red"}]])
                                       :header      (@tr [:delete-payment-method])
                                       :content     (@tr [:are-you-sure?])
                                       :button-text (@tr [:delete])
@@ -847,7 +848,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-credit-card"}]
+              [icons/CreditCardIcon]
               (@tr [:payment-method])]
              (when customer
                [:<>
@@ -932,7 +933,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-file-invoice"}]
+              [icons/FileInvoiceIcon]
               (@tr [:not-any])]]])]))))
 
 
@@ -968,15 +969,15 @@
                   [ui/TableCell (format-currency currency total)]
                   [ui/TableCell
                    (when invoice-pdf
-                     [ui/Button {:basic true
-                                 :icon  "download"
-                                 :href  invoice-pdf}])]]))]]
+                     [uix/Button {:basic true
+                                  :icon  "download"
+                                  :href  invoice-pdf}])]]))]]
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-file-invoice-dollar"}]
+              [icons/FileInvoiceDollarIcon]
               (@tr [:not-any])]]])]))))
 
 
@@ -1017,7 +1018,7 @@
                    :basic    true
                    :size     "small"
                    :on-click #(dispatch [::events/open-modal :add-coupon])}
-        [ui/Icon {:name "plus square outline"}]
+        [icons/PlusSquareIcon]
         (str/capitalize (@tr [:add]))]])))
 
 
@@ -1070,7 +1071,7 @@
                                               [ui/Button {:basic true
                                                           :size  "small"
                                                           :icon  true}
-                                               [ui/Icon {:name "trash", :color "red"}]])
+                                               [icons/TrashIconFull {:color "red"}]])
                                :header      (@tr [:delete-coupon])
                                :content     (@tr [:are-you-sure?])
                                :button-text (@tr [:delete])}])}]]]]]
@@ -1079,7 +1080,7 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:className "fad fa-ticket"}]
+              [icons/TicketIcon]
               (@tr [:not-any])]
              (when @subscription
                [:<>
@@ -1126,9 +1127,9 @@
             value     (-> @form! :names->value :email)
             {:keys [txt icon]} (if (str/blank? value)
                                  {:txt  :add
-                                  :icon "plus square outline"}
+                                  :icon icons/i-plus-square-icon}
                                  {:txt  :update
-                                  :icon "pencil"})]
+                                  :icon icons/i-pencil})]
         [:<>
          [ui/Modal
           {:open       @open?
@@ -1174,7 +1175,7 @@
    header
    [ui/HeaderSubheader (or subheader ff/nbsp)]])
 
-(def icon-envelope-dollar "fad fa-envelope-open-dollar")
+(def icon-envelope-dollar icons/i-envelope-open-dollar)
 
 (defn CreateVendor
   []
@@ -1194,7 +1195,7 @@
                    :header (tr [:sales-dashboard])}]
       [DashboardVendor]]
      [ui/GridColumn
-      [IconHeader {:icon      "fad fa-envelope"
+      [IconHeader {:icon      icons/i-envelop
                    :header    (tr [:customer-service])
                    :subheader (:email vendor)}]
       [:div {:style {:display "block"}}
@@ -1294,13 +1295,12 @@
        @principal-name
        ff/nbsp
        (when editable?
-         [ui/Icon {:name     "close"
-                   :link     true
-                   :size     "small"
-                   :color    "red"
-                   :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
-                               (dispatch [::main-events/changes-protection? true])
-                               (set-group-changed! id))}])]]]))
+         [icons/CloseIcon {:link     true
+                           :size     "small"
+                           :color    "red"
+                           :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
+                                       (dispatch [::main-events/changes-protection? true])
+                                       (set-group-changed! id))}])]]]))
 
 
 (defn GroupMembers
@@ -1540,15 +1540,15 @@
   []
   [{:menuItem {:content (r/as-element [TabMenuSubscription])
                :key     :subscription
-               :icon    "credit card"}
+               :icon    icons/i-credit-card}
     :render   #(r/as-element [SubscriptionPane])}
    {:menuItem {:content (r/as-element [TabMenuGroups])
                :key     :groups
-               :icon    "users"}
+               :icon    icons/i-users}
     :render   #(r/as-element [GroupsPane])}
    {:menuItem {:content (r/as-element [TabMenuDetails])
                :key     :details
-               :icon    "info"}
+               :icon    icons/i-info}
     :render   #(r/as-element [DetailsPane])}])
 
 
@@ -1561,7 +1561,7 @@
        {:db-path [::spec/tab]
         :menu    {:secondary true
                   :pointing  true
-                  :style     {:display        "flex"
+                  :style     {:display       "flex"
                               :flex-direction "row"
                               :flex-wrap      "wrap"}}
         :panes   panes}])))

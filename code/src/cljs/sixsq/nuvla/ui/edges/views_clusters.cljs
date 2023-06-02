@@ -13,7 +13,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn StatisticStates
@@ -22,7 +23,7 @@
     (fn []
       [ui/StatisticGroup {:widths 4 :size "tiny"}
        [components/StatisticState  {:value (:count @clusters),
-                                    :icons ["fas fa-chart-network"],
+                                    :icons [icons/i-chart-network],
                                     :label "TOTAL",
                                     :clickable? false,
                                     :positive-color "",
@@ -42,7 +43,7 @@
         [uix/Card
          {:href        href
           :header      [:<>
-                        [ui/Icon {:className "fas fa-chart-network"}]
+                        [icons/ChartNetworkIcon]
                         (if (> (count name) 21)
                           (str (apply str (take 20 name)) "...")
                           name)]
@@ -64,7 +65,7 @@
                               [ui/ListItem
                                [ui/Image {:avatar true}
                                 [ui/Icon {:className (if (some #{nb-id} nuvlabox-managers)
-                                                       "fas fa-crown"
+                                                       icons/i-crown
                                                        "")}]]
                                [ui/ListContent
                                 [ui/ListHeader name
@@ -78,8 +79,7 @@
                                       :position       "bottom center"
                                       :hide-on-scroll true
                                       :hoverable      true
-                                      :trigger        (r/as-element [ui/Icon {:name  "info circle"
-                                                                              :color "brown"}])}]])
+                                      :trigger        (r/as-element [icons/InfoIconFull {:color "brown"}])}]])
                         (str (@tr [:nuvlabox-cluster-nodes]) cluster-nodes)]}]))))
 
 

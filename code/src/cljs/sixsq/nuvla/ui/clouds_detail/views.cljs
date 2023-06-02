@@ -15,7 +15,8 @@
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn refresh
@@ -45,12 +46,12 @@
              (utils/swarm-manager? infra-service)
              {:popup-txt  "Swarm Manager"
               :label-txt  "Swarm"
-              :label-icon "fa-solid fa-crown"}
+              :label-icon icons/i-crown}
 
              (utils/swarm-worker? infra-service)
              {:popup-txt  "Swarm Worker"
               :label-txt  "Swarm"
-              :label-icon "fa-solid fa-robot"}
+              :label-icon icons/i-robot}
 
              (utils/swarm-disabled? infra-service)
              {:popup-txt   "Swarm Disabled"
@@ -67,7 +68,7 @@
                               :basic    true
                               :style    {:float "right"}}
                     (when label-icon
-                      [uix/Icon {:name label-icon}])
+                      [icons/Icon {:name label-icon}])
                     label-txt])}])))
 
 
@@ -81,7 +82,7 @@
       :on-confirm  #(dispatch [::events/delete])
       :danger-msg  (@tr [:infrastructure-delete-warning])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "trash"}]
+                                  [icons/TrashIconFull]
                                   (str/capitalize (@tr [:delete]))])
       :header      (@tr [:delete-infrastructure])
       :content     [:h3 content]}]))
@@ -97,7 +98,7 @@
       :on-confirm  #(dispatch [::events/operation "terminate"])
       :danger-msg  (@tr [:infrastructure-terminate-warning])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "delete"}]
+                                  [icons/DeleteIcon]
                                   (str/capitalize (@tr [:terminate]))])
       :header      (@tr [:terminate-infrastructure])
       :content     [:h3 content]}]))
@@ -113,7 +114,7 @@
       :on-confirm  #(dispatch [::events/operation "stop"])
       :danger-msg  (@tr [:infrastructure-stop-warning])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "stop"}]
+                                  [icons/StopIconFull]
                                   (@tr [:stop])])
       :header      (@tr [:stop-infrastructure])
       :content     [:h3 content]}]))
@@ -129,7 +130,7 @@
       :on-confirm  #(dispatch [::events/operation "start"])
       :danger-msg  (@tr [:infrastructure-start-warning])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name "rocket"}]
+                                  [icons/RocketIcon]
                                   (@tr [:start])])
       :header      (@tr [:start-infrastructure])
       :content     [:h3 content]}]))
@@ -146,11 +147,9 @@
       (when @can-delete?
         [DeleteButton infra-service])
 
-      (when @can-terminate?
-        [TerminateButton infra-service])
+      [TerminateButton infra-service]
 
-      (when @can-stop?
-        [StopButton infra-service])
+      [StopButton infra-service]
 
       (when @can-start?
         [StartButton infra-service])
@@ -232,7 +231,7 @@
       (let [{:keys [state name id]} @infra-service]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [ui/Icon {:name "cloud"}]
+          [icons/CloudIcon]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [OnlineStatusIcon state]

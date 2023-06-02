@@ -23,6 +23,7 @@
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
@@ -50,10 +51,10 @@
         ^{:key (random-uuid)}
         [:div {:style {:margin-top "10px"}}
          [filter-comp/ButtonFilter
-          {:resource-name  spec/resource-name
-           :default-filter @additional-filter
-           :open?          filter-open?
-           :on-done        #(dispatch [::events/set-additional-filter %])
+          {:resource-name                    spec/resource-name
+           :default-filter                   @additional-filter
+           :open?                            filter-open?
+           :on-done                          #(dispatch [::events/set-additional-filter %])
            :show-clear-button-outside-modal? true}]]]])))
 
 (defn BulkUpdateModal
@@ -106,8 +107,8 @@
 (defn BulkActionModal
   [{:keys [on-confirm trigger header danger-msg button-text]}]
   (let [open? (r/atom false)
-        close        (fn []
-                       (swap! open? not))]
+        close (fn []
+                (swap! open? not))]
     (fn []
       [uix/ModalDanger
        {:on-confirm  #(do
@@ -116,7 +117,7 @@
         :open        @open?
         :on-close    close
         :trigger     (r/as-element
-                      [:div {:on-click close} trigger])
+                       [:div {:on-click close} trigger])
         :header      header
         :danger-msg  danger-msg
         :button-text button-text}])))
@@ -126,7 +127,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn []
       [BulkActionModal
-       {:on-confirm   (fn [] (dispatch [::events/bulk-operation "bulk-stop"]))
+       {:on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-stop"]))
         :trigger     (str/capitalize (@tr [:stop]))
         :header      (@tr [:bulk-deployment-stop])
         :danger-msg  (@tr [:danger-action-cannot-be-undone])
@@ -150,7 +151,7 @@
       [:<>
        [components/StickyBar
         [ui/Menu {:borderless true, :stackable true}
-         [ui/MenuItem {:icon     "grid layout"
+         [ui/MenuItem {:icon     icons/i-grid-layout
                        :active   (= @view "cards")
                        :on-click #(dispatch [::events/set-view "cards"])}]
          [ui/MenuItem {:icon     "table"
@@ -167,8 +168,8 @@
    {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
-        url       @(subscribe [::subs/deployment-url id primary-url-pattern])
-        creator   (subscribe [::session-subs/resolve-user created-by])]
+        url     @(subscribe [::subs/deployment-url id primary-url-pattern])
+        creator (subscribe [::session-subs/resolve-user created-by])]
     [:<>
      [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
@@ -207,12 +208,12 @@
 
 (defn VerticalDataTable
   [_deployments-list _options]
-  (let [tr                (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
-        (let [selectable?                (or (nil? show-options?) show-options?)
-              {trigger :trigger-config
+        (let [selectable? (or (nil? show-options?) show-options?)
+              {trigger           :trigger-config
                BulkEditTagsModal :modal} (bulk-edit-modal/create-bulk-edit-modal
                                            {:db-path                [::spec/select]
                                             :refetch-event          ::events/get-deployments
@@ -222,52 +223,52 @@
                                             :no-edit-rights-sub-key ::subs/deployments-without-edit-rights
                                             :singular               (@tr [:deployment])
                                             :plural                 (@tr [:deployments])
-                                            :filter-fn               build-bulk-filter})]
+                                            :filter-fn              build-bulk-filter})]
           [:<>
            [BulkEditTagsModal]
-           [Table {:columns      [{:field-key :id}
-                                  (when-not no-module-name
-                                    {:field-key      :module.name
-                                     :header-content (@tr [:module])})
-                                  {:field-key :version :no-sort? true}
-                                  {:field-key :status
-                                   :sort-key  :state}
-                                  {:field-key :url
-                                   :no-sort?  true}
-                                  {:field-key :created}
-                                  {:field-key :created-by}
-                                  {:field-key :tags}
-                                  {:field-key :infrastructure
-                                   :no-sort?  true}
-                                  (when selectable? {:field-key :actions
-                                                     :no-sort?  true})]
-                   :rows         deployments-list
+           [Table {:columns       [{:field-key :id}
+                                   (when-not no-module-name
+                                     {:field-key      :module.name
+                                      :header-content (@tr [:module])})
+                                   {:field-key :version :no-sort? true}
+                                   {:field-key :status
+                                    :sort-key  :state}
+                                   {:field-key :url
+                                    :no-sort?  true}
+                                   {:field-key :created}
+                                   {:field-key :created-by}
+                                   {:field-key :tags}
+                                   {:field-key :infrastructure
+                                    :no-sort?  true}
+                                   (when selectable? {:field-key :actions
+                                                      :no-sort?  true})]
+                   :rows          deployments-list
                    :sort-config   {:db-path     ::spec/ordering
                                    :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                   :row-render   (fn [deployment] [RowFn deployment options])
-                   :table-props  (merge style/single-line {:stackable true})
+                   :row-render    (fn [deployment] [RowFn deployment options])
+                   :table-props   (merge style/single-line {:stackable true})
                    :select-config (when selectable?
-                                    {:bulk-actions [{:event [::events/bulk-update-params]
-                                                     :name (str/capitalize (@tr [:update]))}
-                                                    {:component (r/as-element BulkStopModal)}
-                                                    {:component (r/as-element BulkForceDeleteModal)}
-                                                    trigger]
-                                     :select-db-path [::spec/select]
+                                    {:bulk-actions        [{:event [::events/bulk-update-params]
+                                                            :name  (str/capitalize (@tr [:update]))}
+                                                           {:component (r/as-element BulkStopModal)}
+                                                           {:component (r/as-element BulkForceDeleteModal)}
+                                                           trigger]
+                                     :select-db-path      [::spec/select]
                                      :total-count-sub-key [::subs/deployments-count]
-                                     :resources-sub-key deployments-resources-subs-key
-                                     :rights-needed :edit})}]])))))
+                                     :resources-sub-key   deployments-resources-subs-key
+                                     :rights-needed       :edit})}]])))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]
-  (let [tr           (subscribe [::i18n-subs/tr])
+  (let [tr          (subscribe [::i18n-subs/tr])
         {module-logo-url :logo-url
          module-name     :name
          module-content  :content} module
         [primary-url-name
          primary-url-pattern] (-> module-content (get :urls []) first)
-        primary-url  (subscribe [::subs/deployment-url id primary-url-pattern])
-        started?     (utils/started? state)
-        creator      (subscribe [::session-subs/resolve-user created-by])]
+        primary-url (subscribe [::subs/deployment-url id primary-url-pattern])
+        started?    (utils/started? state)
+        creator     (subscribe [::session-subs/resolve-user created-by])]
     ^{:key id}
     [uix/Card
      (cond-> {:header        [:span [:p {:style {:overflow      "hidden",
@@ -343,7 +344,7 @@
          [ui/StatisticGroup {:size  "tiny"
                              :style {:justify-content "center"}}
           [components/StatisticState {:value                    total
-                                      :icons                    ["fa-light fa-rocket-launch"]
+                                      :icons                    [icons/i-rocket]
                                       :label                    "TOTAL"
                                       :stacked?                 true
                                       :clickable?               clickable?
@@ -384,26 +385,27 @@
 
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
-  (let [tr    (subscribe [::i18n-subs/tr])
-        icon  "rocket"]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:class     :nuvla-deployments
                  :secondary true
                  :raised    true
                  :style     {:display         "flex"
-                             :flex-direction   "column"
+                             :flex-direction  "column"
                              :justify-content "space-between"}}
 
      [:h4 {:class :ui-header
            :style {:border-radius ".28571429rem .28571429rem 0 0"}}
-      [ui/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
+      [icons/Icon {:name icons/i-rocket}] (str/capitalize (@tr [:deployments]))]
 
      [StatisticStates false deployment-subs]
 
-     [ui/Button {:class    "center"
-                 :style    {:align-self "start"}
-                 :content  "Show me"
-                 :on-click (or on-click
-                               #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
+     [uix/Button {:class    "center"
+                  :color    "blue"
+                  :icon     icons/i-rocket
+                  :style    {:align-self "start"}
+                  :content  "Show me"
+                  :on-click (or on-click
+                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
 (defn Pagination
   [db-path-arg]
@@ -416,7 +418,7 @@
 
 (defn DeploymentTable
   [options]
-  (let [deployments    (subscribe deployments-resources-subs-key)]
+  (let [deployments (subscribe deployments-resources-subs-key)]
     (fn [{:keys [no-actions]}]
       (let [show-options (not (true? no-actions))]
         [:div

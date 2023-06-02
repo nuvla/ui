@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.unknown-resource
   (:require [re-frame.core :refer [subscribe]]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn UnknownResource
@@ -11,5 +12,5 @@
     [ui/Container {:textAlign "center"}
      [ui/Header {:as   "h3"
                  :icon true}
-      [ui/Icon {:name "warning sign"}]
+      [icons/WarningIcon]
       reason-text]]))

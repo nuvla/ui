@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
@@ -42,19 +43,19 @@
       (< vulnerability-score 4.0) (set-fn "LOW" vuln-low-color))))
 
 (def orchestration-icons
-  {:swarm      "docker"
+  {:swarm      icons/i-docker
    :kubernetes "/ui/images/kubernetes.svg"})
 
 (defn state->icon
   "Commissioning state"
   [state]
-  (let [icons-map {state-activated       "fa-light fa-handshake"
-                   state-new             "fa-light fa-dolly"
-                   state-commissioned    "fa-light fa-check"
-                   state-decommissioning "fa-light fa-eraser"
-                   state-decommissioned  "fa-light fa-ban"
-                   state-suspended       "fa-light fa-pause"
-                   state-error           "fa-light fa-exclamation"}]
+  (let [icons-map {state-activated       icons/i-handshake
+                   state-new             icons/i-dolly
+                   state-commissioned    icons/i-check
+                   state-decommissioning icons/i-eraser
+                   state-decommissioned  icons/i-ban
+                   state-suspended       icons/i-pause
+                   state-error           icons/i-exclamation}]
     (get icons-map state)))
 
 

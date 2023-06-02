@@ -7,7 +7,8 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn summary-row
@@ -20,8 +21,8 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @price-completed?
-        [ui/Icon {:name "eur", :size "large"}]
-        [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
+        [icons/EuroIcon {:size "large"}]
+        [icons/WarningIcon {:size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:price])]
      [ui/TableCell [:div (str
                            (general-utils/format "%.2f" (* (:cent-amount-daily @price) 0.3))
@@ -56,8 +57,8 @@
        (when @new-price
          (if (> (:cent-amount-daily @new-price)
                 (:cent-amount-daily @price))
-           [ui/Icon {:name "caret up" :color "red"}]
-           [ui/Icon {:name "caret down" :color "green"}]))
+           [icons/CaretUpIcon {:color "red"}]
+           [icons/CaretDownIcon {:color "green"}]))
 
        [:b (format-price (or @new-price @price))]]
       (when @new-price

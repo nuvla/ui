@@ -9,7 +9,8 @@
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.style :as style]))
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (defn summary-row
   []
@@ -28,7 +29,7 @@
         [ui/TableCell {:collapsing true}
          (if @completed?
            [ui/Icon {:name "map marker alternate", :size "large"}]
-           [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
+           [icons/WarningIcon {:size "large", :color "red"}])]
         [ui/TableCell {:collapsing true} (@tr [:infra-services])]
         [ui/TableCell [:div
                        [:span (or name id)]
@@ -41,8 +42,8 @@
                      :on-click on-click-fn}
         [ui/TableCell {:collapsing true}
          (if @creds-completed?
-           [ui/Icon {:name "key", :size "large"}]
-           [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
+           [icons/KeyIcon {:size "large"}]
+           [icons/WarningIcon {:size "large", :color "red"}])]
         [ui/TableCell {:collapsing true} (@tr [:credentials])]
         [ui/TableCell [:div
                        [:span (or name id)]
@@ -61,7 +62,7 @@
                           :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}
-       [ui/Icon {:name "key"}]
+       [icons/KeyIcon]
        (when (some? @status)
          [ui/Icon {:corner true
                    :name   (cond
@@ -105,7 +106,7 @@
       [ui/Message {:size    "tiny"
                    :info    compatible?
                    :warning (not compatible?)}
-       [ui/Icon {:name (if compatible? "info" "warning")}]
+       (if compatible? [icons/InfoIcon] [icons/WarningIcon])
        @compatibility-msg])))
 
 (defn InfraServiceItem
@@ -128,7 +129,7 @@
                            :margin-right   4
                            :padding-bottom 7}}]
         [:<>
-         [ui/Icon {:name "docker"}]
+         [icons/DockerIcon]
          [clouds-detail/CompatibilityLabel infra-service]])
       ff/nbsp
       (or name id)]

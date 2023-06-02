@@ -10,10 +10,10 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
             [sixsq.nuvla.ui.utils.form-fields :as form-fields]
             [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -29,24 +29,19 @@
        :else msg-or-key))))
 
 
-(defn Icon
-  [{:keys [name] :as opts}]
-  [ui/Icon
-   (if (some #(str/starts-with? name %) ["fa-" "fal " "fad " "fas "])
-     (-> opts (dissoc :name) (assoc :class name))
-     opts)])
-
-
 (defn Button
   "This button requires a single options map that contains the :text key. The
    value of the :text key is used to define the button text as well as the
    accessibility label :aria-label. The button may not specify children."
-  [{:keys [text icon] :as options}]
-  (let [final-opts (-> options
+  [{:keys [text icon content] :as options}]
+  (let [cntn      (or text content)
+        final-opts (-> options
                        (dissoc :text)
+                       (assoc  :content cntn)
                        (dissoc :icon)
-                       (assoc :aria-label text))]
-    [ui/Button final-opts (when icon [Icon {:name icon}]) text]))
+                       (assoc :aria-label (when (string? cntn) cntn))
+                       (assoc :icon (when icon (r/as-element [icons/Icon {:name icon}]))))]
+    [ui/Button final-opts]))
 
 
 (defn MenuItem
@@ -59,9 +54,9 @@
                        (assoc :aria-label name))]
     [ui/MenuItem final-opts
      (when icon
-       [Icon (cond-> {:name icon}
+       [icons/Icon (cond-> {:name icon}
                      (boolean? loading?) (assoc :loading loading?))])
-     (str/capitalize name)]))
+     (when (string? name) (str/capitalize name))]))
 
 
 (defn MenuItemForSearch
@@ -74,8 +69,8 @@
                        (assoc :aria-label name))]
     [ui/MenuItem final-opts
      (if loading?
-       [ui/Icon {:name "refresh", :loading loading?}]
-       [ui/Icon {:name "search"}])
+       [icons/Icon {:name "refresh", :loading loading?}]
+       [icons/Icon {:name "search"}])
      name]))
 
 
@@ -88,14 +83,14 @@
                        (dissoc :visible?))
         icon-name  (if visible? "chevron down" "chevron up")]
     [ui/MenuItem final-opts
-     [ui/Icon {:name icon-name}]]))
+     [icons/Icon {:name icon-name}]]))
 
 
 (defn ModalHeader
   [{:keys [header icon]}]
   [ui/ModalHeader
    (when icon
-     [ui/Icon {:name icon}])
+     [icons/Icon {:name icon}])
    (utils-general/capitalize-first-letter header)])
 
 
@@ -105,7 +100,7 @@
    (cond-> {}
            type (assoc type true)
            icon (assoc :icon true))
-   (when icon [ui/Icon {:name icon}])
+   (when icon [icons/Icon {:name icon}])
    [ui/MessageContent
     [ui/MessageHeader
      (when header header)]
@@ -137,18 +132,18 @@
                                          (js/encodeURIComponent value))
                           :target   "_blank"
                           :download filename}
-                      [ui/Icon {:link true
-                                :size "large"
-                                :name "download"}]])}
+                      [icons/Icon {:link true
+                                   :size "large"
+                                   :name "download"}]])}
          [TR :click-to-download]])
       (when copy
         [ui/Popup
          {:trigger (r/as-element
                      [ui/CopyToClipboard {:text value}
-                      [ui/Icon {:style {:margin-left 10}
-                                :link  true
-                                :size  "large"
-                                :name  "clone"}]])}
+                      [icons/Icon {:style {:margin-left 10}
+                                   :link  true
+                                   :size  "large"
+                                   :name  "clone"}]])}
          [TR :click-to-copy]])]]]])
 
 (defn EditorCode
@@ -208,10 +203,10 @@
         [title-size
          {:class title-class}
 
-         [Icon {:name (if @active? "fa-light fa-angle-down" "fa-light fa-angle-right")}]
+         [icons/Icon {:name (if @active? icons/i-angle-down icons/i-angle-right)}]
 
          (when icon
-           [:<> [Icon {:name icon}] " "])
+           [:<> [icons/Icon {:name icon}] " "])
 
          label
 
@@ -226,7 +221,7 @@
   [icon title & {:keys [inline]}]
   [:h2 (when inline {:style {:display    :inline
                              :word-break :break-all}})
-   [Icon {:name icon}] " " title])
+   [icons/Icon {:name icon}] " " title])
 
 
 (defn SpanBlockJustified
@@ -257,10 +252,10 @@
                                              (reset! local-validate? true)
                                              (on-change text)))}
             icon        (cond
-                          (= :password type) [ui/Icon {:name     (if @show "eye slash" :eye)
+                          (= :password type) [icons/Icon {:name     (if @show "eye slash" :eye)
                                                        :link     true
                                                        :on-click #(swap! show not)}]
-                          @active-input? :pencil)]
+                          @active-input? icons/i-pencil)]
         (when on-validation
           (dispatch [on-validation key error?]))
 
@@ -279,7 +274,7 @@
               [ui/FormField {:error error?}
                [:div {:className "ui input icon"}
                 [ui/TextArea common-opts]
-                (when @active-input? [ui/Icon {:name "pencil"}])]]])
+                (when @active-input? [icons/Icon {:name icons/i-pencil}])]]])
            [SpanBlockJustified default-value])]))))
 
 
@@ -305,7 +300,7 @@
 
 (defn LinkIcon
   [{:keys [name on-click]}]
-  [:a [ui/Icon {:name name, :link true, :on-click on-click}]])
+  [:a [icons/Icon {:name name, :link true, :on-click on-click}]])
 
 
 (defn Link
@@ -319,7 +314,7 @@
        :target   "_blank"
        :on-click (fn [event]
                    (when-not (.-metaKey event)              ;;cmd key not pressed
-                     (dispatch [::routing-events/navigate href])
+                     (dispatch [:sixsq.nuvla.ui.routing.events/navigate href])
                      (.preventDefault event)
                      (.stopPropagation event)))}
    (or label href)])
@@ -384,7 +379,7 @@
                                  (reset! clicked? false))}
                   (some? open) (assoc :open open))
 
-       (when header [ui/ModalHeader (when icon [Icon {:name icon}]) (str/capitalize header)])
+       (when header [ui/ModalHeader (when icon [icons/Icon {:name icon}]) (str/capitalize header)])
 
        [ui/ModalContent {:scrolling false}
         (when content content)]
@@ -438,7 +433,7 @@
    (for [tag tags]
      ^{:key (random-uuid)}
      [ui/Popup
-      {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+      {:trigger        (r/as-element [ui/Label [icons/Icon {:name "tag"}]
                                       (utils-general/truncate tag 20)])
        :content        tag
        :position       "bottom center"

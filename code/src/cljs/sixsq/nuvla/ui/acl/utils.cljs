@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.acl.utils
   (:require [clojure.set :as set]
-            [sixsq.nuvla.ui.utils.general :as general-utils]))
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def rights-hierarchy (-> (make-hierarchy)
 
@@ -166,9 +167,9 @@
 (defn id->icon
   [id]
   (case (general-utils/id->resource-name id)
-    "user" "fa-light fa-user"
-    "group" "fa-light fa-users"
-    "nuvlabox" "fa-light fa-box"
-    "infrastructure-service" "fa-light fa-cloud"
-    "deployment" "fa-light  fa-rocket"
-    "question circle outline"))
+    "user" icons/i-user
+    "group" icons/i-users
+    "nuvlabox" icons/i-box
+    "infrastructure-service" icons/i-cloud
+    "deployment" icons/i-rocket
+    icons/i-question-circle-outline))

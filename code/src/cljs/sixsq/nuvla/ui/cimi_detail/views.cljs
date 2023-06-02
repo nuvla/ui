@@ -19,7 +19,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.table :as table]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn path->resource-id
@@ -61,7 +62,7 @@
                                       :name       menu-item-label
                                       :on-click   #(reset! show? true)}
                          (when icon
-                           [ui/Icon {:name icon}])
+                           [icons/Icon {:name icon}])
                          (str/capitalize menu-item-label)])}
          [uix/ModalHeader {:header title-text}]
          [ui/ModalContent {:scrolling (boolean scrolling?)} body]
@@ -80,7 +81,7 @@
       [action-button-icon
        (@tr [:raw])
        (@tr [:save])
-       "pencil"
+       icons/i-pencil
        (str (@tr [:editing]) " " id)
        [forms/resource-editor id text]
        (fn []
@@ -203,7 +204,7 @@
      {:title       (or name id)
       :subtitle    (when name id)
       :description description
-      :icon        "file"
+      :icon        icons/i-file
       :updated     updated
       :acl         acl
       :properties  properties}

@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
             [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.utils.general :as utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
@@ -30,18 +31,17 @@
   (let [nav-path   (subscribe [::route-subs/nav-path])
         click-fn   #(dispatch [::routing-events/navigate (trim-path @nav-path index)])
         page-title (utils/truncate (str (or text segment)))]
-    (tap> segment)
     ^{:key (str index "_" segment)}
     [ui/BreadcrumbSection
      [:a {:on-click click-fn
           :style    {:cursor "pointer"}
           :class    (when (zero? index) :parent)}
       (when icon-class
-        [uix/Icon {:name icon-class
-                   :style {:padding-right "10px"
-                           :font-weight   (when-not
-                                           (= "Deployments" text)
-                                            400)}}])
+        [icons/Icon {:name  icon-class
+                     :style {:padding-right "10px"
+                             :font-weight   (when-not
+                                              (= "Deployments" text)
+                                              400)}}])
       page-title]]))
 
 (defn- format-path-segment [tr first-segment]
@@ -51,7 +51,7 @@
 (defn format-first-crumb
   [nav-path]
   (let [tr            (subscribe [::i18n-subs/tr])
-        first-segment  (first nav-path)
+        first-segment (first nav-path)
         page-info     (subscribe [::subs/page-info first-segment])]
     {:text       (if (seq first-segment)
                    (format-path-segment tr first-segment)
@@ -130,7 +130,7 @@
     [ui/Modal {:open        (some? @navigation-info)
                :close-icon  true
                :on-close    do-not-ignore-changes-fn
-                ;; data-testid is used for e2e test
+               ;; data-testid is used for e2e test
                :data-testid "protection-modal"}
 
      [uix/ModalHeader {:header (@tr [:ignore-changes?])}]
@@ -172,7 +172,7 @@
           (@tr [:subscribe]))]
        [:p]
        (when @open-subs-required?
-         [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])])]]]))
+         [:p [icons/InfoIconFull] (@tr [:subscription-required-content-group])])]]]))
 
 
 (defn contents
@@ -186,7 +186,6 @@
                 :id    "nuvla-ui-content"
                 :fluid true}
                @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
-
        [router-component]])))
 
 
@@ -229,7 +228,7 @@
     [ui/MenuItem {:aria-label "toggle sidebar"
                   :link       true
                   :on-click   #(dispatch [::events/toggle-sidebar])}
-     [uix/Icon {:name "fa-light fa-bars"}]]
+     [icons/BarsIcon]]
 
     [ui/MenuItem [breadcrumbs]]
 

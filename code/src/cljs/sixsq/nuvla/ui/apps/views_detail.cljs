@@ -35,7 +35,8 @@
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as utils-values]))
+            [sixsq.nuvla.ui.utils.values :as utils-values]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def edit-cell-left-padding 24)
 
@@ -43,7 +44,7 @@
   [{:keys [full] :or {full false}}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "fa-light fa-book"}]
+     [icons/BookIcon]
      (@tr [(if full :eula-full :eula)])]))
 
 
@@ -51,7 +52,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "fa-light fa-euro-sign"}]
+     [icons/EuroIcon]
      (str/capitalize (@tr [:pricing]))]))
 
 
@@ -59,7 +60,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "fa-rocket-launch fal"}]
+     [icons/RocketIcon]
      (str/capitalize (@tr [:deployments]))]))
 
 
@@ -74,7 +75,7 @@
   (let [module-subtype (subscribe [::subs/module-subtype])
         tab-name       (if (= utils/subtype-application-k8s @module-subtype) "Kubernetes" "Docker")]
     [:<>
-     [uix/Icon {:name "fa-light fa-file-code"}]
+     [icons/FileCodeIcon]
      (str/capitalize tab-name)]))
 
 
@@ -82,7 +83,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     [uix/Icon {:name "fa-light fa-gear"}]
+     [icons/GearIcon]
      (str/capitalize (@tr [:configuration]))]))
 
 
@@ -91,27 +92,17 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         error? (subscribe [::subs/details-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
-     [uix/Icon {:name "fa-light fa-circle-info"}]
+     [icons/InfoIcon]
      (str/capitalize (@tr [:details]))]))
 
 
-(defn edit-button-disabled?
-  [page-changed? form-valid?]
-  (or (not page-changed?) (not form-valid?)))
-
-
 (defn save-callback
-  []
+  [form-valid?]
   (dispatch-sync [::events/set-validate-form? true])
   (dispatch-sync [::events/validate-form])
-  (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)
-        {:keys [subtype]} (get @re-frame.db/app-db ::spec/module)
-        new-subtype (:subtype @(subscribe [::route-subs/nav-query-params]))]
-    (when form-valid?
-      (dispatch [::events/set-validate-form? false])
-      (if (= (or subtype new-subtype) utils/subtype-project)
-        (dispatch [::events/open-save-modal])
-        (dispatch [::events/open-save-modal])))))
+  (when form-valid?
+    (dispatch [::events/set-validate-form? false])
+    (dispatch [::events/open-save-modal])))
 
 
 (defn DeleteButton
@@ -123,7 +114,7 @@
     [uix/ModalDanger
      {:on-confirm  (fn [] (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [uix/Icon {:name "fa-light fa-trash"}]
+                                  [icons/TrashIcon]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
       :header      (@tr [:delete-module])
@@ -139,7 +130,7 @@
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish id])
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [ui/Icon {:name utils/publish-icon}]
+                                  [icons/CircleCheck]
                                   (str/capitalize (@tr [:publish]))])
       :content     [:p (@tr [:publish-confirmation-message])]
       :header      (@tr [:publish-module])
@@ -154,7 +145,7 @@
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/un-publish id])
       :trigger     (r/as-element [ui/MenuItem
-                                  [uix/Icon {:name utils/un-publish-icon}]
+                                  [icons/UnpublishIcon]
                                   (str/capitalize (@tr [:un-publish]))])
       :content     [:p (@tr [:un-publish-confirmation-message])]
       :header      (@tr [:un-publish-module])
@@ -175,7 +166,6 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         module           (subscribe [::subs/module])
         is-new?          (subscribe [::subs/is-new?])
-        page-changed?    (subscribe [::main-subs/changes-protection?])
         form-valid?      (subscribe [::subs/form-valid?])
         editable?        (subscribe [::subs/editable?])
         module-id        (subscribe [::subs/module-id-version])
@@ -186,28 +176,31 @@
         paste-disabled?  (subscribe [::subs/paste-disabled?])
         deploy-disabled? (subscribe [::subs/deploy-disabled?])
         can-publish?     (subscribe [::subs/can-publish?])
-        can-unpublish?   (subscribe [::subs/can-unpublish?])]
+        can-unpublish?   (subscribe [::subs/can-unpublish?])
+        save-disabled?   (subscribe [::subs/save-btn-disabled?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true}
         (when @editable?
           [uix/MenuItem
            {:name     (@tr [:save])
-            :icon     "fa-light fa-floppy-disk"
-            :disabled (edit-button-disabled? @page-changed? @form-valid?)
-            :on-click save-callback}])
+            :icon     icons/i-floppy
+            :class    (when-not @save-disabled? "primary-menu-item")
+            :disabled @save-disabled?
+            :primary  true
+            :on-click #(save-callback @form-valid?)}])
 
         (when @is-app?
           [uix/MenuItem
            {:name     (@tr [:deploy])
-            :icon     "fa-light fa-rocket-launch"
+            :icon     icons/i-rocket
             :disabled @deploy-disabled?
             :on-click #(deploy-click @module-id @is-apps-sets?)}])
 
         (when @is-project?
           [ui/MenuItem
            {:name     (@tr [:add])
-            :icon     (r/as-element [uix/Icon {:name "fa-light fa-plus-large"}])
+            :icon     (r/as-element [icons/AddIconLarge])
             :disabled @deploy-disabled?
             :on-click #(dispatch [::events/open-add-modal])}])
         (when @can-copy?
@@ -215,7 +208,7 @@
            {:trigger        (r/as-element
                               [ui/MenuItem
                                {:name     (@tr [:copy])
-                                :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy"}])
+                                :icon     (r/as-element [icons/CopyIcon])
                                 :disabled @is-new?
                                 :on-click #(dispatch [::events/copy])}])
             :content        (@tr [:module-copied])
@@ -227,7 +220,7 @@
         (when (and (not @is-new?) @is-project?)
           [ui/MenuItem
            {:name     (@tr [:paste])
-            :icon     (r/as-element [uix/Icon {:name "fa-light fa-copy icon"}])
+            :icon     (r/as-element [icons/CopyIcon])
             :disabled @paste-disabled?
             :on-click #(dispatch [::events/open-paste-modal])}])
 
@@ -329,7 +322,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}
 
-         [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
+         [uix/ModalHeader {:header (@tr [:add]) :icon icons/i-plus-full}]
 
          [ui/ModalContent {:scrolling false}
           [ui/CardGroup {:centered    true
@@ -340,8 +333,7 @@
              :on-click #(dispatch [::events/close-add-modal])}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
-             [ui/Icon {:name "folder"
-                       :size :massive}]]]
+             [icons/FolderIconFull {:size :massive}]]]
 
            [ui/Card
             {:href     (when parent (pathify [base-path "New Application?subtype=application"]))
@@ -349,15 +341,12 @@
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header (@tr [:application-docker])]
-             [:div]
              [ui/IconGroup
-              [ui/Icon {:name  "cubes"
-                        :size  :massive
-                        :color (when-not parent :grey)}]
-              [:div [ui/Icon {:name  "docker"
-                              :size  :huge
-                              :color (when-not parent :grey)
-                              :style {:padding-left "150px"}}]]]]]
+              [icons/CubesIcon {:size  :massive
+                                :color (when-not parent :grey)}]
+              [:div [icons/DockerIcon {:size  :huge
+                                       :color (when-not parent :grey)
+                                       :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
             {:href     (when parent (pathify [base-path "New Application?subtype=application_kubernetes"]))
@@ -365,10 +354,8 @@
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
              [ui/Header (@tr [:application-kubernetes])]
-             [:div]
              [ui/IconGroup {:size :massive}
-              [ui/Icon {:name  "cubes"
-                        :color (when-not parent :grey)}]
+              [icons/CubesIcon {:color (when-not parent :grey)}]
               [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
                          :floated "right"
                          :style   {:width "50px"}}]]]]
@@ -379,10 +366,8 @@
                            #(dispatch [::events/close-add-modal]))}
               [ui/CardContent {:text-align :center}
                [ui/Header "Applications sets (preview)"]
-               [:div]
-               [ui/Icon {:name  "th large"
-                         :size  :massive
-                         :color (when-not parent :grey)}]]])]]]))))
+               [icons/AppSetsIcon {:size  :massive
+                                   :color (when-not parent :grey)}]]])]]]))))
 
 
 (defn paste-modal
@@ -403,7 +388,7 @@
                    :on-close   #(dispatch [::events/close-paste-modal])}
 
          [uix/ModalHeader {:header (str (@tr [:paste-modal-header]))
-                           :icon   "paste"}]
+                           :icon   icons/i-paste}]
 
          [ui/ModalContent
           [:div (@tr [:paste-modal-content])]
@@ -458,25 +443,6 @@
    [ui/TableCell v2]])
 
 
-(def module-summary-keys #{:created
-                           :updated
-                           :resource-url
-                           :id
-                           :path
-                           :subtype})
-
-
-(defn details-section
-  []
-  (let [module (subscribe [::subs/module])]
-    (fn []
-      (let [summary-info (-> (select-keys @module module-summary-keys)
-                             (merge {:owners (->> @module :acl :owners (str/join ", "))
-                                     :author (->> @module :content :author)}))
-            rows         (map tuple-to-row summary-info)]
-        [cc/metadata-simple rows]))))
-
-
 (defn error-text [tr error]
   (if-let [{:keys [status reason]} (ex-data error)]
     (str (or (@tr [reason]) (name reason)) " (" status ")")
@@ -490,7 +456,7 @@
       (when (instance? js/Error error)
         [ui/Container
          [ui/Header {:as "h3", :icon true}
-          [ui/Icon {:name "warning sign"}]
+          [icons/WarningIcon]
           (error-text tr error)]]))))
 
 
@@ -508,7 +474,7 @@
         [ui/Grid {:centered true
                   :columns  2}
          [ui/GridColumn
-          [:div {:style {:display :flex
+          [:div {:style {:display         :flex
                          :justify-content :space-between}}
            [:h4 "Markdown" [general-utils/mandatory-icon]]
            [:span {:style {:color :red}}
@@ -534,9 +500,9 @@
          [ui/GridColumn
           [:h4 "Preview"]
           [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
-       :title-size   :h4
-       :title-class  :tab-app-detail
-       :label        (str/capitalize (@tr [:description]))
+       :title-size :h4
+       :title-class :tab-app-detail
+       :label (str/capitalize (@tr [:description]))
        :default-open true])))
 
 
@@ -591,8 +557,7 @@
                [ui/TableCell (@tr [:tags])]
                [ui/TableCell {:style {:padding-left (when @editable? edit-cell-left-padding)}} [Tags]]]
               (for [x extras]
-                x)]]
-            [details-section]]
+                x)]]]
            [ui/GridColumn {:width 3 :floated "right"}
             [ui/Image {:src (or logo-url @default-logo-url)}]
             (when @editable?
@@ -628,22 +593,20 @@
 
 (defn trash
   [id remove-event]
-  [ui/Icon {:name     "trash"
-            :link     true
-            :on-click #(do (dispatch [::main-events/changes-protection? true])
-                           (dispatch [remove-event id])
-                           (dispatch [::events/validate-form]))
-            :color    :red}])
+  [icons/TrashIconFull {:link     true
+                        :on-click #(do (dispatch [::main-events/changes-protection? true])
+                                       (dispatch [remove-event id])
+                                       (dispatch [::events/validate-form]))
+                        :color    :red}])
 
 
 (defn plus
   [add-event]
-  [ui/Icon {:name     "add"
-            :link     true
-            :color    "green"
-            :on-click #(do (dispatch [::main-events/changes-protection? true])
-                           (dispatch [add-event {}])
-                           (dispatch [::events/validate-form]))}])
+  [icons/AddIconFull {:link     true
+                      :color    "green"
+                      :on-click #(do (dispatch [::main-events/changes-protection? true])
+                                     (dispatch [add-event {}])
+                                     (dispatch [::events/validate-form]))}])
 
 
 (defn SingleEnvVariable
@@ -1089,7 +1052,7 @@
                                                (dispatch [::events/validate-form])))}]
             " "
             [ui/Popup {:content (@tr [:follow-customer-trial-help])
-                       :trigger (r/as-element [ui/Icon {:name "info circle"}])}]])
+                       :trigger (r/as-element [ui/Icon {:class icons/i-info}])}]])
          ]))))
 
 
@@ -1171,7 +1134,7 @@
                :on-change (partial on-change ::events/license-description)]
               [uix/TableRowField (@tr [:url]), :key "license-url",
                :editable? is-editable?, :spec (if @is-custom? ::spec/license-url any?), :validate-form? @validate-form?,
-               :required? true, :default-value [:a {:href (:license-url @license)
+               :required? true, :default-value [:a {:href  (:license-url @license)
                                                     :targe :_blank} (:license-url @license)],
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]
@@ -1222,12 +1185,12 @@
                :stackable true}
       [ui/GridRow {:columns 2}
        [ui/GridColumn {:floated "left"}
-       [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:description]))]]
+        [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:description]))]]
        (when @editable?
          [ui/GridColumn {:style {:text-align "right"}}
-          [ui/Button {:icon     "pencil"
-                      :compact  true
-                      :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
+          [uix/Button {:icon     icons/i-pencil
+                       :compact  true
+                       :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
                        :only      "mobile"}
@@ -1245,7 +1208,7 @@
   [{:keys [icon?]}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
-     (when icon? [uix/Icon {:name "fa-light fa-user-group"}])
+     (when icon? [icons/UserGroupIcon])
      (str/capitalize (@tr [:share]))]))
 
 

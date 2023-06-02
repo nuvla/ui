@@ -13,7 +13,8 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (s/def ::subtypes (s/nilable set?))
@@ -128,8 +129,8 @@
     [ui/ListItem {:on-click #(dispatch [::toggle-app db-path module])
                   :style    {:cursor :pointer}}
      [ui/ListIcon {:name (if selected?
-                           "check square outline"
-                           "square outline")}]
+                           icons/i-check-square-outline
+                           icons/i-square-outline)}]
      [ui/ListContent
       [ui/ListHeader (when selected? {:as :a})
        [apps-utils/SubtypeIconInfra subtype selected?]
@@ -150,7 +151,7 @@
 (defn Project
   [db-path path {:keys [applications] :as content}]
   [ui/ListItem
-   [ui/ListIcon {:name "folder"}]
+   [ui/ListIcon {:name icons/i-folder-full}]
    [ui/ListContent
     [ui/ListHeader path]
     [ui/ListList
@@ -193,11 +194,11 @@
        {:db-path                 (conj db-path ::tab)
         :panes                   [{:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
                                               :key     :app-store
-                                              :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+                                              :icon    (r/as-element [icons/StoreIcon])}
                                    :render   render}
                                   {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
                                               :key     :all-apps
-                                              :icon    "grid layout"}
+                                              :icon    icons/i-grid-layout}
                                    :render   render}
                                   {:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
                                               :key     :my-apps

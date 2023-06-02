@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as forms]
             [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -36,7 +37,7 @@
         on-click (or on-click #())]
     [uix/MenuItem
      {:name     (@tr [:refresh])
-      :icon     "fa-light fa-arrows-rotate"
+      :icon     icons/i-arrow-rotate
       :loading? (boolean loading?)
       :on-click on-click
       :style    {:cursor "pointer"
@@ -148,11 +149,11 @@
                        :margin-left  "auto"}
                :role  :button}
               (for [i icons]
-                [uix/Icon {:key     icon-key
-                           :size    (when (and clickable? selected?) "large")
-                           :loading (and (pos? value) (= "spinner" i))
-                           :style   {:margin-right 0}
-                           :name    i}])]
+                [icons/Icon {:key     icon-key
+                             :size    (when (and clickable? selected?) "large")
+                             :loading (and (pos? value) (= icons/i-spinner i))
+                             :style   {:margin-right 0}
+                             :name    i}])]
          [ui/StatisticValue
           (or value "-")]
          [ui/StatisticLabel label]]
@@ -162,10 +163,10 @@
           "\u2002"
           [ui/IconGroup
            (for [i icons]
-             [uix/Icon {:key     icon-key
-                        :size    (when (and clickable? selected?) "large")
-                        :loading (and (pos? value) (= "spinner" i))
-                        :name    i}])]]
+             [icons/Icon {:key     icon-key
+                          :size    (when (and clickable? selected?) "large")
+                          :loading (and (pos? value) (= icons/i-spinner i))
+                          :name    i}])]]
          [ui/StatisticLabel label]])])))
 
 
@@ -175,14 +176,13 @@
         is-small-device? (subscribe [::subs/is-small-device?])]
     (when-not @is-small-device?
       [ui/Segment {:raised true :compact true}
-       [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]])))
+       [:span [ui/Icon {:name icons/i-arrow-left}] (@tr [:statistics-select-info])]])))
 
 
 (defn InfoPopup
   [message]
   [ui/Popup {:content message
-             :trigger (r/as-element [ui/Icon {:name "info circle"}])}])
-
+             :trigger (r/as-element [ui/Icon {:class icons/i-info}])}])
 
 (defn NotFoundPortal
   [subs message-header message-content]
@@ -237,7 +237,7 @@
 
 (defn Pencil
   [editing?]
-  [ui/Icon {:name     "pencil"
+  [ui/Icon {:clas     icons/i-pencil
             :on-click #(reset! editing? true)
             :style    {:cursor "pointer"}}])
 
@@ -328,7 +328,7 @@
          (for [tag tags]
            ^{:key (str uuid "_" tag)}
            [ui/Popup
-            {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+            {:trigger        (r/as-element [ui/Label [ui/Icon {:class icons/i-tag}]
                                             (utils-general/truncate tag 20)])
              :content        tag
              :position       "bottom center"

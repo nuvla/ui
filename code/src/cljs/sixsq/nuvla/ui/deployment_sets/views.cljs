@@ -17,7 +17,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 (def view-type (r/atom :cards))
 
@@ -30,9 +31,9 @@
   [state]
   (if (str/ends-with? state "ING")
     "sync"
-    (get {STARTED "play"
-          STOPPED "stop"
-          CREATED "circle outline"} state)))
+    (get {STARTED icons/i-play
+          STOPPED icons/i-stop
+          CREATED icons/i-circle-outline} state)))
 
 (defn StatisticStates
   [clickable?]
@@ -51,7 +52,7 @@
      [ui/StatisticGroup {:size  "tiny"
                          :style {:justify-content "center"}}
       (for [stat-props [{:value          total
-                         :icons          ["fa-light fa-bullseye"]
+                         :icons          [icons/i-bullseye]
                          :label          "TOTAL"
                          :positive-color nil}
                         {:value          created
@@ -83,7 +84,7 @@
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true :stackable true}
-        [ui/MenuItem {:icon     "grid layout"
+        [ui/MenuItem {:icon     icons/i-grid-layout
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
         [ui/MenuItem {:icon     "table"

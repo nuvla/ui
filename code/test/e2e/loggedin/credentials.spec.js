@@ -21,6 +21,7 @@ test.skip('Creates and deletes api key credentials', async ({ page }, { project,
   // TODO: should we test this?
   await page.locator('.close').click();
 
+  await page.pause();
   await page.getByRole('row', { name: 'e2e-testing key api-key' }).locator('i').first().click();
   await page.getByText('I understand that deleting this credential is permanent and cannot be undone. Th').click();
   await page.getByRole('button', { name: 'delete' }).click();

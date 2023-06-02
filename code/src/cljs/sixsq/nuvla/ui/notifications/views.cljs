@@ -19,7 +19,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
-            [taoensso.timbre :as timbre]))
+            [taoensso.timbre :as timbre]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn save-callback-notification-subscription-config
@@ -143,10 +144,10 @@
                     :align   :right}
 
       (when (general-utils/can-edit? notif-subs)
-        [ui/Icon {:name     :cog
-                  :color    :blue
-                  :style    {:cursor :pointer}
-                  :on-click #(dispatch [::events/open-edit-subscription-modal notif-subs false])}])]]))
+        [icons/GearIcon
+         {:color    :blue
+          :style    {:cursor :pointer}
+          :on-click #(dispatch [::events/open-edit-subscription-modal notif-subs false])}])]]))
 
 
 (defn ManageSubscriptionsModal
@@ -969,7 +970,7 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete-notification-method id])
-      :trigger     (r/as-element [ui/Icon {:name  "trash"
+      :trigger     (r/as-element [ui/Icon {:class icons/i-trash-full
                                            :style {:cursor "pointer"}
                                            :color "red"}])
       :content     [:h3 content]
@@ -998,10 +999,9 @@
     (when (general-utils/can-delete? notif-method)
       [DeleteButtonNotificationMethod notif-method])
     (when (general-utils/can-edit? notif-method)
-      [ui/Icon {:name     :cog
-                :color    :blue
-                :style    {:cursor :pointer}
-                :on-click #(dispatch [::events/open-add-update-notification-method-modal notif-method false])}])]])
+      [icons/GearIcon {:color    :blue
+                       :style    {:cursor :pointer}
+                       :on-click #(dispatch [::events/open-add-update-notification-method-modal notif-method false])}])]])
 
 
 (defn DeleteButtonSubscriptionConfig
@@ -1011,7 +1011,7 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete-subscription-config id])
-      :trigger     (r/as-element [ui/Icon {:name  "trash"
+      :trigger     (r/as-element [ui/Icon {:class icons/i-trash-full
                                            :style {:cursor "pointer"}
                                            :color "red"}])
       :content     [:h3 content]
@@ -1119,10 +1119,9 @@
                         (when (general-utils/can-delete? subs-conf)
                           [DeleteButtonSubscriptionConfig subs-conf])
                         (when (general-utils/can-edit? subs-conf)
-                          [ui/Icon {:name     :cog
-                                    :color    :blue
-                                    :style    {:cursor :pointer}
-                                    :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]])]]
+                          [icons/GearIcon {:color    :blue
+                                           :style    {:cursor :pointer}
+                                           :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]])]]
                   :title-size :h4
                   :default-open true
                   :count (count resource-subs-confs)

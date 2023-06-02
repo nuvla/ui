@@ -11,8 +11,8 @@
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn is-advanced-mode?
@@ -31,7 +31,8 @@
   [help-kw]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Popup {:trigger (r/as-element
-                          [ui/Icon {:name "info circle", :link true}])
+                          [ui/Icon {:class icons/i-info
+                                    :link  true}])
                :basic   true
                :content (@tr [help-kw])}]))
 
@@ -84,7 +85,7 @@
 
 (defn PrincipalIcon
   [principal]
-  [uix/Icon {:name (utils/id->icon principal)}])
+  [icons/Icon {:name (utils/id->icon principal)}])
 
 
 (defn OwnerItem
@@ -98,13 +99,12 @@
        @principal-name
        ff/nbsp
        (when removable?
-         [ui/Icon {:name     "close"
-                   :link     true
-                   :size     "small"
-                   :color    "red"
-                   :on-click #(do
-                                (swap! ui-acl utils/acl-remove-owner principal)
-                                (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]]))
+         [icons/CloseIcon {:link     true
+                           :size     "small"
+                           :color    "red"
+                           :on-click #(do
+                                        (swap! ui-acl utils/acl-remove-owner principal)
+                                        (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]]))
 
 
 (defn RightCheckbox
@@ -150,12 +150,12 @@
 
      [ui/TableCell
       (when-not read-only
-        [ui/Icon {:link     true
-                  :name     "trash"
-                  :color    "red"
-                  :on-click #(do
-                               (swap! ui-acl utils/acl-remove-principle-from-rights principal)
-                               (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]))
+        [icons/TrashIconFull
+         {:link     true
+          :color    "red"
+          :on-click #(do
+                       (swap! ui-acl utils/acl-remove-principle-from-rights principal)
+                       (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]))
 
 
 (defn DropdownPrincipals
@@ -242,10 +242,10 @@
             (str/capitalize (@tr [:owners]))
             [InfoIcon :acl-owners]
 
-            [ui/Icon {:name     (if is-advanced? "compress" "expand")
-                      :style    {:float "right"}
-                      :link     true
-                      :on-click #(reset! mode (if is-advanced? :simple :advanced))}]]]]
+            [icons/Icon {:name     (if is-advanced? icons/i-compress icons/i-expand)
+                         :style    {:float "right"}
+                         :link     true
+                         :on-click #(reset! mode (if is-advanced? :simple :advanced))}]]]]
 
          [ui/TableBody
           [ui/TableRow
@@ -333,7 +333,7 @@
         ui-acl        (->ui-acl default-value can-edit?)]
     {:menuItem {:content "Share"
                 :key     :share
-                :icon    "users"}
+                :icon    (r/as-element [ui/Icon {:class icons/i-user-group}])}
      :render   (fn []
                  (r/as-element
                    (when default-value
@@ -360,14 +360,14 @@
 
               icon-principals (cond
                                 (and owners (= (count owners) 1) (empty? principals-set)) "lock"
-                                (contains? principals-set "group/nuvla-anon") "world"
-                                some-groups? "users"
-                                (not some-groups?) "user"
+                                (contains? principals-set "group/nuvla-anon") icons/i-world
+                                some-groups? icons/i-users
+                                (not some-groups?) icons/i-user
                                 :else nil)
               rights-keys     (utils/acl-get-all-used-rights-set @ui-acl)
               icon-right      (cond
-                                (some #(str/starts-with? (name %) "edit") rights-keys) "pencil"
-                                (some #(str/starts-with? (name %) "view") rights-keys) "eye"
+                                (some #(str/starts-with? (name %) "edit") rights-keys) icons/i-pencil
+                                (some #(str/starts-with? (name %) "view") rights-keys) icons/i-eye
                                 :else nil)]
           [:<>
            [ui/Button {:floated  "right"
@@ -376,17 +376,17 @@
                        :basic    true
                        :on-click #(accordion-utils/toggle active?)}
             [:div
-             [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
+             [ui/Popup {:trigger  (r/as-element [icons/Icon {:name icon-principals}])
                         :position "bottom center"
                         :content  (@tr [:access-rights])
                         :style    {:margin 0}}]
              (when icon-right
-               [ui/Popup {:trigger  (r/as-element [ui/Icon {:name  icon-right
+               [ui/Popup {:trigger  (r/as-element [ui/Icon {:class icon-right
                                                             :style {:margin 0}}])
                           :position "bottom center"
                           :content  (@tr [:access-rights])}])
-             [ui/Icon {:name  (if @active? "caret down" "caret left")
-                       :style {:margin 0}}]]]])))))
+             [icons/Icon {:name  (if @active? icons/i-caret-down icons/i-caret-left)
+                          :style {:margin 0}}]]]])))))
 
 
 (defn AclSection

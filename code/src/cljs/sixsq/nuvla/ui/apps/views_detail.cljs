@@ -458,25 +458,6 @@
    [ui/TableCell v2]])
 
 
-(def module-summary-keys #{:created
-                           :updated
-                           :resource-url
-                           :id
-                           :path
-                           :subtype})
-
-
-(defn details-section
-  []
-  (let [module (subscribe [::subs/module])]
-    (fn []
-      (let [summary-info (-> (select-keys @module module-summary-keys)
-                             (merge {:owners (->> @module :acl :owners (str/join ", "))
-                                     :author (->> @module :content :author)}))
-            rows         (map tuple-to-row summary-info)]
-        [cc/metadata-simple rows]))))
-
-
 (defn error-text [tr error]
   (if-let [{:keys [status reason]} (ex-data error)]
     (str (or (@tr [reason]) (name reason)) " (" status ")")
@@ -591,8 +572,7 @@
                [ui/TableCell (@tr [:tags])]
                [ui/TableCell {:style {:padding-left (when @editable? edit-cell-left-padding)}} [Tags]]]
               (for [x extras]
-                x)]]
-            [details-section]]
+                x)]]]
            [ui/GridColumn {:width 3 :floated "right"}
             [ui/Image {:src (or logo-url @default-logo-url)}]
             (when @editable?

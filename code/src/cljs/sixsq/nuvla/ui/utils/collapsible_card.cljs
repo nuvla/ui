@@ -65,18 +65,6 @@
          (when @more? [properties-table properties])]]])))
 
 
-(defn metadata-simple
-  [_rows]
-  (let [more? (r/atom false)]
-    (fn [rows]
-      [:div {:style {:padding-top    5
-                     :padding-bottom 5}}
-       (when (seq rows)
-         [more-or-less more?])
-       (when @more?
-         [table/definition-table rows])])))
-
-
 (defn collapsible-segment
   [_title & _children]
   (let [visible? (r/atom true)]

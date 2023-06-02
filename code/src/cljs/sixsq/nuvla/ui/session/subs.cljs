@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.session.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
+            [reagent.core :as r]
             [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.session.spec :as spec]
             [sixsq.nuvla.ui.session.utils :as utils]
@@ -252,5 +253,5 @@
   :<- [::groups-options]
   (fn [[peers groups] [_ filter-set]]
     (remove #(contains? filter-set (:value %))
-            (concat (map #(assoc % :icon icons/i-user) peers)
-                    (map #(assoc % :icon icons/i-user-group) groups)))))
+            (concat (map #(assoc % :icon (r/as-element [icons/UserIcon])) peers)
+                    (map #(assoc % :icon (r/as-element [icons/UserGroupIcon])) groups)))))

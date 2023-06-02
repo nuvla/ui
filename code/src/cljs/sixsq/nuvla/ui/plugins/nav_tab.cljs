@@ -95,8 +95,7 @@
     (when (nil? @default-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [{:keys [panes] :as opts}]
-      (let [clean-panes   (->> (remove nil? panes)
-                               (map clean-panes))
+      (let [clean-panes   (map clean-panes (remove nil? panes))
             key->index    (zipmap (map (comp :key :menuItem) clean-panes)
                                   (range (count clean-panes)))]
         [ui/Tab

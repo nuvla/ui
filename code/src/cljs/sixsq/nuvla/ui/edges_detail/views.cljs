@@ -1009,7 +1009,6 @@
         locale (subscribe [::i18n-subs/locale])
         {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])]
     [ui/Segment {:secondary true
-                 :color     "blue"
                  :raised    true}
      [:h4 "NuvlaEdge "
       (when nuvlabox-engine-version
@@ -1179,7 +1178,6 @@
 (defn TabOverviewHost
   [nb-status ssh-creds]
   [ui/Segment {:secondary true
-               :color     "grey"
                :raised    true}
    [:h4 "Host"]
    [StatusOrNotAvailable nb-status [HostInfo nb-status ssh-creds]]])
@@ -1247,7 +1245,6 @@
   [{:keys [online] :as nb-status}]
   (let [tr @(subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
-                 :color     "brown"
                  :raised    true}
      [:h4 "Status "
       [ui/Popup
@@ -1264,7 +1261,6 @@
   [{:keys [id] :as nuvlabox}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
-                 :color     "teal"
                  :raised    true}
      [:h4 (str/capitalize (@tr [:tags]))]
      [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
@@ -1293,7 +1289,6 @@
   []
   (let [services @(subscribe [::subs/infra-services])]
     [ui/Segment {:secondary true
-                 :color     "pink"
                  :raised    true}
      [:h4 [uix/TR :infrastructure-services]]
      [ui/ListSA {:divided true :relaxed true}
@@ -1313,7 +1308,6 @@
     :as _nuvlabox}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
-                 :color     "black"
                  :raised    true}
      [:h4 (str/capitalize (@tr [:cluster])) " " (@tr [:status])
       (when orchestrator

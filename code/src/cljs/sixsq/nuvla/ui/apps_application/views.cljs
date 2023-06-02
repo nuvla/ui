@@ -314,8 +314,8 @@
   []
   (let [tr      (subscribe [::i18n-subs/tr])
         is-new? (subscribe [::apps-subs/is-new?])]
-    [:div {:class :uix-apps-details-deployments}
-     [:h2 [apps-views-detail/DeploymentsTitle]]
+    [:div {:class :uix-apps-details-details}
+     [:h4 {:class :tab-app-detail} [apps-views-detail/DeploymentsTitle]]
      (if @is-new?
        [uix/WarningMsgNoElements]
        [deployments-views/DeploymentTable
@@ -346,8 +346,8 @@
 
 (defn ConfigurationPane
   []
-  [:div {:class :uix-apps-details-configuration}
-   [:h2 [apps-views-detail/ConfigurationTitle]]
+  [:div {:class :uix-apps-details-details}
+   [:h4 {:class :tab-app-detail} [apps-views-detail/ConfigurationTitle]]
    [apps-views-detail/EnvVariablesSection]
    [FilesSection]
    [apps-views-detail/UrlsSection]
@@ -364,7 +364,8 @@
 
 (defn LicensePane
   []
-  [apps-views-detail/LicenseSection])
+  [:div {:class :uix-apps-details-details}
+   [apps-views-detail/LicenseSection]])
 
 
 (defn TabMenuPricing
@@ -380,8 +381,9 @@
         price     (subscribe [::apps-subs/price])
         vendor    (subscribe [::profile-subs/vendor])]
     (fn []
-      [:div {:class :uix-apps-details-pricing}
-       [:h2 [apps-views-detail/PricingTitle]]
+      [:div {:class :uix-apps-details-details}
+       [:h4  {:class :tab-app-detail}
+        [apps-views-detail/PricingTitle]]
        (if (or (and @editable? @vendor) (some? @price))
          [apps-views-detail/Pricing]
          [:<>
@@ -406,8 +408,8 @@
   (let [active-tab     (sub-apps-tab)
         module-subtype (subscribe [::apps-subs/module-subtype])]
     @active-tab
-    [:div {:class :uix-apps-details-docker}
-     [:h2 [apps-views-detail/DockerTitle]]
+    [:div {:class :uix-apps-details-details}
+     [:h4 {:class :tab-app-detail} [apps-views-detail/DockerTitle]]
      [apps-views-detail/registries-section]
      ^{:key (random-uuid)}
      [:div
@@ -560,7 +562,7 @@
           {:db-path                 [::apps-spec/tab]
            :menu                    {:secondary true
                                      :pointing  true
-                                     :style     {:display        "flex"
+                                     :style     {:display       "flex"
                                                  :flex-direction "row"
                                                  :flex-wrap      "wrap"}
                                      :class     :uix-tab-nav}

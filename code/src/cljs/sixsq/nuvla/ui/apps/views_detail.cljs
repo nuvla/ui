@@ -1093,7 +1093,7 @@
             {:keys [license-name]} @license]
         [:<>
          (when (not= utils/subtype-component subtype)
-           [:h2 [LicenseTitle {:full true}]])
+           [:h4 {:class :tab-app-detail} [LicenseTitle {:full true}]])
          (if (or @editable? (some? @license))
            [ui/Form
             (when @editable?

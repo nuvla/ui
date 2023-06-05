@@ -185,13 +185,20 @@
        [ui/Icon {:name "privacy"}] private-ssh-key-file]]]
     (@tr [:nuvlabox-modal-private-ssh-key-info])]])
 
+(def nb-asset->k8s-setting
+  {"bluetooth" "peripheral-manager-bluetooth=true"
+   "gpu"       "peripheral-manager-gpu=true"
+   "modbus"    "peripheral-manager-modbus=true"
+   "network"   "peripheral-manager-network=true"
+   "security"  "security=true"
+   "usb"       "peripheral-manager-usb=true"})
+
 (defn CreatedNuvlaBox
-  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys
-   _new-private-ssh-key playbooks-toggle _on-close-fn]
+  [{:keys [nuvlabox-id nuvlabox-release-data nuvlabox-ssh-keys playbooks-toggle]}]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         playbooks-cronjob    (subscribe [::subs/nuvlabox-playbooks-cronjob])
-        private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
+        private-ssh-key-file  (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
         public-keys          (when (seq @nuvlabox-ssh-keys)
                                (str (str/join "\\n" (:public-keys @nuvlabox-ssh-keys)) "\\n"))
         zip-url              (r/atom nil)
@@ -206,13 +213,27 @@
     (zip/create download-files #(reset! zip-url %))
     (when @nuvlabox-ssh-keys
       (dispatch [::events/assign-ssh-keys @nuvlabox-ssh-keys nuvlabox-id]))
-    (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys
-         new-private-ssh-key playbooks-toggle on-close-fn]
+    (fn [{:keys [nuvlabox-id creation-data new-private-ssh-key playbooks-toggle on-close-fn k8s-install?]}]
       (let [tr                  (subscribe [::i18n-subs/tr])
             nuvlabox-name-or-id (str "NuvlaEdge " (or (:name creation-data)
                                                       (general-utils/id->short-uuid nuvlabox-id)))
-            execute-command     (str "docker-compose -p nuvlaedge -f "
-                                     (str/join " -f " (map :name download-files)) " up -d")]
+            k8s-peripherals     (keep (set (keys nb-asset->k8s-setting))
+                                                            nuvlabox-peripherals)
+            execute-command     (if k8s-install?
+                                  (str "helm install nuvlaedge/nuvlaedge --set NUVLAEDGE_UUID="
+                                       nuvlabox-id
+                                       " kubernetesNode=<TARGET_KUBERNETES_NODE_NAME> "
+                                       (when (seq k8s-peripherals)
+                                         (str "--set "
+                                              (str/join " --set "
+                                                        (map nb-asset->k8s-setting
+                                                             (keep (set (keys nb-asset->k8s-setting))
+                                                                   nuvlabox-peripherals)))))
+                                       "$(echo \"<paste_NUVLAEDGE_UUID_from_nuvla>\" | tr \"/\" \"-\") ./nuvlaedge-engine")
+                                  (str "docker-compose -p nuvlaedge -f "
+                                       (str/join " -f " (map :name download-files)) " up -d"))
+            clone-command       (when k8s-install?
+                                  "helm repo add nuvlaedge https://nuvlaedge.github.io/deployment")]
         [:<>
          [uix/ModalHeader {:header (str nuvlabox-name-or-id " created") :icon "box"}]
 
@@ -261,24 +282,34 @@
             [ui/Header (@tr [:nuvlabox-quick-install])]]
 
            [ui/SegmentGroup {:raised true}
-            [ui/Segment {:loading    (nil? @zip-url)
-                         :text-align :center}
-             [ui/Label {:circular true
-                        :color    "green"} "1"]
-             [:h5 {:style {:margin "0.5em 0 1em 0"}}
-              (str/capitalize (@tr [:download])) " compose file(s)"]
-             [:a {:href     @zip-url
-                  :target   "_blank"
-                  :style    {:margin "1em"}
-                  :download "nuvlaedge.zip"} "nuvlaedge.zip " [ui/Icon {:name "download"}]]]
+            (if k8s-install?
+              [ui/Segment {:text-align :center}
+               [:h5 {:style {:margin "0.5em 0 1em 0"}}
+                (@tr [:execute])
+                (values/copy-value-to-clipboard "" (str clone-command "\n" execute-command) (@tr [:copy-command-to-clipboard]))]
 
-            [ui/Segment {:text-align :center}
-             [ui/Label {:circular true
-                        :color    "green"} "2"]
-             [:h5 {:style {:margin "0.5em 0 1em 0"}}
-              (@tr [:nuvlabox-unzip-execute])
-              (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
-             [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]]
+               [:div {:style {:font "1em Inconsolata, monospace"}} clone-command]
+               [:div {:style {:font "1em Inconsolata, monospace"}} execute-command]]
+
+              [:<>
+               [ui/Segment {:loading    (nil? @zip-url)
+                            :text-align :center}
+                [ui/Label {:circular true
+                           :color    "green"} "1"]
+                [:h5 {:style {:margin "0.5em 0 1em 0"}}
+                 (str/capitalize (@tr [:download])) " compose file(s)"]
+                [:a {:href     @zip-url
+                     :target   "_blank"
+                     :style    {:margin "1em"}
+                     :download "nuvlaedge.zip"} "nuvlaedge.zip " [ui/Icon {:name "download"}]]]
+
+               [ui/Segment {:text-align :center}
+                [ui/Label {:circular true
+                           :color    "green"} "2"]
+                [:h5 {:style {:margin "0.5em 0 1em 0"}}
+                 (@tr [:nuvlabox-unzip-execute])
+                 (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
+                [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]])]
 
            [:div {:style {:margin "20px 0px 0px 0px"}}
             [NuvlaDocs tr compose-doc-url]]]]
@@ -613,12 +644,19 @@
       (when (and (= (count @vpn-infra-opts) 1)
                  (nil? (:vpn-server-id @creation-data)))
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
-      [ui/Modal {:open       true
+      [ui/Modal {:open       @visible?
                  :close-icon true
                  :on-close   on-close-fn}
        (cond
-         @nuvlabox-id [CreatedNuvlaBox @nuvlabox-id @creation-data @nuvlabox-release-data
-                       nuvlabox-ssh-keys new-private-ssh-key @playbooks-toggle on-close-fn]
+         @nuvlabox-id [CreatedNuvlaBox
+                       {:nuvlabox-id           @nuvlabox-id
+                        :k8s-install?          (= k8s-based @install-strategy)
+                        :creation-data         @creation-data
+                        :nuvlabox-release-data @nuvlabox-release-data
+                        :nuvlabox-ssh-keys     nuvlabox-ssh-keys
+                        :new-private-ssh-key   new-private-ssh-key
+                        :playbooks-toggle      @playbooks-toggle
+                        :on-close-fn           on-close-fn}]
          @usb-api-key [CreatedNuvlaBoxUSBTrigger @creation-data @nuvlabox-release-data @usb-api-key
                        nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
          :else [:<>

@@ -400,6 +400,115 @@
           [ui/Button {:positive true
                       :on-click on-close-fn} (@tr [:close])]]]))))
 
+(def docker-based "docker")
+(def usb-install "usb")
+(def compose-install "compose")
+(def k8s-based "k8s")
+(def form-valid-strategies #{usb-install compose-install k8s-based})
+
+(defn- InstallMethod
+  [_]
+  (let [tr        (subscribe [::i18n-subs/tr])]
+    (fn [{:keys [install-strategy-error install-strategy playbooks-toggle default-ttl usb-trigger-key-ttl]}]
+      (if
+       (nil? (#{docker-based compose-install usb-install} @install-strategy))
+        [:div {:display :flex}
+         [ui/CardGroup {:centered    true
+                        :itemsPerRow 2}
+          [ui/Card
+           {:on-click (fn [] (reset! install-strategy docker-based))
+            ;; :style {:display (when (= k8s-based @install-strategy) :none)}
+            }
+           [ui/CardContent {:text-align :center}
+            [ui/Header "Docker"]
+            [icons/DockerIcon {:size  :massive}] ]]
+
+          [ui/Card
+           {:on-click (fn [] (reset! install-strategy k8s-based))
+            :raised true
+            :style (when (= k8s-based @install-strategy)
+                     {:border  "10px lightgreen solid"})}
+           [ui/CardContent {:text-align :center}
+            [ui/Header "Kubernetes"]
+            [ui/Image {:src     "/ui/images/kubernetes.svg"
+                       :style   {:width "110px"}}]]]]]
+        [ui/Form
+         [ui/Header {:style {:text-align "center"}} "Docker"]
+         [ui/Segment {:raised true}
+
+          [ui/FormCheckbox {:label     "Compose file bundle"
+                            :radio     true
+                            :error     (not (nil? @install-strategy-error))
+                            :checked   (= @install-strategy "compose")
+                            :on-change #(do
+                                          (reset! install-strategy "compose")
+                                          (reset! install-strategy-error nil))}]
+
+          [:div {:style {:color "grey" :font-style "oblique"}}
+           (@tr [:create-nuvlabox-compose])]
+          [:a {:href   compose-doc-url
+               :target "_blank"}
+           (@tr [:nuvlabox-modal-more-info])]
+
+          [:div {:style {:margin  "10px 5px 5px 5px"
+                         :display (if (= @install-strategy "compose")
+                                    "block" "none")}}
+           [ui/Checkbox {:toggle    true
+                         :label     (@tr [:nuvlabox-modal-enable-playbooks])
+                         :checked   @playbooks-toggle
+                         :on-change #(swap! playbooks-toggle not)}]
+           [ui/Popup
+            {:trigger        (r/as-element [ui/Icon {:class icons/i-info
+                                                     :style {:margin-left "1em"}}])
+             :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
+             :on             "hover"
+             :hide-on-scroll true}]]
+
+
+          [ui/Divider {:fitted     true
+                       :horizontal true
+                       :style      {:text-transform "lowercase"
+                                    :margin         "10px 0"}} "Or"]
+
+          [ui/FormCheckbox {:label     "USB stick"
+                            :radio     true
+                            :error     (not (nil? @install-strategy-error))
+                            :checked   (= @install-strategy "usb")
+                            :on-change #(do
+                                          (reset! install-strategy "usb")
+                                          (reset! install-strategy-error nil)
+                                          (reset! playbooks-toggle false))}]
+
+          [:div {:style {:color "grey" :font-style "oblique"}}
+           (@tr [:create-nuvlabox-usb])]
+
+          [:div {:style {:margin  "10px 5px 5px 5px"
+                         :display (if (= @install-strategy "usb")
+                                    "block" "none")}}
+           [ui/Input {:label       (@tr [:nuvlabox-modal-usb-expires])
+                      :placeholder default-ttl
+                      :value       @usb-trigger-key-ttl
+                      :size        "mini"
+                      :type        "number"
+                      :on-change   (ui-callback/input-callback
+                                    #(cond
+                                       (number? (general-utils/str->int %))
+                                       (reset! usb-trigger-key-ttl
+                                               (general-utils/str->int %))
+                                       (empty? %) (reset! usb-trigger-key-ttl 0)))
+                      :step        1
+                      :min         0}]
+           [ui/Popup {:content  (@tr [:nuvlabox-modal-usb-expires-popup] [default-ttl])
+                      :position "right center"
+                      :wide     true
+                      :trigger  (r/as-element [ui/Icon {:name  "question"
+                                                        :color "grey"}])}]]
+          [:a {:href   usb-doc-url
+               :target "_blank"}
+           (@tr [:nuvlabox-modal-more-info])]]
+         [:a {:href ""
+              :on-click (fn [] (reset! install-strategy nil))} [icons/ArrowLeftIcon] "back to selection"]]))))
+
 (defn AddModal
   []
   (let [modal-id                   spec/modal-add-id
@@ -411,9 +520,9 @@
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (subscribe [::subs/nuvlabox-releases-by-id])
-        first-nb-release           (->> @nb-releases
-                                        (remove :pre-release)
-                                        first)
+        first-nb-release            (->> @nb-releases
+                                         (remove :pre-release)
+                                         first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
         default-data               {:refresh-interval 30, :version default-major-version}
         creation-data              (r/atom default-data)
@@ -459,7 +568,7 @@
                                       (reset! nuvlabox-release-data default-release-data)
                                       (reset! creating false))
         on-add-fn                  #(cond
-                                      (nil? @install-strategy) (reset! install-strategy-error true)
+                                      (nil? (form-valid-strategies @install-strategy)) (reset! install-strategy-error true)
                                       :else (do
                                               (reset! creating true)
                                               (if @ssh-toggle
@@ -504,7 +613,7 @@
       (when (and (= (count @vpn-infra-opts) 1)
                  (nil? (:vpn-server-id @creation-data)))
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
-      [ui/Modal {:open       @visible?
+      [ui/Modal {:open       true
                  :close-icon true
                  :on-close   on-close-fn}
        (cond
@@ -642,79 +751,11 @@
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:nuvlabox-modal-install-method])]
 
-                    [ui/Form
-                     [ui/Segment {:raised true}
-
-                      [ui/FormCheckbox {:label     "Compose file bundle"
-                                        :radio     true
-                                        :error     (not (nil? @install-strategy-error))
-                                        :checked   (= @install-strategy "compose")
-                                        :on-change #(do
-                                                      (reset! install-strategy "compose")
-                                                      (reset! install-strategy-error nil))}]
-
-                      [:div {:style {:color "grey" :font-style "oblique"}}
-                       (@tr [:create-nuvlabox-compose])]
-                      [:a {:href   compose-doc-url
-                           :target "_blank"}
-                       (@tr [:nuvlabox-modal-more-info])]
-
-                      [:div {:style {:margin  "10px 5px 5px 5px"
-                                     :display (if (= @install-strategy "compose")
-                                                "block" "none")}}
-                       [ui/Checkbox {:toggle    true
-                                     :label     (@tr [:nuvlabox-modal-enable-playbooks])
-                                     :checked   @playbooks-toggle
-                                     :on-change #(swap! playbooks-toggle not)}]
-                       [ui/Popup
-                        {:trigger        (r/as-element [ui/Icon {:class icons/i-info
-                                                                 :style {:margin-left "1em"}}])
-                         :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
-                         :on             "hover"
-                         :hide-on-scroll true}]]
-
-
-                      [ui/Divider {:fitted     true
-                                   :horizontal true
-                                   :style      {:text-transform "lowercase"
-                                                :margin         "10px 0"}} "Or"]
-
-                      [ui/FormCheckbox {:label     "USB stick"
-                                        :radio     true
-                                        :error     (not (nil? @install-strategy-error))
-                                        :checked   (= @install-strategy "usb")
-                                        :on-change #(do
-                                                      (reset! install-strategy "usb")
-                                                      (reset! install-strategy-error nil)
-                                                      (reset! playbooks-toggle false))}]
-
-                      [:div {:style {:color "grey" :font-style "oblique"}}
-                       (@tr [:create-nuvlabox-usb])]
-
-                      [:div {:style {:margin  "10px 5px 5px 5px"
-                                     :display (if (= @install-strategy "usb")
-                                                "block" "none")}}
-                       [ui/Input {:label       (@tr [:nuvlabox-modal-usb-expires])
-                                  :placeholder default-ttl
-                                  :value       @usb-trigger-key-ttl
-                                  :size        "mini"
-                                  :type        "number"
-                                  :on-change   (ui-callback/input-callback
-                                                 #(cond
-                                                    (number? (general-utils/str->int %))
-                                                    (reset! usb-trigger-key-ttl
-                                                            (general-utils/str->int %))
-                                                    (empty? %) (reset! usb-trigger-key-ttl 0)))
-                                  :step        1
-                                  :min         0}]
-                       [ui/Popup {:content  (@tr [:nuvlabox-modal-usb-expires-popup] [default-ttl])
-                                  :position "right center"
-                                  :wide     true
-                                  :trigger  (r/as-element [ui/Icon {:name  "question"
-                                                                    :color "grey"}])}]]
-                      [:a {:href   usb-doc-url
-                           :target "_blank"}
-                       (@tr [:nuvlabox-modal-more-info])]]]])]
+                    [InstallMethod {:install-strategy-error install-strategy-error
+                                    :install-strategy install-strategy
+                                    :playbooks-toggle playbooks-toggle
+                                    :default-ttl default-ttl
+                                    :usb-trigger-key-ttl usb-trigger-key-ttl}]])]
 
                 [ui/ModalActions
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]

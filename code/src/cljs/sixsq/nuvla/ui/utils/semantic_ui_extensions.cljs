@@ -253,9 +253,9 @@
                                              (on-change text)))}
             icon        (cond
                           (= :password type) [icons/Icon {:name     (if @show "eye slash" :eye)
-                                                       :link     true
-                                                       :on-click #(swap! show not)}]
-                          @active-input? icons/i-pencil)]
+                                                          :link     true
+                                                          :on-click #(swap! show not)}]
+                          @active-input? [ui/Icon {:class icons/i-pencil}])]
         (when on-validation
           (dispatch [on-validation key error?]))
 

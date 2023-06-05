@@ -427,7 +427,7 @@
            {:on-click (fn [] (reset! install-strategy k8s-based))
             :raised true
             :style (when (= k8s-based @install-strategy)
-                     {:border  "10px lightgreen solid"})}
+                     {:outline  "5px #21ba45 solid"})}
            [ui/CardContent {:text-align :center}
             [ui/Header "Kubernetes"]
             [ui/Image {:src     "/ui/images/kubernetes.svg"

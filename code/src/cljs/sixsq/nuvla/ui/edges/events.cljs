@@ -351,7 +351,7 @@
 (reg-event-db
   ::set-created-nuvlabox-id
   (fn [db [_ {:keys [resource-id]}]]
-    (dispatch [::get-nuvlaboxes])
+    ;; (dispatch [::get-nuvlaboxes])
     (assoc db ::spec/nuvlabox-created-id resource-id)))
 
 

@@ -222,7 +222,7 @@
                                                             nuvlabox-peripherals)
             execute-command     (if k8s-install?
                                   (str "helm install "
-                                       (str/replace nuvlabox-id #"/" "-")
+                                       (when nuvlabox-id (str/replace nuvlabox-id #"/" "-"))
                                        " nuvlaedge/nuvlaedge"
                                        " --version " (-> nuvlabox-release-data
                                                          :nb-selected
@@ -294,7 +294,8 @@
                 (values/copy-value-to-clipboard "" (str clone-command "\n" execute-command) (@tr [:copy-command-to-clipboard]))]
 
                [:div {:style {:font "1em Inconsolata, monospace"}} clone-command]
-               [:div {:style {:font "1em Inconsolata, monospace"}} execute-command]]
+               [:div {:style {:font "1em Inconsolata, monospace"}} execute-command
+                (ff/help-popup (@tr [:target-node-name-hint]))]]
 
               [:<>
                [ui/Segment {:loading    (nil? @zip-url)
@@ -452,9 +453,7 @@
          [ui/CardGroup {:centered    true
                         :itemsPerRow 2}
           [ui/Card
-           {:on-click (fn [] (reset! install-strategy docker-based))
-            ;; :style {:display (when (= k8s-based @install-strategy) :none)}
-            }
+           {:on-click (fn [] (reset! install-strategy docker-based))}
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker"]
             [icons/DockerIcon {:size  :massive}] ]]

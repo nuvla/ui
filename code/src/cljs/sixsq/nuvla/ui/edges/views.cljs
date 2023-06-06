@@ -186,12 +186,13 @@
     (@tr [:nuvlabox-modal-private-ssh-key-info])]])
 
 (def nb-asset->k8s-setting
-  {"bluetooth" "peripheral-manager-bluetooth=true"
-   "gpu"       "peripheral-manager-gpu=true"
-   "modbus"    "peripheral-manager-modbus=true"
-   "network"   "peripheral-manager-network=true"
+  {"bluetooth" "peripheralManagerBluetooth=true"
+   "gpu"       "peripheralManagerGPU=true"
+   "modbus"    "peripheralManagerModbus=true"
+   "network"   "peripheralManagerNetwork=true"
    "security"  "security=true"
-   "usb"       "peripheral-manager-usb=true"})
+   "usb"       "peripheralManagerUSB=true"
+   "vpn"       "vpnClient"})
 
 (defn CreatedNuvlaBox
   [{:keys [nuvlabox-id nuvlabox-release-data nuvlabox-ssh-keys playbooks-toggle]}]
@@ -220,16 +221,19 @@
             k8s-peripherals     (keep (set (keys nb-asset->k8s-setting))
                                                             nuvlabox-peripherals)
             execute-command     (if k8s-install?
-                                  (str "helm install nuvlaedge/nuvlaedge --set NUVLAEDGE_UUID="
-                                       nuvlabox-id
-                                       " kubernetesNode=<TARGET_KUBERNETES_NODE_NAME> "
+                                  (str "helm install nuvlaedge/nuvlaedge"
+                                       " --version " (-> nuvlabox-release-data
+                                                         :nb-selected
+                                                         :release)
+                                       " --set NUVLAEDGE_UUID=" nuvlabox-id
                                        (when (seq k8s-peripherals)
                                          (str "--set "
                                               (str/join " --set "
                                                         (map nb-asset->k8s-setting
                                                              (keep (set (keys nb-asset->k8s-setting))
                                                                    nuvlabox-peripherals)))))
-                                       "$(echo \"<paste_NUVLAEDGE_UUID_from_nuvla>\" | tr \"/\" \"-\") ./nuvlaedge-engine")
+                                       " --set kubernetesNode=<TARGET_KUBERNETES_NODE_NAME> "
+                                       (str/replace nuvlabox-id #"/" "-"))
                                   (str "docker-compose -p nuvlaedge -f "
                                        (str/join " -f " (map :name download-files)) " up -d"))
             clone-command       (when k8s-install?

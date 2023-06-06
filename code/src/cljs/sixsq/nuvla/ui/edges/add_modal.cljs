@@ -151,16 +151,29 @@
 
            [ui/SegmentGroup {:raised true}
             (if k8s-install?
-              [ui/Segment {:text-align :center}
-               [:h5 {:style {:margin "0.5em 0 1em 0"}}
-                (@tr [:execute-these-commands])
-                (values/copy-value-to-clipboard "" (str clone-command "\n" execute-command) (@tr [:copy-commands-to-clipboard]))]
+              [:<>
+               [ui/Segment {:loading    (nil? @zip-url)
+                            :text-align :center}
+                [:h3 (str/capitalize (@tr [:execute-these-commands]))]]
 
-               [:div {:style {:font "1em Inconsolata, monospace"}} clone-command]
-               [:div {:style {:font "1em Inconsolata, monospace"
+               [ui/Segment {:loading    (nil? @zip-url)
+                            :text-align :center}
+                [ui/Label {:circular true
+                           :color    "green"} "1"]
+                [:h5 {:style {:margin "0.5em 0 1em 0"}}
+                 (str/capitalize (@tr [:clone-helm-repo]))
+                 (values/copy-value-to-clipboard "" clone-command (@tr [:copy-command-to-clipboard]))]
+                [:div {:style {:font "1em Inconsolata, monospace"}} clone-command]]
+
+               [ui/Segment {:text-align :center}
+                [ui/Label {:circular true
+                           :color    "green"} "2"]
+                [:h5 {:style {:margin "0.5em 0 1em 0"}}
+                 (@tr [:install])
+                 (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
+                [:div {:style {:font "1em Inconsolata, monospace"
                               :margin-top "1rem"}} execute-command
-                (ff/help-popup (@tr [:target-node-name-hint]))]]
-
+                (ff/help-popup (@tr [:target-node-name-hint]))]]]
               [:<>
                [ui/Segment {:loading    (nil? @zip-url)
                             :text-align :center}

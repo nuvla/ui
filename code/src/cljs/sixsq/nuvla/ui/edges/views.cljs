@@ -221,7 +221,9 @@
             k8s-peripherals     (keep (set (keys nb-asset->k8s-setting))
                                                             nuvlabox-peripherals)
             execute-command     (if k8s-install?
-                                  (str "helm install nuvlaedge/nuvlaedge"
+                                  (str "helm install "
+                                       (str/replace nuvlabox-id #"/" "-")
+                                       " nuvlaedge/nuvlaedge"
                                        " --version " (-> nuvlabox-release-data
                                                          :nb-selected
                                                          :release)
@@ -232,8 +234,7 @@
                                                         (map nb-asset->k8s-setting
                                                              (keep (set (keys nb-asset->k8s-setting))
                                                                    nuvlabox-peripherals)))))
-                                       " --set kubernetesNode=<TARGET_KUBERNETES_NODE_NAME> "
-                                       (str/replace nuvlabox-id #"/" "-"))
+                                       " --set kubernetesNode=<TARGET_KUBERNETES_NODE_NAME> ")
                                   (str "docker-compose -p nuvlaedge -f "
                                        (str/join " -f " (map :name download-files)) " up -d"))
             clone-command       (when k8s-install?

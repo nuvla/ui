@@ -29,8 +29,7 @@
    "modbus"    "peripheralManagerModbus=true"
    "network"   "peripheralManagerNetwork=true"
    "security"  "security=true"
-   "usb"       "peripheralManagerUSB=true"
-   "vpn"       "vpnClient"})
+   "usb"       "peripheralManagerUSB=true"})
 
 (defn NuvlaDocs
   [tr url]
@@ -68,10 +67,10 @@
         zip-url              (r/atom nil)
         envsubst             (cond-> {"${NUVLABOX_UUID}"  nuvlabox-id
                                       "${NUVLAEDGE_UUID}" nuvlabox-id}
-                                     public-keys (assoc "${NUVLABOX_SSH_PUB_KEY}" public-keys
-                                                        "${NUVLAEDGE_SSH_PUB_KEY}" public-keys))
-        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
-                                                          (partial general-utils/envsubst-str envsubst))]
+                               public-keys (assoc "${NUVLABOX_SSH_PUB_KEY}" public-keys
+                                                  "${NUVLAEDGE_SSH_PUB_KEY}" public-keys))
+        download-files        (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
+                                                           (partial general-utils/envsubst-str envsubst))]
     (when playbooks-toggle
       (dispatch [::events/enable-host-level-management nuvlabox-id]))
     (zip/create download-files #(reset! zip-url %))
@@ -82,7 +81,8 @@
             nuvlabox-name-or-id (str "NuvlaEdge " (or (:name creation-data)
                                                       (general-utils/id->short-uuid nuvlabox-id)))
             k8s-peripherals     (keep (set (keys nb-asset->k8s-setting))
-                                                            nuvlabox-peripherals)
+                                      nuvlabox-peripherals)
+            with-vpn?           (not (str/blank? (:vpn-server-id creation-data)))
             execute-command     (if k8s-install?
                                   (str "helm install "
                                        (when nuvlabox-id (str/replace nuvlabox-id #"/" "-"))
@@ -91,8 +91,9 @@
                                                          :nb-selected
                                                          :release)
                                        " --set NUVLAEDGE_UUID=" nuvlabox-id
+                                       (when with-vpn? " --set vpnClient=true")
                                        (when (seq k8s-peripherals)
-                                         (str "--set "
+                                         (str " --set "
                                               (str/join " --set "
                                                         (map nb-asset->k8s-setting
                                                              (keep (set (keys nb-asset->k8s-setting))
@@ -127,7 +128,7 @@
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
                               " ")
                    (values/copy-value-to-clipboard
-                     "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
+                    "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
 
             (when @new-private-ssh-key
@@ -172,8 +173,8 @@
                  (@tr [:install])
                  (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
                 [:div {:style {:font "1em Inconsolata, monospace"
-                              :margin-top "1rem"}} execute-command
-                (ff/help-popup (@tr [:target-node-name-hint]))]]]
+                               :margin-top "1rem"}} execute-command
+                 (ff/help-popup (@tr [:target-node-name-hint]))]]]
               [:<>
                [ui/Segment {:loading    (nil? @zip-url)
                             :text-align :center}
@@ -421,10 +422,6 @@
          [:a {:href ""
               :on-click (fn [] (reset! install-strategy nil))} [icons/ArrowLeftIcon] "back to selection"]]))))
 
-(comment
-  (dispatch [::events/set-created-nuvlabox-id {:resource-id "nuvlabox/123"}])
-  (dispatch [::events/set-created-nuvlabox-id nil])
-  )
 
 (defn AddModal
   []
@@ -687,3 +684,11 @@
                              :loading  @creating
                              :on-click on-add-fn}
                   (@tr [:create])]]])])))
+
+
+(comment
+  ;; eval this to move to success screen without creating edge
+  (dispatch [::events/set-created-nuvlabox-id {:resource-id "nuvlabox/123"}])
+
+  ;; eval this to move from success screen back to create screen
+  (dispatch [::events/set-created-nuvlabox-id nil]))

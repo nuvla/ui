@@ -15,7 +15,7 @@
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.utils.general :refer [create-filter-for-read-only-resources]]
+            [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
@@ -54,8 +54,8 @@
   ::set-deployments
   (fn [{:keys [db]} [_ {:keys [resources] :as deployments}]]
     (let [deployments-resource-ids (map :id resources)
-          filter-deps-ids          (str/join " or " (map #(str "parent='" % "'")
-                                                         deployments-resource-ids))
+          filter-deps-ids           (str/join " or " (map #(str "parent='" % "'")
+                                                          deployments-resource-ids))
           query-params             {:filter (str "(" filter-deps-ids ") and value!=null")
                                     :select "parent, id, deployment, name, value"
                                     :last   10000}
@@ -63,7 +63,8 @@
                                      (when-not (instance? js/Error response)
                                        (dispatch [::set-deployments-params-map response])))]
       (cond-> {:db (assoc db ::main-spec/loading? false
-                             ::spec/deployments deployments)}
+                          ::spec/deployments deployments)
+               :fx [[:dispatch [::get-edges-of-deployments resources]]]}
               (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search
                                                           [:deployment-parameter
                                                            query-params callback])))))
@@ -91,6 +92,26 @@
                                   (pagination-plugin/first-last-params
                                     db [(or pagination-db-path ::spec/pagination)]))
                              #(dispatch [::set-deployments %])]})))
+
+(reg-event-fx
+ ::get-edges-of-deployments
+ (fn [_ [_ resources]]
+   (let [filter-str (apply
+                     general-utils/join-or
+                     (map (fn [deployment]
+                            (str "id='" (:nuvlabox deployment) "'"))
+                          (filter :nuvlabox resources)))]
+     {::cimi-api-fx/search
+      [:nuvlabox
+       (->> {:filter filter-str})
+       #(dispatch [::set-deployment-edges %])]})))
+
+(reg-event-db
+ ::set-deployment-edges
+ (fn [db [_ response]]
+   (let [edges (:resources response)]
+     (assoc db ::spec/deployment-edges (zipmap (map :id edges)
+                                               edges)))))
 
 (reg-event-fx
   ::set-deployments-summary

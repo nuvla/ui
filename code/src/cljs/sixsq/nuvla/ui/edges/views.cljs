@@ -740,7 +740,7 @@
         creator               (subscribe [::session-subs/resolve-user created-by])]
     [:<>
      [ui/TableCell {:collapsing true}
-      [OnlineStatusIcon online]]
+      [OnlineStatusIcon online nil true]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:class (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]

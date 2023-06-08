@@ -23,6 +23,8 @@
                           "error"
                           "pending"})
 (s/def ::bulk-update-modal any?)
+(s/def ::bulk-stop-modal boolean?)
+(s/def ::bulk-delete-modal boolean?)
 (s/def ::selected-set set?)
 (s/def ::select-all? boolean?)
 (s/def ::bulk-jobs-monitored any?)

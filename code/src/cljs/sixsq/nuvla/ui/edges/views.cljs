@@ -731,8 +731,7 @@
   []
   (let [nb-release (subscribe [::subs/nuvlabox-releases])
         new-modal  (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-edge-on-k8s])]
-    ^{:key (count @nb-release)}
-    (if @new-modal [add-modal/AddModal] [AddModal])))
+    (if @new-modal ^{:key (count @nb-release)}[add-modal/AddModal] ^{:key (count @nb-release)}[AddModal])))
 
 
 (defn NuvlaboxRow

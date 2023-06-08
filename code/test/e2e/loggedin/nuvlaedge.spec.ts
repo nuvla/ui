@@ -12,7 +12,6 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await page.getByText('Add', { exact: true }).click();
 
-  await page.locator('a:has-text("Docker")').click();
   await page.getByText('bluetooth').click();
 
   await page.getByText('gpu').click();

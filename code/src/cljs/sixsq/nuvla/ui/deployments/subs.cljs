@@ -60,6 +60,14 @@
   (fn [db]
     (::spec/bulk-update-modal db)))
 
+(reg-sub
+  ::bulk-stop-modal
+  :-> ::spec/bulk-stop-modal)
+
+(reg-sub
+  ::bulk-delete-modal
+  :-> ::spec/bulk-delete-modal)
+
 
 (reg-sub
   ::deployments-count

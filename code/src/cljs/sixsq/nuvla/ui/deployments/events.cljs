@@ -160,22 +160,6 @@
   (fn [db _]
     (assoc db ::spec/bulk-update-modal nil)))
 
-(reg-event-fx
-  ::open-modal-bulk-update
-  (fn [{db :db} [_ filter-str module-href]]
-    (cond-> {:db (assoc db ::spec/bulk-update-modal {:filter-str  filter-str
-                                                     :module-href module-href})}
-            module-href (assoc
-                          ::cimi-api-fx/get
-                          [module-href
-                           #(dispatch
-                              [:sixsq.nuvla.ui.deployments-detail.events/set-module-versions %])]))))
-
-(reg-event-db
-  ::close-modal-bulk-update
-  (fn [db _]
-    (assoc db ::spec/bulk-update-modal nil)))
-
 (reg-event-db
   ::open-modal-bulk-stop
   (fn [db]

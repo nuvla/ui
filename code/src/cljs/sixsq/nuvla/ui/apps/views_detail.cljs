@@ -26,7 +26,6 @@
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
-            [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -117,9 +116,10 @@
                                   [icons/TrashIcon]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
-      :header      (@tr [:delete-module])
+      :header      [:span [icons/LayerGroupIcon] (@tr [:delete-module])]
       :danger-msg  (@tr [:module-delete-warning])
-      :button-text (@tr [:delete])}]))
+      :button-text (str (@tr [:delete]) " " (@tr [:application]))
+      :header-class [:nuvla-apps :delete-modal-header]}]))
 
 
 (defn PublishButton

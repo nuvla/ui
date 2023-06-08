@@ -322,7 +322,7 @@
 
 (defn ModalDanger
   [{:keys [_button-text _on-confirm danger-msg _header _content _trigger _open _on-close _modal-action
-           control-confirmed?]}]
+           control-confirmed? header-class]}]
   (let [confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
         clicked?   (r/atom false)]
     (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action]}]
@@ -339,7 +339,10 @@
                                  (reset! clicked? false))}
                   (some? open) (assoc :open open))
 
-       (when header [ui/ModalHeader (str/capitalize header)])
+       (when header [ui/ModalHeader {:class header-class}
+                     (if (string? header)
+                       (str/capitalize header)
+                       header)])
 
        [ui/ModalContent {:scrolling false}
         (when content content)

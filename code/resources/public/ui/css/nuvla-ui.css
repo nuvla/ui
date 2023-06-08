@@ -3,8 +3,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap');
 
 :root {
+  --apps-color: rgba(73, 135, 250, 1);
   --deployments-color: rgba(122, 101, 255, 1);
   --edges-color: rgba(22, 173, 146, 1);
+  --accent-color: #c10e12;
 }
 
 body,
@@ -148,7 +150,7 @@ tr.active td {
 #nuvla-ui-sidebar a.nuvla-apps:hover,
 body .nuvla-apps .ui.breadcrumb {
   color: #ffffff !important;
-  background-color: rgba(73, 135, 250, 1) !important;
+  background-color: var(--apps-color) !important;
 }
 
 #nuvla-ui-sidebar .active.nuvla-deployments,
@@ -481,6 +483,10 @@ body .nuvla-deployments a {
   color: var(--deployments-color);
 }
 
+.nuvla-apps {
+  --accent-color: var(--apps-color);
+}
+
 .nuvla-deployments {
   --accent-color: var(--deployments-color);
 }
@@ -516,7 +522,7 @@ body .nuvla-edges a {
 }
 
 body .nuvla-apps a {
-  color: rgba(73, 135, 250, 1);
+  color: var(--apps-color);
 }
 
 i.icon.sort:before {
@@ -772,7 +778,7 @@ body .divider-red {
   }
 }
 .nuvla-dashboard .statistic.nuvla-apps {
-  background-color: rgba(73, 135, 250, 1);
+  background-color: var(--apps-color);
 }
 
 .nuvla-dashboard .statistic.nuvla-deployments {
@@ -1065,5 +1071,10 @@ i.link.icons {
 /** general **/
 .ui.input > input {
   font-family: 'Poppins' !important;
+}
+
+.delete-modal-header {
+  background-color: var(--accent-color) !important;
+  color: white !important;
 }
 /**  general **/

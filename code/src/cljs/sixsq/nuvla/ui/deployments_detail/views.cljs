@@ -396,9 +396,11 @@
           :open        @open?
           :trigger     (r/as-element button)
           :content     [:<> [:h3 text-1] [:p text-2]]
-          :header      (@tr [:delete-deployment])
+          :header [:span [icons/RocketIcon]
+                   (@tr [:delete-deployment])]
           :danger-msg  (@tr [:deployment-delete-msg])
-          :button-text (@tr [:delete])}]))))
+          :button-text (str (@tr [:delete]) " " (@tr [:deployment]))
+          :header-class [:nuvla-deployments :delete-modal-header]}]))))
 
 
 (defn CloneButton

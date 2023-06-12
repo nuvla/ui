@@ -319,50 +319,84 @@
                      (.stopPropagation event)))}
    (or label href)])
 
+(defn ButtonAskingForConfirmation
+  [_]
+  (let [mode (r/atom :idle)
+        tr   (subscribe [::i18n-subs/tr])]
+    (fn [{:keys [color text update-event disabled? action-aria-label button-fn]}]
+      (let [confirm-prefix (str (str/capitalize (@tr [:yes])) ", ")]
+        (if (= :idle @mode)
+          [:div
+           [:span (str text "?")]
+           [ui/Button {:aria-label action-aria-label
+                       :color    (or color :red)
+                       :disabled disabled?
+                       :active   true
+                       :style    {:margin-left "2rem"}
+                       :on-click (fn [] (reset! mode :confirming))}
+            [icons/CheckIconFull {:style {:margin 0}}]]]
+          [:div
+           [:span (str (@tr [:are-you-sure?]) " ")]
+           (if button-fn
+             [button-fn confirm-prefix]
+             [Button {:text     (str confirm-prefix text)
+                      :disabled disabled?
+                      :color    (or color :red)
+                      :on-click (fn [] (if (fn? update-event)
+                                         (update-event)
+                                         (dispatch update-event)))}])
+           [ui/Button {:on-click (fn [] (reset! mode :idle))}
+            [icons/XMarkIcon {:style {:margin 0}}]]])))))
 
 (defn ModalDanger
   [{:keys [_button-text _on-confirm danger-msg _header _content _trigger _open _on-close _modal-action
-           control-confirmed? header-class]}]
+           control-confirmed? header-class with-confirm-step?]}]
   (let [confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
         clicked?   (r/atom false)]
     (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action]}]
-      [ui/Modal (cond->
-                  {:on-click   (fn [event]
-                                 (.stopPropagation event)
-                                 (.preventDefault event))
-                   :close-icon true
-                   :trigger    trigger
-                   :on-close   (fn [& args]
-                                 (when on-close
-                                   (apply on-close args))
-                                 (reset! confirmed? (nil? danger-msg))
-                                 (reset! clicked? false))}
-                  (some? open) (assoc :open open))
+      (let [button (fn [added-text]
+                     [Button {:text     (str added-text (str/lower-case button-text))
+                              :negative true
+                              :disabled (or (not @confirmed?) @clicked?)
+                              :loading  @clicked?
+                              :active   true
+                              :on-click #(do (reset! clicked? true)
+                           (on-confirm))}])]
+        [ui/Modal (cond->
+                   {:on-click   (fn [event]
+                                  (.stopPropagation event)
+                                  (.preventDefault event))
+                    :close-icon true
+                    :trigger    trigger
+                    :on-close   (fn [& args]
+                                  (when on-close
+                                    (apply on-close args))
+                                  (reset! confirmed? (nil? danger-msg))
+                                  (reset! clicked? false))}
+                    (some? open) (assoc :open open))
 
-       (when header [ui/ModalHeader {:class header-class}
-                     (if (string? header)
-                       (str/capitalize header)
-                       header)])
+         (when header [ui/ModalHeader {:class header-class}
+                       (if (string? header)
+                         (str/capitalize header)
+                         header)])
 
-       [ui/ModalContent {:scrolling false}
-        (when content content)
-        (when danger-msg
-          [ui/Message {:error true}
-           [ui/MessageHeader {:style {:margin-bottom 10}} [TR :danger-action-cannot-be-undone]]
-           [ui/MessageContent [ui/Checkbox {:label     danger-msg
-                                            :checked   @confirmed?
-                                            :fitted    true
-                                            :on-change #(swap! confirmed? not)}]]])]
+         [ui/ModalContent {:scrolling false}
+          (when content content)
+          (when danger-msg
+            [ui/Message {:error true}
+             [ui/MessageHeader {:style {:margin-bottom 10}} [TR :danger-action-cannot-be-undone]]
+             [ui/MessageContent [ui/Checkbox {:label     danger-msg
+                                              :checked   @confirmed?
+                                              :fitted    true
+                                              :on-change #(swap! confirmed? not)}]]])]
 
-       [ui/ModalActions
-        (when modal-action modal-action)
-        [Button {:text     (str/lower-case button-text)
-                 :negative true
-                 :disabled (or (not @confirmed?) @clicked?)
-                 :loading  @clicked?
-                 :active   true
-                 :on-click #(do (reset! clicked? true)
-                                (on-confirm))}]]])))
+         [ui/ModalActions
+          (when modal-action modal-action)
+          (if with-confirm-step?
+            [ButtonAskingForConfirmation {:button-fn button :text button-text
+                                          :action-aria-label button-text
+                                          :disabled? (or (not @confirmed?) @clicked?)}]
+            [button])]]))))
 
 
 (defn ModalFromButton

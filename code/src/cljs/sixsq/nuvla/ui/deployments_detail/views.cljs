@@ -388,7 +388,8 @@
                       :disabled?   (not (general-utils/can-delete? deployment))})]
         ^{:key (random-uuid)}
         [uix/ModalDanger
-         {:on-close    (fn [event]
+         {:with-confirm-step? true
+          :on-close    (fn [event]
                          (reset! open? false)
                          (.stopPropagation event)
                          (.preventDefault event))

@@ -111,7 +111,8 @@
         {:keys [id name description]} module
         content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
     [uix/ModalDanger
-     {:on-confirm  (fn [] (dispatch [::events/delete-module id]))
+     {:with-confirm-step? true
+      :on-confirm  (fn [] (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [icons/TrashIcon]
                                   (str/capitalize (@tr [:delete]))])

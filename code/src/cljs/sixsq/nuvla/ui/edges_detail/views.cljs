@@ -66,13 +66,16 @@
         {:keys [id name description]} nuvlabox
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
-     {:button-text (@tr [:delete])
+     {:with-confirm-step? true
+      :button-text (str (@tr [:delete]) " " (@tr [:edge]))
       :on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:class icons/i-trash-full}]
                                   (@tr [:delete])])
-      :header      (@tr [:delete-nuvlabox])
-      :content     [:h3 content]}]))
+      :header      [:span [icons/BoxIcon]
+                    (@tr [:delete-nuvlabox])]
+      :content     [:h3 content]
+      :header-class [:nuvla-edges :delete-modal-header]}]))
 
 
 (defn SshKeysDropdown

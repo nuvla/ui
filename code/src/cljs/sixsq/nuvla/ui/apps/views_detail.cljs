@@ -293,13 +293,17 @@
        [uix/ModalHeader {:header (@tr [:select-logo-url])}]
 
        [ui/ModalContent
-        [ui/Input {:default-value (or (:logo-url @module) "")
-                   :placeholder   (@tr [:logo-url-placeholder])
-                   :fluid         true
-                   :auto-focus    true
-                   :on-change     (ui-callback/input-callback #(reset! local-url %))
-                   :on-key-press  (partial utils-forms/on-return-key
-                                           #(dispatch [::events/save-logo-url @local-url]))}]]
+        [:p
+         (@tr [:logo-hint])]
+        [:div
+         [ui/Input {:default-value (or (:logo-url @module) "")
+                    :placeholder   (@tr [:logo-url-placeholder])
+                    :fluid         true
+                    :auto-focus    true
+                    :on-change     (ui-callback/input-callback #(reset! local-url %))
+                    :on-key-press  (partial utils-forms/on-return-key
+                                            #(dispatch [::events/save-logo-url @local-url]))}]]
+        ]
 
        [ui/ModalActions
         [uix/Button {:text     "Ok"

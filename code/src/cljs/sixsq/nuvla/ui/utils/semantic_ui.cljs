@@ -6,7 +6,7 @@
             ["qrcode.react" :as qrcode]
             ["react-copy-to-clipboard" :as copy-to-clipboard]
             ["react-datepicker" :as date-picker]
-            ["react-diff-viewer" :as react-diff-viewer]
+            ["react-diff-viewer-continued" :as react-diff-viewer]
             ["react-markdown" :as react-markdown]
             ["semantic-ui-react" :as semantic]
             [reagent.core :as r]))

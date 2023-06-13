@@ -119,7 +119,7 @@
       :content     [:h3 content]
       :header      [:span [icons/LayerGroupIcon] (@tr [:delete-module])]
       :danger-msg  (@tr [:module-delete-warning])
-      :button-text (str (@tr [:delete]) " " (@tr [:application]))
+      :button-text (str (str/capitalize (@tr [:delete])) " " (@tr [:application]))
       :header-class [:nuvla-apps :delete-modal-header]}]))
 
 

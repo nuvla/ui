@@ -324,7 +324,7 @@
   (let [mode (r/atom :idle)
         tr   (subscribe [::i18n-subs/tr])]
     (fn [{:keys [color text update-event disabled? action-aria-label button-fn]}]
-      (let [confirm-prefix (str (str/capitalize (@tr [:yes])) ", ")]
+      (let [confirm-prefix (str (str/capitalize (@tr [:yes])) ": ")]
         (if (= :idle @mode)
           [:div
            [:span (str text "?")]
@@ -355,7 +355,7 @@
         clicked?   (r/atom false)]
     (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action]}]
       (let [button (fn [added-text]
-                     [Button {:text     (str added-text (str/lower-case button-text))
+                     [Button {:text     (str added-text button-text)
                               :negative true
                               :disabled (or (not @confirmed?) @clicked?)
                               :loading  @clicked?

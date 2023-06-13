@@ -400,7 +400,7 @@
           :header [:span [icons/RocketIcon]
                    (@tr [:delete-deployment])]
           :danger-msg  (@tr [:deployment-delete-msg])
-          :button-text (str (@tr [:delete]) " " (@tr [:deployment]))
+          :button-text (str (str/capitalize (@tr [:delete])) " " (str/capitalize (@tr [:deployment])))
           :header-class [:nuvla-deployments :delete-modal-header]}]))))
 
 

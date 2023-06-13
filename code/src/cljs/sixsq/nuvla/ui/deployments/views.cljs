@@ -174,7 +174,8 @@
          primary-url-pattern] (-> module :content (get :urls []) first)
         url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
         creator               (subscribe [::session-subs/resolve-user created-by])
-        edge-stati            (subscribe [::subs/deployment-edges-stati (:nuvlabox deployment)])]
+        edge-id               (:nuvlabox deployment)
+        edge-stati            (subscribe [::subs/deployment-edges-stati edge-id])]
     [:<>
      [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
@@ -201,9 +202,8 @@
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
-      [utils/CloudNuvlaEdgeLink deployment]]
-     [ui/TableCell
-      [OnlineStatusIcon @edge-stati nil true]]
+      [utils/CloudNuvlaEdgeLink deployment
+       :status-icon (when edge-id [OnlineStatusIcon @edge-stati nil true])]]
      (when show-options?
        [ui/TableCell
         (cond
@@ -246,9 +246,6 @@
                                    {:field-key :created-by}
                                    {:field-key :tags}
                                    {:field-key :infrastructure
-                                    :no-sort?  true}
-                                   {:field-key :edge-status
-                                    :header-content [:span (str (@tr [:edge]) "-") [icons/HeartbeatIcon]]
                                     :no-sort?  true}
                                    (when selectable? {:field-key :actions
                                                       :no-sort?  true})]

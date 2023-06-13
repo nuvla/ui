@@ -23,7 +23,6 @@
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.spec :as utils-spec]
             [sixsq.nuvla.ui.utils.spec :as us]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -1119,11 +1118,11 @@
         error     (subscribe [::subs/error-message])
         open?     (subscribe [::subs/modal-open? :vendor-set-email])
         vendor    (subscribe [::subs/vendor])
-        form-conf {:form-spec    (s/keys :req-un [::utils-spec/email])
+        form-conf {:form-spec    (s/keys :req-un [::us/email])
                    :names->value {:email (or (:email @vendor) "")}}
         form!     (fv/init-form form-conf)]
     (fn []
-      (let [spec->msg {::utils-spec/email (@tr [:email-invalid-format])}
+      (let [spec->msg {::us/email (@tr [:email-invalid-format])}
             value     (-> @form! :names->value :email)
             {:keys [txt icon]} (if (str/blank? value)
                                  {:txt  :add

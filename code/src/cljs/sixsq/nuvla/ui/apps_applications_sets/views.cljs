@@ -300,18 +300,12 @@
 
 
 (defn DetailsPane []
-  (let [active-tab (subscribe [::apps-subs/active-tab])
-        editable?  (subscribe [::apps-subs/editable?])]
+  (let [active-tab (subscribe [::apps-subs/active-tab])]
     @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
      {:extras           [^{:key "module_subtype"}
-                         [ui/TableRow
-                          [ui/TableCell {:collapsing true
-                                         :style      {:padding-bottom 8}} "subtype"]
-                          [ui/TableCell {:style
-                                         {:padding-left (when @editable? apps-views-detail/edit-cell-left-padding)}}
-                           "Applications sets"]]]
+                         [apps-views-detail/SubtypeRow]]
       :validation-event ::apps-events/set-details-validation-error}]))
 
 

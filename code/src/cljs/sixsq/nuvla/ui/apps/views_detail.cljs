@@ -26,7 +26,6 @@
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
-            [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -516,6 +515,22 @@
      @module
      #(do (dispatch [::main-events/changes-protection? true])
           (dispatch [::events/set-tags %]))]))
+
+(defn SubtypeRow
+  []
+  (let [is-new?   (subscribe [::subs/is-new?])
+        editable? (subscribe [::subs/editable?])
+        module-subtype (subscribe [::subs/module-subtype])]
+    (when-not @is-new?
+      [ui/TableRow
+       [ui/TableCell {:collapsing true
+                      :style      {:padding-bottom 8}} "subtype"]
+       [ui/TableCell {:style
+                      {:padding-left (when @editable? edit-cell-left-padding)}}
+        (condp = @module-subtype
+          utils/subtype-application "Docker"
+          utils/subtype-application-k8s "Kubernetes"
+          utils/subtype-applications-sets "Applications sets")]])))
 
 
 (defn Details

@@ -1164,7 +1164,7 @@
                      :basic    true
                      :size     "small"
                      :on-click #(dispatch [::events/open-modal :vendor-set-email])}
-          [ui/Icon {:name icon}]
+          [icons/Icon {:name icon}]
           (str/capitalize (@tr [txt]))]]))))
 
 (defn IconHeader
@@ -1560,7 +1560,7 @@
        {:db-path [::spec/tab]
         :menu    {:secondary true
                   :pointing  true
-                  :style     {:display       "flex"
+                  :style     {:display        "flex"
                               :flex-direction "row"
                               :flex-wrap      "wrap"}}
         :panes   panes}])))

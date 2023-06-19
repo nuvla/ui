@@ -201,7 +201,7 @@
           [ui/MenuItem
            {:name     (@tr [:add])
             :icon     (r/as-element [icons/AddIconLarge])
-            :disabled @deploy-disabled?
+            :disabled (or @deploy-disabled? (not @editable?))
             :on-click #(dispatch [::events/open-add-modal])}])
         (when @can-copy?
           [ui/Popup
@@ -221,7 +221,7 @@
           [ui/MenuItem
            {:name     (@tr [:paste])
             :icon     (r/as-element [icons/CopyIcon])
-            :disabled @paste-disabled?
+            :disabled (or @paste-disabled? (not @editable?))
             :on-click #(dispatch [::events/open-paste-modal])}])
 
         (when (general-utils/can-delete? @module)

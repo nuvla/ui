@@ -284,8 +284,9 @@
     [ui/Modal
      {:close-icon true
       :trigger    (r/as-element
-                    [icons/AddIconFull {:color    "green"
-                                        :on-click on-open}])
+                    [ui/Icon {:class icons/i-plus-full
+                              :color    "green"
+                              :on-click on-open}])
       :header     "New apps set"
       :content    (r/as-element
                     [ui/ModalContent

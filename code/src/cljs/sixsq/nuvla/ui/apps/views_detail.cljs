@@ -187,7 +187,6 @@
             :icon     icons/i-floppy
             :class    (when-not @save-disabled? "primary-menu-item")
             :disabled @save-disabled?
-            :primary  true
             :on-click #(save-callback @form-valid?)}])
 
         (when @is-app?

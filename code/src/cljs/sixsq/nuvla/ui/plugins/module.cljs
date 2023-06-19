@@ -7,11 +7,12 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.routing.utils :refer [str-pathify name->href]]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def change-event-module-version ::change-event-module-version)
@@ -400,11 +401,14 @@
         version-id       (get-version-id @versions-indexed (:id content))
         label            (cond-> (or name id)
                                  show-version? (str " v" version-id))
-        href             (str path "?version=" version-id)]
+        href             (str-pathify (name->href routes/apps)
+                                      (str path "?version=" version-id))]
     [ui/ListItem
      [apps-utils/SubtypeDockerK8sListIcon subtype]
      [ui/ListContent
-      [values/AsLink href :label label :page "apps"]
+      [:a {:href   href
+           :target "_blank"}
+       label]
       children]]))
 
 (defn ModuleVersions

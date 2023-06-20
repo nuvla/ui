@@ -1138,8 +1138,8 @@
                                     (or (:name sshkey) (:id sshkey))]]
                                   [ui/ListDescription
                                    (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                :trigger   (r/as-element [ui/Icon {:class icons/i-key
-                                                   :fitted true}
+                :trigger   (r/as-element [:div [ui/Icon {:class icons/i-key
+                                                         :fitted true}]
                                           (@tr [:nuvlabox-detail-ssh-enabled])
                                           [ui/Icon {:class icons/i-angle-down
                                                     :fitted true}]])}]]])

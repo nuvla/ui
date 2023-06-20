@@ -87,31 +87,6 @@
                                 {:key     "done", :content "Done" :positive true
                                  :onClick on-done}]}]))))
 
-(defn AppNameIcon
-  [id {module-id :id} on-delete]
-  [module-plugin/ModuleNameIcon
-   {:db-path       [::spec/apps-sets id]
-    :href          module-id
-    :show-version? true
-    :children      (when on-delete
-                     [:<>
-                      " "
-                      [icons/CloseIcon {:color    "red" :link true
-                                        :on-click #(on-delete module-id)}]])}])
-
-
-(defn AppsList
-  [id]
-  (let [selected  @(subscribe [::subs/apps-selected id])
-        on-delete #(do
-                     (dispatch [::events/remove-app id %])
-                     (dispatch [::main-events/changes-protection? true])
-                     (dispatch [::apps-events/validate-form]))]
-    [ui/ListSA
-     (for [module selected]
-       ^{:key (:id module)}
-       [AppNameIcon id module on-delete])]))
-
 (defn AddAppsSet
   []
   [ui/Button {:primary  true
@@ -231,11 +206,7 @@
            [ui/TableCell {:collapsing true} "subtype"]
            ^{:key (str/join "-" ["set" id "subtype"])}
            [ui/TableCell @(subscribe [::subs/apps-set-subtype id])]]]]
-
-        #_[AppsList id]
-
         [ConfigureSetApplications id]]
-
        :label [:<>
                (str i " | " apps-set-name)
                (when @editable?
@@ -246,8 +217,7 @@
                                                     (dispatch [::events/remove-apps-set id])
                                                     (dispatch [::main-events/changes-protection? true])
                                                     (dispatch [::apps-events/validate-form]))}])]
-       :default-open true]
-      )))
+       :default-open true])))
 
 (defn AppsSetsSection
   []
@@ -450,10 +420,6 @@
                               :key     :applications}
                    :pane     {:content (r/as-element [ApplicationsPane])
                               :key     :applications-pane}}
-                  #_{:menuItem {:content (r/as-element [TabMenuConfiguration])
-                                :key     :configuration}
-                     :pane     {:content (r/as-element [Configuration])
-                                :key     :configuration-pane}}
                   {:menuItem {:content (r/as-element [TabMenuVersions])
                               :key     :versions}
                    :pane     {:content (r/as-element [VersionsPane])

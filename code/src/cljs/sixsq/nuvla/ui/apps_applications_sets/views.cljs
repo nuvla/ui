@@ -21,6 +21,7 @@
     [sixsq.nuvla.ui.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.plugins.module-selector :as module-selector]
     [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -68,9 +69,11 @@
                                (or saved-subtype @subtype!))]
         [ui/Modal {:close-icon true
                    :trigger    (r/as-element
-                                 [ui/Icon {:class icons/i-plus-full
-                                           :color    "green"
-                                           :on-click on-open}])
+                                 [ui/MenuItem
+                                  {:icon     (r/as-element
+                                               [icons/Icon {:name  icons/i-plus-full
+                                                            :color "green"}])
+                                   :on-click on-open}])
                    :header     "New apps set"
                    :content    (r/as-element
                                  [ui/ModalContent
@@ -84,36 +87,6 @@
                                 {:key     "done", :content "Done" :positive true
                                  :onClick on-done}]}]))))
 
-(defn AppNameIcon
-  [id {module-id :id} on-delete]
-  [module-plugin/ModuleNameIcon
-   {:db-path       [::spec/apps-sets id]
-    :href          module-id
-    :show-version? true
-    :children      (when on-delete
-                     [:<>
-                      " "
-                      [icons/CloseIcon {:color "red" :link true
-                        :on-click #(on-delete module-id)}]])}])
-
-
-(defn AppsList
-  [id]
-  (let [selected  @(subscribe [::subs/apps-selected id])
-        on-delete #(do
-                     (dispatch [::events/remove-app id %])
-                     (dispatch [::main-events/changes-protection? true])
-                     (dispatch [::apps-events/validate-form]))]
-    [ui/ListSA
-     (for [module selected]
-       ^{:key (:id module)}
-       [AppNameIcon id module on-delete])]))
-
-(defn AddApps
-  [id]
-  [:div {:style {:padding-top 10}}
-   [SelectAppsModal id]])
-
 (defn AddAppsSet
   []
   [ui/Button {:primary  true
@@ -122,6 +95,89 @@
                            (dispatch [::main-events/changes-protection? true])
                            (dispatch [::apps-events/validate-form]))}
    "New set of applications"])
+
+(defn ConfigureApplication
+  [id module-id]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        editable? (subscribe [::apps-subs/editable?])
+        db-path   [::spec/apps-sets id]]
+    [ui/TabPane
+     [ui/Popup {:trigger (r/as-element
+                           [:span
+                            [module-plugin/LinkToApp
+                             {:db-path  db-path
+                              :href     module-id
+                              :children [:<>
+                                         [ui/Icon {:class icons/i-link}]
+                                         "Go to app"]}]])
+                :content "Open application in a new window"}]
+     [uix/Accordion
+      [module-plugin/ModuleVersions
+       {:db-path      db-path
+        :href         module-id
+        :change-event [::main-events/changes-protection? true]
+        :read-only?   (not @editable?)}]
+      :label (@tr [:select-version])
+      :default-open true]
+     [uix/Accordion
+      [module-plugin/EnvVariables
+       {:db-path      db-path
+        :href         module-id
+        :change-event [::main-events/changes-protection? true]
+        :read-only?   (not @editable?)}]
+      :label (@tr [:env-variables])
+      :default-open true]
+     [uix/Accordion
+      [module-plugin/RegistriesCredentials
+       {:db-path      db-path
+        :href         module-id
+        :required?    false
+        :change-event [::main-events/changes-protection? true]}]
+      :label (@tr [:private-registries])
+      :default-open true]]))
+
+(defn DeleteApp
+  [id module-id]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/ModalDanger
+     {:header      "Delete application"
+      :content     "Delete application from deployment set"
+      :trigger     (r/as-element
+                     [:span
+                      [icons/CloseIcon
+                       {:color "red" :link true}]])
+      :button-text (@tr [:delete])
+      :on-confirm  #(do
+                      (dispatch [::events/remove-app id module-id])
+                      (dispatch [::main-events/changes-protection? true])
+                      (dispatch [::apps-events/validate-form]))}]))
+
+(defn ConfigureSetApplications
+  [id]
+  (let [applications (subscribe [::subs/apps-selected id])
+        editable?    (subscribe [::apps-subs/editable?])
+        panes        (cond->
+                       (mapv
+                         (fn [{:keys [name subtype] module-id :id}]
+                           {:menuItem
+                            {:content (r/as-element
+                                        [:<>
+                                         (or name id)
+                                         ff/nbsp
+                                         (when @editable?
+                                           [DeleteApp id module-id])])
+                             :icon    (r/as-element
+                                        [icons/Icon {:name (apps-utils/subtype-icon subtype)}])
+                             :key     (str id "-" module-id)}
+                            :render #(r/as-element [ConfigureApplication id module-id])})
+                         @applications)
+                       @editable? (conj {:menuItem (r/as-element
+                                                     ^{:key (str "add-apps-" id)}
+                                                     [SelectAppsModal id])}))]
+    (if (or (seq @applications) @editable?)
+      ^{:key (str "tab-apps-" id)}
+      [ui/Tab {:panes panes}]
+      [ui/Message {:info true} "No applications for this set yet"])))
 
 (defn AccordionAppSet
   [_opts]
@@ -150,11 +206,7 @@
            [ui/TableCell {:collapsing true} "subtype"]
            ^{:key (str/join "-" ["set" id "subtype"])}
            [ui/TableCell @(subscribe [::subs/apps-set-subtype id])]]]]
-
-        [AppsList id]
-
-        (when @editable?
-          [AddApps id])]
+        [ConfigureSetApplications id]]
        :label [:<>
                (str i " | " apps-set-name)
                (when @editable?
@@ -165,8 +217,7 @@
                                                     (dispatch [::events/remove-apps-set id])
                                                     (dispatch [::main-events/changes-protection? true])
                                                     (dispatch [::apps-events/validate-form]))}])]
-       :default-open true]
-      )))
+       :default-open true])))
 
 (defn AppsSetsSection
   []
@@ -337,52 +388,6 @@
       [ui/GridColumn
        [OverviewModuleSummary]]]]))
 
-(defn ConfigureSetApplications
-  [id]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        applications (subscribe [::subs/apps-selected id])
-        editable?    (subscribe [::apps-subs/editable?])
-        db-path      [::spec/apps-sets id]
-        read-only?   (not @editable?)]
-    (if (seq @applications)
-      ^{:key (str "tab-apps-" id)}
-      [ui/Tab
-       {:panes (map
-                 (fn [{:keys [name subtype] module-id :id}]
-                   {:menuItem {:content (or name id)
-                               :icon    (r/as-element
-                                          [icons/Icon {:name (apps-utils/subtype-icon subtype)}])
-                               :key     (str id "-" module-id)}
-                    :render   #(r/as-element
-                                 [ui/TabPane
-                                  [ui/TabPane
-                                   [uix/Accordion
-                                    [module-plugin/ModuleVersions
-                                     {:db-path      db-path
-                                      :href         module-id
-                                      :change-event [::main-events/changes-protection? true]
-                                      :read-only?   (not @editable?)}]
-                                    :label (@tr [:select-version])
-                                    :default-open true]
-                                   [uix/Accordion
-                                    [module-plugin/EnvVariables
-                                     {:db-path      db-path
-                                      :href         module-id
-                                      :change-event [::main-events/changes-protection? true]
-                                      :read-only?   read-only?}]
-                                    :label (@tr [:env-variables])
-                                    :default-open true]
-                                   [uix/Accordion
-                                    [module-plugin/RegistriesCredentials
-                                     {:db-path      db-path
-                                      :href         module-id
-                                      :required?     false
-                                      :change-event [::main-events/changes-protection? true]}]
-                                    :label (@tr [:private-registries])
-                                    :default-open true]]])})
-                 @applications)}]
-      [ui/Message {:info true} "No applications for this set yet"])))
-
 (defn Configuration
   []
   (let [apps-sets (subscribe [::subs/apps-sets])]
@@ -415,10 +420,6 @@
                               :key     :applications}
                    :pane     {:content (r/as-element [ApplicationsPane])
                               :key     :applications-pane}}
-                  {:menuItem {:content (r/as-element [TabMenuConfiguration])
-                              :key     :configuration}
-                   :pane     {:content (r/as-element [Configuration])
-                              :key     :configuration-pane}}
                   {:menuItem {:content (r/as-element [TabMenuVersions])
                               :key     :versions}
                    :pane     {:content (r/as-element [VersionsPane])
@@ -438,8 +439,8 @@
                          (dispatch [::apps-events/set-active-tab :overview]))
     (dispatch [::apps-events/set-form-spec ::spec/apps-sets])
     (fn []
-      (let [name   (get @module-common ::apps-spec/name)
-            panes  (module-detail-panes)]
+      (let [name  (get @module-common ::apps-spec/name)
+            panes (module-detail-panes)]
         [ui/Container {:fluid true}
          [uix/PageHeader icons/i-app-sets name :inline true]
          [apps-views-detail/MenuBar]

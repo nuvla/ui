@@ -127,21 +127,15 @@
         editable? (subscribe [::apps-subs/editable?])
         db-path   [::spec/apps-sets id]]
     [ui/TabPane
-     [ui/Popup
-      {:trigger (r/as-element [ui/Icon {:color "blue"
-                                        :class icons/i-link}])
-       :content "Open application in new window"
-       :on      "hover"}]
      [ui/Popup {:trigger (r/as-element
-                           [:span [ui/Icon {:class icons/i-link}]])
-                :content "Open application in new window"}]
-     [:a "Open app in new window "]
-     #_[{:color "red"} "Remove app from set" [icons/DeleteIcon]]
-     #_[:div
-        [module-plugin/ModuleNameIcon
-         {:db-path       db-path
-          :href          module-id
-          :show-version? true}]]
+                           [:span
+                            [module-plugin/LinkToApp
+                             {:db-path  db-path
+                              :href     module-id
+                              :children [:<>
+                                         [ui/Icon {:class icons/i-link}]
+                                         "Go to app"]}]])
+                :content "Open application in a new window"}]
      [uix/Accordion
       [module-plugin/ModuleVersions
        {:db-path      db-path
@@ -167,6 +161,22 @@
       :label (@tr [:private-registries])
       :default-open true]]))
 
+(defn DeleteApp
+  [id module-id]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/ModalDanger
+     {:header      "Delete application"
+      :content     "Delete application from deployment set"
+      :trigger     (r/as-element
+                     [:span
+                      [icons/CloseIcon
+                       {:color "red" :link true}]])
+      :button-text (@tr [:delete])
+      :on-confirm  #(do
+                      (dispatch [::events/remove-app id module-id])
+                      (dispatch [::main-events/changes-protection? true])
+                      (dispatch [::apps-events/validate-form]))}]))
+
 (defn ConfigureSetApplications
   [id]
   (let [applications (subscribe [::subs/apps-selected id])
@@ -180,12 +190,7 @@
                                          (or name id)
                                          ff/nbsp
                                          (when @editable?
-                                           [icons/CloseIcon
-                                            {:color    "red" :link true
-                                             :on-click #(do
-                                                          (dispatch [::events/remove-app id module-id])
-                                                          (dispatch [::main-events/changes-protection? true])
-                                                          (dispatch [::apps-events/validate-form]))}])])
+                                           [DeleteApp id module-id])])
                              :icon    (r/as-element
                                         [icons/Icon {:name (apps-utils/subtype-icon subtype)}])
                              :key     (str id "-" module-id)}

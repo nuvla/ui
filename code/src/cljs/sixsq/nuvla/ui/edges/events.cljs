@@ -132,7 +132,8 @@
              (assoc ::spec/additional-filter filter)
              (assoc-in [::spec/pagination :active-page] 1))
      :fx [[:dispatch [::get-nuvlaboxes]]
-          [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]]}))
+          [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]
+          [:dispatch [::get-nuvlabox-locations]]]}))
 
 (reg-event-fx
   ::set-nuvlaboxes
@@ -178,16 +179,15 @@
 
 (reg-event-fx
   ::get-nuvlabox-locations
-  (fn [{{:keys [::spec/state-selector] :as db} :db} _]
+  (fn [{db :db} _]
+    (js/console.error "get-nuvlabox-locations")
     {::cimi-api-fx/search [:nuvlabox
                            {:first  1
                             :last   10000
                             :select "id,name,online,location,inferred-location"
                             :filter (general-utils/join-and
-                                      "(location!=null or inferred-location!=null)"
-                                      (when state-selector (utils/state-filter state-selector))
-                                      (full-text-search-plugin/filter-text
-                                        db [::spec/edges-search]))}
+                                     "(location!=null or inferred-location!=null)"
+                                     (get-full-filter-string db))}
                            #(dispatch [::set-nuvlabox-locations %])]}))
 
 

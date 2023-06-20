@@ -871,7 +871,7 @@
   (let [nuvlabox-locations (subscribe [::subs/nuvlabox-locations])
         nbs-locations      (:resources @nuvlabox-locations)]
     [map/MapBox
-     {}
+     {:responsive-height? true}
      (doall
        (for [{:keys [id] :as nuvlabox} nbs-locations]
          ^{:key id}

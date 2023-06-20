@@ -968,9 +968,10 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete-credential id])
-      :trigger     (r/as-element [icons/TrashIconFull
-                                  {:style {:cursor "pointer"}
-                                   :color "red"}])
+      :trigger     (r/as-element
+                     [ui/Icon {:class icons/i-trash-full
+                               :style {:cursor "pointer"}
+                               :color "red"}])
       :content     [:h3 content]
       :header      (@tr [:delete-credential])
       :danger-msg  (@tr [:credential-delete-warning])

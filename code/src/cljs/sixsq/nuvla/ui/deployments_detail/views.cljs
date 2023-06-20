@@ -782,12 +782,11 @@
         deployment (subscribe [::subs/deployment])]
     (fn []
       (let [module-name (get-in @deployment [:module :name] "")
-            state       (:state @deployment)
-            uuid        (:id @deployment "")]
+            state       (:state @deployment)]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
           [icons/RocketIcon]
-          module-name " (" (general-utils/id->uuid uuid) ")"]
+          module-name]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [StatusIcon (depl-state->status state)]
           [:span {:style {:font-weight "bold"}}

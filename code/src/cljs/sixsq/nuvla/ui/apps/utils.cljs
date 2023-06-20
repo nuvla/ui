@@ -2,6 +2,7 @@
   sixsq.nuvla.ui.apps.utils
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
+            [reagent.core :as r]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -448,3 +449,23 @@ For more information on how to format your app description using Markdown syntax
     (cond-> db
             reset? (update error-spec #(disj % key))
             set? (update error-spec #(conj % key)))))
+
+(defn versions-options
+  [versions-indexed tr]
+  (map (fn [[idx {:keys [href commit created published]}]]
+         {:key   (str href "-" idx)
+          :value href
+          :text  (r/as-element
+                   [:span
+                    (->> [(str "v" idx)
+                          (utils-general/truncate commit 70)
+                          created
+                          (when (true? published)
+                            [:<>
+                             [icons/Icon {:name publish-icon}]
+                             (tr [:published])])]
+                         (remove nil?)
+                         (interpose " | ")
+                         (cons :span)
+                         vec)])})
+       versions-indexed))

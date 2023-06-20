@@ -46,31 +46,25 @@
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         versions         (subscribe [::subs/module-versions])
+        options          (subscribe [::subs/module-versions-options])
         module-id        (subscribe [::subs/module-id])
         selected-version (subscribe [::subs/selected-version])]
     (fn []
-      (let [options (map (fn [[idx {:keys [href commit published]}]]
-                           {:key   idx
-                            :value href
-                            :text  (str "v" idx " | " (general-utils/truncate commit 70)
-                                        (when (true? published) (str " | " (@tr [:published]))))
-                            :icon  (when published apps-utils/publish-icon)})
-                         @versions)]
-        [ui/Segment {:clearing true}
-         [ui/Form
-          [ui/Message {:info    true
-                       :header  (@tr [:quick-tip])
-                       :content (@tr [:quick-tip-fetch-module])}]
-          [VersionSelectionMessages]
-          [ui/FormDropdown {:value     @selected-version
-                            :scrolling true
-                            :upward    false
-                            :selection true
-                            :on-change (ui-callback/value
-                                         #(do (dispatch [::events/set-selected-version %])
-                                              (dispatch [::events/fetch-module
-                                                         (->> %
-                                                              (get-version-id @versions)
-                                                              (str @module-id "_"))])))
-                            :fluid     true
-                            :options   options}]]]))))
+      [ui/Segment {:clearing true}
+       [ui/Form
+        [ui/Message {:info    true
+                     :header  (@tr [:quick-tip])
+                     :content (@tr [:quick-tip-fetch-module])}]
+        [VersionSelectionMessages]
+        [ui/FormDropdown {:value     @selected-version
+                          :scrolling true
+                          :upward    false
+                          :selection true
+                          :on-change (ui-callback/value
+                                       #(do (dispatch [::events/set-selected-version %])
+                                            (dispatch [::events/fetch-module
+                                                       (->> %
+                                                            (get-version-id @versions)
+                                                            (str @module-id "_"))])))
+                          :fluid     true
+                          :options   @options}]]])))

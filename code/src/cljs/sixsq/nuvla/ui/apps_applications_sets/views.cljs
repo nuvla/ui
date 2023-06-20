@@ -191,6 +191,12 @@
     (fn [{:keys [i id apps-set-name apps-set-description]}]
       [uix/Accordion
        [:<>
+        [:p (str "Application set is a named group of apps intended to be deployed on a target set. "
+                 "Target set are defined at deployment time. "
+                 "You can define multiple application sets. "
+                 "This can be useful in multitude of scenarios. "
+                 "In example, this can be used to deploy some applications on cloud and others on edge.")]
+        [:p "To add apps to your application set, click the plus button below."]
         [ui/Table {:compact    true
                    :definition true}
          [ui/TableBody

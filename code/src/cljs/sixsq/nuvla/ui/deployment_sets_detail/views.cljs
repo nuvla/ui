@@ -287,7 +287,7 @@
                     [ui/Icon {:class icons/i-plus-full
                               :color    "green"
                               :on-click on-open}])
-      :header     "New apps set"
+      :header     "Select targets sets"
       :content    (r/as-element
                     [ui/ModalContent
                      [target-selector/TargetsSelectorSection

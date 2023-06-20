@@ -306,13 +306,8 @@
     [(subscribe [::module-versions-indexed db-path href])
      (subscribe [::i18n-subs/tr])])
   (fn [[versions-indexed tr]]
-    (map (fn [[idx {:keys [href commit published]}]]
-           {:key   idx
-            :value href
-            :text  (str "v" idx " | " (general-utils/truncate commit 70)
-                        (when (true? published) (str " | " (tr [:published]))))
-            :icon  (when published apps-utils/publish-icon)})
-         versions-indexed)))
+    (apps-utils/versions-options versions-indexed tr)))
+
 (defn AsFormInput
   [db-path href read-only?
    index {env-name        :name

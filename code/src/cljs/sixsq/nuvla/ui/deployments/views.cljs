@@ -62,13 +62,10 @@
   (let [tr              (subscribe [::i18n-subs/tr])
         info            (subscribe [::subs/bulk-update-modal])
         versions        (subscribe [::deployments-detail-subs/module-versions])
+        version-options (subscribe [::deployments-detail-subs/module-versions-options])
         selected-module (r/atom nil)]
     (fn []
-      (let [options     (map (fn [[idx {:keys [href commit]}]]
-                               {:key   idx,
-                                :value href
-                                :text  (str "v" idx " | " commit)}) @versions)
-            module-href (:module-href @info)]
+      (let [module-href (:module-href @info)]
         [ui/Modal {:open       (some? @info)
                    :close-icon true
                    :on-close   #(dispatch [::events/close-modal-bulk-update])}
@@ -94,7 +91,7 @@
                                           (dep-diag-versions/get-version-id @versions)
                                           (str module-href "_"))))
              :fluid       true
-             :options     options}]]]
+             :options     @version-options}]]]
          [ui/ModalActions
           [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
                        :positive true
@@ -105,41 +102,44 @@
                                              [::events/close-modal-bulk-update]])}]]]))))
 
 (defn BulkActionModal
-  [{:keys [on-confirm trigger header danger-msg button-text]}]
-  (let [open? (r/atom false)
-        close (fn []
-                (swap! open? not))]
-    (fn []
-      [uix/ModalDanger
-       {:on-confirm  #(do
-                        (on-confirm)
-                        (reset! open? false))
-        :open        @open?
-        :on-close    close
-        :trigger     (r/as-element
-                       [:div {:on-click close} trigger])
-        :header      header
-        :danger-msg  danger-msg
-        :button-text button-text}])))
+  [{:keys [on-confirm trigger open? header danger-msg button-text close-event]}]
+  [uix/ModalDanger
+   {:on-confirm  (fn [] (on-confirm))
+    :open        open?
+    :on-close    (fn [] (dispatch close-event))
+    :trigger     (r/as-element
+                   [:div {:on-click
+                          (fn [] (when open?
+                                   (dispatch close-event)))} trigger])
+    :header      header
+    :danger-msg  danger-msg
+    :button-text button-text}])
 
 (defn BulkStopModal
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        open? (subscribe [::subs/bulk-stop-modal])]
     (fn []
       [BulkActionModal
-       {:on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-stop"]))
-        :trigger     (str/capitalize (@tr [:stop]))
+       {:open?       @open?
+        :close-event [::events/close-modal-bulk-stop]
+        :on-confirm  (fn []
+                       (dispatch [::events/bulk-operation "bulk-stop" nil [::events/close-modal-bulk-stop]]))
         :header      (@tr [:bulk-deployment-stop])
         :danger-msg  (@tr [:danger-action-cannot-be-undone])
         :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}])))
 
 (defn BulkForceDeleteModal
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        open? (subscribe [::subs/bulk-delete-modal])]
     (fn []
       [BulkActionModal
-       {:on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-force-delete"]))
-        :trigger     (str/capitalize (@tr [:force-delete]))
+       {:open?       @open?
+        :close-event [::events/close-modal-bulk-delete]
+        :on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-force-delete"
+                                       nil
+                                       [::events/close-modal-bulk-delete]]))
         :header      (@tr [:bulk-deployment-force-delete])
         :danger-msg  (@tr [:danger-action-deployment-force-delete])
         :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}])))
@@ -245,13 +245,15 @@
                    :rows          deployments-list
                    :sort-config   {:db-path     ::spec/ordering
                                    :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                   :row-render    (fn [deployment] [RowFn deployment options])
+                   :row-render    (fn [deployment] [RowFn deployment (assoc options :show-options? selectable?)])
                    :table-props   (merge style/single-line {:stackable true})
                    :select-config (when selectable?
                                     {:bulk-actions        [{:event [::events/bulk-update-params]
                                                             :name  (str/capitalize (@tr [:update]))}
-                                                           {:component (r/as-element BulkStopModal)}
-                                                           {:component (r/as-element BulkForceDeleteModal)}
+                                                           {:event [::events/open-modal-bulk-stop]
+                                                            :name  (str/capitalize (@tr [:stop]))}
+                                                           {:event [::events/open-modal-bulk-delete]
+                                                            :name  (str/capitalize (@tr [:delete]))}
                                                            trigger]
                                      :select-db-path      [::spec/select]
                                      :total-count-sub-key [::subs/deployments-count]
@@ -322,6 +324,8 @@
     (fn []
       [:div
        [BulkUpdateModal]
+       [BulkStopModal]
+       [BulkForceDeleteModal]
        (if (= @view "cards")
          [CardsDataTable @deployments]
          [VerticalDataTable @deployments])])))

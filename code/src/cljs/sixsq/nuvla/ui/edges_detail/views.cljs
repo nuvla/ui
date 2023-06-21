@@ -1138,8 +1138,8 @@
                                     (or (:name sshkey) (:id sshkey))]]
                                   [ui/ListDescription
                                    (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                :trigger   (r/as-element [ui/Icon {:class icons/i-key
-                                                   :fitted true}
+                :trigger   (r/as-element [:div [ui/Icon {:class icons/i-key
+                                                         :fitted true}]
                                           (@tr [:nuvlabox-detail-ssh-enabled])
                                           [ui/Icon {:class icons/i-angle-down
                                                     :fitted true}]])}]]])
@@ -1374,20 +1374,24 @@
           [ui/TableCell "Swarm Certificate Expiry Date"]
           [ui/TableCell swarm-node-cert-expiry-date]])
 
+       [ui/TableRow {:border-bottom nil}
+        [ui/TableCell {:col-span 2} "Node Labels"]]
        [ui/TableRow
-        [ui/TableCell "Node Labels"]
-        [ui/TableCell]]
-       [:div
-        (if (seq cluster-node-labels)
-          (for [{:keys [name value]} cluster-node-labels]
-            ^{:key (str name value)}
-            [ui/Label {:style {:margin-top "0.2rem"}
-                       :image true}
-             name
-             [ui/LabelDetail {:color :grey} value]])
-          [:span {:style {:font-size "0.8rem"
-                          :font-style "italic"}}
-           (@tr [:no-labels-defined])])]]]]))
+        [ui/TableCell {:col-span 2
+                       :style {:border :none
+                               :padding 0}}
+         (if (seq cluster-node-labels)
+           (for [{:keys [name value]} cluster-node-labels]
+             ^{:key (str name value)}
+             [ui/Label {:style {:margin-top   "0.5rem"
+                                :margin-left  0
+                                :margin-right "0.5rem"}
+                        :image true}
+              name
+              [ui/LabelDetail {:color :grey} value]])
+           [:span {:style {:font-size "0.8rem"
+                           :font-style "italic"}}
+            (@tr [:no-labels-defined])])]]]]]))
 
 
 (defn TabOverview

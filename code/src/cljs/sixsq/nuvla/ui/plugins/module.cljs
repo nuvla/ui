@@ -7,11 +7,12 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.routing.utils :refer [str-pathify name->href]]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def change-event-module-version ::change-event-module-version)
@@ -305,13 +306,8 @@
     [(subscribe [::module-versions-indexed db-path href])
      (subscribe [::i18n-subs/tr])])
   (fn [[versions-indexed tr]]
-    (map (fn [[idx {:keys [href commit published]}]]
-           {:key   idx
-            :value href
-            :text  (str "v" idx " | " (general-utils/truncate commit 70)
-                        (when (true? published) (str " | " (tr [:published]))))
-            :icon  (when published apps-utils/publish-icon)})
-         versions-indexed)))
+    (apps-utils/versions-options versions-indexed tr)))
+
 (defn AsFormInput
   [db-path href read-only?
    index {env-name        :name
@@ -392,19 +388,31 @@
          [DropdownContainerRegistry opts i private-registry])]
       [ui/Message "No container registries defined"])))
 
+(defn LinkToApp
+  [{:keys [db-path href children]
+    :as   _opts}]
+  (let [{:keys [path content]} @(subscribe [::module db-path href])
+        versions-indexed (subscribe [::module-versions-indexed db-path href])
+        version-id       (get-version-id @versions-indexed (:id content))]
+    [:a {:href   (str-pathify (name->href routes/apps)
+                              (str path "?version=" version-id))
+         :target "_blank"}
+     children]))
+
 (defn ModuleNameIcon
   [{:keys [db-path href children show-version?]
     :as   _opts}]
-  (let [{:keys [id path name subtype content]} @(subscribe [::module db-path href])
+  (let [{:keys [id name subtype content]} @(subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         version-id       (get-version-id @versions-indexed (:id content))
         label            (cond-> (or name id)
-                                 show-version? (str " v" version-id))
-        href             (str path "?version=" version-id)]
+                                 show-version? (str " v" version-id))]
     [ui/ListItem
      [apps-utils/SubtypeDockerK8sListIcon subtype]
      [ui/ListContent
-      [values/AsLink href :label label :page "apps"]
+      [LinkToApp {:db-path  db-path
+                  :href     href
+                  :children label}]
       children]]))
 
 (defn ModuleVersions

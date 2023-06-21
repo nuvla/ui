@@ -650,3 +650,5 @@
 (defn SpinnerIcon
   [opts]
   [I opts i-spinner])
+
+(def i-lock "fal fa-lock")

@@ -26,7 +26,6 @@
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
-            [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -187,7 +186,6 @@
             :icon     icons/i-floppy
             :class    (when-not @save-disabled? "primary-menu-item")
             :disabled @save-disabled?
-            :primary  true
             :on-click #(save-callback @form-valid?)}])
 
         (when @is-app?
@@ -201,7 +199,7 @@
           [ui/MenuItem
            {:name     (@tr [:add])
             :icon     (r/as-element [icons/AddIconLarge])
-            :disabled @deploy-disabled?
+            :disabled (or @deploy-disabled? (not @editable?))
             :on-click #(dispatch [::events/open-add-modal])}])
         (when @can-copy?
           [ui/Popup
@@ -221,7 +219,7 @@
           [ui/MenuItem
            {:name     (@tr [:paste])
             :icon     (r/as-element [icons/CopyIcon])
-            :disabled @paste-disabled?
+            :disabled (or @paste-disabled? (not @editable?))
             :on-click #(dispatch [::events/open-paste-modal])}])
 
         (when (general-utils/can-delete? @module)
@@ -293,13 +291,17 @@
        [uix/ModalHeader {:header (@tr [:select-logo-url])}]
 
        [ui/ModalContent
-        [ui/Input {:default-value (or (:logo-url @module) "")
-                   :placeholder   (@tr [:logo-url-placeholder])
-                   :fluid         true
-                   :auto-focus    true
-                   :on-change     (ui-callback/input-callback #(reset! local-url %))
-                   :on-key-press  (partial utils-forms/on-return-key
-                                           #(dispatch [::events/save-logo-url @local-url]))}]]
+        [:p
+         (@tr [:logo-hint])]
+        [:div
+         [ui/Input {:default-value (or (:logo-url @module) "")
+                    :placeholder   (@tr [:logo-url-placeholder])
+                    :fluid         true
+                    :auto-focus    true
+                    :on-change     (ui-callback/input-callback #(reset! local-url %))
+                    :on-key-press  (partial utils-forms/on-return-key
+                                            #(dispatch [::events/save-logo-url @local-url]))}]]
+        ]
 
        [ui/ModalActions
         [uix/Button {:text     "Ok"
@@ -513,6 +515,22 @@
      @module
      #(do (dispatch [::main-events/changes-protection? true])
           (dispatch [::events/set-tags %]))]))
+
+(defn SubtypeRow
+  []
+  (let [is-new?   (subscribe [::subs/is-new?])
+        editable? (subscribe [::subs/editable?])
+        module-subtype (subscribe [::subs/module-subtype])]
+    (when-not @is-new?
+      [ui/TableRow
+       [ui/TableCell {:collapsing true
+                      :style      {:padding-bottom 8}} "subtype"]
+       [ui/TableCell {:style
+                      {:padding-left (when @editable? edit-cell-left-padding)}}
+        (condp = @module-subtype
+          utils/subtype-application "Docker"
+          utils/subtype-application-k8s "Kubernetes"
+          utils/subtype-applications-sets "Applications sets")]])))
 
 
 (defn Details

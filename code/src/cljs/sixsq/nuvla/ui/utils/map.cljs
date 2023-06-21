@@ -100,14 +100,6 @@
 
 (def default-latlng-center [45, 0])
 
-#_(defn normalize-lat-lng
-    [^js latlng]
-    (.map latlng #(.wrap %1)))
-
-#_(defn normalize-lat-lngs
-    [^js latlngs]
-    (.map latlngs normalize-lat-lng))
-
 
 (defn normalize-lng-coordinates
   [coordinates]
@@ -129,19 +121,18 @@
 
 (def map-default-ops
   {:min-zoom      2
-   :style         {:height 500}
    :center        default-latlng-center
    :worldCopyJump true
    :zoom          3})
 
 
 (defn MapBox
-  [opts content]
-  [:div {:className "mapbox-map"}
+  [{:keys [responsive-height?] :as opts} content]
+  [:div {:className (if responsive-height? "mapbox-map-responsive-height" "mapbox-map")}
    [:a {:className "mapbox-wordmark"
         :href      "http://mapbox.com/about/maps"
         :target    "_blank"} "Mapbox"]
-   [Map (merge map-default-ops opts)
+   [Map (merge map-default-ops (dissoc opts :responsive-height?))
     [DefaultLayers]
     content]])
 

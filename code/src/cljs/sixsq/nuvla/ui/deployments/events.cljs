@@ -160,6 +160,26 @@
   (fn [db _]
     (assoc db ::spec/bulk-update-modal nil)))
 
+(reg-event-db
+  ::open-modal-bulk-stop
+  (fn [db]
+    (assoc db ::spec/bulk-stop-modal true)))
+
+(reg-event-db
+  ::close-modal-bulk-stop
+  (fn [db _]
+    (assoc db ::spec/bulk-stop-modal false)))
+
+(reg-event-db
+  ::open-modal-bulk-delete
+  (fn [db]
+    (assoc db ::spec/bulk-delete-modal true)))
+
+(reg-event-db
+  ::close-modal-bulk-delete
+  (fn [db _]
+    (assoc db ::spec/bulk-delete-modal false)))
+
 (reg-event-fx
   ::bulk-update-params
   (fn [{db :db}]

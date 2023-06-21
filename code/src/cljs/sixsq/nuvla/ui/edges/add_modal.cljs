@@ -22,6 +22,7 @@
 
 (def usb-doc-url "https://docs.nuvla.io/nuvlaedge/installation/install-with-usb-stick/")
 (def compose-doc-url "https://docs.nuvla.io/nuvlaedge/installation/install-with-compose-files/")
+(def k8s-doc-url "https://docs.nuvla.io/nuvlaedge/installation/install-with-helm/")
 
 (def nb-asset->k8s-setting
   {"bluetooth" "peripheralManagerBluetooth=true"
@@ -196,7 +197,7 @@
                 [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]])]
 
            [:div {:style {:margin "20px 0px 0px 0px"}}
-            [NuvlaDocs tr compose-doc-url]]]]
+            [NuvlaDocs tr (if k8s-install? k8s-doc-url compose-doc-url)]]]]
 
          [ui/ModalActions
           [ui/Button {:positive true

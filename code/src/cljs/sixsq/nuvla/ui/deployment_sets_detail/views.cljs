@@ -345,20 +345,20 @@
    [ui/TableCell {:width 6}
     [TargetsSet i apps-set (not summary-page)]]])
 
-(defn CreateStartButton
+(defn MenuStartCreate
   []
   (let [disabled? @(subscribe [::subs/create-start-disabled?])
-        on-click  #(dispatch [::events/create-start %])]
-    [ui/ButtonGroup {:floated  "right"
-                     :positive true}
-     [ui/Button {:content  "Create"
-                 :disabled disabled?
-                 :on-click (partial on-click false)}]
-     [ui/ButtonOr]
-     [ui/Button {:icon     "play"
-                 :content  "Start"
-                 :disabled disabled?
-                 :on-click (partial on-click true)}]]))
+        on-click  #(dispatch [::events/create-start %])
+        opts {:disabled disabled?
+              :on-click (partial on-click true)}]
+    [ui/Menu
+     [ui/MenuItem {:disabled disabled?
+                   :on-click (partial on-click false)}
+      [icons/PlayIcon]
+      "Create"]
+     [ui/MenuItem {:disabled disabled?
+                   :on-click (partial on-click true)}
+      "Start"]]))
 
 (defn AppsSets
   [{:keys [summary-page]
@@ -533,10 +533,9 @@
 
 (defn Summary
   []
-  [ui/Segment (merge style/basic {:clearing true})
-   [AppsSets {:summary-page true}]
-   [CreateStartButton]]
-  )
+  [:<>
+   [MenuStartCreate]
+   [AppsSets {:summary-page true}]])
 
 (defn StepDescription
   [description]

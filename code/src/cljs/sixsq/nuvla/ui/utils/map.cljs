@@ -45,12 +45,13 @@
 
 (defn DefaultLayers
   []
-  (let [access-token (subscribe [::main-subs/config :mapbox-access-token])]
+  (let [access-token (subscribe [::main-subs/config :mapbox-access-token])
+        dev?         (str/blank? @access-token)]
     [LayersControl {:position "topright"}
      ;; don't optimize, @access-token with :<>, will break UI with funtion removeLayer not defined
      (when @access-token
        [BaseLayer {:name    "Light"
-                   :checked (not config/debug?)}
+                   :checked (not dev?)}
         [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
                     :attribution attributions}]])
      (when @access-token
@@ -61,9 +62,9 @@
        [BaseLayer {:name "Satellite"}
         [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
                     :attribution attributions}]])
-     (when config/debug?
+     (when dev?
        [BaseLayer {:name    "Light cartodb dev"
-                   :checked config/debug?}
+                   :checked dev?}
         [TileLayer {:url         "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
                     :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>, &copy; <a href=\"https://carto.com/attributions\">Carto</a>"}]])]))
 

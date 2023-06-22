@@ -1,13 +1,12 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-env-variables
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.credentials.events :as creds-events]
-            [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 
@@ -31,73 +30,32 @@
      [ui/TableCell {:collapsing true} (@tr [:env-variables])]
      [ui/TableCell [:div [:span description]]]]))
 
-
-(defn CredentialsDropdown
-  [_env-value _index _deployment _credentials]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [env-value index deployment credentials]
-      [ui/Dropdown
-       {:clearable   true
-        :selection   true
-        :fluid       true
-        :value       env-value
-        :placeholder (@tr [:select-credential])
-        :on-change   (ui-callback/value
-                       #(dispatch [::events/set-deployment (assoc-in
-                                                             @deployment
-                                                             [:module :content
-                                                              :environmental-variables
-                                                              index :value] %)]))
-        :options     (map (fn [{id :id, name :name}]
-                            {:key id, :value id, :text name})
-                          credentials)}])))
-
-
-(def cred-env-var-map
-  {"S3_CRED"  "infrastructure-service-minio"
-   "GPG_CRED" "gpg-key"})
-
-
-(defn is-cred-env-var?
-  [env-var-name]
-  (contains? (set (keys cred-env-var-map)) env-var-name))
-
-
-(defn filter-creds
-  [env-name creds]
-  (when (is-cred-env-var? env-name)
-    (filter #(when (= (get cred-env-var-map env-name) (:subtype %)) %) creds)))
-
-
 (defn AsFormInput
   [index {env-name        :name
           env-description :description
           env-value       :value
           env-required    :required}]
   (let [deployment     (subscribe [::subs/deployment])
-        creds          (subscribe [::creds-subs/credentials])
-        selected-creds (filter-creds env-name @creds)]
+        on-change #(dispatch [::events/set-deployment (assoc-in
+                                                        @deployment
+                                                        [:module :content
+                                                         :environmental-variables
+                                                         index :value] %)])]
     [ui/FormField {:required env-required}
      [:label env-name ff/nbsp (ff/help-popup env-description)]
-     (if selected-creds
-       [CredentialsDropdown env-value index deployment selected-creds]
+     (if (module-plugin/is-cred-env-var? env-name)
+       [module-plugin/EnvCredential env-name env-value on-change]
        [ui/Input
         {:type          "text"
          :name          env-name
          :default-value (or env-value "")
          :read-only     false
          :fluid         true
-         :on-change     (ui-callback/input-callback
-                          #(dispatch [::events/set-deployment (assoc-in
-                                                                @deployment
-                                                                [:module :content
-                                                                 :environmental-variables
-                                                                 index :value] %)]))}])]))
+         :on-change     (ui-callback/input-callback on-change)}])]))
 
 
 (defmethod utils/step-content :env-variables
   []
-  (dispatch [::creds-events/get-credentials])
   (let [env-variables (subscribe [::subs/env-variables])]
     [ui/Segment
      [ui/Form

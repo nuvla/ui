@@ -328,6 +328,7 @@
     {::cimi-api-fx/search [:credential
                            {:filter  (str "subtype='" subtype "'")
                             :orderby "name:asc, id:asc"
+                            :select "id, name"
                             :last    10000}
                            #(setter (map (fn [{id :id, name :name}]
                                            {:key id, :value id, :text name})

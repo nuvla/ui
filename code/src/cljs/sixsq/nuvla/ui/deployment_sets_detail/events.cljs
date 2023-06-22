@@ -167,15 +167,6 @@
     (let [id (:id deployment-set)]
       {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate routes/deployment-sets])]})))
 
-(defn changed-env-vars
-  [application env-vars]
-  (keep (fn [{:keys [::module-plugin/new-value :value :name]}]
-          (when (some-> new-value (not= value))
-            {:name        name
-             :value       new-value
-             :application application})
-          ) env-vars))
-
 (defn application-overwrites
   [db i {:keys [id version] :as _application}]
   (let [db-path     [::spec/apps-sets i]

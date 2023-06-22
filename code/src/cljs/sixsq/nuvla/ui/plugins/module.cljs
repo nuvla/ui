@@ -251,7 +251,8 @@
 (defn- changed-env-vars
   [env-vars]
   (keep (fn [{:keys [::new-value :value :name]}]
-          (when (some-> new-value (not= value))
+          (when (and (not (str/blank? new-value))
+                     (not= new-value value))
             {:name  name
              :value new-value})
           ) env-vars))
@@ -308,23 +309,70 @@
   (fn [[versions-indexed tr]]
     (apps-utils/versions-options versions-indexed tr)))
 
+(def cred-env-var-map
+  {"S3_CRED"  "infrastructure-service-minio"
+   "GPG_CRED" "gpg-key"})
+
+(defn is-cred-env-var?
+  [env-var-name]
+  (contains? (set (keys cred-env-var-map)) env-var-name))
+
+(defn filter-creds
+  [env-name creds]
+  (when (is-cred-env-var? env-name)
+    (filter #(when (= (get cred-env-var-map env-name) (:subtype %)) %) creds)))
+
+(reg-event-fx
+  ::get-credentials-opts
+  (fn [_ [_ subtype setter]]
+    {::cimi-api-fx/search [:credential
+                           {:filter  (str "subtype='" subtype "'")
+                            :orderby "name:asc, id:asc"
+                            :last    10000}
+                           #(setter (map (fn [{id :id, name :name}]
+                                           {:key id, :value id, :text name})
+                                         (:resources %)))]}))
+
+(defn EnvCredential
+  [env-name _value _on-change]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        options (r/atom [])
+        subtype (get cred-env-var-map env-name)]
+    (dispatch [::get-credentials-opts subtype #(reset! options %)])
+    (fn [_env-name value on-change]
+      [ui/Dropdown
+       {:clearable   true
+        :selection   true
+        :fluid       true
+        :value       value
+        :placeholder (@tr [:select-credential])
+        :on-change   (ui-callback/value on-change)
+        :options     @options}])))
+
+(defn EnvVarInput
+  [db-path href read-only? i {env-name  :name
+                              env-value :value}]
+  (let [updated-env-value @(subscribe [::module-env-value db-path href i])
+        value             (or updated-env-value env-value "")
+        on-change         #(dispatch [::update-env db-path href i %])]
+    (if (is-cred-env-var? env-name)
+      [EnvCredential env-name value on-change]
+      [ui/Input
+       {:type          "text"
+        :name          env-name
+        :default-value value
+        :read-only     read-only?
+        :fluid         true
+        :on-change     (ui-callback/input-callback on-change)}])))
+
 (defn AsFormInput
   [db-path href read-only?
-   index {env-name        :name
-          env-description :description
-          env-value       :value
-          env-required    :required}]
-  (let [updated-env-value @(subscribe [::module-env-value db-path href index])]
-    [ui/FormField {:required env-required}
-     [:label env-name ff/nbsp (ff/help-popup env-description)]
-     [ui/Input
-      {:type          "text"
-       :name          env-name
-       :default-value (or updated-env-value env-value "")
-       :read-only     read-only?
-       :fluid         true
-       :on-change     (ui-callback/input-callback
-                        #(dispatch [::update-env db-path href index %]))}]]))
+   i {env-name        :name
+      env-description :description
+      env-required    :required :as env-variable}]
+  [ui/FormField {:required env-required}
+   [:label env-name ff/nbsp (ff/help-popup env-description)]
+   [EnvVarInput db-path href read-only? i env-variable]])
 
 (defn EnvVariables
   [{:keys [db-path href change-event read-only?]

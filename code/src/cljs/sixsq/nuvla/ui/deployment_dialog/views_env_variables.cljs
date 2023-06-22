@@ -41,7 +41,7 @@
         :selection   true
         :fluid       true
         :value       env-value
-        :placeholder (@tr [:credentials-select-related-infra])
+        :placeholder (@tr [:select-credential])
         :on-change   (ui-callback/value
                        #(dispatch [::events/set-deployment (assoc-in
                                                              @deployment

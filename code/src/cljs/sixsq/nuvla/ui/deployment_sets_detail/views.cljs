@@ -21,6 +21,9 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.events :as routes-events]
+            [sixsq.nuvla.ui.routing.utils :as routes-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -173,7 +176,7 @@
   []
   (let [deployment-set (subscribe [::subs/deployment-set])]
     (fn []
-      (let [{:keys [tags]} @deployment-set]
+      (let [{:keys [id tags]} @deployment-set]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
@@ -184,8 +187,9 @@
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
-             #(dispatch [::tab/change-tab {:db-path [::spec/tab]
-                                           :tab-key :deployments}])]]]
+             #(dispatch [::routes-events/navigate
+                         (routes-utils/pathify [(routes-utils/name->href routes/deployments)
+                                                (str "?deployment=deployment-set='" id "'")])])]]]
 
           (when (seq tags)
             [ui/GridColumn
@@ -206,18 +210,6 @@
                   (events-plugin/events-section
                     {:db-path [::spec/events]
                      :href    (:id @deployment-set)})
-
-                  {:menuItem {:key     :configure-sets-detail
-                              :icon    "configure"
-                              :content (str/capitalize (tr [:configure]))}
-                   :render   #(r/as-element [:h1 "configure same as new"])}
-                  {:menuItem {:content (str/capitalize (tr [:deployments]))
-                              :key     :deployments
-                              :icon    #(r/as-element [icons/RocketIcon])}
-                   :render   #(r/as-element [deployments-views/DeploymentTable
-                                             {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
-                                              :no-actions  true
-                                              :empty-msg   (tr [:empty-deployemnt-msg])}])}
                   (job-views/jobs-section)
                   (acl/TabAcls {:e          deployment-set
                                 :can-edit?  can-edit?
@@ -349,8 +341,8 @@
   []
   (let [disabled? @(subscribe [::subs/create-start-disabled?])
         on-click  #(dispatch [::events/create-start %])
-        opts {:disabled disabled?
-              :on-click (partial on-click true)}]
+        opts      {:disabled disabled?
+                   :on-click (partial on-click true)}]
     [ui/Menu
      [ui/MenuItem {:disabled disabled?
                    :on-click (partial on-click false)}

@@ -13,9 +13,9 @@
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
-                                                  get-stored-db-value-from-query-param] :as route-utils]
+                                                  get-stored-db-value-from-query-param]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.session.utils :refer [get-active-claim] :as session-utils]
+            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -179,8 +179,7 @@
 
 (reg-event-fx
   ::get-nuvlabox-locations
-  (fn [{db :db} _]
-    (js/console.error "get-nuvlabox-locations")
+  (fn [{db :db}]
     {::cimi-api-fx/search [:nuvlabox
                            {:first  1
                             :last   10000

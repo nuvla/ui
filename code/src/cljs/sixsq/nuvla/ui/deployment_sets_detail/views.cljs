@@ -21,6 +21,9 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.events :as routes-events]
+            [sixsq.nuvla.ui.routing.utils :as routes-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -173,7 +176,7 @@
   []
   (let [deployment-set (subscribe [::subs/deployment-set])]
     (fn []
-      (let [{:keys [tags]} @deployment-set]
+      (let [{:keys [id tags]} @deployment-set]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
@@ -184,8 +187,9 @@
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
-             #(dispatch [::tab/change-tab {:db-path [::spec/tab]
-                                           :tab-key :deployments}])]]]
+             #(dispatch [::routes-events/navigate
+                         (routes-utils/pathify [(routes-utils/name->href routes/deployments)
+                                                (str "?deployment=deployment-set='" id "'")])])]]]
 
           (when (seq tags)
             [ui/GridColumn
@@ -206,18 +210,6 @@
                   (events-plugin/events-section
                     {:db-path [::spec/events]
                      :href    (:id @deployment-set)})
-
-                  {:menuItem {:key     :configure-sets-detail
-                              :icon    "configure"
-                              :content (str/capitalize (tr [:configure]))}
-                   :render   #(r/as-element [:h1 "configure same as new"])}
-                  {:menuItem {:content (str/capitalize (tr [:deployments]))
-                              :key     :deployments
-                              :icon    #(r/as-element [icons/RocketIcon])}
-                   :render   #(r/as-element [deployments-views/DeploymentTable
-                                             {:fetch-event [::events/get-deployments-for-deployment-sets (:id @deployment-set)]
-                                              :no-actions  true
-                                              :empty-msg   (tr [:empty-deployemnt-msg])}])}
                   (job-views/jobs-section)
                   (acl/TabAcls {:e          deployment-set
                                 :can-edit?  can-edit?
@@ -284,7 +276,7 @@
     [ui/Modal
      {:close-icon true
       :trigger    (r/as-element
-                    [ui/Icon {:class icons/i-plus-full
+                    [ui/Icon {:class    icons/i-plus-full
                               :color    "green"
                               :on-click on-open}])
       :header     "Select targets sets"
@@ -310,7 +302,7 @@
    [TargetIcon subtype]
    [ui/ListContent (or name target-id) " "
     (when on-delete
-      [icons/CloseIcon {:color "red" :link true
+      [icons/CloseIcon {:color    "red" :link true
                         :on-click #(on-delete target-id)}])]])
 
 
@@ -345,20 +337,20 @@
    [ui/TableCell {:width 6}
     [TargetsSet i apps-set (not summary-page)]]])
 
-(defn CreateStartButton
+(defn MenuBarNew
   []
-  (let [disabled? @(subscribe [::subs/create-start-disabled?])
-        on-click  #(dispatch [::events/create-start %])]
-    [ui/ButtonGroup {:floated  "right"
-                     :positive true}
-     [ui/Button {:content  "Create"
-                 :disabled disabled?
-                 :on-click (partial on-click false)}]
-     [ui/ButtonOr]
-     [ui/Button {:icon     "play"
-                 :content  "Start"
-                 :disabled disabled?
-                 :on-click (partial on-click true)}]]))
+  (let [tr        @(subscribe [::i18n-subs/tr])
+        disabled? @(subscribe [::subs/create-start-disabled?])
+        on-click  #(dispatch [::events/save-start %])]
+    [ui/Menu
+     [ui/MenuItem {:disabled disabled?
+                   :on-click (partial on-click false)}
+      [icons/FloppyIcon]
+      (str/capitalize (tr [:save]))]
+     [ui/MenuItem {:disabled disabled?
+                   :on-click (partial on-click true)}
+      [icons/PlayIcon]
+      (str/capitalize (tr [:start]))]]))
 
 (defn AppsSets
   [{:keys [summary-page]
@@ -421,40 +413,41 @@
   [txt]
   [:label [:b txt]])
 
-(defn Licenses
+(defn EULA
   []
   (let [tr       @(subscribe [::i18n-subs/tr])
         licenses @(subscribe [::subs/deployment-set-licenses])
         checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
-    (if (seq licenses)
-      [ui/Segment
-       [ui/ListSA {:divided true}
-        (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
-          ^{:key (str "accept-eula-" license)}
-          [ui/ListItem
-           [ui/ListIcon {:name "book"}]
-           [ui/ListContent
-            [ui/ListHeader {:as     :a
-                            :target "_blank"
-                            :href   url
-                            } name]
-            (when description
-              [ui/ListDescription description])
-            [ui/ListList
-             (for [{i            :i
-                    {:keys [id]} :application} sets-apps-targets]
-               ^{:key (str "license-" i "-" id)}
-               [module-plugin/ModuleNameIcon
-                {:db-path [::spec/apps-sets i]
-                 :href    id}])]]])]
-       [ui/Form
-        [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
-                          :required  true
-                          :checked   checked?
-                          :on-change (ui-callback/checked
-                                       #(dispatch [::events/set
-                                                   ::spec/licenses-accepted? %]))}]]]
-      [ui/Message (tr [:eula-not-defined])])))
+    [ui/Segment {:attached true}
+     (if (seq licenses)
+       [:<>
+        [ui/ListSA {:divided true}
+         (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
+           ^{:key (str "accept-eula-" license)}
+           [ui/ListItem
+            [ui/ListIcon {:name "book"}]
+            [ui/ListContent
+             [ui/ListHeader {:as     :a
+                             :target "_blank"
+                             :href   url
+                             } name]
+             (when description
+               [ui/ListDescription description])
+             [ui/ListList
+              (for [{i            :i
+                     {:keys [id]} :application} sets-apps-targets]
+                ^{:key (str "license-" i "-" id)}
+                [module-plugin/ModuleNameIcon
+                 {:db-path [::spec/apps-sets i]
+                  :href    id}])]]])]
+        [ui/Form
+         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
+                           :required  true
+                           :checked   checked?
+                           :on-change (ui-callback/checked
+                                        #(dispatch [::events/set
+                                                    ::spec/licenses-accepted? %]))}]]]
+       [ui/Message (tr [:eula-not-defined])])]))
 
 (defn Prices
   []
@@ -462,7 +455,7 @@
         apps-targets-total-price @(subscribe [::subs/deployment-set-apps-targets-total-price])
         checked?                 @(subscribe [::subs/get ::spec/prices-accepted?])
         dep-set-total-price      @(subscribe [::subs/deployment-set-total-price])]
-    [ui/Segment
+    [ui/Segment {:attached true}
      (if (seq apps-targets-total-price)
        [:<>
         [ui/Table
@@ -498,25 +491,43 @@
                                                     ::spec/prices-accepted? %]))}]]]
        [ui/Message (tr [:free-app])])]))
 
-(defn ConfigureSets
+(defn EulaPrices
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:div
+     [ui/Header {:as :h5 :attached "top"}
+      (@tr [:eula-full])]
+     [EULA]
+     [ui/Header {:as :h5 :attached "top"}
+      (str/capitalize (@tr [:total-price]))]
+     [Prices]]))
+
+(defn SelectTargetsConfigureSets
   []
   [ui/Tab
    {:menu  {:secondary true
             :pointing  true}
     :panes (map-indexed
-             (fn [i {:keys [name applications]}]
+             (fn [i {:keys [name applications] :as apps-set}]
                {:menuItem {:content (str (inc i) " | " name)
                            :key     (keyword (str "configure-set-" i))}
                 :render   #(r/as-element
-                             [ConfigureApps i applications])}
+                             [:div
+                              [ui/Header {:as :h5 :attached "top"}
+                               "Targets sets"]
+                              [ui/Segment {:attached true}
+                               [TargetsSet i apps-set true]]
+                              [ui/Header {:as :h5 :attached "top"}
+                               "Configure"]
+                              [ui/Segment {:attached true}
+                               [ConfigureApps i applications]]])}
                ) @(subscribe [::subs/applications-sets]))}])
 
 (defn Summary
   []
-  [ui/Segment (merge style/basic {:clearing true})
-   [AppsSets {:summary-page true}]
-   [CreateStartButton]]
-  )
+  [:<>
+   [MenuBarNew]
+   [AppsSets {:summary-page true}]])
 
 (defn StepDescription
   [description]
@@ -528,32 +539,25 @@
   []
   (let [tr    (subscribe [::i18n-subs/tr])
         items [{:key         :name
-                :icon        "bullseye"
+                :icon        icons/i-bullseye
                 :content     [NameDescriptionStep]
                 :title       "New deployment set"
-                :description "Give it a name"}
-               {:key         :select-apps-targets
-                :icon        "list"
-                :content     [AppsSets]
+                :description "Give it a name"
+                :subs        ::subs/step-name-complete?}
+               {:key         :select-targets-and-configure-sets
+                :icon        icons/i-list
+                :content     [SelectTargetsConfigureSets]
                 :title       "Apps / Targets"
-                :description (@tr [:select-applications-targets])}
-               {:key         :configure-sets
-                :icon        "configure"
-                :content     [ConfigureSets]
-                :title       (str/capitalize (@tr [:configure]))
-                :description (@tr [:configure-applications])}
-               {:key         :eula
-                :icon        "book"
-                :content     [Licenses]
-                :title       (@tr [:eula])
-                :description (@tr [:eula-full])}
-               {:key         :price
-                :icon        "eur"
-                :content     [Prices]
-                :title       (str/capitalize (@tr [:price]))
-                :description (@tr [:total-price])}
+                :description (@tr [:select-targets-and-configure-applications])
+                :subs        ::subs/step-apps-targets-complete?}
+               {:key         :eula-price
+                :icon        icons/i-book
+                :content     [EulaPrices]
+                :title       (@tr [:eula-price])
+                :description (@tr [:eula-and-total-price])
+                :subs        ::subs/step-licenses-prices-complete?}
                {:key         :summary
-                :icon        "info"
+                :icon        icons/i-info
                 :content     [Summary]
                 :title       (str/capitalize (@tr [:summary]))
                 :description (@tr [:overall-summary])}]]
@@ -566,10 +570,13 @@
          :size    :mini
          :style   {:flex-wrap "wrap"}
          :fluid   true
-         :items   (mapv #(assoc %
-                           :description
-                           (r/as-element
-                             [StepDescription (:description %)]))
+         :items   (mapv (fn [{:keys [description icon subs] :as item}]
+                          (assoc item
+                            :description
+                            (r/as-element
+                              [StepDescription description])
+                            :icon (r/as-element [icons/Icon {:name icon}])
+                            :completed (when subs @(subscribe [subs]))))
                         items)}]])))
 
 (defn DeploymentSet

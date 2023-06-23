@@ -652,3 +652,5 @@
   [I opts i-spinner])
 
 (def i-lock "fal fa-lock")
+
+(def i-sync "fal fa-sync")

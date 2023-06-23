@@ -32,7 +32,8 @@
             <configuration>
               <executable>npm</executable>
               <arguments>
-                <argument>install</argument>
+                <argument>ci</argument>
+                <argument>--legacy-peer-deps</argument>
               </arguments>
             </configuration>
           </execution>

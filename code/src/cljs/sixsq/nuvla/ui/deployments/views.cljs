@@ -28,7 +28,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 
@@ -168,8 +169,10 @@
    {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
-        url     @(subscribe [::subs/deployment-url id primary-url-pattern])
-        creator (subscribe [::session-subs/resolve-user created-by])]
+        url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
+        creator               (subscribe [::session-subs/resolve-user created-by])
+        edge-id               (:nuvlabox deployment)
+        edge-status            (subscribe [::subs/deployment-edges-stati edge-id])]
     [:<>
      [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
@@ -196,7 +199,8 @@
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
-      [utils/CloudNuvlaEdgeLink deployment]]
+      [utils/CloudNuvlaEdgeLink deployment
+       :color (when edge-id (vc/status->color @edge-status))]]
      (when show-options?
        [ui/TableCell
         (cond

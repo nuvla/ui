@@ -326,6 +326,27 @@ div.search.dropdown > input {
   width: 100%;
 }
 
+.mapbox-map-responsive-height {
+  position: relative;
+  width: 100%;
+}
+
+.leaflet-container {
+  height: 500px;
+}
+
+@media (min-width: 1040px) {
+  .mapbox-map-responsive-height {
+    position: relative;
+    width: 100%;
+    height: 650px;
+    z-index: 0;
+  }
+  .mapbox-map-responsive-height .leaflet-container {
+    height: 100%;
+  }
+}
+
 .mapbox-wordmark {
   position: absolute;
   display: block;

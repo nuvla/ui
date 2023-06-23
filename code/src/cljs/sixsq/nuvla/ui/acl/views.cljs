@@ -359,7 +359,7 @@
               some-groups?    (some #(str/starts-with? % "group/") principals-set)
 
               icon-principals (cond
-                                (and owners (= (count owners) 1) (empty? principals-set)) "lock"
+                                (and owners (= (count owners) 1) (empty? principals-set)) icons/i-lock
                                 (contains? principals-set "group/nuvla-anon") icons/i-world
                                 some-groups? icons/i-users
                                 (not some-groups?) icons/i-user
@@ -376,7 +376,7 @@
                        :basic    true
                        :on-click #(accordion-utils/toggle active?)}
             [:div
-             [ui/Popup {:trigger  (r/as-element [icons/Icon {:name icon-principals}])
+             [ui/Popup {:trigger  (r/as-element [ui/Icon {:class icon-principals}])
                         :position "bottom center"
                         :content  (@tr [:access-rights])
                         :style    {:margin 0}}]

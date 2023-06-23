@@ -3,10 +3,10 @@
    namespace has no real functionality; it just keeps Cursive from complaining
    about undefined symbols."
   (:require ["@uiw/react-codemirror" :as code-mirror]
-            ["qrcode.react" :as qrcode]
+            ["qrcode.react" :refer (QRCodeCanvas)]
             ["react-copy-to-clipboard" :as copy-to-clipboard]
             ["react-datepicker" :as date-picker]
-            ["react-diff-viewer" :as react-diff-viewer]
+            ["react-diff-viewer-continued" :as react-diff-viewer]
             ["react-markdown" :as react-markdown]
             ["semantic-ui-react" :as semantic]
             [reagent.core :as r]))
@@ -206,4 +206,4 @@
 ;;
 ;; QR Code
 ;;
-(def QRCode (r/adapt-react-class qrcode))
+(def QRCode (r/adapt-react-class QRCodeCanvas))

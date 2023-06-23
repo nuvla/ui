@@ -28,7 +28,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 
@@ -62,13 +63,10 @@
   (let [tr              (subscribe [::i18n-subs/tr])
         info            (subscribe [::subs/bulk-update-modal])
         versions        (subscribe [::deployments-detail-subs/module-versions])
+        version-options (subscribe [::deployments-detail-subs/module-versions-options])
         selected-module (r/atom nil)]
     (fn []
-      (let [options     (map (fn [[idx {:keys [href commit]}]]
-                               {:key   idx,
-                                :value href
-                                :text  (str "v" idx " | " commit)}) @versions)
-            module-href (:module-href @info)]
+      (let [module-href (:module-href @info)]
         [ui/Modal {:open       (some? @info)
                    :close-icon true
                    :on-close   #(dispatch [::events/close-modal-bulk-update])}
@@ -94,7 +92,7 @@
                                           (dep-diag-versions/get-version-id @versions)
                                           (str module-href "_"))))
              :fluid       true
-             :options     options}]]]
+             :options     @version-options}]]]
          [ui/ModalActions
           [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
                        :positive true
@@ -107,7 +105,7 @@
 (defn BulkActionModal
   [{:keys [on-confirm trigger open? header danger-msg button-text close-event]}]
   [uix/ModalDanger
-   {:on-confirm   (fn [] (on-confirm))
+   {:on-confirm  (fn [] (on-confirm))
     :open        open?
     :on-close    (fn [] (dispatch close-event))
     :trigger     (r/as-element
@@ -126,15 +124,15 @@
       [BulkActionModal
        {:open?       @open?
         :close-event [::events/close-modal-bulk-stop]
-        :on-confirm   (fn []
-                        (dispatch [::events/bulk-operation "bulk-stop" nil [::events/close-modal-bulk-stop]]))
+        :on-confirm  (fn []
+                       (dispatch [::events/bulk-operation "bulk-stop" nil [::events/close-modal-bulk-stop]]))
         :header      (@tr [:bulk-deployment-stop])
         :danger-msg  (@tr [:danger-action-cannot-be-undone])
         :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}])))
 
 (defn BulkForceDeleteModal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr    (subscribe [::i18n-subs/tr])
         open? (subscribe [::subs/bulk-delete-modal])]
     (fn []
       [BulkActionModal
@@ -171,8 +169,10 @@
    {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
-        url     @(subscribe [::subs/deployment-url id primary-url-pattern])
-        creator (subscribe [::session-subs/resolve-user created-by])]
+        url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
+        creator               (subscribe [::session-subs/resolve-user created-by])
+        edge-id               (:nuvlabox deployment)
+        edge-status            (subscribe [::subs/deployment-edges-stati edge-id])]
     [:<>
      [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
@@ -199,7 +199,8 @@
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
-      [utils/CloudNuvlaEdgeLink deployment]]
+      [utils/CloudNuvlaEdgeLink deployment
+       :color (when edge-id (vc/status->color @edge-status))]]
      (when show-options?
        [ui/TableCell
         (cond
@@ -254,9 +255,9 @@
                                     {:bulk-actions        [{:event [::events/bulk-update-params]
                                                             :name  (str/capitalize (@tr [:update]))}
                                                            {:event [::events/open-modal-bulk-stop]
-                                                            :name (str/capitalize (@tr [:stop]))}
+                                                            :name  (str/capitalize (@tr [:stop]))}
                                                            {:event [::events/open-modal-bulk-delete]
-                                                            :name (str/capitalize (@tr [:delete]))}
+                                                            :name  (str/capitalize (@tr [:delete]))}
                                                            trigger]
                                      :select-db-path      [::spec/select]
                                      :total-count-sub-key [::subs/deployments-count]

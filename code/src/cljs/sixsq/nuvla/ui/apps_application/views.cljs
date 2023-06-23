@@ -382,7 +382,7 @@
         vendor    (subscribe [::profile-subs/vendor])]
     (fn []
       [:div {:class :uix-apps-details-details}
-       [:h4  {:class :tab-app-detail}
+       [:h4 {:class :tab-app-detail}
         [apps-views-detail/PricingTitle]]
        (if (or (and @editable? @vendor) (some? @price))
          [apps-views-detail/Pricing]
@@ -436,29 +436,14 @@
                      :align          :middle}]])))
 
 
-(defn subtype->pretty
-  [subtype]
-  (condp = subtype
-    apps-utils/subtype-application "Docker"
-    apps-utils/subtype-application-k8s "Kubernetes"
-    "Docker"))
-
-
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
-        module-subtype (subscribe [::apps-subs/module-subtype])
-        active-tab     (sub-apps-tab)
-        editable?      (subscribe [::apps-subs/editable?])]
+        active-tab     (sub-apps-tab)]
     @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
      {:extras           [^{:key "module_subtype"}
-                         [ui/TableRow
-                          [ui/TableCell {:collapsing true
-                                         :style      {:padding-bottom 8}} "subtype"]
-                          [ui/TableCell {:style
-                                         {:padding-left (when @editable? apps-views-detail/edit-cell-left-padding)}}
-                           (subtype->pretty @module-subtype)]]
+                         [apps-views-detail/SubtypeRow]
                          ^{:key "nuvla-access"}
                          [ui/TableRow
                           [ui/TableCell {:collapsing true
@@ -552,8 +537,8 @@
     (dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
-      (let [name   (get @module-common ::apps-spec/name)
-            panes  (module-detail-panes)]
+      (let [name  (get @module-common ::apps-spec/name)
+            panes (module-detail-panes)]
         [ui/Container {:fluid true
                        :class :uix-apps-details}
          [uix/PageHeader icons/i-layer-group name :inline true]
@@ -562,7 +547,7 @@
           {:db-path                 [::apps-spec/tab]
            :menu                    {:secondary true
                                      :pointing  true
-                                     :style     {:display       "flex"
+                                     :style     {:display        "flex"
                                                  :flex-direction "row"
                                                  :flex-wrap      "wrap"}
                                      :class     :uix-tab-nav}

@@ -7,11 +7,12 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.routing.utils :refer [str-pathify name->href]]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def change-event-module-version ::change-event-module-version)
@@ -250,7 +251,8 @@
 (defn- changed-env-vars
   [env-vars]
   (keep (fn [{:keys [::new-value :value :name]}]
-          (when (some-> new-value (not= value))
+          (when (and (not (str/blank? new-value))
+                     (not= new-value value))
             {:name  name
              :value new-value})
           ) env-vars))
@@ -305,30 +307,73 @@
     [(subscribe [::module-versions-indexed db-path href])
      (subscribe [::i18n-subs/tr])])
   (fn [[versions-indexed tr]]
-    (map (fn [[idx {:keys [href commit published]}]]
-           {:key   idx
-            :value href
-            :text  (str "v" idx " | " (general-utils/truncate commit 70)
-                        (when (true? published) (str " | " (tr [:published]))))
-            :icon  (when published apps-utils/publish-icon)})
-         versions-indexed)))
+    (apps-utils/versions-options versions-indexed tr)))
+
+(def cred-env-var-map
+  {"S3_CRED"  "infrastructure-service-minio"
+   "GPG_CRED" "gpg-key"})
+
+(defn is-cred-env-var?
+  [env-var-name]
+  (contains? (set (keys cred-env-var-map)) env-var-name))
+
+(defn filter-creds
+  [env-name creds]
+  (when (is-cred-env-var? env-name)
+    (filter #(when (= (get cred-env-var-map env-name) (:subtype %)) %) creds)))
+
+(reg-event-fx
+  ::get-credentials-opts
+  (fn [_ [_ subtype setter]]
+    {::cimi-api-fx/search [:credential
+                           {:filter  (str "subtype='" subtype "'")
+                            :orderby "name:asc, id:asc"
+                            :select "id, name"
+                            :last    10000}
+                           #(setter (map (fn [{id :id, name :name}]
+                                           {:key id, :value id, :text name})
+                                         (:resources %)))]}))
+
+(defn EnvCredential
+  [env-name _value _on-change]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        options (r/atom [])
+        subtype (get cred-env-var-map env-name)]
+    (dispatch [::get-credentials-opts subtype #(reset! options %)])
+    (fn [_env-name value on-change]
+      [ui/Dropdown
+       {:clearable   true
+        :selection   true
+        :fluid       true
+        :value       value
+        :placeholder (@tr [:select-credential])
+        :on-change   (ui-callback/value on-change)
+        :options     @options}])))
+
+(defn EnvVarInput
+  [db-path href read-only? i {env-name  :name
+                              env-value :value}]
+  (let [updated-env-value @(subscribe [::module-env-value db-path href i])
+        value             (or updated-env-value env-value "")
+        on-change         #(dispatch [::update-env db-path href i %])]
+    (if (is-cred-env-var? env-name)
+      [EnvCredential env-name value on-change]
+      [ui/Input
+       {:type          "text"
+        :name          env-name
+        :default-value value
+        :read-only     read-only?
+        :fluid         true
+        :on-change     (ui-callback/input-callback on-change)}])))
+
 (defn AsFormInput
   [db-path href read-only?
-   index {env-name        :name
-          env-description :description
-          env-value       :value
-          env-required    :required}]
-  (let [updated-env-value @(subscribe [::module-env-value db-path href index])]
-    [ui/FormField {:required env-required}
-     [:label env-name ff/nbsp (ff/help-popup env-description)]
-     [ui/Input
-      {:type          "text"
-       :name          env-name
-       :default-value (or updated-env-value env-value "")
-       :read-only     read-only?
-       :fluid         true
-       :on-change     (ui-callback/input-callback
-                        #(dispatch [::update-env db-path href index %]))}]]))
+   i {env-name        :name
+      env-description :description
+      env-required    :required :as env-variable}]
+  [ui/FormField {:required env-required}
+   [:label env-name ff/nbsp (ff/help-popup env-description)]
+   [EnvVarInput db-path href read-only? i env-variable]])
 
 (defn EnvVariables
   [{:keys [db-path href change-event read-only?]
@@ -392,19 +437,31 @@
          [DropdownContainerRegistry opts i private-registry])]
       [ui/Message "No container registries defined"])))
 
+(defn LinkToApp
+  [{:keys [db-path href children]
+    :as   _opts}]
+  (let [{:keys [path content]} @(subscribe [::module db-path href])
+        versions-indexed (subscribe [::module-versions-indexed db-path href])
+        version-id       (get-version-id @versions-indexed (:id content))]
+    [:a {:href   (str-pathify (name->href routes/apps)
+                              (str path "?version=" version-id))
+         :target "_blank"}
+     children]))
+
 (defn ModuleNameIcon
   [{:keys [db-path href children show-version?]
     :as   _opts}]
-  (let [{:keys [id path name subtype content]} @(subscribe [::module db-path href])
+  (let [{:keys [id name subtype content]} @(subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         version-id       (get-version-id @versions-indexed (:id content))
         label            (cond-> (or name id)
-                                 show-version? (str " v" version-id))
-        href             (str path "?version=" version-id)]
+                                 show-version? (str " v" version-id))]
     [ui/ListItem
      [apps-utils/SubtypeDockerK8sListIcon subtype]
      [ui/ListContent
-      [values/AsLink href :label label :page "apps"]
+      [LinkToApp {:db-path  db-path
+                  :href     href
+                  :children label}]
       children]]))
 
 (defn ModuleVersions

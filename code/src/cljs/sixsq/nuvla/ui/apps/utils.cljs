@@ -2,6 +2,7 @@
   sixsq.nuvla.ui.apps.utils
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
+            [reagent.core :as r]
             [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -36,18 +37,40 @@ For more information on how to format your app description using Markdown syntax
 
 ")
 
-(def projects-description-template  "# Project Description Placeholder
+(def projects-description-template "# Project Description Placeholder
 
 This is a generic placeholder that you should replace with your own project description.
 Be sure to provide a clear and concise overview of what this project contains (i.e. apps and/or sub-projects). If this is your root project (aka first level project), it's a good idea to introduce your organisation.
 
 For more information on how to format your app description using Markdown syntax, please see the [Basic Syntax Guide](https://www.markdownguide.org/basic-syntax/) and the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/).
 "
-)
+  )
+
+(def apps-sets-description-template "# Applications Sets Description Placeholder
+
+This is a generic placeholder that you should replace with your own app description.
+Be sure to provide a clear and concise overview of your app, its features, and its benefits.
+
+## Licenses
+Please include information about the licenses under which that software is distributed, including any third-party or
+open-source software used by your app.
+
+## Documentation
+You can also provide a link to your app's external documentation, which should include a comprehensive guide to getting
+started with your app, as well as detailed information on how to use its various features.
+Here is an [example link](https://example.com/docs) to external documentation.
+
+For more information on how to format your app description using Markdown syntax, please see the [Basic Syntax Guide](https://www.markdownguide.org/basic-syntax/) and the [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/).
+
+![App Screenshot](https://sos-ch-gva-2.exo.io/nuvla-images/bb-overview-blured.png)
+
+")
 
 (def subtype->descr-template
-  {subtype-application apps-description-template
-   subtype-project     projects-description-template})
+  {subtype-application       apps-description-template
+   subtype-application-k8s   apps-description-template
+   subtype-applications-sets apps-sets-description-template
+   subtype-project           projects-description-template})
 
 (defn descr-not-template?
   [module-subtype description]
@@ -64,7 +87,7 @@ For more information on how to format your app description using Markdown syntax
 (defn module-common-valid?
   [module-common module-subtype]
   (and (s/valid? ::spec/module-common module-common)
-    (description-valid? module-subtype (::spec/description module-common))))
+       (description-valid? module-subtype (::spec/description module-common))))
 
 (def publish-icon
   icons/i-circle-check)
@@ -426,3 +449,23 @@ For more information on how to format your app description using Markdown syntax
     (cond-> db
             reset? (update error-spec #(disj % key))
             set? (update error-spec #(conj % key)))))
+
+(defn versions-options
+  [versions-indexed tr]
+  (map (fn [[idx {:keys [href commit created published]}]]
+         {:key   (str href "-" idx)
+          :value href
+          :text  (r/as-element
+                   [:span
+                    (->> [(str "v" idx)
+                          (utils-general/truncate commit 70)
+                          created
+                          (when (true? published)
+                            [:<>
+                             [icons/Icon {:name publish-icon}]
+                             (tr [:published])])]
+                         (remove nil?)
+                         (interpose " | ")
+                         (cons :span)
+                         vec)])})
+       versions-indexed))

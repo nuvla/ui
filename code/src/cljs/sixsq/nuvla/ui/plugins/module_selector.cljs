@@ -184,8 +184,10 @@
                         [full-text-search/FullTextSearch
                          {:db-path      (conj db-path ::search)
                           :change-event [::load-apps db-path]}]
-                        [ui/ListSA
-                         [Node db-path (dissoc apps :applications) (:applications apps)]]
+                        (if (seq apps)
+                          [ui/ListSA
+                           [Node db-path (dissoc apps :applications) (:applications apps)]]
+                          [ui/Message {:info true} "No applications found"])
                         [pagination/Pagination
                          {:db-path      (conj db-path ::pagination)
                           :total-items  count

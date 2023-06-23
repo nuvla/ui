@@ -37,7 +37,7 @@
 ; create an initial entry for new application
 
 (def defaults {::apps-sets                       {1 {:id             1
-                                                     ::apps-set-name ""
+                                                     ::apps-set-name "Main"
                                                      ::apps-selector (module-selector/build-spec)}}
                ::configuration-validation-errors #{}
                ::apps-validation-errors          #{}})

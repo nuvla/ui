@@ -740,7 +740,7 @@
         creator               (subscribe [::session-subs/resolve-user created-by])]
     [:<>
      [ui/TableCell {:collapsing true}
-      [OnlineStatusIcon online]]
+      [OnlineStatusIcon online nil true]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:class (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
@@ -871,7 +871,7 @@
   (let [nuvlabox-locations (subscribe [::subs/nuvlabox-locations])
         nbs-locations      (:resources @nuvlabox-locations)]
     [map/MapBox
-     {}
+     {:responsive-height? true}
      (doall
        (for [{:keys [id] :as nuvlabox} nbs-locations]
          ^{:key id}

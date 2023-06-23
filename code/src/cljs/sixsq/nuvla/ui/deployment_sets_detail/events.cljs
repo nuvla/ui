@@ -188,7 +188,7 @@
             (seq applications-overwrites) (assoc :applications applications-overwrites))))
 
 (reg-event-fx
-  ::create-start
+  ::save-start
   (fn [{{:keys [::spec/create-name
                 ::spec/create-description
                 ::spec/module-applications-sets] :as db} :db} [_ start?]]

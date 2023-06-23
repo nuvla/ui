@@ -337,20 +337,20 @@
    [ui/TableCell {:width 6}
     [TargetsSet i apps-set (not summary-page)]]])
 
-(defn MenuStartCreate
+(defn MenuBarNew
   []
-  (let [disabled? @(subscribe [::subs/create-start-disabled?])
-        on-click  #(dispatch [::events/create-start %])
-        opts      {:disabled disabled?
-                   :on-click (partial on-click true)}]
+  (let [tr        @(subscribe [::i18n-subs/tr])
+        disabled? @(subscribe [::subs/create-start-disabled?])
+        on-click  #(dispatch [::events/save-start %])]
     [ui/Menu
      [ui/MenuItem {:disabled disabled?
                    :on-click (partial on-click false)}
-      [icons/PlayIcon]
-      "Create"]
+      [icons/FloppyIcon]
+      (str/capitalize (tr [:save]))]
      [ui/MenuItem {:disabled disabled?
                    :on-click (partial on-click true)}
-      "Start"]]))
+      [icons/PlayIcon]
+      (str/capitalize (tr [:start]))]]))
 
 (defn AppsSets
   [{:keys [summary-page]
@@ -526,7 +526,7 @@
 (defn Summary
   []
   [:<>
-   [MenuStartCreate]
+   [MenuBarNew]
    [AppsSets {:summary-page true}]])
 
 (defn StepDescription

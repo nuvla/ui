@@ -20,14 +20,14 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as utils-general]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.map :as map]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.utils.icons :as icons]))
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn refresh
   []

@@ -4,6 +4,69 @@
 
 ## Released
 
+## [2.33.8] - 2023-06-23
+
+### Changed
+
+- Edge - Adapt UI for adding new k8s nuvlaedge #1243
+- Map - Fixes map on cf preview deployments
+- Deployment - Show nuvlaedge status the deployment is running on #984
+- Deployment set detail - Save replace create action
+- Deployment set detail - Remove deployment section and replace it by a redirect
+  to deployments page with a filter
+- Deployment set detail - Remove configuration empty section
+- Deployment modal - Use module plugin for env cred dropdown
+- Applications set - Support for env var cred selection
+- Deployment set - Support for env var cred selection
+- Module plugin - Bug fix regarding changed env values when empty string
+- Applications sets - Use Tab instead of accordion for sets and applications
+- Applications sets - Make new applications sets button less visible
+- Applications sets - By default name the first set Main
+- Applications sets - Select applications modal title changed
+- Applications sets - Applications title aligned with the rest of application
+  tabs
+- Deployment set new - Create start button moved to a menu bar
+- Deployment set new - Step completed checkmark
+- Deployment set new - Step Eula/Price merged
+- Deployment set new - Step Apps/Targets merged with configration
+- Deployment set new - Require at least one target to be selected
+- Deployment set new - Step icons changed
+- Edge - Filter wizard works on edges map view
+- Edge - Makes map view in edges page higher
+- Edge details - Fixes font in edge host info ssh key dropdown
+- Apps sets creation - Helper text that explains user what he need to do to
+  create an apps sets
+- Step group plugin - Remove next previous buttons
+- Deployment sets - Remove next previous buttons not useful
+- Deployment sets - Select target modal wrong title fix
+- Apps sets creation/edition - Select applications show no apps message when no
+  apps
+- Apps sets creation - Sets and configuration tab not presented the same way may
+  confuse user
+- Apps sets creation/edition - Require user confirmation for delete app
+- Apps sets creation - Click on apps link during creation trigger changes modal
+  fix
+- Apps - Provide a description template for applications sets and for kubernetes
+- Apps - Subtype should not be visible when creating
+- Apps - Disables paste/add buttons in projects with no edit rights
+- Deps - Upgrade deps #1237
+- Deployment details - Removes GUID from page header
+- Apps - Adds hint for image format on logo modal
+- Deployment - Bulk action modals only opening when enabled #1280
+- Edge details - Node labels full width of row
+- General - Design changes latest changes
+- Deployment dialog - Do not consider execution mode saved in deployment
+- General - Use new icons by creating icon components #1236
+- Apps - remove more details collapsed section from details tab #1271
+- Apps - Save button should become blue when enabled #1269
+- Apps - Shows house icon as default in breadcrumbs
+- Apps - Tab changes ignores changes protection
+- Apps - Resets tab to default when changing apps
+- Apps - Remove project from the app title #1235
+- Apps - Do not show paste button on project creation page
+- Invite - Error message missing space fix
+- Deployment page - Support for bulk edit tags
+
 ## [2.33.7] - 2023-05-19
 
 ### Changed

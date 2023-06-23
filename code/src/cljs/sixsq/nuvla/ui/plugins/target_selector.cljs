@@ -9,8 +9,8 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.icons :as icons]))
+            [sixsq.nuvla.ui.utils.icons :as icons]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (s/def ::subtype (s/nilable #{"docker" "kubernetes"}))
 

@@ -20,6 +20,7 @@
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
@@ -28,8 +29,7 @@
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            [taoensso.timbre :as timbre]
-            [sixsq.nuvla.ui.utils.icons :as icons]))
+            [taoensso.timbre :as timbre]))
 
 (defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]

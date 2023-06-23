@@ -154,7 +154,7 @@
 (defn CloudNuvlaEdgeLink
   [{:keys [parent nuvlabox nuvlabox-name credential-name
            infrastructure-service infrastructure-service-name] :as _deployment}
-   & {:keys [link] :or {link true}}]
+   & {:keys [link color] :or {link true}}]
   (let [href  (or nuvlabox infrastructure-service parent)
         label (or nuvlabox-name
                 infrastructure-service-name
@@ -162,7 +162,7 @@
                 (some-> href general-utils/id->short-uuid))]
     (when href
       [:<>
-       (cond nuvlabox [icons/BoxIcon]
+       (cond nuvlabox [icons/BoxIcon {:color color}]
              infrastructure-service [icons/CloudIcon]
              parent [icons/KeyIcon]
              :else nil)
@@ -170,9 +170,9 @@
          [values/AsLink (general-utils/id->uuid href)
           :label label
           :page (cond nuvlabox "edges"
-                  infrastructure-service "clouds"
-                  parent "api/credential"
-                  :else nil)]
+                      infrastructure-service "clouds"
+                      parent "api/credential"
+                      :else nil)]
          label)])))
 
 

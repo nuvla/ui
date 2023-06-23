@@ -14,6 +14,16 @@
   :-> :resources)
 
 (reg-sub
+ ::deployment-edges
+ :-> ::spec/deployment-edges)
+
+(reg-sub
+ ::deployment-edges-stati
+ :<- [::deployment-edges]
+ (fn [edges [_ id]]
+   (-> edges (get id) :online)))
+
+(reg-sub
   ::deployments-summary
   (fn [db]
     (::spec/deployments-summary db)))

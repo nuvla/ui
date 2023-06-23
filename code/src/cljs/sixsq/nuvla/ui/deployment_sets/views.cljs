@@ -12,7 +12,7 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
+            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -30,7 +30,7 @@
 (defn state->icon
   [state]
   (if (str/ends-with? state "ING")
-    "sync"
+    icons/i-sync
     (get {STARTED icons/i-play
           STOPPED icons/i-stop
           CREATED icons/i-circle-outline} state)))
@@ -142,7 +142,7 @@
     [uix/Card
      {:href        href
       :header      [:<>
-                    [ui/Icon {:name (state->icon state)}]
+                    [icons/Icon {:name (state->icon state)}]
                     (or name id)]
       :meta        (str (@tr [:created]) " " (time/parse-ago created @locale))
       :state       state

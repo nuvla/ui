@@ -179,7 +179,7 @@
 
 (reg-event-fx
   ::get-nuvlabox-locations
-  (fn [{db :db} _]
+  (fn [{db :db}]
     {::cimi-api-fx/search [:nuvlabox
                            {:first  1
                             :last   10000

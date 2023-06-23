@@ -34,10 +34,10 @@
    value of the :text key is used to define the button text as well as the
    accessibility label :aria-label. The button may not specify children."
   [{:keys [text icon content] :as options}]
-  (let [cntn      (or text content)
+  (let [cntn       (or text content)
         final-opts (-> options
                        (dissoc :text)
-                       (assoc  :content cntn)
+                       (assoc :content cntn)
                        (dissoc :icon)
                        (assoc :aria-label (when (string? cntn) cntn))
                        (assoc :icon (when icon (r/as-element [icons/Icon {:name icon}]))))]
@@ -55,7 +55,7 @@
     [ui/MenuItem final-opts
      (when icon
        [icons/Icon (cond-> {:name icon}
-                     (boolean? loading?) (assoc :loading loading?))])
+                           (boolean? loading?) (assoc :loading loading?))])
      (when (string? name) (str/capitalize name))]))
 
 
@@ -255,7 +255,7 @@
                           (= :password type) [icons/Icon {:name     (if @show "eye slash" :eye)
                                                           :link     true
                                                           :on-click #(swap! show not)}]
-                          @active-input? [ui/Icon {:class icons/i-pencil}])]
+                          @active-input? [icons/PencilIcon])]
         (when on-validation
           (dispatch [on-validation key error?]))
 

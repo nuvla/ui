@@ -235,6 +235,13 @@
     (-> module-info :versions apps-utils/map-versions-index)))
 
 (reg-sub
+  ::module-versions-options
+  :<- [::module-versions]
+  :<- [::i18n-subs/tr]
+  (fn [[versions-indexed tr]]
+    (apps-utils/versions-options versions-indexed tr)))
+
+(reg-sub
   ::latest-version
   :<- [::module-versions]
   (fn [module-versions]

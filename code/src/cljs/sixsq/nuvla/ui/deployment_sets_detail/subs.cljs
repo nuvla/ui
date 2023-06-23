@@ -89,16 +89,6 @@
          (group-by license-set-apps-targets))))
 
 (reg-sub
-  ::deployment-set-registries-creds-incomplete?
-  :<- [::applications-sets-apps-targets]
-  (fn [sets-apps-targets]
-    (not-every?
-      (fn [{:keys [application registries-credentials]}]
-        (= (count (get-in application [:content :private-registries]))
-           (count (remove str/blank? registries-credentials))))
-      sets-apps-targets)))
-
-(reg-sub
   ::deployment-set-apps-targets-total-price
   :<- [::applications-sets-apps-targets]
   (fn [apps-targets]
@@ -116,18 +106,49 @@
     (reduce #(+ %1 (:total-price %2)) 0 apps-targets-total-price)))
 
 (reg-sub
-  ::create-start-disabled?
+  ::step-name-complete?
   :<- [::get ::spec/create-name]
+  :-> (comp not str/blank?))
+
+(reg-sub
+  ::step-licenses-prices-complete?
   :<- [::deployment-set-licenses]
   :<- [::get ::spec/licenses-accepted?]
   :<- [::deployment-set-apps-targets-total-price]
   :<- [::get ::spec/prices-accepted?]
-  :<- [::deployment-set-registries-creds-incomplete?]
-  (fn [[create-name licenses licenses-accepted? prices prices-accepted?
-        registries-creds-incomplete?]]
-    (or (str/blank? create-name)
-        (and (seq licenses)
-             (not licenses-accepted?))
-        (and (seq prices)
-             (not prices-accepted?))
-        registries-creds-incomplete?)))
+  (fn [[licenses licenses-accepted? prices prices-accepted?]]
+    (boolean
+      (and (or licenses-accepted?
+               (not (seq licenses)))
+           (or prices-accepted?
+               (not (seq prices)))))))
+
+(reg-sub
+  ::deployment-set-registries-creds-complete?
+  :<- [::applications-sets-apps-targets]
+  (fn [sets-apps-targets]
+    (every?
+      (fn [{:keys [application registries-credentials]}]
+        (= (count (get-in application [:content :private-registries]))
+           (count (remove str/blank? registries-credentials))))
+      sets-apps-targets)))
+
+(reg-sub
+  ::targets-sets-complete?
+  :<- [::applications-sets-apps-targets]
+  (fn [sets-apps-targets]
+    (some #(pos? (:targets-count %)) sets-apps-targets)))
+
+(reg-sub
+  ::step-apps-targets-complete?
+  :<- [::deployment-set-registries-creds-complete?]
+  :<- [::targets-sets-complete?]
+  :-> #(every? true? %))
+
+(reg-sub
+  ::create-start-disabled?
+  :<- [::step-name-complete?]
+  :<- [::step-licenses-prices-complete?]
+  :<- [::step-apps-targets-complete?]
+  ;;todo require all mandatory params to be filled up?
+  :-> #(some false? %))

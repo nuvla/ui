@@ -79,7 +79,9 @@
                                       :position       "bottom center"
                                       :hide-on-scroll true
                                       :hoverable      true
-                                      :trigger        (r/as-element [icons/InfoIconFull {:color "brown"}])}]])
+                                      :trigger        (r/as-element
+                                                        [ui/Icon {:class icons/i-info-full
+                                                                  :color "brown"}])}]])
                         (str (@tr [:nuvlabox-cluster-nodes]) cluster-nodes)]}]))))
 
 

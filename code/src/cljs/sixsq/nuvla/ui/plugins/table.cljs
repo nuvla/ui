@@ -97,10 +97,8 @@
 (s/def ::total-count-sub-key (s/* keyword?))
 (s/def ::resources-sub-key (s/* keyword?))
 
-(s/def ::bulk-action (s/or  :component  (s/keys :req-un [::component]
-                                                :opt-un [::name ::icon])
-                            :name-event (s/keys :req-un [::name ::event]
-                                                :opt-un [::component ::icon])))
+(s/def ::bulk-action (s/keys :req-un [::name ::event]
+                       :opt-un [::component ::icon]))
 
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
 (s/def ::select-db-path (s/* keyword?))
@@ -378,25 +376,16 @@
                               :borderless (= 1 (count bulk-actions))
                               :stackable  true}
                      (for [[idx action ] (map-indexed vector bulk-actions)
-                           :let [{:keys [component name event icon]} action]]
-
-                       (if component
-                         [ui/MenuItem
-                          {:style {:border :none}
-                           :disabled nothing-selected?
-                           :class :bulk-action-bar-item
-                           :key idx}
-                          (when icon [icon])
-                          [component]]
-                         [ui/MenuItem
-                          {:disabled nothing-selected?
-                           :class :bulk-action-bar-item
-                           :on-click (fn []
-                                       (if (fn? event) (event payload)
-                                           (dispatch event)))
-                           :key idx}
-                          (when icon [icon])
-                          name]))]])
+                           :let [{:keys [name event icon]} action]]
+                       [ui/MenuItem
+                        {:disabled nothing-selected?
+                         :class :bulk-action-bar-item
+                         :on-click (fn []
+                                     (if (fn? event) (event payload)
+                                       (dispatch event)))
+                         :key idx}
+                        (when icon [icon])
+                        name])]])
                   :basic    true
                   :disabled (not= :none @selection-status)
                   :content  (@tr [:select-at-least-one-item])}]]

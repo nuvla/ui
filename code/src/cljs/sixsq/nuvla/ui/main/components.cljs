@@ -237,7 +237,7 @@
 
 (defn Pencil
   [editing?]
-  [ui/Icon {:clas     icons/i-pencil
+  [ui/Icon {:class    icons/i-pencil
             :on-click #(reset! editing? true)
             :style    {:cursor "pointer"}}])
 
@@ -287,7 +287,7 @@
                       :placeholder      (@tr [:type-to-add-tags])
                       :default-value    tags
                       :name             "tag"
-                      :fluid             true
+                      :fluid            true
                       :allowAdditions   true
                       :additionLabel    (str (@tr [:add-dropdown]) " ")
                       :search           true
@@ -295,26 +295,26 @@
                       :multiple         true
                       :on-change        (ui-callback/value (fn [v] (on-change-fn v)))
                       :on-add-item      (ui-callback/value
-                                         (fn [value] (reset! value-options (conj @value-options value))))
+                                          (fn [value] (reset! value-options (conj @value-options value))))
                       :options          options
                       :renderLabel      (fn [label]
                                           (r/as-element
-                                           [ui/Label {:icon    "tag"
-                                                      :size    "mini"
-                                                      :color   (or tag-color "teal")
-                                                      :content (.-value label)
-                                                      :style   {:margin-top 10
-                                                                :max-height 150
-                                                                :overflow   "auto"}}]))}]))))
+                                            [ui/Label {:icon    "tag"
+                                                       :size    "mini"
+                                                       :color   (or tag-color "teal")
+                                                       :content (.-value label)
+                                                       :style   {:margin-top 10
+                                                                 :max-height 150
+                                                                 :overflow   "auto"}}]))}]))))
 
 (defn EditableTags
   "Editable tags component. Allows editing (add, remove) of tags if the element is editable by the user."
   [element _on-change-fn]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        editing?      (r/atom false)
-        uuid          (random-uuid)
-        editable?     (or (utils-general/can-edit? element)
-                          (-> element :acl nil?))]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        editing?  (r/atom false)
+        uuid      (random-uuid)
+        editable? (or (utils-general/can-edit? element)
+                      (-> element :acl nil?))]
     (fn [{:keys [tags] :as _element} on-change-fn]
       (if @editing?
         [:div {:style {:align-items "center"}}

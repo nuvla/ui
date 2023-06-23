@@ -8,6 +8,7 @@
 (def resource-name "deployment")
 
 (s/def ::deployments any?)
+(s/def ::deployment-edges any?)
 (s/def ::deployments-summary any?)
 (s/def ::deployments-summary-all any?)
 (s/def ::deployments-search any?)
@@ -23,6 +24,8 @@
                           "error"
                           "pending"})
 (s/def ::bulk-update-modal any?)
+(s/def ::bulk-stop-modal boolean?)
+(s/def ::bulk-delete-modal boolean?)
 (s/def ::selected-set set?)
 (s/def ::select-all? boolean?)
 (s/def ::bulk-jobs-monitored any?)
@@ -31,12 +34,13 @@
 (def default-ordering {:field :created :order "desc"})
 
 (def defaults {::deployments-search      (full-text-search-plugin/build-spec)
-               ::additional-filter       nil
+               ::additional-filter        nil
                ::deployments             nil
+               ::deployment-edges        nil
                ::deployments-summary     nil
                ::deployments-summary-all nil
                ::deployments-params-map  nil
-               ::filter-external         nil
+               ::filter-external          nil
                ::view                    "table"
                ::state-selector          "all"
                ::bulk-update-modal       nil

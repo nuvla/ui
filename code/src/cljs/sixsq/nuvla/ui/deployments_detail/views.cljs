@@ -388,7 +388,8 @@
                       :disabled?   (not (general-utils/can-delete? deployment))})]
         ^{:key (random-uuid)}
         [uix/ModalDanger
-         {:on-close    (fn [event]
+         {:with-confirm-step? true
+          :on-close    (fn [event]
                          (reset! open? false)
                          (.stopPropagation event)
                          (.preventDefault event))
@@ -396,9 +397,11 @@
           :open        @open?
           :trigger     (r/as-element button)
           :content     [:<> [:h3 text-1] [:p text-2]]
-          :header      (@tr [:delete-deployment])
+          :header [:span [icons/RocketIcon]
+                   (@tr [:delete-deployment])]
           :danger-msg  (@tr [:deployment-delete-msg])
-          :button-text (@tr [:delete])}]))))
+          :button-text (str (str/capitalize (@tr [:delete])) " " (str/capitalize (@tr [:deployment])))
+          :header-class [:nuvla-deployments :delete-modal-header]}]))))
 
 
 (defn CloneButton

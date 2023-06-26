@@ -45,8 +45,8 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page.getByRole('link', { name: new RegExp(newEdgeName) }).click();
 
   await page.getByText(/^delete$/i).click();
-  await page.getByRole('button', { name: 'delete edge' }).click();
-  await page.getByRole('button', { name: 'yes, delete edge' }).click();
+  await page.getByRole('button', { name: 'Delete NuvlaEdge' }).click();
+  await page.getByRole('button', { name: 'Yes: Delete NuvlaEdge' }).click();
   await expect(page).toHaveURL(edgesPageRegex);
 
   await page.getByPlaceholder('Search ...').click();

@@ -25,8 +25,9 @@ test('Deletes all nuvlaedges created through e2e tests', async ({ page, context 
       .nth(0)
       .click({ timeout: 5000 });
     await page.locator('a:has-text("delete")').click();
-    await page.getByRole('button', { name: 'delete edge' }).click();
-    await page.getByRole('button', { name: 'yes, delete edge' }).click();
+    await page.pause();
+    await page.getByRole('button', { name: 'Delete NuvlaEdge' }).click();
+    await page.getByRole('button', { name: 'Yes: Delete NuvlaEdge' }).click();
     await page.waitForURL(`${baseURL}/ui/edges?view=table`);
     await page.getByPlaceholder('Search ...').click();
     page.getByPlaceholder('Search ...').fill(newEdgeName);

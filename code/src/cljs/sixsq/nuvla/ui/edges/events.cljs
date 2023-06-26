@@ -341,16 +341,17 @@
 
 
 (reg-event-fx
-  ::create-nuvlabox
-  (fn [_ [_ creation-data]]
-    {::cimi-api-fx/add [:nuvlabox creation-data
-                        #(dispatch [::set-created-nuvlabox-id %])]}))
+ ::create-nuvlabox
+ (fn [_ [_ creation-data]]
+   {::cimi-api-fx/add [:nuvlabox creation-data
+                       (fn [res]
+                         (dispatch [::set-created-nuvlabox-id res])
+                         (dispatch [::get-nuvlaboxes]))]}))
 
 
 (reg-event-db
   ::set-created-nuvlabox-id
   (fn [db [_ {:keys [resource-id]}]]
-    (dispatch [::get-nuvlaboxes])
     (assoc db ::spec/nuvlabox-created-id resource-id)))
 
 

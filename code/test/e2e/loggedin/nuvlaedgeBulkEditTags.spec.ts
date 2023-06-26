@@ -17,7 +17,6 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
 
   // ---------- TESTING WITH SELECTION BY CHECKBOXES -----------
   // Add one tag on all edges
-  await page.pause();
   await selectAll();
   await editTagsModal();
   await page.locator('div[role="combobox"] input[type="text"]').fill('AddTagTest');
@@ -54,7 +53,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(1, { timeout: 2000 });
 
   // Remove multiple tags on one edge
-  await page.pause();
+
   await selectFirst();
   await editTagsModal();
 
@@ -63,7 +62,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest2');
   await page.locator('div[role="combobox"] input[type="text"]').press('Enter');
   await closeDropDown();
-  await page.pause();
+
   await page.getByText('Remove specific tags').click();
   await page.getByRole('button', { name: 'edit tags' }).click();
   await page.getByRole('button', { name: 'Yes: Remove specific tags' }).click();
@@ -110,7 +109,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(2, { timeout: 2000 });
 
   // Set multiple tags on one edge
-  await page.pause();
+
   await selectFirst();
   await editTagsModal();
 

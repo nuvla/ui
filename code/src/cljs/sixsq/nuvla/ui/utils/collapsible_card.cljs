@@ -3,12 +3,12 @@
             [re-frame.core :refer [subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.table :as table]
-            [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.icons :as icons]))
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (defn more-or-less

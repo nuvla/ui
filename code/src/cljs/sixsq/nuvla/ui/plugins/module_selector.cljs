@@ -13,8 +13,8 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.icons :as icons]))
+            [sixsq.nuvla.ui.utils.icons :as icons]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (s/def ::subtypes (s/nilable set?))

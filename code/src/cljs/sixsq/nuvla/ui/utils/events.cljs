@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.utils.events
   (:require [re-frame.core :refer [reg-event-fx]]
             [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.routing.utils :as route-utils]
-            [sixsq.nuvla.ui.routing.routes :as routes]))
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :as route-utils]))
 
 ;; TODO: Refactor/move to additional filter or main fx
 (reg-event-fx

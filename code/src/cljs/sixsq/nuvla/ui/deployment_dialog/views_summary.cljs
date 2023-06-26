@@ -12,8 +12,8 @@
             [sixsq.nuvla.ui.deployment-dialog.views-price :as price-step]
             [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.icons :as icons]))
+            [sixsq.nuvla.ui.utils.icons :as icons]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn application-row

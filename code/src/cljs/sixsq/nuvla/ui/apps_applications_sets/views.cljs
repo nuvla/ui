@@ -24,11 +24,11 @@
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.icons :as icons]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.icons :as icons]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn SelectSubtype
   [subtype!]

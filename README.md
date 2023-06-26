@@ -93,7 +93,7 @@ command `caddy reload` (no need to restart anything else).
 
 ### Start development ui
 
-Run `npm install` inside `code` folder of the cloned repository. This only needs to be done once at the beginning and
+Run `npm ci --legacy-peer-deps` inside `code` folder of the cloned repository. This only needs to be done once at the beginning and
 then whenever dependencies change.
 When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui at https://nui.localhost.
 

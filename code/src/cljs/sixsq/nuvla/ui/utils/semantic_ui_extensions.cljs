@@ -187,7 +187,7 @@
                            title-class]
                     :or   {title-size :h3, on-open #(), on-close #(), styled? true}}]
       [ui/Accordion {:id        id
-                     :fluid     true
+                     :fluid      true
                      :styled    styled?
                      :style     {:margin-top    "10px"
                                  :margin-bottom "10px"}

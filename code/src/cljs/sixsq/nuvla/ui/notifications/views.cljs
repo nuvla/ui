@@ -14,13 +14,13 @@
             [sixsq.nuvla.ui.notifications.utils :as utils]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
-            [taoensso.timbre :as timbre]
-            [sixsq.nuvla.ui.utils.icons :as icons]))
+            [taoensso.timbre :as timbre]))
 
 
 (defn save-callback-notification-subscription-config

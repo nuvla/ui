@@ -3,11 +3,14 @@
 
 (def feature-deployment-set-key "deployment-set")
 (def feature-applications-sets-key "applications-sets")
+(def feature-edge-on-k8s "edge-on-k8s")
 
 (def feature-flags [{:k     feature-deployment-set-key
                      :label "Page deployment set visible in left menu."}
                     {:k     feature-applications-sets-key
-                     :label "Applications sets support"}])
+                     :label "Applications sets support"}
+                    {:k     feature-edge-on-k8s
+                     :label "k8s installation method available in Add Edge modal."}])
 
 (def existing-feature-flags-keys (->> feature-flags (map :k) set))
 

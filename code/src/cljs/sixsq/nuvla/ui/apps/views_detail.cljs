@@ -111,14 +111,16 @@
         {:keys [id name description]} module
         content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
     [uix/ModalDanger
-     {:on-confirm  (fn [] (dispatch [::events/delete-module id]))
+     {:with-confirm-step? true
+      :on-confirm  (fn [] (dispatch [::events/delete-module id]))
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [icons/TrashIcon]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
-      :header      (@tr [:delete-module])
+      :header      [:span [icons/LayerGroupIcon] (@tr [:delete-module])]
       :danger-msg  (@tr [:module-delete-warning])
-      :button-text (@tr [:delete])}]))
+      :button-text (str (str/capitalize (@tr [:delete])) " " (@tr [:application]))
+      :header-class [:nuvla-apps :delete-modal-header]}]))
 
 
 (defn PublishButton

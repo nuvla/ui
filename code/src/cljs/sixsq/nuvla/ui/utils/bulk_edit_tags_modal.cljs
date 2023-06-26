@@ -94,35 +94,6 @@
                :checked   active?
                :on-change #(change-mode edit-mode)}]))
 
-(defn- ButtonAskingForConfirmation
-  [_]
-  (let [mode (r/atom :idle)
-        tr   (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [color text update-event disabled? action-aria-label]}]
-      (if (= :idle @mode)
-        [:div
-         [:span (str text "?")]
-         [ui/Button {:aria-label action-aria-label
-                     :color    color
-                     :disabled disabled?
-                     :active   true
-                     :style    {:margin-left "2rem"}
-                     :on-click (fn [] (reset! mode :confirming))}
-          [icons/CheckIconFull {:style {:margin 0}}]]]
-        [:div
-         [:span (str (@tr [:are-you-sure?]) " ")]
-         [uix/Button {:text     (str (str/capitalize (@tr [:yes])) ", " text)
-                      :disabled disabled?
-                      :color    color
-                      :on-click (fn [] (dispatch update-event))}]
-         [ui/Button {:on-click (fn [] (reset! mode :idle))}
-          [icons/XMarkIcon {:style {:margin 0}}]]]))))
-
-;; Needs
-;; - available tags -> through resource-key, fetched from here
-;; - selected resources -> sub-key
-;; - not editable selected resources -> event plus sub-key
-;; - open-modal -> db-path
 
 (s/def ::db-path (s/* keyword?))
 (s/def ::resource-key keyword?)
@@ -249,9 +220,9 @@
                                        (map #(str "id='" % "'")
                                             (->> @view-only-items :resources (map :id))))]))}
                      (@tr [(if (= not-editable 1) :open-it-in-new-tab :open-them-in-new-tab)])]]])]
-          [ButtonAskingForConfirmation {:disabled? disabled? :db-path db-path
-                                       :update-event update-event :total-count-sub-key total-count-sub-key
-                                       :text action-text :color color :action-aria-label "edit tags"}]]]))))
+          [uix/ButtonAskingForConfirmation {:disabled? disabled? :db-path db-path
+                                            :update-event update-event :total-count-sub-key total-count-sub-key
+                                            :text action-text :color color :action-aria-label "edit tags"}]]]))))
 
 (defn create-bulk-edit-modal
   [{:keys [db-path on-open-modal-event resource-key] :as opts}]

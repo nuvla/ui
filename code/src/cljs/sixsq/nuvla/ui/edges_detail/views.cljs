@@ -66,13 +66,16 @@
         {:keys [id name description]} nuvlabox
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
-     {:button-text (@tr [:delete])
+     {:with-confirm-step? true
+      :button-text (str (str/capitalize (@tr [:delete])) " " (@tr [:nuvlaedge]))
       :on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:class icons/i-trash-full}]
+                                  [ui/Icon {:class icons/i-trash}]
                                   (@tr [:delete])])
-      :header      (@tr [:delete-nuvlabox])
-      :content     [:h3 content]}]))
+      :header      [:span [icons/BoxIcon]
+                    (@tr [:delete-nuvlabox])]
+      :content     [:h3 content]
+      :header-class [:nuvla-edges :delete-modal-header]}]))
 
 
 (defn SshKeysDropdown
@@ -655,7 +658,7 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "enable-host-level-management" @show?)}
-      [TextActionButton resource operation show? "Enable host level management (required for playbooks)" "cog" (@tr [:enable])])))
+      [TextActionButton resource operation show? "Enable host level management (required for playbooks)" icons/i-gear (@tr [:enable])])))
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "disable-host-level-management"]
   [_resource _operation]
@@ -663,7 +666,7 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "disable-host-level-management" @show?)}
-      [TextActionButton resource operation show? "Disable host level management (disables playbooks)" "cog" (@tr [:disable])])))
+      [TextActionButton resource operation show? "Disable host level management (disables playbooks)" icons/i-gear (@tr [:disable])])))
 
 (defn MenuBar [uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])

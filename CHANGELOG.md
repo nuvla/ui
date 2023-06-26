@@ -4,10 +4,12 @@
 
 ## Released
 
-## [2.33.8] - 2023-06-23
+## [2.33.8] - 2023-06-26
 
 ### Changed
 
+- Apps - Clearer distinction of deletion modals between deployments and apps #1283
+- Deployments - Clearer distinction of deletion modals between deployments and apps #1283
 - Edge - Adapt UI for adding new k8s nuvlaedge #1243
 - Map - Fixes map on cf preview deployments
 - Deployment - Show nuvlaedge status the deployment is running on #984

@@ -96,8 +96,8 @@
   :test-paths ["test/cljs"]
 
   :profiles
-  {:dev   {:dependencies [[org.clojure/clojure "1.11.1"]
-                          [org.clojure/clojurescript "1.11.60"
+  {:dev   {:dependencies [[org.clojure/clojure "1.10.1"]
+                          [org.clojure/clojurescript "1.10.866"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library
@@ -105,10 +105,10 @@
                           [binaryage/devtools "1.0.7" :scope "test"]
                           [day8.re-frame/re-frame-10x "1.6.0"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.19.9"]   ;; WARNING: also in package.json
-                          [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
-                          [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
-                          [com.google.javascript/closure-compiler-unshaded "v20220719"]
+   :scljs {:dependencies [[thheller/shadow-cljs "2.17.8"]   ;; WARNING: also in package.json
+                          [org.clojure/google-closure-library "0.0-20201211-3e6c510d"]
+                          [org.clojure/google-closure-library-third-party "0.0-20201211-3e6c510d"]
+                          [com.google.javascript/closure-compiler-unshaded "v20210505"]
                           [djblue/portal "0.42.1"]]}}
 
 

@@ -14,7 +14,7 @@
       utils/subtype-application (apps-application-utils/db->module module commit db)
       utils/subtype-application-k8s (apps-application-utils/db->module module commit db)
       utils/subtype-applications-sets (apps-applications-sets-utils/db->module module commit db)
-      utils/subtype-project module
+      utils/subtype-project (dissoc module :content)
       module)))
 
 

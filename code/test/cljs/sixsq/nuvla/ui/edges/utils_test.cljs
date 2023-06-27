@@ -22,7 +22,8 @@
    {:release "2.7.11"}
    {:release "2.11.8"}
    {:release "2.8.11"}
-   {:release "2.10.7"}])
+   {:release "2.10.7"}
+   {:no-version ""}])
 
 (deftest version-sort-test
   (is '({:release "3.0.0"}
@@ -35,5 +36,6 @@
         {:release "2.7.9"}
         {:release "2.7.8"}
         {:release "2.1.0"}
-        {:release "1.2.3"})
+        {:release "1.2.3"}
+        {:no-version ""})
       (t/sort-by-version test-versions-sort-data)))

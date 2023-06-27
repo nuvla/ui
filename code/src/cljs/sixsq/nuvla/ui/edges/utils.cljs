@@ -257,7 +257,7 @@
   (table-plugin/build-bulk-filter (get-in db db-path) (get-full-filter-string db)))
 
 (defn- parse-version-number [v]
-  (->> (re-seq #"\d+" v)
+  (->> (re-seq #"\d+" (or v ""))
        (map js/Number)))
 
 (defn compare-versions [m n]

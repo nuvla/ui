@@ -255,3 +255,19 @@
 (defn build-bulk-filter
   [db-path db]
   (table-plugin/build-bulk-filter (get-in db db-path) (get-full-filter-string db)))
+
+(defn- parse-version-number [v]
+  (->> (re-seq #"\d+" v)
+       (map js/Number)))
+
+(defn compare-versions [m n]
+  (let [[m_1 m_2 m_3] (parse-version-number m)
+        [n_1 n_2 n_3] (parse-version-number n)]
+    (cond
+      (not= m_1 n_1) (compare n_1 m_1)
+      (not= m_2 n_2) (compare n_2 m_2)
+      (not= m_3 n_3) (compare n_3 m_3)
+      :else 0)))
+
+(defn sort-by-version [e]
+  (sort-by :release compare-versions e))

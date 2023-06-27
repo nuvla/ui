@@ -200,10 +200,30 @@ npx playwright test --help
 
 ### Unit tests
 
+#### Run all unit tests
+
 ```bash
 npm run test:unit
 ```
 
+#### Run unit tests in cursive REPL
+
+1. Shadow-clj build project:
+    ```bash
+    lein dev
+    ```
+2. Get nREPL server port from file or from console:
+   - console: `shadow-cljs - nREPL server started on port 60325`
+   - file: `code/.shadow-cljs/nrepl.port`
+3. Wait until shadow-cljs finish compilation
+4. Browse to UI page in web browser to load javascript runtime
+5. Connect with nRepl client
+6. Select project in nRepl, load test file and run-tests
+   ```repl
+   (shadow/repl :nuvla-ui)
+   (load-file "test/cljs/sixsq/nuvla/ui/edges/utils_test.cljs")
+   (cljs.test/run-tests 'sixsq.nuvla.ui.edges.utils-test)
+   ```
 
 ## Bundle size analyze
 

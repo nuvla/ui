@@ -1181,7 +1181,7 @@
 
 (defn notifications-view
   [_path]
-  (timbre/set-level! :info)
+  (timbre/set-min-level! :info)
   [:<>
    [TabsAll]
    [EditSubscriptionModal]

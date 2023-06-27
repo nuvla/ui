@@ -13,7 +13,7 @@ test('Creating a new project', async ({ page }, { config }) => {
   await expect(page).toHaveURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
   await page.locator('a:has-text("Add")').click();
   await page.getByRole('link', { name: 'Project' }).nth(1).click();
-  await expect(page).toHaveURL('https://nui.localhost/ui/apps/New%20Project?subtype=project&apps-project-tab=details');
+  await expect(page).toHaveURL(`${baseURL}/ui/apps/New%20Project?subtype=project&apps-project-tab=details`);
   await page.locator('input[type="input"]').click();
   await page.locator('input[type="input"]').fill('ThisIsJustATest');
   await page
@@ -22,10 +22,10 @@ test('Creating a new project', async ({ page }, { config }) => {
   await page.pause();
   await page.locator('a:has-text("Save")').click();
   await page.getByRole('button', { name: 'save' }).click();
-  await expect(page).toHaveURL('https://nui.localhost/ui/apps/thisisjustatest?apps-project-tab=overview');
+  await expect(page).toHaveURL(`${baseURL}/ui/apps/thisisjustatest?apps-project-tab=overview`);
   await page.locator('a:has-text("Delete")').click();
   await page.getByText('I understand that deleting this application is permanent and cannot be undone.').click();
   await page.getByRole('button', { name: 'Delete Application' }).click();
   await page.getByRole('button', { name: 'Yes: Delete Application' }).click();
-  await expect(page).toHaveURL('https://nui.localhost/ui/apps?apps-store-tab=appstore');
+  await expect(page).toHaveURL(`${baseURL}/ui/apps?apps-store-tab=appstore`);
 });

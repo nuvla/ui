@@ -105,7 +105,7 @@
                           [binaryage/devtools "1.0.7" :scope "test"]
                           [day8.re-frame/re-frame-10x "1.6.0"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.24.0"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.17.8"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20230227-c7c0a541"]
                           [org.clojure/google-closure-library-third-party "0.0-20230227-c7c0a541"]
                           [com.google.javascript/closure-compiler-unshaded "v20230411"]

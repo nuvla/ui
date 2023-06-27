@@ -8,34 +8,34 @@
 
  :repositories      {"sixsq-community-releases" {:url "https://nexus.sixsq.com/content/repositories/releases-community-rhel7/"}}
 
- :builds            {:nuvla-ui {:target     :browser
-                                :output-dir "resources/public/ui/js"
-                                :asset-path "/ui/js"
-                                :js-options {:ignore-exports true}
+ :builds            {:nuvla-ui {:target      :browser
+                                :output-dir  "resources/public/ui/js"
+                                :asset-path  "/ui/js"
+                                :js-options  {:ignore-exports true}
 
-                                :modules    {:nuvla-ui {:entries [sixsq.nuvla.ui.core]}}
+                                :modules     {:nuvla-ui {:entries [sixsq.nuvla.ui.core]}}
 
                                 :build-hooks [(portal.shadow.remote/hook)]
-                                :devtools   {:after-load        sixsq.nuvla.ui.core/mount-root
-                                             :preloads          [devtools.preload
-                                                                 day8.re-frame-10x.preload
-                                                                 dev.portal]
-                                             :use-document-host false}
+                                :devtools    {:after-load        sixsq.nuvla.ui.core/mount-root
+                                              :preloads          [devtools.preload
+                                                                  day8.re-frame-10x.preload
+                                                                  dev.portal]
+                                              :use-document-host false}
 
-                                :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL
-                                                                #_"https://nuvla.io"
-                                                                #_"https://localhost"
-                                                                ;; Serve everything from the same host:
-                                                                ;; host file needs this entry to point to localhost
-                                                                ""
-                                                                re_frame.trace.trace_enabled_QMARK_ true}
-                                             :compiler-options {:infer-externs :auto}}
+                                :dev         {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL
+                                                                 #_"https://nuvla.io"
+                                                                 #_"https://localhost"
+                                                                 ;; Serve everything from the same host:
+                                                                 ;; host file needs this entry to point to localhost
+                                                                 ""
+                                                                 re_frame.trace.trace_enabled_QMARK_ true}
+                                              :compiler-options {:infer-externs :auto}}
 
-                                :release    {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL ""}
-                                             :compiler-options {:infer-externs :auto
-                                                                :optimizations :advanced
-                                                                :pseudo-names  false
-                                                                :pretty-print  false}}}
-                     :test     {:target     :karma
-                                :output-to  "target/ci.js"
-                                :ns-regexp  "-(spec|test)$"}}}
+                                :release     {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL ""}
+                                              :compiler-options {:infer-externs :auto
+                                                                 :optimizations :advanced
+                                                                 :pseudo-names  false
+                                                                 :pretty-print  false}}}
+                     :test     {:target    :karma
+                                :output-to "target/ci.js"
+                                :ns-regexp "-(spec|test)$"}}}

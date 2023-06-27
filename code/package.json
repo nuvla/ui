@@ -34,7 +34,7 @@
     "mockdate": "^3.0.5",
     "nbb": "^1.1.151",
     "playwright": "^1.27.1",
-    "shadow-cljs": "^2.24.0",
+    "shadow-cljs": "2.17.8",
     "source-map-support": "^0.5.19"
   },
   "dependencies": {
@@ -50,7 +50,7 @@
     "codemirror": "^6.0.1",
     "date-fns": "^2.30.0",
     "diff": "^5.0.0",
-    "highlight.js": "^11.1.0",
+    "highlight.js": "11.1.0",
     "js-yaml": "^4.1.0",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",

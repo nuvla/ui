@@ -47,51 +47,51 @@
 (def edges-routes
   (mapv (fn [page-alias]
           [[page-alias
-            {:name      (create-route-name page-alias)
-             :view      edges-view
-             :dict-key  :edges}
+            {:name     (create-route-name page-alias)
+             :view     #'edges-view
+             :dict-key :edges}
             [""]
             ["/" (create-route-name page-alias "-slashed")]]
            [(str page-alias "/:uuid")
-            {:name      (create-route-name page-alias "-details")
-             :view      DetailedViewPage}]
+            {:name (create-route-name page-alias "-details")
+             :view #'DetailedViewPage}]
            [(str page-alias "/nuvlabox-cluster/:uuid")
             {:name (create-route-name page-alias "-cluster-details")
-             :view views-cluster/ClusterViewPage}]])
+             :view #'views-cluster/ClusterViewPage}]])
         (utils/canonical->all-page-names "edges")))
 
 (def cloud-routes
   (mapv (fn [page-alias]
           [page-alias
-           {:name      (create-route-name page-alias)
-            :view      clouds-view
-            :dict-key  :clouds}
+           {:name     (create-route-name page-alias)
+            :view     #'clouds-view
+            :dict-key :clouds}
            [""]
            ["/" (create-route-name page-alias "-slashed")]
            ["/:uuid"
-            {:name      (create-route-name page-alias "-details")
-             :view      clouds-view}]])
+            {:name (create-route-name page-alias "-details")
+             :view #'clouds-view}]])
         (utils/canonical->all-page-names "clouds")))
 
 
 (def deployment-routes
   (mapv (fn [page-alias]
           [page-alias
-           {:name      (create-route-name page-alias)
-            :view      deployments-view
-            :dict-key  :deployments}
+           {:name     (create-route-name page-alias)
+            :view     #'deployments-view
+            :dict-key :deployments}
            [""]
            ["/" (create-route-name page-alias "-slashed")]
            ["/:uuid"
             {:name (create-route-name page-alias "-details")
-             :view DeploymentDetails}]])
+             :view #'DeploymentDetails}]])
         (utils/canonical->all-page-names "deployments")))
 
 
 (def r-routes
   [""
    {:name ::routes/root
-    :view home-view}
+    :view #'home-view}
    ["/"]
    [(str base-path "/")                                     ;; sixsq.nuvla.ui.config/base-path = "/ui" on nuvla.io
     [""
@@ -102,27 +102,27 @@
     deployment-routes
     ["sign-up"
      {:name      ::routes/sign-up
-      :view      SessionPageWelcomeRedirect
+      :view      #'SessionPageWelcomeRedirect
       :link-text "Sign up"}]
     ["sign-in"
      {:name      ::routes/sign-in
-      :view      SessionPageWelcomeRedirect
+      :view      #'SessionPageWelcomeRedirect
       :link-text "login"}]
     ["reset-password"
      {:name      ::routes/reset-password
-      :view      SessionPageWelcomeRedirect
+      :view      #'SessionPageWelcomeRedirect
       :link-text "Reset password"}]
     ["set-password"
      {:name      ::routes/set-password
-      :view      SessionPageWithoutWelcomeRedirect
+      :view      #'SessionPageWithoutWelcomeRedirect
       :link-text "Set password"}]
     ["sign-in-token"
      {:name      ::routes/sign-in-token
-      :view      SessionPageWelcomeRedirect
+      :view      #'SessionPageWelcomeRedirect
       :link-text "sign in token"}]
     ["about"
      {:name      ::routes/about
-      :view      About
+      :view      #'About
       :link-text "About"}]
     ["welcome"
      {:name      ::routes/home
@@ -132,53 +132,53 @@
       :link-text "home"}]
     ["dashboard"
      {:name      ::routes/dashboard
-      :view      dashboard-view
+      :view      #'dashboard-view
       :link-text "dashboard"}]
     ["apps"
      {:name      ::routes/apps
-      :view      app-views/AppsOverview
+      :view      #'app-views/AppsOverview
       :link-text "Apps"}
      [""]
      ["/" ::routes/apps-slashed]
      ["/*sub-path"
       {:name ::routes/apps-details
-       :view app-views/AppDetailsRoute}]]
+       :view #'app-views/AppDetailsRoute}]]
     ["credentials"
      {:name      ::routes/credentials
-      :view      credentials-view
+      :view      #'credentials-view
       :link-text "credentials"}
      [""]
      ["/" ::routes/credentials-slash]]
     ["notifications"
      {:name      ::routes/notifications
-      :view      notifications-view
+      :view      #'notifications-view
       :link-text "notifications"}]
     ["data"
      {:name      ::routes/data
-      :view      data-view
+      :view      #'data-view
       :link-text "data"}]
     ["data/*uuid"
      {:name ::routes/data-details
-      :view data-set-views/DataSet}]
+      :view #'data-set-views/DataSet}]
     ["deployment-sets"
      {:name      ::routes/deployment-sets
-      :view      deployment-sets-view
+      :view      #'deployment-sets-view
       :link-text "deployment-sets"}
      [""]
      ["/" ::routes/deployment-sets-slashed]]
     ["deployment-sets/:uuid"
      {:name      ::routes/deployment-sets-details
-      :view      deployment-sets-view
+      :view      #'deployment-sets-view
       :link-text "deployment-sets"}]
     ["documentation"
      {:name      ::routes/documentation
-      :view      documentation
+      :view      #'documentation
       :link-text "documentation"}
      [""]
      ["/*sub-path" ::routes/documentation-sub-page]]
     ["api"
      {:name      ::routes/api
-      :view      ApiView
+      :view      #'ApiView
       :link-text "api"}
      [""]
      ["/" ::routes/api-slashed]
@@ -186,10 +186,10 @@
       {:name ::routes/api-sub-page}]]
     ["profile"
      {:name ::routes/profile
-      :view profile}]]
+      :view #'profile}]]
    ["/*"
     {:name ::routes/catch-all
-     :view UnknownResource}]])
+     :view #'UnknownResource}]])
 
 (def router
   (rf/router

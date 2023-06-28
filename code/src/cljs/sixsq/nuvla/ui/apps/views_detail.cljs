@@ -178,8 +178,7 @@
         deploy-disabled? (subscribe [::subs/deploy-disabled?])
         can-publish?     (subscribe [::subs/can-publish?])
         can-unpublish?   (subscribe [::subs/can-unpublish?])
-        save-disabled?   (subscribe [::subs/save-btn-disabled?])
-        page-changed?    (subscribe [::main-subs/changes-protection?])]
+        save-disabled?   (subscribe [::subs/save-btn-disabled?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true}
@@ -232,11 +231,7 @@
           [UnPublishButton @module])
 
         (when @can-publish?
-          [PublishButton @module])
-
-        [components/RefreshMenu
-         {:refresh-disabled? @is-new?
-          :on-refresh        #(dispatch [::events/refresh @page-changed?])}]]])))
+          [PublishButton @module])]])))
 
 
 (defn save-modal

@@ -788,8 +788,7 @@
         (dispatch [::intercom-events/set-event "Is subscription owner" (= user-id subscription-user-id)])
         [ui/Segment {:padded  true
                      :color   "purple"
-                     :loading @loading?
-                     :style   {:height "100%"}}
+                     :loading @loading?}
          [ui/Header {:as :h2 :dividing true} (@tr [:payment-methods])]
          (if @cards-bank-accounts
            [ui/Table {:basic "very"}
@@ -1033,8 +1032,7 @@
             locale @(subscribe [::i18n-subs/locale])]
         [ui/Segment {:padded  true
                      :color   "green"
-                     :loading @loading?
-                     :style   {:height "100%"}}
+                     :loading @loading?}
          [ui/Header {:as :h2 :dividing true} (@tr [:coupon])]
          (if coupon
            [ui/Table {:basic "very"}
@@ -1211,8 +1209,7 @@
     (fn []
       [ui/Segment {:padded  true
                    :color   "blue"
-                   :loading @loading?
-                   :style   {:height "100%"}}
+                   :loading @loading?}
        [ui/Header {:as :h2 :dividing true} (@tr [:vendor])]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
@@ -1237,8 +1234,7 @@
             balance (* balance -1)]
         [ui/Segment {:padded  true
                      :color   "grey"
-                     :loading @loading?
-                     :style   {:height "100%"}}
+                     :loading @loading?}
          [ui/Header {:as :h2 :dividing true} (@tr [:billing-info])]
          [ui/Table {:basic "very"}
           [ui/TableBody
@@ -1458,26 +1454,49 @@
             [GroupMembers group])]]))))
 
 
-(defn SubscriptionAndBilling
+(defn Billing
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
         show-subscription    (subscribe [::subs/show-subscription])
         show-coupon          (subscribe [::subs/show-coupon])
         show-billing-contact (subscribe [::subs/show-billing-contact])
-        show-consumption     (subscribe [::subs/show-consumption])
         show-invoices        (subscribe [::subs/show-invoices])
         show-payment-methods (subscribe [::subs/show-payment-methods])
         device               (subscribe [::main-subs/device])]
     (fn []
+      (if (or @show-billing-contact
+              @show-payment-methods
+              @show-subscription
+              @show-coupon
+              @show-invoices)
+        [ui/Grid {:stackable true
+                  :centered  true}
+         [ui/GridRow {:columns (grid-columns-dense @device)}
+          [ui/GridColumn {:style {:padding-bottom "20px"}}
+           (when @show-billing-contact [BillingContact])
+           (when @show-payment-methods [PaymentMethods])
+           (when @show-subscription [Vendor])
+           (when @show-coupon [Coupon])]
+          [ui/GridColumn {:style {:padding-bottom "20px"}}
+           (when @show-invoices [Invoices])]]]
+        [ui/Message {:info true}
+         (@tr [:no-subscription-information])]))))
+
+(defn Subscriptions
+  []
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        show-subscription    (subscribe [::subs/show-subscription])
+        show-consumption     (subscribe [::subs/show-consumption])
+        device               (subscribe [::main-subs/device])]
+    (fn []
       (if-let [sub-sections (cond-> []
-                                    @show-subscription (conj Subscription)
-                                    @show-coupon (conj Coupon)
-                                    @show-billing-contact (conj BillingContact)
-                                    @show-consumption (conj CurrentConsumption)
-                                    @show-invoices (conj Invoices)
-                                    @show-payment-methods (conj PaymentMethods)
-                                    @show-subscription (conj Vendor)
-                                    true seq)]
+
+                              ;; refactor back
+                              (or true @show-subscription)
+
+                              (conj Subscription)
+                              @show-consumption (conj CurrentConsumption)
+                              true seq)]
         [ui/Grid {:stackable true
                   :centered  true}
          [ui/GridRow {:columns (grid-columns-dense @device)}
@@ -1488,15 +1507,24 @@
          (@tr [:no-subscription-information])]))))
 
 
-(defn TabMenuSubscription
+(defn TabMenuSubscriptions
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [:span (str/capitalize (@tr [:subscription]))]))
+    [:span (str/capitalize (@tr [:subscriptions]))]))
+
+(defn TabMenuBilling
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span (str/capitalize (@tr [:billing]))]))
 
 
 (defn SubscriptionPane
   []
-  [SubscriptionAndBilling])
+  [Subscriptions])
+
+(defn BillingPane
+  []
+  [Billing])
 
 
 (defn TabMenuGroups
@@ -1537,10 +1565,14 @@
 
 (defn profile-panes
   []
-  [{:menuItem {:content (r/as-element [TabMenuSubscription])
+  [{:menuItem {:content (r/as-element [TabMenuSubscriptions])
                :key     :subscription
-               :icon    icons/i-credit-card}
+               :icon    icons/i-shopping-cart}
     :render   #(r/as-element [SubscriptionPane])}
+   {:menuItem {:content (r/as-element [TabMenuBilling])
+               :key     :billing
+               :icon    icons/i-credit-card}
+    :render   #(r/as-element [BillingPane])}
    {:menuItem {:content (r/as-element [TabMenuGroups])
                :key     :groups
                :icon    icons/i-users}
@@ -1560,7 +1592,7 @@
        {:db-path [::spec/tab]
         :menu    {:secondary true
                   :pointing  true
-                  :style     {:display        "flex"
+                  :style     {:display       "flex"
                               :flex-direction "row"
                               :flex-wrap      "wrap"}}
         :panes   panes}])))

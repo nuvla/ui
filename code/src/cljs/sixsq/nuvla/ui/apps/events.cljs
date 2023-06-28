@@ -50,23 +50,23 @@
   (fn [db [_ validate-form?]]
     (assoc db ::spec/validate-form? validate-form?)))
 
+(defn- is-form-valid? [db]
+  (let [form-spec      (get db ::spec/form-spec)
+        module-subtype (-> db ::spec/module-common ::spec/subtype)
+        module-common  (get db ::spec/module-common)
+        module         (get-module module-subtype db)]
+    (and
+     (utils/module-common-valid?
+      module-common module-subtype)
+     (or (nil? form-spec) (s/valid? form-spec module)))))
 
 ; Perform form validation if validate-form? is true.
 (reg-event-db
   ::validate-form
-  (fn [db]
-    (let [form-spec      (get db ::spec/form-spec)
-          module-subtype (-> db ::spec/module-common ::spec/subtype)
-          module-common  (get db ::spec/module-common)
-          module         (get-module module-subtype db)
-          validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form?
-                           (and
-                             (utils/module-common-valid?
-                               module-common module-subtype)
-                             (or (nil? form-spec) (s/valid? form-spec module)))
-                           true)]
-      (assoc db ::spec/form-valid? valid?))))
+  (fn [{:keys [::spec/validate-form?] :as db}]
+    (assoc db ::spec/form-valid? (if validate-form?
+                                   (is-form-valid? db)
+                                   true))))
 
 
 ; Set the spec to apply for form validation
@@ -245,25 +245,18 @@
 (reg-event-db
   ::open-save-modal
   (fn [db _]
-    (assoc db ::spec/save-modal-visible? true)))
+    (let [form-valid? (is-form-valid? db)]
+      (if form-valid?
+        (assoc db ::spec/save-modal-visible? true)
+        (assoc db
+               ::spec/form-valid? false
+               ::spec/validate-form? true)))))
 
 
 (reg-event-db
   ::close-save-modal
   (fn [db _]
     (assoc db ::spec/save-modal-visible? false)))
-
-
-(reg-event-db
-  ::open-validation-error-modal
-  (fn [db _]
-    (assoc db ::spec/validation-error-modal-visible? true)))
-
-
-(reg-event-db
-  ::close-validation-error-modal
-  (fn [db _]
-    (assoc db ::spec/validation-error-modal-visible? false)))
 
 
 (reg-event-fx

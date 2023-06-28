@@ -22,6 +22,7 @@ test('Additional filter wizard', async ({ page }, { config }) => {
 
   expect(page.locator('tr[role=link]')).toHaveCount(1, { timeout: 200 });
 
+  await page.getByRole('button', { name: 'Filter' }).click();
   await page.getByRole('button', { name: 'remove filter' }).click();
   await page.waitForResponse('/api/nuvlabox');
   await page.waitForTimeout(100);

@@ -313,7 +313,7 @@
 (defn- ClearButton
   [{:keys [active-filter? on-done close-fn resource-name persist?]
     :or   {persist? true}}]
-  (let [ tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Button
      {:positive true
       :style    {:align-items :center}
@@ -325,14 +325,21 @@
                    (close-fn))}
      (@tr [:clear-filter])]))
 
+(defn- FilteredAttributes
+  [{:keys [filter-text]}]
+  [:div {:style {:font-style :italic
+                 :overflow :hidden
+                 :text-overflow :ellipsis
+                 :white-space :nowrap}} filter-text])
+
 (reg-event-fx
   ::call-filter-fn
   [(inject-cofx :storage/all)]
   (fn [{{:keys [current-route]} :db
-        storage :storage/all} [_ fn filter-query]]
+        storage :storage/all} [_ f filter-query]]
     (let [filter-storage-key (get-query-param current-route :filter-storage-key)
           storage-filter     (get storage filter-storage-key)]
-      (fn (or storage-filter filter-query))
+      (f (or storage-filter filter-query))
       (when filter-storage-key
         {:storage/remove {:name filter-storage-key}
          :fx [[:dispatch [::route-events/store-in-query-param
@@ -366,66 +373,66 @@
                                 :disabled (not active-filter?)}
                                [:div [FilterSummary {:additional-filters-applied default-filter}]]]))]
         [:div
-         {:style {:display :flex}}
-         [:div
-          {:style {:display :flex}}
-          [ui/Modal
-           {:trigger    (r/as-element
-                         [filter-popup
-                          [ui/Button {:type     :button
-                                      :icon     true
-                                      :disabled (nil? resource-name)
-                                      :on-click open-fn
-                                      :color    :teal
-                                      :style    (merge {:align-items :center
-                                                        :z-index 100
-                                                        :display :flex}
-                                                       trigger-style)}
-                           (if active-filter?
-                             [icons/FilterIconFull]
-                             [icons/FilterIcon])
-                           \u00A0
-                           (str/capitalize (@tr [:filter]))]])
-            :open       @open?
-            :on-close   close-fn
-            :close-icon true}
+         {:style {:display     :flex
+                  :align-items :center}}
+         [ui/Modal
+          {:trigger    (r/as-element
+                        [filter-popup
+                         [ui/Button {:type     :button
+                                     :icon     true
+                                     :disabled (nil? resource-name)
+                                     :on-click open-fn
+                                     :color    :teal
+                                     :style    (merge {:align-items :center
+                                                       :z-index 100
+                                                       :display :flex}
+                                                      trigger-style)}
+                          (if active-filter?
+                            [icons/FilterIconFull]
+                            [icons/FilterIcon])
+                          \u00A0
+                          (str/capitalize (@tr [:filter]))]])
+           :open       @open?
+           :on-close   close-fn
+           :close-icon true}
 
-           [uix/ModalHeader {:header (@tr [:filter-composer])}]
+          [uix/ModalHeader {:header (@tr [:filter-composer])}]
 
-           (when resource-name
-             [:<>
-              [ui/ModalContent
-               [FilterFancy resource-name data]
-               [ui/Message {:error (and @show-error? (some? error))}
-                [ui/MessageHeader {:style {:margin-bottom 10}}
-                 (str/capitalize "Result:")
-                 [ui/Button {:floated  "right"
-                             :icon     true
-                             :toggle   true
-                             :active   @show-error?
-                             :on-click #(swap! show-error? not)}
-                  [ui/Icon {:className icons/i-spell-check}]]]
-                [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
-                 (or (and @show-error? error) filter-string)]]]
-              [ui/ModalActions
-               [ClearButton {:persist? persist? :on-done on-done :close-fn close-fn
-                             :active-filter? active-filter? :resource-name resource-name}]
-               [ui/Button
-                {:positive true
-                 :disabled (some? error)
-                 :on-click #(do
-                              (on-done filter-string)
-                              (when persist?
-                                (dispatch [::route-events/store-in-query-param
-                                           {:query-key   (or (keyword resource-name) :filter)
-                                            :value       filter-string
-                                            :push-state? true}]))
-                              (close-fn))}
-                (@tr [:done])]]])]
-          (when show-clear-button-outside-modal?
-            ^{:key 1}
-            [filter-popup
-             [:div [ClearButton {:on-done on-done :close-fn close-fn
-                                 :active-filter? active-filter? :resource-name resource-name}]]])]
+          (when resource-name
+            [:<>
+             [ui/ModalContent
+              [FilterFancy resource-name data]
+              [ui/Message {:error (and @show-error? (some? error))}
+               [ui/MessageHeader {:style {:margin-bottom 10}}
+                (str/capitalize "Result:")
+                [ui/Button {:floated  "right"
+                            :icon     true
+                            :toggle   true
+                            :active   @show-error?
+                            :on-click #(swap! show-error? not)}
+                 [ui/Icon {:className icons/i-spell-check}]]]
+               [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
+                (or (and @show-error? error) filter-string)]]]
+             [ui/ModalActions
+              [ClearButton {:persist? persist? :on-done on-done :close-fn close-fn
+                            :active-filter? active-filter? :resource-name resource-name}]
+              [ui/Button
+               {:positive true
+                :disabled (some? error)
+                :on-click #(do
+                             (on-done filter-string)
+                             (when persist?
+                               (dispatch [::route-events/store-in-query-param
+                                          {:query-key   (or (keyword resource-name) :filter)
+                                           :value       filter-string
+                                           :push-state? true}]))
+                             (close-fn))}
+               (@tr [:done])]]])]
+         (when (and show-clear-button-outside-modal? active-filter?)
+           ^{:key 1}
+           [filter-popup
+            [:div {:style {:width "75%"}}
+             [FilteredAttributes {:filter-text    default-filter }]]])
          (when persist?
-           [ff/help-popup (@tr [:additional-filter-help-text])])]))))
+           [:div {:style {:align-self :start}}
+            [ff/help-popup (@tr [:additional-filter-help-text])]])]))))

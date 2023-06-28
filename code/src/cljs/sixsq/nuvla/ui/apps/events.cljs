@@ -29,35 +29,7 @@
             [sixsq.nuvla.ui.utils.response :as response]))
 
 
-(def refresh-action-get-module :apps-get-module)
-(def refresh-action-get-deployment :apps-get-deployment)
-
-
-(reg-event-fx
-  ::refresh
-  (fn [{{:keys [::spec/version
-                ::spec/module] :as db} :db} [_ page-changed?]]
-    (let [get-module-fn ::get-module
-          dispatch-fn   (if page-changed?
-                          [::main-events/ignore-changes-modal get-module-fn]
-                          [get-module-fn version])]
-      {:db db
-       :fx [[:dispatch [::main-events/action-interval-start
-                        {:id        refresh-action-get-module
-                         :frequency 20000
-                         :event     dispatch-fn}]]
-            [:dispatch [::main-events/action-interval-start
-                        {:id        refresh-action-get-deployment
-                         :frequency 20000
-                         :event     [::deployments-events/get-deployments
-                                     {:filter-external-arg   (str "module/id='" (:id module) "'")
-                                      :external-filter-only? true
-                                      :pagination-db-path    ::apps-application-spec/deployment-pagination}]}]]]})))
-
-
-
 ;; Validation
-
 (defn get-module
   [module-subtype db]
   (let [component   (get db ::apps-component-spec/module-component)
@@ -192,16 +164,23 @@
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::get-deployments-for-module %]))]})))
 
+(def refresh-action-get-deployment :apps-get-deployment)
 
 (reg-event-fx
   ::get-deployments-for-module
-  (fn [{{:keys [::spec/module]} :db} [_ {id :id}]]
-    (let [module-id (or id (:id module))]
-      (when module-id
-        {:fx [[:dispatch [::deployments-events/get-deployments
-                          {:filter-external-arg   (str "module/id='" module-id "'")
-                           :external-filter-only? true
-                           :pagination-db-path    ::apps-application-spec/deployment-pagination}]]]}))))
+  (fn [{{:keys [::spec/module]} :db} [_ module-arg]]
+    (let [{:keys [id subtype]} (or module-arg module)
+          event [::deployments-events/get-deployments
+                 {:filter-external-arg   (str "module/id='" id "'")
+                  :external-filter-only? true
+                  :pagination-db-path    ::apps-application-spec/deployment-pagination}]]
+      {:fx [[:dispatch
+             [(if (or (nil? id) (utils/project? subtype))
+                ::main-events/action-interval-delete
+                ::main-events/action-interval-start)
+              {:id        refresh-action-get-deployment
+               :frequency 20000
+               :event     event}]]]})))
 
 (reg-event-fx
   ::init-view
@@ -603,7 +582,7 @@
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
-    (let [id (:id module)
+    (let [id      (:id module)
           {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)
           is-app? (= subtype utils/subtype-application)]
       (if (nil? id)
@@ -643,7 +622,7 @@
     (let [query-params {:apps-store-tab (-> db ::apps-store-spec/tab :default-tab)}]
       {:db                  (-> db
                                 (dissoc ::spec/module)
-                                (assoc  ::spec/form-valid? true))
+                                (assoc ::spec/form-valid? true))
        ::cimi-api-fx/delete [id #(dispatch [::main-events/reset-changes-protection
                                             [::routing-events/navigate routes/apps nil query-params]])]})))
 

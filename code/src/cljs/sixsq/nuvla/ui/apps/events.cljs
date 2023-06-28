@@ -42,10 +42,7 @@
                           [::main-events/ignore-changes-modal get-module-fn]
                           [get-module-fn version])]
       {:db db
-       :fx [[:dispatch [::main-events/action-interval-start
-                        {:id        refresh-action-get-module
-                         :frequency 20000
-                         :event     dispatch-fn}]]
+       :fx [[:dispatch dispatch-fn]
             [:dispatch [::main-events/action-interval-start
                         {:id        refresh-action-get-deployment
                          :frequency 20000

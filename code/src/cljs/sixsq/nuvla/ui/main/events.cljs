@@ -199,7 +199,11 @@
         (fn? ignore-changes-modal)
         (do (ignore-changes-modal)
           {:db db-chng-unprtd
-           :fx clear-fx})))))
+           :fx clear-fx})
+
+        (keyword? ignore-changes-modal)
+        {:db db-chng-unprtd
+         :fx (conj clear-fx [:dispatch [ignore-changes-modal]])}))))
 
 (reg-event-fx
   ::after-clear-event

@@ -95,15 +95,6 @@
      (str/capitalize (@tr [:details]))]))
 
 
-(defn save-callback
-  [form-valid?]
-  (dispatch-sync [::events/set-validate-form? true])
-  (dispatch-sync [::events/validate-form])
-  (when form-valid?
-    (dispatch [::events/set-validate-form? false])
-    (dispatch [::events/open-save-modal])))
-
-
 (defn DeleteButton
   [module]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -167,7 +158,6 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         module           (subscribe [::subs/module])
         is-new?          (subscribe [::subs/is-new?])
-        form-valid?      (subscribe [::subs/form-valid?])
         editable?        (subscribe [::subs/editable?])
         module-id        (subscribe [::subs/module-id-version])
         is-project?      (subscribe [::subs/is-project?])
@@ -188,7 +178,7 @@
             :icon     icons/i-floppy
             :class    (when-not @save-disabled? "primary-menu-item")
             :disabled @save-disabled?
-            :on-click #(save-callback @form-valid?)}])
+            :on-click #(dispatch [::events/open-save-modal])}])
 
         (when @is-app?
           [uix/MenuItem

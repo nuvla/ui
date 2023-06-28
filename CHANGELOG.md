@@ -4,6 +4,16 @@
 
 ## Released
 
+## [2.33.10] - 2023-06-28
+
+- Filter comp - Better indication that a filter is active #1308
+- Apps details - Always validate form before opening save modal
+- Apps details - Do not load deployments for project
+- Apps details - Remove refresh button
+- Apps details - Refresh app resets edited fields during edition
+- Edges details - Navigation to NE without view right or to non-existing one make
+  UI crash in dev mode fix
+
 ## [2.33.9] - 2023-06-28
 
 - Apps - Creation of project bugfix, content not allowed

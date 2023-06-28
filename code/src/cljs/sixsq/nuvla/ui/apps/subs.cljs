@@ -111,8 +111,9 @@
   ::save-btn-disabled?
   :<- [::form-valid?]
   :<- [::main-subs/changes-protection?]
-  (fn [[form-valid? page-changed?]]
-    (or (not page-changed?) (not form-valid?))))
+  :<- [::is-description-template?]
+  (fn [[form-valid? page-changed? is-description-template?]]
+    (or (not page-changed?) (not form-valid?) is-description-template?)))
 
 (reg-sub
   ::module-license

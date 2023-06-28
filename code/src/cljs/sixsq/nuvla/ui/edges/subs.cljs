@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.edges.subs
   (:require [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.edges.spec :as spec]
+            [sixsq.nuvla.ui.edges.utils :as utils]
             [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -146,15 +147,16 @@
   (fn [nuvlabox-releases]
     (zipmap (map :release nuvlabox-releases) nuvlabox-releases)))
 
+
 (reg-sub
   ::nuvlabox-releases-options
   :<- [::nuvlabox-releases]
   (fn [nuvlabox-releases]
-    (map
-     (fn [{:keys [id release pre-release]}]
-       {:key release, :text (str release (when pre-release " - pre-release")),
-        :value id, :pre-release pre-release})
-     nuvlabox-releases)))
+    (->> (utils/sort-by-version nuvlabox-releases)
+         (map
+          (fn [{:keys [id release pre-release]}]
+            {:key release, :text (str release (when pre-release " - pre-release")),
+             :value id, :pre-release pre-release})))))
 
 (reg-sub
   ::ssh-keys-available

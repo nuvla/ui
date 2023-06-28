@@ -4,6 +4,14 @@
 
 ## Released
 
+## [2.33.9] - 2023-06-28
+
+- Apps - Creation of project bugfix, content not allowed
+- Edges - Sort by version number descending
+- Router - Reload router components not working fix
+- Deps - Upgrade clojure deps
+- Readme - Document how to run unit tests in repl
+
 ## [2.33.8] - 2023-06-26
 
 ### Changed

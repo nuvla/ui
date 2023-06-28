@@ -231,11 +231,7 @@
           [UnPublishButton @module])
 
         (when @can-publish?
-          [PublishButton @module])
-
-        [components/RefreshMenu
-         {:refresh-disabled? @is-new?
-          :on-refresh        #(dispatch [::events/refresh])}]]])))
+          [PublishButton @module])]])))
 
 
 (defn save-modal

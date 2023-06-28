@@ -541,7 +541,7 @@
 
 (defn clouds-view
   [{path :path}]
-  (timbre/set-level! :info)
+  (timbre/set-min-level! :info)
   (let [[_ uuid] path
         n        (count path)
         root     [Infrastructures]

@@ -3,6 +3,7 @@
             [form-validator.core :as fv]
             [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
             [reagent.core :as r]
+            [goog.dom :as gdom]
             [reagent.dom :as rdom]
             [sixsq.nuvla.ui.about.events :as about-events]
             [sixsq.nuvla.ui.cimi.events :as api-events]
@@ -24,17 +25,9 @@
     (log/info "development mode")))
 
 
-(defn render-component-when-present
-  ([tag comp & {:keys [initialization-fn]}]
-   (when-let [container-element (.getElementById js/document tag)]
-     (log/info "Rendering " tag)
-     (when initialization-fn (initialization-fn))
-     (rdom/render [comp] container-element))))
-
-
 (defn mount-root []
   (clear-subscription-cache!)
-  (render-component-when-present "app" main-views/app))
+  (rdom/render [main-views/app] (gdom/getElement "app")))
 
 
 (defn visibility-watcher []

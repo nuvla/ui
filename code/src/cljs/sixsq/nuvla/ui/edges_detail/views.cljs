@@ -67,15 +67,15 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:with-confirm-step? true
-      :button-text (str (str/capitalize (@tr [:delete])) " " (@tr [:nuvlaedge]))
-      :on-confirm  #(dispatch [::events/delete])
-      :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:class icons/i-trash}]
-                                  (@tr [:delete])])
-      :header      [:span [icons/BoxIcon]
-                    (@tr [:delete-nuvlabox])]
-      :content     [:h3 content]
-      :header-class [:nuvla-edges :delete-modal-header]}]))
+      :button-text        (str (str/capitalize (@tr [:delete])) " " (@tr [:nuvlaedge]))
+      :on-confirm         #(dispatch [::events/delete])
+      :trigger            (r/as-element [ui/MenuItem
+                                         [ui/Icon {:class icons/i-trash}]
+                                         (@tr [:delete])])
+      :header             [:span [icons/BoxIcon]
+                           (@tr [:delete-nuvlabox])]
+      :content            [:h3 content]
+      :header-class       [:nuvla-edges :delete-modal-header]}]))
 
 
 (defn SshKeysDropdown
@@ -1141,10 +1141,10 @@
                                     (or (:name sshkey) (:id sshkey))]]
                                   [ui/ListDescription
                                    (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                :trigger   (r/as-element [:div [ui/Icon {:class icons/i-key
+                :trigger   (r/as-element [:div [ui/Icon {:class  icons/i-key
                                                          :fitted true}]
                                           (@tr [:nuvlabox-detail-ssh-enabled])
-                                          [ui/Icon {:class icons/i-angle-down
+                                          [ui/Icon {:class  icons/i-angle-down
                                                     :fitted true}]])}]]])
           (when docker-server-version
             [ui/TableRow
@@ -1308,7 +1308,7 @@
 (defn TabOverviewCluster
   [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
            cluster-node-role cluster-managers cluster-nodes orchestrator cluster-node-labels]
-    :as _nuvlabox}]
+    :as   _nuvlabox}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :raised    true}
@@ -1337,8 +1337,8 @@
          (when (= cluster-node-role "manager")
            [:<>
             (str " ")
-            [icons/CrownIcon {:corner    true
-                              :color     "blue"}]])]]
+            [icons/CrownIcon {:corner true
+                              :color  "blue"}]])]]
        (when cluster-join-address
          [ui/TableRow
           [ui/TableCell "Cluster Join Address"]
@@ -1377,12 +1377,12 @@
           [ui/TableCell "Swarm Certificate Expiry Date"]
           [ui/TableCell swarm-node-cert-expiry-date]])
 
-       [ui/TableRow {:border-bottom nil}
+       [ui/TableRow
         [ui/TableCell {:col-span 2} "Node Labels"]]
        [ui/TableRow
         [ui/TableCell {:col-span 2
-                       :style {:border :none
-                               :padding 0}}
+                       :style    {:border  :none
+                                  :padding 0}}
          (if (seq cluster-node-labels)
            (for [{:keys [name value]} cluster-node-labels]
              ^{:key (str name value)}
@@ -1392,7 +1392,7 @@
                         :image true}
               name
               [ui/LabelDetail {:color :grey} value]])
-           [:span {:style {:font-size "0.8rem"
+           [:span {:style {:font-size  "0.8rem"
                            :font-style "italic"}}
             (@tr [:no-labels-defined])])]]]]]))
 
@@ -1918,6 +1918,7 @@
   []
   (let [tr          @(subscribe [::i18n-subs/tr])
         nuvlabox    (subscribe [::subs/nuvlabox])
+        {:keys [id state]} @nuvlabox
         can-edit?   @(subscribe [::subs/can-edit?])
         peripherals @(subscribe [::subs/nuvlabox-peripherals-ids])
         deployments @(subscribe [::deployments-subs/deployments])
@@ -1925,8 +1926,8 @@
                                 :key     :overview
                                 :icon    icons/i-eye}
                      :render   #(r/as-element [TabOverview])}]
-    (case (:state @nuvlabox)
-      "SUSPENDED" [overview]
+    (if (= state "SUSPENDED")
+      [overview]
       [overview
        {:menuItem {:content "Location"
                    :key     :location
@@ -1950,7 +1951,7 @@
                    :key     :logs
                    :icon    icons/i-file-code}
         :render   (fn [] (r/as-element [log-views/TabLogs
-                                        (:id @nuvlabox)
+                                        id
                                         #(subscribe [::subs/nuvlabox-components])
                                         false]))}
        {:menuItem {:content (r/as-element [:span "Peripherals"
@@ -1961,9 +1962,10 @@
                    :key     :peripherals
                    :icon    icons/i-usb-drive}
         :render   #(r/as-element [TabPeripherals])}
-       (events-plugin/events-section
-         {:db-path [::spec/events]
-          :href    (:id @nuvlabox)})
+       (when id
+         (events-plugin/events-section
+           {:db-path [::spec/events]
+            :href    id}))
        {:menuItem {:content (r/as-element [:span "Deployments"
                                            [ui/Label {:circular true
                                                       :size     "mini"

@@ -593,8 +593,8 @@
            [EmergencyPlaybooksDropdown (:id resource) (partial on-change-fn :emergency-playbooks-ids)]]]
          [ui/ModalActions
           [uix/Button
-           {:text     button-text
-            :primary  true
+           {:text     "HIHI"
+            ;; :primary  true
             :disabled (empty? playbooks)
             :loading  (true? @loading?)
             :on-click on-click-fn}]]]))))
@@ -1828,7 +1828,7 @@
                                                   "emergency"
                                                   "wrench")}) @playbooks)}]
             (when @can-edit?
-              [ui/Button {:icon     icons/i-info-full
+              [ui/Button {:icon     icons/i-plus-full
                           :size     "mini"
                           :positive true
                           :circular true

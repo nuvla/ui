@@ -59,9 +59,9 @@
 (defn grid-columns-dense
   [device]
   (case device
-    :wide-screen 3
-    :large-screen 2
+    (:wide-screen :large-screen) 3
     1))
+
 
 (def group-changed! (r/atom {}))
 (defn set-group-changed! [id] (swap! group-changed! assoc id true))
@@ -643,62 +643,66 @@
           (@tr [:subscribe])
           (@tr [:try-nuvla-for-14-days]))]])))
 
+(defn SubscriptionCard
+  [{:keys [status start-date trial-start trial-end
+           current-period-start current-period-end]}
+   title-suffix]
+  (let [canceled? (= status "canceled")
+        locale    (subscribe [::i18n-subs/locale])
+        tr        (subscribe [::i18n-subs/tr])
+        loading?  (subscribe [::subs/loading? :subscription])
+        pm?       (subscribe [::subs/payment-methods?])]
+    [ui/Segment {:padded  true
+                 :color   "red"
+                 :loading @loading?
+                 :style   {:height "100%"}}
+     [ui/Header {:as :h2 :dividing true} (@tr [:subscription]) (when title-suffix (str " - " title-suffix))]
+     (if (and status (not canceled?))
+       [ui/Table {:basic "very"}
+        [ui/TableBody
+         [ui/TableRow
+          [ui/TableCell {:width 5} [:b (str/capitalize (@tr [:status]))]]
+          [ui/TableCell {:width 11} (str/capitalize status)]]
+         [ui/TableRow
+          [ui/TableCell [:b (@tr [:start-date])]]
+          [ui/TableCell (some-> start-date (time/time->format "LLL" @locale))]]
+         (when (= status "trialing")
+           [:<>
+            [ui/TableRow
+             [ui/TableCell [:b (@tr [:trial-start-date])]]
+             [ui/TableCell (some-> trial-start
+                                   (time/time->format "LLL" @locale))]]
+            [ui/TableRow
+             [ui/TableCell [:b (@tr [:trial-end-date])]]
+             [ui/TableCell (some-> trial-end (time/time->format "LLL" @locale))]]])
+         [ui/TableRow
+          [ui/TableCell [:b (@tr [:current-period-start])]]
+          [ui/TableCell (some-> current-period-start (time/time->format "LLL" @locale))]]
+         [ui/TableRow
+          [ui/TableCell [:b (@tr [:current-period-end])]]
+          [ui/TableCell (some-> current-period-end (time/time->format "LLL" @locale))]]]]
+       [ui/Grid {:text-align     "center"
+                 :vertical-align "middle"
+                 :style          {:height "100%"}}
+        [ui/GridColumn
+         [ui/Header {:as :h3, :icon true, :disabled true}
+          [icons/MoneyCheckEditIcon]
+          (if canceled?
+            [uix/TR
+             (if @pm?
+               :reactivate-subscription
+               :reactivate-subscription-need-pm)]
+            [uix/TR :not-subscribed-yet])]
+         [:br]
+         [SubscribeButton]]])]))
 
 
-(defn Subscription
+(defn EdgeSubscription
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        locale       (subscribe [::i18n-subs/locale])
-        subscription (subscribe [::subs/subscription])
-        loading?     (subscribe [::subs/loading? :subscription])
-        pm?          (subscribe [::subs/payment-methods?])]
+  (let [subscription (subscribe [::subs/subscription])
+        tr           (subscribe [::i18n-subs/tr])]
     (fn []
-      (let [{:keys [status start-date trial-start trial-end
-                    current-period-start current-period-end]} @subscription
-            canceled? (= status "canceled")]
-        [ui/Segment {:padded  true
-                     :color   "red"
-                     :loading @loading?
-                     :style   {:height "100%"}}
-         [ui/Header {:as :h2 :dividing true} (@tr [:subscription])]
-         (if (and status (not canceled?))
-           [ui/Table {:basic "very"}
-            [ui/TableBody
-             [ui/TableRow
-              [ui/TableCell {:width 5} [:b (str/capitalize (@tr [:status]))]]
-              [ui/TableCell {:width 11} (str/capitalize status)]]
-             [ui/TableRow
-              [ui/TableCell [:b (@tr [:start-date])]]
-              [ui/TableCell (some-> start-date (time/time->format "LLL" @locale))]]
-             (when (= status "trialing")
-               [:<>
-                [ui/TableRow
-                 [ui/TableCell [:b (@tr [:trial-start-date])]]
-                 [ui/TableCell (some-> trial-start
-                                       (time/time->format "LLL" @locale))]]
-                [ui/TableRow
-                 [ui/TableCell [:b (@tr [:trial-end-date])]]
-                 [ui/TableCell (some-> trial-end (time/time->format "LLL" @locale))]]])
-             [ui/TableRow
-              [ui/TableCell [:b (@tr [:current-period-start])]]
-              [ui/TableCell (some-> current-period-start (time/time->format "LLL" @locale))]]
-             [ui/TableRow
-              [ui/TableCell [:b (@tr [:current-period-end])]]
-              [ui/TableCell (some-> current-period-end (time/time->format "LLL" @locale))]]]]
-           [ui/Grid {:text-align     "center"
-                     :vertical-align "middle"
-                     :style          {:height "100%"}}
-            [ui/GridColumn
-             [ui/Header {:as :h3, :icon true, :disabled true}
-              [icons/MoneyCheckEditIcon]
-              (if canceled?
-                [uix/TR
-                 (if @pm?
-                   :reactivate-subscription
-                   :reactivate-subscription-need-pm)]
-                [uix/TR :not-subscribed-yet])]
-             [:br]
-             [SubscribeButton]]])]))))
+      [SubscriptionCard @subscription (@tr [:nuvlaedge])])))
 
 
 (defn AddPaymentMethodButton
@@ -1494,7 +1498,7 @@
                               ;; refactor back
                               (or true @show-subscription)
 
-                              (conj Subscription)
+                              (conj EdgeSubscription)
                               @show-consumption (conj CurrentConsumption)
                               true seq)]
         [ui/Grid {:stackable true

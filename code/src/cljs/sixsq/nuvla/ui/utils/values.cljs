@@ -92,7 +92,8 @@
     [:span {:style {:cursor :pointer}} value " "
      [ui/Popup {:content (r/as-element [:p popup-text])
                 :trigger (r/as-element [ui/Icon
-                                        {:class [icons/i-clipboard (when (not show?) "hide")]
+                                        {:class [(when (not show?) "hide")]
+                                         :name  "clipboard outline"
                                          :color "blue"
                                          :style {:color "black"}}])}]]]))
 

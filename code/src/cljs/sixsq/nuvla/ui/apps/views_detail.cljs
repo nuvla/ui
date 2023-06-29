@@ -97,20 +97,22 @@
 
 (defn DeleteButton
   [module]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        is-new? (subscribe [::subs/is-new?])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        is-new?     (subscribe [::subs/is-new?])
+        is-project? (subscribe [::subs/is-project?])
         {:keys [id name description]} module
-        content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
+        content (str (or name id) (when description " - ") (utils-values/markdown->summary description))
+        tr-key (if @is-project? [:delete-project] [:delete-module])]
     [uix/ModalDanger
      {:with-confirm-step? true
       :on-confirm  (fn [] (dispatch [::events/delete-module id]))
-      :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
+      :trigger     (r/as-element [ui/MenuItem {:disabled (or @is-new? (seq (:children module)))}
                                   [icons/TrashIcon]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
-      :header      [:span [icons/LayerGroupIcon] (@tr [:delete-module])]
+      :header      [:span [icons/LayerGroupIcon] (@tr tr-key)]
       :danger-msg  (@tr [:module-delete-warning])
-      :button-text (str (str/capitalize (@tr [:delete])) " " (@tr [:application]))
+      :button-text (@tr tr-key)
       :header-class [:nuvla-apps :delete-modal-header]}]))
 
 

@@ -28,7 +28,7 @@ test('Creating a new project', async ({ page }, { config }) => {
   await expect(page).toHaveURL(`${baseURL}/ui/apps/${newProjectName.toLowerCase()}?apps-project-tab=overview`);
   await page.locator('a:has-text("Delete")').click();
   await page.getByText('I understand that deleting this application is permanent and cannot be undone.').click();
-  await page.getByRole('button', { name: 'Delete Application' }).click();
-  await page.getByRole('button', { name: 'Yes: Delete Application' }).click();
+  await page.getByRole('button', { name: 'Delete Project' }).click();
+  await page.getByRole('button', { name: 'Yes: Delete Project' }).click();
   await expect(page).toHaveURL(`${baseURL}/ui/apps?apps-store-tab=appstore`);
 });

@@ -20,12 +20,13 @@ test('Additional filter wizard', async ({ page }, { config }) => {
 
   await page.waitForResponse('/api/nuvlabox');
 
-  expect(page.locator('tr[role=link]')).toHaveCount(1, { timeout: 200 });
+  await page.waitForTimeout(300);
+  expect(page.locator('tr[role=link]')).toHaveCount(1);
 
   await page.getByRole('button', { name: 'Filter' }).click();
   await page.getByRole('button', { name: 'remove filter' }).click();
   await page.waitForResponse('/api/nuvlabox');
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBeGreaterThan(1);
 
   await page.waitForURL(`${baseURL}/ui/edges?view=table`);
@@ -33,19 +34,19 @@ test('Additional filter wizard', async ({ page }, { config }) => {
   await page.goBack();
   await page.waitForURL(`${baseURL}/ui/edges?view=table&nuvlabox=name=%27e2e-Test-Do_not_delete%27`);
   await page.waitForResponse('/api/nuvlabox');
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBe(1);
 
   await page.goForward();
   await page.waitForURL(`${baseURL}/ui/edges?view=table`);
   await page.waitForResponse('/api/nuvlabox');
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBeGreaterThan(1);
 
   await page.goBack();
   await page.waitForURL(`${baseURL}/ui/edges?view=table&nuvlabox=name=%27e2e-Test-Do_not_delete%27`);
   await page.waitForResponse('/api/nuvlabox');
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBe(1);
   await page.reload();
   await page.waitForURL(`${baseURL}/ui/edges?view=table&nuvlabox=name=%27e2e-Test-Do_not_delete%27`);

@@ -27,12 +27,17 @@
                                     "resources/public/ui/css/semantic.min.css"
                                     "resources/public/ui/css/themes"
                                     "resources/public/ui/css/version.css"
+                                    "resources/public/ui/index.html"
                                     "resources/public/ui/css/react-datepicker.min.css"
                                     "resources/public/ui/css/leaflet.css"
                                     "resources/public/ui/css/leaflet.draw.css"
                                     "resources/public/ui/css/images"]
 
   :auto-clean false
+
+  :prep-tasks []
+
+  :pom-location "target/"
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
@@ -79,5 +84,7 @@
                          "watch" "nuvla-ui"]
             "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
                          "cljs-repl" "nuvla-ui"]
-            "install"   ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                         "release" "nuvla-ui"]})
+            "install"   ["do"
+                         ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                          "release" "nuvla-ui"]
+                         ["install"]]})

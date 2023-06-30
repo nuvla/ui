@@ -135,7 +135,7 @@
        [OverviewModuleSummary]]]]))
 
 
-(defn module-detail-panes
+(defn project-detail-panes
   []
   (let [module    (subscribe [::apps-subs/module])
         editable? (subscribe [::apps-subs/editable?])]
@@ -162,7 +162,7 @@
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)
-            panes  (module-detail-panes)]
+            panes  (project-detail-panes)]
         [ui/Container {:fluid true}
          [uix/PageHeader icons/i-folder (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]

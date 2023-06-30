@@ -1,6 +1,5 @@
 (def parent-version "6.7.12")
 (def sixsq-nuvla-api-version "2.0.11")
-(def version "2.33.11-SNAPSHOT")
 
 (defproject sixsq.nuvla.ui/code "2.33.11-SNAPSHOT"
 
@@ -12,10 +11,7 @@
             :url          "http://www.apache.org/licenses/LICENSE-2.0.txt"
             :distribution :repo}
 
-  :plugins [[lein-parent "0.3.2"]
-            [lein-unpack-resources "0.1.1"]
-            [pdok/lein-filegen "0.1.0"]
-            [lein-resource "16.9.1"]]
+  :plugins [[lein-parent "0.3.2"]]
 
   :parent-project {:coords  [sixsq.nuvla/parent ~parent-version]
                    :inherit [:plugins
@@ -37,40 +33,6 @@
                                     "resources/public/ui/css/images"]
 
   :auto-clean false
-
-  :prep-tasks []
-
-  :pom-location "target/"
-
-  :filegen [{:data        ["#release-version:after {content: '" ~version "';}\n"]
-             :template-fn #(apply str %)
-             :target      "target/version.css"}]
-
-  :resource {:skip-stencil [#".*"]
-
-
-             ;; This should be mirrored in `cp_assets.cljs`, if you add or remove files from here, do the same in `cp_assets.cljs`
-             :resource-paths
-             [["node_modules/semantic-ui-css/semantic.min.css"
-               {:target-path "resources/public/ui/css/semantic.min.css"}]
-              ["node_modules/semantic-ui-css/themes"
-               {:target-path "resources/public/ui/css/themes"}]
-              ["node_modules/react-datepicker/dist/react-datepicker.min.css"
-               {:target-path "resources/public/ui/css/react-datepicker.min.css"}]
-              ["target/version.css"
-               {:target-path "resources/public/ui/css/version.css"}]
-              ["node_modules/leaflet/dist/leaflet.css"
-               {:target-path "resources/public/ui/css/leaflet.css"}]
-              ["node_modules/leaflet-draw/dist/leaflet.draw.css"
-               {:target-path "resources/public/ui/css/leaflet.draw.css"}]
-              ["node_modules/leaflet-draw/dist/images/spritesheet.png"
-               {:target-path "resources/public/ui/css/images/spritesheet.png"}]
-              ["node_modules/leaflet-draw/dist/images/spritesheet-2x.png"
-               {:target-path "resources/public/ui/css/images/spritesheet-2x.png"}]
-              ["node_modules/leaflet-draw/dist/images/spritesheet.svg"
-               {:target-path "resources/public/ui/css/images/spritesheet.svg"}]
-              ["node_modules/leaflet/dist/images"
-               {:target-path "resources/public/ui/css/images"}]]}
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
@@ -113,16 +75,9 @@
 
 
 
-  :aliases {"prepare"   ["do"
-                         ["filegen"]
-                         ["resource"]]
-            "dev"       ["do"
-                         "prepare"
-                         ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                          "watch" "nuvla-ui"]]
+  :aliases {"dev"       ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                         "watch" "nuvla-ui"]
             "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
                          "cljs-repl" "nuvla-ui"]
-            "install"   ["do" "prepare"
-                         ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                          "release" "nuvla-ui"]
-                         ["install"]]})
+            "install"   ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                         "release" "nuvla-ui"]})

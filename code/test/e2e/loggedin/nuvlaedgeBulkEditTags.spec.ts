@@ -23,7 +23,6 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.locator('div[role="combobox"] input[type="text"]').press('Enter');
   await closeDropDown();
   await page.getByRole('button', { name: 'edit tags' }).click();
-  await page.pause();
   await page.getByRole('button', { name: 'Yes: Add tags' }).click();
 
   // ASSERTION 1

@@ -46,7 +46,8 @@ const config: PlaywrightTestConfig = {
   reporter: process.env.CI ? [['github'], ['html'], ['list']] : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    screenshot: 'only-on-failure',
+    video: 'on',
+    screenshot: 'on',
     video: process.env.CI ? 'retain-on-failure' : 'on',
     storageState: 'storageState.json',
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */

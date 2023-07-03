@@ -110,6 +110,18 @@
     (::spec/upcoming-invoice db)))
 
 (reg-sub
+  ::apps-subscriptions-consumtions
+  :<- [::subscription]
+  :<- [::upcoming-invoice]
+  :<- [::upcoming-invoice-lines]
+  (fn [[sub upcoming-invoice upcoming-invoice-lines] _]
+   (map (fn [n] {:app-name (str "App " n " - FAKE_DATA")
+                  :subscription sub
+                  :upcoming-invoice upcoming-invoice
+                  :upcoming-lines upcoming-invoice-lines})
+         (range (+ 1 (rand-int 5))))))
+
+(reg-sub
   ::upcoming-invoice-lines
   :<- [::upcoming-invoice]
   (fn [upcoming-invoice]

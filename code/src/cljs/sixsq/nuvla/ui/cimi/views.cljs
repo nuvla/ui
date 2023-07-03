@@ -473,6 +473,7 @@
 
 (defn CimiResource
   []
+  (dispatch [::events/get-results])
   (let [path         (subscribe [::route-subs/nav-path])
         query-params (subscribe [::route-subs/nav-query-params])]
     (fn []

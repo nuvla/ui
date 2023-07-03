@@ -265,8 +265,8 @@
 (defn cimi-detail
   [path]
   (dispatch [::events/get (path->resource-id path)])
-  (let [loading?           (subscribe [::subs/loading?])
-        resource           (subscribe [::subs/resource])]
+  (let [loading? (subscribe [::subs/loading?])
+        resource (subscribe [::subs/resource])]
     (fn []
       (let [resource-id       (path->resource-id path)
             {:keys [id updated acl] :as resource-value} @resource

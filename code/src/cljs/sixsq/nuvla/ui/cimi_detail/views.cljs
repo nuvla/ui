@@ -263,12 +263,12 @@
 
 
 (defn cimi-detail
-  []
-  (let [path               (subscribe [::route-subs/nav-path])
-        loading?           (subscribe [::subs/loading?])
+  [path]
+  (dispatch [::events/get (path->resource-id path)])
+  (let [loading?           (subscribe [::subs/loading?])
         resource           (subscribe [::subs/resource])]
     (fn []
-      (let [resource-id       (path->resource-id @path)
+      (let [resource-id       (path->resource-id path)
             {:keys [id updated acl] :as resource-value} @resource
             correct-resource? (= resource-id id)]
         (if (= resource-id id)
@@ -287,4 +287,4 @@
              {:on-refresh #(dispatch [::events/get resource-id])
               :loading?   @loading?}]
             (when (and (not @loading?) correct-resource?) @resource)]]
-          (dispatch [::events/get (path->resource-id @path)]))))))
+          (dispatch [::events/get (path->resource-id path)]))))))

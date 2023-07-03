@@ -486,7 +486,7 @@
            2 [:<>
               [MenuBar]
               [ResultsDisplay]]
-           3 [cimi-detail-views/cimi-detail]
+           3 [cimi-detail-views/cimi-detail @path]
            [MenuBar])]))))
 
 (defn ApiView

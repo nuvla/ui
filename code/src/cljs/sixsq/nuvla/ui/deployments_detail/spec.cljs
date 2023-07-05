@@ -20,5 +20,4 @@
    ::events                    (events-plugin/build-spec
                                  :default-items-per-page 15)
    ::node-parameters           nil
-   ::deployment-log-controller nil
-   ::upcoming-invoice          nil})
+   ::deployment-log-controller nil})

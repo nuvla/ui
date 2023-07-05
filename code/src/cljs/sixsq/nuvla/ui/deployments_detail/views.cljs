@@ -230,51 +230,6 @@
         env-vars       (get @module-content :environmental-variables [])]
     (list-section env-vars :env-vars :env-variables)))
 
-
-(defn billing-section
-  []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        upcoming-invoice (subscribe [::subs/upcoming-invoice])
-        deployment       (subscribe [::subs/deployment])
-        locale           (subscribe [::i18n-subs/locale])
-        {total    :total
-         currency :currency} @upcoming-invoice
-        {:keys [description period]} (some-> @upcoming-invoice :lines first)
-        coupon           (get-in @upcoming-invoice [:discount :coupon])]
-    (when (some? (:subscription-id @deployment))
-      {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:billing]))])
-                  :key     :billing
-                  :icon    icons/i-euro}
-       :render   #(r/as-element
-                    [ui/Segment
-                     [ui/Table {:collapsing true
-                                :basic      "very"
-                                :padded     false}
-                      [ui/TableBody
-                       [ui/TableRow
-                        [ui/TableCell
-                         [:b (str/capitalize (@tr [:details])) ": "]]
-                        [ui/TableCell
-                         description]]
-                       [ui/TableRow
-                        [ui/TableCell
-                         [:b (str/capitalize (@tr [:period])) ": "]]
-                        [ui/TableCell
-                         (some-> period :start (time/time->format "LL" @locale))
-                         " - "
-                         (some-> period :end (time/time->format "LL" @locale))]]
-                       [ui/TableRow
-                        [ui/TableCell
-                         [:b (str/capitalize (@tr [:coupon])) ": "]]
-                        [ui/TableCell
-                         (or (:name coupon) "-")]]
-                       [ui/TableRow
-                        [ui/TableCell
-                         [:b (str/capitalize (@tr [:total])) ": "]]
-                        [ui/TableCell
-                         (or total "-") " " currency]]]]])})))
-
-
 (defn logs-section
   []
   (let [tr         (subscribe [::i18n-subs/tr])
@@ -755,7 +710,6 @@
           :href    (:id @deployment)}))
      (parameters-section)
      (env-vars-section)
-     (billing-section)
      (job-views/jobs-section)
      (acl/TabAcls {:e          deployment
                    :can-edit?  (not @read-only?)

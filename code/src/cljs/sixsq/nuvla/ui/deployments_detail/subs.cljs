@@ -133,13 +133,6 @@
   (fn [[module-versions id]]
     (apps-utils/find-current-version module-versions id)))
 
-
-(reg-sub
-  ::upcoming-invoice
-  (fn [db]
-    (::spec/upcoming-invoice db)))
-
-
 (reg-sub
   ::not-found?
   (fn [db]

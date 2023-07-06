@@ -428,11 +428,11 @@
                                            :push-state? true}]))
                              (close-fn))}
                (@tr [:done])]]])]
+         (when persist?
+           [:div {:style {:align-self :start}}
+            [ff/help-popup (@tr [:additional-filter-help-text])]])
          (when (and show-clear-button-outside-modal? active-filter?)
            ^{:key 1}
            [filter-popup
             [:div {:style {:width "75%"}}
-             [FilteredAttributes {:filter-text    default-filter }]]])
-         (when persist?
-           [:div {:style {:align-self :start}}
-            [ff/help-popup (@tr [:additional-filter-help-text])]])]))))
+             [FilteredAttributes {:filter-text default-filter }]]])]))))

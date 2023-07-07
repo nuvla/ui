@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.about.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.main.components :as main-components]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -58,7 +59,7 @@
                  :size     :small
                  :src      "/ui/images/by_sixsq_mark_red_on_transparent_300px.png"}]]
      [ui/ListSA
-      [ui/ListItem (@tr [:version-number]) ": " [:span#release-version "v"]]
+      [ui/ListItem (@tr [:version-number]) ": " [main-components/SpanVersion]]
       [ui/ListItem [:a {:href   "https://sixsq.com/nuvla"
                         :target "_blank"}
                     (str/capitalize (@tr [:product-info]))]]

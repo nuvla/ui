@@ -11,7 +11,6 @@
 
     <link rel="stylesheet" href="/ui/css/semantic.min.css">
     <link rel="stylesheet" href="/ui/css/nuvla-ui.css">
-    <link rel="stylesheet" href="/ui/css/version.css">
     <link rel='icon' href='/ui/images/favicon-v2.ico' type='image/x-icon'>
     <link rel="stylesheet" href="/ui/css/react-datepicker.min.css">
     <link rel="stylesheet" href="/ui/css/leaflet.css">

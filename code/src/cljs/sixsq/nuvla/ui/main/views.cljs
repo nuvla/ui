@@ -100,7 +100,6 @@
       [breadcrumbs-dropdown]
       [breadcrumbs-links])))
 
-
 (defn footer
   []
   (let [grid-style   {:style {:padding-top    5
@@ -114,7 +113,7 @@
       [ui/GridColumn grid-style
        [:a {:on-click #(dispatch [::routing-events/navigate routes/about])
             :style    {:cursor "pointer"}}
-        [:span#release-version (str "v")]]]
+        [main-components/SpanVersion]]]
       [ui/GridColumn grid-style
        [i18n-views/LocaleDropdown]]]]))
 

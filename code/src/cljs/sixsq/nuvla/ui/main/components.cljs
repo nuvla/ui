@@ -342,3 +342,8 @@
          ff/nbsp
          (when editable?
            [Pencil editing?])]))))
+
+(defn SpanVersion
+  []
+  (let [version (subscribe [::subs/ui-version-current])]
+    [:span#release-version "v" @version]))

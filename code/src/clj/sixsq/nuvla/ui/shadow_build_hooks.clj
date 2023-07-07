@@ -10,12 +10,9 @@
     (sh/sh "cp" "-r" source-path target-path))
   build-state)
 
-(defn generate-version-css
+(defn generate-version
   {:shadow.build/stage :configure}
   [{::build/keys [config] :as build-state} target]
   (io/make-parents target)
-  (spit (io/file target)
-        (str "#release-version:after {content: '"
-             (:release-version config)
-             "';}\n"))
+  (spit (io/file target) (:release-version config))
   build-state)

@@ -340,7 +340,7 @@
   ::get-ui-version
   (fn []
     (let [force-no-cache (int (time/timestamp))
-          url            (str "/ui/css/version.css?" force-no-cache)]
+          url            (str "/ui/version?" force-no-cache)]
       {:http-xhrio {:method          :get
                     :uri             url
                     :timeout         8000

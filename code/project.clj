@@ -24,14 +24,7 @@
                                     "target"
                                     "node_modules"
                                     ".shadow-cljs"
-                                    "resources/public/ui/css/semantic.min.css"
-                                    "resources/public/ui/css/themes"
-                                    "resources/public/ui/css/version.css"
-                                    "resources/public/ui/index.html"
-                                    "resources/public/ui/css/react-datepicker.min.css"
-                                    "resources/public/ui/css/leaflet.css"
-                                    "resources/public/ui/css/leaflet.draw.css"
-                                    "resources/public/ui/css/images"]
+                                    "resources/public/ui/index.html"]
 
   :auto-clean false
 
@@ -70,7 +63,8 @@
                             org.clojure/google-closure-library
                             org.clojure/google-closure-library-third-party]]
                           [binaryage/devtools "1.0.7" :scope "test"]
-                          [day8.re-frame/re-frame-10x "1.6.0"]]}
+                          [day8.re-frame/re-frame-10x "1.6.0"]
+                          [com.github.ljpengelen/shadow-cljs-hash-assets-hook "1.1.0"]]}
 
    :scljs {:dependencies [[thheller/shadow-cljs "2.17.8"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]

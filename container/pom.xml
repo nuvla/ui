@@ -202,7 +202,7 @@
             <argument>-a</argument>
             <argument>-not</argument>
             <argument>-name</argument>
-            <argument>version.css</argument>
+            <argument>version</argument>
             <argument>-a</argument>
             <argument>-not</argument>
             <argument>-name</argument>

@@ -142,7 +142,9 @@
                                  (when (general-utils/can-operation? "upcoming-invoice" customer)
                                    [:dispatch [::upcoming-invoice]])
                                  (when (general-utils/can-operation? "list-payment-methods" customer)
-                                   [:dispatch [::list-payment-methods]])]))))
+                                   [:dispatch [::list-payment-methods]])
+                                 (when (general-utils/can-operation? "list-app-subscriptions" customer)
+                                   [:dispatch [::get-app-subscriptions]])]))))
 
 (reg-event-fx
   ::search-existing-customer
@@ -169,6 +171,20 @@
   (fn [{:keys [::spec/loading] :as db} [_ subscription]]
     (assoc db ::spec/subscription subscription
               ::spec/loading (disj loading :subscription))))
+
+(reg-event-fx
+  ::get-app-subscriptions
+  (fn [{{:keys [::spec/customer] :as db} :db}]
+    (let [on-success #(dispatch [::set-app-subscriptions %])]
+      {:db                     (update db ::spec/loading conj :app-subscriptions)
+       ::cimi-api-fx/operation [(:id customer) "list-app-subscriptions" on-success]})))
+
+
+(reg-event-db
+  ::set-app-subscriptions
+  (fn [{:keys [::spec/loading] :as db} [_ subscription]]
+    (assoc db ::spec/app-subscriptions subscription
+              ::spec/loading (disj loading :app-subscriptions))))
 
 (reg-event-fx
   ::customer-info

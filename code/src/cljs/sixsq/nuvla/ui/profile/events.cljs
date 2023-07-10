@@ -181,12 +181,25 @@
       {:db                     (update db ::spec/loading conj :app-subscriptions)
        ::cimi-api-fx/operation [(:id customer) "list-app-subscriptions" on-success]})))
 
+(reg-event-fx
+  ::set-app-subscriptions
+  (fn [{{:keys [::spec/loading] :as db} :db} [_ app-subs]]
+    {:db (assoc db ::spec/app-subscriptions app-subs
+                ::spec/loading (disj loading :app-subscriptions))
+     :fx (map (fn [app-sub-id]
+                [:dispatch [::get-next-app-invoice app-sub-id]])
+              (keys app-subs))}))
+
+(reg-event-fx
+  ::get-next-app-invoice
+  (fn [{{:keys [::spec/customer]} :db} [_ app-sub-id]]
+    (let [on-success #(dispatch [::set-next-app-invoice app-sub-id %])]
+      {::cimi-api-fx/operation [(:id customer) "upcoming-invoice" on-success :data {:id app-sub-id}]})))
 
 (reg-event-db
-  ::set-app-subscriptions
-  (fn [{:keys [::spec/loading] :as db} [_ subscription]]
-    (assoc db ::spec/app-subscriptions subscription
-              ::spec/loading (disj loading :app-subscriptions))))
+  ::set-next-app-invoice
+  (fn [db [_ app-sub-id upcoming-invoice]]
+    (update-in db [::spec/app-subscriptions app-sub-id] assoc :upcoming-invoice upcoming-invoice)))
 
 (reg-event-fx
   ::customer-info

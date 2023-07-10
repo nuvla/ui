@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.profile.subs
-  (:require [re-frame.core :refer [reg-sub]]
+  (:require [day8.re-frame-10x.inlined-deps.re-frame.v1v1v2.re-frame.core :refer [subscribe]]
+            [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.profile.spec :as spec]
@@ -109,6 +110,20 @@
   (fn [db]
     (::spec/upcoming-invoice db)))
 
+(defn- calc-upcoming-invoices
+  [upcoming-invoice]
+  (->> upcoming-invoice
+       :lines
+       (group-by :period)
+       (sort-by #(-> % first :start))))
+
+
+(reg-sub
+  ::upcoming-invoice-lines
+  :<- [::upcoming-invoice]
+  (fn [upcoming-invoice]
+    (calc-upcoming-invoices upcoming-invoice)))
+
 (reg-sub
  ::app-subscriptions
  :-> ::spec/app-subscriptions)
@@ -120,29 +135,15 @@
    (sort-by :sort-order (vals app-subs))))
 
 (reg-sub
-  ::apps-subscriptions-consumtions
+  ::apps-subscriptions-consumptions
   :<- [::app-subscriptions-list]
-  :<- [::subscription]
-  :<- [::upcoming-invoice]
-  :<- [::upcoming-invoice-lines]
-  (fn [[app-subs sub upcoming-invoice upcoming-invoice-lines] _]
-   (into (mapv (fn [sub] {:app-name (-> sub :metadata :application)
-                         :subscription sub}) app-subs)
-         (map (fn [n] {:app-name (str "App " n " - FAKE_DATA")
-                       :subscription sub
-                       :upcoming-invoice upcoming-invoice
-                       :upcoming-lines upcoming-invoice-lines})
-              (range (+ 10 (rand-int 5)))))))
-
-
-(reg-sub
-  ::upcoming-invoice-lines
-  :<- [::upcoming-invoice]
-  (fn [upcoming-invoice]
-    (->> upcoming-invoice
-         :lines
-         (group-by :period)
-         (sort-by #(-> % first :start)))))
+  (fn [app-subs _]
+    (map (fn [{:keys [upcoming-invoice] :as sub}]
+           {:app-name (-> sub :metadata :application)
+            :subscription sub
+            :upcoming-invoice upcoming-invoice
+            :upcoming-lines (calc-upcoming-invoices upcoming-invoice)})
+         app-subs)))
 
 (reg-sub
   ::invoices

@@ -1501,9 +1501,10 @@
 (defn GridColumPaddedBottom [c]
   [ui/GridColumn {:style {:padding-bottom "20px"}} c])
 
+
 (defn AppsSubsAndConsumption
   []
-  (let [apps-subs-and-consumptions (subscribe [::subs/apps-subscriptions-consumtions])
+  (let [apps-subs-and-consumptions (subscribe [::subs/apps-subscriptions-consumptions])
         loading?         (subscribe [::subs/loading? :upcoming-invoice])]
     (fn []
       [:<>

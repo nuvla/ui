@@ -175,7 +175,9 @@
 (reg-event-fx
   ::get-app-subscriptions
   (fn [{{:keys [::spec/customer] :as db} :db}]
-    (let [on-success #(dispatch [::set-app-subscriptions %])]
+    (let [on-success #(dispatch [::set-app-subscriptions
+                                 (zipmap (map :id %)
+                                         (map-indexed (fn [idx sub] (assoc sub :sort-order idx)) %))])]
       {:db                     (update db ::spec/loading conj :app-subscriptions)
        ::cimi-api-fx/operation [(:id customer) "list-app-subscriptions" on-success]})))
 

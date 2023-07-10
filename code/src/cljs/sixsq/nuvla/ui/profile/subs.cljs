@@ -114,8 +114,14 @@
  :-> ::spec/app-subscriptions)
 
 (reg-sub
+ ::app-subscriptions-list
+ :<- [::app-subscriptions]
+ (fn [app-subs]
+   (sort-by :sort-order (vals app-subs))))
+
+(reg-sub
   ::apps-subscriptions-consumtions
-  :<- [::app-subscriptions]
+  :<- [::app-subscriptions-list]
   :<- [::subscription]
   :<- [::upcoming-invoice]
   :<- [::upcoming-invoice-lines]

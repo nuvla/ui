@@ -110,16 +110,24 @@
     (::spec/upcoming-invoice db)))
 
 (reg-sub
+ ::app-subscriptions
+ :-> ::spec/app-subscriptions)
+
+(reg-sub
   ::apps-subscriptions-consumtions
+  :<- [::app-subscriptions]
   :<- [::subscription]
   :<- [::upcoming-invoice]
   :<- [::upcoming-invoice-lines]
-  (fn [[sub upcoming-invoice upcoming-invoice-lines] _]
-   (map (fn [n] {:app-name (str "App " n " - FAKE_DATA")
-                  :subscription sub
-                  :upcoming-invoice upcoming-invoice
-                  :upcoming-lines upcoming-invoice-lines})
-         (range (+ 1 (rand-int 5))))))
+  (fn [[app-subs sub upcoming-invoice upcoming-invoice-lines] _]
+   (into (mapv (fn [sub] {:app-name (-> sub :metadata :application)
+                         :subscription sub}) app-subs)
+         (map (fn [n] {:app-name (str "App " n " - FAKE_DATA")
+                       :subscription sub
+                       :upcoming-invoice upcoming-invoice
+                       :upcoming-lines upcoming-invoice-lines})
+              (range (+ 10 (rand-int 5)))))))
+
 
 (reg-sub
   ::upcoming-invoice-lines

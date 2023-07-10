@@ -1510,12 +1510,14 @@
        (for [{:keys [upcoming-lines upcoming-invoice app-name subscription]}
              @apps-subs-and-consumptions]
          ^{:key app-name}
-         [GridColumPaddedBottom
-          [CurrentConsumptionView
-           {:label    app-name
-            :loading? @loading?
-            :upcoming-invoice upcoming-invoice
-            :upcoming-lines upcoming-lines}]])])))
+         [:<>
+          [GridColumPaddedBottom [SubscriptionCard subscription app-name]]
+          [GridColumPaddedBottom
+           [CurrentConsumptionView
+            {:label    app-name
+             :loading? @loading?
+             :upcoming-invoice upcoming-invoice
+             :upcoming-lines upcoming-lines}]]])])))
 
 (defn- GridRowWith2or1Cols [c]
   (let [device (subscribe [::main-subs/device])]

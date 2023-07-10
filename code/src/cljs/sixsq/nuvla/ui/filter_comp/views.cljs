@@ -311,26 +311,29 @@
               :push-state?  true}]))
 
 (defn- ClearButton
-  [{:keys [active-filter? on-done close-fn resource-name persist?]
+  [{:keys [active-filter? on-done close-fn resource-name persist? view]
     :or   {persist? true}}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Button
-     {:positive true
-      :style    {:align-items :center}
-      :disabled (not active-filter?)
-      :on-click #(do
-                   (if persist?
-                     (clear-filter on-done resource-name)
-                     (on-done ""))
-                   (close-fn))}
-     (@tr [:clear-filter])]))
+  (let [tr (subscribe [::i18n-subs/tr])
+        clear-fn #(do
+                    (if persist?
+                      (clear-filter on-done resource-name)
+                      (on-done ""))
+                    (close-fn))]
+    (if view
+      [:button
+       {:style {:border :none
+                :z-index 1000
+                :cursor :pointer}
+        :on-click clear-fn}
+       view]
+      [ui/Button
+       {:positive true
+        :style    {:align-items :center
+                   :z-index 1000}
+        :disabled (not active-filter?)
+        :on-click clear-fn}
+       (or view (@tr [:clear-filter]))])))
 
-(defn- FilteredAttributes
-  [{:keys [filter-text]}]
-  [:div {:style {:font-style :italic
-                 :overflow :hidden
-                 :text-overflow :ellipsis
-                 :white-space :nowrap}} filter-text])
 
 (reg-event-fx
   ::call-filter-fn
@@ -371,7 +374,11 @@
                               [ui/Popup
                                {:trigger  (r/as-element trigger)
                                 :disabled (not active-filter?)}
-                               [:div [FilterSummary {:additional-filters-applied default-filter}]]]))]
+                               [:div [FilterSummary {:additional-filters-applied default-filter}]]]))
+            clear-button   (fn [icon] [ClearButton
+                                       (merge {:persist? persist? :on-done on-done :close-fn close-fn
+                                               :active-filter? active-filter? :resource-name resource-name}
+                                              {:view icon})])]
         [:div
          {:style {:display     :flex
                   :align-items :center}}
@@ -414,8 +421,7 @@
                [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
                 (or (and @show-error? error) filter-string)]]]
              [ui/ModalActions
-              [ClearButton {:persist? persist? :on-done on-done :close-fn close-fn
-                            :active-filter? active-filter? :resource-name resource-name}]
+              [clear-button]
               [ui/Button
                {:positive true
                 :disabled (some? error)
@@ -428,11 +434,20 @@
                                            :push-state? true}]))
                              (close-fn))}
                (@tr [:done])]]])]
+         (when persist?
+           [:div {:style {:align-self :start}}
+            [ff/help-popup (@tr [:additional-filter-help-text])]])
          (when (and show-clear-button-outside-modal? active-filter?)
            ^{:key 1}
            [filter-popup
-            [:div {:style {:width "75%"}}
-             [FilteredAttributes {:filter-text    default-filter }]]])
-         (when persist?
-           [:div {:style {:align-self :start}}
-            [ff/help-popup (@tr [:additional-filter-help-text])]])]))))
+            [:div {:style {:display :flex
+                           :width "75%"}}
+             [:div {:style
+                    {:font-size "0.8rem"
+                     :font-style :italic
+                     :overflow :hidden
+                     :text-overflow :ellipsis
+                     :white-space :nowrap}}
+              default-filter]
+             [clear-button
+              [icons/XMarkIcon {:style {:margin-right 0}}]]]])]))))

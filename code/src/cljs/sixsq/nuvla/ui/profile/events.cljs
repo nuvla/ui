@@ -175,31 +175,30 @@
 (reg-event-fx
   ::get-app-subscriptions
   (fn [{{:keys [::spec/customer] :as db} :db}]
-    (let [on-success #(dispatch [::set-app-subscriptions
-                                 (zipmap (map :id %)
-                                         (map-indexed (fn [idx sub] (assoc sub :sort-order idx)) %))])]
-      {:db                     (update db ::spec/loading conj :app-subscriptions)
+    (let [on-success #(dispatch [::get-app-sub-invoices
+                                 (map-indexed (fn [idx app-sub] (assoc app-sub :sort-order idx)) %)])]
+      {:db (assoc db ::spec/app-subscriptions nil)
        ::cimi-api-fx/operation [(:id customer) "list-app-subscriptions" on-success]})))
 
 (reg-event-fx
-  ::set-app-subscriptions
-  (fn [{{:keys [::spec/loading] :as db} :db} [_ app-subs]]
-    {:db (assoc db ::spec/app-subscriptions app-subs
-                ::spec/loading (disj loading :app-subscriptions))
-     :fx (map (fn [app-sub-id]
-                [:dispatch [::get-next-app-invoice app-sub-id]])
-              (keys app-subs))}))
+ ::get-app-sub-invoices
+ (fn [_ [_ app-subs]]
+   {:fx (map (fn [app-sub]
+               [:dispatch [::get-next-app-invoice app-sub]])
+             app-subs)}))
 
 (reg-event-fx
   ::get-next-app-invoice
-  (fn [{{:keys [::spec/customer]} :db} [_ app-sub-id]]
-    (let [on-success #(dispatch [::set-next-app-invoice app-sub-id %])]
-      {::cimi-api-fx/operation [(:id customer) "upcoming-invoice" on-success :data {:id app-sub-id}]})))
+  (fn [{{:keys [::spec/customer]} :db} [_ app-sub]]
+    (let [on-success #(dispatch [::set-app-sub app-sub %])]
+      {::cimi-api-fx/operation [(:id customer) "upcoming-invoice" on-success :data {:id (:id app-sub)}]})))
 
 (reg-event-db
-  ::set-next-app-invoice
-  (fn [db [_ app-sub-id upcoming-invoice]]
-    (update-in db [::spec/app-subscriptions app-sub-id] assoc :upcoming-invoice upcoming-invoice)))
+  ::set-app-sub
+  (fn [db [_ app-sub upcoming-invoice]]
+    (when (-> upcoming-invoice :lines seq)
+      (->> (assoc app-sub :upcoming-invoice upcoming-invoice)
+           (assoc-in db [::spec/app-subscriptions (:id app-sub)])))))
 
 (reg-event-fx
   ::customer-info

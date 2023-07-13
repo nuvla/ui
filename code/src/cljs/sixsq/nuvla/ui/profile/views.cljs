@@ -699,10 +699,9 @@
 
 (defn EdgeSubscription
   []
-  (let [subscription (subscribe [::subs/subscription])
-        tr           (subscribe [::i18n-subs/tr])]
+  (let [subscription (subscribe [::subs/subscription])]
     (fn []
-      [SubscriptionCard @subscription (@tr [:nuvlaedge])])))
+      [SubscriptionCard @subscription])))
 
 
 (defn AddPaymentMethodButton
@@ -864,7 +863,7 @@
        " " (utils-general/format "%.2f" amount)))
 
 (defn- CurrentConsumptionView
-  [{:keys [upcoming-invoice loading? upcoming-lines label]}]
+  [{:keys [upcoming-invoice loading? upcoming-lines]}]
   (let [tr      (subscribe [::i18n-subs/tr])
         locale @(subscribe [::i18n-subs/locale])
         {upcoming-total    :total
@@ -875,13 +874,14 @@
                  :color   "brown"
                  :loading loading?
                  :style   {:height "100%"}}
-     [ui/Header {:as :h2 :dividing true} (str (@tr [:current-consumption]) " - " label)]
+     [ui/Header {:as :h2 :dividing true} (@tr [:current-consumption])]
      (if (empty? upcoming-lines)
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
                  :style          {:height "100%"}}
         [ui/GridColumn
-         [ui/Header {:as :h3, :icon true, :disabled true}
+         [ui/Header {:style {:margin 0}
+                     :as :h3, :icon true, :disabled true}
           [icons/FileInvoiceIcon]
           (@tr [:not-any])]]]
        [ui/Table
@@ -1495,12 +1495,15 @@
       [CurrentConsumptionView
        {:upcoming-invoice @upcoming-invoice
         :loading? @loading?
-        :upcoming-lines @upcoming-lines
-        :label (@tr [:nuvlaedge])}])))
+        :upcoming-lines @upcoming-lines}])))
+
+(defn- GridRowWith2or1Cols [c]
+  (let [device (subscribe [::main-subs/device])]
+    [ui/GridRow {:columns (grid-columns-dense @device)}
+     c]))
 
 (defn GridColumPaddedBottom [c]
   [ui/GridColumn {:style {:padding-bottom "20px"}} c])
-
 
 (defn AppsSubsAndConsumption
   []
@@ -1511,26 +1514,25 @@
        (for [{:keys [upcoming-lines upcoming-invoice app-name subscription]}
              @apps-subs-and-consumptions]
          ^{:key app-name}
-         [:<>
-          [GridColumPaddedBottom [SubscriptionCard subscription app-name]]
-          [GridColumPaddedBottom
-           [CurrentConsumptionView
-            {:label    app-name
-             :loading? @loading?
-             :upcoming-invoice upcoming-invoice
-             :upcoming-lines upcoming-lines}]]])])))
-
-(defn- GridRowWith2or1Cols [c]
-  (let [device (subscribe [::main-subs/device])]
-    [ui/GridRow {:columns (grid-columns-dense @device)}
-     c]))
+         [ui/Card {:style {:width "100%"
+                           :padding "1rem"}}
+          [:h1 app-name]
+          [ui/Grid
+           [GridRowWith2or1Cols
+            [:<>
+             [GridColumPaddedBottom [SubscriptionCard subscription]]
+             [GridColumPaddedBottom
+              [CurrentConsumptionView
+               {:label    app-name
+                :loading? @loading?
+                :upcoming-invoice upcoming-invoice
+                :upcoming-lines upcoming-lines}]]]]]])])))
 
 (defn Subscriptions
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
         show-subscription    (subscribe [::subs/show-subscription])
-        show-consumption     (subscribe [::subs/show-consumption])
-        device               (subscribe [::main-subs/device])]
+        show-consumption     (subscribe [::subs/show-consumption])]
     (fn []
       (if-let [sub-sections (cond-> []
 
@@ -1540,13 +1542,17 @@
 
                               @show-consumption (conj EdgeCurrentConsumption)
                               true seq)]
-        [ui/Grid {:stackable true
-                  :centered  true}
-         [GridRowWith2or1Cols
-          [:<> (for [s sub-sections]
-                 ^{:key (random-uuid)}
-                 [GridColumPaddedBottom [s]])
-           [AppsSubsAndConsumption]]]]
+        [:<>
+         [ui/Card {:style {:width "100%"
+                           :padding "1rem"}}
+          [:h1 (@tr [:nuvlaedge])]
+          [ui/Grid {:stackable true
+                    :centered  true}
+           [GridRowWith2or1Cols
+            (for [s sub-sections]
+              ^{:key (random-uuid)}
+              [GridColumPaddedBottom [s]])]]]
+         [AppsSubsAndConsumption]]
 
         [ui/Message {:info true}
          (@tr [:no-subscription-information])]))))

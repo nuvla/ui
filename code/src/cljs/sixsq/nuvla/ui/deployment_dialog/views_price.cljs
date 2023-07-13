@@ -33,7 +33,6 @@
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         price-completed? (subscribe [::subs/price-completed?])
-        coupon           (subscribe [::subs/coupon])
         deployment       (subscribe [::subs/deployment])
         start?           (subscribe [::subs/deployment-start?])
         price            (subscribe [::subs/price])
@@ -69,11 +68,4 @@
       [ui/Checkbox {:label     (@tr [:accept-costs])
                     :checked   @price-completed?
                     :on-change (ui-callback/checked
-                                 #(dispatch [::events/set-price-accepted? %]))}]]
-     [ui/Input
-      {:label         "Coupon"
-       :placeholder   "code"
-       :default-value (or @coupon "")
-       :on-change     (ui-callback/input-callback
-                        #(dispatch [::events/set-deployment
-                                    (assoc @deployment :coupon %)]))}]]))
+                                 #(dispatch [::events/set-price-accepted? %]))}]]]))

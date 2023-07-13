@@ -17,28 +17,18 @@
   (fn [db [_ module]]
     (assoc db ::spec/module-versions (:versions module))))
 
-(reg-event-db
-  ::set-upcoming-invoice
-  (fn [db [_ upcoming-invoice]]
-    (assoc db ::spec/upcoming-invoice upcoming-invoice)))
-
 (reg-event-fx
   ::set-deployment
-  (fn [{{:keys [::spec/module-versions
-                ::spec/upcoming-invoice] :as db} :db}
-       [_ {:keys [id module subscription-id] :as resource}]]
-    (let [module-href (:href module)
-          on-success  #(dispatch [::set-upcoming-invoice %])]
+  (fn [{{:keys [::spec/module-versions] :as db} :db}
+       [_ {:keys [id module] :as resource}]]
+    (let [module-href (:href module)]
       (cond-> {:db (assoc db ::spec/not-found? (nil? resource)
                              ::main-spec/loading? false
                              ::spec/loading? false
                              ::spec/deployment resource)}
               (and (not module-versions)
                    module-href) (assoc ::cimi-api-fx/get
-                                       [module-href #(dispatch [::set-module-versions %])])
-              (and (nil? upcoming-invoice)
-                   subscription-id) (assoc ::cimi-api-fx/operation
-                                           [id "upcoming-invoice" on-success])))))
+                                       [module-href #(dispatch [::set-module-versions %])])))))
 
 (reg-event-db
   ::set-deployment-parameters

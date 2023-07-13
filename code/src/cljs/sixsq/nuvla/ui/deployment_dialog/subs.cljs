@@ -210,11 +210,6 @@
   :-> :license)
 
 (reg-sub
-  ::coupon
-  :<- [::deployment]
-  :-> :coupon)
-
-(reg-sub
   ::files
   :<- [::module-content]
   :-> :files)

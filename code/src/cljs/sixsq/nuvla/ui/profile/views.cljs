@@ -646,7 +646,7 @@
 (defn SubscriptionCard
   [{:keys [status start-date trial-start trial-end
            current-period-start current-period-end]}
-   title-suffix]
+   title]
   (let [canceled? (= status "canceled")
         locale    (subscribe [::i18n-subs/locale])
         tr        (subscribe [::i18n-subs/tr])
@@ -656,7 +656,7 @@
                  :color   "red"
                  :loading @loading?
                  :style   {:height "100%"}}
-     [ui/Header {:as :h2 :dividing true} (@tr [:subscription]) (when title-suffix (str " - " title-suffix))]
+     [ui/Header {:as :h2 :dividing true} (or title (@tr [:subscription]))]
      (if (and status (not canceled?))
        [ui/Table {:basic "very"}
         [ui/TableBody
@@ -1507,7 +1507,8 @@
 
 (defn AppsSubsAndConsumption
   []
-  (let [apps-subs-and-consumptions (subscribe [::subs/apps-subscriptions-consumptions])
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        apps-subs-and-consumptions (subscribe [::subs/apps-subscriptions-consumptions])
         loading?         (subscribe [::subs/loading? :upcoming-invoice])]
     (fn []
       [:<>
@@ -1520,7 +1521,7 @@
           [ui/Grid
            [GridRowWith2or1Cols
             [:<>
-             [GridColumPaddedBottom [SubscriptionCard subscription]]
+             [GridColumPaddedBottom [SubscriptionCard subscription (@tr [:usage])]]
              [GridColumPaddedBottom
               [CurrentConsumptionView
                {:label    app-name

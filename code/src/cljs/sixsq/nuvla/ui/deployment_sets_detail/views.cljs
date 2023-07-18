@@ -10,6 +10,7 @@
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.views :as deployments-views]
+            [sixsq.nuvla.ui.edges.views :refer [StatisticStatesEdgeView]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
@@ -20,6 +21,7 @@
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
+            [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routes-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -36,6 +38,7 @@
 
 
 (def refresh-action-id :deployment-set-get-deployment-set)
+
 
 
 (defn refresh
@@ -111,6 +114,7 @@
             :on-refresh #(refresh uuid)}]]]))))
 
 
+
 (defn EditableCell
   [attribute]
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -174,26 +178,80 @@
 
 (defn TabOverview
   []
-  (let [deployment-set (subscribe [::subs/deployment-set])]
+  (let [deployment-set (subscribe [::subs/deployment-set])
+        edges-summary (subscribe [::subs/edges-summary])]
     (fn []
-      (let [{:keys [id tags]} @deployment-set]
+      (let [{:keys [id tags]} @deployment-set
+            tr (subscribe [::i18n-subs/tr])]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
                    :padded    true}
-          [ui/GridRow
-           [ui/GridColumn {:stretched true}
-            [TabOverviewDeploymentSet @deployment-set]]
-           [ui/GridColumn {:stretched true}
-            [deployments-views/DeploymentsOverviewSegment
-             ::deployments-subs/deployments nil nil
-             #(dispatch [::routes-events/navigate
-                         (routes-utils/pathify [(routes-utils/name->href routes/deployments)
-                                                (str "?deployment=deployment-set='" id "'")])])]]]
+          [ui/GridColumn {:stretched true}
+           [TabOverviewDeploymentSet @deployment-set]]
+          [ui/GridColumn {:stretched true}
+           [ui/Segment {:class     :nuvla-apps
+                        :secondary true
+                        :raised    true}
+
+            [:h4 {:class [:ui-header :ui-card-header]}
+             [icons/Icon {:name icons/i-box}]
+             (str/capitalize (@tr [:apps]))]
+
+            [Table {:rows (mapv (fn [idx] {:app-name (str "App " idx)
+                                           :version (str "v" idx)
+                                           :status "yeah"
+                                           :last-update (time/time->format (js/Date.))})
+
+                             (range
+                               (* 5
+                                  (js/Math.random))))}]]]
+
+          [ui/GridColumn {:stretched true}
+           [ui/Segment {:class     :nuvla-edges
+                        :secondary true
+                        :raised    true
+                        :style     {:display         "flex"
+                                    :flex-direction  "column"
+                                    :justify-content "space-between"}}
+
+            [:h4 {:class [:ui-header :ui-card-header]}
+             [icons/Icon {:name icons/i-box}]
+             (str (@tr [:nuvlaedge]) "s")]
+
+             [StatisticStatesEdgeView @edges-summary]]]
+
+          [ui/GridColumn {:stretched true}
+           [deployments-views/DeploymentsOverviewSegment
+            ::deployments-subs/deployments nil nil
+            #(dispatch [::routes-events/navigate
+                        (routes-utils/pathify [(routes-utils/name->href routes/deployments)
+                                               (str "?deployment=deployment-set='" id "'")])])]]
 
           (when (seq tags)
             [ui/GridColumn
              [TabOverviewTags @deployment-set]])]]))))
+
+(into {} [[:count 2231]
+          [:aggregations
+           {:terms:state {:doc_count_error_upper_bound 0, :sum_other_doc_count 0, :buckets
+                          [{:key "COMMISSIONED", :doc_count 2085}
+                           {:key "NEW", :doc_count 56}
+                           {:key "SUSPENDED", :doc_count 48}
+                           {:key "DECOMMISSIONED", :doc_count 31}
+                           {:key "DECOMMISSIONING", :doc_count 8}
+                           {:key "ACTIVATED", :doc_count 2}
+                           {:key "ERROR", :doc_count 1}]},
+            :terms:online {:doc_count_error_upper_bound 0, :sum_other_doc_count 0,
+                           :buckets
+                           [{:key 1, :key_as_string "true", :doc_count 1616}
+                            {:key 0, :key_as_string "false", :doc_count 477}]}}]
+          [:acl {:query ["group/nuvla-user"], :add ["group/nuvla-user"], :bulk-action ["group/nuvla-user"]}]
+          [:resource-type "nuvlabox-collection"]
+          [:id "nuvlabox"]
+          [:resources []]
+          [:operations [{:rel "add", :href "nuvlabox"} {:rel "bulk-delete", :href "nuvlabox"}]]])
+
 
 (defn TabsDeploymentSet
   []

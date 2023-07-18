@@ -152,3 +152,29 @@
   :<- [::step-apps-targets-complete?]
   ;;todo require all mandatory params to be filled up?
   :-> #(some false? %))
+
+(reg-sub
+  ::edges-summary
+  (fn []
+    {:count 2223,
+     :aggregations
+     {:terms:state
+      {:doc_count_error_upper_bound 0,
+       :sum_other_doc_count 0,
+       :buckets
+       [{:key "COMMISSIONED", :doc_count 2078}
+        {:key "NEW", :doc_count 55}
+        {:key "SUSPENDED", :doc_count 48}
+        {:key "DECOMMISSIONED", :doc_count 31}
+        {:key "DECOMMISSIONING", :doc_count 7}
+        {:key "ACTIVATED", :doc_count 3}
+        {:key "ERROR", :doc_count 1}]},
+      :terms:online
+      {:doc_count_error_upper_bound 0,
+       :sum_other_doc_count 0,
+       :buckets [{:key 1, :key_as_string "true", :doc_count 1614} {:key 0, :key_as_string "false", :doc_count 471}]}},
+     :acl {:query ["group/nuvla-user"], :add ["group/nuvla-user"], :bulk-action ["group/nuvla-user"]},
+     :resource-type "nuvlabox-collection",
+     :id "nuvlabox",
+     :resources [],
+     :operations [{:rel "add", :href "nuvlabox"} {:rel "bulk-delete", :href "nuvlabox"}]}))

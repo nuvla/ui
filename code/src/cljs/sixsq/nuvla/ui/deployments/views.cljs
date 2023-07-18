@@ -401,7 +401,7 @@
                              :flex-direction  "column"
                              :justify-content "space-between"}}
 
-     [:h4 {:class :ui-header
+     [:h4 {:class [:ui-header :ui-card-header]
            :style {:border-radius ".28571429rem .28571429rem 0 0"}}
       [icons/Icon {:name icons/i-rocket}] (str/capitalize (@tr [:deployments]))]
 

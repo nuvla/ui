@@ -881,6 +881,12 @@ body .divider-red {
   margin-right: 0;
 }
 
+.ui-card-header {
+  background-color: var(--accent-color) !important;
+  border-radius: '.28571429rem .28571429rem 0 0';
+  color: #ffffff;
+}
+
 .nuvla-edges .ui-header,
 .nuvla-edges .button {
   background-color: var(--edges-color) !important;

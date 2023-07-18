@@ -44,56 +44,60 @@
   [new-view]
   (dispatch [::events/change-view-type new-view]))
 
+(defn StatisticStatesEdgeView
+  []
+  (fn [summary clickable?]
+    (let [tr      (subscribe [::i18n-subs/tr])
+          total           (:count summary)
+          online-statuses (general-utils/aggregate-to-map
+                            (get-in summary [:aggregations :terms:online :buckets]))
+          online          (:1 online-statuses)
+          offline         (:0 online-statuses)
+          unknown         (- total (+ online offline))]
+      [ui/StatisticGroup {:widths (when-not clickable? 4)
+                          :size   "tiny"}
+       (for [statistic-opts [{:value          total
+                              :icons          [icons/i-box]
+                              :label          "TOTAL"
+                              :positive-color nil}
+                             {:value          online
+                              :icons          [icons/i-power]
+                              :label          utils/status-online
+                              :positive-color "green"}
+                             {:value          offline
+                              :icons          [icons/i-power]
+                              :label          utils/status-offline
+                              :positive-color "red"}
+                             {:value          unknown
+                              :icons          [icons/i-power]
+                              :label          utils/status-unknown
+                              :positive-color "orange"}]]
+         ^{:key (str "stat-state-" (:label statistic-opts))}
+         [components/StatisticState
+          (assoc statistic-opts
+            :stacked? true
+            :clickable? clickable?
+            :set-state-selector-event ::events/set-state-selector
+            :state-selector-subs ::subs/state-selector)])
+       (when clickable?
+         [ui/Button
+          {:icon     true
+           :style    {:margin "50px auto 15px"}
+           :on-click #(when clickable?
+                        (reset! show-state-statistics (not @show-state-statistics))
+                        (when-not @show-state-statistics
+                          (dispatch [::events/set-state-selector nil])))}
+          [icons/ArrowDownIcon]
+          \u0020
+          (@tr [:commissionning-states])])])))
+
 
 (defn StatisticStatesEdge
   [clickable?]
   (let [summary (if clickable?
                   (subscribe [::subs/nuvlaboxes-summary])
-                  (subscribe [::subs/nuvlaboxes-summary-all]))
-        tr      (subscribe [::i18n-subs/tr])]
-    (fn [clickable?]
-      (let [total           (:count @summary)
-            online-statuses (general-utils/aggregate-to-map
-                              (get-in @summary [:aggregations :terms:online :buckets]))
-            online          (:1 online-statuses)
-            offline         (:0 online-statuses)
-            unknown         (- total (+ online offline))]
-        [ui/StatisticGroup {:widths (when-not clickable? 4)
-                            :size   "tiny"}
-         (for [statistic-opts [{:value          total
-                                :icons          [icons/i-box]
-                                :label          "TOTAL"
-                                :positive-color nil}
-                               {:value          online
-                                :icons          [icons/i-power]
-                                :label          utils/status-online
-                                :positive-color "green"}
-                               {:value          offline
-                                :icons          [icons/i-power]
-                                :label          utils/status-offline
-                                :positive-color "red"}
-                               {:value          unknown
-                                :icons          [icons/i-power]
-                                :label          utils/status-unknown
-                                :positive-color "orange"}]]
-           ^{:key (str "stat-state-" (:label statistic-opts))}
-           [components/StatisticState
-            (assoc statistic-opts
-              :stacked? true
-              :clickable? clickable?
-              :set-state-selector-event ::events/set-state-selector
-              :state-selector-subs ::subs/state-selector)])
-         (when clickable?
-           [ui/Button
-            {:icon     true
-             :style    {:margin "50px auto 15px"}
-             :on-click #(when clickable?
-                          (reset! show-state-statistics (not @show-state-statistics))
-                          (when-not @show-state-statistics
-                            (dispatch [::events/set-state-selector nil])))}
-            [icons/ArrowDownIcon]
-            \u0020
-            (@tr [:commissionning-states])])]))))
+                  (subscribe [::subs/nuvlaboxes-summary-all]))]
+    [StatisticStatesEdgeView summary clickable?]))
 
 (defn StatisticStates
   []

@@ -103,6 +103,8 @@
                         {:change-event            change-event
                          :ignore-chng-protection? ignore-chng-protection?}]]]})))
 
+(defn keyword->string [k] (if (keyword? k) (name k) k))
+
 (reg-event-fx
   ::change-query-param
   (fn [{{:keys [current-route] :as db} :db} [_ new-partial-route-data]]
@@ -115,7 +117,9 @@
              (utils/name->href
                route-name
                path-params
-               (update-values query-params #(some-> % js/encodeURIComponent)))]]})))
+               (update-values query-params #(some-> %
+                                                    keyword->string
+                                                    js/encodeURIComponent)))]]})))
 
 (reg-event-fx
   ::store-in-query-param

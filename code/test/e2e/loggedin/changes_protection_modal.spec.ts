@@ -77,7 +77,7 @@ async function setUp(page: Page, baseURL) {
   await page.getByRole('link', { name: 'Navigate Apps' }).click();
   await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
   await page.getByText('DO NOT DELETE --- e2e test project', { exact: true }).click();
-  await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=%3Aoverview`);
+  await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview`);
   await page.getByRole('link', { name: 'Details' }).click();
   await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=details`);
   await page.locator('input[type="input"]').click();

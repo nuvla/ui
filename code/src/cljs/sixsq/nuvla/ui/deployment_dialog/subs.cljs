@@ -540,7 +540,8 @@
         registries-completed? license license-completed? price price-completed? version-completed?
         selected-credential-id]]
     (let [cred-invalid? @(subscribe [::creds-subs/credential-check-status-invalid? selected-credential-id])]
-      (or (not deployment)
+      false
+      #_(or (not deployment)
           (and (not data-completed?) data-step-active?)
           (not credentials-completed?)
           (not env-variables-completed?)

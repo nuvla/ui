@@ -31,14 +31,14 @@
                 {:field-key :state}
                 {:field-key :progress}
                 {:field-key :return-code}
-                {:field-key  :message
-                 :accessor   :status-message
-                 :cell (fn [{{:keys [state]} :row-data
-                             :keys [cell-data]}]
-                         (if (= state "QUEUED")
-                           [:span {:style {:display "none"}} cell-data]
-                           cell-data))
-                 :cell-props {:style {:white-space "pre"}}}]
+                {:field-key :message
+                 :accessor  :status-message
+                 :cell      (fn [{{:keys [state]} :row-data
+                                  :keys           [cell-data]}]
+                              [:span {:style (cond-> {:white-space "pre"}
+                                                     (= state "QUEUED")
+                                                     (assoc :display "none"))}
+                               cell-data])}]
                :rows resources}]
        [pagination-plugin/Pagination
         {:db-path      [::spec/pagination]

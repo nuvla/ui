@@ -142,7 +142,9 @@
                                  (when (general-utils/can-operation? "upcoming-invoice" customer)
                                    [:dispatch [::upcoming-invoice]])
                                  (when (general-utils/can-operation? "list-payment-methods" customer)
-                                   [:dispatch [::list-payment-methods]])]))))
+                                   [:dispatch [::list-payment-methods]])
+                                 (when (general-utils/can-operation? "list-app-subscriptions" customer)
+                                   [:dispatch [::get-app-subscriptions]])]))))
 
 (reg-event-fx
   ::search-existing-customer
@@ -169,6 +171,34 @@
   (fn [{:keys [::spec/loading] :as db} [_ subscription]]
     (assoc db ::spec/subscription subscription
               ::spec/loading (disj loading :subscription))))
+
+(reg-event-fx
+  ::get-app-subscriptions
+  (fn [{{:keys [::spec/customer] :as db} :db}]
+    (let [on-success #(dispatch [::get-app-sub-invoices
+                                 (map-indexed (fn [idx app-sub] (assoc app-sub :sort-order idx)) %)])]
+      {:db                     (assoc db ::spec/app-subscriptions nil)
+       ::cimi-api-fx/operation [(:id customer) "list-app-subscriptions" on-success]})))
+
+(reg-event-fx
+  ::get-app-sub-invoices
+  (fn [_ [_ app-subs]]
+    {:fx (map (fn [app-sub]
+                [:dispatch [::get-next-app-invoice app-sub]])
+              app-subs)}))
+
+(reg-event-fx
+  ::get-next-app-invoice
+  (fn [{{:keys [::spec/customer]} :db} [_ app-sub]]
+    (let [on-success #(dispatch [::set-app-sub app-sub %])]
+      {::cimi-api-fx/operation [(:id customer) "upcoming-invoice" on-success :data {:id (:id app-sub)}]})))
+
+(reg-event-db
+  ::set-app-sub
+  (fn [db [_ app-sub upcoming-invoice]]
+    (when (-> upcoming-invoice :lines seq)
+      (->> (assoc app-sub :upcoming-invoice upcoming-invoice)
+           (assoc-in db [::spec/app-subscriptions (:id app-sub)])))))
 
 (reg-event-fx
   ::customer-info

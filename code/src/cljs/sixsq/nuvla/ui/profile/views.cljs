@@ -59,9 +59,9 @@
 (defn grid-columns-dense
   [device]
   (case device
-    :wide-screen 3
-    :large-screen 2
+    (:wide-screen :large-screen) 2
     1))
+
 
 (def group-changed! (r/atom {}))
 (defn set-group-changed! [id] (swap! group-changed! assoc id true))
@@ -643,62 +643,65 @@
           (@tr [:subscribe])
           (@tr [:try-nuvla-for-14-days]))]])))
 
+(defn SubscriptionCard
+  [{:keys [status start-date trial-start trial-end
+           current-period-start current-period-end]}
+   title]
+  (let [canceled? (= status "canceled")
+        locale    (subscribe [::i18n-subs/locale])
+        tr        (subscribe [::i18n-subs/tr])
+        loading?  (subscribe [::subs/loading? :subscription])
+        pm?       (subscribe [::subs/payment-methods?])]
+    [ui/Segment {:padded  true
+                 :color   "red"
+                 :loading @loading?
+                 :style   {:height "100%"}}
+     [ui/Header {:as :h2 :dividing true} (or title (@tr [:subscription]))]
+     (if (and status (not canceled?))
+       [ui/Table {:basic "very"}
+        [ui/TableBody
+         [ui/TableRow
+          [ui/TableCell {:width 5} [:b (str/capitalize (@tr [:status]))]]
+          [ui/TableCell {:width 11} (str/capitalize status)]]
+         [ui/TableRow
+          [ui/TableCell [:b (@tr [:start-date])]]
+          [ui/TableCell (some-> start-date (time/time->format "LLL" @locale))]]
+         (when (= status "trialing")
+           [:<>
+            [ui/TableRow
+             [ui/TableCell [:b (@tr [:trial-start-date])]]
+             [ui/TableCell (some-> trial-start
+                                   (time/time->format "LLL" @locale))]]
+            [ui/TableRow
+             [ui/TableCell [:b (@tr [:trial-end-date])]]
+             [ui/TableCell (some-> trial-end (time/time->format "LLL" @locale))]]])
+         [ui/TableRow
+          [ui/TableCell [:b (@tr [:current-period-start])]]
+          [ui/TableCell (some-> current-period-start (time/time->format "LLL" @locale))]]
+         [ui/TableRow
+          [ui/TableCell [:b (@tr [:current-period-end])]]
+          [ui/TableCell (some-> current-period-end (time/time->format "LLL" @locale))]]]]
+       [ui/Grid {:text-align     "center"
+                 :vertical-align "middle"
+                 :style          {:height "100%"}}
+        [ui/GridColumn
+         [ui/Header {:as :h3, :icon true, :disabled true}
+          [icons/MoneyCheckEditIcon]
+          (if canceled?
+            [uix/TR
+             (if @pm?
+               :reactivate-subscription
+               :reactivate-subscription-need-pm)]
+            [uix/TR :not-subscribed-yet])]
+         [:br]
+         [SubscribeButton]]])]))
 
 
-(defn Subscription
+(defn EdgeSubscription
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        locale       (subscribe [::i18n-subs/locale])
-        subscription (subscribe [::subs/subscription])
-        loading?     (subscribe [::subs/loading? :subscription])
-        pm?          (subscribe [::subs/payment-methods?])]
+  (let [subscription (subscribe [::subs/subscription])]
     (fn []
-      (let [{:keys [status start-date trial-start trial-end
-                    current-period-start current-period-end]} @subscription
-            canceled? (= status "canceled")]
-        [ui/Segment {:padded  true
-                     :color   "red"
-                     :loading @loading?
-                     :style   {:height "100%"}}
-         [ui/Header {:as :h2 :dividing true} (@tr [:subscription])]
-         (if (and status (not canceled?))
-           [ui/Table {:basic "very"}
-            [ui/TableBody
-             [ui/TableRow
-              [ui/TableCell {:width 5} [:b (str/capitalize (@tr [:status]))]]
-              [ui/TableCell {:width 11} (str/capitalize status)]]
-             [ui/TableRow
-              [ui/TableCell [:b (@tr [:start-date])]]
-              [ui/TableCell (some-> start-date (time/time->format "LLL" @locale))]]
-             (when (= status "trialing")
-               [:<>
-                [ui/TableRow
-                 [ui/TableCell [:b (@tr [:trial-start-date])]]
-                 [ui/TableCell (some-> trial-start
-                                       (time/time->format "LLL" @locale))]]
-                [ui/TableRow
-                 [ui/TableCell [:b (@tr [:trial-end-date])]]
-                 [ui/TableCell (some-> trial-end (time/time->format "LLL" @locale))]]])
-             [ui/TableRow
-              [ui/TableCell [:b (@tr [:current-period-start])]]
-              [ui/TableCell (some-> current-period-start (time/time->format "LLL" @locale))]]
-             [ui/TableRow
-              [ui/TableCell [:b (@tr [:current-period-end])]]
-              [ui/TableCell (some-> current-period-end (time/time->format "LLL" @locale))]]]]
-           [ui/Grid {:text-align     "center"
-                     :vertical-align "middle"
-                     :style          {:height "100%"}}
-            [ui/GridColumn
-             [ui/Header {:as :h3, :icon true, :disabled true}
-              [icons/MoneyCheckEditIcon]
-              (if canceled?
-                [uix/TR
-                 (if @pm?
-                   :reactivate-subscription
-                   :reactivate-subscription-need-pm)]
-                [uix/TR :not-subscribed-yet])]
-             [:br]
-             [SubscribeButton]]])]))))
+      [SubscriptionCard @subscription])))
 
 
 (defn AddPaymentMethodButton
@@ -788,8 +791,7 @@
         (dispatch [::intercom-events/set-event "Is subscription owner" (= user-id subscription-user-id)])
         [ui/Segment {:padded  true
                      :color   "purple"
-                     :loading @loading?
-                     :style   {:height "100%"}}
+                     :loading @loading?}
          [ui/Header {:as :h2 :dividing true} (@tr [:payment-methods])]
          (if @cards-bank-accounts
            [ui/Table {:basic "very"}
@@ -860,80 +862,79 @@
   (str (if (= currency "eur") "€" currency)
        " " (utils-general/format "%.2f" amount)))
 
+(defn- CurrentConsumptionView
+  [{:keys [upcoming-invoice loading? upcoming-lines]}]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale @(subscribe [::i18n-subs/locale])
+        {upcoming-total    :total
+         upcoming-subtotal :subtotal
+         upcoming-currency :currency
+         {:keys [coupon]}  :discount} upcoming-invoice]
+    [ui/Segment {:padded  true
+                 :color   "brown"
+                 :loading loading?
+                 :style   {:height "100%"}}
+     [ui/Header {:as :h2 :dividing true} (@tr [:current-consumption])]
+     (if (empty? upcoming-lines)
+       [ui/Grid {:text-align     "center"
+                 :vertical-align "middle"
+                 :style          {:height "100%"}}
+        [ui/GridColumn
+         [ui/Header {:style {:margin 0}
+                     :as    :h3, :icon true, :disabled true}
+          [icons/FileInvoiceIcon]
+          (@tr [:not-any])]]]
+       [ui/Table
+        [ui/TableHeader
+         [ui/TableRow
+          [ui/TableHeaderCell (str/capitalize (@tr [:description]))]
+          [ui/TableHeaderCell {:text-align "right"} (@tr [:amount])]]]
+        [ui/TableBody
+         (for [[period lines] upcoming-lines]
+           ^{:key (str period)}
+           [:<>
+            [ui/TableRow
+             [ui/TableCell {:col-span 2, :style {:color "grey"}}
+              (str (some-> period :start (time/time->format "LL" locale))
+                   " - "
+                   (some-> period :end (time/time->format "LL" locale)))]]
+            (for [{:keys [description amount currency]} lines]
+              ^{:key (str period description)}
+              [ui/TableRow
+               [ui/TableCell description]
+               [ui/TableCell {:text-align "right"}
+                (format-currency currency amount)]])])
 
-(defn CurrentConsumption
-  []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        loading?         (subscribe [::subs/loading? :upcoming-invoice])
-        upcoming-invoice (subscribe [::subs/upcoming-invoice])
-        upcoming-lines   (subscribe [::subs/upcoming-invoice-lines])]
-    (fn []
-      (let [locale @(subscribe [::i18n-subs/locale])
-            {upcoming-total    :total
-             upcoming-subtotal :subtotal
-             upcoming-currency :currency
-             {:keys [coupon]}  :discount} @upcoming-invoice]
-        [ui/Segment {:padded  true
-                     :color   "brown"
-                     :loading @loading?
-                     :style   {:height "100%"}}
-         [ui/Header {:as :h2 :dividing true} (@tr [:current-consumption])]
-         (if (seq @upcoming-lines)
-           [ui/Table
-            [ui/TableHeader
+         (when upcoming-subtotal
+           [ui/TableRow {:active true}
+            [ui/TableCell [:i [:b (@tr [:subtotal])]]]
+            [ui/TableCell {:text-align "right"}
+             [:b [:i (format-currency
+                       upcoming-currency upcoming-subtotal)]]]])
+         (when coupon
+           (let [{:keys [percent-off amount-off currency]} coupon]
              [ui/TableRow
-              [ui/TableHeaderCell (str/capitalize (@tr [:description]))]
-              [ui/TableHeaderCell {:text-align "right"} (@tr [:amount])]]]
-            [ui/TableBody
-             (for [[period lines] @upcoming-lines]
-               ^{:key (str period)}
-               [:<>
-                [ui/TableRow
-                 [ui/TableCell {:col-span 2, :style {:color "grey"}}
-                  (str (some-> period :start (time/time->format "LL" locale))
-                       " - "
-                       (some-> period :end (time/time->format "LL" locale)))]]
-                (for [{:keys [description amount currency]} lines]
-                  ^{:key (str period description)}
-                  [ui/TableRow
-                   [ui/TableCell description]
-                   [ui/TableCell {:text-align "right"}
-                    (format-currency currency amount)]])])
+              [ui/TableCell
+               [:i (str (:name coupon) " ("
+                        (when percent-off
+                          (str percent-off "%"))
+                        (when amount-off
+                          (format-currency currency amount-off))
+                        " "
+                        (@tr [:reduction-off])
+                        ")")]]
+              [ui/TableCell {:text-align "right"}
+               [:i (format-currency
+                     upcoming-currency
+                     (- upcoming-total upcoming-subtotal))]]]))
+         (when upcoming-total
+           [ui/TableRow {:active true}
+            [ui/TableCell [:b (str/capitalize (@tr [:total]))]]
+            [ui/TableCell {:text-align "right"}
+             [:b (format-currency upcoming-currency upcoming-total)]]])]])]))
 
-             (when upcoming-subtotal
-               [ui/TableRow {:active true}
-                [ui/TableCell [:i [:b (@tr [:subtotal])]]]
-                [ui/TableCell {:text-align "right"}
-                 [:b [:i (format-currency
-                           upcoming-currency upcoming-subtotal)]]]])
-             (when coupon
-               (let [{:keys [percent-off amount-off currency]} coupon]
-                 [ui/TableRow
-                  [ui/TableCell
-                   [:i (str (:name coupon) " ("
-                            (when percent-off
-                              (str percent-off "%"))
-                            (when amount-off
-                              (format-currency currency amount-off))
-                            " "
-                            (@tr [:reduction-off])
-                            ")")]]
-                  [ui/TableCell {:text-align "right"}
-                   [:i (format-currency
-                         upcoming-currency
-                         (- upcoming-total upcoming-subtotal))]]]))
-             (when upcoming-total
-               [ui/TableRow {:active true}
-                [ui/TableCell [:b (str/capitalize (@tr [:total]))]]
-                [ui/TableCell {:text-align "right"}
-                 [:b (format-currency upcoming-currency upcoming-total)]]])]]
-           [ui/Grid {:text-align     "center"
-                     :vertical-align "middle"
-                     :style          {:height "100%"}}
-            [ui/GridColumn
-             [ui/Header {:as :h3, :icon true, :disabled true}
-              [icons/FileInvoiceIcon]
-              (@tr [:not-any])]]])]))))
+
+
 
 
 (defn Invoices
@@ -978,6 +979,7 @@
              [ui/Header {:as :h3, :icon true, :disabled true}
               [icons/FileInvoiceDollarIcon]
               (@tr [:not-any])]]])]))))
+
 
 
 (defn AddCouponButton
@@ -1033,8 +1035,7 @@
             locale @(subscribe [::i18n-subs/locale])]
         [ui/Segment {:padded  true
                      :color   "green"
-                     :loading @loading?
-                     :style   {:height "100%"}}
+                     :loading @loading?}
          [ui/Header {:as :h2 :dividing true} (@tr [:coupon])]
          (if coupon
            [ui/Table {:basic "very"}
@@ -1211,8 +1212,7 @@
     (fn []
       [ui/Segment {:padded  true
                    :color   "blue"
-                   :loading @loading?
-                   :style   {:height "100%"}}
+                   :loading @loading?}
        [ui/Header {:as :h2 :dividing true} (@tr [:vendor])]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
@@ -1237,8 +1237,7 @@
             balance (* balance -1)]
         [ui/Segment {:padded  true
                      :color   "grey"
-                     :loading @loading?
-                     :style   {:height "100%"}}
+                     :loading @loading?}
          [ui/Header {:as :h2 :dividing true} (@tr [:billing-info])]
          [ui/Table {:basic "very"}
           [ui/TableBody
@@ -1458,45 +1457,125 @@
             [GroupMembers group])]]))))
 
 
-(defn SubscriptionAndBilling
+(defn Billing
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
         show-subscription    (subscribe [::subs/show-subscription])
         show-coupon          (subscribe [::subs/show-coupon])
         show-billing-contact (subscribe [::subs/show-billing-contact])
-        show-consumption     (subscribe [::subs/show-consumption])
         show-invoices        (subscribe [::subs/show-invoices])
         show-payment-methods (subscribe [::subs/show-payment-methods])
         device               (subscribe [::main-subs/device])]
     (fn []
-      (if-let [sub-sections (cond-> []
-                                    @show-subscription (conj Subscription)
-                                    @show-coupon (conj Coupon)
-                                    @show-billing-contact (conj BillingContact)
-                                    @show-consumption (conj CurrentConsumption)
-                                    @show-invoices (conj Invoices)
-                                    @show-payment-methods (conj PaymentMethods)
-                                    @show-subscription (conj Vendor)
-                                    true seq)]
+      (if (or @show-billing-contact
+              @show-payment-methods
+              @show-subscription
+              @show-coupon
+              @show-invoices)
         [ui/Grid {:stackable true
                   :centered  true}
          [ui/GridRow {:columns (grid-columns-dense @device)}
-          (for [s sub-sections]
-            ^{:key (random-uuid)}
-            [ui/GridColumn {:style {:padding-bottom "20px"}} [s]])]]
+          [ui/GridColumn {:style {:padding-bottom "20px"}}
+           (when @show-billing-contact [BillingContact])
+           (when @show-payment-methods [PaymentMethods])
+           (when @show-subscription [Vendor])
+           (when @show-coupon [Coupon])]
+          [ui/GridColumn {:style {:padding-bottom "20px"}}
+           (when @show-invoices [Invoices])]]]
+        [ui/Message {:info true}
+         (@tr [:no-subscription-information])]))))
+
+(defn EdgeCurrentConsumption
+  []
+  (let [loading?         (subscribe [::subs/loading? :upcoming-invoice])
+        upcoming-invoice (subscribe [::subs/upcoming-invoice])
+        upcoming-lines   (subscribe [::subs/upcoming-invoice-lines])]
+    (fn []
+      [CurrentConsumptionView
+       {:upcoming-invoice @upcoming-invoice
+        :loading?         @loading?
+        :upcoming-lines   @upcoming-lines}])))
+
+(defn- GridRowWith2or1Cols [c]
+  (let [device (subscribe [::main-subs/device])]
+    [ui/GridRow {:columns (grid-columns-dense @device)}
+     c]))
+
+(defn GridColumPaddedBottom [c]
+  [ui/GridColumn {:style {:padding-bottom "20px"}} c])
+
+(defn AppsSubsAndConsumption
+  []
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        apps-subs-and-consumptions (subscribe [::subs/apps-subscriptions-consumptions])
+        loading?                   (subscribe [::subs/loading? :upcoming-invoice])]
+    (fn []
+      [:<>
+       (doall
+         (for [{:keys [upcoming-lines upcoming-invoice app-name subscription]}
+               @apps-subs-and-consumptions]
+           ^{:key (:id subscription)}
+           [ui/Card {:style {:width   "100%"
+                             :padding "1rem"}}
+            [:h1 app-name]
+            [ui/Grid
+             [GridRowWith2or1Cols
+              [:<>
+               [GridColumPaddedBottom [SubscriptionCard subscription (@tr [:usage])]]
+               [GridColumPaddedBottom
+                [CurrentConsumptionView
+                 {:label            app-name
+                  :loading?         @loading?
+                  :upcoming-invoice upcoming-invoice
+                  :upcoming-lines   upcoming-lines}]]]]]]))])))
+
+(defn Subscriptions
+  []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        show-subscription (subscribe [::subs/show-subscription])
+        show-consumption  (subscribe [::subs/show-consumption])]
+    (fn []
+      (if-let [sub-sections (cond-> []
+
+                                    @show-subscription
+                                    (conj EdgeSubscription)
+
+                                    @show-consumption (conj EdgeCurrentConsumption)
+                                    true seq)]
+        [:<>
+         [ui/Card {:style {:width   "100%"
+                           :padding "1rem"}}
+          [:h1 (@tr [:nuvlaedge])]
+          [ui/Grid {:stackable true
+                    :centered  true}
+           [GridRowWith2or1Cols
+            (for [s sub-sections]
+              ^{:key (random-uuid)}
+              [GridColumPaddedBottom [s]])]]]
+         [AppsSubsAndConsumption]]
+
         [ui/Message {:info true}
          (@tr [:no-subscription-information])]))))
 
 
-(defn TabMenuSubscription
+(defn TabMenuSubscriptions
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [:span (str/capitalize (@tr [:subscription]))]))
+    [:span (str/capitalize (@tr [:subscriptions]))]))
+
+(defn TabMenuBilling
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span (str/capitalize (@tr [:billing]))]))
 
 
 (defn SubscriptionPane
   []
-  [SubscriptionAndBilling])
+  [Subscriptions])
+
+(defn BillingPane
+  []
+  [Billing])
 
 
 (defn TabMenuGroups
@@ -1537,10 +1616,14 @@
 
 (defn profile-panes
   []
-  [{:menuItem {:content (r/as-element [TabMenuSubscription])
+  [{:menuItem {:content (r/as-element [TabMenuSubscriptions])
                :key     :subscription
-               :icon    icons/i-credit-card}
+               :icon    icons/i-shopping-cart}
     :render   #(r/as-element [SubscriptionPane])}
+   {:menuItem {:content (r/as-element [TabMenuBilling])
+               :key     :billing
+               :icon    icons/i-credit-card}
+    :render   #(r/as-element [BillingPane])}
    {:menuItem {:content (r/as-element [TabMenuGroups])
                :key     :groups
                :icon    icons/i-users}

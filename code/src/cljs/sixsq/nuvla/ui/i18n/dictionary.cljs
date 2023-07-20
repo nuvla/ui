@@ -1066,7 +1066,7 @@
         :balance                                       "Solde"
         :bank-account                                  "SEPA"
         :become-a-vendor                               "Pour vendre votre application sur Nuvla, devenez vendeur (voir page de profil)."
-        :billing                                "billing"
+        :billing                                       "billing"
         :billable-only?                                "facturable seulement ?"
         :billing-info                                  "Détails de facturation"
         :bulk-action                                   "Action groupée"

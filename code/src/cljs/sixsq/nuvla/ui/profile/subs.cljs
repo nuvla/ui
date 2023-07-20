@@ -124,24 +124,24 @@
     (calc-upcoming-invoices upcoming-invoice)))
 
 (reg-sub
- ::app-subscriptions
- :-> ::spec/app-subscriptions)
+  ::app-subscriptions
+  :-> ::spec/app-subscriptions)
 
 (reg-sub
- ::app-subscriptions-list
- :<- [::app-subscriptions]
- (fn [app-subs]
-   (sort-by :sort-order (vals app-subs))))
+  ::app-subscriptions-list
+  :<- [::app-subscriptions]
+  (fn [app-subs]
+    (sort-by :sort-order (vals app-subs))))
 
 (reg-sub
   ::apps-subscriptions-consumptions
   :<- [::app-subscriptions-list]
   (fn [app-subs _]
     (map (fn [{:keys [upcoming-invoice] :as sub}]
-           {:app-name (-> sub :metadata :application)
-            :subscription sub
+           {:app-name         (-> sub :metadata :application)
+            :subscription     sub
             :upcoming-invoice upcoming-invoice
-            :upcoming-lines (calc-upcoming-invoices upcoming-invoice)})
+            :upcoming-lines   (calc-upcoming-invoices upcoming-invoice)})
          app-subs)))
 
 (reg-sub

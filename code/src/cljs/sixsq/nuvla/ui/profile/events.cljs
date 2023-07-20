@@ -177,15 +177,15 @@
   (fn [{{:keys [::spec/customer] :as db} :db}]
     (let [on-success #(dispatch [::get-app-sub-invoices
                                  (map-indexed (fn [idx app-sub] (assoc app-sub :sort-order idx)) %)])]
-      {:db (assoc db ::spec/app-subscriptions nil)
+      {:db                     (assoc db ::spec/app-subscriptions nil)
        ::cimi-api-fx/operation [(:id customer) "list-app-subscriptions" on-success]})))
 
 (reg-event-fx
- ::get-app-sub-invoices
- (fn [_ [_ app-subs]]
-   {:fx (map (fn [app-sub]
-               [:dispatch [::get-next-app-invoice app-sub]])
-             app-subs)}))
+  ::get-app-sub-invoices
+  (fn [_ [_ app-subs]]
+    {:fx (map (fn [app-sub]
+                [:dispatch [::get-next-app-invoice app-sub]])
+              app-subs)}))
 
 (reg-event-fx
   ::get-next-app-invoice

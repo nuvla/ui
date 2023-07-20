@@ -864,7 +864,7 @@
 
 (defn- CurrentConsumptionView
   [{:keys [upcoming-invoice loading? upcoming-lines]}]
-  (let [tr      (subscribe [::i18n-subs/tr])
+  (let [tr     (subscribe [::i18n-subs/tr])
         locale @(subscribe [::i18n-subs/locale])
         {upcoming-total    :total
          upcoming-subtotal :subtotal
@@ -881,7 +881,7 @@
                  :style          {:height "100%"}}
         [ui/GridColumn
          [ui/Header {:style {:margin 0}
-                     :as :h3, :icon true, :disabled true}
+                     :as    :h3, :icon true, :disabled true}
           [icons/FileInvoiceIcon]
           (@tr [:not-any])]]]
        [ui/Table
@@ -910,7 +910,7 @@
             [ui/TableCell [:i [:b (@tr [:subtotal])]]]
             [ui/TableCell {:text-align "right"}
              [:b [:i (format-currency
-                      upcoming-currency upcoming-subtotal)]]]])
+                       upcoming-currency upcoming-subtotal)]]]])
          (when coupon
            (let [{:keys [percent-off amount-off currency]} coupon]
              [ui/TableRow
@@ -925,8 +925,8 @@
                         ")")]]
               [ui/TableCell {:text-align "right"}
                [:i (format-currency
-                    upcoming-currency
-                    (- upcoming-total upcoming-subtotal))]]]))
+                     upcoming-currency
+                     (- upcoming-total upcoming-subtotal))]]]))
          (when upcoming-total
            [ui/TableRow {:active true}
             [ui/TableCell [:b (str/capitalize (@tr [:total]))]]
@@ -1487,15 +1487,14 @@
 
 (defn EdgeCurrentConsumption
   []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        loading?         (subscribe [::subs/loading? :upcoming-invoice])
+  (let [loading?         (subscribe [::subs/loading? :upcoming-invoice])
         upcoming-invoice (subscribe [::subs/upcoming-invoice])
         upcoming-lines   (subscribe [::subs/upcoming-invoice-lines])]
     (fn []
       [CurrentConsumptionView
        {:upcoming-invoice @upcoming-invoice
-        :loading? @loading?
-        :upcoming-lines @upcoming-lines}])))
+        :loading?         @loading?
+        :upcoming-lines   @upcoming-lines}])))
 
 (defn- GridRowWith2or1Cols [c]
   (let [device (subscribe [::main-subs/device])]
@@ -1507,44 +1506,44 @@
 
 (defn AppsSubsAndConsumption
   []
-  (let [tr                   (subscribe [::i18n-subs/tr])
+  (let [tr                         (subscribe [::i18n-subs/tr])
         apps-subs-and-consumptions (subscribe [::subs/apps-subscriptions-consumptions])
-        loading?         (subscribe [::subs/loading? :upcoming-invoice])]
+        loading?                   (subscribe [::subs/loading? :upcoming-invoice])]
     (fn []
       [:<>
        (doall
-        (for [{:keys [upcoming-lines upcoming-invoice app-name subscription]}
-              @apps-subs-and-consumptions]
-          ^{:key (:id subscription)}
-          [ui/Card {:style {:width "100%"
-                            :padding "1rem"}}
-           [:h1 app-name]
-           [ui/Grid
-            [GridRowWith2or1Cols
-             [:<>
-              [GridColumPaddedBottom [SubscriptionCard subscription (@tr [:usage])]]
-              [GridColumPaddedBottom
-               [CurrentConsumptionView
-                {:label    app-name
-                 :loading? @loading?
-                 :upcoming-invoice upcoming-invoice
-                 :upcoming-lines upcoming-lines}]]]]]]))])))
+         (for [{:keys [upcoming-lines upcoming-invoice app-name subscription]}
+               @apps-subs-and-consumptions]
+           ^{:key (:id subscription)}
+           [ui/Card {:style {:width   "100%"
+                             :padding "1rem"}}
+            [:h1 app-name]
+            [ui/Grid
+             [GridRowWith2or1Cols
+              [:<>
+               [GridColumPaddedBottom [SubscriptionCard subscription (@tr [:usage])]]
+               [GridColumPaddedBottom
+                [CurrentConsumptionView
+                 {:label            app-name
+                  :loading?         @loading?
+                  :upcoming-invoice upcoming-invoice
+                  :upcoming-lines   upcoming-lines}]]]]]]))])))
 
 (defn Subscriptions
   []
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        show-subscription    (subscribe [::subs/show-subscription])
-        show-consumption     (subscribe [::subs/show-consumption])]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        show-subscription (subscribe [::subs/show-subscription])
+        show-consumption  (subscribe [::subs/show-consumption])]
     (fn []
       (if-let [sub-sections (cond-> []
 
-                              @show-subscription
-                              (conj EdgeSubscription)
+                                    @show-subscription
+                                    (conj EdgeSubscription)
 
-                              @show-consumption (conj EdgeCurrentConsumption)
-                              true seq)]
+                                    @show-consumption (conj EdgeCurrentConsumption)
+                                    true seq)]
         [:<>
-         [ui/Card {:style {:width "100%"
+         [ui/Card {:style {:width   "100%"
                            :padding "1rem"}}
           [:h1 (@tr [:nuvlaedge])]
           [ui/Grid {:stackable true
@@ -1644,7 +1643,7 @@
        {:db-path [::spec/tab]
         :menu    {:secondary true
                   :pointing  true
-                  :style     {:display       "flex"
+                  :style     {:display        "flex"
                               :flex-direction "row"
                               :flex-wrap      "wrap"}}
         :panes   panes}])))

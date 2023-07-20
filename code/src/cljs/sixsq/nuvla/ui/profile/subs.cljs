@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.profile.subs
-  (:require [day8.re-frame-10x.inlined-deps.re-frame.v1v1v2.re-frame.core :refer [subscribe]]
-            [re-frame.core :refer [reg-sub]]
+  (:require [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.profile.spec :as spec]

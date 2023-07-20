@@ -6,8 +6,8 @@
             [sixsq.nuvla.ui.about.subs :as subs]
             [sixsq.nuvla.ui.about.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.main.components :as main-components]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 

@@ -4,6 +4,37 @@
 
 ## Released
 
+## [2.33.11] - 2023-07-21
+
+- Show apps subscriptions invoices current usage #1331
+- Api input field bug fix: Encode URI component #1341
+- Do not display error message when job is requeued because of mixed mode #1343
+- Job component - Progress bar for running job is red when re-queued fix.
+- Job view - Hide job status-message from jobs table when job is queued
+- Api page - refresh the content after switching to a usergroup #1333
+- Deployment details - Remove billing tab #1334
+- Deployment details - Remove billing tab
+- Deployment modal - Remove coupon support
+- Adds remove button to filter indicator #1339
+- Change order of info popup and filter string
+- Shows X-mark button to remove filter
+- Container - configure cache in nginx for css js images and html
+- version css replaced by version file
+- SpanVersion component
+- Hash main assets to force browser reload on file change (cache busting) #1336
+- New UI release indicator is not displayed in all cases #1330
+- Build - Append version number and hash to nuvla-ui.js
+- Build - Regenerate index.html with versionned js name
+- Build - Vesion.css generation move to shadow build hooks
+- Build - Assets moved to shadow build hooks to avoid duplication
+- Deps - Remove nbb (node babashka) dependency
+- Deps - Upgrade highlight.js to avoid warning in console
+- project.clj - Simplify
+- Disables delete button for modules with children #1328
+- Fix clipboard icon #1329
+- Fixes add button icon in playbooks tab
+- Makes projects_create test more stable
+
 ## [2.33.10] - 2023-06-28
 
 - Filter comp - Better indication that a filter is active #1308
@@ -117,7 +148,6 @@
 - Welcome page - Always show house icon as default in breadcrumbs, #1255
 - App details, projects - Tab changes ignores changes protection, #1258
 - App details - Resets active tab to default when changing apps, #1240
-
 
 ## [2.33.6] - 2023-04-28
 

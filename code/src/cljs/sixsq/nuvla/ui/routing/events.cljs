@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.effects :as fx]
             [sixsq.nuvla.ui.routing.utils :as utils]
+            [sixsq.nuvla.ui.utils.helpers :refer [update-values]]
             [taoensso.timbre :as log]))
 
 (def after-nav-cb-key ::after-nav-cb)
@@ -102,6 +103,8 @@
                         {:change-event            change-event
                          :ignore-chng-protection? ignore-chng-protection?}]]]})))
 
+(defn keyword->string [k] (if (keyword? k) (name k) k))
+
 (reg-event-fx
   ::change-query-param
   (fn [{{:keys [current-route] :as db} :db} [_ new-partial-route-data]]
@@ -110,7 +113,13 @@
                   query-params]} (utils/new-route-data current-route new-partial-route-data)
           push-state?            (:push-state? new-partial-route-data)]
       {:db (assoc db ::ignore-changes-protection true)
-       :fx [[(if push-state? ::fx/push-state ::fx/replace-state) (utils/name->href route-name path-params query-params)]]})))
+       :fx [[(if push-state? ::fx/push-state ::fx/replace-state)
+             (utils/name->href
+               route-name
+               path-params
+               (update-values query-params #(some-> %
+                                                    keyword->string
+                                                    js/encodeURIComponent)))]]})))
 
 (reg-event-fx
   ::store-in-query-param

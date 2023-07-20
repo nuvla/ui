@@ -33,6 +33,11 @@
                 {:field-key :return-code}
                 {:field-key  :message
                  :accessor   :status-message
+                 :cell (fn [{{:keys [state]} :row-data
+                             :keys [cell-data]}]
+                         (if (= state "QUEUED")
+                           [:span {:style {:display "none"}} cell-data]
+                           cell-data))
                  :cell-props {:style {:white-space "pre"}}}]
                :rows resources}]
        [pagination-plugin/Pagination

@@ -115,7 +115,7 @@
              (utils/name->href
                route-name
                path-params
-               (update-values query-params js/encodeURIComponent))]]})))
+               (update-values query-params #(some-> % js/encodeURIComponent)))]]})))
 
 (reg-event-fx
   ::store-in-query-param

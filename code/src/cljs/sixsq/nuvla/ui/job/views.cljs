@@ -31,9 +31,14 @@
                 {:field-key :state}
                 {:field-key :progress}
                 {:field-key :return-code}
-                {:field-key  :message
-                 :accessor   :status-message
-                 :cell-props {:style {:white-space "pre"}}}]
+                {:field-key :message
+                 :accessor  :status-message
+                 :cell      (fn [{{:keys [state]} :row-data
+                                  :keys           [cell-data]}]
+                              [:span {:style (cond-> {:white-space "pre"}
+                                                     (= state "QUEUED")
+                                                     (assoc :display "none"))}
+                               cell-data])}]
                :rows resources}]
        [pagination-plugin/Pagination
         {:db-path      [::spec/pagination]
@@ -70,7 +75,9 @@
         last-job (first filtered)
         {:keys [action progress state]} last-job
         message  (str/replace (str/lower-case (str action ": " state)) #"_" " ")
-        error    (or (= "FAILED" state) (= "ERROR" resource-state))]
+        error    (or (= "FAILED" state)
+                     (and (= "ERROR" resource-state)
+                          (not= state "QUEUED")))]
     (when (and last-job (< progress 100))
       [ui/Segment
        [ui/Progress {:active   true

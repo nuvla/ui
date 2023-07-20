@@ -16,7 +16,7 @@ test('Additional filter wizard', async ({ page }, { config }) => {
   await page.getByText('value').click();
   await page.locator('span:has-text("e2e-Test-Do_not_delete")').click();
   await page.getByRole('button', { name: 'Done' }).click();
-  await page.waitForURL(`${baseURL}/ui/edges?view=table&nuvlabox=name=%27e2e-Test-Do_not_delete%27`);
+  await page.waitForURL(`${baseURL}/ui/edges?view=%3Atable&nuvlabox=name%3D%27e2e-Test-Do_not_delete%27`);
 
   await page.waitForResponse('/api/nuvlabox');
 
@@ -29,27 +29,27 @@ test('Additional filter wizard', async ({ page }, { config }) => {
   await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBeGreaterThan(1);
 
-  await page.waitForURL(`${baseURL}/ui/edges?view=table`);
+  await page.waitForURL(`${baseURL}/ui/edges?view=%3Atable`);
 
   await page.goBack();
-  await page.waitForURL(`${baseURL}/ui/edges?view=table&nuvlabox=name=%27e2e-Test-Do_not_delete%27`);
+  await page.waitForURL(`${baseURL}/ui/edges?view=%3Atable&nuvlabox=name%3D%27e2e-Test-Do_not_delete%27`);
   await page.waitForResponse('/api/nuvlabox');
   await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBe(1);
 
   await page.goForward();
-  await page.waitForURL(`${baseURL}/ui/edges?view=table`);
+  await page.waitForURL(`${baseURL}/ui/edges?view=%3Atable`);
   await page.waitForResponse('/api/nuvlabox');
   await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBeGreaterThan(1);
 
   await page.goBack();
-  await page.waitForURL(`${baseURL}/ui/edges?view=table&nuvlabox=name=%27e2e-Test-Do_not_delete%27`);
+  await page.waitForURL(`${baseURL}/ui/edges?view=%3Atable&nuvlabox=name%3D%27e2e-Test-Do_not_delete%27`);
   await page.waitForResponse('/api/nuvlabox');
   await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBe(1);
   await page.reload();
-  await page.waitForURL(`${baseURL}/ui/edges?view=table&nuvlabox=name=%27e2e-Test-Do_not_delete%27`);
+  await page.waitForURL(`${baseURL}/ui/edges?view=%3Atable&nuvlabox=name%3D%27e2e-Test-Do_not_delete%27`);
   await page.waitForResponse('/api/nuvlabox');
   await page.waitForTimeout(300);
   expect(await page.locator('tr[role=link]').count()).toBe(1);

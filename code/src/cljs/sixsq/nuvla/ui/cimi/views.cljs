@@ -473,6 +473,7 @@
 
 (defn CimiResource
   []
+  (dispatch [::events/get-results])
   (let [path         (subscribe [::route-subs/nav-path])
         query-params (subscribe [::route-subs/nav-query-params])]
     (fn []
@@ -486,7 +487,7 @@
            2 [:<>
               [MenuBar]
               [ResultsDisplay]]
-           3 [cimi-detail-views/cimi-detail]
+           3 [cimi-detail-views/cimi-detail @path]
            [MenuBar])]))))
 
 (defn ApiView

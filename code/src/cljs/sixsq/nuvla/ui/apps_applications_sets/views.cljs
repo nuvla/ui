@@ -391,7 +391,8 @@
       (when-not (or @is-new? (= @subtype apps-utils/subtype-applications-sets))
         [ui/GridColumn
          [deployments-views/DeploymentsOverviewSegment
-          ::deployments-subs/deployments ::apps-events/set-active-tab :deployments]])]
+          {:sub-key       ::deployments-subs/deployments
+           :show-me-event [::apps-events/set-active-tab :deployments]}]])]
      [ui/GridRow {:centered true}
       [ui/GridColumn
        [apps-views-detail/OverviewDescription]]]

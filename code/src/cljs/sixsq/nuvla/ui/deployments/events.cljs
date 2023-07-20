@@ -24,11 +24,10 @@
 (reg-event-fx
   ::init
   (fn [{{:keys [current-route] :as db} :db} _]
-    (let [search-query (get-stored-db-value-from-query-param current-route [::spec/state-selector])
-          filter-query  (get-query-param current-route (keyword spec/resource-name))
-          ]
+    (let [state-filter (get-stored-db-value-from-query-param current-route [::spec/state-selector])
+          filter-query  (get-query-param current-route (keyword spec/resource-name))]
       {:db (merge db spec/defaults
-                  {::spec/state-selector   search-query
+                  {::spec/state-selector    state-filter
                    ::spec/additional-filter filter-query})
        :fx [[:dispatch [::refresh]]]})))
 
@@ -74,7 +73,9 @@
   (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
                 ::spec/filter-external
-                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg pagination-db-path external-filter-only?]}]]
+                ::spec/ordering] :as db} :db} [_ {:keys [filter-external-arg
+                                                         pagination-db-path
+                                                         external-filter-only?]}]]
     (let [filter-external (or filter-external-arg filter-external)
           filter-str      (utils/get-filter-param
                             (if external-filter-only?
@@ -82,12 +83,12 @@
                               {:full-text-search  (full-text-search-plugin/filter-text
                                                     db [::spec/deployments-search])
                                :additional-filter additional-filter
-                               :state-selector   state-selector
+                               :state-selector    state-selector
                                :filter-external   filter-external}))]
       {:db                  (assoc db ::spec/filter-external filter-external)
        ::cimi-api-fx/search [:deployment
                              (->> {:aggregation "terms:state"
-                                   :orderby     (ordering->order-string (or ordering spec/default-ordering))
+                                   :orderby     (ordering->order-string ordering)
                                    :filter      filter-str}
                                   (pagination-plugin/first-last-params
                                     db [(or pagination-db-path ::spec/pagination)]))
@@ -123,9 +124,9 @@
   ::get-deployments-summary
   (fn [{{:keys [::spec/additional-filter] :as db} :db} _]
     {::cimi-api-fx/search [:deployment (utils/get-query-params-summary
-                                         (full-text-search-plugin/filter-text
-                                           db [::spec/deployments-search])
-                                         additional-filter)
+                                         {:full-text-search (full-text-search-plugin/filter-text
+                                                              db [::spec/deployments-search])
+                                          :additional-filter additional-filter})
                            #(dispatch [::set-deployments-summary %])]}))
 
 (reg-event-fx
@@ -136,8 +137,8 @@
 
 (reg-event-fx
   ::get-deployments-summary-all
-  (fn [_]
-    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary nil nil)
+  (fn [_ [_ external-filter]]
+    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary {:external-filter external-filter})
                            #(dispatch [::set-deployments-summary-all %])]}))
 
 (reg-event-fx

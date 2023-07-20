@@ -244,11 +244,13 @@
 
 (defn get-full-filter-string
   [{:keys [::spec/state-selector
-           ::spec/additional-filter] :as db}]
+           ::spec/additional-filter
+           ::spec/external-restriction-filter] :as db}]
   (general-utils/join-and
     "id!=null"
     (when state-selector (state-filter state-selector))
     additional-filter
+    external-restriction-filter
     (full-text-search-plugin/filter-text
       db [::spec/edges-search])))
 
@@ -271,3 +273,12 @@
 
 (defn sort-by-version [e]
   (sort-by :release compare-versions e))
+
+(defn summary-stats [summary]
+  (let [total           (:count summary)
+        online-statuses (general-utils/aggregate-to-map
+                          (get-in summary [:aggregations :terms:online :buckets]))
+        online          (:1 online-statuses)
+        offline         (:0 online-statuses)
+        unknown         (- total (+ online offline))]
+    {:total total :online online :offline offline :unknown unknown}))

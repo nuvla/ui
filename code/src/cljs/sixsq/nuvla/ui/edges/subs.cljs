@@ -74,9 +74,22 @@
   ::nuvlaboxes-summary
   :-> ::spec/nuvlaboxes-summary)
 
+
+(reg-sub
+  ::nuvlaboxes-summary-stats
+  :<- [::nuvlaboxes-summary]
+  (fn [summary]
+    (utils/summary-stats summary)))
+
 (reg-sub
   ::nuvlaboxes-summary-all
   :-> ::spec/nuvlaboxes-summary-all)
+
+(reg-sub
+  ::nuvlaboxes-summary-all-stats
+  :<- [::nuvlaboxes-summary-all]
+  (fn [summary]
+    (utils/summary-stats summary)))
 
 (reg-sub
   ::state-selector

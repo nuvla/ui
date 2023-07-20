@@ -16,7 +16,6 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]))
 
 
@@ -33,12 +32,13 @@
      :on-refresh refresh}]])
 
 (defn Statistic
-  [{:keys [value icon class label target positive-color icon-color color]
+  [{:keys [value icon class label target positive-color icon-color color selected?]
     :or   {positive-color "black"}}]
   (let [color        (or color (if (pos? value) positive-color "grey"))
         {:keys [resource tab-event]} target
         interactive? (or tab-event resource)]
-    [ui/Statistic {:style    {:cursor (when interactive? "pointer")}
+    [ui/Statistic {:size ""
+                   :style    {:cursor (when interactive? "pointer")}
                    :color    color
                    :class    (conj [(when interactive? "slight-up")] class)
                    :on-click #(do
@@ -50,36 +50,32 @@
      [ui/StatisticValue (or value "-")]
      [ui/StatisticLabel label]]))
 
+(defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
+  [ui/StatisticGroup {:size  "tiny"
+                      :style {:padding "0.2rem"}}
+   [Statistic {:value total
+               :icon  icons/i-box
+               :label "TOTAL"
+               :color "black"}]
+   [Statistic {:value          online
+               :icon           icons/i-power
+               :label          edges-utils/status-online
+               :positive-color "green"
+               :color          "green"}]
+   [Statistic {:value offline
+               :icon  icons/i-power
+               :label edges-utils/status-offline
+               :color "red"}]
+   [Statistic {:value unknown
+               :icon  icons/i-power
+               :label edges-utils/status-unknown
+               :color "orange"}]])
+
 
 (defn StatisticStatesEdge
   []
-  (let [summary         (subscribe [::edges-subs/nuvlaboxes-summary-all])
-        total           (:count @summary)
-        online-statuses (general-utils/aggregate-to-map
-                          (get-in @summary [:aggregations :terms:online :buckets]))
-        online          (:1 online-statuses)
-        offline         (:0 online-statuses)
-        unknown         (- total (+ online offline))]
-
-    [ui/StatisticGroup {:size  "tiny"
-                        :style {:padding "0.2rem"}}
-     [Statistic {:value total
-                 :icon  icons/i-box
-                 :label "TOTAL"
-                 :color "black"}]
-     [Statistic {:value          online
-                 :icon           icons/i-power
-                 :label          edges-utils/status-online
-                 :positive-color "green"
-                 :color          "green"}]
-     [Statistic {:value offline
-                 :icon  icons/i-power
-                 :label edges-utils/status-offline
-                 :color "red"}]
-     [Statistic {:value unknown
-                 :icon  icons/i-power
-                 :label edges-utils/status-unknown
-                 :color "orange"}]]))
+  (let [summary-stats (subscribe [::edges-subs/nuvlaboxes-summary-all-stats])]
+    [StatisticStatesEdgeView @summary-stats]))
 
 (defn TabOverviewNuvlaBox
   []
@@ -91,7 +87,8 @@
                              :flex-direction  "column"
                              :justify-content "space-between"
                              :border-radius   "8px"
-                             :overflow        :hidden}}
+                             :overflow        :hidden}
+                 }
 
      [:h4 {:class "ui-header"}
       [icons/BoxIcon]

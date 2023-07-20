@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require [clojure.string :as str]
-            [re-frame.core :refer [reg-sub subscribe]]
+            [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
@@ -12,6 +13,17 @@
 (reg-sub
   ::deployment-set
   :-> ::spec/deployment-set)
+
+(reg-sub
+  ::apps
+  :<- [::deployment-set]
+  (fn [deployment-set]
+    (-> deployment-set
+        :applications-sets
+        first
+        :overwrites
+        first
+        :applications)))
 
 (reg-sub
   ::can-edit?
@@ -152,6 +164,59 @@
   :<- [::step-apps-targets-complete?]
   ;;todo require all mandatory params to be filled up?
   :-> #(some false? %))
+
+(reg-sub
+  ::edges-response
+  :-> ::spec/edges)
+
+(reg-sub
+  ::edges-summary-stats
+  :<- [::edges-response]
+  (fn [edges]
+    (edges-utils/summary-stats edges)))
+
+(reg-sub
+  ::edges-count
+  :<- [::edges-response]
+  (fn [edges-response]
+    (:count edges-response)))
+
+
+(reg-sub
+  ::all-edges-ids
+  :<- [::edges-response]
+  (fn [edges-response]
+    (:resources edges-response)))
+
+(reg-sub
+  ::edges-documents-response
+  :-> ::spec/edges-documents)
+
+(reg-sub
+  ::edges-documents
+  :<- [::edges-documents-response]
+  (fn [edges-documents-response]
+    (:resources edges-documents-response)))
+
+(reg-sub
+  ::edges-by-id
+  :<- [::edges-documents]
+  (fn [edges]
+    (zipmap
+      (map :id edges)
+      edges)))
+
+(reg-sub
+  ::get-edge-by-id
+  :<- [::edges-by-id]
+  (fn [edges-by-id [_ id]]
+    (edges-by-id id)))
+
+(reg-sub
+  ::edges-filter
+  :<- [::edges-response]
+  (fn [edges]
+    (general-utils/ids->filter-string (->> edges :resources (map :id)))))
 
 (reg-sub
   ::edges-summary

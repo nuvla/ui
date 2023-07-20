@@ -29,7 +29,7 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.view-components :as vc]))
+            [sixsq.nuvla.ui.utils.view-components :as vc :refer [TitledCard]]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 
@@ -334,86 +334,78 @@
          [CardsDataTable @deployments]
          [VerticalDataTable @deployments])])))
 
+(defn state-aggs->state->count
+  [summary]
+  (let [terms         (general-utils/aggregate-to-map
+                        (get-in summary [:aggregations :terms:state :buckets]))
+        created  (:CREATED terms 0)
+        pending  (:PENDING terms 0)]
+    {:total    (:count summary)
+     :started  (:STARTED terms 0)
+     :created  created
+     :stopped  (:STOPPED terms 0)
+     :error    (:ERROR terms 0)
+     :pending  pending
+     :starting (+ (:STARTING terms 0) created pending)}))
+
+(def default-states
+  [{:key            :total
+    :icons          [icons/i-rocket]
+    :label          "TOTAL"}
+   {:key            :started,
+    :icons          [(utils/state->icon utils/STARTED)],
+    :label          utils/STARTED,
+    :positive-color "green"}
+   {:key            :starting-plus,
+    :icons          [(utils/state->icon utils/STARTING)],
+    :label          utils/STARTING,
+    :positive-color "orange"}
+   {:key            :stopped,
+    :icons          [(utils/state->icon utils/STOPPED)],
+    :label          utils/STOPPED,
+    :positive-color "orange"}
+   {:key            :error,
+    :icons          [(utils/state->icon utils/ERROR)],
+    :label          utils/ERROR,
+    :positive-color "red"}])
+
 (defn StatisticStates
-  [_clickable? summary-subs]
+  [_clickable? summary-subs _states]
   (let [summary (subscribe [summary-subs])]
-    (fn [clickable? _summary-subs]
-      (let [terms         (general-utils/aggregate-to-map
-                            (get-in @summary [:aggregations :terms:state :buckets]))
-            started       (:STARTED terms 0)
-            starting      (:STARTING terms 0)
-            created       (:CREATED terms 0)
-            stopped       (:STOPPED terms 0)
-            error         (:ERROR terms 0)
-            pending       (:PENDING terms 0)
-            starting-plus (+ starting created pending)
-            total         (:count @summary)]
+    (fn [clickable? _summary-subs states-override]
+      (let [states->counts (state-aggs->state->count @summary)
+            states (or states-override default-states)]
         [ui/GridColumn {:width 8}
-         [ui/StatisticGroup {:size  "tiny"
-                             :style {:justify-content "center"}}
-          [components/StatisticState {:value                    total
-                                      :icons                    [icons/i-rocket]
-                                      :label                    "TOTAL"
-                                      :stacked?                 true
-                                      :clickable?               clickable?
-                                      :set-state-selector-event ::events/set-state-selector
-                                      :state-selector-subs      ::subs/state-selector}]
-          [components/StatisticState {:value                    started,
-                                      :icons                    [(utils/state->icon utils/STARTED)],
-                                      :label                    utils/STARTED,
-                                      :stacked?                 true
-                                      :clickable?               clickable?,
-                                      :positive-color           "green",
-                                      :set-state-selector-event ::events/set-state-selector,
-                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
-          [components/StatisticState {:value                    starting-plus,
-                                      :icons                    [(utils/state->icon utils/STARTING)],
-                                      :label                    utils/STARTING,
-                                      :stacked?                 true
-                                      :clickable?               clickable?,
-                                      :positive-color           "orange",
-                                      :set-state-selector-event ::events/set-state-selector,
-                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
-          [components/StatisticState {:value                    stopped,
-                                      :icons                    [(utils/state->icon utils/STOPPED)],
-                                      :label                    utils/STOPPED,
-                                      :stacked?                 true
-                                      :clickable?               clickable?,
-                                      :positive-color           "orange",
-                                      :set-state-selector-event ::events/set-state-selector,
-                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]
-          [components/StatisticState {:value                    error,
-                                      :icons                    [(utils/state->icon utils/ERROR)],
-                                      :label                    utils/ERROR,
-                                      :stacked?                 true
-                                      :clickable?               clickable?,
-                                      :positive-color           "red",
-                                      :set-state-selector-event ::events/set-state-selector,
-                                      :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]]]))))
+         (into [ui/StatisticGroup {:size  "tiny"
+                                   :style {:justify-content "center"}}
+                (for [state states]
+                  ^{:key (:key state)}
+                  [components/StatisticState
+                   (merge state
+                     {:value                    (states->counts (:key state))
+                      :stacked?                 true
+                      :clickable?               (or (:clickable? state) clickable?)
+                      :set-state-selector-event ::events/set-state-selector
+                      :state-selector-subs      ::subs/state-selector})])])]))))
+
+(defn TitledCardDeployments
+  [& children]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [TitledCard {:class :nuvla-deployments
+                 :icon  icons/i-rocket
+                 :label (str/capitalize (@tr [:deployments]))}
+     children]))
 
 (defn DeploymentsOverviewSegment
-  [deployment-subs set-active-tab-event deployment-tab-key on-click]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:class     :nuvla-deployments
-                 :secondary true
-                 :raised    true
-                 :style     {:display         "flex"
-                             :flex-direction  "column"
-                             :justify-content "space-between"}}
-
-     [:h4 {:class [:ui-header :ui-card-header]
-           :style {:border-radius ".28571429rem .28571429rem 0 0"}}
-      [icons/Icon {:name icons/i-rocket}] (str/capitalize (@tr [:deployments]))]
-
-     [StatisticStates false deployment-subs]
-
-     [uix/Button {:class    "center"
-                  :color    "blue"
-                  :icon     icons/i-rocket
-                  :style    {:align-self "start"}
-                  :content  "Show me"
-                  :on-click (or on-click
-                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
+  [{:keys [sub-key show-me-event on-click]}]
+  [TitledCardDeployments
+   [StatisticStates false sub-key]
+   [uix/Button {:class    "center"
+                :color    "blue"
+                :icon     icons/i-rocket
+                :content  "Show me"
+                :on-click (or on-click
+                            #(when show-me-event (dispatch show-me-event)))}]])
 
 (defn Pagination
   [db-path-arg]
@@ -432,7 +424,9 @@
         [:div
          [VerticalDataTable
           @deployments (assoc options :show-options? show-options)]
-         [Pagination (:pagination-db-path options)]]))))
+         (if-let [pagination (:pagination options)]
+           [pagination]
+           [Pagination (:pagination-db-path options)])]))))
 
 (defn DeploymentsMainContent
   []

@@ -38,6 +38,7 @@
 (s/def ::nuvlabox-playbooks-cronjob any?)
 
 (s/def ::additional-filter (s/nilable string?))
+(s/def ::external-restriction-filter (s/nilable string?))
 
 (def columns
   [:online :state :name :description :created
@@ -46,7 +47,7 @@
 (s/def ::ordering
   (s/cat :field (set columns) :order #{"desc" "asc"}))
 
-(def default-ordering {:field :created :order "desc"})
+(def default-ordering [[:created :desc]])
 
 (s/def ::select (s/nilable any?))
 
@@ -92,6 +93,7 @@
    ::ordering                      (build-ordering)
    ::edges-search                  (full-text-search-plugin/build-spec)
    ::additional-filter             nil
+   ::external-restriction-filter   nil
    ::select                        (table-plugin/build-bulk-edit-spec)
    })
 

@@ -5,8 +5,7 @@
             [goog.string :as gstring]
             [goog.string.format]
             [sixsq.nuvla.ui.session.utils :as session-utils]
-            [sixsq.nuvla.ui.utils.icons :as icons]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 
 (defn str->int
@@ -244,6 +243,10 @@
 (defn join-and
   [& filters]
   (join-filters "and" filters))
+
+(defn ids->filter-string
+  [ids]
+  (apply join-or (map #(str "id='" % "'") ids)))
 
 ;;
 ;; ACL utils

@@ -59,15 +59,21 @@
 
 (reg-event-fx
   ::change-tab
-  (fn [{db :db} [_ {:keys [db-path tab-key ignore-chng-protection?]}]]
+  (fn [{db :db} [_ {:keys [db-path tab-key
+                           ignore-chng-protection?
+                           reset-query-params?
+                           payload]}]]
     (let [change-event (get-in db (conj db-path ::change-event))]
       {:fx [[:dispatch [::route-events/navigate-partial
-                        {:change-event            change-event
-                         :partial-query-params    {(db-path->query-param-key db-path) tab-key}
-                         :ignore-chng-protection? ignore-chng-protection?}]]]})))
+                        (or payload
+                          {:change-event            change-event
+                           (if reset-query-params?
+                             :query-params
+                             :partial-query-params) {(db-path->query-param-key db-path) tab-key}
+                           :ignore-chng-protection? ignore-chng-protection?})]]]})))
 
 (defn Tab
-  [{:keys [db-path panes change-event ignore-chng-protection?] :as _opts}]
+  [{:keys [db-path panes change-event ignore-chng-protection? reset-query-params?] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [default-tab     (subscribe [::helpers/retrieve db-path ::default-tab])
         route           (subscribe [::route-subs/current-route])
@@ -77,7 +83,8 @@
                           (let [menuItem (:menuItem item)
                                 k        (:key menuItem)
                                 icon     (:icon menuItem)
-                                href     (gen-href @route {:partial-query-params {query-param-key k}})
+                                qp       {(if reset-query-params? :query-params :partial-query-params) {query-param-key k}}
+                                href     (gen-href @route qp)
                                 clean-i  (if (and (string? icon)
                                                   (some #(str/starts-with? icon %) ["fa-" "fal " "fad " "fas "]))
                                            (r/as-element [icons/Icon {:name icon}])
@@ -85,8 +92,10 @@
                                 on-click (fn [event]
                                            (.preventDefault event)
                                            (dispatch [::change-tab
-                                                      {:db-path                 db-path :tab-key k
-                                                       :ignore-chng-protection? ignore-chng-protection?}]))]
+                                                      {:payload
+                                                       (assoc qp
+                                                         :change-event change-event
+                                                         :ignore-chng-protection? ignore-chng-protection?)}]))]
                             (-> item
                                 (update :menuItem merge {:href                     href
                                                          :onClick                  on-click

@@ -17,7 +17,6 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-            [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
@@ -38,7 +37,6 @@
 
 
 (def refresh-action-id :deployment-set-get-deployment-set)
-
 
 
 (defn refresh
@@ -232,48 +230,8 @@
             [ui/GridColumn
              [TabOverviewTags @deployment-set]])]]))))
 
-(into {} [[:count 2231]
-          [:aggregations
-           {:terms:state {:doc_count_error_upper_bound 0, :sum_other_doc_count 0, :buckets
-                          [{:key "COMMISSIONED", :doc_count 2085}
-                           {:key "NEW", :doc_count 56}
-                           {:key "SUSPENDED", :doc_count 48}
-                           {:key "DECOMMISSIONED", :doc_count 31}
-                           {:key "DECOMMISSIONING", :doc_count 8}
-                           {:key "ACTIVATED", :doc_count 2}
-                           {:key "ERROR", :doc_count 1}]},
-            :terms:online {:doc_count_error_upper_bound 0, :sum_other_doc_count 0,
-                           :buckets
-                           [{:key 1, :key_as_string "true", :doc_count 1616}
-                            {:key 0, :key_as_string "false", :doc_count 477}]}}]
-          [:acl {:query ["group/nuvla-user"], :add ["group/nuvla-user"], :bulk-action ["group/nuvla-user"]}]
-          [:resource-type "nuvlabox-collection"]
-          [:id "nuvlabox"]
-          [:resources []]
-          [:operations [{:rel "add", :href "nuvlabox"} {:rel "bulk-delete", :href "nuvlabox"}]]])
 
 
-(defn TabsDeploymentSet
-  []
-  (let [tr             @(subscribe [::i18n-subs/tr])
-        deployment-set (subscribe [::subs/deployment-set])
-        can-edit?      @(subscribe [::subs/can-edit?])]
-    (when @deployment-set
-      [tab/Tab
-       {:db-path [::spec/tab]
-        :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
-                              :key     :overview
-                              :icon    "info"}
-                   :render   #(r/as-element [TabOverview])}
-                  (events-plugin/events-section
-                    {:db-path [::spec/events]
-                     :href    (:id @deployment-set)})
-                  (job-views/jobs-section)
-                  (acl/TabAcls {:e          deployment-set
-                                :can-edit?  can-edit?
-                                :edit-event ::events/edit})]
-        :menu    {:secondary true
-                  :pointing  true}}])))
 
 (defn on-change-input
   [k]
@@ -431,6 +389,8 @@
                       :apps-set     apps-set
                       :summary-page summary-page}])]]]))
 
+
+;; TODO: Pass down overwritten env from depl set
 (defn EnvVariablesApp
   [i module-id]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -636,6 +596,33 @@
                             :icon (r/as-element [icons/Icon {:name icon}])
                             :completed (when subs @(subscribe [subs]))))
                         items)}]])))
+
+(defn TabsDeploymentSet
+  []
+  (let [tr               @(subscribe [::i18n-subs/tr])
+        deployment-set   (subscribe [::subs/deployment-set])
+        apps             @(subscribe [::subs/applications-sets])
+        can-edit?        @(subscribe [::subs/can-edit?])]
+    (when @deployment-set
+      [tab/Tab
+       {:db-path [::spec/tab]
+        :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
+                              :key     :overview
+                              :icon    "info"}
+                   :render   #(r/as-element [TabOverview])}
+                  {:menuItem {:key :apps
+                              :content (str/capitalize (tr [:apps]))
+                              :icon icons/i-layer-group}
+                   :render   #(r/as-element
+                                [ConfigureApps
+                                   0
+                                   (:applications (first apps))])}
+                  (job-views/jobs-section)
+                  (acl/TabAcls {:e          deployment-set
+                                :can-edit?  can-edit?
+                                :edit-event ::events/edit})]
+        :menu    {:secondary true
+                  :pointing  true}}])))
 
 (defn DeploymentSet
   [uuid]

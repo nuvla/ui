@@ -1512,22 +1512,23 @@
         loading?         (subscribe [::subs/loading? :upcoming-invoice])]
     (fn []
       [:<>
-       (for [{:keys [upcoming-lines upcoming-invoice app-name subscription]}
-             @apps-subs-and-consumptions]
-         ^{:key app-name}
-         [ui/Card {:style {:width "100%"
-                           :padding "1rem"}}
-          [:h1 app-name]
-          [ui/Grid
-           [GridRowWith2or1Cols
-            [:<>
-             [GridColumPaddedBottom [SubscriptionCard subscription (@tr [:usage])]]
-             [GridColumPaddedBottom
-              [CurrentConsumptionView
-               {:label    app-name
-                :loading? @loading?
-                :upcoming-invoice upcoming-invoice
-                :upcoming-lines upcoming-lines}]]]]]])])))
+       (doall
+        (for [{:keys [upcoming-lines upcoming-invoice app-name subscription]}
+              @apps-subs-and-consumptions]
+          ^{:key (:id subscription)}
+          [ui/Card {:style {:width "100%"
+                            :padding "1rem"}}
+           [:h1 app-name]
+           [ui/Grid
+            [GridRowWith2or1Cols
+             [:<>
+              [GridColumPaddedBottom [SubscriptionCard subscription (@tr [:usage])]]
+              [GridColumPaddedBottom
+               [CurrentConsumptionView
+                {:label    app-name
+                 :loading? @loading?
+                 :upcoming-invoice upcoming-invoice
+                 :upcoming-lines upcoming-lines}]]]]]]))])))
 
 (defn Subscriptions
   []
@@ -1537,8 +1538,7 @@
     (fn []
       (if-let [sub-sections (cond-> []
 
-                              ;; TODO: refactor back by removing `or true`
-                              (or true @show-subscription)
+                              @show-subscription
                               (conj EdgeSubscription)
 
                               @show-consumption (conj EdgeCurrentConsumption)

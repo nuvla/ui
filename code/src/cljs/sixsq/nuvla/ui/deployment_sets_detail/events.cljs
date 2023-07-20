@@ -23,7 +23,12 @@
   (fn [{{:keys [current-route] :as db} :db}]
     (let [id (routing-utils/get-query-param current-route :applications-sets)]
       {:db               (merge db spec/defaults)
-       ::cimi-api-fx/get [id #(dispatch [::set-applications-sets %])]})))
+       :fx [[:dispatch [::get-application-sets id]]]})))
+
+(reg-event-fx
+  ::get-application-sets
+  (fn [_ [_ id]]
+    {::cimi-api-fx/get [id #(dispatch [::set-applications-sets %])]}))
 
 
 (defn restore-applications
@@ -102,8 +107,9 @@
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set]]
     {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
-                   ::spec/deployment-set deployment-set
-                   ::main-spec/loading? false)}))
+           ::spec/deployment-set deployment-set
+           ::main-spec/loading? false)
+     :fx [[:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]}))
 
 (reg-event-fx
   ::operation

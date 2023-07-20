@@ -70,7 +70,9 @@
         last-job (first filtered)
         {:keys [action progress state]} last-job
         message  (str/replace (str/lower-case (str action ": " state)) #"_" " ")
-        error    (or (= "FAILED" state) (= "ERROR" resource-state))]
+        error    (or (= "FAILED" state)
+                     (and (= "ERROR" resource-state)
+                          (not= state "QUEUED")))]
     (when (and last-job (< progress 100))
       [ui/Segment
        [ui/Progress {:active   true

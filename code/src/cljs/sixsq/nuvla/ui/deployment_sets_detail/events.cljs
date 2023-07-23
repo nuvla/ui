@@ -39,45 +39,73 @@
 (defn load-module-configurations
   [modules-by-id fx [id {:keys [applications]}]]
   (->> applications
-       (map (fn [{module-id :id :keys [version
-                                       environmental-variables
-                                       registries-credentials]}]
-              (when (get modules-by-id module-id)
-                [:dispatch [::module-plugin/load-module
-                            [::spec/apps-sets id]
-                            (str module-id "_" version)
-                            {:env                    (when (seq environmental-variables)
-                                                       (->> environmental-variables
-                                                            (map (juxt :name :value))
-                                                            (into {})))
-                             :registries-credentials registries-credentials}]])))
-       (concat fx)))
+    (map (fn [{module-id :id :keys [version
+                                    environmental-variables
+                                    registries-credentials]}]
+           (when (get modules-by-id module-id)
+             [:dispatch [::module-plugin/load-module
+                         [::spec/apps-sets id]
+                         (str module-id "_" version)
+                         {:env                    (when (seq environmental-variables)
+                                                    (->> environmental-variables
+                                                      (map (juxt :name :value))
+                                                      (into {})))
+                          :registries-credentials registries-credentials}]])))
+    (concat fx)))
+
+(defn- merge-vector-of-maps
+  [scn prm]
+  (vals (merge
+          (into {} (map (juxt :name identity) scn))
+          (into {} (map (juxt :name identity) prm)))))
+
+(defn- merge-app-overwrites
+  [modul-id->app app]
+  (let [app-from-depl-set (get modul-id->app (:id app))
+        merged-env        (merge-vector-of-maps
+                            (:environmental-variables app)
+                            (:environmental-variables app-from-depl-set))]
+    (assoc
+      (merge app app-from-depl-set)
+      :environmental-variables merged-env)))
 
 (reg-event-fx
   ::load-apps-sets-response
-  (fn [{:keys [db]} [_ module apps-count {:keys [resources]}]]
-    (let [modules-by-id     (->> resources (map (juxt :id identity)) (into {}))
-          indexed-apps-sets (->> module
-                                 :content
-                                 :applications-sets
-                                 (map-indexed vector))
+  (fn [{:keys [db]} [_ {:keys [apps-sets-set total-apps-count apps apps-set-index->modul-id->app]}]]
+    (let [modules-by-id     (->> apps (map (juxt :id identity)) (into {}))
+          apps-sets (->> apps-sets-set
+                         :content
+                         :applications-sets
+                         (map-indexed vector))
+          merged-configs (mapv (fn [[idx app-set]]
+                                 [idx (assoc app-set :applications
+                                        (mapv
+                                          (partial merge-app-overwrites (apps-set-index->modul-id->app idx))
+                                          (:applications app-set)))])
+                           apps-sets)
+
           new-db            (reduce restore-applications
-                                    db indexed-apps-sets)
+                              db merged-configs)
           fx                (reduce (partial load-module-configurations modules-by-id)
-                                    [] indexed-apps-sets)
-          all-apps-visible? (= apps-count (count resources))]
+                              [] merged-configs)
+          all-apps-visible? (= total-apps-count (count apps))]
       (if all-apps-visible?
         {:db new-db
          :fx fx}
         {:fx [[:dispatch [::messages-events/add
                           {:header  "Unable to load selected applications sets"
-                           :content (str "Loaded " (count resources) " out of " apps-count ".")
+                           :content (str "Loaded " (count apps) " out of " total-apps-count ".")
                            :type    :error}]]]}))))
 
 (reg-event-fx
   ::load-apps-sets
-  (fn [_ [_ module]]
-    (let [apps-urls  (->> module
+  (fn [{{:keys [::spec/deployment-set]} :db} [_ apps-sets]]
+    (let [app-sets-by-app-set-id (->> deployment-set
+                                      :applications-sets
+                                      (map (juxt :id identity))
+                                      (into {}))
+_ (js/console.error " app-sets-by-app-set-id" app-sets-by-app-set-id)
+          apps-urls  (->> apps-sets
                           :content
                           :applications-sets
                           (mapcat :applications)
@@ -88,16 +116,28 @@
                       :last   1000}
           callback   #(if (instance? js/Error %)
                         (cimi-api-fx/default-error-message % "load applications sets failed")
-                        (dispatch [::load-apps-sets-response module (count apps-urls) %]))]
+                        (dispatch [::load-apps-sets-response {:apps-sets-set apps-sets
+                                                              :total-apps-count (count apps-urls)
+                                                              :apps (:resources %)
+                                                              :apps-set-index->modul-id->app
+                                                              (->> (app-sets-by-app-set-id
+                                                                     (:id apps-sets))
+                                                                   :overwrites
+                                                                   (map :applications)
+                                                                   (map-indexed (fn [idx apps]
+                                                                                  [idx (zipmap
+                                                                                         (map :id apps)
+                                                                                         apps)]))
+                                                                   (into {}))}]))]
       (when (seq apps-urls)
         {::cimi-api-fx/search [:module params callback]}))))
 
 (reg-event-fx
   ::set-applications-sets
-  (fn [{:keys [db]} [_ {:keys [subtype] :as module}]]
+  (fn [{:keys [db]} [_ {:keys [subtype] :as apps-sets}]]
     (if (apps-utils/applications-sets? subtype)
-      {:db (assoc db ::spec/module-applications-sets module)
-       :fx [[:dispatch [::load-apps-sets module]]]}
+      {:db (assoc db ::spec/module-applications-sets apps-sets)
+       :fx [[:dispatch [::load-apps-sets apps-sets]]]}
       {:dispatch [::messages-events/add
                   {:header  "Wrong module subtype"
                    :content (str "Selected module subtype:" subtype)
@@ -118,7 +158,7 @@
                         (let [{:keys [status message]} (response/parse %)]
                           (dispatch [::messages-events/add
                                      {:header  (cond-> (str "operation " operation " will be executed soon")
-                                                       status (str " (" status ")"))
+                                                 status (str " (" status ")"))
                                       :content message
                                       :type    :success}]))
                         (on-success-fn %))
@@ -132,7 +172,7 @@
   ::get-deployment-set
   (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id]]
     {:db               (cond-> db
-                               (not= (:id deployment-set) id) (merge spec/defaults))
+                         (not= (:id deployment-set) id) (merge spec/defaults))
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
@@ -156,7 +196,7 @@
          (let [{:keys [status message]} (response/parse-ex-info %)]
            (dispatch [::messages-events/add
                       {:header  (cond-> (str "error editing " resource-id)
-                                        status (str " (" status ")"))
+                                  status (str " (" status ")"))
                        :content message
                        :type    :error}]))
          (do
@@ -181,17 +221,18 @@
                       db db-path id)]
     (cond-> {:id      id
              :version version}
-            (seq env-changed) (assoc :environmental-variables env-changed)
-            (seq regs-creds) (assoc :registries-credentials regs-creds))))
+      (seq env-changed) (assoc :environmental-variables env-changed)
+      (seq regs-creds) (assoc :registries-credentials regs-creds))))
+
 
 (defn applications-sets->overwrites
   [db i {:keys [applications] :as _applications-sets}]
   (let [targets                 (subs/get-db-targets-selected-ids db i)
         applications-overwrites (map (partial application-overwrites db i)
-                                     applications)]
+                                  applications)]
     (cond-> {}
-            (seq targets) (assoc :targets targets)
-            (seq applications-overwrites) (assoc :applications applications-overwrites))))
+      (seq targets) (assoc :targets targets)
+      (seq applications-overwrites) (assoc :applications applications-overwrites))))
 
 (reg-event-fx
   ::save-start
@@ -203,8 +244,7 @@
                   :applications-sets [{:id         (:id module-applications-sets)
                                        :version    (apps-utils/module-version module-applications-sets)
                                        :overwrites (map-indexed (partial applications-sets->overwrites db)
-                                                                (-> module-applications-sets :content :applications-sets))
-                                       }]
+                                                     (-> module-applications-sets :content :applications-sets))}]
                   :start             start?}
                  (not (str/blank? create-description)) (assoc :description create-description))]
       {::cimi-api-fx/add
@@ -227,6 +267,6 @@
   (fn [{db :db} [_ i db-path]]
     (let [selected (target-selector/db-selected db db-path)]
       {:db (->> selected
-                (map (juxt :id identity))
-                (into {})
-                (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))
+             (map (juxt :id identity))
+             (into {})
+             (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))

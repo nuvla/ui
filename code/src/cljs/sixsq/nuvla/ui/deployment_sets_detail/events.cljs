@@ -34,7 +34,7 @@
 (defn restore-applications
   [db [i]]
   (assoc-in db [::spec/apps-sets i ::spec/targets]
-            (target-selector/build-spec)))
+    (target-selector/build-spec)))
 
 (defn load-module-configurations
   [modules-by-id fx [id {:keys [applications]}]]
@@ -74,9 +74,9 @@
   (fn [{:keys [db]} [_ {:keys [apps-sets-set total-apps-count apps apps-set-index->modul-id->app]}]]
     (let [modules-by-id     (->> apps (map (juxt :id identity)) (into {}))
           apps-sets (->> apps-sets-set
-                         :content
-                         :applications-sets
-                         (map-indexed vector))
+                      :content
+                      :applications-sets
+                      (map-indexed vector))
           merged-configs (mapv (fn [[idx app-set]]
                                  [idx (assoc app-set :applications
                                         (mapv
@@ -101,16 +101,15 @@
   ::load-apps-sets
   (fn [{{:keys [::spec/deployment-set]} :db} [_ apps-sets]]
     (let [app-sets-by-app-set-id (->> deployment-set
-                                      :applications-sets
-                                      (map (juxt :id identity))
-                                      (into {}))
-_ (js/console.error " app-sets-by-app-set-id" app-sets-by-app-set-id)
+                                   :applications-sets
+                                   (map (juxt :id identity))
+                                   (into {}))
           apps-urls  (->> apps-sets
-                          :content
-                          :applications-sets
-                          (mapcat :applications)
-                          (map :id)
-                          distinct)
+                       :content
+                       :applications-sets
+                       (mapcat :applications)
+                       (map :id)
+                       distinct)
           filter-str (apply general-utils/join-or (map #(str "id='" % "'") apps-urls))
           params     {:filter filter-str
                       :last   1000}
@@ -122,13 +121,13 @@ _ (js/console.error " app-sets-by-app-set-id" app-sets-by-app-set-id)
                                                               :apps-set-index->modul-id->app
                                                               (->> (app-sets-by-app-set-id
                                                                      (:id apps-sets))
-                                                                   :overwrites
-                                                                   (map :applications)
-                                                                   (map-indexed (fn [idx apps]
-                                                                                  [idx (zipmap
-                                                                                         (map :id apps)
-                                                                                         apps)]))
-                                                                   (into {}))}]))]
+                                                                :overwrites
+                                                                (map :applications)
+                                                                (map-indexed (fn [idx apps]
+                                                                               [idx (zipmap
+                                                                                      (map :id apps)
+                                                                                      apps)]))
+                                                                (into {}))}]))]
       (when (seq apps-urls)
         {::cimi-api-fx/search [:module params callback]}))))
 
@@ -175,7 +174,9 @@ _ (js/console.error " app-sets-by-app-set-id" app-sets-by-app-set-id)
                          (not= (:id deployment-set) id) (merge spec/defaults))
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
                         :on-error #(dispatch [::set-deployment-set nil])]
-     :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
+     :fx               [[:dispatch [::resolve-to-ancestor {:ids ["credential/cd9b35f5-2980-4ffe-9431-bac830e1111e"]
+                                                           :storage-event ::set-edges}]]
+                        [:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::get-deployments-for-deployment-sets id]]]}))
 
@@ -270,3 +271,30 @@ _ (js/console.error " app-sets-by-app-set-id" app-sets-by-app-set-id)
              (map (juxt :id identity))
              (into {})
              (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))
+
+(reg-event-fx
+  ::resolve-to-ancestor
+  (fn [_ [_ {ids :ids storage-event :storage-event}]]
+    (let [callback #(let [resources  (:resources %)
+                          parent-ids (remove nil? (map :parent resources))
+                          resolved?  (empty? parent-ids)]
+                      (cond
+                        (or (empty? resources) (instance? js/Error %))
+                        (cimi-api-fx/default-error-message % "loading edges for credentials failed")
+
+                        resolved?
+                        (dispatch [storage-event %])
+
+                        :else
+                        (dispatch [::resolve-to-ancestor {:ids           parent-ids
+                                                          :storage-event storage-event}])))]
+      {::cimi-api-fx/search [(general-utils/id->resource-name (first ids))
+                             {:filter (apply general-utils/join-or (map #(str "id='" % "'") ids))
+                              :last   1000}
+                             callback]})))
+
+(reg-event-db
+  ::set-edges
+  (fn [db [_ resources]]
+    (assoc db ::edges
+      resources)))

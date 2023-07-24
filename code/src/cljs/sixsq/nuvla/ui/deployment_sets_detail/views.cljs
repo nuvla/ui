@@ -389,8 +389,15 @@
                       :apps-set     apps-set
                       :summary-page summary-page}])]]]))
 
+(defn ModuleVersionsApp
+  [i module-id]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/Accordion
+     [module-plugin/ModuleVersions
+      {:db-path [::spec/apps-sets i]
+       :href    module-id}]
+     :label (@tr [:select-version])]))
 
-;; TODO: Pass down overwritten env from depl set
 (defn EnvVariablesApp
   [i module-id]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -423,6 +430,16 @@
                              :key     (keyword (str "configure-set-" i "-app-" id))}
                   :render   #(r/as-element
                                [ui/TabPane
+                                [ui/Popup {:trigger (r/as-element
+                                                      [:span
+                                                       [module-plugin/LinkToApp
+                                                        {:db-path  [::spec/apps-sets i]
+                                                         :href     id
+                                                         :children [:<>
+                                                                    [ui/Icon {:class icons/i-link}]
+                                                                    "Go to app"]}]])
+                                           :content "Open application in a new window"}]
+                                [ModuleVersionsApp i id]
                                 [EnvVariablesApp i id]
                                 [RegistriesCredsApp i id]])})
                ) applications)}])
@@ -615,8 +632,8 @@
                               :icon icons/i-layer-group}
                    :render   #(r/as-element
                                 [ConfigureApps
-                                   0
-                                   (:applications (first apps))])}
+                                 0
+                                 (:applications (first apps))])}
                   (job-views/jobs-section)
                   (acl/TabAcls {:e          deployment-set
                                 :can-edit?  can-edit?

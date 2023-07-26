@@ -5,6 +5,14 @@
             [sixsq.nuvla.ui.plugins.step-group :as step-group-plugin]))
 
 (s/def ::deployment-set (s/nilable any?))
+
+(s/def ::name string?)
+(s/def ::description string?)
+(s/def ::version string?)
+(s/def ::apps (s/coll-of map? :kind vector?))
+(s/def ::edges (s/coll-of map? :kind vector?))
+(s/def ::deployments (s/coll-of map? :kind vector?))
+
 (s/def ::deployment-set-not-found? boolean?)
 (s/def ::targets-selected (s/nilable set?))
 (s/def ::bulk-jobs any?)

@@ -14,6 +14,17 @@
   :-> ::spec/deployment-set)
 
 (reg-sub
+  ::apps
+  :<- [::deployment-set]
+  (fn [deployment-set]
+    (-> deployment-set
+        :applications-sets
+        first
+        :overwrites
+        first
+        :applications)))
+
+(reg-sub
   ::can-edit?
   :<- [::deployment-set]
   (fn [deployment-set]
@@ -152,6 +163,16 @@
   :<- [::step-apps-targets-complete?]
   ;;todo require all mandatory params to be filled up?
   :-> #(some false? %))
+
+(reg-sub
+  ::edges
+  :-> ::spec/edges)
+
+(reg-sub
+  ::edges-filter
+  :<- [::edges]
+  (fn [edges]
+    (general-utils/ids->filter-string (->> edges :resources (map :id)))))
 
 (reg-sub
   ::edges-summary

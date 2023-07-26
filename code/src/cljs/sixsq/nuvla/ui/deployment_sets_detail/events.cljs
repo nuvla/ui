@@ -289,12 +289,12 @@
                         (dispatch [::resolve-to-ancestor {:ids           parent-ids
                                                           :storage-event storage-event}])))]
       {::cimi-api-fx/search [(general-utils/id->resource-name (first ids))
-                             {:filter (apply general-utils/join-or (map #(str "id='" % "'") ids))
+                             {:filter (general-utils/ids->filter-string ids)
                               :last   1000}
                              callback]})))
 
 (reg-event-db
   ::set-edges
   (fn [db [_ resources]]
-    (assoc db ::edges
+    (assoc db ::spec/edges
       resources)))

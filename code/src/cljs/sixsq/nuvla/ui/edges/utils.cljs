@@ -244,11 +244,13 @@
 
 (defn get-full-filter-string
   [{:keys [::spec/state-selector
-           ::spec/additional-filter] :as db}]
+           ::spec/additional-filter
+           ::spec/external-restriction-filter] :as db}]
   (general-utils/join-and
     "id!=null"
     (when state-selector (state-filter state-selector))
     additional-filter
+    external-restriction-filter
     (full-text-search-plugin/filter-text
       db [::spec/edges-search])))
 

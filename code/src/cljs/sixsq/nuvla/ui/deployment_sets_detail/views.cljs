@@ -10,7 +10,7 @@
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.views :as deployments-views]
-            [sixsq.nuvla.ui.edges.views :refer [StatisticStatesEdgeView]]
+            [sixsq.nuvla.ui.edges.views :as edges-views :refer [NuvlaBoxesOrClusters StatisticStatesEdgeView]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
@@ -614,10 +614,30 @@
                             :completed (when subs @(subscribe [subs]))))
                         items)}]])))
 
+(defn EdgesTab
+  []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        edges   (subscribe [::subs/edges])
+        columns [{:field-key :online :header-content [icons/HeartbeatIcon]}
+                 {:field-key :state}
+                 {:field-key :name}
+                 {:field-key :description}
+                 {:field-key :created}
+                 {:field-key :created-by}
+                 {:field-key :refresh-interval
+                  :header-content (str/lower-case (@tr [:report-interval]))}
+                 {:field-key :last-online :no-sort? true}
+                 {:field-key :version :no-sort? true}
+                 {:field-key :tags :no-sort? true}]]
+    [edges-views/NuvlaEdgeTableView
+     {:edges (:resources @edges )
+      :columns columns}]))
+
 (defn TabsDeploymentSet
   []
   (let [tr               @(subscribe [::i18n-subs/tr])
         deployment-set   (subscribe [::subs/deployment-set])
+        edges-filter     (subscribe [::subs/edges-filter])
         apps             @(subscribe [::subs/applications-sets])
         can-edit?        @(subscribe [::subs/can-edit?])]
     (when @deployment-set
@@ -634,7 +654,11 @@
                                 [ConfigureApps
                                  0
                                  (:applications (first apps))])}
-                  (job-views/jobs-section)
+                  {:menuItem {:key :edges
+                              :content (str/capitalize (tr [:edges]))
+                              :icon icons/i-box}
+                   :render   #(r/as-element
+                                [EdgesTab])}
                   (acl/TabAcls {:e          deployment-set
                                 :can-edit?  can-edit?
                                 :edit-event ::events/edit})]

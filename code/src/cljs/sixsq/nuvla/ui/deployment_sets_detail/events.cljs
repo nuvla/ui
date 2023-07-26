@@ -170,15 +170,19 @@
 (reg-event-fx
   ::get-deployment-set
   (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id]]
-    {:db               (cond-> db
-                         (not= (:id deployment-set) id) (merge spec/defaults))
-     ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
-                        :on-error #(dispatch [::set-deployment-set nil])]
-     :fx               [[:dispatch [::resolve-to-ancestor {:ids ["credential/cd9b35f5-2980-4ffe-9431-bac830e1111e"]
-                                                           :storage-event ::set-edges}]]
-                        [:dispatch [::events-plugin/load-events [::spec/events] id]]
-                        [:dispatch [::job-events/get-jobs id]]
-                        [:dispatch [::get-deployments-for-deployment-sets id]]]}))
+    (let [parent-ids (->> deployment-set
+                       :applications-sets
+                       (mapcat :overwrites)
+                       (mapcat :targets))]
+      {:db               (cond-> db
+                           (not= (:id deployment-set) id) (merge spec/defaults))
+       ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
+                          :on-error #(dispatch [::set-deployment-set nil])]
+       :fx               [[:dispatch [::resolve-to-ancestor {:ids parent-ids
+                                                             :storage-event ::set-edges}]]
+                          [:dispatch [::events-plugin/load-events [::spec/events] id]]
+                          [:dispatch [::job-events/get-jobs id]]
+                          [:dispatch [::get-deployments-for-deployment-sets id]]]})))
 
 (reg-event-fx
   ::get-deployments-for-deployment-sets

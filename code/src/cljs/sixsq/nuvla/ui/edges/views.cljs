@@ -97,7 +97,7 @@
   (let [summary (if clickable?
                   (subscribe [::subs/nuvlaboxes-summary])
                   (subscribe [::subs/nuvlaboxes-summary-all]))]
-    [StatisticStatesEdgeView summary clickable?]))
+    [StatisticStatesEdgeView @summary clickable?]))
 
 (defn StatisticStates
   []

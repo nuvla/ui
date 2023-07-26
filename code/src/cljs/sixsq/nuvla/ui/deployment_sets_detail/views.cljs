@@ -177,7 +177,7 @@
 (defn TabOverview
   []
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-summary (subscribe [::subs/edges-summary])]
+        edges-response (subscribe [::subs/edges-response])]
     (fn []
       (let [{:keys [id tags]} @deployment-set
             tr (subscribe [::i18n-subs/tr])]
@@ -217,7 +217,7 @@
              [icons/Icon {:name icons/i-box}]
              (str (@tr [:nuvlaedge]) "s")]
 
-             [StatisticStatesEdgeView @edges-summary]]]
+             [StatisticStatesEdgeView @edges-response]]]
 
           [ui/GridColumn {:stretched true}
            [deployments-views/DeploymentsOverviewSegment
@@ -617,7 +617,7 @@
 (defn EdgesTab
   []
   (let [tr      (subscribe [::i18n-subs/tr])
-        edges   (subscribe [::subs/edges])
+        edges   (subscribe [::subs/edges-response])
         columns [{:field-key :online :header-content [icons/HeartbeatIcon]}
                  {:field-key :state}
                  {:field-key :name}

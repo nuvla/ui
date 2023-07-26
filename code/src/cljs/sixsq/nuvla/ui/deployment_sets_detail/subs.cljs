@@ -165,12 +165,39 @@
   :-> #(some false? %))
 
 (reg-sub
-  ::edges
+  ::edges-response
   :-> ::spec/edges)
 
 (reg-sub
-  ::edges-filter
+  ::edges-count
+  :<- [::edges-response]
+  (fn [edges-response]
+    (:count edges-response)))
+
+
+(reg-sub
+  ::edges
+  :<- [::edges-response]
+  (fn [edges-response]
+    (:resources edges-response)))
+
+(reg-sub
+  ::edges-by-id
   :<- [::edges]
+  (fn [edges]
+    (zipmap
+      (map :id edges)
+      edges)))
+
+(reg-sub
+  ::get-edge-by-id
+  :<- [::edges-by-id]
+  (fn [edges-by-id [_ id]]
+    (edges-by-id id)))
+
+(reg-sub
+  ::edges-filter
+  :<- [::edges-response]
   (fn [edges]
     (general-utils/ids->filter-string (->> edges :resources (map :id)))))
 

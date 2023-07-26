@@ -291,14 +291,20 @@
 
                         :else
                         (dispatch [::resolve-to-ancestor {:ids           parent-ids
-                                                          :storage-event storage-event}])))]
-      {::cimi-api-fx/search [(general-utils/id->resource-name (first ids))
-                             {:filter (general-utils/ids->filter-string ids)
-                              :last   1000}
-                             callback]})))
+                                                          :storage-event storage-event}])))
+          resource-name (general-utils/id->resource-name (first ids))
+          ids-filter     (general-utils/ids->filter-string ids)]
+      (when (every? seq [resource-name ids-filter])
+        {::cimi-api-fx/search [resource-name
+                               (cond->
+                                 {:filter ids-filter
+                                  :last   10000}
+                                 (= "nuvlabox" resource-name)
+                                 (merge {:aggregation "terms:online,terms:state"}))
+                               callback]}))))
 
 (reg-event-db
   ::set-edges
-  (fn [db [_ resources]]
+  (fn [db [_ response]]
     (assoc db ::spec/edges
-      resources)))
+      response)))

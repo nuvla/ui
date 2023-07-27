@@ -862,10 +862,12 @@ body .divider-red {
   margin-top: -0.5rem;
   margin-bottom: 0.1rem !important;
 }
+
 .nuvla-edges .statistics .red .icons,
 .nuvla-deployments .statistics .red .icons {
   color: #ff0000;
 }
+
 .nuvla-edges .statistics .orange .icons,
 .nuvla-deployments .statistics .orange .icons {
   color: #f2711c;
@@ -883,7 +885,7 @@ body .divider-red {
 
 .ui-card-header {
   background-color: var(--accent-color) !important;
-  border-radius: '.28571429rem .28571429rem 0 0';
+  border-radius: 0.28571429rem 0.28571429rem 0 0;
   color: #ffffff;
 }
 

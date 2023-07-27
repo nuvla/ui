@@ -180,20 +180,21 @@
   (let [deployment-set (subscribe [::subs/deployment-set])
         edges-stats    (subscribe [::subs/edges-summary-stats])
         apps           (subscribe [::subs/applications-sets-apps-targets])
-        app-row-data   (mapv (fn [{:keys [application] :as app-data}]
-                               {:idx (:i app-data)
-                                :href (:id application)
-                                :app-name (:name application)
-                                :version  (str "v" (get-version-id
-                                                     (map-indexed vector (:versions application))
-                                                     (-> application :content :id)))
-                                :status "yeah, good question"
-                                :last-update (time/time->format (js/Date.))})
-
-                         @apps)]
+        ]
     (fn []
       (let [{:keys [id tags]} @deployment-set
-            tr (subscribe [::i18n-subs/tr])]
+            tr (subscribe [::i18n-subs/tr])
+            app-row-data   (mapv (fn [{:keys [application] :as app-data}]
+                                   {:idx (:i app-data)
+                                    :href (:id application)
+                                    :app-name (:name application)
+                                    :version  (str "v" (get-version-id
+                                                         (map-indexed vector (:versions application))
+                                                         (-> application :content :id)))
+                                    :status "yeah, good question"
+                                    :last-update (time/time->format (js/Date.))})
+
+                             @apps)]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
@@ -209,17 +210,18 @@
              [icons/Icon {:name icons/i-box}]
              (str/capitalize (@tr [:apps]))]
 
-            [Table {:columns (map (fn [k]
-                                    {:field-key k
-                                     :cell (when (= k :app-name)
-                                             (fn [{:keys [cell-data row-data]}]
-                                               [module-plugin/LinkToApp
-                                                {:db-path  [::spec/apps-sets (:idx row-data)]
-                                                 :href     (:href row-data)
-                                                 :children [:<>
-                                                            cell-data]
-                                                 :target   :_self}]))})
-                               (keys (dissoc (first app-row-data) :idx :href)))
+            [Table {:columns
+                    (map (fn [k]
+                           {:field-key k
+                            :cell (when (= k :app-name)
+                                    (fn [{:keys [cell-data row-data]}]
+                                      [module-plugin/LinkToApp
+                                       {:db-path  [::spec/apps-sets (:idx row-data)]
+                                        :href     (:href row-data)
+                                        :children [:<>
+                                                   cell-data]
+                                        :target   :_self}]))})
+                      (keys (dissoc (first app-row-data) :idx :href)))
                     :rows app-row-data}]]]
 
           [ui/GridColumn {:stretched true}

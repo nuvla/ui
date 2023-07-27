@@ -49,36 +49,32 @@
      [ui/StatisticValue (or value "-")]
      [ui/StatisticLabel label]]))
 
+(defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
+  [ui/StatisticGroup {:size  "tiny"
+                      :style {:padding "0.2rem"}}
+   [Statistic {:value total
+               :icon  icons/i-box
+               :label "TOTAL"
+               :color "black"}]
+   [Statistic {:value          online
+               :icon           icons/i-power
+               :label          edges-utils/status-online
+               :positive-color "green"
+               :color          "green"}]
+   [Statistic {:value offline
+               :icon  icons/i-power
+               :label edges-utils/status-offline
+               :color "red"}]
+   [Statistic {:value unknown
+               :icon  icons/i-power
+               :label edges-utils/status-unknown
+               :color "orange"}]])
+
 
 (defn StatisticStatesEdge
   []
-  (let [summary         (subscribe [::edges-subs/nuvlaboxes-summary-all])
-        total           (:count @summary)
-        online-statuses (general-utils/aggregate-to-map
-                          (get-in @summary [:aggregations :terms:online :buckets]))
-        online          (:1 online-statuses)
-        offline         (:0 online-statuses)
-        unknown         (- total (+ online offline))]
-
-    [ui/StatisticGroup {:size  "tiny"
-                        :style {:padding "0.2rem"}}
-     [Statistic {:value total
-                 :icon  icons/i-box
-                 :label "TOTAL"
-                 :color "black"}]
-     [Statistic {:value          online
-                 :icon           icons/i-power
-                 :label          edges-utils/status-online
-                 :positive-color "green"
-                 :color          "green"}]
-     [Statistic {:value offline
-                 :icon  icons/i-power
-                 :label edges-utils/status-offline
-                 :color "red"}]
-     [Statistic {:value unknown
-                 :icon  icons/i-power
-                 :label edges-utils/status-unknown
-                 :color "orange"}]]))
+  (let [summary-stats (subscribe [::edges-subs/nuvlaboxes-summary-all-stats])]
+    [StatisticStatesEdgeView @summary-stats]))
 
 (defn TabOverviewNuvlaBox
   []
@@ -90,7 +86,8 @@
                              :flex-direction  "column"
                              :justify-content "space-between"
                              :border-radius   "8px"
-                             :overflow        :hidden}}
+                             :overflow        :hidden}
+                 }
 
      [:h4 {:class "ui-header"}
       [icons/BoxIcon]

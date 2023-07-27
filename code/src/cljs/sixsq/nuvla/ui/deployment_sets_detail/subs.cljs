@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require [clojure.string :as str]
-            [re-frame.core :refer [reg-sub subscribe]]
+            [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
@@ -167,6 +168,12 @@
 (reg-sub
   ::edges-response
   :-> ::spec/edges)
+
+(reg-sub
+  ::edges-summary-stats
+  :<- [::edges-response]
+  (fn [edges]
+    (edges-utils/summary-stats edges)))
 
 (reg-sub
   ::edges-count

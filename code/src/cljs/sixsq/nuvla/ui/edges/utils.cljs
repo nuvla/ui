@@ -273,3 +273,12 @@
 
 (defn sort-by-version [e]
   (sort-by :release compare-versions e))
+
+(defn summary-stats [summary]
+  (let [total           (:count summary)
+        online-statuses (general-utils/aggregate-to-map
+                          (get-in summary [:aggregations :terms:online :buckets]))
+        online          (:1 online-statuses)
+        offline         (:0 online-statuses)
+        unknown         (- total (+ online offline))]
+    {:total total :online online :offline offline :unknown unknown}))

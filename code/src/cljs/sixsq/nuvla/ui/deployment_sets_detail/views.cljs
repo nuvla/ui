@@ -2,15 +2,15 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.acl.views :as acl]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
+            [sixsq.nuvla.ui.dashboard.views :refer [StatisticStatesEdgeView]]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.views :as deployments-views]
-            [sixsq.nuvla.ui.edges.views :as edges-views :refer [NuvlaBoxesOrClusters StatisticStatesEdgeView]]
+            [sixsq.nuvla.ui.edges.views :as edges-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
@@ -22,9 +22,10 @@
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
-            [sixsq.nuvla.ui.routing.events :as routes-events]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routes-utils]
+            [sixsq.nuvla.ui.routing.utils :as route-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -177,7 +178,7 @@
 (defn TabOverview
   []
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-response (subscribe [::subs/edges-response])]
+        edges-stats (subscribe [::subs/edges-summary-stats])]
     (fn []
       (let [{:keys [id tags]} @deployment-set
             tr (subscribe [::i18n-subs/tr])]
@@ -217,12 +218,20 @@
              [icons/Icon {:name icons/i-box}]
              (str (@tr [:nuvlaedge]) "s")]
 
-             [StatisticStatesEdgeView @edges-response]]]
+            [StatisticStatesEdgeView @edges-stats]
+            [ui/Button {:class    "center"
+                        :icon #(r/as-element [icons/BoxIcon])
+                        :content  "Show me"
+                        :on-click #(dispatch [::routing-events/change-query-param
+                                              {:push-state? true
+                                               :query-params
+                                               {(route-utils/db-path->query-param-key [::spec/tab])
+                                                "edges"}}])}]]]
 
           [ui/GridColumn {:stretched true}
            [deployments-views/DeploymentsOverviewSegment
             ::deployments-subs/deployments nil nil
-            #(dispatch [::routes-events/navigate
+            #(dispatch [::routing-events/navigate
                         (routes-utils/pathify [(routes-utils/name->href routes/deployments)
                                                (str "?deployment=deployment-set='" id "'")])])]]
 

@@ -440,14 +440,14 @@
       [ui/Message "No container registries defined"])))
 
 (defn LinkToApp
-  [{:keys [db-path href children]
+  [{:keys [db-path href children target]
     :as   _opts}]
   (let [{:keys [path content]} @(subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         version-id       (get-version-id @versions-indexed (:id content))]
     [:a {:href   (str-pathify (name->href routes/apps)
-                              (str path "?version=" version-id))
-         :target "_blank"}
+                   (str path "?version=" version-id))
+         :target (or target "_blank")}
      children]))
 
 (defn ModuleNameIcon

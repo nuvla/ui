@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
             [sixsq.nuvla.ui.dashboard.views :refer [StatisticStatesEdgeView]]
+            [sixsq.nuvla.ui.deployment-dialog.views-module-version :refer [get-version-id]]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
@@ -25,7 +26,6 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routes-utils]
-            [sixsq.nuvla.ui.routing.utils :as route-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -178,7 +178,19 @@
 (defn TabOverview
   []
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats (subscribe [::subs/edges-summary-stats])]
+        edges-stats    (subscribe [::subs/edges-summary-stats])
+        apps           (subscribe [::subs/applications-sets-apps-targets])
+        app-row-data   (mapv (fn [{:keys [application] :as app-data}]
+                               {:idx (:i app-data)
+                                :href (:id application)
+                                :app-name (:name application)
+                                :version  (str "v" (get-version-id
+                                                     (map-indexed vector (:versions application))
+                                                     (-> application :content :id)))
+                                :status "yeah, good question"
+                                :last-update (time/time->format (js/Date.))})
+
+                         @apps)]
     (fn []
       (let [{:keys [id tags]} @deployment-set
             tr (subscribe [::i18n-subs/tr])]
@@ -197,14 +209,18 @@
              [icons/Icon {:name icons/i-box}]
              (str/capitalize (@tr [:apps]))]
 
-            [Table {:rows (mapv (fn [idx] {:app-name (str "App " idx)
-                                           :version (str "v" idx)
-                                           :status "yeah"
-                                           :last-update (time/time->format (js/Date.))})
-
-                             (range
-                               (* 5
-                                  (js/Math.random))))}]]]
+            [Table {:columns (map (fn [k]
+                                    {:field-key k
+                                     :cell (when (= k :app-name)
+                                             (fn [{:keys [cell-data row-data]}]
+                                               [module-plugin/LinkToApp
+                                                {:db-path  [::spec/apps-sets (:idx row-data)]
+                                                 :href     (:href row-data)
+                                                 :children [:<>
+                                                            cell-data]
+                                                 :target   :_self}]))})
+                               (keys (dissoc (first app-row-data) :idx :href)))
+                    :rows app-row-data}]]]
 
           [ui/GridColumn {:stretched true}
            [ui/Segment {:class     :nuvla-edges
@@ -225,7 +241,7 @@
                         :on-click #(dispatch [::routing-events/change-query-param
                                               {:push-state? true
                                                :query-params
-                                               {(route-utils/db-path->query-param-key [::spec/tab])
+                                               {(routes-utils/db-path->query-param-key [::spec/tab])
                                                 "edges"}}])}]]]
 
           [ui/GridColumn {:stretched true}

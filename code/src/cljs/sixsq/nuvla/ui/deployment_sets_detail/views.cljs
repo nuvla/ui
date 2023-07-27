@@ -682,7 +682,6 @@
                    :render #(r/as-element
                               [deployments-views/DeploymentTable
                                {:no-actions         true
-                                :no-module-name     true
                                 :empty-msg          (tr [:empty-deployment-module-msg])
                                 :pagination-db-path ::spec/deployment-pagination
                                 :fetch-event        [::events/get-deployments-for-deployment-sets]}])}]

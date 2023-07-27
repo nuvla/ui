@@ -175,16 +175,11 @@
       deployment-set #(dispatch [::events/edit id {:tags %}
                                  (@tr [:updated-successfully])])]]))
 
-(defn TabOverview
+(defn- AppsOverviewTable
   []
-  (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats    (subscribe [::subs/edges-summary-stats])
-        apps           (subscribe [::subs/applications-sets-apps-targets])
-        ]
+  (let [apps           (subscribe [::subs/applications-sets-apps-targets])]
     (fn []
-      (let [{:keys [id tags]} @deployment-set
-            tr (subscribe [::i18n-subs/tr])
-            app-row-data   (mapv (fn [{:keys [application] :as app-data}]
+      (let [app-row-data   (mapv (fn [{:keys [application] :as app-data}]
                                    {:idx (:i app-data)
                                     :href (:id application)
                                     :app-name (:name application)
@@ -195,6 +190,32 @@
                                     :last-update (time/time->format (js/Date.))})
 
                              @apps)]
+        [Table {:columns
+                (map (fn [k]
+                       {:field-key k
+                        :cell (when (= k :app-name)
+                                (fn [{:keys [cell-data row-data]}]
+                                  [module-plugin/LinkToApp
+                                   {:db-path  [::spec/apps-sets (:idx row-data)]
+                                    :href     (:href row-data)
+                                    :children [:<>
+                                               cell-data]
+                                    :target   :_self}]))})
+                  (keys (dissoc (first app-row-data) :idx :href)))
+                :rows app-row-data}]))))
+
+(defn TabOverview
+  []
+  (let [deployment-set (subscribe [::subs/deployment-set])
+        edges-stats    (subscribe [::subs/edges-summary-stats])]
+    (fn []
+      (let [tr (subscribe [::i18n-subs/tr])
+            create-nav-fn (fn [tab]
+                            #(dispatch [::routing-events/change-query-param
+                                              {:push-state? true
+                                               :query-params
+                                               {(routes-utils/db-path->query-param-key [::spec/tab])
+                                                tab}}]))]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
@@ -210,19 +231,7 @@
              [icons/Icon {:name icons/i-box}]
              (str/capitalize (@tr [:apps]))]
 
-            [Table {:columns
-                    (map (fn [k]
-                           {:field-key k
-                            :cell (when (= k :app-name)
-                                    (fn [{:keys [cell-data row-data]}]
-                                      [module-plugin/LinkToApp
-                                       {:db-path  [::spec/apps-sets (:idx row-data)]
-                                        :href     (:href row-data)
-                                        :children [:<>
-                                                   cell-data]
-                                        :target   :_self}]))})
-                      (keys (dissoc (first app-row-data) :idx :href)))
-                    :rows app-row-data}]]]
+            [AppsOverviewTable]]]
 
           [ui/GridColumn {:stretched true}
            [ui/Segment {:class     :nuvla-edges
@@ -240,22 +249,12 @@
             [ui/Button {:class    "center"
                         :icon #(r/as-element [icons/BoxIcon])
                         :content  "Show me"
-                        :on-click #(dispatch [::routing-events/change-query-param
-                                              {:push-state? true
-                                               :query-params
-                                               {(routes-utils/db-path->query-param-key [::spec/tab])
-                                                "edges"}}])}]]]
+                        :on-click (create-nav-fn "edges")}]]]
 
           [ui/GridColumn {:stretched true}
            [deployments-views/DeploymentsOverviewSegment
             ::deployments-subs/deployments nil nil
-            #(dispatch [::routing-events/navigate
-                        (routes-utils/pathify [(routes-utils/name->href routes/deployments)
-                                               (str "?deployment=deployment-set='" id "'")])])]]
-
-          (when (seq tags)
-            [ui/GridColumn
-             [TabOverviewTags @deployment-set]])]]))))
+            (create-nav-fn "deployments")]]]]))))
 
 
 

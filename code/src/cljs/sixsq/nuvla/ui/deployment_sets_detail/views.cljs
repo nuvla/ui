@@ -659,9 +659,16 @@
                               :icon icons/i-box}
                    :render   #(r/as-element
                                 [EdgesTab])}
-                  (acl/TabAcls {:e          deployment-set
-                                :can-edit?  can-edit?
-                                :edit-event ::events/edit})]
+                  {:menuItem {:key :deployments
+                              :content (str/capitalize (tr [:deployments]))
+                              :icon icons/i-rocket}
+                   :render #(r/as-element
+                              [deployments-views/DeploymentTable
+                               {:no-actions         true
+                                :no-module-name     true
+                                :empty-msg          (tr [:empty-deployment-module-msg])
+                                :pagination-db-path ::spec/deployment-pagination
+                                :fetch-event        [::events/get-deployments-for-deployment-sets]}])}]
         :menu    {:secondary true
                   :pointing  true}}])))
 

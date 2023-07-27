@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
@@ -18,12 +19,36 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
+(def refresh-action-id :deployment-set-get-deployment-set)
+
+(defn refresh
+  [uuid]
+  (dispatch [::main-events/action-interval-start
+             {:id        refresh-action-id
+              :frequency 10000
+              :event     [::get-deployment-set (str "deployment-set/" uuid)]}]))
+
+(reg-event-db
+  ::init
+  (fn [db _]
+    {:db (merge db spec/defaults)}))
+
+(reg-event-fx
+  ::init
+  (fn [{db :db} [_ uuid]]
+    {:fx [[:dispatch [::clear]]
+          [:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]
+          [:dispatch [::main-events/action-interval-start
+                      {:id        refresh-action-id
+                       :frequency 10000
+                       :event     [::get-deployment-set (str "deployment-set/" uuid)]}]]] }))
+
 (reg-event-fx
   ::new
-  (fn [{{:keys [current-route] :as db} :db}]
+  (fn [{{:keys [current-route]} :db}]
     (let [id (routing-utils/get-query-param current-route :applications-sets)]
-      {:db               (merge db spec/defaults)
-       :fx [[:dispatch [::get-application-sets id]]]})))
+      {:fx [[:dispatch [::clear]]
+            [:dispatch [::get-application-sets id]]]})))
 
 (reg-event-fx
   ::get-application-sets

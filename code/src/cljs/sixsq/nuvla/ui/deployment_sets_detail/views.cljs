@@ -24,7 +24,6 @@
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
-            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routes-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -37,15 +36,7 @@
             [sixsq.nuvla.ui.utils.values :as values]))
 
 
-(def refresh-action-id :deployment-set-get-deployment-set)
 
-
-(defn refresh
-  [uuid]
-  (dispatch [::main-events/action-interval-start
-             {:id        refresh-action-id
-              :frequency 10000
-              :event     [::events/get-deployment-set (str "deployment-set/" uuid)]}]))
 
 (defn StartButton
   [{:keys [id] :as deployment-set}]
@@ -108,9 +99,9 @@
                 ^{:key "start"}
                 [StartButton @deployment-set])
           [components/RefreshMenu
-           {:action-id  refresh-action-id
+           {:action-id  events/refresh-action-id
             :loading?   @loading?
-            :on-refresh #(refresh uuid)}]]]))))
+            :on-refresh #(events/refresh uuid)}]]]))))
 
 
 
@@ -700,25 +691,27 @@
 
 (defn DeploymentSet
   [uuid]
-  (refresh uuid)
-  (let [{:keys [id name]} @(subscribe [::subs/deployment-set])]
-    [components/LoadingPage {:dimmable? true}
-     [:<>
-      [components/NotFoundPortal
-       ::subs/deployment-set-not-found?
-       :no-deployment-set-message-header
-       :no-deployment-set-message-content]
-      [ui/Container {:fluid true}
-       [uix/PageHeader "bullseye" (or name id)]
-       [MenuBar uuid]
-       [job-views/ProgressJobAction]
-       [bulk-progress-plugin/MonitoredJobs
-        {:db-path [::spec/bulk-jobs]}]
-       [components/ErrorJobsMessage
-        ::job-subs/jobs nil nil
-        #(dispatch [::tab/change-tab {:db-path [::spec/tab]
-                                      :tab-key :jobs}])]
-       [TabsDeploymentSet]]]]))
+  (dispatch [::events/init uuid])
+  (let [depl-set (subscribe [::subs/deployment-set])]
+    (fn []
+      (let [{:keys [id name]} @depl-set]
+        [components/LoadingPage {:dimmable? true}
+         [:<>
+          [components/NotFoundPortal
+           ::subs/deployment-set-not-found?
+           :no-deployment-set-message-header
+           :no-deployment-set-message-content]
+          [ui/Container {:fluid true}
+           [uix/PageHeader "bullseye" (or name id)]
+           [MenuBar uuid]
+           [job-views/ProgressJobAction]
+           [bulk-progress-plugin/MonitoredJobs
+            {:db-path [::spec/bulk-jobs]}]
+           [components/ErrorJobsMessage
+            ::job-subs/jobs nil nil
+            #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                          :tab-key :jobs}])]
+           [TabsDeploymentSet]]]]))))
 
 
 (defn Details

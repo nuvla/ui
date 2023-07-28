@@ -4,6 +4,10 @@
 
 ## Released
 
+## [2.33.12] - 2023-07-28
+
+- Copy to clipboard buttons doesn't work in all places bugfix tasklist#2491
+
 ## [2.33.11] - 2023-07-21
 
 - Show apps subscriptions invoices current usage #1331

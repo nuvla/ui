@@ -304,33 +304,34 @@
 
 (reg-event-fx
   ::resolve-to-ancestor
-  (fn [_ [_ {ids :ids storage-event :storage-event}]]
-    (let [callback #(let [resources  (:resources %)
-                          parent-ids (remove nil? (map :parent resources))
-                          resolved?  (empty? parent-ids)]
-                      (cond
-                        (or (empty? resources) (instance? js/Error %))
-                        (cimi-api-fx/default-error-message % "loading edges for credentials failed")
+  (fn [{{:keys [::spec/edges]} :db} [_ {ids :ids storage-event :storage-event}]]
+    (when-not edges
+      (let [callback #(let [resources  (:resources %)
+                            parent-ids (remove nil? (map :parent resources))
+                            resolved?  (empty? parent-ids)]
+                        (cond
+                          (or (empty? resources) (instance? js/Error %))
+                          (cimi-api-fx/default-error-message % "loading edges for credentials failed")
 
-                        resolved?
-                        (dispatch [storage-event %])
+                          resolved?
+                          (dispatch [storage-event %])
 
-                        :else
-                        (dispatch [::resolve-to-ancestor {:ids           parent-ids
-                                                          :storage-event storage-event}])))
-          resource-name (general-utils/id->resource-name (first ids))
-          ids-filter     (general-utils/ids->filter-string ids)]
-      (when (every? seq [resource-name ids-filter])
-        {::cimi-api-fx/search [resource-name
-                               (cond->
-                                 {:filter ids-filter
-                                  :last   10000}
-                                 (= "nuvlabox" resource-name)
-                                 (merge {:aggregation "terms:online,terms:state"}))
-                               callback]}))))
+                          :else
+                          (dispatch [::resolve-to-ancestor {:ids           parent-ids
+                                                            :storage-event storage-event}])))
+            resource-name (general-utils/id->resource-name (first ids))
+            ids-filter    (general-utils/ids->filter-string ids)]
+        (when (every? seq [resource-name ids-filter])
+          {::cimi-api-fx/search [resource-name
+                                 (cond->
+                                   {:filter ids-filter
+                                    :last   10000}
+                                   (= "nuvlabox" resource-name)
+                                   (merge {:aggregation "terms:online,terms:state"}))
+                                 callback]})))))
 
 (reg-event-db
   ::set-edges
   (fn [db [_ response]]
     (assoc db ::spec/edges
-      response)))
+      (update response :resources (map :id)))))

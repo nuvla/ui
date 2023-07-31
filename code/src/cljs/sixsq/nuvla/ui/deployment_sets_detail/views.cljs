@@ -677,9 +677,7 @@
   []
   (let [tr               @(subscribe [::i18n-subs/tr])
         deployment-set   (subscribe [::subs/deployment-set])
-        edges-filter     (subscribe [::subs/edges-filter])
-        apps             @(subscribe [::subs/applications-sets])
-        can-edit?        @(subscribe [::subs/can-edit?])]
+        apps             @(subscribe [::subs/applications-sets])]
     (when @deployment-set
       [tab/Tab
        {:db-path [::spec/tab]
@@ -693,7 +691,7 @@
                    :render   #(r/as-element
                                 [ConfigureApps
                                  0
-                                 (:applications (first apps))])}
+                                 (mapcat :applications apps)])}
                   {:menuItem {:key :edges
                               :content (str/capitalize (tr [:edges]))
                               :icon icons/i-box}

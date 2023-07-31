@@ -21,16 +21,17 @@
 (s/def ::field keyword?)
 (s/def ::order #{"asc" "desc"})
 
-(s/def ::sort-direction (s/nilable (s/keys :req-un [::field ::order])))
+(s/def ::sort-direction
+ (s/nilable (s/keys :req-un [::field ::order])))
 
 (defn build-ordering
-  ([] (build-ordering {:created "desc"}))
+  ([] (build-ordering [[:created "desc"]]))
   ([ordering]
    ordering))
 
 (defn ordering->order-string [ordering]
   (str/join "," (for [[field order] ordering]
-                  (str (name field) ":" order))))
+                  (str (name field) ":" (name order)))))
 
 (s/def ::field-key keyword?)
 (s/def ::accessor (s/nilable (s/or :function fn? :keyword keyword?)))

@@ -47,7 +47,7 @@
 (s/def ::ordering
   (s/cat :field (set columns) :order #{"desc" "asc"}))
 
-(def default-ordering {:field :created :order "desc"})
+(def default-ordering [[:created :desc]])
 
 (s/def ::select (s/nilable any?))
 

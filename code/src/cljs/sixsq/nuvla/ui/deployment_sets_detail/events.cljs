@@ -350,18 +350,19 @@
                 current-route] :as db} :db} _]
     (let [ordering     (or ordering spec/default-ordering)
           query-filter (-> current-route :query-params edges-state-filter-key)]
-      {:db (assoc db ::spec/edge-documents nil)
-       ::cimi-api-fx/search
-       [:nuvlabox
-        (->> {:orderby (ordering->order-string ordering)
-              :filter  (general-utils/join-and
-                         "id!=null"
-                         (general-utils/ids->filter-string (-> edges
-                                                               :resources))
-                         (when query-filter (state-filter query-filter)))}
-             #_(pagination-plugin/first-last-params
-                 db [::spec/pagination]))
-        #(dispatch [::set-edge-documents %])]})))
+      (when edges
+        {:db (assoc db ::spec/edge-documents nil)
+         ::cimi-api-fx/search
+         [:nuvlabox
+          (->> {:orderby (ordering->order-string ordering)
+                :filter  (general-utils/join-and
+                           "id!=null"
+                           (general-utils/ids->filter-string (-> edges
+                                                                 :resources))
+                           (when query-filter (state-filter query-filter)))}
+               #_(pagination-plugin/first-last-params
+                   db [::spec/pagination]))
+          #(dispatch [::set-edge-documents %])]}))))
 
 (reg-event-db
   ::set-edge-documents

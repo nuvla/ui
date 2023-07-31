@@ -195,7 +195,7 @@
                 :rows app-row-data}]))))
 
 
-(defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
+(defn StatisticStatesEdgeView [{:keys [total online offline unknown selected-state]}]
   (let [current-route     @(subscribe [::route-subs/current-route])
         to-edges-tab      {:deployment-sets-detail-tab :edges}
         create-target-url (fn [status-filter]
@@ -217,16 +217,19 @@
                                  :label          edges-utils/status-online
                                  :positive-color "green"
                                  :color          "green"
+                                 :icon-color     "green"
                                  :target (create-target-url "ONLINE")}]
      [dashboard-views/Statistic {:value offline
                                  :icon  icons/i-power
                                  :label edges-utils/status-offline
                                  :color "red"
+                                 :icon-color "red"
                                  :target (create-target-url "OFFLINE")}]
      [dashboard-views/Statistic {:value unknown
                                  :icon  icons/i-power
                                  :label edges-utils/status-unknown
                                  :color "orange"
+                                 :icon-color "orange"
                                  :target (create-target-url "UNKNOWN")}]]))
 
 (defn TabOverview
@@ -665,25 +668,34 @@
                             :completed (when subs @(subscribe [subs]))))
                         items)}]])))
 
+(defn EdgesTabView
+  [state]
+  (dispatch [::events/get-edge-documents])
+  (let [tr         (subscribe [::i18n-subs/tr])
+        edges      (subscribe [::subs/edges-documents-response])
+        columns    [{:field-key :online :header-content [icons/HeartbeatIcon]}
+                    {:field-key :state}
+                    {:field-key :name}
+                    {:field-key :description}
+                    {:field-key :created}
+                    {:field-key :created-by}
+                    {:field-key :refresh-interval
+                     :header-content (str/lower-case (@tr [:report-interval]))}
+                    {:field-key :last-online :no-sort? true}
+                    {:field-key :version :no-sort? true}
+                    {:field-key :tags :no-sort? true}]
+        edges-stats (subscribe [::subs/edges-summary-stats])]
+    [:<>
+     [StatisticStatesEdgeView (assoc @edges-stats :selected-state state)]
+     [edges-views/NuvlaEdgeTableView
+      {:edges (:resources @edges)
+       :columns columns}]]))
+
 (defn EdgesTab
   []
-  (dispatch [::events/get-edge-documents])
-  (let [tr      (subscribe [::i18n-subs/tr])
-        edges   (subscribe [::subs/edges-documents-response])
-        columns [{:field-key :online :header-content [icons/HeartbeatIcon]}
-                 {:field-key :state}
-                 {:field-key :name}
-                 {:field-key :description}
-                 {:field-key :created}
-                 {:field-key :created-by}
-                 {:field-key :refresh-interval
-                  :header-content (str/lower-case (@tr [:report-interval]))}
-                 {:field-key :last-online :no-sort? true}
-                 {:field-key :version :no-sort? true}
-                 {:field-key :tags :no-sort? true}]]
-    [edges-views/NuvlaEdgeTableView
-     {:edges (:resources @edges)
-      :columns columns}]))
+  (let [state (subscribe [::route-subs/query-param events/edges-state-filter-key])]
+    (fn []
+      [EdgesTabView @state])))
 
 (defn TabsDeploymentSet
   []

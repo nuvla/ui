@@ -4,19 +4,19 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-            [sixsq.nuvla.ui.dashboard.views :refer [StatisticStatesEdgeView]]
+            [sixsq.nuvla.ui.dashboard.views :as dashboard-views ]
             [sixsq.nuvla.ui.deployment-dialog.views-module-version :refer [get-version-id]]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.views :as deployments-views]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.edges.views :as edges-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
@@ -33,9 +33,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
-
-
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]))
 
 
 (defn StartButton
@@ -194,6 +193,30 @@
                                     :target   :_self}]))})
                   (keys (dissoc (first app-row-data) :idx :href)))
                 :rows app-row-data}]))))
+
+(defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
+  (let [current-route @(subscribe [::route-subs/current-route])
+        to-edges-tab  {:deployment-sets-detail-tab :edges}]
+    [ui/StatisticGroup {:size  "tiny"
+                        :style {:padding "0.2rem"}}
+     [dashboard-views/Statistic {:value total
+                                 :icon  icons/i-box
+                                 :label "TOTAL"
+                                 :color "black"
+                                 :target {:resource (routes-utils/gen-href current-route {:query-params to-edges-tab})}}]
+     [dashboard-views/Statistic {:value          online
+                                 :icon           icons/i-power
+                                 :label          edges-utils/status-online
+                                 :positive-color "green"
+                                 :color          "green"}]
+     [dashboard-views/Statistic {:value offline
+                                 :icon  icons/i-power
+                                 :label edges-utils/status-offline
+                                 :color "red"}]
+     [dashboard-views/Statistic {:value unknown
+                                 :icon  icons/i-power
+                                 :label edges-utils/status-unknown
+                                 :color "orange"}]]))
 
 (defn TabOverview
   []

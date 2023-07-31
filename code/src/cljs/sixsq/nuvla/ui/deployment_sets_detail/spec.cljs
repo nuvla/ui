@@ -33,4 +33,5 @@
    ::create-name               ""
    ::create-description        ""
    ::licenses-accepted?        false
-   ::prices-accepted?          false})
+   ::prices-accepted?          false
+   ::edges                     nil})

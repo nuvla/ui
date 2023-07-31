@@ -28,16 +28,11 @@
               :frequency 10000
               :event     [::get-deployment-set (str "deployment-set/" uuid)]}]))
 
-(reg-event-db
-  ::init
-  (fn [db _]
-    {:db (merge db spec/defaults)}))
 
 (reg-event-fx
   ::init
-  (fn [{db :db} [_ uuid]]
-    {:fx [[:dispatch [::clear]]
-          [:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]
+  (fn [_ [_ uuid]]
+    {:fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-id
                        :frequency 10000
@@ -45,10 +40,10 @@
 
 (reg-event-fx
   ::new
-  (fn [{{:keys [current-route]} :db}]
+  (fn [{{:keys [current-route] :as db} :db}]
     (let [id (routing-utils/get-query-param current-route :applications-sets)]
-      {:fx [[:dispatch [::clear]]
-            [:dispatch [::get-application-sets id]]]})))
+      {:db (merge db spec/defaults)
+       :fx [[:dispatch [::get-application-sets id]]]})))
 
 (reg-event-fx
   ::get-application-sets
@@ -170,10 +165,16 @@
 (reg-event-fx
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set]]
-    {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
-           ::spec/deployment-set deployment-set
-           ::main-spec/loading? false)
-     :fx [[:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]}))
+    (let [parent-ids (->> deployment-set
+                          :applications-sets
+                          (mapcat :overwrites)
+                          (mapcat :targets))]
+      {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
+             ::spec/deployment-set deployment-set
+             ::main-spec/loading? false)
+       :fx [[:dispatch [::resolve-to-ancestor {:ids parent-ids
+                                               :storage-event ::set-edges}]]
+            [:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]})))
 
 (reg-event-fx
   ::operation
@@ -195,19 +196,14 @@
 (reg-event-fx
   ::get-deployment-set
   (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id]]
-    (let [parent-ids (->> deployment-set
-                       :applications-sets
-                       (mapcat :overwrites)
-                       (mapcat :targets))]
-      {:db               (cond-> db
-                           (not= (:id deployment-set) id) (merge spec/defaults))
-       ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
-                          :on-error #(dispatch [::set-deployment-set nil])]
-       :fx               [[:dispatch [::resolve-to-ancestor {:ids parent-ids
-                                                             :storage-event ::set-edges}]]
-                          [:dispatch [::events-plugin/load-events [::spec/events] id]]
-                          [:dispatch [::job-events/get-jobs id]]
-                          [:dispatch [::get-deployments-for-deployment-sets id]]]})))
+    {:db               (cond-> db
+                         (not= (:id deployment-set) id) (merge spec/defaults))
+     ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
+                        :on-error #(dispatch [::set-deployment-set nil])]
+     :fx               [
+                        [:dispatch [::events-plugin/load-events [::spec/events] id]]
+                        [:dispatch [::job-events/get-jobs id]]
+                        [:dispatch [::get-deployments-for-deployment-sets id]]]}))
 
 (reg-event-fx
   ::get-deployments-for-deployment-sets

@@ -87,7 +87,7 @@
       {:db                  (assoc db ::spec/filter-external filter-external)
        ::cimi-api-fx/search [:deployment
                              (->> {:aggregation "terms:state"
-                                   :orderby     (ordering->order-string (or ordering spec/default-ordering))
+                                   :orderby     (ordering->order-string ordering)
                                    :filter      filter-str}
                                   (pagination-plugin/first-last-params
                                     db [(or pagination-db-path ::spec/pagination)]))

@@ -183,14 +183,24 @@
 
 
 (reg-sub
-  ::edges
+  ::all-edges-ids
   :<- [::edges-response]
   (fn [edges-response]
     (:resources edges-response)))
 
 (reg-sub
+  ::edges-documents-response
+  :-> ::spec/edges-documents)
+
+(reg-sub
+  ::edges-documents
+  :<- [::edges-documents-response]
+  (fn [edges-documents-response]
+    (:resources edges-documents-response)))
+
+(reg-sub
   ::edges-by-id
-  :<- [::edges]
+  :<- [::edges-documents]
   (fn [edges]
     (zipmap
       (map :id edges)

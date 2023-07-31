@@ -194,29 +194,40 @@
                   (keys (dissoc (first app-row-data) :idx :href)))
                 :rows app-row-data}]))))
 
+
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
-  (let [current-route @(subscribe [::route-subs/current-route])
-        to-edges-tab  {:deployment-sets-detail-tab :edges}]
+  (let [current-route     @(subscribe [::route-subs/current-route])
+        to-edges-tab      {:deployment-sets-detail-tab :edges}
+        create-target-url (fn [status-filter]
+                            {:resource ((partial routes-utils/gen-href current-route)
+                                         {:query-params
+                                          (cond->
+                                            to-edges-tab
+                                            status-filter
+                                            (assoc events/edges-state-filter-key status-filter))})})]
     [ui/StatisticGroup {:size  "tiny"
                         :style {:padding "0.2rem"}}
      [dashboard-views/Statistic {:value total
                                  :icon  icons/i-box
                                  :label "TOTAL"
                                  :color "black"
-                                 :target {:resource (routes-utils/gen-href current-route {:query-params to-edges-tab})}}]
+                                 :target (create-target-url nil)}]
      [dashboard-views/Statistic {:value          online
                                  :icon           icons/i-power
                                  :label          edges-utils/status-online
                                  :positive-color "green"
-                                 :color          "green"}]
+                                 :color          "green"
+                                 :target (create-target-url "ONLINE")}]
      [dashboard-views/Statistic {:value offline
                                  :icon  icons/i-power
                                  :label edges-utils/status-offline
-                                 :color "red"}]
+                                 :color "red"
+                                 :target (create-target-url "OFFLINE")}]
      [dashboard-views/Statistic {:value unknown
                                  :icon  icons/i-power
                                  :label edges-utils/status-unknown
-                                 :color "orange"}]]))
+                                 :color "orange"
+                                 :target (create-target-url "UNKNOWN")}]]))
 
 (defn TabOverview
   []
@@ -656,8 +667,9 @@
 
 (defn EdgesTab
   []
+  (dispatch [::events/get-edge-documents])
   (let [tr      (subscribe [::i18n-subs/tr])
-        edges   (subscribe [::subs/edges-response])
+        edges   (subscribe [::subs/edges-documents-response])
         columns [{:field-key :online :header-content [icons/HeartbeatIcon]}
                  {:field-key :state}
                  {:field-key :name}
@@ -670,7 +682,7 @@
                  {:field-key :version :no-sort? true}
                  {:field-key :tags :no-sort? true}]]
     [edges-views/NuvlaEdgeTableView
-     {:edges (:resources @edges )
+     {:edges (:resources @edges)
       :columns columns}]))
 
 (defn TabsDeploymentSet

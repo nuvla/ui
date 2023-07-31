@@ -2,6 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.step-group :as step-group-plugin]))
 
 (s/def ::deployment-set (s/nilable any?))
@@ -11,7 +12,12 @@
 (s/def ::version string?)
 (s/def ::apps (s/coll-of map? :kind vector?))
 (s/def ::edges (s/coll-of map? :kind vector?))
+(s/def ::edges-documents (s/coll-of map? :kind vector?))
 (s/def ::deployments (s/coll-of map? :kind vector?))
+
+(def default-ordering [[:created :desc]])
+(def pagination-default {::pagination (pagination-plugin/build-spec
+                                        :default-items-per-page 25)})
 
 (s/def ::deployment-set-not-found? boolean?)
 (s/def ::targets-selected (s/nilable set?))
@@ -33,4 +39,6 @@
    ::create-name               ""
    ::create-description        ""
    ::licenses-accepted?        false
-   ::prices-accepted?          false})
+   ::prices-accepted?          false
+   ::ordering                  default-ordering
+   ::pagination-default        pagination-default})

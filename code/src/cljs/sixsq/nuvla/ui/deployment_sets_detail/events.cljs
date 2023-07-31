@@ -6,12 +6,14 @@
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.edges.utils :refer [state-filter]]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
+            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -325,13 +327,43 @@
           {::cimi-api-fx/search [resource-name
                                  (cond->
                                    {:filter ids-filter
-                                    :last   10000}
+                                    :last   10000
+                                    :select "id, parent"}
                                    (= "nuvlabox" resource-name)
                                    (merge {:aggregation "terms:online,terms:state"}))
                                  callback]})))))
 
-(reg-event-db
+
+(reg-event-fx
   ::set-edges
-  (fn [db [_ response]]
-    (assoc db ::spec/edges
-      (update response :resources (map :id)))))
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/edges
+           (update response :resources #(mapv :id %)))
+     :fx [[:dispatch [::get-edge-documents]]]}))
+
+(def edges-state-filter-key :edges-state)
+
+(reg-event-fx
+  ::get-edge-documents
+  (fn [{{:keys [::spec/edges
+                ::spec/ordering
+                current-route] :as db} :db} _]
+    (let [ordering     (or ordering spec/default-ordering)
+          query-filter (-> current-route :query-params edges-state-filter-key)]
+      {:db (assoc db ::spec/edge-documents nil)
+       ::cimi-api-fx/search
+       [:nuvlabox
+        (->> {:orderby (ordering->order-string ordering)
+              :filter  (general-utils/join-and
+                         "id!=null"
+                         (general-utils/ids->filter-string (-> edges
+                                                               :resources))
+                         (when query-filter (state-filter query-filter)))}
+             #_(pagination-plugin/first-last-params
+                 db [::spec/pagination]))
+        #(dispatch [::set-edge-documents %])]})))
+
+(reg-event-db
+  ::set-edge-documents
+  (fn [db [_ edges-response]]
+    (assoc db ::spec/edges-documents edges-response)))

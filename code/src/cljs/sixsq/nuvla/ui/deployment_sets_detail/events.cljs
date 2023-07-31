@@ -28,11 +28,16 @@
               :frequency 10000
               :event     [::get-deployment-set (str "deployment-set/" uuid)]}]))
 
+(reg-event-db
+  ::clear-target-edges
+  (fn [db]
+    (assoc db ::spec/edges nil)))
 
 (reg-event-fx
   ::init
   (fn [_ [_ uuid]]
-    {:fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]
+    {:fx [[:dispatch [::clear-target-edges]]
+          [:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-id
                        :frequency 10000

@@ -6,7 +6,8 @@
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
-            [sixsq.nuvla.ui.edges.utils :refer [state-filter]]
+            [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
+            [sixsq.nuvla.ui.edges.utils :as edge-utils]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -207,18 +208,22 @@
                          (not= (:id deployment-set) id) (merge spec/defaults))
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
                         :on-error #(dispatch [::set-deployment-set nil])]
-     :fx               [
-                        [:dispatch [::events-plugin/load-events [::spec/events] id]]
+     :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::get-deployments-for-deployment-sets id]]]}))
 
+(def deployments-state-filter-key :depl-state)
+
 (reg-event-fx
   ::get-deployments-for-deployment-sets
-  (fn [_ [_ id]]
+  (fn [{{:keys [current-route]} :db} [_ id]]
     (when id
-      {:fx [[:dispatch [::deployments-events/get-deployments
-                        {:filter-external-arg   (str "deployment-set='" id "'")
-                         :external-filter-only? true}]]]})))
+      (let [query-filter (routing-utils/get-query-param current-route deployments-state-filter-key)]
+        {:fx [[:dispatch [::deployments-events/get-deployments
+                          {:filter-external-arg   (general-utils/join-and
+                                                    (str "deployment-set='" id "'")
+                                                     (deployments-utils/state-filter query-filter))
+                           :external-filter-only? true}]]]}))))
 
 (reg-event-fx
   ::edit
@@ -349,7 +354,7 @@
                 ::spec/ordering
                 current-route] :as db} :db} _]
     (let [ordering     (or ordering spec/default-ordering)
-          query-filter (-> current-route :query-params edges-state-filter-key)]
+          query-filter (routing-utils/get-query-param current-route edges-state-filter-key)]
       (when edges
         {:db (assoc db ::spec/edge-documents nil)
          ::cimi-api-fx/search
@@ -359,7 +364,7 @@
                            "id!=null"
                            (general-utils/ids->filter-string (-> edges
                                                                  :resources))
-                           (when query-filter (state-filter query-filter)))}
+                           (when query-filter (edge-utils/state-filter query-filter)))}
                #_(pagination-plugin/first-last-params
                    db [::spec/pagination]))
           #(dispatch [::set-edge-documents %])]}))))

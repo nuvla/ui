@@ -24,11 +24,10 @@
 (reg-event-fx
   ::init
   (fn [{{:keys [current-route] :as db} :db} _]
-    (let [search-query (get-stored-db-value-from-query-param current-route [::spec/state-selector])
-          filter-query  (get-query-param current-route (keyword spec/resource-name))
-          ]
+    (let [state-filter (get-stored-db-value-from-query-param current-route [::spec/state-selector])
+          filter-query  (get-query-param current-route (keyword spec/resource-name))]
       {:db (merge db spec/defaults
-                  {::spec/state-selector   search-query
+                  {::spec/state-selector    state-filter
                    ::spec/additional-filter filter-query})
        :fx [[:dispatch [::refresh]]]})))
 

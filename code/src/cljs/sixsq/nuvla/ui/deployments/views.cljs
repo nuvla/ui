@@ -29,7 +29,7 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.view-components :as vc]))
+            [sixsq.nuvla.ui.utils.view-components :as vc :refer [TitledCard]]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 
@@ -394,17 +394,10 @@
 (defn DeploymentsOverviewContainer
   [& children]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (into
-      [ui/Segment {:class     :nuvla-deployments
-                   :secondary true
-                   :raised    true
-                   :style     {:display         "flex"
-                               :flex-direction  "column"
-                               :justify-content "space-between"}}
-
-       [:h4 {:class [:ui-header :ui-card-header]}
-        [icons/Icon {:name icons/i-rocket}] (str/capitalize (@tr [:deployments]))]]
-      children)))
+    [TitledCard {:class :nuvla-deployments
+                 :icon  icons/i-rocket
+                 :label (str/capitalize (@tr [:deployments]))}
+     children]))
 
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]

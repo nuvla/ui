@@ -16,3 +16,15 @@
   [ui/Icon {:class  (if solid? icons/i-power-full icons/i-power)
             :corner (true? corner)
             :color  (status->color status)}])
+
+(defn TitledCard
+  [{:keys [class icon label]} children]
+  (into [ui/Segment {:class     class
+                     :secondary true
+                     :raised    true
+                     :style     {:display         "flex"
+                                 :flex-direction  "column"
+                                 :justify-content "space-between"}}
+         [:h4 {:class [:ui-header :ui-card-header]}
+          [icons/Icon {:name icon}] label]]
+    children))

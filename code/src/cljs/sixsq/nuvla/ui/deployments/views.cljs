@@ -391,28 +391,32 @@
                                       :set-state-selector-event ::events/set-state-selector,
                                       :state-selector-subs      :sixsq.nuvla.ui.deployments.subs/state-selector}]]]))))
 
+(defn DeploymentsOverviewContainer
+  [& children]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (into
+      [ui/Segment {:class     :nuvla-deployments
+                   :secondary true
+                   :raised    true
+                   :style     {:display         "flex"
+                               :flex-direction  "column"
+                               :justify-content "space-between"}}
+
+       [:h4 {:class [:ui-header :ui-card-header]}
+        [icons/Icon {:name icons/i-rocket}] (str/capitalize (@tr [:deployments]))]]
+      children)))
+
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:class     :nuvla-deployments
-                 :secondary true
-                 :raised    true
-                 :style     {:display         "flex"
-                             :flex-direction  "column"
-                             :justify-content "space-between"}}
-
-     [:h4 {:class [:ui-header :ui-card-header]}
-      [icons/Icon {:name icons/i-rocket}] (str/capitalize (@tr [:deployments]))]
-
-     [StatisticStates false deployment-subs]
-
-     [uix/Button {:class    "center"
-                  :color    "blue"
-                  :icon     icons/i-rocket
-                  :style    {:align-self "start"}
-                  :content  "Show me"
-                  :on-click (or on-click
-                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
+  [DeploymentsOverviewContainer
+   [StatisticStates false deployment-subs]
+   [uix/Button {:class    "center"
+                :color    "blue"
+                :icon     icons/i-rocket
+                :style    {:align-self "start"}
+                :content  "Show me"
+                :on-click (or on-click
+                            #(dispatch [set-active-tab-event deployment-tab-key]))}]])
 
 (defn Pagination
   [db-path-arg]

@@ -406,7 +406,6 @@
    [uix/Button {:class    "center"
                 :color    "blue"
                 :icon     icons/i-rocket
-                :style    {:align-self "start"}
                 :content  "Show me"
                 :on-click (or on-click
                             #(dispatch [set-active-tab-event deployment-tab-key]))}]])

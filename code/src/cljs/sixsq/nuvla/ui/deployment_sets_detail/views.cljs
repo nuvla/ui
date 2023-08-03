@@ -34,7 +34,8 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.routing.subs :as route-subs]))
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 
 (defn StartButton
@@ -167,7 +168,7 @@
 
 (defn- AppsOverviewTable
   []
-  (let [apps           (subscribe [::subs/applications-sets-apps-targets])]
+  (let [apps (subscribe [::subs/applications-sets-apps-targets])]
     (fn []
       (let [app-row-data   (mapv (fn [{:keys [application] :as app-data}]
                                    {:idx (:i app-data)
@@ -252,28 +253,18 @@
           [ui/GridColumn {:stretched true}
            [TabOverviewDeploymentSet @deployment-set]]
           [ui/GridColumn {:stretched true}
-           [ui/Segment {:class     :nuvla-apps
-                        :secondary true
-                        :raised    true}
-
-            [:h4 {:class [:ui-header :ui-card-header]}
-             [icons/Icon {:name icons/i-box}]
-             (str/capitalize (@tr [:apps]))]
-
-            [AppsOverviewTable]]]
+           [vc/TitledCard
+            {:class :nuvla-apps
+             :icon  icons/i-layer-group
+             :label (str/capitalize (@tr [:apps]))}
+            [:div {:style {:flex-grow 1}}
+             [AppsOverviewTable ]]]]
 
           [ui/GridColumn {:stretched true}
-           [ui/Segment {:class     :nuvla-edges
-                        :secondary true
-                        :raised    true
-                        :style     {:display         "flex"
-                                    :flex-direction  "column"
-                                    :justify-content "space-between"}}
-
-            [:h4 {:class [:ui-header :ui-card-header]}
-             [icons/Icon {:name icons/i-box}]
-             (str (@tr [:nuvlaedge]) "s")]
-
+           [vc/TitledCard
+            {:class :nuvla-edges
+             :icon  icons/i-box
+             :label (str (@tr [:nuvlaedge]) "s")}
             [StatisticStatesEdgeView @edges-stats]
             [ui/Button {:class    "center"
                         :icon #(r/as-element [icons/BoxIcon])

@@ -18,7 +18,7 @@
             :color  (status->color status)}])
 
 (defn TitledCard
-  [{:keys [class icon label]} children]
+  [{:keys [class icon label]} & children]
   (into [ui/Segment {:class     class
                      :secondary true
                      :raised    true

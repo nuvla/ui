@@ -712,9 +712,9 @@
 (defn TabsDeploymentSet
   [uuid]
   (let [tr               @(subscribe [::i18n-subs/tr])
-        deployment-set   (subscribe [::subs/deployment-set])
+        deployment-set   @(subscribe [::subs/deployment-set])
         apps             @(subscribe [::subs/applications-sets])]
-    (when @deployment-set
+    (when deployment-set
       [tab/Tab
        {:reset-query-params? true
         :db-path [::spec/tab]

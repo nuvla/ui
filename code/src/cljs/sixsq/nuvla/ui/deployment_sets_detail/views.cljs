@@ -233,17 +233,18 @@
                                  :target (create-target-url "UNKNOWN")}]]))
 
 (defn TabOverview
-  []
+  [uuid]
+  (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set (subscribe [::subs/deployment-set])
         edges-stats    (subscribe [::subs/edges-summary-stats])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])
             create-nav-fn (fn [tab]
                             #(dispatch [::routing-events/change-query-param
-                                              {:push-state? true
-                                               :query-params
-                                               {(routes-utils/db-path->query-param-key [::spec/tab])
-                                                tab}}]))]
+                                        {:push-state? true
+                                         :query-params
+                                         {(routes-utils/db-path->query-param-key [::spec/tab])
+                                          tab}}]))]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
@@ -697,18 +698,30 @@
     (fn []
       [EdgesTabView @state])))
 
+(defn DeploymentsTab
+  [uuid]
+  (dispatch [::events/get-deployments-for-deployment-sets uuid])
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [:<>
+     [deployments-views/DeploymentTable
+      {:no-actions         true
+       :empty-msg          (tr [:empty-deployment-module-msg])
+       :pagination-db-path ::spec/deployment-pagination
+       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]]))
+
 (defn TabsDeploymentSet
-  []
+  [uuid]
   (let [tr               @(subscribe [::i18n-subs/tr])
         deployment-set   (subscribe [::subs/deployment-set])
         apps             @(subscribe [::subs/applications-sets])]
     (when @deployment-set
       [tab/Tab
-       {:db-path [::spec/tab]
+       {:reset-query-params? true
+        :db-path [::spec/tab]
         :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
                               :key     :overview
                               :icon    "info"}
-                   :render   #(r/as-element [TabOverview])}
+                   :render   #(r/as-element [TabOverview uuid])}
                   {:menuItem {:key :apps
                               :content (str/capitalize (tr [:apps]))
                               :icon icons/i-layer-group}
@@ -725,11 +738,7 @@
                               :content (str/capitalize (tr [:deployments]))
                               :icon icons/i-rocket}
                    :render #(r/as-element
-                              [deployments-views/DeploymentTable
-                               {:no-actions         true
-                                :empty-msg          (tr [:empty-deployment-module-msg])
-                                :pagination-db-path ::spec/deployment-pagination
-                                :fetch-event        [::events/get-deployments-for-deployment-sets]}])}]
+                              [DeploymentsTab uuid])}]
         :menu    {:secondary true
                   :pointing  true}}])))
 
@@ -755,7 +764,7 @@
             ::job-subs/jobs nil nil
             #(dispatch [::tab/change-tab {:db-path [::spec/tab]
                                           :tab-key :jobs}])]
-           [TabsDeploymentSet]]]]))))
+           [TabsDeploymentSet uuid]]]]))))
 
 
 (defn Details

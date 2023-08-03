@@ -24,12 +24,15 @@
 
 (def refresh-action-id :deployment-set-get-deployment-set)
 
+(defn uuid->depl-set-id [uuid]
+  (str "deployment-set/" uuid))
+
 (defn refresh
   [uuid]
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
-              :event     [::get-deployment-set (str "deployment-set/" uuid)]}]))
+              :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]))
 
 (reg-event-db
   ::clear-target-edges
@@ -209,8 +212,7 @@
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
-                        [:dispatch [::job-events/get-jobs id]]
-                        [:dispatch [::get-deployments-for-deployment-sets id]]]}))
+                        [:dispatch [::job-events/get-jobs id]]]}))
 
 (def deployments-state-filter-key :depl-state)
 
@@ -221,8 +223,8 @@
       (let [query-filter (routing-utils/get-query-param current-route deployments-state-filter-key)]
         {:fx [[:dispatch [::deployments-events/get-deployments
                           {:filter-external-arg   (general-utils/join-and
-                                                    (str "deployment-set='" id "'")
-                                                     (deployments-utils/state-filter query-filter))
+                                                    (str "deployment-set='" (uuid->depl-set-id id) "'")
+                                                    (deployments-utils/state-filter query-filter))
                            :external-filter-only? true}]]]}))))
 
 (reg-event-fx

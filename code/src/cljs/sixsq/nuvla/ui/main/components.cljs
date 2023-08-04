@@ -128,7 +128,8 @@
 
 
 (defn StatisticState
-  ([{:keys [value icons label clickable? positive-color set-state-selector-event state-selector-subs stacked?]
+  ([{:keys [value icons label clickable? positive-color set-state-selector-event
+            state-selector-subs stacked? on-click]
      :or   {positive-color "black"}}]
    (let [state-selector (subscribe [state-selector-subs])
          selected?      (or
@@ -141,8 +142,10 @@
                     :color    color
                     :class    (when clickable? "slight-up")
                     :on-click #(when clickable?
-                                 (dispatch [set-state-selector-event
-                                            (if (= label "TOTAL") nil label)]))}
+                                 (if (fn? on-click)
+                                   (on-click)
+                                   (dispatch [set-state-selector-event
+                                              (if (= label "TOTAL") nil label)])))}
       (if stacked?
         [:<> [ui/IconGroup
               {:style {:margin-right "auto"

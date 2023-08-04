@@ -1428,8 +1428,8 @@
           (when-not suspended?
             [ui/GridColumn {:stretched true}
              [deployments-views/DeploymentsOverviewSegment
-              ::deployments-subs/deployments nil nil
-              #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :deployments}])]])
+              {:sub-key  ::deployments-subs/deployments
+               :on-click #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :deployments}])}]])
 
           (when (and (:node-id @nb-status) (not suspended?))
             [ui/GridColumn {:stretched true}

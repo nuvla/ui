@@ -97,7 +97,7 @@
 (defn state-filter
   [state]
   (case state
-    ("all" nil) nil
+    ("all" nil "TOTAL") nil
     STARTING "state='RUNNING' or state='PENDING' or state='CREATED'"
     (str "state='" state "'")))
 

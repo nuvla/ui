@@ -10,7 +10,7 @@
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-            [sixsq.nuvla.ui.deployments.views :as deployments-views]
+            [sixsq.nuvla.ui.deployments.views :as dv]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.edges.views :as edges-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -240,12 +240,15 @@
         edges-stats    (subscribe [::subs/edges-summary-stats])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])
-            create-nav-fn (fn [tab]
+            create-nav-fn (fn [tab added-params]
                             #(dispatch [::routing-events/change-query-param
                                         {:push-state? true
                                          :query-params
-                                         {(routes-utils/db-path->query-param-key [::spec/tab])
-                                          tab}}]))]
+                                         (merge
+                                           {(routes-utils/db-path->query-param-key [::spec/tab])
+                                            tab}
+                                           added-params)}]))
+            create-nav-to-depl-fn (partial create-nav-fn "deployments")]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
@@ -269,12 +272,18 @@
             [ui/Button {:class    "center"
                         :icon #(r/as-element [icons/BoxIcon])
                         :content  "Show me"
-                        :on-click (create-nav-fn "edges")}]]]
+                        :on-click (create-nav-fn "edges" nil)}]]]
 
           [ui/GridColumn {:stretched true}
-           [deployments-views/DeploymentsOverviewSegment
-            ::deployments-subs/deployments nil nil
-            (create-nav-fn "deployments")]]]]))))
+           [dv/TitledCardDeployments
+            [dv/StatisticStates true ::deployments-subs/deployments
+             (mapv (fn [state] (assoc state :on-click
+                                 (create-nav-to-depl-fn {:depl-state (:label state)}))) dv/default-states)]
+            [uix/Button {:class    "center"
+                         :color    "blue"
+                         :icon     icons/i-rocket
+                         :content  "Show me"
+                         :on-click (create-nav-fn "deployments" nil)}]]]]]))))
 
 
 
@@ -694,7 +703,7 @@
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [tr @(subscribe [::i18n-subs/tr])]
     [:<>
-     [deployments-views/DeploymentTable
+     [dv/DeploymentTable
       {:no-actions         true
        :empty-msg          (tr [:empty-deployment-module-msg])
        :pagination-db-path ::spec/deployment-pagination

@@ -428,7 +428,9 @@
         [:div
          [VerticalDataTable
           @deployments (assoc options :show-options? show-options)]
-         [Pagination (:pagination-db-path options)]]))))
+         (if-let [pagination (:pagination options)]
+           [pagination]
+           [Pagination (:pagination-db-path options)])]))))
 
 (defn DeploymentsMainContent
   []

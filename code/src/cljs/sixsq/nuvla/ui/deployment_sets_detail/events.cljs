@@ -226,7 +226,8 @@
                           {:filter-external-arg   (general-utils/join-and
                                                     filter-constraint
                                                     (deployments-utils/state-filter query-filter))
-                           :external-filter-only? true}]]
+                           :external-filter-only? true
+                           :pagination-db-path ::spec/pagination-deployments}]]
               [:dispatch [::deployments-events/get-deployments-summary-all filter-constraint]]]}))))
 
 (reg-event-fx

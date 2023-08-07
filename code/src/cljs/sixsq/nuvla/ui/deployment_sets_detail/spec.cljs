@@ -16,8 +16,8 @@
 (s/def ::deployments (s/coll-of map? :kind vector?))
 
 (def default-ordering [[:created :desc]])
-(def pagination-default {::pagination (pagination-plugin/build-spec
-                                        :default-items-per-page 25)})
+(def pagination-default (pagination-plugin/build-spec
+                          :default-items-per-page 25))
 
 (s/def ::deployment-set-not-found? boolean?)
 (s/def ::targets-selected (s/nilable set?))
@@ -25,6 +25,8 @@
 (s/def ::create-name string?)
 (s/def ::create-description string?)
 (s/def ::module-applications-sets (s/nilable map?))
+
+(s/def ::pagination-deployments any?)
 
 (def defaults
   {::module-applications-sets  nil
@@ -41,4 +43,5 @@
    ::licenses-accepted?        false
    ::prices-accepted?          false
    ::ordering                  default-ordering
-   ::pagination-default        pagination-default})
+   ::pagination-default        pagination-default
+   ::pagination-deployments    pagination-default})

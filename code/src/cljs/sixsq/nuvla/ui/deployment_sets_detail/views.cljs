@@ -20,10 +20,12 @@
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :as routes-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -34,7 +36,6 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 
@@ -248,7 +249,12 @@
     (mapv (fn [state] (assoc state
                         :on-click
                         ((partial create-nav-fn "deployments") {:depl-state (:label state)})
-                        :selected? (= state-filter (:label state)))) dv/default-states)])
+                        :selected? (or
+                                     (= state-filter (:label state))
+                                     (and
+                                       (nil? state-filter)
+                                       (= "TOTAL" (:label state))))))
+      dv/default-states)])
 
 (defn- DeploymentsStatesCard
   [state-filter]
@@ -712,16 +718,22 @@
 (defn DeploymentsTab
   [uuid]
   (let [tr @(subscribe [::i18n-subs/tr])
-        depl-state-filter (subscribe [::route-subs/query-param events/deployments-state-filter-key])]
-    (fn []
-      (dispatch [::events/get-deployments-for-deployment-sets uuid])
-      [:div {:class :nuvla-deployments}
-       [DeploymentStatesFilter @depl-state-filter]
-       [dv/DeploymentTable
-        {:no-actions         true
-         :empty-msg          (tr [:empty-deployment-module-msg])
-         :pagination-db-path ::spec/deployment-pagination
-         :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]])))
+        depl-state-filter (subscribe [::route-subs/query-param events/deployments-state-filter-key])
+        count             (subscribe [::deployments-subs/deployments-count])]
+    (dispatch [::events/get-deployments-for-deployment-sets uuid])
+    [:div {:class :nuvla-deployments}
+     [DeploymentStatesFilter @depl-state-filter]
+     [dv/DeploymentTable
+      {:no-actions         true
+       :empty-msg          (tr [:empty-deployment-module-msg])
+       :pagination-db-path ::spec/pagination-deployments
+       :pagination         (fn []
+                             [pagination-plugin/Pagination
+                              {:db-path                [::spec/pagination-deployments]
+                               :total-items            @count
+                               :change-event           [::events/get-deployments-for-deployment-sets uuid]
+                               :i-per-page-multipliers [1 2 4]}])
+       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]]))
 
 (defn TabsDeploymentSet
   [uuid]

@@ -233,6 +233,29 @@
                                  :icon-color "orange"
                                  :target (create-target-url "UNKNOWN")}]]))
 
+(defn create-nav-fn
+  [tab added-params]
+  #(dispatch [::routing-events/change-query-param
+              {:push-state? true
+               :query-params
+               (merge
+                 {(routes-utils/db-path->query-param-key [::spec/tab])
+                  tab}
+                 added-params)}]))
+
+(defn- DeploymentsStatesCard
+  []
+  [dv/TitledCardDeployments
+   [dv/StatisticStates true ::deployments-subs/deployments
+    (mapv (fn [state] (assoc state :on-click
+                        ((partial create-nav-fn "deployments") {:depl-state (:label state)}))) dv/default-states)]
+   [uix/Button {:class    "center"
+                :color    "blue"
+                :icon     icons/i-rocket
+                :content  "Show me"
+                :on-click  (create-nav-fn "deployments" nil)}]])
+
+
 (defn TabOverview
   [uuid]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
@@ -240,15 +263,7 @@
         edges-stats    (subscribe [::subs/edges-summary-stats])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])
-            create-nav-fn (fn [tab added-params]
-                            #(dispatch [::routing-events/change-query-param
-                                        {:push-state? true
-                                         :query-params
-                                         (merge
-                                           {(routes-utils/db-path->query-param-key [::spec/tab])
-                                            tab}
-                                           added-params)}]))
-            create-nav-to-depl-fn (partial create-nav-fn "deployments")]
+            ]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
@@ -261,7 +276,7 @@
              :icon  icons/i-layer-group
              :label (str/capitalize (@tr [:apps]))}
             [:div {:style {:flex-grow 1}}
-             [AppsOverviewTable ]]]]
+             [AppsOverviewTable]]]]
 
           [ui/GridColumn {:stretched true}
            [vc/TitledCard
@@ -273,17 +288,8 @@
                         :icon #(r/as-element [icons/BoxIcon])
                         :content  "Show me"
                         :on-click (create-nav-fn "edges" nil)}]]]
-
           [ui/GridColumn {:stretched true}
-           [dv/TitledCardDeployments
-            [dv/StatisticStates true ::deployments-subs/deployments
-             (mapv (fn [state] (assoc state :on-click
-                                 (create-nav-to-depl-fn {:depl-state (:label state)}))) dv/default-states)]
-            [uix/Button {:class    "center"
-                         :color    "blue"
-                         :icon     icons/i-rocket
-                         :content  "Show me"
-                         :on-click (create-nav-fn "deployments" nil)}]]]]]))))
+           [DeploymentsStatesCard]]]]))))
 
 
 

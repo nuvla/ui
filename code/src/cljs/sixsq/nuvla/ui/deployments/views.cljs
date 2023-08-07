@@ -388,6 +388,7 @@
                     :stacked?                 true
                     :clickable?               (or (:clickable? state) clickable?)
                     :on-click                 (:on-click state)
+                    :selected?                (:selected? state)
                     :set-state-selector-event ::events/set-state-selector
                     :state-selector-subs      ::subs/state-selector}])])]))))
 

@@ -243,12 +243,17 @@
                   tab}
                  added-params)}]))
 
+(defn- DeploymentStatesFilter [state-filter]
+  [dv/StatisticStates true ::deployments-subs/deployments-summary-all
+    (mapv (fn [state] (assoc state
+                        :on-click
+                        ((partial create-nav-fn "deployments") {:depl-state (:label state)})
+                        :selected? (= state-filter (:label state)))) dv/default-states)])
+
 (defn- DeploymentsStatesCard
-  []
+  [state-filter]
   [dv/TitledCardDeployments
-   [dv/StatisticStates true ::deployments-subs/deployments
-    (mapv (fn [state] (assoc state :on-click
-                        ((partial create-nav-fn "deployments") {:depl-state (:label state)}))) dv/default-states)]
+   [DeploymentStatesFilter state-filter]
    [uix/Button {:class    "center"
                 :color    "blue"
                 :icon     icons/i-rocket
@@ -706,14 +711,17 @@
 
 (defn DeploymentsTab
   [uuid]
-  (dispatch [::events/get-deployments-for-deployment-sets uuid])
-  (let [tr @(subscribe [::i18n-subs/tr])]
-    [:<>
-     [dv/DeploymentTable
-      {:no-actions         true
-       :empty-msg          (tr [:empty-deployment-module-msg])
-       :pagination-db-path ::spec/deployment-pagination
-       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]]))
+  (let [tr @(subscribe [::i18n-subs/tr])
+        depl-state-filter (subscribe [::route-subs/query-param events/deployments-state-filter-key])]
+    (fn []
+      (dispatch [::events/get-deployments-for-deployment-sets uuid])
+      [:div {:class :nuvla-deployments}
+       [DeploymentStatesFilter @depl-state-filter]
+       [dv/DeploymentTable
+        {:no-actions         true
+         :empty-msg          (tr [:empty-deployment-module-msg])
+         :pagination-db-path ::spec/deployment-pagination
+         :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]])))
 
 (defn TabsDeploymentSet
   [uuid]

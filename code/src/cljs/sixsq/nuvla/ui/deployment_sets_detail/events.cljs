@@ -220,12 +220,14 @@
   ::get-deployments-for-deployment-sets
   (fn [{{:keys [current-route]} :db} [_ id]]
     (when id
-      (let [query-filter (routing-utils/get-query-param current-route deployments-state-filter-key)]
+      (let [query-filter      (routing-utils/get-query-param current-route deployments-state-filter-key)
+            filter-constraint (str "deployment-set='" (uuid->depl-set-id id) "'")]
         {:fx [[:dispatch [::deployments-events/get-deployments
                           {:filter-external-arg   (general-utils/join-and
-                                                    (str "deployment-set='" (uuid->depl-set-id id) "'")
+                                                    filter-constraint
                                                     (deployments-utils/state-filter query-filter))
-                           :external-filter-only? true}]]]}))))
+                           :external-filter-only? true}]]
+              [:dispatch [::deployments-events/get-deployments-summary-all filter-constraint]]]}))))
 
 (reg-event-fx
   ::edit

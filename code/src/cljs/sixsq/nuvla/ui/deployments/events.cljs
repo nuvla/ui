@@ -124,9 +124,9 @@
   ::get-deployments-summary
   (fn [{{:keys [::spec/additional-filter] :as db} :db} _]
     {::cimi-api-fx/search [:deployment (utils/get-query-params-summary
-                                         (full-text-search-plugin/filter-text
-                                           db [::spec/deployments-search])
-                                         additional-filter)
+                                         {:full-text-search (full-text-search-plugin/filter-text
+                                                              db [::spec/deployments-search])
+                                          :additional-filter additional-filter})
                            #(dispatch [::set-deployments-summary %])]}))
 
 (reg-event-fx
@@ -137,8 +137,8 @@
 
 (reg-event-fx
   ::get-deployments-summary-all
-  (fn [_]
-    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary nil nil)
+  (fn [_ [_ external-filter]]
+    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary {:external-filter external-filter})
                            #(dispatch [::set-deployments-summary-all %])]}))
 
 (reg-event-fx

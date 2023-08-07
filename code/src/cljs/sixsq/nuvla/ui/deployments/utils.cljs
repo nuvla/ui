@@ -126,9 +126,9 @@
 
 
 (defn get-query-params-summary
-  [full-text-search additional-filter]
+  [{:keys [full-text-search additional-filter external-filter]}]
   (let [filter-str (general-utils/join-and
-                     full-text-search additional-filter)
+                     full-text-search additional-filter external-filter)
         aggregate  "terms:state"]
     (cond-> {:orderby     "created:desc"
              :aggregation aggregate

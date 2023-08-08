@@ -44,42 +44,40 @@
   [new-view]
   (dispatch [::events/change-view-type new-view]))
 
+(def edges-states
+  [{:key            :total
+    :icons          [icons/i-box]
+    :label          "TOTAL"
+    :positive-color nil}
+   {:key            :online
+    :icons          [icons/i-power]
+    :label          utils/status-online
+    :positive-color "green"}
+   {:key            :offline
+    :icons          [icons/i-power]
+    :label          utils/status-offline
+    :positive-color "red"}
+   {:key            :unknown
+    :icons          [icons/i-power]
+    :label          utils/status-unknown
+    :positive-color "orange"}])
+
 (defn StatisticStatesEdgeView
   []
-  (fn [summary clickable?]
-    (let [tr      (subscribe [::i18n-subs/tr])
-          total           (:count summary)
-          online-statuses (general-utils/aggregate-to-map
-                            (get-in summary [:aggregations :terms:online :buckets]))
-          online          (:1 online-statuses)
-          offline         (:0 online-statuses)
-          unknown         (- total (+ online offline))]
+  (fn [{:keys [states] :as states->counts} clickable? restricted-view?]
+    (let [tr      (subscribe [::i18n-subs/tr])]
       [ui/StatisticGroup {:widths (when-not clickable? 4)
                           :size   "tiny"}
-       (for [statistic-opts [{:value          total
-                              :icons          [icons/i-box]
-                              :label          "TOTAL"
-                              :positive-color nil}
-                             {:value          online
-                              :icons          [icons/i-power]
-                              :label          utils/status-online
-                              :positive-color "green"}
-                             {:value          offline
-                              :icons          [icons/i-power]
-                              :label          utils/status-offline
-                              :positive-color "red"}
-                             {:value          unknown
-                              :icons          [icons/i-power]
-                              :label          utils/status-unknown
-                              :positive-color "orange"}]]
-         ^{:key (str "stat-state-" (:label statistic-opts))}
+       (for [state (or states edges-states)]
+         ^{:key (str "stat-state-" (:label state))}
          [components/StatisticState
-          (assoc statistic-opts
-            :stacked? true
-            :clickable? clickable?
-            :set-state-selector-event ::events/set-state-selector
-            :state-selector-subs ::subs/state-selector)])
-       (when clickable?
+          (merge state
+            {:value                    (states->counts (:key state))
+             :stacked?                 true
+             :clickable?               (or (:clickable? state) clickable?)
+             :set-state-selector-event ::events/set-state-selector
+             :state-selector-subs      ::subs/state-selector})])
+       (when (and clickable? (not restricted-view?))
          [ui/Button
           {:icon     true
            :style    {:margin "50px auto 15px"}
@@ -97,7 +95,18 @@
   (let [summary (if clickable?
                   (subscribe [::subs/nuvlaboxes-summary])
                   (subscribe [::subs/nuvlaboxes-summary-all]))]
-    [StatisticStatesEdgeView @summary clickable?]))
+    (fn []
+      (let [total           (:count @summary)
+            online-statuses (general-utils/aggregate-to-map
+                              (get-in @summary [:aggregations :terms:online :buckets]))
+            online          (:1 online-statuses)
+            offline         (:0 online-statuses)]
+        [StatisticStatesEdgeView
+         {:total           total
+          :online          online
+          :offline         offline
+          :unknown         (- total (+ online offline))}
+         clickable?]))))
 
 (defn StatisticStates
   []

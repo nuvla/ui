@@ -381,16 +381,12 @@
                 (for [state states]
                   ^{:key (:key state)}
                   [components/StatisticState
-                   {:value                    (states->counts (:key state))
-                    :icons                    (:icons state)
-                    :label                    (:label state)
-                    :positive-color           (:positive-color state)
-                    :stacked?                 true
-                    :clickable?               (or (:clickable? state) clickable?)
-                    :on-click                 (:on-click state)
-                    :selected?                (:selected? state)
-                    :set-state-selector-event ::events/set-state-selector
-                    :state-selector-subs      ::subs/state-selector}])])]))))
+                   (merge state
+                     {:value                    (states->counts (:key state))
+                      :stacked?                 true
+                      :clickable?               (or (:clickable? state) clickable?)
+                      :set-state-selector-event ::events/set-state-selector
+                      :state-selector-subs      ::subs/state-selector})])])]))))
 
 (defn TitledCardDeployments
   [& children]

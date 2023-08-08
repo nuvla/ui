@@ -36,7 +36,8 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.utils.view-components :as vc]))
+            [sixsq.nuvla.ui.utils.view-components :as vc]
+            [sixsq.nuvla.ui.routing.events :as route-events]))
 
 
 (defn StartButton
@@ -197,11 +198,11 @@
                 :rows app-row-data}]))))
 
 
-(defn StatisticStatesEdgeView [{:keys [total online offline unknown selected-state]}]
+(defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
   (let [current-route     @(subscribe [::route-subs/current-route])
         to-edges-tab      {:deployment-sets-detail-tab :edges}
         create-target-url (fn [status-filter]
-                            {:resource ((partial routes-utils/gen-href current-route)
+                            {:resource (routes-utils/gen-href current-route
                                          {:query-params
                                           (cond->
                                             to-edges-tab
@@ -687,7 +688,7 @@
                         items)}]])))
 
 (defn EdgesTabView
-  [state]
+  [selected-state]
   (dispatch [::events/get-edge-documents])
   (let [tr         (subscribe [::i18n-subs/tr])
         edges      (subscribe [::subs/edges-documents-response])
@@ -702,9 +703,27 @@
                     {:field-key :last-online :no-sort? true}
                     {:field-key :version :no-sort? true}
                     {:field-key :tags :no-sort? true}]
-        edges-stats (subscribe [::subs/edges-summary-stats])]
-    [:<>
-     [StatisticStatesEdgeView (assoc @edges-stats :selected-state state)]
+        edges-stats (subscribe [::subs/edges-summary-stats])
+        current-route (subscribe [::route-subs/current-route])]
+    [:div {:class :nuvla-edges}
+     [edges-views/StatisticStatesEdgeView
+      (assoc @edges-stats
+        :states (mapv (fn [state]
+                        (assoc state
+                          :selected?
+                          (or
+                            (= (state :label) selected-state)
+                            (and
+                              (= (state :label) "TOTAL")
+                              (nil? selected-state)))
+                          :on-click
+                          #(dispatch
+                             [::route-events/navigate
+                              (routes-utils/gen-href @current-route
+                                {:partial-query-params
+                                 {events/edges-state-filter-key (:label state)}})]))
+                        ) edges-views/edges-states))
+      true true]
      [edges-views/NuvlaEdgeTableView
       {:edges (:resources @edges)
        :columns columns}]

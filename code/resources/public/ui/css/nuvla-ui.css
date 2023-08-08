@@ -852,7 +852,7 @@ body .divider-red {
 .nuvla-deployments .statistics .green .icons {
   color: #21ba45;
 }
-.nuvla-edges .statistics .icons .icon.large,
+.nuvla-edges .statistics .icon.large,
 .nuvla-deployment-sets .statistics .icons .icon.large,
 .nuvla-deployments .statistics .icons .icon.large {
   border: 2px solid rgba(148, 130, 255, 0.5) !important;

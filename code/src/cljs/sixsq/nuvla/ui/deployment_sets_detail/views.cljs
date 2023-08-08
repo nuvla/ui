@@ -707,7 +707,12 @@
      [StatisticStatesEdgeView (assoc @edges-stats :selected-state state)]
      [edges-views/NuvlaEdgeTableView
       {:edges (:resources @edges)
-       :columns columns}]]))
+       :columns columns}]
+     [pagination-plugin/Pagination
+      {:db-path                [::spec/pagination-edges]
+       :change-event           [::events/get-edge-documents]
+       :total-items            (-> @edges :count)
+       :i-per-page-multipliers [1 2 4]}]]))
 
 (defn EdgesTab
   []

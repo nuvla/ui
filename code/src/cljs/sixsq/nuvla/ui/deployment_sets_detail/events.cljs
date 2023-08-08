@@ -14,6 +14,7 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
@@ -370,8 +371,8 @@
                            (general-utils/ids->filter-string (-> edges
                                                                  :resources))
                            (when query-filter (edge-utils/state-filter query-filter)))}
-               #_(pagination-plugin/first-last-params
-                   db [::spec/pagination]))
+               (pagination-plugin/first-last-params
+                 db [::spec/pagination-edges]))
           #(dispatch [::set-edge-documents %])]}))))
 
 (reg-event-db

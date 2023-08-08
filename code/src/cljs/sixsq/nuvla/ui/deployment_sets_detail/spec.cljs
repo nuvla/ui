@@ -27,6 +27,7 @@
 (s/def ::module-applications-sets (s/nilable map?))
 
 (s/def ::pagination-deployments any?)
+(s/def ::pagination-edges any?)
 
 (def defaults
   {::module-applications-sets  nil
@@ -43,5 +44,5 @@
    ::licenses-accepted?        false
    ::prices-accepted?          false
    ::ordering                  default-ordering
-   ::pagination-default        pagination-default
-   ::pagination-deployments    pagination-default})
+   ::pagination-deployments    pagination-default
+   ::pagination-edges          pagination-default})

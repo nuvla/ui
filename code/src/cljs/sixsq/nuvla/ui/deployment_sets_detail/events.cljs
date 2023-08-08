@@ -370,7 +370,7 @@
                            "id!=null"
                            (general-utils/ids->filter-string (-> edges
                                                                  :resources))
-                           (when query-filter (edge-utils/state-filter query-filter)))}
+                           (when (seq query-filter) (edge-utils/state-filter query-filter)))}
                (pagination-plugin/first-last-params
                  db [::spec/pagination-edges]))
           #(dispatch [::set-edge-documents %])]}))))

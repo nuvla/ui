@@ -36,8 +36,7 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.utils.view-components :as vc]
-            [sixsq.nuvla.ui.routing.events :as route-events]))
+            [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 
 (defn StartButton
@@ -709,19 +708,23 @@
      [edges-views/StatisticStatesEdgeView
       (assoc @edges-stats
         :states (mapv (fn [state]
-                        (assoc state
-                          :selected?
-                          (or
-                            (= (state :label) selected-state)
-                            (and
-                              (= (state :label) "TOTAL")
-                              (nil? selected-state)))
-                          :on-click
-                          #(dispatch
-                             [::route-events/navigate
-                              (routes-utils/gen-href @current-route
-                                {:partial-query-params
-                                 {events/edges-state-filter-key (:label state)}})]))
+                        (let [label (:label state)]
+                          (assoc state
+                            :selected?
+                            (or
+                              (= label selected-state)
+                              (and
+                                (= label "TOTAL")
+                                (empty? selected-state)))
+                            :on-click
+                            #(dispatch
+                               [::routing-events/navigate
+                                (routes-utils/gen-href @current-route
+                                  {:partial-query-params
+                                   {events/edges-state-filter-key
+                                    (if (= "TOTAL" label)
+                                      nil
+                                      label)}})])))
                         ) edges-views/edges-states))
       true true]
      [edges-views/NuvlaEdgeTableView

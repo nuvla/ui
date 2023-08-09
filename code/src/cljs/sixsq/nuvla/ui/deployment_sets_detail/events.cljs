@@ -21,7 +21,8 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [clojure.string :as s]))
 
 (def refresh-action-id :deployment-set-get-deployment-set)
 
@@ -174,18 +175,23 @@
                    :content (str "Selected module subtype:" subtype)
                    :type    :error}]})))
 
+
 (reg-event-fx
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set]]
     (let [parent-ids (->> deployment-set
                           :applications-sets
                           (mapcat :overwrites)
-                          (mapcat :targets))]
+                          (mapcat (juxt :targets :fleet))
+                          (remove nil?)
+                          flatten)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
              ::spec/deployment-set deployment-set
              ::main-spec/loading? false)
-       :fx [[:dispatch [::resolve-to-ancestor {:ids parent-ids
-                                               :storage-event ::set-edges}]]
+       :fx [[:dispatch [::resolve-to-ancestor-resource
+                        {:ids parent-ids
+                         :storage-event ::set-edges
+                         :ancestor-resource-name "nuvlabox"}]]
             [:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]})))
 
 (reg-event-fx
@@ -316,38 +322,45 @@
              (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))
 
 (reg-event-fx
-  ::resolve-to-ancestor
-  (fn [{{:keys [::spec/edges]} :db} [_ {ids :ids storage-event :storage-event}]]
+  ::resolve-to-ancestor-resource
+  (fn [{{:keys [::spec/edges]} :db} [_ {:keys [ids storage-event
+                                               ancestor-resource-name]}]]
     (when-not edges
-      (let [callback #(let [resources  (:resources %)
-                            parent-ids (remove nil? (map :parent resources))
-                            resolved?  (empty? parent-ids)]
-                        (cond
-                          (or (empty? resources) (instance? js/Error %))
-                          (cimi-api-fx/default-error-message % "loading edges for credentials failed")
+      (let [ancestor-ids   (filterv #(s/starts-with? % ancestor-resource-name) ids)
+            descendant-ids (vec (remove (set ancestor-ids) ids))
+            resolved?      (empty? descendant-ids)
+            callback (fn [response]
+                       (let [resources  (:resources response)
+                             parent-ids (remove nil? (map :parent resources))]
+                         (cond
+                           (or (empty? resources) (instance? js/Error response))
+                           (cimi-api-fx/default-error-message response "loading edges for credentials failed")
 
-                          resolved?
-                          (dispatch [storage-event %])
+                           resolved?
+                           (dispatch [storage-event response])
 
-                          :else
-                          (dispatch [::resolve-to-ancestor {:ids           parent-ids
-                                                            :storage-event storage-event}])))
-            resource-name (general-utils/id->resource-name (first ids))
-            ids-filter    (general-utils/ids->filter-string ids)]
-        (when (every? seq [resource-name ids-filter])
-          {::cimi-api-fx/search [resource-name
+                           :else
+                           (dispatch [::resolve-to-ancestor-resource
+                                      {:ids           (into ancestor-ids parent-ids)
+                                       :storage-event storage-event
+                                       :ancestor-resource-name ancestor-resource-name}]))))
+            ids-to-query  (if resolved? ancestor-ids descendant-ids)
+            next-parent-resource-name (general-utils/id->resource-name (first ids-to-query))
+            ids-filter    (general-utils/ids->filter-string ids-to-query)]
+        (when (every? seq [next-parent-resource-name ids-filter])
+          {::cimi-api-fx/search [next-parent-resource-name
                                  (cond->
                                    {:filter ids-filter
                                     :last   10000
                                     :select "id, parent"}
-                                   (= "nuvlabox" resource-name)
+                                   (= "nuvlabox" next-parent-resource-name)
                                    (merge {:aggregation "terms:online,terms:state"}))
                                  callback]})))))
-
 
 (reg-event-fx
   ::set-edges
   (fn [{db :db} [_ response]]
+
     {:db (assoc db ::spec/edges
            (update response :resources #(mapv :id %)))
      :fx [[:dispatch [::get-edge-documents]]]}))

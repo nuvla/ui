@@ -791,41 +791,44 @@
 
 (defn BulkDeployModal
   []
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        ;; selected-count       (subscribe [::selected-count db-path total-count-sub-key])
-        ;; edit-mode            (subscribe [::edit-mode db-path])
-        open?                (subscribe [::subs/modal-visible? :edges/bulk-edit-modal])
-        ;; used-tags            (subscribe [::tags resource-key])
-        ;; view-only-avlbl?     (keyword? no-edit-rights-sub-key)
-        ;; view-only-items      (when view-only-avlbl?
-        ;;                        (subscribe [no-edit-rights-sub-key]))
-        ]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        selected-count  (subscribe [::bulk-edit-modal/selected-count [::spec/select] ::subs/nuvlaboxes-count])
+        open?           (subscribe [::subs/modal-visible? :edges/bulk-deploy-modal])
+        name            (r/atom nil)
+        change-name     (fn [value] (reset! name (when-not (str/blank? value) value)))
+        navigate        (fn []
+                          (dispatch [::routing-events/navigate
+                                     routes/deployment-sets-details
+                                     {:uuid :create}
+                                     {:name @name}]))
+        close-fn     #(dispatch [::events/open-modal nil])]
     (fn []
-      (let [close-fn     #(dispatch [::events/open-modal nil])]
-        [ui/Modal {:open       @open?
-                   :close-icon true
-                   :on-close   close-fn}
-         [uix/ModalHeader {:header (@tr [:bulk-update-tags])}]
-         [ui/ModalContent
-          [ui/Form
-           ]]
-         [ui/ModalActions
-          {:style {:display         :flex
-                   :align-items     :center
-                   :justify-content :space-between
-                   :text-align      :left}}
-          [:div
-           {:style {:line-height "1.2rem"}}
-           "there"]
-          [uix/Button {:disabled? false
-                       :on-click (fn [])}
-           "HI"]]]))))
+      [ui/Modal {:open       @open?
+                 :close-icon true
+                 :on-close   close-fn}
+       [uix/ModalHeader {:header (@tr [:create-deployment-group])}]
+       [ui/ModalContent
+        [ui/Form
+         [ui/Input {:type  "text"
+                    :label "Choose a name"
+                    :on-change (ui-callback/value change-name)}]]]
+       [ui/ModalActions
+        {:style {:display         :flex
+                 :align-items     :center
+                 :justify-content :space-between
+                 :text-align      :left}}
+        [:div
+         {:style {:line-height "1.2rem"}}
+         "selected count " @selected-count]
+        [ui/Button {:disabled? false
+                    :on-click navigate
+                    :positive true
+                    :content "Continue to Deployment Group page"}]]])))
 
 (defn NuvlaEdgeTableView
   [{:keys [bulk-edit columns edges]}]
   (let [{bulk-edit-modal :modal
-         trigger :trigger-config} bulk-edit
-        ]
+         trigger :trigger-config} bulk-edit]
     [:<>
      (when bulk-edit-modal
        [bulk-edit-modal])
@@ -848,7 +851,7 @@
                                                     :name "Bulk Deploy App"
                                                     :event (fn []
                                                              (dispatch
-                                                               [::events/open-modal :edges/bulk-edit-modal]))}])
+                                                               [::events/open-modal :edges/bulk-deploy-modal]))}])
                                   :total-count-sub-key [::subs/nuvlaboxes-count]
                                   :resources-sub-key [::subs/nuvlaboxes-resources]
                                   :select-db-path [::spec/select]

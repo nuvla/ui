@@ -21,8 +21,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]
-            [clojure.string :as s]))
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-action-id :deployment-set-get-deployment-set)
 
@@ -50,6 +49,11 @@
                       {:id        refresh-action-id
                        :frequency 10000
                        :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]]] }))
+
+(reg-event-fx
+  ::init-create
+  (fn [_ [_ uuid]]
+    {:fx [] }))
 
 (reg-event-fx
   ::new
@@ -326,7 +330,7 @@
   (fn [{{:keys [::spec/edges]} :db} [_ {:keys [ids storage-event
                                                ancestor-resource-name]}]]
     (when-not edges
-      (let [ancestor-ids   (filterv #(s/starts-with? % ancestor-resource-name) ids)
+      (let [ancestor-ids   (filterv #(str/starts-with? % ancestor-resource-name) ids)
             descendant-ids (vec (remove (set ancestor-ids) ids))
             resolved?      (empty? descendant-ids)
             callback (fn [response]

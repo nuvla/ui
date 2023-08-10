@@ -289,8 +289,8 @@
 
 (defn CellCheckbox
   [{:keys [id selected-all-sub selected-set-sub db-path
-           resources-sub-key rights-needed edge-name idx]}]
-  (let [resources (subscribe [::editable-resources-on-page resources-sub-key rights-needed])
+           resources-sub-key edge-name idx]}]
+  (let [resources (subscribe resources-sub-key)
         select-fn (fn [] (dispatch [::select-id id db-path (map :id @resources)]))
         checked?  (or @selected-all-sub (is-selected? @selected-set-sub id))]
     [ui/TableCell {:aria-label (str "select row " idx)
@@ -303,8 +303,8 @@
 
 
 (defn HeaderCellCeckbox
-  [{:keys [db-path resources-sub-key page-selected?-sub rights-needed]}]
-  (let [resources @(subscribe [::editable-resources-on-page resources-sub-key rights-needed])]
+  [{:keys [db-path resources-sub-key page-selected?-sub]}]
+  (let [resources @(subscribe resources-sub-key)]
     [ui/Checkbox {:aria-label "select all on page"
                   :checked    @page-selected?-sub
                   :on-click   #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))

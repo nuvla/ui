@@ -5,7 +5,8 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.effects :as fx]
             [sixsq.nuvla.ui.routing.utils :as utils]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [sixsq.nuvla.ui.routing.routes :as routes]))
 
 (def after-nav-cb-key ::after-nav-cb)
 

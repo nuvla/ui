@@ -104,7 +104,27 @@
             :loading?   @loading?
             :on-refresh #(events/refresh uuid)}]]]))))
 
-
+(defn MenuBarCreate
+  [uuid]
+  (let [deployment-set (subscribe [::subs/deployment-set])
+        loading?       (subscribe [::subs/loading?])]
+    (fn []
+      (let [MenuItems (cimi-detail-views/format-operations
+                        @deployment-set
+                        #{"start" "stop" "delete"})]
+        [components/StickyBar
+         [components/ResponsiveMenuBar
+          (conj MenuItems
+                ^{:key "delete"}
+                [DeleteButton @deployment-set]
+                ^{:key "stop"}
+                [StopButton @deployment-set]
+                ^{:key "start"}
+                [StartButton @deployment-set])
+          [components/RefreshMenu
+           {:action-id  events/refresh-action-id
+            :loading?   @loading?
+            :on-refresh #(events/refresh uuid)}]]]))))
 
 (defn EditableCell
   [attribute]
@@ -763,11 +783,11 @@
        :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]]))
 
 (defn TabsDeploymentSet
-  [uuid]
+  [{:keys [uuid creating?]}]
   (let [tr               @(subscribe [::i18n-subs/tr])
         deployment-set   @(subscribe [::subs/deployment-set])
         apps             @(subscribe [::subs/applications-sets])]
-    (when deployment-set
+    (when (or deployment-set creating?)
       [tab/Tab
        {:reset-query-params? true
         :db-path [::spec/tab]
@@ -795,33 +815,65 @@
         :menu    {:secondary true
                   :pointing  true}}])))
 
+(defn- DeploymentSetView
+  [depl-set uuid]
+  (let [{:keys [id name]} @depl-set]
+    [components/LoadingPage {:dimmable? true}
+     [:<>
+      [components/NotFoundPortal
+       ::subs/deployment-set-not-found?
+       :no-deployment-set-message-header
+       :no-deployment-set-message-content]
+      [ui/Container {:fluid true}
+       [uix/PageHeader "bullseye" (or name id)]
+       [MenuBar uuid]
+       [job-views/ProgressJobAction]
+       [bulk-progress-plugin/MonitoredJobs
+        {:db-path [::spec/bulk-jobs]}]
+       [components/ErrorJobsMessage
+        ::job-subs/jobs nil nil
+        #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                      :tab-key :jobs}])]
+       [TabsDeploymentSet {:uuid uuid}]]]]))
+
+(defn DeploymentSetCreate
+  [uuid]
+  (dispatch [::events/init-create])
+  (let [depl-set (subscribe [::subs/deployment-set])
+        name     (subscribe [::route-subs/query-param :name])]
+    (fn []
+      [:<>
+      [components/NotFoundPortal
+       ::subs/deployment-set-not-found?
+       :no-deployment-set-message-header
+       :no-deployment-set-message-content]
+      [ui/Container {:fluid true}
+       [uix/PageHeader "bullseye" (or @name "NO NAME SET")]
+       [MenuBarCreate]
+       [job-views/ProgressJobAction]
+      ;;  [bulk-progress-plugin/MonitoredJobs
+      ;;   {:db-path [::spec/bulk-jobs]}]
+      ;;  [components/ErrorJobsMessage
+      ;;   ::job-subs/jobs nil nil
+      ;;   #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+      ;;                                 :tab-key :jobs}])]
+       [TabsDeploymentSet {:creating? true}]]])))
+
 (defn DeploymentSet
   [uuid]
   (dispatch [::events/init uuid])
   (let [depl-set (subscribe [::subs/deployment-set])]
     (fn []
-      (let [{:keys [id name]} @depl-set]
-        [components/LoadingPage {:dimmable? true}
-         [:<>
-          [components/NotFoundPortal
-           ::subs/deployment-set-not-found?
-           :no-deployment-set-message-header
-           :no-deployment-set-message-content]
-          [ui/Container {:fluid true}
-           [uix/PageHeader "bullseye" (or name id)]
-           [MenuBar uuid]
-           [job-views/ProgressJobAction]
-           [bulk-progress-plugin/MonitoredJobs
-            {:db-path [::spec/bulk-jobs]}]
-           [components/ErrorJobsMessage
-            ::job-subs/jobs nil nil
-            #(dispatch [::tab/change-tab {:db-path [::spec/tab]
-                                          :tab-key :jobs}])]
-           [TabsDeploymentSet uuid]]]]))))
+      [DeploymentSetView depl-set uuid])))
 
 
 (defn Details
   [uuid]
-  (if (= (str/lower-case uuid) "new")
+  (case (str/lower-case uuid)
+    "new"
     [AddPage]
+
+    "create"
+    [DeploymentSetCreate uuid]
+
     [DeploymentSet uuid]))

@@ -18,12 +18,10 @@
   ::apps
   :<- [::deployment-set]
   (fn [deployment-set]
-    (-> deployment-set
-        :applications-sets
-        first
-        :overwrites
-        first
-        :applications)))
+    (->> deployment-set
+         :applications-sets
+         (mapcat :overwrites)
+         (mapcat :applications))))
 
 (reg-sub
   ::can-edit?
@@ -166,25 +164,25 @@
   :-> #(some false? %))
 
 (reg-sub
-  ::edges-response
+  ::edges-in-deployment-group-response
   :-> ::spec/edges)
 
 (reg-sub
   ::edges-summary-stats
-  :<- [::edges-response]
+  :<- [::edges-in-deployment-group-response]
   (fn [edges]
     (edges-utils/summary-stats edges)))
 
 (reg-sub
   ::edges-count
-  :<- [::edges-response]
+  :<- [::edges-in-deployment-group-response]
   (fn [edges-response]
     (:count edges-response)))
 
 
 (reg-sub
   ::all-edges-ids
-  :<- [::edges-response]
+  :<- [::edges-in-deployment-group-response]
   (fn [edges-response]
     (:resources edges-response)))
 
@@ -214,32 +212,6 @@
 
 (reg-sub
   ::edges-filter
-  :<- [::edges-response]
+  :<- [::edges-in-deployment-group-response]
   (fn [edges]
     (general-utils/ids->filter-string (->> edges :resources (map :id)))))
-
-(reg-sub
-  ::edges-summary
-  (fn []
-    {:count 2223,
-     :aggregations
-     {:terms:state
-      {:doc_count_error_upper_bound 0,
-       :sum_other_doc_count 0,
-       :buckets
-       [{:key "COMMISSIONED", :doc_count 2078}
-        {:key "NEW", :doc_count 55}
-        {:key "SUSPENDED", :doc_count 48}
-        {:key "DECOMMISSIONED", :doc_count 31}
-        {:key "DECOMMISSIONING", :doc_count 7}
-        {:key "ACTIVATED", :doc_count 3}
-        {:key "ERROR", :doc_count 1}]},
-      :terms:online
-      {:doc_count_error_upper_bound 0,
-       :sum_other_doc_count 0,
-       :buckets [{:key 1, :key_as_string "true", :doc_count 1614} {:key 0, :key_as_string "false", :doc_count 471}]}},
-     :acl {:query ["group/nuvla-user"], :add ["group/nuvla-user"], :bulk-action ["group/nuvla-user"]},
-     :resource-type "nuvlabox-collection",
-     :id "nuvlabox",
-     :resources [],
-     :operations [{:rel "add", :href "nuvlabox"} {:rel "bulk-delete", :href "nuvlabox"}]}))

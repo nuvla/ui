@@ -784,9 +784,12 @@
 
 (defn TabsDeploymentSet
   [{:keys [uuid creating?]}]
-  (let [tr               @(subscribe [::i18n-subs/tr])
-        deployment-set   @(subscribe [::subs/deployment-set])
-        apps             @(subscribe [::subs/applications-sets])]
+  (let [tr             @(subscribe [::i18n-subs/tr])
+        deployment-set @(subscribe [::subs/deployment-set])
+        apps-sets      @(subscribe [::subs/applications-sets])
+        apps           @(subscribe [::subs/apps])
+        edges          @(subscribe [::subs/all-edges-ids])
+        depl-count     @(subscribe [::deployments-subs/deployments-count])]
     (when (or deployment-set creating?)
       [tab/Tab
        {:reset-query-params? true
@@ -797,18 +800,21 @@
                    :render   #(r/as-element [TabOverview uuid])}
                   {:menuItem {:key :apps
                               :content (str/capitalize (tr [:apps]))
+                              :disabled (empty? apps)
                               :icon icons/i-layer-group}
                    :render   #(r/as-element
                                 [ConfigureApps
                                  0
-                                 (mapcat :applications apps)])}
+                                 (mapcat :applications apps-sets)])}
                   {:menuItem {:key :edges
                               :content (str/capitalize (tr [:edges]))
+                              :disabled (empty? edges)
                               :icon icons/i-box}
                    :render   #(r/as-element
                                 [EdgesTab])}
                   {:menuItem {:key :deployments
                               :content (str/capitalize (tr [:deployments]))
+                              :disabled (= 0 depl-count)
                               :icon icons/i-rocket}
                    :render #(r/as-element
                               [DeploymentsTab uuid])}]
@@ -837,10 +843,9 @@
        [TabsDeploymentSet {:uuid uuid}]]]]))
 
 (defn DeploymentSetCreate
-  [uuid]
+  []
   (dispatch [::events/init-create])
-  (let [depl-set (subscribe [::subs/deployment-set])
-        name     (subscribe [::route-subs/query-param :name])]
+  (let [name     (subscribe [::route-subs/query-param :name])]
     (fn []
       [:<>
       [components/NotFoundPortal
@@ -874,6 +879,6 @@
     [AddPage]
 
     "create"
-    [DeploymentSetCreate uuid]
+    [DeploymentSetCreate]
 
     [DeploymentSet uuid]))

@@ -364,7 +364,6 @@
 (reg-event-fx
   ::set-edges
   (fn [{db :db} [_ response]]
-
     {:db (assoc db ::spec/edges
            (update response :resources #(mapv :id %)))
      :fx [[:dispatch [::get-edge-documents]]]}))

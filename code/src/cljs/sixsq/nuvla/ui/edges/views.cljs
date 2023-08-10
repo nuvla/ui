@@ -789,29 +789,70 @@
         :total-items            total-elements
         :i-per-page-multipliers [1 2 4]}])))
 
+(defn BulkDeployModal
+  []
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        ;; selected-count       (subscribe [::selected-count db-path total-count-sub-key])
+        ;; edit-mode            (subscribe [::edit-mode db-path])
+        open?                (subscribe [::subs/modal-visible? :edges/bulk-edit-modal])
+        ;; used-tags            (subscribe [::tags resource-key])
+        ;; view-only-avlbl?     (keyword? no-edit-rights-sub-key)
+        ;; view-only-items      (when view-only-avlbl?
+        ;;                        (subscribe [no-edit-rights-sub-key]))
+        ]
+    (fn []
+      (let [close-fn     #(dispatch [::events/open-modal nil])]
+        [ui/Modal {:open       @open?
+                   :close-icon true
+                   :on-close   close-fn}
+         [uix/ModalHeader {:header (@tr [:bulk-update-tags])}]
+         [ui/ModalContent
+          [ui/Form
+           ]]
+         [ui/ModalActions
+          {:style {:display         :flex
+                   :align-items     :center
+                   :justify-content :space-between
+                   :text-align      :left}}
+          [:div
+           {:style {:line-height "1.2rem"}}
+           "there"]
+          [uix/Button {:disabled? false
+                       :on-click (fn [])}
+           "HI"]]]))))
+
 (defn NuvlaEdgeTableView
   [{:keys [bulk-edit columns edges]}]
   (let [{bulk-edit-modal :modal
-         trigger :trigger-config} bulk-edit]
+         trigger :trigger-config} bulk-edit
+        ]
     [:<>
      (when bulk-edit-modal
        [bulk-edit-modal])
-     [Table (cond->
-              {:sort-config       {:db-path     ::spec/ordering
-                                   :fetch-event [::events/get-nuvlaboxes]}
-               :columns           columns
-               :rows              edges
-               :table-props       {:compact "very" :selectable true}
-               :cell-props        {:header {:single-line true}}
-               :row-render        (fn [row-data] [NuvlaboxRow row-data])
-               :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
-               :row-props         {:role  "link"
-                                   :style {:cursor "pointer"}}}
-              trigger (assoc :select-config {:bulk-actions [trigger]
-                                             :total-count-sub-key [::subs/nuvlaboxes-count]
-                                             :resources-sub-key [::subs/nuvlaboxes-resources]
-                                             :select-db-path [::spec/select]
-                                             :rights-needed :edit}))]]))
+     [BulkDeployModal]
+     [Table (->
+             {:sort-config       {:db-path     ::spec/ordering
+                                  :fetch-event [::events/get-nuvlaboxes]}
+              :columns           columns
+              :rows              edges
+              :table-props       {:compact "very" :selectable true}
+              :cell-props        {:header {:single-line true}}
+              :row-render        (fn [row-data] [NuvlaboxRow row-data])
+              :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+              :row-props         {:role  "link"
+                                  :style {:cursor "pointer"}}
+              :select-config     {:bulk-actions (filterv
+                                                  some?
+                                                  [trigger
+                                                   {:icon (fn [] [icons/RocketIcon])
+                                                    :name "Bulk Deploy App"
+                                                    :event (fn []
+                                                             (dispatch
+                                                               [::events/open-modal :edges/bulk-edit-modal]))}])
+                                  :total-count-sub-key [::subs/nuvlaboxes-count]
+                                  :resources-sub-key [::subs/nuvlaboxes-resources]
+                                  :select-db-path [::spec/select]
+                                  :rights-needed :edit}})]]))
 
 
 (defn NuvlaboxTable

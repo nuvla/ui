@@ -288,21 +288,18 @@
            (filter (partial general-utils/can-operation? rights-needed) resources))))
 
 (defn CellCheckbox
-  [{:keys [can-edit? id selected-all-sub selected-set-sub db-path
+  [{:keys [id selected-all-sub selected-set-sub db-path
            resources-sub-key rights-needed edge-name idx]}]
   (let [resources (subscribe [::editable-resources-on-page resources-sub-key rights-needed])
         select-fn (fn [] (dispatch [::select-id id db-path (map :id @resources)]))
         checked?  (or @selected-all-sub (is-selected? @selected-set-sub id))]
     [ui/TableCell {:aria-label (str "select row " idx)
                    :on-click (fn [event]
-                               (when can-edit?
-                                 (select-fn)
-                                 (.stopPropagation event)))}
-     (when can-edit?
-       [:<>
-        [ui/Checkbox {:id idx
-                      :aria-label (str "select " edge-name)
-                      :checked checked?}]])]))
+                               (select-fn)
+                               (.stopPropagation event))}
+     [ui/Checkbox {:id idx
+                   :aria-label (str "select " edge-name)
+                   :checked checked?}]]))
 
 
 (defn HeaderCellCeckbox
@@ -511,10 +508,7 @@
              ^{:key id}
              [ui/TableRow (get-row-props row)
               (when selectable?
-                [CellCheckbox {:can-edit? (if rights-needed
-                                            (general-utils/can-operation? rights-needed row)
-                                            true)
-                               :id id :selected-set-sub selected-set :db-path select-db-path
+                [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
                                :selected-all-sub select-all? :resources-sub-key resources-sub-key
                                :rights-needed rights-needed
                                :edge-name (or

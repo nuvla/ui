@@ -206,10 +206,5 @@
   :-> ::spec/additional-filter)
 
 (reg-sub
-  ::selected-count
-  (fn []
-    [(subscribe [::table-plugin/selected-set-sub [::spec/select]])
-     (subscribe [::table-plugin/select-all?-sub [::spec/select]])
-     (subscribe [::nuvlaboxes-count])])
-  (fn [[selected-set selected-all? total-count]]
-    (if selected-all? total-count (count selected-set))))
+  ::selection
+  :-> ::spec/select)

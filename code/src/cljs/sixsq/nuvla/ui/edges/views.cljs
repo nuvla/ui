@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.about.subs :as about-subs]
             [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+            [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]
             [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.edges.add-modal :as add-modal]
             [sixsq.nuvla.ui.edges.events :as events]
@@ -803,6 +804,8 @@
                                      {:name @name}]))
         close-fn     #(dispatch [::events/open-modal nil])]
     (fn []
+      (when @open?
+        (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges]))
       [ui/Modal {:open       @open?
                  :close-icon true
                  :on-close   close-fn}
@@ -823,16 +826,19 @@
         [ui/Button {:disabled? false
                     :on-click navigate
                     :positive true
-                    :content "Continue to Deployment Group page"}]]])))
+                    :content "Continue creating Deployment Group"}]]])))
 
 (defn NuvlaEdgeTableView
-  [{:keys [bulk-edit columns edges]}]
-  (let [{bulk-edit-modal :modal
-         trigger :trigger-config} bulk-edit]
+  [{:keys [bulk-edit bulk-deploy columns edges]}]
+  (let [{bulk-edit-modal     :modal
+         trigger             :trigger-config} bulk-edit
+        {bulk-deploy-modal   :modal
+         bulk-deploy-trigger :trigger-config} bulk-deploy]
     [:<>
      (when bulk-edit-modal
        [bulk-edit-modal])
-     [BulkDeployModal]
+     (when bulk-deploy-modal
+       [bulk-deploy-modal])
      [Table (->
              {:sort-config       {:db-path     ::spec/ordering
                                   :fetch-event [::events/get-nuvlaboxes]}
@@ -847,11 +853,7 @@
               :select-config     {:bulk-actions (filterv
                                                   some?
                                                   [trigger
-                                                   {:icon (fn [] [icons/RocketIcon])
-                                                    :name "Bulk Deploy App"
-                                                    :event (fn []
-                                                             (dispatch
-                                                               [::events/open-modal :edges/bulk-deploy-modal]))}])
+                                                   bulk-deploy-trigger])
                                   :total-count-sub-key [::subs/nuvlaboxes-count]
                                   :resources-sub-key [::subs/nuvlaboxes-resources]
                                   :select-db-path [::spec/select]
@@ -892,7 +894,13 @@
                              :singular               (@tr [:edge])
                              :plural                 (@tr [:edges])
                              :filter-fn               (partial utils/build-bulk-filter [::spec/select])})]
-    [NuvlaEdgeTableView {:bulk-edit bulk-edit :columns columns :edges selected-nbs}]))
+    [NuvlaEdgeTableView {:bulk-edit bulk-edit
+                         :bulk-deploy {:modal BulkDeployModal
+                                       :trigger-config {:icon (fn [] [icons/RocketIcon])
+                                                        :name "Bulk Deploy App"
+                                                        :event (fn []
+                                                                 (dispatch
+                                                                   [::events/open-modal :edges/bulk-deploy-modal]))}} :columns columns :edges selected-nbs}]))
 
 
 (defn NuvlaboxMapPoint

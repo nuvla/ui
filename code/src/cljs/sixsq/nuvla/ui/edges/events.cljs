@@ -125,7 +125,15 @@
                     :type    :error})])
       {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
 
-
+(reg-event-fx
+  ::get-selected-edge-ids
+  (fn [{{:keys [::spec/select] :as db} :db} [_ storage-event]]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:filter (table-plugin/build-bulk-filter
+                 select
+                 (get-full-filter-string db)) :select "id"}
+      #(dispatch [storage-event %])]}))
 
 (reg-event-fx
   ::set-additional-filter

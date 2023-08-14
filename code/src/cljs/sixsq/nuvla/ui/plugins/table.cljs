@@ -101,7 +101,7 @@
 (s/def ::bulk-action (s/keys :req-un [::name ::event]
                        :opt-un [::component ::icon]))
 
-(s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector? :min-count 1)))
+(s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector?)))
 (s/def ::select-db-path (s/* keyword?))
 (s/def ::rights-needed keyword?)
 (s/def ::select-label-accessor (s/nilable fn?))
@@ -137,6 +137,7 @@
 
 (s/def ::selection-status #{:all :page
                             :some :none})
+
 
 (defn build-bulk-filter
   [{:keys [::select-all? ::selected-set]} filter-string]
@@ -448,9 +449,12 @@
                 resources-sub-key rights-needed select-label-accessor]} select-config
         tr             @(subscribe [::i18n-subs/tr])
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
-        selectable?    (and select-config (s/valid? ::select-config select-config)
-                            (or (not rights-needed)
-                                (some (partial general-utils/can-operation? rights-needed) rows)))
+        selectable?    (and
+                         select-config
+                         (s/valid? ::select-config select-config)
+                         (seq (:bulk-actions select-config))
+                         (or (not rights-needed)
+                           (some (partial general-utils/can-operation? rights-needed) rows)))
         selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))
         select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
         page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed]))

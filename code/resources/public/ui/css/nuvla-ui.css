@@ -546,6 +546,11 @@ body .nuvla-apps a {
   color: var(--apps-color);
 }
 
+.nuvla-apps button {
+  color: var(--accent-color) !important;
+  background-color: var(--accent-color) !important;
+}
+
 i.icon.sort:before {
   color: rgb(0 0 0 / 40%) !important;
 }
@@ -890,9 +895,10 @@ body .divider-red {
 }
 
 .nuvla-edges .ui-header,
-.nuvla-edges .button {
-  background-color: var(--edges-color) !important;
-  color: #ffffff;
+.nuvla-edges .button,
+.nuvla-apps .button {
+  background-color: var(--accent-color) !important;
+  color: #ffffff !important;
 }
 
 .nuvla-edges .button:hover {

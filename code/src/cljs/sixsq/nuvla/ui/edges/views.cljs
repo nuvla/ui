@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]
+            [sixsq.nuvla.ui.deployment-sets-detail.subs :as depl-group-subs]
             [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.edges.add-modal :as add-modal]
             [sixsq.nuvla.ui.edges.events :as events]
@@ -798,14 +799,15 @@
         name            (r/atom nil)
         change-name     (fn [value] (reset! name (when-not (str/blank? value) value)))
         navigate        (fn []
-                          (dispatch [::routing-events/navigate
-                                     routes/deployment-sets-details
-                                     {:uuid :create}
-                                     {:name @name}]))
+                          (let [id (random-uuid)]
+                            (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
+                            (dispatch [::routing-events/navigate
+                                       routes/deployment-sets-details
+                                       {:uuid :create}
+                                       {:name    @name
+                                        depl-group-subs/creation-temp-id-key id}])))
         close-fn     #(dispatch [::events/open-modal nil])]
     (fn []
-      (when @open?
-        (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges]))
       [ui/Modal {:open       @open?
                  :close-icon true
                  :on-close   close-fn}
@@ -839,25 +841,24 @@
        [bulk-edit-modal])
      (when bulk-deploy-modal
        [bulk-deploy-modal])
-     [Table (->
-             {:sort-config       {:db-path     ::spec/ordering
-                                  :fetch-event [::events/get-nuvlaboxes]}
-              :columns           columns
-              :rows              edges
-              :table-props       {:compact "very" :selectable true}
-              :cell-props        {:header {:single-line true}}
-              :row-render        (fn [row-data] [NuvlaboxRow row-data])
-              :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
-              :row-props         {:role  "link"
-                                  :style {:cursor "pointer"}}
-              :select-config     {:bulk-actions (filterv
-                                                  some?
-                                                  [trigger
-                                                   bulk-deploy-trigger])
-                                  :total-count-sub-key [::subs/nuvlaboxes-count]
-                                  :resources-sub-key [::subs/nuvlaboxes-resources]
-                                  :select-db-path [::spec/select]
-                                  :rights-needed :edit}})]]))
+     [Table {:sort-config       {:db-path     ::spec/ordering
+                                 :fetch-event [::events/get-nuvlaboxes]}
+             :columns           columns
+             :rows              edges
+             :table-props       {:compact "very" :selectable true}
+             :cell-props        {:header {:single-line true}}
+             :row-render        (fn [row-data] [NuvlaboxRow row-data])
+             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+             :row-props         {:role  "link"
+                                 :style {:cursor "pointer"}}
+             :select-config     {:bulk-actions (filterv
+                                                 some?
+                                                 [trigger
+                                                  bulk-deploy-trigger])
+                                 :total-count-sub-key [::subs/nuvlaboxes-count]
+                                 :resources-sub-key [::subs/nuvlaboxes-resources]
+                                 :select-db-path [::spec/select]
+                                 :rights-needed :edit}}]]))
 
 
 (defn NuvlaboxTable

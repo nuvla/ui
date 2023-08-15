@@ -127,13 +127,13 @@
 
 (reg-event-fx
   ::get-selected-edge-ids
-  (fn [{{:keys [::spec/select] :as db} :db} [_ storage-event]]
+  (fn [{{:keys [::spec/select] :as db} :db} [_ storage-event id]]
     {::cimi-api-fx/search
      [:nuvlabox
       {:filter (table-plugin/build-bulk-filter
                  select
                  (get-full-filter-string db)) :select "id"}
-      #(dispatch [storage-event %])]}))
+      #(dispatch [storage-event % id])]}))
 
 (reg-event-fx
   ::set-additional-filter

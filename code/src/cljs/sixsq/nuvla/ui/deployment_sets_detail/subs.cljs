@@ -1,10 +1,14 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
+            [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
+
+(def creation-temp-id-key :temp-id)
 
 (reg-sub
   ::loading?
@@ -163,9 +167,18 @@
   ;;todo require all mandatory params to be filled up?
   :-> #(some false? %))
 
+(defn create-edges-db-path [temp-id]
+  (cond->> [::spec/edges]
+    (nonblank-string temp-id) (into [::spec/temp-db temp-id])))
+
+
 (reg-sub
   ::edges-in-deployment-group-response
-  :-> ::spec/edges)
+  (fn [{:keys [current-route
+               ::spec/temp-db] :as db}]
+    (let [temp-id       (routing-utils/get-query-param current-route creation-temp-id-key)
+          edges-db-path (create-edges-db-path (str temp-id))]
+      (get-in db edges-db-path))))
 
 (reg-sub
   ::edges-summary-stats
@@ -215,3 +228,11 @@
   :<- [::edges-in-deployment-group-response]
   (fn [edges]
     (general-utils/ids->filter-string (->> edges :resources (map :id)))))
+
+(reg-sub
+  ::save-disabled?
+  :<- [::deployment-set]
+  :<- [::edges-in-deployment-group-response]
+  (fn [[deployment-set edges]]
+    {:deployment-group deployment-set
+     :edges            edges}))

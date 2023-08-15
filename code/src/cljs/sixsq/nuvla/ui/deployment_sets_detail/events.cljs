@@ -38,7 +38,7 @@
 (reg-event-db
   ::clear-target-edges
   (fn [db]
-    (assoc db ::spec/edges nil)))
+    (dissoc db ::spec/edges ::spec/edges-documents)))
 
 (reg-event-fx
   ::init
@@ -48,12 +48,13 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-id
                        :frequency 10000
-                       :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]]] }))
+                       :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]]]}))
 
 (reg-event-fx
   ::init-create
-  (fn [_ [_ uuid]]
-    {:fx [] }))
+  (fn [{db :db}]
+    {:db (merge db spec/defaults)
+     :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]]}))
 
 (reg-event-fx
   ::new
@@ -243,23 +244,25 @@
 
 (reg-event-fx
   ::edit
-  (fn [_ [_ resource-id data success-msg]]
-    {::cimi-api-fx/edit
-     [resource-id data
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error editing " resource-id)
-                                  status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-         (do
-           (when success-msg
+  (fn [{db :db} [_ resource-id data success-msg]]
+    (if-not resource-id
+      {:db (update db ::spec/deployment-set merge data)}
+      {::cimi-api-fx/edit
+       [resource-id data
+        #(if (instance? js/Error %)
+           (let [{:keys [status message]} (response/parse-ex-info %)]
              (dispatch [::messages-events/add
-                        {:header  success-msg
-                         :content success-msg
-                         :type    :success}]))
-           (dispatch [::set-deployment-set %])))]}))
+                        {:header  (cond-> (str "error editing " resource-id)
+                                    status (str " (" status ")"))
+                         :content message
+                         :type    :error}]))
+           (do
+             (when success-msg
+               (dispatch [::messages-events/add
+                          {:header  success-msg
+                           :content success-msg
+                           :type    :success}]))
+             (dispatch [::set-deployment-set %])))]})))
 
 (reg-event-fx
   ::delete
@@ -363,35 +366,38 @@
 
 (reg-event-fx
   ::set-edges
-  (fn [{db :db} [_ response]]
-    {:db (assoc db ::spec/edges
-           (update response :resources #(mapv :id %)))
-     :fx [[:dispatch [::get-edge-documents]]]}))
+  (fn [{db :db} [_ response temp-id]]
+    (let [path (subs/create-edges-db-path (str temp-id))]
+      {:db (assoc-in db path
+             (update response :resources #(mapv :id %)))
+       :fx [[:dispatch [::get-edge-documents]]]})))
 
 (def edges-state-filter-key :edges-state)
 
 (reg-event-fx
   ::get-edge-documents
-  (fn [{{:keys [::spec/edges
-                ::spec/ordering
+  (fn [{{:keys [::spec/ordering
                 current-route] :as db} :db} _]
-    (let [ordering     (or ordering spec/default-ordering)
+    (let [edges        (get-in db
+                         (subs/create-edges-db-path
+                           (str (routing-utils/get-query-param current-route subs/creation-temp-id-key))))
+          ordering     (or ordering spec/default-ordering)
           query-filter (routing-utils/get-query-param current-route edges-state-filter-key)]
-      (when edges
-        {:db (assoc db ::spec/edge-documents nil)
-         ::cimi-api-fx/search
-         [:nuvlabox
-          (->> {:orderby (ordering->order-string ordering)
-                :filter  (general-utils/join-and
-                           "id!=null"
-                           (general-utils/ids->filter-string (-> edges
-                                                                 :resources))
-                           (when (seq query-filter) (edge-utils/state-filter query-filter)))}
-               (pagination-plugin/first-last-params
-                 db [::spec/pagination-edges]))
-          #(dispatch [::set-edge-documents %])]}))))
+      (cond-> {:db (assoc db ::spec/edge-documents nil)}
+        edges
+        (assoc ::cimi-api-fx/search
+          [:nuvlabox
+           (->> {:orderby (ordering->order-string ordering)
+                 :filter  (general-utils/join-and
+                            "id!=null"
+                            (general-utils/ids->filter-string (-> edges
+                                                                  :resources))
+                            (when (seq query-filter) (edge-utils/state-filter query-filter)))}
+                (pagination-plugin/first-last-params
+                  db [::spec/pagination-edges]))
+           #(dispatch [::set-edges-documents %])])))))
 
 (reg-event-db
-  ::set-edge-documents
+  ::set-edges-documents
   (fn [db [_ edges-response]]
     (assoc db ::spec/edges-documents edges-response)))

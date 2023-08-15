@@ -36,8 +36,7 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.utils.view-components :as vc]
-            [sixsq.nuvla.ui.deployments.spec :as deployments]))
+            [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 
 (defn StartButton
@@ -105,10 +104,27 @@
             :loading?   @loading?
             :on-refresh #(events/refresh uuid)}]]]))))
 
+(defn SaveButton
+  [{:keys [id name description] :as _deployment-set}]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        content (str (or name id) (when description " - ") description)
+        save-disabled? (subscribe [::subs/save-disabled?])]
+    [uix/ModalDanger
+     {:on-confirm  #(dispatch [::events/delete])
+      :trigger     (r/as-element [uix/MenuItem
+                                  {:name     (@tr [:save])
+                                   :icon     icons/i-floppy
+                                   :class    (when-not @save-disabled? "primary-menu-item")
+                                   :disabled @save-disabled?
+                                   :on-click #(dispatch [::events/open-save-modal])}])
+      :content     [:h3 "HI"]
+      :header      (@tr [:save-deployment-set])
+      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :button-text (@tr [:delete])}]))
+
 (defn MenuBarCreate
-  [uuid]
-  (let [deployment-set (subscribe [::subs/deployment-set])
-        loading?       (subscribe [::subs/loading?])]
+  []
+  (let [deployment-set (subscribe [::subs/deployment-set])]
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
                         @deployment-set
@@ -117,18 +133,12 @@
          [components/ResponsiveMenuBar
           (conj MenuItems
                 ^{:key "delete"}
-                [DeleteButton @deployment-set]
-                ^{:key "stop"}
-                [StopButton @deployment-set]
-                ^{:key "start"}
-                [StartButton @deployment-set])
-          [components/RefreshMenu
-           {:action-id  events/refresh-action-id
-            :loading?   @loading?
-            :on-refresh #(events/refresh uuid)}]]]))))
+            [SaveButton @deployment-set])
+
+          ]]))))
 
 (defn EditableCell
-  [attribute]
+  [attribute creating?]
   (let [tr             (subscribe [::i18n-subs/tr])
         deployment-set (subscribe [::subs/deployment-set])
         can-edit?      (subscribe [::subs/can-edit?])
@@ -136,45 +146,49 @@
         on-change-fn   #(dispatch [::events/edit
                                    id {attribute %}
                                    (@tr [:updated-successfully])])]
-    (if @can-edit?
+    (if (or creating? @can-edit?)
       [components/EditableInput attribute @deployment-set on-change-fn]
       [ui/TableCell (get @deployment-set attribute)])))
 
 
 (defn TabOverviewDeploymentSet
-  [{:keys [id created updated created-by state]}]
+  [{:keys [id created updated created-by state]} creating?]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 "Deployment set"]
+     [:h4 (str (when creating? "Creating a new ") "Deployment group")]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
-       [ui/TableRow
-        [ui/TableCell "Id"]
-        (when id
-          [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]])]
+       (when-not creating?
+         [ui/TableRow
+          [ui/TableCell "Id"]
+          (when id
+            [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]])])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
-        [EditableCell :name]]
+        ^{:key (or id "name")}
+        [EditableCell :name creating?]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:description]))]
-        [EditableCell :description]]
-       [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:state]))]
-        [ui/TableCell state]]
-       (when created-by
-         [ui/TableRow
-          [ui/TableCell (str/capitalize (@tr [:created-by]))]
-          [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
-       [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:created]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
-       [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:updated]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]]]]))
+        ^{:key (or id "description")}
+        [EditableCell :description creating?]]
+       (when-not creating?
+         [:<> [ui/TableRow
+               [ui/TableCell (str/capitalize (@tr [:state]))]
+               [ui/TableCell state]]
+          (when created-by
+            [ui/TableRow
+             [ui/TableCell (str/capitalize (@tr [:created-by]))]
+             [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:created]))]
+           [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:updated]))]
+           [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]])]]]))
 
 
 (defn TabOverviewTags
@@ -187,6 +201,10 @@
      [components/EditableTags
       deployment-set #(dispatch [::events/edit id {:tags %}
                                  (@tr [:updated-successfully])])]]))
+
+(defn AddButton []
+  [ui/Button {:icon icons/i-plus-large
+              :style {:align-self "center"}}])
 
 (defn- AppsOverviewTable
   []
@@ -204,20 +222,21 @@
 
                              @apps)]
         (if (empty? app-row-data)
-          [ui/Button {:icon icons/i-plus-large}]
-          [Table {:columns
-                  (map (fn [k]
-                         {:field-key k
-                          :cell (when (= k :app-name)
-                                  (fn [{:keys [cell-data row-data]}]
-                                    [module-plugin/LinkToApp
-                                     {:db-path  [::spec/apps-sets (:idx row-data)]
-                                      :href     (:href row-data)
-                                      :children [:<>
-                                                 cell-data]
-                                      :target   :_self}]))})
-                    (keys (dissoc (first app-row-data) :idx :href)))
-                  :rows app-row-data}])))))
+          [AddButton]
+          [:div {:style {:height "100%"}}
+           [Table {:columns
+                   (map (fn [k]
+                          {:field-key k
+                           :cell (when (= k :app-name)
+                                   (fn [{:keys [cell-data row-data]}]
+                                     [module-plugin/LinkToApp
+                                      {:db-path  [::spec/apps-sets (:idx row-data)]
+                                       :href     (:href row-data)
+                                       :children [:<>
+                                                  cell-data]
+                                       :target   :_self}]))})
+                     (keys (dissoc (first app-row-data) :idx :href)))
+                   :rows app-row-data}]])))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
@@ -295,8 +314,18 @@
                     :on-click  (create-nav-fn "deployments" nil)}]])))
 
 
+(defn EdgeOverviewContent [edges-stats]
+  [:<>
+   [StatisticStatesEdgeView edges-stats]
+   [ui/Button {:class    "center"
+               :icon     #(r/as-element [icons/BoxIcon])
+               :content  "Show me"
+               :disabled (or (nil? (:total edges-stats))
+                           (= 0 (:total edges-stats)))
+               :on-click (create-nav-fn "edges" nil)}]])
+
 (defn TabOverview
-  [uuid]
+  [uuid creating?]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set (subscribe [::subs/deployment-set])
         edges-stats    (subscribe [::subs/edges-summary-stats])
@@ -308,27 +337,22 @@
                    :stackable true
                    :padded    true}
           [ui/GridColumn {:stretched true}
-           [TabOverviewDeploymentSet @deployment-set]]
+           [TabOverviewDeploymentSet @deployment-set creating?]]
           [ui/GridColumn {:stretched true}
            [vc/TitledCard
             {:class :nuvla-apps
              :icon  icons/i-layer-group
              :label (str/capitalize (@tr [:apps]))}
-            [:div {:style {:flex-grow 1}}
-             [AppsOverviewTable]]]]
+            [AppsOverviewTable]]]
 
           [ui/GridColumn {:stretched true}
            [vc/TitledCard
             {:class :nuvla-edges
              :icon  icons/i-box
              :label (str (@tr [:nuvlaedge]) "s")}
-            [StatisticStatesEdgeView @edges-stats]
-            [ui/Button {:class    "center"
-                        :icon     #(r/as-element [icons/BoxIcon])
-                        :content  "Show me"
-                        :disabled (or (nil? (:total @edges-stats))
-                                      (= 0 (:total @edges-stats)))
-                        :on-click (create-nav-fn "edges" nil)}]]]
+            (if (< 0 (:total @edges-stats))
+              [EdgeOverviewContent @edges-stats]
+              [AddButton])]]
           [ui/GridColumn {:stretched true}
            [DeploymentsStatesCard]]]]))))
 
@@ -414,6 +438,7 @@
     "infrastructure-service-swarm" [icons/DockerIcon]
     "infrastructure-service-kubernetes" [apps-utils/IconK8s false]
     [icons/QuestionCircleIcon]))
+
 (defn TargetNameIcon
   [{:keys [subtype name] target-id :id} on-delete]
   [ui/ListItem
@@ -794,6 +819,7 @@
 
 (defn TabsDeploymentSet
   [{:keys [uuid creating?]}]
+  (when creating? (dispatch [::events/init-create]))
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set @(subscribe [::subs/deployment-set])
         apps-sets      @(subscribe [::subs/applications-sets])
@@ -807,7 +833,7 @@
         :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
                               :key     :overview
                               :icon    "info"}
-                   :render   #(r/as-element [TabOverview uuid])}
+                   :render   #(r/as-element [TabOverview uuid creating?])}
                   {:menuItem {:key :apps
                               :content (str/capitalize (tr [:apps]))
                               :disabled (empty? apps)
@@ -854,8 +880,7 @@
 
 (defn DeploymentSetCreate
   []
-  (dispatch [::events/init-create])
-  (let [name     (subscribe [::route-subs/query-param :name])]
+  (let [name (subscribe [::route-subs/query-param :name])]
     (fn []
       [:<>
       [components/NotFoundPortal
@@ -866,12 +891,6 @@
        [uix/PageHeader "bullseye" (or @name "NO NAME SET")]
        [MenuBarCreate]
        [job-views/ProgressJobAction]
-      ;;  [bulk-progress-plugin/MonitoredJobs
-      ;;   {:db-path [::spec/bulk-jobs]}]
-      ;;  [components/ErrorJobsMessage
-      ;;   ::job-subs/jobs nil nil
-      ;;   #(dispatch [::tab/change-tab {:db-path [::spec/tab]
-      ;;                                 :tab-key :jobs}])]
        [TabsDeploymentSet {:creating? true}]]])))
 
 (defn DeploymentSet

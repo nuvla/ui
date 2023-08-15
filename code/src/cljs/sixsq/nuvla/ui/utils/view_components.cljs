@@ -19,12 +19,17 @@
 
 (defn TitledCard
   [{:keys [class icon label]} & children]
-  (into [ui/Segment {:class     class
-                     :secondary true
-                     :raised    true
-                     :style     {:display         "flex"
-                                 :flex-direction  "column"
-                                 :justify-content "space-between"}}
-         [:h4 {:class [:ui-header :ui-card-header]}
-          [icons/Icon {:name icon}] label]]
-    children))
+  [ui/Segment {:class     class
+               :secondary true
+               :raised    true
+               :style {:height          "100%"
+                       :display         "flex"
+                       :flex-direction  "column"
+                       :justify-content "space-evenly"}}
+   [:h4 {:class [:ui-header :ui-card-header]}
+    [icons/Icon {:name icon}] label]
+   (into [:div {:style {:height          "100%"
+                        :display         "flex"
+                        :flex-direction  "column"
+                        :justify-content "space-evenly"}}
+          children])])

@@ -236,3 +236,13 @@
   (fn [[deployment-set edges]]
     {:deployment-group deployment-set
      :edges            edges}))
+
+(reg-sub
+  ::opened-modal
+  :-> ::spec/opened-modal)
+
+(reg-sub
+  ::modal-open?
+  :<- [::opened-modal]
+  (fn [opened-modal [_ id]]
+    (= id opened-modal)))

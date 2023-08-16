@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
+            [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
@@ -52,8 +54,8 @@
 
 (reg-event-fx
   ::init-create
-  (fn [{db :db}]
-    {:db (merge db spec/defaults)
+  (fn [{db :db} [_ name]]
+    {:db (merge db (assoc-in spec/defaults [::spec/deployment-set :name] name))
      :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]]}))
 
 (reg-event-fx
@@ -398,6 +400,19 @@
            #(dispatch [::set-edges-documents %])])))))
 
 (reg-event-db
+  ::set-opened-modal
+  (fn [db [_ id]]
+    (assoc db ::spec/opened-modal id)))
+
+(reg-event-db
   ::set-edges-documents
   (fn [db [_ edges-response]]
     (assoc db ::spec/edges-documents edges-response)))
+
+(reg-event-fx
+  ::fetch-app-picker-apps
+  (fn [_ [_ pagination-db-path]]
+    {:fx [[:dispatch [::apps-store-events/get-modules
+                      apps-store-spec/allapps-key
+                      {:order-by "name:asc"
+                       :pagination-db-path [pagination-db-path]}]]]}))

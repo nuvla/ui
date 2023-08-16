@@ -139,8 +139,15 @@
       vpn-infra)))
 
 (reg-sub
-  ::nuvlabox-releases
+  ::nuvlabox-releases-response
   :-> ::spec/nuvlabox-releases)
+
+(reg-sub
+  ::nuvlabox-releases
+  :<- [::nuvlabox-releases-response]
+  (fn [nuvlabox-releases]
+    (utils/sort-by-version nuvlabox-releases)))
+
 
 (reg-sub
   ::nuvlabox-releases-by-id
@@ -166,10 +173,11 @@
   :<- [::nuvlabox-releases]
   (fn [nuvlabox-releases]
     (->> (utils/sort-by-version nuvlabox-releases)
+         ((fn [v] (tap> v) v))
          (map
-          (fn [{:keys [id release pre-release]}]
-            {:key release, :text (str release (when pre-release " - pre-release")),
-             :value id, :pre-release pre-release})))))
+           (fn [{:keys [id release pre-release]}]
+             {:key release, :text (str release (when pre-release " - pre-release")),
+              :value id, :pre-release pre-release})))))
 
 (reg-sub
   ::ssh-keys-available

@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
+            [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
             [sixsq.nuvla.ui.dashboard.views :as dashboard-views ]
@@ -25,10 +27,13 @@
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.routing.utils :as routes-utils]
+            [sixsq.nuvla.ui.routing.utils :as routes-utils :refer [name->href
+                                                                   pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -36,6 +41,7 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 
@@ -202,9 +208,84 @@
       deployment-set #(dispatch [::events/edit id {:tags %}
                                  (@tr [:updated-successfully])])]]))
 
-(defn AddButton []
-  [ui/Button {:icon icons/i-plus-large
+(def apps-picker-modal-id :add-modal/apps)
+
+(defn AppCard
+  [{:keys [id name description path subtype logo-url price published versions tags] :as app} show-published-tick?]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        map-versions   (apps-utils/map-versions-index versions)
+        module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
+        module-index   (apps-utils/latest-published-index map-versions)
+        detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
+        follow-trial?  (get price :follow-customer-trial false)
+        button-icon    (if (and price (not follow-trial?)) :cart icons/i-rocket)
+        button-color   (if follow-trial? "green" "blue")
+        deploy-price   (str (@tr [(if follow-trial?
+                                    :free-trial-and-then
+                                    :deploy-for)])
+                        ;;  (format-money (/ (:cent-amount-daily price) 100)) "/"
+                         (@tr [:day]))
+        button-content (if price deploy-price (@tr [:deploy]))
+        on-click       (fn [event]
+                        ;;  (apps-views-detail/deploy-click module-id (apps-utils/applications-sets? subtype))
+                         (.preventDefault event)
+                         (.stopPropagation event))
+        button-ops     {:fluid    true
+                        :color    button-color
+                        :icon     button-icon
+                        :content  button-content
+                        :on-click on-click}
+        desc-summary   (-> description
+                           utils-values/markdown->summary
+                           (utils-general/truncate 80))]
+    [apps-store-views/ModuleCardView
+     {:logo-url logo-url
+      :subtype subtype
+      :name name
+      :id id
+      :desc-summary desc-summary
+      :tags tags
+      :published published
+      :detail-href detail-href
+      :button-ops button-ops}]))
+
+(defn AddButton
+  [id]
+  [ui/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
+              :icon icons/i-plus-large
               :style {:align-self "center"}}])
+
+(defn AppsPicker
+  [tab-key pagination-db-path]
+  (let [modules (subscribe [:sixsq.nuvla.ui.apps-store.subs/modules])]
+    (fn []
+      ^{:key tab-key}
+      [ui/TabPane
+       [apps-store-views/ControlBar tab-key]
+       [apps-store-views/ModulesCardsGroupView
+        (for [{:keys [id] :as module} (get @modules :resources [])]
+          ^{:key id}
+          [AppCard module false])]
+       [pagination-plugin/Pagination
+        {:db-path      [pagination-db-path]
+         :total-items  (:count @modules)
+         :change-event [::events/fetch-app-picker-apps pagination-db-path]}]])))
+
+(defn AppsPickerModal
+  []
+  (let [tr           (subscribe [::i18n-subs/tr])
+        open?        (subscribe [::subs/opened-modal apps-picker-modal-id])
+        close-fn     #(dispatch [::events/set-opened-modal nil])
+        tab-key      apps-store-spec/allapps-key]
+    (dispatch [::events/fetch-app-picker-apps ::spec/pagination-apps-picker])
+    (fn []
+      [ui/Modal {:size :fullscreen
+                 :open       @open?
+                 :close-icon true
+                 :on-close   close-fn}
+       [uix/ModalHeader {:header (@tr [:create-deployment-group ])}]
+       [ui/ModalContent
+        [AppsPicker tab-key ::spec/pagination-apps-picker]]])))
 
 (defn- AppsOverviewTable
   []
@@ -222,7 +303,9 @@
 
                              @apps)]
         (if (empty? app-row-data)
-          [AddButton]
+          [:<>
+           [AppsPickerModal]
+           [AddButton apps-picker-modal-id]]
           [:div {:style {:height "100%"}}
            [Table {:columns
                    (map (fn [k]
@@ -355,8 +438,6 @@
               [AddButton])]]
           [ui/GridColumn {:stretched true}
            [DeploymentsStatesCard]]]]))))
-
-
 
 
 (defn on-change-input
@@ -819,7 +900,6 @@
 
 (defn TabsDeploymentSet
   [{:keys [uuid creating?]}]
-  (when creating? (dispatch [::events/init-create]))
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set @(subscribe [::subs/deployment-set])
         apps-sets      @(subscribe [::subs/applications-sets])
@@ -881,17 +961,18 @@
 (defn DeploymentSetCreate
   []
   (let [name (subscribe [::route-subs/query-param :name])]
+    (dispatch [::events/init-create @name])
     (fn []
       [:<>
-      [components/NotFoundPortal
-       ::subs/deployment-set-not-found?
-       :no-deployment-set-message-header
-       :no-deployment-set-message-content]
-      [ui/Container {:fluid true}
-       [uix/PageHeader "bullseye" (or @name "NO NAME SET")]
-       [MenuBarCreate]
-       [job-views/ProgressJobAction]
-       [TabsDeploymentSet {:creating? true}]]])))
+       [components/NotFoundPortal
+        ::subs/deployment-set-not-found?
+        :no-deployment-set-message-header
+        :no-deployment-set-message-content]
+       [ui/Container {:fluid true}
+        [uix/PageHeader "bullseye" (or @name "NO NAME SET")]
+        [MenuBarCreate]
+        [job-views/ProgressJobAction]
+        [TabsDeploymentSet {:creating? true}]]])))
 
 (defn DeploymentSet
   [uuid]

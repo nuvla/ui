@@ -20,6 +20,7 @@
             [sixsq.nuvla.ui.job.views :as job-views]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
@@ -261,7 +262,11 @@
     (fn []
       ^{:key tab-key}
       [ui/TabPane
-       [apps-store-views/ControlBar tab-key]
+       [ui/Menu {:secondary true}
+        [ui/MenuMenu {:position "left"}
+         [full-text-search-plugin/FullTextSearch
+          {:db-path      [::apps-store-spec/modules-search]
+           :change-event [::pagination-plugin/change-page [pagination-db-path] 1]}]]]
        [apps-store-views/ModulesCardsGroupView
         (for [{:keys [id] :as module} (get @modules :resources [])]
           ^{:key id}

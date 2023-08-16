@@ -107,12 +107,12 @@
       :change-event [::events/get-modules active-tab]}]))
 
 (defn ControlBar
-  [active-tab]
+  [active-tab pagination-db-path]
   [ui/Menu {:secondary true}
    [ui/MenuMenu {:position "left"}
     [full-text-search-plugin/FullTextSearch
      {:db-path      [::spec/modules-search]
-      :change-event [::pagination-plugin/change-page [(spec/page-keys->pagination-db-path active-tab)] 1]}]]
+      :change-event [::pagination-plugin/change-page [(or pagination-db-path (spec/page-keys->pagination-db-path active-tab))] 1]}]]
    [RefreshButton active-tab]])
 
 (defn ControlBarProjects [active-tab]

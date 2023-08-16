@@ -34,14 +34,12 @@
                                                                    pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
@@ -173,7 +171,7 @@
          [ui/TableRow
           [ui/TableCell "Id"]
           (when id
-            [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]])])
+            [ui/TableCell [utils-values/AsLink id :label (general-utils/id->uuid id)]])])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
         ^{:key (or id "name")}
@@ -212,7 +210,7 @@
 (def apps-picker-modal-id :add-modal/apps)
 
 (defn AppCard
-  [{:keys [id name description path subtype logo-url price published versions tags] :as app} show-published-tick?]
+  [{:keys [id name description path subtype logo-url price published versions tags vendor]} show-published-tick?]
   (let [tr             (subscribe [::i18n-subs/tr])
         map-versions   (apps-utils/map-versions-index versions)
         module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
@@ -238,13 +236,13 @@
                         :on-click on-click}
         desc-summary   (-> description
                            utils-values/markdown->summary
-                           (utils-general/truncate 80))]
+                           (general-utils/truncate 80))]
     [apps-store-views/ModuleCardView
      {:logo-url logo-url
       :subtype subtype
       :name name
       :id id
-      :desc-summary desc-summary
+      :desc-summary [:<> [:div desc-summary] [:div vendor]]
       :tags tags
       :published published
       :detail-href detail-href
@@ -293,7 +291,7 @@
         [AppsPicker tab-key ::spec/pagination-apps-picker]]])))
 
 (defn- AppsOverviewTable
-  []
+  [creating?]
   (let [apps (subscribe [::subs/applications-sets-apps-targets])]
     (fn []
       (let [app-row-data   (mapv (fn [{:keys [application] :as app-data}]
@@ -307,24 +305,24 @@
                                     :last-update (time/time->format (js/Date.))})
 
                              @apps)]
-        (if (empty? app-row-data)
+        [:div {:style {:height "100%"}}
+         [Table {:columns
+                 (map (fn [k]
+                        {:field-key k
+                         :cell (when (= k :app-name)
+                                 (fn [{:keys [cell-data row-data]}]
+                                   [module-plugin/LinkToApp
+                                    {:db-path  [::spec/apps-sets (:idx row-data)]
+                                     :href     (:href row-data)
+                                     :children [:<>
+                                                cell-data]
+                                     :target   :_self}]))})
+                   (keys (dissoc (first app-row-data) :idx :href)))
+                 :rows app-row-data}]]
+        (when creating?
           [:<>
            [AppsPickerModal]
-           [AddButton apps-picker-modal-id]]
-          [:div {:style {:height "100%"}}
-           [Table {:columns
-                   (map (fn [k]
-                          {:field-key k
-                           :cell (when (= k :app-name)
-                                   (fn [{:keys [cell-data row-data]}]
-                                     [module-plugin/LinkToApp
-                                      {:db-path  [::spec/apps-sets (:idx row-data)]
-                                       :href     (:href row-data)
-                                       :children [:<>
-                                                  cell-data]
-                                       :target   :_self}]))})
-                     (keys (dissoc (first app-row-data) :idx :href)))
-                   :rows app-row-data}]])))))
+           [AddButton apps-picker-modal-id]])))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
@@ -431,7 +429,7 @@
             {:class :nuvla-apps
              :icon  icons/i-layer-group
              :label (str/capitalize (@tr [:apps]))}
-            [AppsOverviewTable]]]
+            [AppsOverviewTable creating?]]]
 
           [ui/GridColumn {:stretched true}
            [vc/TitledCard
@@ -717,7 +715,7 @@
           (for [{:keys [i targets-count total-price application]} apps-targets-total-price]
             ^{:key (str "price-" i "-" (:id application))}
             [ui/TableRow
-             [ui/TableCell [values/AsLink (:path application)
+             [ui/TableCell [utils-values/AsLink (:path application)
                             :label (or (:name application)
                                        (:id application)) :page "apps"]]
              [ui/TableCell {:text-align "right"} (general-utils/format-money

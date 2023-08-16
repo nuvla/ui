@@ -416,3 +416,9 @@
                       apps-store-spec/allapps-key
                       {:order-by "name:asc"
                        :pagination-db-path [pagination-db-path]}]]]}))
+
+(reg-event-fx
+  ::add-app-from-picker
+  (fn [_ [_ ]]
+    {:db []
+     }))

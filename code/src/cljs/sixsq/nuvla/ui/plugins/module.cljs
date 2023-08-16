@@ -59,7 +59,7 @@
   (db-module-subpath db-path href ::registries-credentials))
 
 
-(defn- db-module
+(defn db-module
   [db db-path href]
   (get-in db (db-module-path db-path href)))
 

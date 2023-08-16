@@ -167,15 +167,15 @@
   ;;todo require all mandatory params to be filled up?
   :-> #(some false? %))
 
-(defn create-edges-db-path [temp-id]
-  (cond->> [::spec/edges]
+(defn create-db-path [db-path temp-id]
+  (cond->> db-path
     (nonblank-string temp-id) (into [::spec/temp-db temp-id])))
 
+(def create-edges-db-path (partial create-db-path [::spec/edges]) )
 
 (reg-sub
   ::edges-in-deployment-group-response
-  (fn [{:keys [current-route
-               ::spec/temp-db] :as db}]
+  (fn [{:keys [current-route] :as db}]
     (let [temp-id       (routing-utils/get-query-param current-route creation-temp-id-key)
           edges-db-path (create-edges-db-path (str temp-id))]
       (get-in db edges-db-path))))

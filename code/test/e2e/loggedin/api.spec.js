@@ -26,8 +26,10 @@ test('Navigation api pages and title check', async ({ page }, { project, config 
   await expect(page.getByPlaceholder('e.g. created:desc, ...')).toHaveValue('');
   await page.getByRole('cell', { name: 'name' }).locator('a').nth(1).click();
   await expect(page.getByPlaceholder('e.g. created:desc, ...')).toHaveValue('name:asc');
-  await expect(page).toHaveURL(apiUrl + '/user-template?first=0&last=20&filter=&orderby=name:asc&select=&aggregation=');
+  await expect(page).toHaveURL(
+    apiUrl + '/user-template?first=0&last=20&filter=&orderby=name%3Aasc&select=&aggregation='
+  );
   await page.getByRole('cell', { name: 'id' }).locator('a').nth(1).click();
   await expect(page.getByPlaceholder('e.g. created:desc, ...')).toHaveValue('id:asc');
-  await expect(page).toHaveURL(apiUrl + '/user-template?first=0&last=20&filter=&orderby=id:asc&select=&aggregation=');
+  await expect(page).toHaveURL(apiUrl + '/user-template?first=0&last=20&filter=&orderby=id%3Aasc&select=&aggregation=');
 });

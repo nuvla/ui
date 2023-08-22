@@ -399,7 +399,9 @@
 (defn DeploymentsOverviewSegment
   [{:keys [sub-key show-me-event on-click]}]
   [TitledCardDeployments
+   ^{:key "deployment-overview-stats"}
    [StatisticStates false sub-key]
+   ^{:key "deployment-overview-button"}
    [uix/Button {:class    "center"
                 :color    "blue"
                 :icon     icons/i-rocket

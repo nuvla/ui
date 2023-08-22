@@ -4,7 +4,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-            [sixsq.nuvla.ui.dashboard.views :as dashboard-views ]
+            [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
             [sixsq.nuvla.ui.deployment-dialog.views-module-version :refer [get-version-id]]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
@@ -170,31 +170,30 @@
 (defn- AppsOverviewTable
   []
   (let [apps (subscribe [::subs/applications-sets-apps-targets])]
-    (fn []
-      (let [app-row-data   (mapv (fn [{:keys [application] :as app-data}]
-                                   {:idx (:i app-data)
-                                    :href (:id application)
-                                    :app-name (:name application)
-                                    :version  (str "v" (get-version-id
-                                                         (map-indexed vector (:versions application))
-                                                         (-> application :content :id)))
-                                    :status "yeah, good question"
-                                    :last-update (time/time->format (js/Date.))})
+    (let [app-row-data (mapv (fn [{:keys [application] :as app-data}]
+                               {:idx         (:i app-data)
+                                :href        (:id application)
+                                :app-name    (:name application)
+                                :version     (str "v" (get-version-id
+                                                        (map-indexed vector (:versions application))
+                                                        (-> application :content :id)))
+                                :status      "yeah, good question"
+                                :last-update (time/time->format (js/Date.))})
 
                              @apps)]
-        [Table {:columns
-                (map (fn [k]
-                       {:field-key k
-                        :cell (when (= k :app-name)
-                                (fn [{:keys [cell-data row-data]}]
-                                  [module-plugin/LinkToApp
-                                   {:db-path  [::spec/apps-sets (:idx row-data)]
-                                    :href     (:href row-data)
-                                    :children [:<>
-                                               cell-data]
-                                    :target   :_self}]))})
-                  (keys (dissoc (first app-row-data) :idx :href)))
-                :rows app-row-data}]))))
+      [Table {:columns
+              (map (fn [k]
+                     {:field-key k
+                      :cell      (when (= k :app-name)
+                                   (fn [{:keys [cell-data row-data]}]
+                                     [module-plugin/LinkToApp
+                                      {:db-path  [::spec/apps-sets (:idx row-data)]
+                                       :href     (:href row-data)
+                                       :children [:<>
+                                                  cell-data]
+                                       :target   :_self}]))})
+                   (keys (dissoc (first app-row-data) :idx :href)))
+              :rows app-row-data}])))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
@@ -202,17 +201,17 @@
         to-edges-tab      {:deployment-sets-detail-tab :edges}
         create-target-url (fn [status-filter]
                             {:resource (routes-utils/gen-href current-route
-                                         {:query-params
-                                          (cond->
-                                            to-edges-tab
-                                            status-filter
-                                            (assoc events/edges-state-filter-key status-filter))})})]
+                                                              {:query-params
+                                                               (cond->
+                                                                 to-edges-tab
+                                                                 status-filter
+                                                                 (assoc events/edges-state-filter-key status-filter))})})]
     [ui/StatisticGroup {:size  "tiny"
                         :style {:padding "0.2rem"}}
-     [dashboard-views/Statistic {:value total
-                                 :icon  icons/i-box
-                                 :label "TOTAL"
-                                 :color "black"
+     [dashboard-views/Statistic {:value  total
+                                 :icon   icons/i-box
+                                 :label  "TOTAL"
+                                 :color  "black"
                                  :target (create-target-url nil)}]
      [dashboard-views/Statistic {:value          online
                                  :icon           icons/i-power
@@ -220,19 +219,19 @@
                                  :positive-color "green"
                                  :color          "green"
                                  :icon-color     "green"
-                                 :target (create-target-url "ONLINE")}]
-     [dashboard-views/Statistic {:value offline
-                                 :icon  icons/i-power
-                                 :label edges-utils/status-offline
-                                 :color "red"
+                                 :target         (create-target-url "ONLINE")}]
+     [dashboard-views/Statistic {:value      offline
+                                 :icon       icons/i-power
+                                 :label      edges-utils/status-offline
+                                 :color      "red"
                                  :icon-color "red"
-                                 :target (create-target-url "OFFLINE")}]
-     [dashboard-views/Statistic {:value unknown
-                                 :icon  icons/i-power
-                                 :label edges-utils/status-unknown
-                                 :color "orange"
+                                 :target     (create-target-url "OFFLINE")}]
+     [dashboard-views/Statistic {:value      unknown
+                                 :icon       icons/i-power
+                                 :label      edges-utils/status-unknown
+                                 :color      "orange"
                                  :icon-color "orange"
-                                 :target (create-target-url "UNKNOWN")}]]))
+                                 :target     (create-target-url "UNKNOWN")}]]))
 
 (defn create-nav-fn
   [tab added-params]
@@ -246,25 +245,27 @@
 
 (defn- DeploymentStatesFilter [state-filter]
   [dv/StatisticStates true ::deployments-subs/deployments-summary-all
-    (mapv (fn [state] (assoc state
-                        :on-click
-                        ((partial create-nav-fn "deployments") {:depl-state (:label state)})
-                        :selected? (or
-                                     (= state-filter (:label state))
-                                     (and
-                                       (nil? state-filter)
-                                       (= "TOTAL" (:label state))))))
-      dv/default-states)])
+   (mapv (fn [state] (assoc state
+                       :on-click
+                       ((partial create-nav-fn "deployments") {:depl-state (:label state)})
+                       :selected? (or
+                                    (= state-filter (:label state))
+                                    (and
+                                      (nil? state-filter)
+                                      (= "TOTAL" (:label state))))))
+         dv/default-states)])
 
 (defn- DeploymentsStatesCard
   [state-filter]
   [dv/TitledCardDeployments
+   ^{:key "deployment-states-card-stats"}
    [DeploymentStatesFilter state-filter]
+   ^{:key "deployment-states-card-button"}
    [uix/Button {:class    "center"
                 :color    "blue"
                 :icon     icons/i-rocket
                 :content  "Show me"
-                :on-click  (create-nav-fn "deployments" nil)}]])
+                :on-click (create-nav-fn "deployments" nil)}]])
 
 
 (defn TabOverview
@@ -295,10 +296,10 @@
              :icon  icons/i-box
              :label (str (@tr [:nuvlaedge]) "s")}
             [StatisticStatesEdgeView @edges-stats]
-            [ui/Button {:class    "center"
-                        :icon #(r/as-element [icons/BoxIcon])
-                        :content  "Show me"
-                        :on-click (create-nav-fn "edges" nil)}]]]
+            [uix/Button {:class    "center"
+                         :icon     icons/i-box
+                         :content  "Show me"
+                         :on-click (create-nav-fn "edges" nil)}]]]
           [ui/GridColumn {:stretched true}
            [DeploymentsStatesCard]]]]))))
 
@@ -689,20 +690,20 @@
 (defn EdgesTabView
   [selected-state]
   (dispatch [::events/get-edge-documents])
-  (let [tr         (subscribe [::i18n-subs/tr])
-        edges      (subscribe [::subs/edges-documents-response])
-        columns    [{:field-key :online :header-content [icons/HeartbeatIcon]}
-                    {:field-key :state}
-                    {:field-key :name}
-                    {:field-key :description}
-                    {:field-key :created}
-                    {:field-key :created-by}
-                    {:field-key :refresh-interval
-                     :header-content (str/lower-case (@tr [:report-interval]))}
-                    {:field-key :last-online :no-sort? true}
-                    {:field-key :version :no-sort? true}
-                    {:field-key :tags :no-sort? true}]
-        edges-stats (subscribe [::subs/edges-summary-stats])
+  (let [tr            (subscribe [::i18n-subs/tr])
+        edges         (subscribe [::subs/edges-documents-response])
+        columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}
+                       {:field-key :state}
+                       {:field-key :name}
+                       {:field-key :description}
+                       {:field-key :created}
+                       {:field-key :created-by}
+                       {:field-key      :refresh-interval
+                        :header-content (str/lower-case (@tr [:report-interval]))}
+                       {:field-key :last-online :no-sort? true}
+                       {:field-key :version :no-sort? true}
+                       {:field-key :tags :no-sort? true}]
+        edges-stats   (subscribe [::subs/edges-summary-stats])
         current-route (subscribe [::route-subs/current-route])]
     [:div {:class :nuvla-edges}
      [edges-views/StatisticStatesEdgeView
@@ -720,15 +721,15 @@
                             #(dispatch
                                [::routing-events/navigate
                                 (routes-utils/gen-href @current-route
-                                  {:partial-query-params
-                                   {events/edges-state-filter-key
-                                    (if (= "TOTAL" label)
-                                      nil
-                                      label)}})])))
+                                                       {:partial-query-params
+                                                        {events/edges-state-filter-key
+                                                         (if (= "TOTAL" label)
+                                                           nil
+                                                           label)}})])))
                         ) edges-views/edges-states))
       true true]
      [edges-views/NuvlaEdgeTableView
-      {:edges (:resources @edges)
+      {:edges   (:resources @edges)
        :columns columns}]
      [pagination-plugin/Pagination
       {:db-path                [::spec/pagination-edges]
@@ -744,7 +745,7 @@
 
 (defn DeploymentsTab
   [uuid]
-  (let [tr @(subscribe [::i18n-subs/tr])
+  (let [tr                @(subscribe [::i18n-subs/tr])
         depl-state-filter (subscribe [::route-subs/query-param events/deployments-state-filter-key])
         count             (subscribe [::deployments-subs/deployments-count])]
     (dispatch [::events/get-deployments-for-deployment-sets uuid])

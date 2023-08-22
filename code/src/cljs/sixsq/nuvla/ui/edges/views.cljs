@@ -804,7 +804,9 @@
                :table-props       {:compact "very" :selectable true}
                :cell-props        {:header {:single-line true}}
                :row-render        (fn [row-data] [NuvlaboxRow row-data])
-               :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+               :row-click-handler (fn [{id :id}]
+                                    (dispatch [::routing-events/navigate
+                                               (utils/edges-details-url (general-utils/id->uuid id))]))
                :row-props         {:role  "link"
                                    :style {:cursor "pointer"}}}
               trigger (assoc :select-config {:bulk-actions [trigger]

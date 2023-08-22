@@ -51,7 +51,6 @@
   ;; To close it
   (p/close)
 
-
   ;; Diffing two maps:
   #_(tap> (with-meta [{:a :b} {:b :c}] {:portal.viewer/default :portal.viewer/diff}))
   )

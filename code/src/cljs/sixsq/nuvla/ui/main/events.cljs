@@ -123,7 +123,6 @@
         (js/clearTimeout existing-timer))
       (assoc db ::spec/actions-interval (dissoc actions-interval id)))))
 
-
 (reg-event-fx
   ::open-link
   (fn [_ [_ uri]]

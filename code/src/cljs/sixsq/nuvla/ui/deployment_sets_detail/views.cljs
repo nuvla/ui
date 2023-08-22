@@ -170,30 +170,31 @@
 (defn- AppsOverviewTable
   []
   (let [apps (subscribe [::subs/applications-sets-apps-targets])]
-    (let [app-row-data (mapv (fn [{:keys [application] :as app-data}]
-                               {:idx         (:i app-data)
-                                :href        (:id application)
-                                :app-name    (:name application)
-                                :version     (str "v" (get-version-id
-                                                        (map-indexed vector (:versions application))
-                                                        (-> application :content :id)))
-                                :status      "yeah, good question"
-                                :last-update (time/time->format (js/Date.))})
+    (fn []
+      (let [app-row-data (mapv (fn [{:keys [application] :as app-data}]
+                                 {:idx         (:i app-data)
+                                  :href        (:id application)
+                                  :app-name    (:name application)
+                                  :version     (str "v" (get-version-id
+                                                          (map-indexed vector (:versions application))
+                                                          (-> application :content :id)))
+                                  :status      "yeah, good question"
+                                  :last-update (time/time->format (js/Date.))})
 
-                             @apps)]
-      [Table {:columns
-              (map (fn [k]
-                     {:field-key k
-                      :cell      (when (= k :app-name)
-                                   (fn [{:keys [cell-data row-data]}]
-                                     [module-plugin/LinkToApp
-                                      {:db-path  [::spec/apps-sets (:idx row-data)]
-                                       :href     (:href row-data)
-                                       :children [:<>
-                                                  cell-data]
-                                       :target   :_self}]))})
-                   (keys (dissoc (first app-row-data) :idx :href)))
-              :rows app-row-data}])))
+                           @apps)]
+        [Table {:columns
+                (map (fn [k]
+                       {:field-key k
+                        :cell      (when (= k :app-name)
+                                     (fn [{:keys [cell-data row-data]}]
+                                       [module-plugin/LinkToApp
+                                        {:db-path  [::spec/apps-sets (:idx row-data)]
+                                         :href     (:href row-data)
+                                         :children [:<>
+                                                    cell-data]
+                                         :target   :_self}]))})
+                  (keys (dissoc (first app-row-data) :idx :href)))
+                :rows app-row-data}]))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
@@ -689,20 +690,20 @@
 
 (defn EdgesTabView
   [selected-state]
-  (dispatch [::events/get-edge-documents])
-  (let [tr            (subscribe [::i18n-subs/tr])
-        edges         (subscribe [::subs/edges-documents-response])
-        columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}
-                       {:field-key :state}
-                       {:field-key :name}
-                       {:field-key :description}
-                       {:field-key :created}
-                       {:field-key :created-by}
-                       {:field-key      :refresh-interval
-                        :header-content (str/lower-case (@tr [:report-interval]))}
-                       {:field-key :last-online :no-sort? true}
-                       {:field-key :version :no-sort? true}
-                       {:field-key :tags :no-sort? true}]
+  (dispatch [::events/get-edges-documents])
+  (let [tr           (subscribe [::i18n-subs/tr])
+        edges        (subscribe [::subs/edges-documents-response])
+        columns      [{:field-key :online :header-content [icons/HeartbeatIcon]}
+                      {:field-key :state}
+                      {:field-key :name}
+                      {:field-key :description}
+                      {:field-key :created}
+                      {:field-key :created-by}
+                      {:field-key      :refresh-interval
+                       :header-content (str/lower-case (@tr [:report-interval]))}
+                      {:field-key :last-online :no-sort? true}
+                      {:field-key :version :no-sort? true}
+                      {:field-key :tags :no-sort? true}]
         edges-stats   (subscribe [::subs/edges-summary-stats])
         current-route (subscribe [::route-subs/current-route])]
     [:div {:class :nuvla-edges}
@@ -733,7 +734,7 @@
        :columns columns}]
      [pagination-plugin/Pagination
       {:db-path                [::spec/pagination-edges]
-       :change-event           [::events/get-edge-documents]
+       :change-event           [::events/get-edges-documents]
        :total-items            (-> @edges :count)
        :i-per-page-multipliers [1 2 4]}]]))
 

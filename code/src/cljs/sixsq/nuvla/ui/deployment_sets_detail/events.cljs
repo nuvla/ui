@@ -66,24 +66,24 @@
 (defn restore-applications
   [db [i]]
   (assoc-in db [::spec/apps-sets i ::spec/targets]
-    (target-selector/build-spec)))
+            (target-selector/build-spec)))
 
 (defn load-module-configurations
   [modules-by-id fx [id {:keys [applications]}]]
   (->> applications
-    (map (fn [{module-id :id :keys [version
-                                    environmental-variables
-                                    registries-credentials]}]
-           (when (get modules-by-id module-id)
-             [:dispatch [::module-plugin/load-module
-                         [::spec/apps-sets id]
-                         (str module-id "_" version)
-                         {:env                    (when (seq environmental-variables)
-                                                    (->> environmental-variables
-                                                      (map (juxt :name :value))
-                                                      (into {})))
-                          :registries-credentials registries-credentials}]])))
-    (concat fx)))
+       (map (fn [{module-id :id :keys [version
+                                       environmental-variables
+                                       registries-credentials]}]
+              (when (get modules-by-id module-id)
+                [:dispatch [::module-plugin/load-module
+                            [::spec/apps-sets id]
+                            (str module-id "_" version)
+                            {:env                    (when (seq environmental-variables)
+                                                       (->> environmental-variables
+                                                         (map (juxt :name :value))
+                                                         (into {})))
+                             :registries-credentials registries-credentials}]])))
+       (concat fx)))
 
 (defn- merge-vector-of-maps
   [scn prm]
@@ -105,21 +105,20 @@
   ::load-apps-sets-response
   (fn [{:keys [db]} [_ {:keys [apps-sets-set total-apps-count apps apps-set-index->modul-id->app]}]]
     (let [modules-by-id     (->> apps (map (juxt :id identity)) (into {}))
-          apps-sets (->> apps-sets-set
-                      :content
-                      :applications-sets
-                      (map-indexed vector))
-          merged-configs (mapv (fn [[idx app-set]]
-                                 [idx (assoc app-set :applications
-                                        (mapv
-                                          (partial merge-app-overwrites (apps-set-index->modul-id->app idx))
-                                          (:applications app-set)))])
-                           apps-sets)
-
+          apps-sets         (->> apps-sets-set
+                                 :content
+                                 :applications-sets
+                                 (map-indexed vector))
+          merged-configs    (mapv (fn [[idx app-set]]
+                                    [idx (assoc app-set :applications
+                                           (mapv
+                                             (partial merge-app-overwrites (apps-set-index->modul-id->app idx))
+                                             (:applications app-set)))])
+                              apps-sets)
           new-db            (reduce restore-applications
-                              db merged-configs)
+                                    db merged-configs)
           fx                (reduce (partial load-module-configurations modules-by-id)
-                              [] merged-configs)
+                                    [] merged-configs)
           all-apps-visible? (= total-apps-count (count apps))]
       (if all-apps-visible?
         {:db new-db
@@ -182,8 +181,8 @@
                           (mapcat :overwrites)
                           (mapcat :targets))]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
-             ::spec/deployment-set deployment-set
-             ::main-spec/loading? false)
+                     ::spec/deployment-set deployment-set
+                     ::main-spec/loading? false)
        :fx [[:dispatch [::resolve-to-ancestor {:ids parent-ids
                                                :storage-event ::set-edges}]]
             [:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]})))
@@ -195,7 +194,7 @@
                         (let [{:keys [status message]} (response/parse %)]
                           (dispatch [::messages-events/add
                                      {:header  (cond-> (str "operation " operation " will be executed soon")
-                                                 status (str " (" status ")"))
+                                                       status (str " (" status ")"))
                                       :content message
                                       :type    :success}]))
                         (on-success-fn %))
@@ -209,7 +208,7 @@
   ::get-deployment-set
   (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id]]
     {:db               (cond-> db
-                         (not= (:id deployment-set) id) (merge spec/defaults))
+                               (not= (:id deployment-set) id) (merge spec/defaults))
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
@@ -240,7 +239,7 @@
          (let [{:keys [status message]} (response/parse-ex-info %)]
            (dispatch [::messages-events/add
                       {:header  (cond-> (str "error editing " resource-id)
-                                  status (str " (" status ")"))
+                                        status (str " (" status ")"))
                        :content message
                        :type    :error}]))
          (do
@@ -265,8 +264,8 @@
                       db db-path id)]
     (cond-> {:id      id
              :version version}
-      (seq env-changed) (assoc :environmental-variables env-changed)
-      (seq regs-creds) (assoc :registries-credentials regs-creds))))
+            (seq env-changed) (assoc :environmental-variables env-changed)
+            (seq regs-creds) (assoc :registries-credentials regs-creds))))
 
 
 (defn applications-sets->overwrites
@@ -288,7 +287,7 @@
                   :applications-sets [{:id         (:id module-applications-sets)
                                        :version    (apps-utils/module-version module-applications-sets)
                                        :overwrites (map-indexed (partial applications-sets->overwrites db)
-                                                     (-> module-applications-sets :content :applications-sets))}]
+                                                                (-> module-applications-sets :content :applications-sets))}]
                   :start             start?}
                  (not (str/blank? create-description)) (assoc :description create-description))]
       {::cimi-api-fx/add
@@ -311,9 +310,9 @@
   (fn [{db :db} [_ i db-path]]
     (let [selected (target-selector/db-selected db db-path)]
       {:db (->> selected
-             (map (juxt :id identity))
-             (into {})
-             (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))
+                (map (juxt :id identity))
+                (into {})
+                (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))
 
 (reg-event-fx
   ::resolve-to-ancestor
@@ -349,13 +348,13 @@
   ::set-edges
   (fn [{db :db} [_ response]]
     {:db (assoc db ::spec/edges
-           (update response :resources #(mapv :id %)))
-     :fx [[:dispatch [::get-edge-documents]]]}))
+                   (update response :resources #(mapv :id %)))
+     :fx [[:dispatch [::get-edges-documents]]]}))
 
 (def edges-state-filter-key :edges-state)
 
 (reg-event-fx
-  ::get-edge-documents
+  ::get-edges-documents
   (fn [{{:keys [::spec/edges
                 ::spec/ordering
                 current-route] :as db} :db} _]

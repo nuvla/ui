@@ -7,13 +7,8 @@
 
 (s/def ::deployment-set (s/nilable any?))
 
-(s/def ::name string?)
-(s/def ::description string?)
-(s/def ::version string?)
-(s/def ::apps (s/coll-of map? :kind vector?))
 (s/def ::edges (s/coll-of map? :kind vector?))
 (s/def ::edges-documents (s/coll-of map? :kind vector?))
-(s/def ::deployments (s/coll-of map? :kind vector?))
 
 (def default-ordering [[:created :desc]])
 (def pagination-default (pagination-plugin/build-spec

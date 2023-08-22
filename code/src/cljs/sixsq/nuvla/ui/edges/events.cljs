@@ -154,15 +154,14 @@
 
 (reg-event-fx
   ::get-nuvlaedges-status
-  (fn [_ [_ {nuvlaboxes    :resources
-             storage-event :storage-event}]]
+  (fn [_ [_ {nuvlaboxes    :resources}]]
     (when (seq nuvlaboxes)
       {::cimi-api-fx/search
        [:nuvlabox-status
         {:select "parent,next-heartbeat,id,nuvlabox-engine-version,online"
          :filter (apply general-utils/join-or
                         (map #(str "parent='" (:id %) "'") nuvlaboxes))}
-        #(dispatch [(or storage-event ::set-nuvlaedges-status) %])]})))
+        #(dispatch [::set-nuvlaedges-status %])]})))
 
 
 (reg-event-fx

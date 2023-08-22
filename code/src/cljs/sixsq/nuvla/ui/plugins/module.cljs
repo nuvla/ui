@@ -382,16 +382,14 @@
   (dispatch [::helpers/set db-path change-event-env-variables change-event])
   (let [tr            @(subscribe [::i18n-subs/tr])
         module        @(subscribe [::module db-path href])
-        env-variables (module-env-vars module)
-;; TODO: MERGE ENVS
-        merged-env    env-variables]
-    (if (seq merged-env)
+        env-variables (module-env-vars module)]
+    (if (seq env-variables)
       [ui/Form
        (map-indexed
          (fn [i env-variable]
            ^{:key (str (:name env-variable) "_" i)}
            [AsFormInput db-path href read-only? i env-variable])
-         merged-env)]
+         env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 
 (defn DropdownContainerRegistry
@@ -446,7 +444,7 @@
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         version-id       (get-version-id @versions-indexed (:id content))]
     [:a {:href   (str-pathify (name->href routes/apps)
-                   (str path "?version=" version-id))
+                              (str path "?version=" version-id))
          :target (or target "_blank")}
      children]))
 

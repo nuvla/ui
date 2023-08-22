@@ -74,7 +74,6 @@
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [tr            @(subscribe [::i18n-subs/tr])
         dipp          @(subscribe [::helpers/retrieve db-path ::default-items-per-page])
-        _ (tap> i-per-page-multipliers)
         per-page-opts (map (fn [i]
                              (let [n-per-page (* dipp i)]
                                {:key     n-per-page
@@ -82,7 +81,6 @@
                                 :content n-per-page
                                 :text    (str n-per-page " " (tr [:per-page]))}))
                            (or i-per-page-multipliers (range 1 4)))
-        _ (tap> per-page-opts)
         change-page   #(dispatch [::change-page db-path %])
         active-page   @(subscribe [::helpers/retrieve db-path ::active-page])
         per-page      @(subscribe [::helpers/retrieve db-path ::items-per-page])

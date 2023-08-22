@@ -7,6 +7,7 @@
 
 (def local-storage-key "nuvla.ui.locale")
 
+
 (reg-event-fx
   ::set-locale
   [(inject-cofx :storage/get {:name local-storage-key})]

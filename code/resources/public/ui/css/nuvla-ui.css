@@ -852,7 +852,7 @@ body .divider-red {
 .nuvla-deployments .statistics .green .icons {
   color: #21ba45;
 }
-.nuvla-edges .statistics .icons .icon.large,
+.nuvla-edges .statistics .icon.large,
 .nuvla-deployment-sets .statistics .icons .icon.large,
 .nuvla-deployments .statistics .icons .icon.large {
   border: 2px solid rgba(148, 130, 255, 0.5) !important;
@@ -862,10 +862,12 @@ body .divider-red {
   margin-top: -0.5rem;
   margin-bottom: 0.1rem !important;
 }
+
 .nuvla-edges .statistics .red .icons,
 .nuvla-deployments .statistics .red .icons {
   color: #ff0000;
 }
+
 .nuvla-edges .statistics .orange .icons,
 .nuvla-deployments .statistics .orange .icons {
   color: #f2711c;
@@ -879,6 +881,12 @@ body .divider-red {
 .nuvla-deployments .statistics i.icons .icon:first-child,
 .nuvla-edges .statistics i.icons .icon:first-child {
   margin-right: 0;
+}
+
+.ui-card-header {
+  background-color: var(--accent-color) !important;
+  border-radius: 0.28571429rem 0.28571429rem 0 0;
+  color: #ffffff;
 }
 
 .nuvla-edges .ui-header,

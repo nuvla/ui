@@ -2,27 +2,30 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.acl.views :as acl]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
+            [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
+            [sixsq.nuvla.ui.deployment-dialog.views-module-version :refer [get-version-id]]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-            [sixsq.nuvla.ui.deployments.views :as deployments-views]
+            [sixsq.nuvla.ui.deployments.views :as dv]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
+            [sixsq.nuvla.ui.edges.views :as edges-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.job.views :as job-views]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-            [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
+            [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
-            [sixsq.nuvla.ui.routing.events :as routes-events]
-            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :as routes-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -32,18 +35,9 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.view-components :as vc]))
 
-
-(def refresh-action-id :deployment-set-get-deployment-set)
-
-
-(defn refresh
-  [uuid]
-  (dispatch [::main-events/action-interval-start
-             {:id        refresh-action-id
-              :frequency 10000
-              :event     [::events/get-deployment-set (str "deployment-set/" uuid)]}]))
 
 (defn StartButton
   [{:keys [id] :as deployment-set}]
@@ -106,9 +100,10 @@
                 ^{:key "start"}
                 [StartButton @deployment-set])
           [components/RefreshMenu
-           {:action-id  refresh-action-id
+           {:action-id  events/refresh-action-id
             :loading?   @loading?
-            :on-refresh #(refresh uuid)}]]]))))
+            :on-refresh #(events/refresh uuid)}]]]))))
+
 
 
 (defn EditableCell
@@ -172,50 +167,145 @@
       deployment-set #(dispatch [::events/edit id {:tags %}
                                  (@tr [:updated-successfully])])]]))
 
-(defn TabOverview
+(defn- AppsOverviewTable
   []
-  (let [deployment-set (subscribe [::subs/deployment-set])]
+  (let [apps (subscribe [::subs/applications-sets-apps-targets])]
     (fn []
-      (let [{:keys [id tags]} @deployment-set]
-        [ui/TabPane
-         [ui/Grid {:columns   2
-                   :stackable true
-                   :padded    true}
-          [ui/GridRow
-           [ui/GridColumn {:stretched true}
-            [TabOverviewDeploymentSet @deployment-set]]
-           [ui/GridColumn {:stretched true}
-            [deployments-views/DeploymentsOverviewSegment
-             ::deployments-subs/deployments nil nil
-             #(dispatch [::routes-events/navigate
-                         (routes-utils/pathify [(routes-utils/name->href routes/deployments)
-                                                (str "?deployment=deployment-set='" id "'")])])]]]
+      (let [app-row-data (mapv (fn [{:keys [application] :as app-data}]
+                                 {:idx         (:i app-data)
+                                  :href        (:id application)
+                                  :app-name    (:name application)
+                                  :version     (str "v" (get-version-id
+                                                          (map-indexed vector (:versions application))
+                                                          (-> application :content :id)))
+                                  :status      "yeah, good question"
+                                  :last-update (time/time->format (js/Date.))})
 
-          (when (seq tags)
-            [ui/GridColumn
-             [TabOverviewTags @deployment-set]])]]))))
+                               @apps)]
+        [Table {:columns
+                (map (fn [k]
+                       {:field-key k
+                        :cell      (when (= k :app-name)
+                                     (fn [{:keys [cell-data row-data]}]
+                                       [module-plugin/LinkToApp
+                                        {:db-path  [::spec/apps-sets (:idx row-data)]
+                                         :href     (:href row-data)
+                                         :children [:<>
+                                                    cell-data]
+                                         :target   :_self}]))})
+                     (keys (dissoc (first app-row-data) :idx :href)))
+                :rows app-row-data}]))))
 
-(defn TabsDeploymentSet
-  []
-  (let [tr             @(subscribe [::i18n-subs/tr])
-        deployment-set (subscribe [::subs/deployment-set])
-        can-edit?      @(subscribe [::subs/can-edit?])]
-    (when @deployment-set
-      [tab/Tab
-       {:db-path [::spec/tab]
-        :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
-                              :key     :overview
-                              :icon    "info"}
-                   :render   #(r/as-element [TabOverview])}
-                  (events-plugin/events-section
-                    {:db-path [::spec/events]
-                     :href    (:id @deployment-set)})
-                  (job-views/jobs-section)
-                  (acl/TabAcls {:e          deployment-set
-                                :can-edit?  can-edit?
-                                :edit-event ::events/edit})]
-        :menu    {:secondary true
-                  :pointing  true}}])))
+
+(defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
+  (let [current-route     @(subscribe [::route-subs/current-route])
+        to-edges-tab      {:deployment-sets-detail-tab :edges}
+        create-target-url (fn [status-filter]
+                            {:resource (routes-utils/gen-href current-route
+                                                              {:query-params
+                                                               (cond->
+                                                                 to-edges-tab
+                                                                 status-filter
+                                                                 (assoc events/edges-state-filter-key status-filter))})})]
+    [ui/StatisticGroup {:size  "tiny"
+                        :style {:padding "0.2rem"}}
+     [dashboard-views/Statistic {:value  total
+                                 :icon   icons/i-box
+                                 :label  "TOTAL"
+                                 :color  "black"
+                                 :target (create-target-url nil)}]
+     [dashboard-views/Statistic {:value          online
+                                 :icon           icons/i-power
+                                 :label          edges-utils/status-online
+                                 :positive-color "green"
+                                 :color          "green"
+                                 :icon-color     "green"
+                                 :target         (create-target-url "ONLINE")}]
+     [dashboard-views/Statistic {:value      offline
+                                 :icon       icons/i-power
+                                 :label      edges-utils/status-offline
+                                 :color      "red"
+                                 :icon-color "red"
+                                 :target     (create-target-url "OFFLINE")}]
+     [dashboard-views/Statistic {:value      unknown
+                                 :icon       icons/i-power
+                                 :label      edges-utils/status-unknown
+                                 :color      "orange"
+                                 :icon-color "orange"
+                                 :target     (create-target-url "UNKNOWN")}]]))
+
+(defn create-nav-fn
+  [tab added-params]
+  #(dispatch [::routing-events/change-query-param
+              {:push-state? true
+               :query-params
+               (merge
+                 {(routes-utils/db-path->query-param-key [::spec/tab])
+                  tab}
+                 added-params)}]))
+
+(defn- DeploymentStatesFilter [state-filter]
+  [dv/StatisticStates true ::deployments-subs/deployments-summary-all
+   (mapv (fn [state] (assoc state
+                       :on-click
+                       ((partial create-nav-fn "deployments") {:depl-state (:label state)})
+                       :selected? (or
+                                    (= state-filter (:label state))
+                                    (and
+                                      (nil? state-filter)
+                                      (= "TOTAL" (:label state))))))
+         dv/default-states)])
+
+(defn- DeploymentsStatesCard
+  [state-filter]
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [dv/TitledCardDeployments
+     ^{:key "deployment-states-card-stats"}
+     [DeploymentStatesFilter state-filter]
+     ^{:key "deployment-states-card-button"}
+     [uix/Button {:class    "center"
+                  :color    "blue"
+                  :icon     icons/i-rocket
+                  :content  (tr [:show-me])
+                  :on-click (create-nav-fn "deployments" nil)}]]))
+
+
+(defn TabOverview
+  [uuid]
+  (dispatch [::events/get-deployments-for-deployment-sets uuid])
+  (let [deployment-set (subscribe [::subs/deployment-set])
+        edges-stats    (subscribe [::subs/edges-summary-stats])
+        tr             (subscribe [::i18n-subs/tr])]
+    (fn []
+      [ui/TabPane
+       [ui/Grid {:columns   2
+                 :stackable true
+                 :padded    true}
+        [ui/GridColumn {:stretched true}
+         [TabOverviewDeploymentSet @deployment-set]]
+        [ui/GridColumn {:stretched true}
+         [vc/TitledCard
+          {:class :nuvla-apps
+           :icon  icons/i-layer-group
+           :label (str/capitalize (@tr [:apps]))}
+          [:div {:style {:flex-grow 1}}
+           [AppsOverviewTable]]]]
+
+        [ui/GridColumn {:stretched true}
+         [vc/TitledCard
+          {:class :nuvla-edges
+           :icon  icons/i-box
+           :label (str (@tr [:nuvlaedge]) "s")}
+          [StatisticStatesEdgeView @edges-stats]
+          [uix/Button {:class    "center"
+                       :icon     icons/i-box
+                       :content  (@tr [:show-me])
+                       :on-click (create-nav-fn "edges" nil)}]]]
+        [ui/GridColumn {:stretched true}
+         [DeploymentsStatesCard]]]])))
+
+
+
 
 (defn on-change-input
   [k]
@@ -373,6 +463,15 @@
                       :apps-set     apps-set
                       :summary-page summary-page}])]]]))
 
+(defn ModuleVersionsApp
+  [i module-id]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/Accordion
+     [module-plugin/ModuleVersions
+      {:db-path [::spec/apps-sets i]
+       :href    module-id}]
+     :label (@tr [:select-version])]))
+
 (defn EnvVariablesApp
   [i module-id]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -405,6 +504,16 @@
                              :key     (keyword (str "configure-set-" i "-app-" id))}
                   :render   #(r/as-element
                                [ui/TabPane
+                                [ui/Popup {:trigger (r/as-element
+                                                      [:span
+                                                       [module-plugin/LinkToApp
+                                                        {:db-path  [::spec/apps-sets i]
+                                                         :href     id
+                                                         :children [:<>
+                                                                    [ui/Icon {:class icons/i-link}]
+                                                                    "Go to app"]}]])
+                                           :content "Open application in a new window"}]
+                                [ModuleVersionsApp i id]
                                 [EnvVariablesApp i id]
                                 [RegistriesCredsApp i id]])})
                ) applications)}])
@@ -579,27 +688,138 @@
                             :completed (when subs @(subscribe [subs]))))
                         items)}]])))
 
+(defn EdgesTabView
+  [selected-state]
+  (dispatch [::events/get-edges-documents])
+  (let [tr            (subscribe [::i18n-subs/tr])
+        edges         (subscribe [::subs/edges-documents-response])
+        columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}
+                       {:field-key :state}
+                       {:field-key :name}
+                       {:field-key :description}
+                       {:field-key :created}
+                       {:field-key :created-by}
+                       {:field-key      :refresh-interval
+                        :header-content (str/lower-case (@tr [:report-interval]))}
+                       {:field-key :last-online :no-sort? true}
+                       {:field-key :version :no-sort? true}
+                       {:field-key :tags :no-sort? true}]
+        edges-stats   (subscribe [::subs/edges-summary-stats])
+        current-route (subscribe [::route-subs/current-route])]
+    [:div {:class :nuvla-edges}
+     [edges-views/StatisticStatesEdgeView
+      (assoc @edges-stats
+        :states (mapv (fn [state]
+                        (let [label (:label state)]
+                          (assoc state
+                            :selected?
+                            (or
+                              (= label selected-state)
+                              (and
+                                (= label "TOTAL")
+                                (empty? selected-state)))
+                            :on-click
+                            #(dispatch
+                               [::routing-events/navigate
+                                (routes-utils/gen-href @current-route
+                                                       {:partial-query-params
+                                                        {events/edges-state-filter-key
+                                                         (if (= "TOTAL" label)
+                                                           nil
+                                                           label)}})])))
+                        ) edges-views/edges-states))
+      true true]
+     [edges-views/NuvlaEdgeTableView
+      {:edges   (:resources @edges)
+       :columns columns}]
+     [pagination-plugin/Pagination
+      {:db-path                [::spec/pagination-edges]
+       :change-event           [::events/get-edges-documents]
+       :total-items            (-> @edges :count)
+       :i-per-page-multipliers [1 2 4]}]]))
+
+(defn EdgesTab
+  []
+  (let [state (subscribe [::route-subs/query-param events/edges-state-filter-key])]
+    (fn []
+      [EdgesTabView @state])))
+
+(defn DeploymentsTab
+  [uuid]
+  (let [tr                @(subscribe [::i18n-subs/tr])
+        depl-state-filter (subscribe [::route-subs/query-param events/deployments-state-filter-key])
+        count             (subscribe [::deployments-subs/deployments-count])]
+    (dispatch [::events/get-deployments-for-deployment-sets uuid])
+    [:div {:class :nuvla-deployments}
+     [DeploymentStatesFilter @depl-state-filter]
+     [dv/DeploymentTable
+      {:no-actions         true
+       :empty-msg          (tr [:empty-deployment-module-msg])
+       :pagination-db-path ::spec/pagination-deployments
+       :pagination         (fn []
+                             [pagination-plugin/Pagination
+                              {:db-path                [::spec/pagination-deployments]
+                               :total-items            @count
+                               :change-event           [::events/get-deployments-for-deployment-sets uuid]
+                               :i-per-page-multipliers [1 2 4]}])
+       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]]))
+
+(defn TabsDeploymentSet
+  [uuid]
+  (let [tr             @(subscribe [::i18n-subs/tr])
+        deployment-set @(subscribe [::subs/deployment-set])
+        apps           @(subscribe [::subs/applications-sets])]
+    (when deployment-set
+      [tab/Tab
+       {:reset-query-params? true
+        :db-path             [::spec/tab]
+        :panes               [{:menuItem {:content (str/capitalize (tr [:overview]))
+                                          :key     :overview
+                                          :icon    "info"}
+                               :render   #(r/as-element [TabOverview uuid])}
+                              {:menuItem {:key     :apps
+                                          :content (str/capitalize (tr [:apps]))
+                                          :icon    icons/i-layer-group}
+                               :render   #(r/as-element
+                                            [ConfigureApps
+                                             0
+                                             (mapcat :applications apps)])}
+                              {:menuItem {:key     :edges
+                                          :content (str/capitalize (tr [:edges]))
+                                          :icon    icons/i-box}
+                               :render   #(r/as-element
+                                            [EdgesTab])}
+                              {:menuItem {:key     :deployments
+                                          :content (str/capitalize (tr [:deployments]))
+                                          :icon    icons/i-rocket}
+                               :render   #(r/as-element
+                                            [DeploymentsTab uuid])}]
+        :menu                {:secondary true
+                              :pointing  true}}])))
+
 (defn DeploymentSet
   [uuid]
-  (refresh uuid)
-  (let [{:keys [id name]} @(subscribe [::subs/deployment-set])]
-    [components/LoadingPage {:dimmable? true}
-     [:<>
-      [components/NotFoundPortal
-       ::subs/deployment-set-not-found?
-       :no-deployment-set-message-header
-       :no-deployment-set-message-content]
-      [ui/Container {:fluid true}
-       [uix/PageHeader "bullseye" (or name id)]
-       [MenuBar uuid]
-       [job-views/ProgressJobAction]
-       [bulk-progress-plugin/MonitoredJobs
-        {:db-path [::spec/bulk-jobs]}]
-       [components/ErrorJobsMessage
-        ::job-subs/jobs nil nil
-        #(dispatch [::tab/change-tab {:db-path [::spec/tab]
-                                      :tab-key :jobs}])]
-       [TabsDeploymentSet]]]]))
+  (dispatch [::events/init uuid])
+  (let [depl-set (subscribe [::subs/deployment-set])]
+    (fn []
+      (let [{:keys [id name]} @depl-set]
+        [components/LoadingPage {:dimmable? true}
+         [:<>
+          [components/NotFoundPortal
+           ::subs/deployment-set-not-found?
+           :no-deployment-set-message-header
+           :no-deployment-set-message-content]
+          [ui/Container {:fluid true}
+           [uix/PageHeader "bullseye" (or name id)]
+           [MenuBar uuid]
+           [job-views/ProgressJobAction]
+           [bulk-progress-plugin/MonitoredJobs
+            {:db-path [::spec/bulk-jobs]}]
+           [components/ErrorJobsMessage
+            ::job-subs/jobs nil nil
+            #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                          :tab-key :jobs}])]
+           [TabsDeploymentSet uuid]]]]))))
 
 
 (defn Details

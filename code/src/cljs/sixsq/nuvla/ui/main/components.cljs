@@ -127,21 +127,26 @@
 
 
 (defn StatisticState
-  ([{:keys [value icons label clickable? positive-color set-state-selector-event state-selector-subs stacked?]
+  ([{:keys [value icons label clickable? positive-color set-state-selector-event
+            state-selector-subs stacked? on-click selected?]
      :or   {positive-color "black"}}]
    (let [state-selector (subscribe [state-selector-subs])
-         selected?      (or
-                          (= label @state-selector)
-                          (and (= label "TOTAL")
-                               (nil? @state-selector)))
+         is-selected?   (if (some? selected?)
+                          selected?
+                          (or
+                            (= label @state-selector)
+                            (and (= label "TOTAL")
+                              (nil? @state-selector))))
          color          (if (pos? value) positive-color "grey")
          icon-key       (str label "-" icons)]
      [ui/Statistic {:style    (when clickable? {:cursor "pointer"})
                     :color    color
                     :class    (when clickable? "slight-up")
                     :on-click #(when clickable?
-                                 (dispatch [set-state-selector-event
-                                            (if (= label "TOTAL") nil label)]))}
+                                 (if (fn? on-click)
+                                   (on-click)
+                                   (dispatch [set-state-selector-event
+                                              (if (= label "TOTAL") nil label)])))}
       (if stacked?
         [:<> [ui/IconGroup
               {:style {:margin-right "auto"
@@ -149,7 +154,7 @@
                :role  :button}
               (for [i icons]
                 [icons/Icon {:key     icon-key
-                             :size    (when (and clickable? selected?) "large")
+                             :size    (when (and clickable? is-selected?) "large")
                              :loading (and (pos? value) (= icons/i-spinner i))
                              :style   {:margin-right 0}
                              :name    i}])]
@@ -163,19 +168,10 @@
           [ui/IconGroup
            (for [i icons]
              [icons/Icon {:key     icon-key
-                          :size    (when (and clickable? selected?) "large")
+                          :size    (when (and clickable? is-selected?) "large")
                           :loading (and (pos? value) (= icons/i-spinner i))
                           :name    i}])]]
          [ui/StatisticLabel label]])])))
-
-
-(defn ClickMeStaticPopup
-  []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        is-small-device? (subscribe [::subs/is-small-device?])]
-    (when-not @is-small-device?
-      [ui/Segment {:raised true :compact true}
-       [:span [ui/Icon {:name icons/i-arrow-left}] (@tr [:statistics-select-info])]])))
 
 
 (defn InfoPopup

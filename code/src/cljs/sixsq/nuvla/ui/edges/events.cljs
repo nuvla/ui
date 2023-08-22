@@ -31,7 +31,8 @@
   ::init
   [(inject-cofx :storage/all)]
   (fn [{{:keys [current-route] :as db} :db
-        storage                        :storage/all}]
+        storage                        :storage/all}
+       [_ external-restriction-filter]]
     (let [db-path            ::spec/state-selector
           search-query       (get-stored-db-value-from-query-param current-route [db-path])
           filter-storage-key (get-query-param current-route :filter-storage-key)
@@ -41,7 +42,8 @@
                (merge spec/defaults)
                (assoc ::main-spec/loading? true)
                (assoc db-path search-query)
-               (assoc ::spec/additional-filter (or storage-filter filter-query)))
+               (assoc ::spec/additional-filter (or storage-filter filter-query))
+               (assoc ::spec/external-restriction-filter external-restriction-filter))
        :fx [[:dispatch [::init-view]]
             [:dispatch [::refresh-root]]
             [:dispatch [::get-nuvlabox-releases]]]})))
@@ -152,7 +154,7 @@
 
 (reg-event-fx
   ::get-nuvlaedges-status
-  (fn [_ [_ {nuvlaboxes :resources}]]
+  (fn [_ [_ {nuvlaboxes    :resources}]]
     (when (seq nuvlaboxes)
       {::cimi-api-fx/search
        [:nuvlabox-status

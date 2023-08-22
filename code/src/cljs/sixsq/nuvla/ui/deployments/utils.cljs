@@ -9,7 +9,6 @@
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -97,7 +96,7 @@
 (defn state-filter
   [state]
   (case state
-    ("all" nil) nil
+    ("all" nil "TOTAL") nil
     STARTING "state='RUNNING' or state='PENDING' or state='CREATED'"
     (str "state='" state "'")))
 
@@ -126,9 +125,9 @@
 
 
 (defn get-query-params-summary
-  [full-text-search additional-filter]
+  [{:keys [full-text-search additional-filter external-filter]}]
   (let [filter-str (general-utils/join-and
-                     full-text-search additional-filter)
+                     full-text-search additional-filter external-filter)
         aggregate  "terms:state"]
     (cond-> {:orderby     "created:desc"
              :aggregation aggregate

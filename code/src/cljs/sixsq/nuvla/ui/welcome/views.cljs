@@ -151,7 +151,7 @@
               (@tr [:welcome-how-to-nb-5-subheader-pre])
               ". "
               ^{:key (@tr [:show-me])}
-              [:a {:href "#deploy-app"} (str/capitalize (@tr [:show-me]))]
+              [:a {:href "#deploy-app"} (@tr [:show-me])]
               ".")]]]
 
      [ui/Divider]

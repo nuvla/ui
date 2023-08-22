@@ -16,7 +16,6 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]))
 
 
@@ -50,40 +49,37 @@
      [ui/StatisticValue (or value "-")]
      [ui/StatisticLabel label]]))
 
+(defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
+  [ui/StatisticGroup {:size  "tiny"
+                      :style {:padding "0.2rem"}}
+   [Statistic {:value total
+               :icon  icons/i-box
+               :label "TOTAL"
+               :color "black"}]
+   [Statistic {:value          online
+               :icon           icons/i-power
+               :label          edges-utils/status-online
+               :positive-color "green"
+               :color          "green"}]
+   [Statistic {:value offline
+               :icon  icons/i-power
+               :label edges-utils/status-offline
+               :color "red"}]
+   [Statistic {:value unknown
+               :icon  icons/i-power
+               :label edges-utils/status-unknown
+               :color "orange"}]])
+
 
 (defn StatisticStatesEdge
   []
-  (let [summary         (subscribe [::edges-subs/nuvlaboxes-summary-all])
-        total           (:count @summary)
-        online-statuses (general-utils/aggregate-to-map
-                          (get-in @summary [:aggregations :terms:online :buckets]))
-        online          (:1 online-statuses)
-        offline         (:0 online-statuses)
-        unknown         (- total (+ online offline))]
-
-    [ui/StatisticGroup {:size  "tiny"
-                        :style {:padding "0.2rem"}}
-     [Statistic {:value total
-                 :icon  icons/i-box
-                 :label "TOTAL"
-                 :color "black"}]
-     [Statistic {:value          online
-                 :icon           icons/i-power
-                 :label          edges-utils/status-online
-                 :positive-color "green"
-                 :color          "green"}]
-     [Statistic {:value offline
-                 :icon  icons/i-power
-                 :label edges-utils/status-offline
-                 :color "red"}]
-     [Statistic {:value unknown
-                 :icon  icons/i-power
-                 :label edges-utils/status-unknown
-                 :color "orange"}]]))
+  (let [summary-stats (subscribe [::edges-subs/nuvlaboxes-summary-all-stats])]
+    [StatisticStatesEdgeView @summary-stats]))
 
 (defn TabOverviewNuvlaBox
   []
-  (let [{:keys [resource tab-index tab-index-event]} utils/target-nbs]
+  (let [tr @(subscribe [::i18n-subs/tr])
+        {:keys [resource tab-index tab-index-event]} utils/target-nbs]
     [ui/Segment {:secondary true
                  :raised    true
                  :class     "nuvla-edges"
@@ -100,7 +96,7 @@
      [StatisticStatesEdge]
 
      [ui/Button {:class    "center"
-                 :content  "Show me"
+                 :content  (tr [:show-me])
                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
                                 (dispatch [::routing-events/navigate resource]))}]]))
@@ -132,7 +128,7 @@
 ; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
 (defn TabOverviewDeployments
   []
-  (let [tr   (subscribe [::i18n-subs/tr])
+  (let [tr @(subscribe [::i18n-subs/tr])
         {:keys [resource tab-key tab-event]} utils/target-deployments]
     [ui/Segment {:secondary true
                  :raised    true
@@ -144,12 +140,12 @@
                              :overflow        :hidden}}
 
      [:h4 {:class "ui-header"} [icons/RocketIcon]
-      (str/upper-case (@tr [:deployments]))]
+      (str/upper-case (tr [:deployments]))]
 
      [StatisticStates ::deployments-subs/deployments-summary-all]
 
      [ui/Button {:class    "center"
-                 :content  "Show me"
+                 :content  (tr [:show-me])
                  :on-click #(do (when (and tab-event tab-key)
                                   (dispatch [tab-event tab-key]))
                                 (dispatch [::routing-events/navigate resource]))}]]))

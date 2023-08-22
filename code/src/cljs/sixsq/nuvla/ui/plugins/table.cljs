@@ -21,16 +21,17 @@
 (s/def ::field keyword?)
 (s/def ::order #{"asc" "desc"})
 
-(s/def ::sort-direction (s/nilable (s/keys :req-un [::field ::order])))
+(s/def ::sort-direction
+ (s/nilable (s/keys :req-un [::field ::order])))
 
 (defn build-ordering
-  ([] (build-ordering {:created "desc"}))
+  ([] (build-ordering [[:created "desc"]]))
   ([ordering]
    ordering))
 
 (defn ordering->order-string [ordering]
   (str/join "," (for [[field order] ordering]
-                  (str (name field) ":" order))))
+                  (str (name field) ":" (name order)))))
 
 (s/def ::field-key keyword?)
 (s/def ::accessor (s/nilable (s/or :function fn? :keyword keyword?)))
@@ -456,7 +457,8 @@
         selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))
         select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
         page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed]))
-        get-row-props  (fn [row] (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
+        get-row-props  (fn [row]
+                         (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
 
     [:div
      (when selectable?
@@ -504,7 +506,7 @@
        [ui/TableBody (:body-props props)
         (doall
          (for [[idx row] (map-indexed vector rows)
-               :let [id (:id row)]]
+               :let [id (or (:id row) (random-uuid))]]
            (cond
              row-render
              ^{:key id}

@@ -376,7 +376,7 @@
    [EnvVarInput db-path href read-only? i env-variable]])
 
 (defn EnvVariables
-  [{:keys [db-path href change-event read-only? env]
+  [{:keys [db-path href change-event read-only?]
     :or   {read-only? false}
     :as   _opts}]
   (dispatch [::helpers/set db-path change-event-env-variables change-event])

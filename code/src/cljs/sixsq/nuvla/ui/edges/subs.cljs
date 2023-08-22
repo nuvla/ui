@@ -139,8 +139,15 @@
       vpn-infra)))
 
 (reg-sub
-  ::nuvlabox-releases
+  ::nuvlabox-releases-response
   :-> ::spec/nuvlabox-releases)
+
+(reg-sub
+  ::nuvlabox-releases
+  :<- [::nuvlabox-releases-response]
+  (fn [nuvlabox-releases]
+    (utils/sort-by-version nuvlabox-releases)))
+
 
 (reg-sub
   ::nuvlabox-releases-by-id

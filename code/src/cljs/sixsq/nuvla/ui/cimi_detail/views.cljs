@@ -10,7 +10,6 @@
             [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as forms]
@@ -263,12 +262,12 @@
 
 
 (defn cimi-detail
-  []
-  (let [path               (subscribe [::route-subs/nav-path])
-        loading?           (subscribe [::subs/loading?])
-        resource           (subscribe [::subs/resource])]
-    (fn []
-      (let [resource-id       (path->resource-id @path)
+  [path]
+  (dispatch [::events/get (path->resource-id path)])
+  (let [loading? (subscribe [::subs/loading?])
+        resource (subscribe [::subs/resource])]
+    (fn [path]
+      (let [resource-id       (path->resource-id path)
             {:keys [id updated acl] :as resource-value} @resource
             correct-resource? (= resource-id id)]
         (if (= resource-id id)
@@ -287,4 +286,4 @@
              {:on-refresh #(dispatch [::events/get resource-id])
               :loading?   @loading?}]
             (when (and (not @loading?) correct-resource?) @resource)]]
-          (dispatch [::events/get (path->resource-id @path)]))))))
+          (dispatch [::events/get (path->resource-id path)]))))))

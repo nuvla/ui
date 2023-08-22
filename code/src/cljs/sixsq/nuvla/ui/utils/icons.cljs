@@ -445,6 +445,11 @@
   [opts]
   [I opts i-credit-card])
 
+(def i-shopping-cart "fal fa-shopping-cart")
+(defn ShoppingCartIcon
+  [opts]
+  [I opts i-shopping-cart])
+
 (def i-file-invoice "fad fa-file-invoice")
 (defn FileInvoiceIcon
   [opts]

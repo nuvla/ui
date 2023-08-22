@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.core
   (:require [cljs.spec.test.alpha :as ts]
             [form-validator.core :as fv]
+            [goog.dom :as gdom]
             [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
             [reagent.core :as r]
-            [goog.dom :as gdom]
             [reagent.dom :as rdom]
             [sixsq.nuvla.ui.about.events :as about-events]
             [sixsq.nuvla.ui.cimi.events :as api-events]

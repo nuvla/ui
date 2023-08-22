@@ -341,7 +341,7 @@
          [:p {:style {:padding-top 8}
               :class "nuvla-command"} [:b "$ " command " "]
           [ui/Popup {:trigger  (r/as-element [ui/CopyToClipboard {:text command}
-                                              [uix/LinkIcon {:name "clipboard outline"}]])
+                                              [:span [uix/LinkIcon {:name "clipboard outline"}]]])
                      :position "top center"}
            "copy to clipboard"]]
          [:p "Note: ensure you have a recent installation of docker."]]))))

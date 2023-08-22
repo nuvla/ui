@@ -107,8 +107,7 @@
                             (if (and (= state "FAILED") (not (@errors-dissmissed id)))
                               (conj coll last-job)
                               coll)))
-            failed-jobs (->> (subscribe [job-subs])
-                             deref
+            failed-jobs (->> @(subscribe [job-subs])
                              :resources
                              (group-by :action)
                              (reduce-kv fn-filter [])

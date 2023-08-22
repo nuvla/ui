@@ -6,6 +6,7 @@
 (s/def ::user any?)
 (s/def ::customer any?)
 (s/def ::subscription any?)
+(s/def ::app-subscriptions any?)
 (s/def ::payment-methods any?)
 (s/def ::upcoming-invoice any?)
 (s/def ::invoices any?)

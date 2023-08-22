@@ -457,7 +457,8 @@
         selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))
         select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
         page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed]))
-        get-row-props  (fn [row] (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
+        get-row-props  (fn [row]
+                         (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
 
     [:div
      (when selectable?
@@ -505,7 +506,7 @@
        [ui/TableBody (:body-props props)
         (doall
          (for [[idx row] (map-indexed vector rows)
-               :let [id (:id row)]]
+               :let [id (or (:id row) (random-uuid))]]
            (cond
              row-render
              ^{:key id}

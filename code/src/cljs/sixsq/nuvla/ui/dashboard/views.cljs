@@ -32,13 +32,12 @@
      :on-refresh refresh}]])
 
 (defn Statistic
-  [{:keys [value icon class label target positive-color icon-color color selected?]
+  [{:keys [value icon class label target positive-color icon-color color]
     :or   {positive-color "black"}}]
   (let [color        (or color (if (pos? value) positive-color "grey"))
         {:keys [resource tab-event]} target
         interactive? (or tab-event resource)]
-    [ui/Statistic {:size ""
-                   :style    {:cursor (when interactive? "pointer")}
+    [ui/Statistic {:style    {:cursor (when interactive? "pointer")}
                    :color    color
                    :class    (conj [(when interactive? "slight-up")] class)
                    :on-click #(do

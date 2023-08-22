@@ -78,7 +78,8 @@
 
 (defn TabOverviewNuvlaBox
   []
-  (let [{:keys [resource tab-index tab-index-event]} utils/target-nbs]
+  (let [tr @(subscribe [::i18n-subs/tr])
+        {:keys [resource tab-index tab-index-event]} utils/target-nbs]
     [ui/Segment {:secondary true
                  :raised    true
                  :class     "nuvla-edges"
@@ -86,8 +87,7 @@
                              :flex-direction  "column"
                              :justify-content "space-between"
                              :border-radius   "8px"
-                             :overflow        :hidden}
-                 }
+                             :overflow        :hidden}}
 
      [:h4 {:class "ui-header"}
       [icons/BoxIcon]
@@ -96,7 +96,7 @@
      [StatisticStatesEdge]
 
      [ui/Button {:class    "center"
-                 :content  "Show me"
+                 :content  (tr [:show-me])
                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
                                 (dispatch [::routing-events/navigate resource]))}]]))
@@ -128,7 +128,7 @@
 ; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
 (defn TabOverviewDeployments
   []
-  (let [tr   (subscribe [::i18n-subs/tr])
+  (let [tr @(subscribe [::i18n-subs/tr])
         {:keys [resource tab-key tab-event]} utils/target-deployments]
     [ui/Segment {:secondary true
                  :raised    true
@@ -140,12 +140,12 @@
                              :overflow        :hidden}}
 
      [:h4 {:class "ui-header"} [icons/RocketIcon]
-      (str/upper-case (@tr [:deployments]))]
+      (str/upper-case (tr [:deployments]))]
 
      [StatisticStates ::deployments-subs/deployments-summary-all]
 
      [ui/Button {:class    "center"
-                 :content  "Show me"
+                 :content  (tr [:show-me])
                  :on-click #(do (when (and tab-event tab-key)
                                   (dispatch [tab-event tab-key]))
                                 (dispatch [::routing-events/navigate resource]))}]]))

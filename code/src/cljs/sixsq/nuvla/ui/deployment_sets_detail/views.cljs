@@ -181,7 +181,7 @@
                                   :status      "yeah, good question"
                                   :last-update (time/time->format (js/Date.))})
 
-                           @apps)]
+                               @apps)]
         [Table {:columns
                 (map (fn [k]
                        {:field-key k
@@ -193,7 +193,7 @@
                                          :children [:<>
                                                     cell-data]
                                          :target   :_self}]))})
-                  (keys (dissoc (first app-row-data) :idx :href)))
+                     (keys (dissoc (first app-row-data) :idx :href)))
                 :rows app-row-data}]))))
 
 
@@ -258,51 +258,51 @@
 
 (defn- DeploymentsStatesCard
   [state-filter]
-  [dv/TitledCardDeployments
-   ^{:key "deployment-states-card-stats"}
-   [DeploymentStatesFilter state-filter]
-   ^{:key "deployment-states-card-button"}
-   [uix/Button {:class    "center"
-                :color    "blue"
-                :icon     icons/i-rocket
-                :content  "Show me"
-                :on-click (create-nav-fn "deployments" nil)}]])
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [dv/TitledCardDeployments
+     ^{:key "deployment-states-card-stats"}
+     [DeploymentStatesFilter state-filter]
+     ^{:key "deployment-states-card-button"}
+     [uix/Button {:class    "center"
+                  :color    "blue"
+                  :icon     icons/i-rocket
+                  :content  (tr [:show-me])
+                  :on-click (create-nav-fn "deployments" nil)}]]))
 
 
 (defn TabOverview
   [uuid]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats    (subscribe [::subs/edges-summary-stats])]
+        edges-stats    (subscribe [::subs/edges-summary-stats])
+        tr             (subscribe [::i18n-subs/tr])]
     (fn []
-      (let [tr (subscribe [::i18n-subs/tr])
-            ]
-        [ui/TabPane
-         [ui/Grid {:columns   2
-                   :stackable true
-                   :padded    true}
-          [ui/GridColumn {:stretched true}
-           [TabOverviewDeploymentSet @deployment-set]]
-          [ui/GridColumn {:stretched true}
-           [vc/TitledCard
-            {:class :nuvla-apps
-             :icon  icons/i-layer-group
-             :label (str/capitalize (@tr [:apps]))}
-            [:div {:style {:flex-grow 1}}
-             [AppsOverviewTable]]]]
+      [ui/TabPane
+       [ui/Grid {:columns   2
+                 :stackable true
+                 :padded    true}
+        [ui/GridColumn {:stretched true}
+         [TabOverviewDeploymentSet @deployment-set]]
+        [ui/GridColumn {:stretched true}
+         [vc/TitledCard
+          {:class :nuvla-apps
+           :icon  icons/i-layer-group
+           :label (str/capitalize (@tr [:apps]))}
+          [:div {:style {:flex-grow 1}}
+           [AppsOverviewTable]]]]
 
-          [ui/GridColumn {:stretched true}
-           [vc/TitledCard
-            {:class :nuvla-edges
-             :icon  icons/i-box
-             :label (str (@tr [:nuvlaedge]) "s")}
-            [StatisticStatesEdgeView @edges-stats]
-            [uix/Button {:class    "center"
-                         :icon     icons/i-box
-                         :content  "Show me"
-                         :on-click (create-nav-fn "edges" nil)}]]]
-          [ui/GridColumn {:stretched true}
-           [DeploymentsStatesCard]]]]))))
+        [ui/GridColumn {:stretched true}
+         [vc/TitledCard
+          {:class :nuvla-edges
+           :icon  icons/i-box
+           :label (str (@tr [:nuvlaedge]) "s")}
+          [StatisticStatesEdgeView @edges-stats]
+          [uix/Button {:class    "center"
+                       :icon     icons/i-box
+                       :content  (@tr [:show-me])
+                       :on-click (create-nav-fn "edges" nil)}]]]
+        [ui/GridColumn {:stretched true}
+         [DeploymentsStatesCard]]]])))
 
 
 
@@ -691,19 +691,19 @@
 (defn EdgesTabView
   [selected-state]
   (dispatch [::events/get-edges-documents])
-  (let [tr           (subscribe [::i18n-subs/tr])
-        edges        (subscribe [::subs/edges-documents-response])
-        columns      [{:field-key :online :header-content [icons/HeartbeatIcon]}
-                      {:field-key :state}
-                      {:field-key :name}
-                      {:field-key :description}
-                      {:field-key :created}
-                      {:field-key :created-by}
-                      {:field-key      :refresh-interval
-                       :header-content (str/lower-case (@tr [:report-interval]))}
-                      {:field-key :last-online :no-sort? true}
-                      {:field-key :version :no-sort? true}
-                      {:field-key :tags :no-sort? true}]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        edges         (subscribe [::subs/edges-documents-response])
+        columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}
+                       {:field-key :state}
+                       {:field-key :name}
+                       {:field-key :description}
+                       {:field-key :created}
+                       {:field-key :created-by}
+                       {:field-key      :refresh-interval
+                        :header-content (str/lower-case (@tr [:report-interval]))}
+                       {:field-key :last-online :no-sort? true}
+                       {:field-key :version :no-sort? true}
+                       {:field-key :tags :no-sort? true}]
         edges-stats   (subscribe [::subs/edges-summary-stats])
         current-route (subscribe [::route-subs/current-route])]
     [:div {:class :nuvla-edges}
@@ -766,36 +766,36 @@
 
 (defn TabsDeploymentSet
   [uuid]
-  (let [tr               @(subscribe [::i18n-subs/tr])
-        deployment-set   @(subscribe [::subs/deployment-set])
-        apps             @(subscribe [::subs/applications-sets])]
+  (let [tr             @(subscribe [::i18n-subs/tr])
+        deployment-set @(subscribe [::subs/deployment-set])
+        apps           @(subscribe [::subs/applications-sets])]
     (when deployment-set
       [tab/Tab
        {:reset-query-params? true
-        :db-path [::spec/tab]
-        :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
-                              :key     :overview
-                              :icon    "info"}
-                   :render   #(r/as-element [TabOverview uuid])}
-                  {:menuItem {:key :apps
-                              :content (str/capitalize (tr [:apps]))
-                              :icon icons/i-layer-group}
-                   :render   #(r/as-element
-                                [ConfigureApps
-                                 0
-                                 (mapcat :applications apps)])}
-                  {:menuItem {:key :edges
-                              :content (str/capitalize (tr [:edges]))
-                              :icon icons/i-box}
-                   :render   #(r/as-element
-                                [EdgesTab])}
-                  {:menuItem {:key :deployments
-                              :content (str/capitalize (tr [:deployments]))
-                              :icon icons/i-rocket}
-                   :render #(r/as-element
-                              [DeploymentsTab uuid])}]
-        :menu    {:secondary true
-                  :pointing  true}}])))
+        :db-path             [::spec/tab]
+        :panes               [{:menuItem {:content (str/capitalize (tr [:overview]))
+                                          :key     :overview
+                                          :icon    "info"}
+                               :render   #(r/as-element [TabOverview uuid])}
+                              {:menuItem {:key     :apps
+                                          :content (str/capitalize (tr [:apps]))
+                                          :icon    icons/i-layer-group}
+                               :render   #(r/as-element
+                                            [ConfigureApps
+                                             0
+                                             (mapcat :applications apps)])}
+                              {:menuItem {:key     :edges
+                                          :content (str/capitalize (tr [:edges]))
+                                          :icon    icons/i-box}
+                               :render   #(r/as-element
+                                            [EdgesTab])}
+                              {:menuItem {:key     :deployments
+                                          :content (str/capitalize (tr [:deployments]))
+                                          :icon    icons/i-rocket}
+                               :render   #(r/as-element
+                                            [DeploymentsTab uuid])}]
+        :menu                {:secondary true
+                              :pointing  true}}])))
 
 (defn DeploymentSet
   [uuid]

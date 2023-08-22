@@ -398,16 +398,17 @@
 
 (defn DeploymentsOverviewSegment
   [{:keys [sub-key show-me-event on-click]}]
-  [TitledCardDeployments
-   ^{:key "deployment-overview-stats"}
-   [StatisticStates false sub-key]
-   ^{:key "deployment-overview-button"}
-   [uix/Button {:class    "center"
-                :color    "blue"
-                :icon     icons/i-rocket
-                :content  "Show me"
-                :on-click (or on-click
-                            #(when show-me-event (dispatch show-me-event)))}]])
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [TitledCardDeployments
+    ^{:key "deployment-overview-stats"}
+    [StatisticStates false sub-key]
+    ^{:key "deployment-overview-button"}
+    [uix/Button {:class    "center"
+                 :color    "blue"
+                 :icon     icons/i-rocket
+                 :content  (tr [:show-me])
+                 :on-click (or on-click
+                               #(when show-me-event (dispatch show-me-event)))}]]))
 
 (defn Pagination
   [db-path-arg]

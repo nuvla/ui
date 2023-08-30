@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.plugins.step-group :as step-group-plugin]))
 
 (s/def ::deployment-set (s/nilable any?))
+(s/def ::deployment-set-edited (s/nilable any?))
 
 (s/def ::edges (s/coll-of map? :kind vector?))
 (s/def ::edges-documents (s/coll-of map? :kind vector?))

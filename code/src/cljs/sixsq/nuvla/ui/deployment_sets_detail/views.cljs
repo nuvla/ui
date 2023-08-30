@@ -103,6 +103,26 @@
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:delete])}]))
 
+(defn SaveButton
+  [{:keys [creating?]}]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        save-disabled? (subscribe [::subs/save-disabled? creating?])]
+    (fn []
+(tap> [:save-])
+      [ui/Popup
+       {:trigger
+        (r/as-element
+          [:div
+           [uix/MenuItem
+            {:name     (@tr [:save])
+             :icon     icons/i-floppy
+             :disabled (not @save-disabled?)
+             :class    (when-not @save-disabled? "primary-menu-item")
+             :on-click (if creating?
+                         #(dispatch [::events/create])
+                         #(dispatch [::events/edit]))}]])
+        :content (@tr [:depl-group-required-fields-before-save])}])))
+
 (defn MenuBar
   [uuid]
   (let [deployment-set (subscribe [::subs/deployment-set])
@@ -114,36 +134,21 @@
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
-                ^{:key "delete"}
-                [DeleteButton @deployment-set]
-                ^{:key "stop"}
-                [StopButton @deployment-set]
-                ^{:key "update"}
-                [UpdateButton @deployment-set]
-                ^{:key "start"}
-                [StartButton @deployment-set])
+            ^{:key "delete"}
+            [DeleteButton @deployment-set]
+            ^{:key "stop"}
+            [StopButton @deployment-set]
+            ^{:key "update"}
+            [UpdateButton @deployment-set]
+            ^{:key "start"}
+            [StartButton @deployment-set]
+            ^{:key "save"}
+            [SaveButton])
           [components/RefreshMenu
-           {:action-id  events/refresh-action-id
+           {:action-id  events/refresh-action-edges-id
             :loading?   @loading?
             :on-refresh #(events/refresh uuid)}]]]))))
 
-
-(defn SaveButton
-  []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        save-disabled? (subscribe [::subs/save-disabled?])]
-    (fn []
-      [ui/Popup
-       {:trigger
-        (r/as-element
-          [:div
-           [uix/MenuItem
-            {:name     (@tr [:save])
-             :icon     icons/i-floppy
-             :disabled (not @save-disabled?)
-             :class    (when-not @save-disabled? "primary-menu-item")
-             :on-click #(dispatch [::events/create])}]])
-        :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBarCreate
   []
@@ -156,17 +161,13 @@
          [components/ResponsiveMenuBar
           (conj MenuItems
                 ^{:key "delete"}
-            [SaveButton @deployment-set])]]))))
+            [SaveButton {:creating? true}])]]))))
 
 (defn EditableCell
   [attribute creating?]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        deployment-set (subscribe [::subs/deployment-set])
+  (let [deployment-set (subscribe [::subs/deployment-set])
         can-edit?      (subscribe [::subs/can-edit?])
-        id             (:id @deployment-set)
-        on-change-fn   #(dispatch [::events/edit
-                                   id {attribute %}
-                                   (@tr [:updated-successfully])])]
+        on-change-fn   #(dispatch [::events/edit {attribute %}])]
     (if (or creating? @can-edit?)
       [components/EditableInput attribute @deployment-set on-change-fn]
       [ui/TableCell (get @deployment-set attribute)])))
@@ -213,15 +214,13 @@
 
 
 (defn TabOverviewTags
-  [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :color     "teal"
-                 :raised    true}
-     [:h4 "Tags"]
-     [components/EditableTags
-      deployment-set #(dispatch [::events/edit id {:tags %}
-                                 (@tr [:updated-successfully])])]]))
+  [deployment-set]
+  [ui/Segment {:secondary true
+               :color     "teal"
+               :raised    true}
+   [:h4 "Tags"]
+   [components/EditableTags
+    deployment-set #(dispatch [::events/edit {:tags %}])]])
 
 (def apps-picker-modal-id :modal/add-apps)
 
@@ -455,8 +454,7 @@
   [uuid creating?]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats    (subscribe [::subs/edges-summary-stats])
-        ]
+        edges-stats    (subscribe [::subs/edges-summary-stats])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])]
         [ui/TabPane

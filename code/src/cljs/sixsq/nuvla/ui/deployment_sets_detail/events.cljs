@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
@@ -11,8 +12,8 @@
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.deployments.spec :as deployments-spec]
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
-            [sixsq.nuvla.ui.edges.utils :as edge-utils]
             [sixsq.nuvla.ui.edges.spec :as edges-spec]
+            [sixsq.nuvla.ui.edges.utils :as edge-utils]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -28,17 +29,49 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
-(def refresh-action-id :deployment-set-get-deployment-set)
+(def refresh-action-edges-id :deployment-set-get-edges)
+(def refresh-action-deployments-id :deployment-set-get-deployments)
 
 (defn uuid->depl-set-id [uuid]
   (str "deployment-set/" uuid))
 
+(defn get-target-fleet-ids
+  [depl-set]
+  (->> depl-set
+       :applications-sets
+       (mapcat :overwrites)
+       (mapcat (juxt :targets :fleet))
+       (remove nil?)
+       flatten))
+
+(reg-event-fx
+  ::refresh
+  (fn [{{:keys [current-route
+                ::spec/deployment-set
+                ::spec/deployment-set-edited]} :db}]
+    (let [uuid (-> current-route :path-params :uuid)
+          stored-targets (get-target-fleet-ids deployment-set)
+          edited-targets (get-target-fleet-ids deployment-set-edited)
+          merged-targets (-> (into stored-targets edited-targets)
+                             distinct
+                             vec)]
+      {:fx [[:dispatch
+             [::main-events/action-interval-start
+              {:id        refresh-action-deployments-id
+               :frequency 10000
+               :event     [::get-deployments-for-deployment-sets (uuid->depl-set-id uuid)]}]]
+            [:dispatch
+             [::main-events/action-interval-start
+              {:id        refresh-action-edges-id
+               :frequency 10000
+               :event     [::resolve-to-ancestor-resource
+                           {:ids merged-targets
+                            :storage-event ::set-edges
+                            :ancestor-resource-name "nuvlabox"}]}]]]})))
+
 (defn refresh
   [uuid]
-  (dispatch [::main-events/action-interval-start
-             {:id        refresh-action-id
-              :frequency 10000
-              :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]))
+  (dispatch [::refresh uuid]))
 
 (reg-event-db
   ::clear-target-edges
@@ -49,11 +82,10 @@
   ::init
   (fn [_ [_ uuid]]
     {:fx [[:dispatch [::clear-target-edges]]
-          [:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]
-          [:dispatch [::main-events/action-interval-start
-                      {:id        refresh-action-id
-                       :frequency 10000
-                       :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]]]}))
+          [:dispatch [::main-events/action-interval-delete {:id refresh-action-edges-id}]]
+          [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
+          [:dispatch [::get-deployment-set (uuid->depl-set-id uuid)]]
+          ]}))
 
 (reg-event-fx
   ::init-create
@@ -62,7 +94,7 @@
       {:db (-> db
                (merge (assoc-in spec/defaults [::spec/deployment-set :name] name))
                (assoc ::deployments-spec/deployments-summary-all nil))
-       :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]]})))
+       :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-edges-id}]]]})))
 
 (reg-event-fx
   ::new
@@ -188,19 +220,17 @@
                    :type    :error}]})))
 
 
+
 (reg-event-fx
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set]]
-    (let [parent-ids (->> deployment-set
-                          :applications-sets
-                          (mapcat :overwrites)
-                          (mapcat (juxt :targets :fleet))
-                          (remove nil?)
-                          flatten)]
+    (let [parent-ids (get-target-fleet-ids deployment-set)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
              ::spec/deployment-set deployment-set
+             ::spec/deployment-set-edited deployment-set
              ::main-spec/loading? false)
-       :fx [[:dispatch [::resolve-to-ancestor-resource
+       :fx [[:dispatch [::refresh uuid]]
+            [:dispatch [::resolve-to-ancestor-resource
                         {:ids parent-ids
                          :storage-event ::set-edges
                          :ancestor-resource-name "nuvlabox"}]]
@@ -237,10 +267,10 @@
 
 (reg-event-fx
   ::get-deployments-for-deployment-sets
-  (fn [{{:keys [current-route]} :db} [_ id]]
-    (when id
+  (fn [{{:keys [current-route]} :db} [_ uuid]]
+    (when uuid
       (let [query-filter      (routing-utils/get-query-param current-route deployments-state-filter-key)
-            filter-constraint (str "deployment-set='" (uuid->depl-set-id id) "'")]
+            filter-constraint (str "deployment-set='" (uuid->depl-set-id uuid) "'")]
         {:fx [[:dispatch [::deployments-events/get-deployments
                           {:filter-external-arg   (general-utils/join-and
                                                     filter-constraint
@@ -251,25 +281,29 @@
 
 (reg-event-fx
   ::edit
-  (fn [{db :db} [_ resource-id data success-msg]]
-    (if-not resource-id
-      {:db (update db ::spec/deployment-set merge data)}
-      {::cimi-api-fx/edit
-       [resource-id data
-        #(if (instance? js/Error %)
-           (let [{:keys [status message]} (response/parse-ex-info %)]
+  (fn [{db :db} [_ data]]
+    (tap> [:data data])
+    {:db (update db ::spec/deployment-set-edited merge data)}))
+
+(reg-event-fx
+  ::save
+  (fn [{db :db} [_ {:keys [resource-id data success-msg]}]]
+    {::cimi-api-fx/edit
+     [resource-id data
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error editing " resource-id)
+                                  status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
+         (do
+           (when success-msg
              (dispatch [::messages-events/add
-                        {:header  (cond-> (str "error editing " resource-id)
-                                    status (str " (" status ")"))
-                         :content message
-                         :type    :error}]))
-           (do
-             (when success-msg
-               (dispatch [::messages-events/add
-                          {:header  success-msg
-                           :content success-msg
-                           :type    :success}]))
-             (dispatch [::set-deployment-set %])))]})))
+                        {:header  success-msg
+                         :content success-msg
+                         :type    :success}]))
+           (dispatch [::set-deployment-set %])))]}))
 
 (reg-event-fx
   ::delete

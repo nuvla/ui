@@ -511,5 +511,8 @@
     ;; TODO: How to get and update the correct app in deployment-set db entry?
     ;; Is idx the index in :application-sets vector or in [:application-sets :overwrites]?
     ;; phhhhh
+    ;;
+    ;; ADDENDUM: This should update :deployment-set-edited, preferably by going through the
+    ;; ::edit event to handle changes-protections
     (let [apps (get-in db [::spec/deployment-set :application-sets idx])]
       db)))

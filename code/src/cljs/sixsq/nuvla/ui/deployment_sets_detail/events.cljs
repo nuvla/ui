@@ -281,7 +281,6 @@
 (reg-event-fx
   ::edit
   (fn [{db :db} [_ data]]
-    (tap> [:data data])
     {:db (update db ::spec/deployment-set-edited merge data)}))
 
 (reg-event-fx
@@ -503,3 +502,12 @@
                                    (remove #(= (:id %) (:href app)) apps)))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]]})))
+
+(reg-event-db
+  ::edit-version
+  (fn [db [_ idx module-id href]]
+    ;; TODO: How to get and update the correct app in deployment-set db entry?
+    ;; Is idx the index in :application-sets vector or in [:application-sets :overwrites]?
+    ;; phhhhh
+    (let [apps (get-in db [::spec/deployment-set :application-sets idx])]
+      db)))

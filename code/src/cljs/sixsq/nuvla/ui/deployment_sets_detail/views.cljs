@@ -129,7 +129,6 @@
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])]
     (fn []
-      (tap> [:hm @deployment-set])
       (let [MenuItems (cimi-detail-views/format-operations
                         @deployment-set
                         #{"start" "stop" "delete" "update"})]
@@ -647,7 +646,8 @@
     [uix/Accordion
      [module-plugin/ModuleVersions
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-version i module-id]}]
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp

@@ -195,7 +195,7 @@
     (let [change-event (get-in db (conj db-path change-event-module-version))]
       {:fx [[:dispatch [::load-module db-path href]]
             (when change-event
-              [:dispatch change-event])]})))
+              [:dispatch (conj change-event href)])]})))
 
 (reg-event-fx
   ::update-env

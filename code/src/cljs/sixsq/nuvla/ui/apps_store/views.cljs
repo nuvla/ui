@@ -23,6 +23,22 @@
             [sixsq.nuvla.ui.utils.style :as utils-style]
             [sixsq.nuvla.ui.utils.values :as utils-values]))
 
+(defn ModuleCardView
+  [{:keys [logo-url subtype name id desc-summary tags published target
+           show-published-tick? detail-href button-ops]}]
+  [uix/Card
+   {:image         logo-url
+    :header        [:<>
+                    [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
+                    (or name id)]
+    :description   desc-summary
+    :content       [uix/Tags tags]
+    :corner-button (when (and published show-published-tick?)
+                     [ui/Label {:corner true} [icons/Icon {:name apps-utils/publish-icon}]])
+    :href          detail-href
+    :button        [uix/Button button-ops]
+    :target        target}])
+
 
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published-tick?]
@@ -50,30 +66,34 @@
                         :content  button-content
                         :on-click on-click}
         desc-summary   (utils-values/markdown->summary description)]
-    [uix/Card
-     {:image         logo-url
-      :header        [:<>
-                      [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
-                      (or name id)]
-      :description   (utils-general/truncate desc-summary 180)
-      :content       [uix/Tags tags]
-      :corner-button (when (and published show-published-tick?)
-                       [ui/Label {:corner true} [icons/Icon {:name apps-utils/publish-icon}]])
-      :href          detail-href
-      :button        [uix/Button button-ops]}]))
+    [ModuleCardView
+     {:logo-url logo-url
+      :subtype subtype
+      :name name
+      :id id
+      :desc-summary desc-summary
+      :tags tags
+      :published published
+      :show-published-tick? show-published-tick?
+      :detail-href detail-href
+      :button-ops button-ops}]))
 
+(defn ModulesCardsGroupView
+  [& children]
+  [:div utils-style/center-items
+     [ui/CardGroup {:centered    true
+                    :itemsPerRow 4
+                    :stackable   true}
+      children]])
 
 (defn ModulesCardsGroup
   [active-tab]
   (let [modules              (subscribe [::subs/modules])
         show-published-tick? (boolean (#{:allapps :myapps} active-tab))]
-    [:div utils-style/center-items
-     [ui/CardGroup {:centered    true
-                    :itemsPerRow 4
-                    :stackable   true}
-      (for [{:keys [id] :as module} (get @modules :resources [])]
-        ^{:key id}
-        [ModuleCard module show-published-tick?])]]))
+    [ModulesCardsGroupView
+     (for [{:keys [id] :as module} (get @modules :resources [])]
+       ^{:key id}
+       [ModuleCard module show-published-tick?])]))
 
 (defn RefreshButton
   [active-tab]
@@ -89,12 +109,12 @@
       :change-event [::events/get-modules active-tab]}]))
 
 (defn ControlBar
-  [active-tab]
+  [active-tab pagination-db-path]
   [ui/Menu {:secondary true}
    [ui/MenuMenu {:position "left"}
     [full-text-search-plugin/FullTextSearch
      {:db-path      [::spec/modules-search]
-      :change-event [::pagination-plugin/change-page [(spec/page-keys->pagination-db-path active-tab)] 1]}]]
+      :change-event [::pagination-plugin/change-page [(or pagination-db-path (spec/page-keys->pagination-db-path active-tab))] 1]}]]
    [RefreshButton active-tab]])
 
 (defn ControlBarProjects [active-tab]
@@ -142,7 +162,7 @@
      {:menuItem {:content (utils-general/capitalize-words (tr [:all-apps]))
                  :key     spec/allapps-key
                  :icon    (r/as-element [icons/LayerGroupIcon])}
-      :render   #(r/as-element [TabDefault spec/allapps-key ])}
+      :render   #(r/as-element [TabDefault spec/allapps-key])}
      {:menuItem {:content (utils-general/capitalize-words (tr [:my-apps]))
                  :key     spec/myapps-key
                  :icon    (r/as-element [icons/StarIcon])}

@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.apps.views-detail
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
-            [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-            [re-frame.db]
+            [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.about.subs :as about-subs]
             [sixsq.nuvla.ui.about.utils :as about-utils]
@@ -1158,25 +1157,32 @@
      [ui/TableCell @resolved-user]]))
 
 
-(defn AuthorVendor
+(defn AuthorVendorForModule
   "Check if the module belongs to a group. If so, search amongst the group. Note that vendor here is a group,
   not a Stripe vendor."
-  []
+  [module component]
   (let [tr         (subscribe [::i18n-subs/tr])
-        module     (subscribe [::subs/module])
         groups     (subscribe [::session-subs/groups])
-        is-vendor? (utils/is-vendor? @module)]
+        is-vendor? (utils/is-vendor? module)]
     (if is-vendor?
-      (let [groups-from-module (utils/module->groups @module)
+      (let [groups-from-module (utils/module->groups module)
             group-id           (first groups-from-module)
             group-definition   (acl-utils/find-group group-id @groups)
             vendor             (if group-definition
                                  (second group-definition)
                                  group-id)]
-        [AuthorVendorRow (@tr [:vendor]) vendor])
-      (let [users-from-module (utils/module->users @module)
+        [(or component AuthorVendorRow) (@tr [:vendor]) vendor])
+      (let [users-from-module (utils/module->users module)
             user              (first users-from-module)]
-        [AuthorVendorRow (@tr [:author]) user]))))
+        [(or component AuthorVendorRow) (@tr [:author]) user]))))
+
+(defn AuthorVendor
+  "Gets module from app-db and passes it to AuthorVendorForModule.
+  Check if the module belongs to a group. If so, search amongst the group. Note that vendor here is a group,
+  not a Stripe vendor."
+  []
+  (let [module (subscribe [::subs/module])]
+    [AuthorVendorForModule @module]))
 
 
 (defn OverviewDescription

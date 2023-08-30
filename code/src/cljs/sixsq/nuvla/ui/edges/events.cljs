@@ -125,7 +125,17 @@
                     :type    :error})])
       {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
 
-
+(reg-event-fx
+  ::get-selected-edge-ids
+  (fn [{{:keys [::spec/select] :as db} :db} [_ storage-event id]]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:filter (table-plugin/build-bulk-filter
+                 select
+                 (get-full-filter-string db))
+       :select "id"
+       :aggregation spec/state-summary-agg-term}
+      #(dispatch [storage-event % id])]}))
 
 (reg-event-fx
   ::set-additional-filter
@@ -219,7 +229,7 @@
                            (utils/get-query-aggregation-params
                              (full-text-search-plugin/filter-text
                                db [::spec/edges-search])
-                             "terms:online,terms:state"
+                             spec/state-summary-agg-term
                              nil)
                            #(dispatch [::set-nuvlaboxes-summary %])]}))
 
@@ -265,7 +275,7 @@
   (fn [{_db :db} _]
     {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params
-                             nil "terms:online,terms:state" nil)
+                             nil spec/state-summary-agg-term nil)
                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 (reg-event-fx

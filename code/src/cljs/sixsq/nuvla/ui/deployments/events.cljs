@@ -65,8 +65,8 @@
                           ::spec/deployments deployments)
                :fx [[:dispatch [::get-edges-of-deployments resources]]]}
               (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search
-                                                          [:deployment-parameter
-                                                           query-params callback])))))
+                                                   [:deployment-parameter
+                                                    query-params callback])))))
 
 (reg-event-fx
   ::get-deployments

@@ -436,8 +436,7 @@ For more information on how to format your app description using Markdown syntax
 (defn is-vendor?
   [module]
   (let [vendors (module->groups module)]
-    #_:clj-kondo/ignore
-    (not (empty? vendors))))
+    (boolean (seq vendors))))
 
 
 (defn set-reset-error

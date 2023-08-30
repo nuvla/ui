@@ -5,6 +5,8 @@
             [sixsq.nuvla.ui.about.subs :as about-subs]
             [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+            [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]
+            [sixsq.nuvla.ui.deployment-sets-detail.subs :as depl-group-subs]
             [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.edges.add-modal :as add-modal]
             [sixsq.nuvla.ui.edges.events :as events]
@@ -789,31 +791,36 @@
         :total-items            total-elements
         :i-per-page-multipliers [1 2 4]}])))
 
+
 (defn NuvlaEdgeTableView
-  [{:keys [bulk-edit columns edges]}]
-  (let [{bulk-edit-modal :modal
-         trigger :trigger-config} bulk-edit]
+  [{:keys [bulk-edit bulk-deploy columns edges]}]
+  (let [{bulk-edit-modal     :modal
+         trigger             :trigger-config} bulk-edit
+        {bulk-deploy-modal   :modal
+         bulk-deploy-trigger :trigger-config} bulk-deploy]
     [:<>
      (when bulk-edit-modal
        [bulk-edit-modal])
-     [Table (cond->
-              {:sort-config       {:db-path     ::spec/ordering
-                                   :fetch-event [::events/get-nuvlaboxes]}
-               :columns           columns
-               :rows              edges
-               :table-props       {:compact "very" :selectable true}
-               :cell-props        {:header {:single-line true}}
-               :row-render        (fn [row-data] [NuvlaboxRow row-data])
-               :row-click-handler (fn [{id :id}]
-                                    (dispatch [::routing-events/navigate
-                                               (utils/edges-details-url (general-utils/id->uuid id))]))
-               :row-props         {:role  "link"
-                                   :style {:cursor "pointer"}}}
-              trigger (assoc :select-config {:bulk-actions [trigger]
-                                             :total-count-sub-key [::subs/nuvlaboxes-count]
-                                             :resources-sub-key [::subs/nuvlaboxes-resources]
-                                             :select-db-path [::spec/select]
-                                             :rights-needed :edit}))]]))
+     (when bulk-deploy-modal
+       [bulk-deploy-modal])
+     [Table {:sort-config       {:db-path     ::spec/ordering
+                                 :fetch-event [::events/get-nuvlaboxes]}
+             :columns           columns
+             :rows              edges
+             :table-props       {:compact "very" :selectable true}
+             :cell-props        {:header {:single-line true}}
+             :row-render        (fn [row-data] [NuvlaboxRow row-data])
+             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+             :row-props         {:role  "link"
+                                 :style {:cursor "pointer"}}
+             :select-config     {:bulk-actions (filterv
+                                                 some?
+                                                 [trigger
+                                                  bulk-deploy-trigger])
+                                 :total-count-sub-key [::subs/nuvlaboxes-count]
+                                 :resources-sub-key [::subs/nuvlaboxes-resources]
+                                 :select-db-path [::spec/select]
+                                 :rights-needed :edit}}]]))
 
 
 (defn NuvlaboxTable
@@ -850,7 +857,18 @@
                              :singular               (@tr [:edge])
                              :plural                 (@tr [:edges])
                              :filter-fn               (partial utils/build-bulk-filter [::spec/select])})]
-    [NuvlaEdgeTableView {:bulk-edit bulk-edit :columns columns :edges selected-nbs}]))
+    [NuvlaEdgeTableView {:bulk-edit   bulk-edit
+                         :bulk-deploy {:trigger-config {:icon (fn [] [icons/RocketIcon])
+                                                        :name "Bulk Deploy App"
+                                                        :event (fn []
+                                                                (let [id (random-uuid)]
+                                                                  (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
+                                                                  (dispatch [::routing-events/navigate
+                                                                             routes/deployment-sets-details
+                                                                             {:uuid :create}
+                                                                             {
+                                                                              ;; :name    @name
+                                                                              depl-group-subs/creation-temp-id-key id}])))}} :columns columns :edges selected-nbs}]))
 
 
 (defn NuvlaboxMapPoint

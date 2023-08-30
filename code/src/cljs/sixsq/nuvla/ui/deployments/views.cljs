@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
             [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
             [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
             [sixsq.nuvla.ui.deployments.events :as events]
@@ -15,6 +14,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.plugins.module :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
@@ -89,7 +89,7 @@
              :on-change   (ui-callback/value
                             #(reset! selected-module
                                      (->> %
-                                          (dep-diag-versions/get-version-id @versions)
+                                          (get-version-id @versions)
                                           (str module-href "_"))))
              :fluid       true
              :options     @version-options}]]]

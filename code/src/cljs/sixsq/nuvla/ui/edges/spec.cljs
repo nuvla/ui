@@ -6,6 +6,8 @@
 
 (def resource-name "nuvlabox")
 
+(def state-summary-agg-term "terms:online,terms:state")
+
 (s/def ::stale-count nat-int?)
 (s/def ::active-count nat-int?)
 (s/def ::nuvlaboxes any?)
@@ -26,7 +28,6 @@
                           "decommissioning" "decommissioned" "error"})
 (s/def ::vpn-infra any?)
 (s/def ::edges-tags (s/nilable (s/* string?)))
-(s/def ::select (s/nilable any?))
 (s/def ::edges-without-edit-rights any?)
 
 ; ssh key association

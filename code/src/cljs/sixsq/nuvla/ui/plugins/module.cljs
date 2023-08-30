@@ -59,7 +59,7 @@
   (db-module-subpath db-path href ::registries-credentials))
 
 
-(defn- db-module
+(defn db-module
   [db db-path href]
   (get-in db (db-module-path db-path href)))
 
@@ -219,7 +219,7 @@
       {:db (update-db-module db db-path href update-module-reg-cred)
        :fx [(when change-event [:dispatch change-event])]})))
 
-(defn- get-version-id
+(defn get-version-id
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
 

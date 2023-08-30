@@ -314,7 +314,7 @@
     (not= stored edited)))
 
 (reg-sub
-  ::save-disabled?
+  ::save-enabled?
   :<- [::deployment-set]
   :<- [::edges-in-deployment-group-response]
   :<- [::apps-creation]

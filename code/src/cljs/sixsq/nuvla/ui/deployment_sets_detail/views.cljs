@@ -106,7 +106,7 @@
 (defn SaveButton
   [{:keys [creating?]}]
   (let [tr             (subscribe [::i18n-subs/tr])
-        save-disabled? (subscribe [::subs/save-disabled? creating?])]
+        save-enabled? (subscribe [::subs/save-enabled? creating?])]
     (fn [{:keys [deployment-set]}]
       [ui/Popup
        {:trigger
@@ -115,8 +115,8 @@
            [uix/MenuItem
             {:name     (@tr [:save])
              :icon     icons/i-floppy
-             :disabled (not @save-disabled?)
-             :class    (when-not @save-disabled? "primary-menu-item")
+             :disabled (not @save-enabled?)
+             :class    (when @save-enabled? "primary-menu-item")
              :on-click #(do (js/console.error "HI")
                           (if creating?
                             (dispatch [::events/create])

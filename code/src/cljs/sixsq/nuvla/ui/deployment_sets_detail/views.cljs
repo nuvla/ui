@@ -107,8 +107,7 @@
   [{:keys [creating?]}]
   (let [tr             (subscribe [::i18n-subs/tr])
         save-disabled? (subscribe [::subs/save-disabled? creating?])]
-    (fn []
-(tap> [:save-])
+    (fn [{:keys [deployment-set]}]
       [ui/Popup
        {:trigger
         (r/as-element
@@ -118,9 +117,11 @@
              :icon     icons/i-floppy
              :disabled (not @save-disabled?)
              :class    (when-not @save-disabled? "primary-menu-item")
-             :on-click (if creating?
-                         #(dispatch [::events/create])
-                         #(dispatch [::events/edit]))}]])
+             :on-click #(do (js/console.error "HI")
+                          (if creating?
+                            (dispatch [::events/create])
+                            (dispatch [::events/persist! {:deployment-set deployment-set
+                                                          :success-msg    (@tr [:updated-successfully])}])))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBar
@@ -128,6 +129,7 @@
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])]
     (fn []
+      (tap> [:hm @deployment-set])
       (let [MenuItems (cimi-detail-views/format-operations
                         @deployment-set
                         #{"start" "stop" "delete" "update"})]
@@ -143,7 +145,7 @@
             ^{:key "start"}
             [StartButton @deployment-set]
             ^{:key "save"}
-            [SaveButton])
+            [SaveButton {:deployment-set @deployment-set}])
           [components/RefreshMenu
            {:action-id  events/refresh-action-edges-id
             :loading?   @loading?

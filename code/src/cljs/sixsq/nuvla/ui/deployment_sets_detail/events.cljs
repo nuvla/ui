@@ -84,8 +84,7 @@
     {:fx [[:dispatch [::clear-target-edges]]
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-edges-id}]]
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
-          [:dispatch [::get-deployment-set (uuid->depl-set-id uuid)]]
-          ]}))
+          [:dispatch [::get-deployment-set (uuid->depl-set-id uuid)]]]}))
 
 (reg-event-fx
   ::init-create
@@ -286,24 +285,25 @@
     {:db (update db ::spec/deployment-set-edited merge data)}))
 
 (reg-event-fx
-  ::save
-  (fn [{db :db} [_ {:keys [resource-id data success-msg]}]]
-    {::cimi-api-fx/edit
-     [resource-id data
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error editing " resource-id)
-                                  status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-         (do
-           (when success-msg
+  ::persist!
+  (fn [_ [_ {:keys [deployment-set success-msg]}]]
+    (let [resource-id (:id deployment-set)]
+      {::cimi-api-fx/edit
+       [resource-id deployment-set
+        #(if (instance? js/Error %)
+           (let [{:keys [status message]} (response/parse-ex-info %)]
              (dispatch [::messages-events/add
-                        {:header  success-msg
-                         :content success-msg
-                         :type    :success}]))
-           (dispatch [::set-deployment-set %])))]}))
+                        {:header  (cond-> (str "error editing " resource-id)
+                                    status (str " (" status ")"))
+                         :content message
+                         :type    :error}]))
+           (do
+             (when success-msg
+               (dispatch [::messages-events/add
+                          {:header  success-msg
+                           :content success-msg
+                           :type    :success}]))
+             (dispatch [::set-deployment-set %])))]})))
 
 (reg-event-fx
   ::delete

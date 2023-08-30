@@ -309,8 +309,7 @@
 
 (reg-sub
   ::unsaved-changes?
-  :<- [::deployment-set]
-  :<- [::deployment-set-edited]
+  :<- [::deployment-set-stored-and-edited]
   (fn [[stored edited]]
     (not= stored edited)))
 

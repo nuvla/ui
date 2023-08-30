@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
-  (:require [clojure.set :as set]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]

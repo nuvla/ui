@@ -1001,6 +1001,7 @@
                                 :disabled (= 0 @depl-count)}
                      :render #(r/as-element
                                 [DeploymentsTab uuid])}]
+          :ignore-chng-protection? true
           :menu    {:secondary true
                     :pointing  true}}]))))
 

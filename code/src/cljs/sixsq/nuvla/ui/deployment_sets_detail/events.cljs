@@ -280,8 +280,10 @@
 
 (reg-event-fx
   ::edit
-  (fn [{db :db} [_ data]]
-    {:db (update db ::spec/deployment-set-edited merge data)}))
+  (fn [{{:keys [::spec/deployment-set ::spec/deployment-set-edited] :as db} :db} [_ data]]
+    (let [updated-deployment-set (merge deployment-set-edited data)]
+      {:db (assoc db ::spec/deployment-set-edited updated-deployment-set)
+       :fx [[:dispatch [::main-events/changes-protection? (not= deployment-set updated-deployment-set)]]]})))
 
 (reg-event-fx
   ::persist!
@@ -302,7 +304,8 @@
                           {:header  success-msg
                            :content success-msg
                            :type    :success}]))
-             (dispatch [::set-deployment-set %])))]})))
+             (dispatch [::set-deployment-set %])
+             (dispatch [::main-events/changes-protection? false])))]})))
 
 (reg-event-fx
   ::delete

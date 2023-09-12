@@ -4,6 +4,11 @@
 
 ## Released
 
+## [2.33.13] - 2023-09-05
+
+- Deployment groups page
+- NuvlaEdge page - Sorts nuvlabox releases in add modal
+
 ## [2.33.12] - 2023-07-28
 
 - Copy to clipboard buttons doesn't work in all places bugfix tasklist#2491

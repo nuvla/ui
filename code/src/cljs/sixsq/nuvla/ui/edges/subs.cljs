@@ -174,9 +174,9 @@
   (fn [nuvlabox-releases]
     (->> (utils/sort-by-version nuvlabox-releases)
          (map
-          (fn [{:keys [id release pre-release]}]
-            {:key release, :text (str release (when pre-release " - pre-release")),
-             :value id, :pre-release pre-release})))))
+           (fn [{:keys [id release pre-release]}]
+             {:key release, :text (str release (when pre-release " - pre-release")),
+              :value id, :pre-release pre-release})))))
 
 (reg-sub
   ::ssh-keys-available
@@ -213,10 +213,5 @@
   :-> ::spec/additional-filter)
 
 (reg-sub
-  ::selected-count
-  (fn []
-    [(subscribe [::table-plugin/selected-set-sub [::spec/select]])
-     (subscribe [::table-plugin/select-all?-sub [::spec/select]])
-     (subscribe [::nuvlaboxes-count])])
-  (fn [[selected-set selected-all? total-count]]
-    (if selected-all? total-count (count selected-set))))
+  ::selection
+  :-> ::spec/select)

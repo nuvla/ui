@@ -97,10 +97,12 @@
                                                          :change-event change-event
                                                          :ignore-chng-protection? ignore-chng-protection?)}]))]
                             (-> item
-                                (update :menuItem merge {:href                     href
-                                                         :onClick                  on-click
-                                                         :data-reitit-handle-click false
-                                                         :icon                     clean-i}))))]
+                                (update :menuItem merge
+                                  {:href                     (when-not (:disabled menuItem) href)
+                                   :onClick                  #(when-not (:disabled menuItem)
+                                                                (on-click %))
+                                   :data-reitit-handle-click false
+                                   :icon                     clean-i}))))]
     (when (nil? @default-tab)
       (dispatch [::helpers/set db-path ::default-tab (or @cur-view (some-> (seq panes) first :menuItem :key))]))
     (fn [{:keys [panes] :as opts}]

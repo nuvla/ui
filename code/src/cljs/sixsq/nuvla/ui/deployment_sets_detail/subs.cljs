@@ -1,10 +1,15 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
-            [sixsq.nuvla.ui.utils.general :as general-utils]))
+            [sixsq.nuvla.ui.routing.utils :as routing-utils]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
+
+(def creation-temp-id-key :temp-id)
 
 (reg-sub
   ::loading?
@@ -14,17 +19,19 @@
   ::deployment-set
   :-> ::spec/deployment-set)
 
-;; Please ignore unused new subs: They're used in follow up branch
+(reg-sub
+  ::deployment-set-name
+  :<- [::deployment-set]
+  :-> :name)
+
 (reg-sub
   ::apps
   :<- [::deployment-set]
   (fn [deployment-set]
-    (-> deployment-set
-        :applications-sets
-        first
-        :overwrites
-        first
-        :applications)))
+    (->> deployment-set
+         :applications-sets
+         (mapcat :overwrites)
+         (mapcat :applications))))
 
 (reg-sub
   ::can-edit?
@@ -84,6 +91,24 @@
                        :targets-count          (count targets)})
                     ) applications)))
          (apply concat))))
+
+
+(defn- app->app-row-data [{:keys [application i]}]
+  {:idx i
+   :href (:id application)
+   :app-name (:name application)
+   :version  (str "v" (module-plugin/get-version-id
+                        (map-indexed vector (:versions application))
+                        (-> application :content :id)))
+   :status "yeah, good question"
+   :last-update (time/time->format (js/Date.))})
+
+(reg-sub
+  ::applications-overview-row-data
+  :<- [::applications-sets-apps-targets]
+  (fn [apps]
+    (mapv app->app-row-data apps)))
+
 
 (defn license-set-apps-targets
   [sets-apps-targets]
@@ -166,26 +191,62 @@
   ;;todo require all mandatory params to be filled up?
   :-> #(some false? %))
 
+(defn create-db-path [db-path temp-id]
+  (cond->> db-path
+    (nonblank-string (str temp-id)) (into [::spec/temp-db temp-id])))
+
+(defn- get-temp-db-id [current-route]
+  (routing-utils/get-query-param current-route creation-temp-id-key))
+
+
+(defn current-route->edges-db-path
+  [current-route]
+  (create-db-path [::spec/edges]
+    (get-temp-db-id current-route)))
+
+(defn create-apps-creation-db-path
+  [current-route]
+  (create-db-path [::spec/apps-creation]
+    (get-temp-db-id current-route)))
+
 (reg-sub
-  ::edges-response
-  :-> ::spec/edges)
+  ::apps-creation
+  (fn [{:keys [current-route] :as db}]
+    (let [apps-db-path (create-apps-creation-db-path current-route)]
+      (get-in db apps-db-path))))
+
+(reg-sub
+  ::apps-creation-row-data
+  :<- [::apps-creation]
+  (fn [apps]
+    (map-indexed
+      (fn [idx app]
+        (app->app-row-data {:i idx
+                            :application app}))
+      apps)))
+
+(reg-sub
+  ::edges-in-deployment-group-response
+  (fn [{:keys [current-route] :as db}]
+    (let [edges-db-path (current-route->edges-db-path current-route)]
+      (get-in db edges-db-path))))
 
 (reg-sub
   ::edges-summary-stats
-  :<- [::edges-response]
+  :<- [::edges-in-deployment-group-response]
   (fn [edges]
     (edges-utils/summary-stats edges)))
 
 (reg-sub
   ::edges-count
-  :<- [::edges-response]
+  :<- [::edges-in-deployment-group-response]
   (fn [edges-response]
     (:count edges-response)))
 
 
 (reg-sub
   ::all-edges-ids
-  :<- [::edges-response]
+  :<- [::edges-in-deployment-group-response]
   (fn [edges-response]
     (:resources edges-response)))
 
@@ -215,6 +276,27 @@
 
 (reg-sub
   ::edges-filter
-  :<- [::edges-response]
+  :<- [::edges-in-deployment-group-response]
   (fn [edges]
-    (general-utils/ids->filter-string (->> edges :resources (map :id)))))
+    (general-utils/ids->inclusion-filter-string (->> edges :resources (map :id)))))
+
+(reg-sub
+  ::save-disabled?
+  :<- [::deployment-set]
+  :<- [::edges-in-deployment-group-response]
+  :<- [::apps-creation]
+  (fn [[deployment-set edges apps]]
+    (and
+      (nonblank-string (:name deployment-set))
+      (seq edges)
+      (seq apps))))
+
+(reg-sub
+  ::opened-modal
+  :-> ::spec/opened-modal)
+
+(reg-sub
+  ::modal-open?
+  :<- [::opened-modal]
+  (fn [opened-modal [_ id]]
+    (= id opened-modal)))

@@ -244,9 +244,13 @@
   [& filters]
   (join-filters "and" filters))
 
-(defn ids->filter-string
-  [ids]
-  (apply join-or (map #(str "id='" % "'") ids)))
+(defn ids->inclusion-filter-string
+  ([ids]
+  (apply join-or (map #(str "id='" % "'") ids))))
+
+(defn ids->exclude-filter-str
+  ([ids]
+  (apply join-and (map #(str "id!='" % "'") ids))))
 
 ;;
 ;; ACL utils

@@ -486,9 +486,10 @@
    are provided, app navigates 2 times. Not dangerous, but unexpected for the user
    who would have to click back 2 times to get to previous page.
    "
-  [{:keys [header description meta image on-click href button tags content
+  [{:keys [header description meta image on-click href target button tags content
            corner-button state left-state loading? on-select selected? extra]}]
-  [ui/Card (-> {:href href}
+  [ui/Card (-> {:href href
+                :target target}
                (merge (when on-click {:on-click (fn [event]
                                                   (on-click event)
                                                   (.preventDefault event))})))
@@ -535,7 +536,7 @@
 
     (when description
       [ui/CardDescription
-       {:style {:overflow "hidden" :max-height "100px"}}
+       {:style {:overflow "hidden" :max-height "250px"}}
        description])
 
     (when content content)

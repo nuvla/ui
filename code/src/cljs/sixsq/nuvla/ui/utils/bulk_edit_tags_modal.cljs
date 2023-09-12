@@ -160,7 +160,7 @@
                              (reset! form-tags []))
                            (dispatch [::open-modal {:db-path  db-path
                                                     :modal-id modal-id}]))
-            not-editable (when view-only-avlbl? (:count @view-only-items))
+            not-editable-count (when view-only-avlbl? (:count @view-only-items))
             updated-tags (if (= modal-tags-remove-all @edit-mode)
                            []
                            @form-tags)
@@ -174,9 +174,12 @@
                                          :db-path      db-path
                                          :plural       plural
                                          :singular     singular}]
-            disabled? (or (= @selected-count 0)
-                        (and  (not= modal-tags-remove-all @edit-mode)
-                          (= 0 (count @form-tags))))]
+            disabled? (or
+                        (zero? @selected-count)
+                        (and
+                          (not= modal-tags-remove-all @edit-mode)
+                          (zero? (count @form-tags)))
+                        (= @selected-count not-editable-count))]
         [ui/Modal {:open       @open?
                    :close-icon true
                    :on-close   close-fn}
@@ -206,20 +209,22 @@
                    " "
                    (@tr [(if (= @selected-count 1) singular plural)])
                    ". ")]
-           (when (and view-only-avlbl? (<= 1 not-editable @selected-count))
-             [:<>
-              [:div
-               (str not-editable " " (@tr [(if (= not-editable 1) singular plural)]) " " (@tr [:tags-not-updated-no-rights]))]
-              [:div [:a {:style {:cursor :pointer}
-                         :target :_blank
-                         :on-click
-                         (fn []
-                           (dispatch
-                            [::events/store-filter-and-open-in-new-tab
-                             (str/join " or "
-                                       (map #(str "id='" % "'")
-                                            (->> @view-only-items :resources (map :id))))]))}
-                     (@tr [(if (= not-editable 1) :open-it-in-new-tab :open-them-in-new-tab)])]]])]
+           (when (<= 1 not-editable-count)
+             (if (< not-editable-count @selected-count)
+               [:<>
+                [:div
+                 (str not-editable-count " " (@tr [(if (= not-editable-count 1) singular plural)]) " " (@tr [:tags-not-updated-no-rights]))]
+                [:div [:a {:style {:cursor :pointer}
+                           :target :_blank
+                           :on-click
+                           (fn []
+                             (dispatch
+                               [::events/store-filter-and-open-in-new-tab
+                                (str/join " or "
+                                  (map #(str "id='" % "'")
+                                    (->> @view-only-items :resources (map :id))))]))}
+                       (@tr [(if (= not-editable-count 1) :open-it-in-new-tab :open-them-in-new-tab)])]]]
+               [:div {:style {:color :red}} (@tr [:only-edges-without-edit-rights-sellected])]))]
           [uix/ButtonAskingForConfirmation {:disabled? disabled? :db-path db-path
                                             :update-event update-event :total-count-sub-key total-count-sub-key
                                             :text action-text :color color :action-aria-label "edit tags"}]]]))))

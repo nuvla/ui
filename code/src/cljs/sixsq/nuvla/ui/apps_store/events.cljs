@@ -38,12 +38,17 @@
 
 (reg-event-fx
   ::get-modules
-  (fn [{{:keys [::session-spec/session] :as db} :db} [_ active-tab]]
+  (fn [{{:keys [::session-spec/session] :as db} :db}
+       [_ active-tab
+        {:keys [order-by
+                pagination-db-path
+                external-filter]}]]
     (-> {:db (assoc db ::apps-spec/module nil)
          ::cimi-api-fx/search
          [:module
-          (->> {:orderby "created:desc"
+          (->> {:orderby (or order-by "created:desc")
                 :filter  (general-utils/join-and
+                           external-filter
                            subtypes-apps-or-filter
                            (case active-tab
                              :appstore (general-utils/published-query-string)
@@ -53,7 +58,8 @@
                              nil)
                            (full-text-search-plugin/filter-text
                              db [::spec/modules-search]))}
-               (pagination-plugin/first-last-params db [(spec/page-keys->pagination-db-path active-tab)]))
+               (pagination-plugin/first-last-params db (or pagination-db-path
+                                                           [(spec/page-keys->pagination-db-path active-tab)])))
           #(dispatch [::set-modules %])]})))
 
 (reg-event-fx

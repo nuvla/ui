@@ -23,6 +23,9 @@
 
 (s/def ::pagination-deployments any?)
 (s/def ::pagination-edges any?)
+(s/def ::pagination-apps-picker any?)
+
+(s/def ::opened-modal (s/nilable keyword?))
 
 (def defaults
   {::module-applications-sets  nil
@@ -40,4 +43,7 @@
    ::prices-accepted?          false
    ::ordering                  default-ordering
    ::pagination-deployments    pagination-default
-   ::pagination-edges          pagination-default})
+   ::pagination-edges          pagination-default
+   ::pagination-apps-picker    (pagination-plugin/build-spec
+                                 :default-items-per-page 16)
+   ::opened-modal              nil})

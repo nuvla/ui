@@ -1,19 +1,24 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
+            [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
+            [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.deployments.spec :as deployments-spec]
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.edges.utils :as edge-utils]
+            [sixsq.nuvla.ui.edges.spec :as edges-spec]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.module :as module-plugin]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
@@ -38,7 +43,7 @@
 (reg-event-db
   ::clear-target-edges
   (fn [db]
-    (assoc db ::spec/edges nil)))
+    (dissoc db ::spec/edges ::spec/edges-documents)))
 
 (reg-event-fx
   ::init
@@ -48,7 +53,16 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-id
                        :frequency 10000
-                       :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]]] }))
+                       :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]]]}))
+
+(reg-event-fx
+  ::init-create
+  (fn [{{:keys [current-route] :as db} :db}]
+    (let [name (routing-utils/get-query-param current-route :name)]
+      {:db (-> db
+               (merge (assoc-in spec/defaults [::spec/deployment-set :name] name))
+               (assoc ::deployments-spec/deployments-summary-all nil))
+       :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-id}]]]})))
 
 (reg-event-fx
   ::new
@@ -173,18 +187,23 @@
                    :content (str "Selected module subtype:" subtype)
                    :type    :error}]})))
 
+
 (reg-event-fx
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set]]
     (let [parent-ids (->> deployment-set
                           :applications-sets
                           (mapcat :overwrites)
-                          (mapcat :targets))]
+                          (mapcat (juxt :targets :fleet))
+                          (remove nil?)
+                          flatten)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
-                     ::spec/deployment-set deployment-set
-                     ::main-spec/loading? false)
-       :fx [[:dispatch [::resolve-to-ancestor {:ids parent-ids
-                                               :storage-event ::set-edges}]]
+             ::spec/deployment-set deployment-set
+             ::main-spec/loading? false)
+       :fx [[:dispatch [::resolve-to-ancestor-resource
+                        {:ids parent-ids
+                         :storage-event ::set-edges
+                         :ancestor-resource-name "nuvlabox"}]]
             [:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]})))
 
 (reg-event-fx
@@ -232,23 +251,25 @@
 
 (reg-event-fx
   ::edit
-  (fn [_ [_ resource-id data success-msg]]
-    {::cimi-api-fx/edit
-     [resource-id data
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error editing " resource-id)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}]))
-         (do
-           (when success-msg
+  (fn [{db :db} [_ resource-id data success-msg]]
+    (if-not resource-id
+      {:db (update db ::spec/deployment-set merge data)}
+      {::cimi-api-fx/edit
+       [resource-id data
+        #(if (instance? js/Error %)
+           (let [{:keys [status message]} (response/parse-ex-info %)]
              (dispatch [::messages-events/add
-                        {:header  success-msg
-                         :content success-msg
-                         :type    :success}]))
-           (dispatch [::set-deployment-set %])))]}))
+                        {:header  (cond-> (str "error editing " resource-id)
+                                    status (str " (" status ")"))
+                         :content message
+                         :type    :error}]))
+           (do
+             (when success-msg
+               (dispatch [::messages-events/add
+                          {:header  success-msg
+                           :content success-msg
+                           :type    :success}]))
+             (dispatch [::set-deployment-set %])))]})))
 
 (reg-event-fx
   ::delete
@@ -295,6 +316,25 @@
         #(dispatch [::routing-events/navigate routes/deployment-sets-details
                     {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
 
+(reg-event-fx
+  ::create
+  (fn [{{:keys [current-route
+                ::spec/deployment-set] :as db} :db}]
+    (let [edges-path (subs/current-route->edges-db-path current-route)
+          apps-path  (subs/create-apps-creation-db-path current-route)
+          name       (:name deployment-set)
+          body       (cond->
+                       {:fleet (:resources (get-in db edges-path))
+                        :modules (map
+                                   (fn [app] (str (:id app) "_" (:version app)))
+                                   (get-in db apps-path))}
+                       (nonblank-string name)
+                       (assoc :name name))]
+      {::cimi-api-fx/add
+       [:deployment-set body
+        #(dispatch [::routing-events/navigate routes/deployment-sets-details
+                    {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
+
 (reg-event-db
   ::set
   (fn [db [_ k v]]
@@ -315,66 +355,117 @@
                 (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))
 
 (reg-event-fx
-  ::resolve-to-ancestor
-  (fn [{{:keys [::spec/edges]} :db} [_ {ids :ids storage-event :storage-event}]]
+  ::resolve-to-ancestor-resource
+  (fn [{{:keys [::spec/edges]} :db} [_ {:keys [ids storage-event
+                                               ancestor-resource-name]}]]
     (when-not edges
-      (let [callback #(let [resources  (:resources %)
-                            parent-ids (remove nil? (map :parent resources))
-                            resolved?  (empty? parent-ids)]
-                        (cond
-                          (or (empty? resources) (instance? js/Error %))
-                          (cimi-api-fx/default-error-message % "loading edges for credentials failed")
+      (let [ancestor-ids   (filterv #(str/starts-with? % ancestor-resource-name) ids)
+            descendant-ids (vec (remove (set ancestor-ids) ids))
+            resolved?      (empty? descendant-ids)
+            callback (fn [response]
+                       (let [resources  (:resources response)
+                             parent-ids (remove nil? (map :parent resources))]
+                         (cond
+                           (or (empty? resources) (instance? js/Error response))
+                           (cimi-api-fx/default-error-message response "loading edges for credentials failed")
 
-                          resolved?
-                          (dispatch [storage-event %])
+                           resolved?
+                           (dispatch [storage-event response])
 
-                          :else
-                          (dispatch [::resolve-to-ancestor {:ids           parent-ids
-                                                            :storage-event storage-event}])))
-            resource-name (general-utils/id->resource-name (first ids))
-            ids-filter    (general-utils/ids->filter-string ids)]
-        (when (every? seq [resource-name ids-filter])
-          {::cimi-api-fx/search [resource-name
+                           :else
+                           (dispatch [::resolve-to-ancestor-resource
+                                      {:ids           (into ancestor-ids parent-ids)
+                                       :storage-event storage-event
+                                       :ancestor-resource-name ancestor-resource-name}]))))
+            ids-to-query  (if resolved? ancestor-ids descendant-ids)
+            next-parent-resource-name (general-utils/id->resource-name (first ids-to-query))
+            ids-filter    (general-utils/ids->inclusion-filter-string ids-to-query)]
+        (when (every? seq [next-parent-resource-name ids-filter])
+          {::cimi-api-fx/search [next-parent-resource-name
                                  (cond->
                                    {:filter ids-filter
                                     :last   10000
                                     :select "id, parent"}
-                                   (= "nuvlabox" resource-name)
-                                   (merge {:aggregation "terms:online,terms:state"}))
+                                   (= "nuvlabox" next-parent-resource-name)
+                                   (merge {:aggregation edges-spec/state-summary-agg-term}))
                                  callback]})))))
-
 
 (reg-event-fx
   ::set-edges
-  (fn [{db :db} [_ response]]
-    {:db (assoc db ::spec/edges
-                   (update response :resources #(mapv :id %)))
-     :fx [[:dispatch [::get-edges-documents]]]}))
+  (fn [{{:keys [current-route] :as db} :db} [_ response]]
+    (let [path (subs/current-route->edges-db-path current-route)]
+      {:db (assoc-in db path
+             (update response :resources #(mapv :id %)))
+       :fx [[:dispatch [::get-edge-documents]]]})))
 
 (def edges-state-filter-key :edges-state)
 
 (reg-event-fx
-  ::get-edges-documents
-  (fn [{{:keys [::spec/edges
-                ::spec/ordering
+  ::get-edge-documents
+  (fn [{{:keys [::spec/ordering
                 current-route] :as db} :db} _]
-    (let [ordering     (or ordering spec/default-ordering)
+    (let [edges        (get-in db
+                         (subs/current-route->edges-db-path
+                           current-route))
+          ordering     (or ordering spec/default-ordering)
           query-filter (routing-utils/get-query-param current-route edges-state-filter-key)]
-      (when edges
-        {:db (assoc db ::spec/edge-documents nil)
-         ::cimi-api-fx/search
-         [:nuvlabox
-          (->> {:orderby (ordering->order-string ordering)
-                :filter  (general-utils/join-and
-                           "id!=null"
-                           (general-utils/ids->filter-string (-> edges
-                                                                 :resources))
-                           (when (seq query-filter) (edge-utils/state-filter query-filter)))}
-               (pagination-plugin/first-last-params
-                 db [::spec/pagination-edges]))
-          #(dispatch [::set-edge-documents %])]}))))
+      (cond-> {:db (assoc db ::spec/edge-documents nil)}
+        edges
+        (assoc ::cimi-api-fx/search
+          [:nuvlabox
+           (->> {:orderby (ordering->order-string ordering)
+                 :filter  (general-utils/join-and
+                            "id!=null"
+                            (general-utils/ids->inclusion-filter-string (-> edges
+                                                                  :resources))
+                            (when (seq query-filter) (edge-utils/state-filter query-filter)))}
+                (pagination-plugin/first-last-params
+                  db [::spec/pagination-edges]))
+           #(dispatch [::set-edges-documents %])])))))
 
 (reg-event-db
-  ::set-edge-documents
+  ::set-opened-modal
+  (fn [db [_ id]]
+    (assoc db ::spec/opened-modal id)))
+
+(reg-event-db
+  ::set-edges-documents
   (fn [db [_ edges-response]]
     (assoc db ::spec/edges-documents edges-response)))
+
+
+(reg-event-fx
+  ::fetch-app-picker-apps
+  (fn [{{:keys [current-route] :as db} :db} [_ pagination-db-path]]
+    (let [current-selection (get-in db (subs/create-apps-creation-db-path current-route))]
+      {:fx [[:dispatch [::apps-store-events/get-modules
+                        apps-store-spec/allapps-key
+                        {:external-filter (general-utils/ids->exclude-filter-str
+                                            (map :id current-selection))
+                         :order-by "name:asc"
+                         :pagination-db-path [pagination-db-path]}]]]})))
+
+(reg-event-fx
+  ::add-app-from-picker
+  (fn [{{:keys [current-route] :as db} :db} [_ app]]
+    (let [db-path  (subs/create-apps-creation-db-path current-route)
+          versions (:versions app)
+          published-versions (filter (comp true? :published) (:versions app))
+          version-id (:href (or (last published-versions) (last versions)))
+          version-no (get-version-id (map-indexed vector versions) version-id)
+          app-with-content (assoc-in app [:content :id] version-id)
+          app-with-version-number (assoc app-with-content :version version-no)
+          current-selection (or (get-in db db-path) [])
+          new-selection (conj current-selection app-with-version-number)]
+      {:db (assoc-in db db-path new-selection)
+       :fx [[:dispatch [::fetch-app-picker-apps
+                        ::spec/pagination-apps-picker]]]})))
+
+(reg-event-fx
+  ::remove-app-from-creation-data
+  (fn [{{:keys [current-route] :as db} :db} [_ app]]
+    (let [db-path  (subs/create-apps-creation-db-path current-route)]
+      {:db (update-in db db-path (fn [apps]
+                                   (remove #(= (:id %) (:href app)) apps)))
+       :fx [[:dispatch [::fetch-app-picker-apps
+                        ::spec/pagination-apps-picker]]]})))

@@ -19,12 +19,10 @@
   ::deployment-set
   :-> ::spec/deployment-set)
 
-;; Please ignore unused new subs: They're used in follow up branch
 (reg-sub
   ::deployment-set-name
   :<- [::deployment-set]
-  (fn [depl-set]
-    (:name depl-set)))
+  :-> :name)
 
 (reg-sub
   ::apps

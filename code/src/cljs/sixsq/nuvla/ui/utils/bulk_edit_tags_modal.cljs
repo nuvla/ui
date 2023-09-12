@@ -175,10 +175,10 @@
                                          :plural       plural
                                          :singular     singular}]
             disabled? (or
-                        (= @selected-count 0)
+                        (zero? @selected-count)
                         (and
                           (not= modal-tags-remove-all @edit-mode)
-                          (= 0 (count @form-tags)))
+                          (zero? (count @form-tags)))
                         (= @selected-count not-editable-count))]
         [ui/Modal {:open       @open?
                    :close-icon true

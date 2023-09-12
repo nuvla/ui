@@ -460,7 +460,7 @@
             {:class :nuvla-edges
              :icon  icons/i-box
              :label (str (@tr [:nuvlaedge]) "s")}
-            (if (< 0 (:total @edges-stats))
+            (if (pos? (:total @edges-stats))
               [EdgeOverviewContent @edges-stats]
               [AddButton])]]
           [ui/GridColumn {:stretched true}

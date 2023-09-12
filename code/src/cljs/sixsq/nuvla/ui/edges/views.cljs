@@ -868,9 +868,7 @@
                                                                   (dispatch [::routing-events/navigate
                                                                              routes/deployment-sets-details
                                                                              {:uuid :create}
-                                                                             {
-                                                                              ;; :name    @name
-                                                                              depl-group-subs/creation-temp-id-key id}])))}} :columns columns :edges selected-nbs}]))
+                                                                             {depl-group-subs/creation-temp-id-key id}])))}} :columns columns :edges selected-nbs}]))
 
 
 (defn NuvlaboxMapPoint

@@ -85,6 +85,7 @@
     (let [name (routing-utils/get-query-param current-route :name)]
       {:db (-> db
                (merge (assoc-in spec/defaults [::spec/deployment-set :name] name))
+               (assoc ::spec/deployment-set-edited nil)
                (assoc ::deployments-spec/deployments-summary-all nil))
        :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]]})))
 
@@ -363,12 +364,12 @@
                                    (get-in db apps-path))}
                        (nonblank-string name)
                        (assoc :name name))]
-      {::cimi-api-fx/add
-       [:deployment-set body
-        #(dispatch [::routing-events/navigate routes/deployment-sets-details
-                    {:uuid (general-utils/id->uuid (:resource-id %))}
-                    nil
-                    {:ignore-chng-protection? true}])]})))
+      {:fx [[:dispatch [::main-events/changes-protection? false]]
+            [::cimi-api-fx/add
+             [:deployment-set body
+              #(dispatch [::routing-events/navigate routes/deployment-sets-details
+                          {:uuid (general-utils/id->uuid (:resource-id %))}])
+              :on-error #(dispatch [::main-events/changes-protection? true])]]]})))
 
 (reg-event-db
   ::set

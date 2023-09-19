@@ -114,9 +114,9 @@
              :icon     icons/i-floppy
              :disabled (not @save-enabled?)
              :class    (when @save-enabled? "primary-menu-item")
-             :on-click #(if creating?
-                          (dispatch [::events/create])
-                          (dispatch [::events/persist! {:deployment-set deployment-set
+             :on-click (if creating?
+                         #(dispatch [::events/create])
+                         #(dispatch [::events/persist! {:deployment-set deployment-set
                                                         :success-msg    (@tr [:updated-successfully])}]))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 

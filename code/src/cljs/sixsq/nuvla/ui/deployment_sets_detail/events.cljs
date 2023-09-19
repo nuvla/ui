@@ -245,8 +245,8 @@
                         (cimi-api-fx/default-operation-on-error resource-id operation %)
                         (on-error-fn))]
       {::cimi-api-fx/operation [resource-id operation on-success
-                                :on-error on-error :data data]
-       :fx [[:dispatch [::refresh]]]})))
+                                :on-error on-error :data data
+                                :always-cb refresh]})))
 
 (reg-event-fx
   ::get-deployment-set

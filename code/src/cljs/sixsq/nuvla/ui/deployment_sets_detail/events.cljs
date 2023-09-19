@@ -17,6 +17,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
@@ -28,7 +29,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
-(def refresh-action-edges-id :deployment-set-get-edges)
+(def refresh-action-depl-set-id :deployment-set)
 (def refresh-action-deployments-id :deployment-set-get-deployments)
 
 (defn uuid->depl-set-id [uuid]
@@ -47,32 +48,22 @@
 
 (reg-event-fx
   ::refresh
-  (fn [{{:keys [current-route
-                ::spec/deployment-set
-                ::spec/deployment-set-edited]} :db}]
-    (let [uuid (-> current-route :path-params :uuid)
-          stored-targets (get-target-fleet-ids deployment-set)
-          edited-targets (get-target-fleet-ids deployment-set-edited)
-          merged-targets (-> (into stored-targets edited-targets)
-                             distinct
-                             vec)]
+  (fn [{{:keys [current-route]} :db}]
+    (let [uuid (-> current-route :path-params :uuid)]
       {:fx [[:dispatch
+             [::main-events/action-interval-start
+              {:id        refresh-action-depl-set-id
+               :frequency 10000
+               :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]]
+            [:dispatch
              [::main-events/action-interval-start
               {:id        refresh-action-deployments-id
                :frequency 10000
-               :event     [::get-deployments-for-deployment-sets (uuid->depl-set-id uuid)]}]]
-            [:dispatch
-             [::main-events/action-interval-start
-              {:id        refresh-action-edges-id
-               :frequency 10000
-               :event     [::resolve-to-ancestor-resource
-                           {:ids merged-targets
-                            :storage-event ::set-edges
-                            :ancestor-resource-name "nuvlabox"}]}]]]})))
+               :event     [::get-deployments-for-deployment-sets (uuid->depl-set-id uuid)]}]]]})))
 
 (defn refresh
-  [uuid]
-  (dispatch [::refresh uuid]))
+  []
+  (dispatch [::refresh]))
 
 (reg-event-db
   ::clear-target-edges
@@ -81,11 +72,12 @@
 
 (reg-event-fx
   ::init
-  (fn [_ [_ uuid]]
+  (fn []
     {:fx [[:dispatch [::clear-target-edges]]
-          [:dispatch [::main-events/action-interval-delete {:id refresh-action-edges-id}]]
+          [:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
-          [:dispatch [::get-deployment-set (uuid->depl-set-id uuid)]]]}))
+          [:dispatch [::refresh]]
+          [:dispatch [::main-events/changes-protection? false]]]}))
 
 (reg-event-fx
   ::init-create
@@ -94,7 +86,7 @@
       {:db (-> db
                (merge (assoc-in spec/defaults [::spec/deployment-set :name] name))
                (assoc ::deployments-spec/deployments-summary-all nil))
-       :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-edges-id}]]]})))
+       :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]]})))
 
 (reg-event-fx
   ::new
@@ -219,17 +211,15 @@
                    :content (str "Selected module subtype:" subtype)
                    :type    :error}]})))
 
-
-
 (reg-event-fx
   ::set-deployment-set
-  (fn [{:keys [db]} [_ deployment-set]]
+  (fn [{:keys [db]} [_ deployment-set fx]]
     (let [parent-ids (get-target-fleet-ids deployment-set)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
              ::spec/deployment-set deployment-set
              ::spec/deployment-set-edited deployment-set
              ::main-spec/loading? false)
-       :fx [[:dispatch [::refresh uuid]]
+       :fx [fx
             [:dispatch [::resolve-to-ancestor-resource
                         {:ids parent-ids
                          :storage-event ::set-edges
@@ -238,7 +228,11 @@
 
 (reg-event-fx
   ::operation
-  (fn [_ [_ resource-id operation data on-success-fn on-error-fn]]
+  (fn [_ [_ {:keys [resource-id operation data on-success-fn on-error-fn]
+             :or {data {}
+                  on-success-fn #(dispatch [::bulk-progress-plugin/monitor
+                                            [::spec/bulk-jobs] (:location %)])
+                  on-error-fn #()}}]]
     (let [on-success #(do
                         (let [{:keys [status message]} (response/parse %)]
                           (dispatch [::messages-events/add
@@ -251,14 +245,15 @@
                         (cimi-api-fx/default-operation-on-error resource-id operation %)
                         (on-error-fn))]
       {::cimi-api-fx/operation [resource-id operation on-success
-                                :on-error on-error :data data]})))
+                                :on-error on-error :data data]
+       :fx [[:dispatch [::refresh]]]})))
 
 (reg-event-fx
   ::get-deployment-set
-  (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id]]
+  (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id fx]]
     {:db               (cond-> db
                                (not= (:id deployment-set) id) (merge spec/defaults))
-     ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
+     ::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]]}))
@@ -356,10 +351,11 @@
 (reg-event-fx
   ::create
   (fn [{{:keys [current-route
-                ::spec/deployment-set] :as db} :db}]
+                ::spec/deployment-set
+                ::spec/deployment-set-edited] :as db} :db}]
     (let [edges-path (subs/current-route->edges-db-path current-route)
           apps-path  (subs/create-apps-creation-db-path current-route)
-          name       (:name deployment-set)
+          name       (or (:name deployment-set) (:name deployment-set-edited))
           body       (cond->
                        {:fleet (:resources (get-in db edges-path))
                         :modules (map
@@ -370,7 +366,9 @@
       {::cimi-api-fx/add
        [:deployment-set body
         #(dispatch [::routing-events/navigate routes/deployment-sets-details
-                    {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
+                    {:uuid (general-utils/id->uuid (:resource-id %))}
+                    nil
+                    {:ignore-chng-protection? true}])]})))
 
 (reg-event-db
   ::set

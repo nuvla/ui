@@ -50,10 +50,9 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "start" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "start"}]))
       :disabled (not (general-utils/can-operation?
                        "start" deployment-set))}
      [icons/PlayIcon]
@@ -64,10 +63,9 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "stop" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "stop"}]))
       :disabled (not (general-utils/can-operation?
                        "stop" deployment-set))}
      [icons/StopIcon]
@@ -79,10 +77,9 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "update" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "update"}]))
       :disabled (not (general-utils/can-operation?
                        "update" deployment-set))}
      [icons/RedoIcon]
@@ -117,11 +114,10 @@
              :icon     icons/i-floppy
              :disabled (not @save-enabled?)
              :class    (when @save-enabled? "primary-menu-item")
-             :on-click #(do (js/console.error "HI")
-                          (if creating?
-                            (dispatch [::events/create])
-                            (dispatch [::events/persist! {:deployment-set deployment-set
-                                                          :success-msg    (@tr [:updated-successfully])}])))}]])
+             :on-click #(if creating?
+                          (dispatch [::events/create])
+                          (dispatch [::events/persist! {:deployment-set deployment-set
+                                                        :success-msg    (@tr [:updated-successfully])}]))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBar
@@ -146,9 +142,9 @@
             ^{:key "save"}
             [SaveButton {:deployment-set @deployment-set}])
           [components/RefreshMenu
-           {:action-id  events/refresh-action-edges-id
+           {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?
-            :on-refresh #(events/refresh uuid)}]]]))))
+            :on-refresh #(events/refresh)}]]]))))
 
 
 (defn MenuBarCreate

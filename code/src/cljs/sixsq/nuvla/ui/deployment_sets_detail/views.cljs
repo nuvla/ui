@@ -74,6 +74,21 @@
      (@tr [:stop])]))
 
 
+(defn UpdateButton
+  [{:keys [id] :as deployment-set}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/MenuItem
+     {:on-click (fn [_]
+                  (dispatch [::events/operation id "update" {}
+                             #(dispatch [::bulk-progress-plugin/monitor
+                                         [::spec/bulk-jobs] (:location %)])
+                             #()]))
+      :disabled (not (general-utils/can-operation?
+                       "update" deployment-set))}
+     [icons/RedoIcon]
+     (@tr [:update])]))
+
+
 (defn DeleteButton
   [{:keys [id name description] :as _deployment-set}]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -95,7 +110,7 @@
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
                         @deployment-set
-                        #{"start" "stop" "delete"})]
+                        #{"start" "stop" "delete" "update"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
@@ -103,6 +118,8 @@
                 [DeleteButton @deployment-set]
                 ^{:key "stop"}
                 [StopButton @deployment-set]
+                ^{:key "update"}
+                [UpdateButton @deployment-set]
                 ^{:key "start"}
                 [StartButton @deployment-set])
           [components/RefreshMenu

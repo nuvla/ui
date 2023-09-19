@@ -32,7 +32,9 @@
 (def refresh-action-deployments-id :deployment-set-get-deployments)
 
 (defn uuid->depl-set-id [uuid]
-  (str "deployment-set/" uuid))
+  (if-not (str/starts-with? uuid "deployment-set/")
+    (str "deployment-set/" uuid)
+    uuid))
 
 (defn get-target-fleet-ids
   [depl-set]

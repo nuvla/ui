@@ -26,8 +26,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]
-            [cljs.core.async :as a]))
+            [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-action-id :deployment-set-get-deployment-set)
 
@@ -441,8 +440,12 @@
     (let [current-selection (get-in db (subs/create-apps-creation-db-path current-route))]
       {:fx [[:dispatch [::apps-store-events/get-modules
                         apps-store-spec/allapps-key
-                        {:external-filter (general-utils/ids->exclude-filter-str
-                                            (map :id current-selection))
+                        {:external-filter
+                         (general-utils/join-and
+                           (general-utils/ids->exclude-filter-str
+                             (map :id current-selection))
+                           (when (seq current-selection)
+                             "subtype!='applications_sets'"))
                          :order-by "name:asc"
                          :pagination-db-path [pagination-db-path]}]]]})))
 
@@ -469,19 +472,31 @@
 
 (reg-event-fx
   ::add-apps-set-apps
-  (fn [_ [_ app]]
-    (js/console.error app)
-    (let [app-ids (->> app
+  (fn [_ [_ apps-sets]]
+    (let [app-ids (->> apps-sets
                        :content
                        :applications-sets
                        (mapcat :applications)
                        (map :id))]
-      {})))
+      {::cimi-api-fx/search
+       [:module
+        {:filter (general-utils/ids->inclusion-filter-string
+                   app-ids)}
+        #(dispatch [::add-apps-to-selection (:resources %)])]})))
+
+(reg-event-fx
+  ::add-apps-to-selection
+  (fn [{db :db} [_ apps]]
+    (let [db-path  (subs/create-apps-creation-db-path (:current-route db))
+          apps (mapv enrich-app apps)]
+      {:db (update-in db db-path (fnil into []) apps)
+       :fx [[:dispatch [::fetch-app-picker-apps
+                        ::spec/pagination-apps-picker]]]})))
 
 (reg-event-fx
   ::remove-app-from-creation-data
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
-    (let [db-path  (subs/create-apps-creation-db-path current-route)]
+    (let [db-path (subs/create-apps-creation-db-path current-route)]
       {:db (update-in db db-path (fn [apps]
                                    (vec (remove #(= (:id %) (:href app)) apps))))
        :fx [[:dispatch [::fetch-app-picker-apps

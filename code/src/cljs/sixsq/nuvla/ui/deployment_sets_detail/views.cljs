@@ -147,7 +147,8 @@
           [components/RefreshMenu
            {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?
-            :on-refresh #(events/refresh)}]]]))))
+            :on-refresh #(events/refresh)}]
+          {:max-items-to-show 4}]]))))
 
 
 (defn MenuBarCreate

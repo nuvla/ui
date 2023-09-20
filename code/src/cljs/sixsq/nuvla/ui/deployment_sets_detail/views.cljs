@@ -90,12 +90,13 @@
 
 
 (defn DeleteButton
-  [{:keys [id name description] :as _deployment-set}]
+  [{:keys [id name description] :as deployment-set}]
   (let [tr      (subscribe [::i18n-subs/tr])
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
+                                  {:disabled (not (general-utils/can-operation? "delete" deployment-set))}
                                   [icons/TrashIconFull]
                                   (@tr [:delete])])
       :content     [:h3 content]

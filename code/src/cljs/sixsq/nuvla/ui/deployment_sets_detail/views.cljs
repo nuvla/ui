@@ -47,14 +47,15 @@
 
 (defn StartButton
   [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        enabled? (general-utils/can-operation? "start" deployment-set)]
     [ui/MenuItem
      {:on-click (fn [_]
                   (dispatch [::events/operation
                              {:resource-id id
                               :operation "start"}]))
-      :disabled (not (general-utils/can-operation?
-                       "start" deployment-set))}
+      :disabled (not enabled?)
+      :class    (when enabled? "primary-menu-item")}
      [icons/PlayIcon]
      (@tr [:start])]))
 
@@ -74,14 +75,16 @@
 
 (defn UpdateButton
   [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? (general-utils/can-operation?
+                       "update" deployment-set)]
     [ui/MenuItem
      {:on-click (fn [_]
                   (dispatch [::events/operation
                              {:resource-id id
                               :operation "update"}]))
-      :disabled (not (general-utils/can-operation?
-                       "update" deployment-set))}
+      :disabled (not enabled?)
+      :class    (when enabled? "primary-menu-item")}
      [icons/RedoIcon]
      (@tr [:update])]))
 
@@ -121,7 +124,7 @@
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBar
-  [uuid]
+  []
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])]
     (fn []

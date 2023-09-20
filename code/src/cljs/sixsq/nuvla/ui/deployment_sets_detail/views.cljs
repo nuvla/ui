@@ -164,7 +164,7 @@
   [attribute creating?]
   (let [deployment-set (subscribe [::subs/deployment-set])
         can-edit?      (subscribe [::subs/can-edit?])
-        on-change-fn   #(dispatch [::events/edit {attribute %}])]
+        on-change-fn   #(dispatch [::events/edit attribute %])]
     (if (or creating? @can-edit?)
       [components/EditableInput attribute @deployment-set on-change-fn]
       [ui/TableCell (get @deployment-set attribute)])))
@@ -208,16 +208,6 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:updated]))]
            [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]])]]]))
-
-
-(defn TabOverviewTags
-  [deployment-set]
-  [ui/Segment {:secondary true
-               :color     "teal"
-               :raised    true}
-   [:h4 "Tags"]
-   [components/EditableTags
-    deployment-set #(dispatch [::events/edit {:tags %}])]])
 
 (def apps-picker-modal-id :modal/add-apps)
 
@@ -643,7 +633,7 @@
      [module-plugin/ModuleVersions
       {:db-path [::spec/apps-sets i]
        :href    module-id
-       :change-event [::events/edit-version i module-id]}]
+       :change-event [::events/edit-config]}]
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
@@ -652,7 +642,8 @@
     [uix/Accordion
      [module-plugin/EnvVariables
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-config]}]
      :label (@tr [:env-variables])]))
 
 (defn RegistriesCredsApp
@@ -661,7 +652,8 @@
     [uix/Accordion
      [module-plugin/RegistriesCredentials
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-config]}]
      :label (@tr [:private-registries])]))
 
 (defn ConfigureApps
@@ -968,7 +960,7 @@
                      :render   #(r/as-element
                                   [ConfigureApps
                                    0
-                                   (mapcat :applications @apps-sets)])}
+                                   (get-in @apps-sets [0 :applications])])}
                     {:menuItem {:key :edges
                                 :content
                                 (let [tab-title (str/capitalize (tr [:edges]))]

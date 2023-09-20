@@ -3,6 +3,7 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
@@ -304,25 +305,21 @@
     (general-utils/ids->inclusion-filter-string (->> edges :resources (map :id)))))
 
 (reg-sub
-  ::deployment-set-edited
-  :-> ::spec/deployment-set-edited)
-
-(reg-sub
   ::unsaved-changes?
   :<- [::deployment-set-stored-and-edited]
   (fn [[stored edited]]
-    (not= stored edited)))
+    (utils/unsaved-changes? stored edited)))
 
 (reg-sub
   ::save-enabled?
-  :<- [::deployment-set]
+  :<- [::deployment-set-edited]
   :<- [::edges-in-deployment-group-response]
   :<- [::apps-creation]
   :<- [::applications-sets]
   :<- [::unsaved-changes?]
-  (fn [[deployment-set edges apps-creation apps-sets unsaved-changes?] [_ creating?]]
+  (fn [[deployment-set-edited edges apps-creation apps-sets unsaved-changes?] [_ creating?]]
     (and
-      (nonblank-string (:name deployment-set))
+      (nonblank-string (:name deployment-set-edited))
       (seq edges)
       (seq (if creating? apps-creation apps-sets))
       (or creating? unsaved-changes?))))

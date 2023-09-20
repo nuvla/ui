@@ -26,12 +26,16 @@
 (s/def ::pagination-edges any?)
 (s/def ::pagination-apps-picker any?)
 
+(s/def ::deployments-summary-all any?)
+
 (s/def ::opened-modal (s/nilable keyword?))
 
 (def defaults
   {::module-applications-sets  nil
    ::apps-sets                 nil
    ::deployment-set            nil
+   ::deployment-set-edited     nil
+   ::deployments-summary-all   nil
    ::deployment-set-not-found? false
    ::events                    (events-plugin/build-spec)
    ::steps                     (step-group-plugin/build-spec

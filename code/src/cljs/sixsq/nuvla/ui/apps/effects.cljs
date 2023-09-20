@@ -34,5 +34,5 @@
                                 (:resources (<! (api/search @CLIENT :module {:filter children-filter}))))
 
             module-data       (cond-> module
-                                      children (assoc :children children))]
+                                children (assoc :children children))]
         (callback module-data)))))

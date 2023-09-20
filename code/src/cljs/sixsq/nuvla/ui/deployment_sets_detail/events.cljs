@@ -11,8 +11,8 @@
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.deployments.spec :as deployments-spec]
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
-            [sixsq.nuvla.ui.edges.utils :as edge-utils]
             [sixsq.nuvla.ui.edges.spec :as edges-spec]
+            [sixsq.nuvla.ui.edges.utils :as edge-utils]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -26,7 +26,8 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [cljs.core.async :as a]))
 
 (def refresh-action-id :deployment-set-get-deployment-set)
 
@@ -445,27 +446,55 @@
                          :order-by "name:asc"
                          :pagination-db-path [pagination-db-path]}]]]})))
 
+(defn enrich-app
+  [app]
+  (let [versions (:versions app)
+        published-versions (filter (comp true? :published) (:versions app))
+        version-id (:href (or (last published-versions) (last versions)))
+        app-with-content (assoc-in app [:content :id] version-id)
+        version-no (get-version-id (map-indexed vector versions) version-id)]
+    (assoc app-with-content :version version-no)))
+
 (reg-event-fx
   ::add-app-from-picker
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
-    (let [db-path  (subs/create-apps-creation-db-path current-route)
-          versions (:versions app)
-          published-versions (filter (comp true? :published) (:versions app))
-          version-id (:href (or (last published-versions) (last versions)))
-          version-no (get-version-id (map-indexed vector versions) version-id)
-          app-with-content (assoc-in app [:content :id] version-id)
-          app-with-version-number (assoc app-with-content :version version-no)
-          current-selection (or (get-in db db-path) [])
-          new-selection (conj current-selection app-with-version-number)]
-      {:db (assoc-in db db-path new-selection)
-       :fx [[:dispatch [::fetch-app-picker-apps
-                        ::spec/pagination-apps-picker]]]})))
+    (if (= (:subtype app)
+           "applications_sets")
+      {::cimi-api-fx/get [(:id app) #(dispatch [::add-apps-set-apps %])]}
+      (let [db-path  (subs/create-apps-creation-db-path current-route)
+            app-with-version-number (enrich-app app)]
+        {:db (update-in db db-path (fnil conj []) app-with-version-number)
+         :fx [[:dispatch [::fetch-app-picker-apps
+                          ::spec/pagination-apps-picker]]]}))))
+
+(reg-event-fx
+  ::add-apps-set-apps
+  (fn [_ [_ app]]
+    (js/console.error app)
+    (let [app-ids (->> app
+                       :content
+                       :applications-sets
+                       (mapcat :applications)
+                       (map :id))]
+      {})))
 
 (reg-event-fx
   ::remove-app-from-creation-data
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
     (let [db-path  (subs/create-apps-creation-db-path current-route)]
       {:db (update-in db db-path (fn [apps]
-                                   (remove #(= (:id %) (:href app)) apps)))
+                                   (vec (remove #(= (:id %) (:href app)) apps))))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]]})))
+
+
+
+(comment
+  (update-in {} [:a :b] (fn [a]
+                          (fnil conj :a)))
+  (update-in {} [:a :b] (fnil conj []) 1)
+
+  (let [a {:s "hi"}]
+    (case (:s a)
+      "hi" "hello"))
+  )

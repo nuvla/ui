@@ -48,6 +48,7 @@
          [:module
           (->> {:orderby (or order-by "created:desc")
                 :filter  (general-utils/join-and
+                           "parent-path!='apps-sets'"
                            external-filter
                            subtypes-apps-or-filter
                            (case active-tab

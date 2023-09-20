@@ -55,7 +55,7 @@
                              :appstore (general-utils/published-query-string)
                              :myapps (general-utils/owner-like-query-string
                                        (or (:active-claim session)
-                                         (:user session)))
+                                           (:user session)))
                              nil)
                            (full-text-search-plugin/filter-text
                              db [::spec/modules-search]))}

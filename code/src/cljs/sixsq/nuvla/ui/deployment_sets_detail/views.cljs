@@ -233,7 +233,6 @@
         detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
         follow-trial?  (get price :follow-customer-trial false)
         button-icon    (if (and price (not follow-trial?)) :cart icons/i-rocket)
-        button-color   (if follow-trial? "green" "blue")
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :deploy-for)])
@@ -246,7 +245,7 @@
                          (.preventDefault event)
                          (.stopPropagation event))
         button-ops     {:fluid    true
-                        :color    button-color
+                        :color    "blue"
                         :icon     button-icon
                         :content  button-content
                         :on-click on-click}
@@ -258,13 +257,14 @@
       :subtype subtype
       :name name
       :id id
-      :desc-summary [:<> [:p desc-summary]
-                     [:p
-                      [:div (str "Project: " (-> (or (:path app) "")
-                                                 (str/split "/")
-                                                 first))]
-                      [:div "Vendor: " [AuthorVendorForModule app :span]]
-                      [:div (str "Price: " deploy-price)]]]
+      :desc-summary [:<>
+                     [:p desc-summary]
+                     [:div
+                      [:p (str "Project: " (-> (or (:path app) "")
+                                               (str/split "/")
+                                               first))]
+                      [:p "Vendor: " [AuthorVendorForModule app :span]]
+                      [:p (str "Price: " deploy-price)]]]
       :tags tags
       :published published
       :detail-href detail-href
@@ -306,7 +306,7 @@
     (dispatch [::events/fetch-app-picker-apps ::spec/pagination-apps-picker])
     (fn []
       [ui/Modal {:size :fullscreen
-                 :open       @open?
+                 :open      @open?
                  :close-icon true
                  :on-close   close-fn}
        [uix/ModalHeader {:header (@tr [:create-deployment-group])}]

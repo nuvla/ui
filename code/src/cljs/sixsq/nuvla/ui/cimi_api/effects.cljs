@@ -60,15 +60,12 @@
   (default-error-message response (str "error during " operation " action on " resource-id)))
 
 (defn api-call-error-check
-  ([api-call on-success on-error]
-   (api-call-error-check api-call on-success on-error #()))
-  ([api-call on-success on-error always-cb]
+  [api-call on-success on-error]
    (go
      (let [response (<! (api-call))]
-       (always-cb)
        (if (instance? js/Error response)
          (on-error response)
-         (on-success response))))))
+         (on-success response)))))
 
 (reg-fx ::cloud-entry-point
         (fn [[callback]]
@@ -130,11 +127,11 @@
 
 (reg-fx
   ::operation
-  (fn [[resource-id operation on-success & {:keys [on-error data always-cb]}]]
+  (fn [[resource-id operation on-success & {:keys [on-error data]}]]
     (when (and resource-id operation)
       (let [api-call #(api/operation @CLIENT resource-id operation data)
             on-error (or on-error (partial default-operation-on-error resource-id operation))]
-        (api-call-error-check api-call on-success on-error always-cb)))))
+        (api-call-error-check api-call on-success on-error)))))
 
 (reg-fx
   ::logout

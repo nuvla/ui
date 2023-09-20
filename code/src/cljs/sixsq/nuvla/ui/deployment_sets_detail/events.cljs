@@ -235,6 +235,7 @@
                                             [::spec/bulk-jobs] (:location %)])
                   on-error-fn #()}}]]
     (let [on-success #(do
+                        (refresh)
                         (let [{:keys [status message]} (response/parse %)]
                           (dispatch [::messages-events/add
                                      {:header  (cond-> (str "operation " operation " will be executed soon")
@@ -243,11 +244,11 @@
                                       :type    :success}]))
                         (on-success-fn %))
           on-error   #(do
+                        (refresh)
                         (cimi-api-fx/default-operation-on-error resource-id operation %)
                         (on-error-fn))]
       {::cimi-api-fx/operation [resource-id operation on-success
-                                :on-error on-error :data data
-                                :always-cb refresh]})))
+                                :on-error on-error :data data]})))
 
 (reg-event-fx
   ::get-deployment-set

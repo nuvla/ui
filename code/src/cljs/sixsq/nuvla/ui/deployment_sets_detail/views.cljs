@@ -868,7 +868,7 @@
 
 (defn EdgesTabView
   [selected-state]
-  (dispatch [::events/get-edges-documents])
+  (dispatch [::events/get-edge-documents])
   (let [tr            (subscribe [::i18n-subs/tr])
         edges         (subscribe [::subs/edges-documents-response])
         columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}

@@ -798,8 +798,7 @@
          trigger             :trigger-config} bulk-edit
         bulk-deploy-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
         {bulk-deploy-modal   :modal
-         bulk-deploy-trigger :trigger-config} (when @bulk-deploy-enabled? bulk-deploy)
-        ]
+         bulk-deploy-trigger :trigger-config} (when @bulk-deploy-enabled? bulk-deploy)]
     [:<>
      (when bulk-edit-modal
        [bulk-edit-modal])

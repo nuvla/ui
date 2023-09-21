@@ -417,7 +417,7 @@
                  :filter  (general-utils/join-and
                             "id!=null"
                             (general-utils/ids->inclusion-filter-string (-> edges
-                                                                  :resources))
+                                                                            :resources))
                             (when (seq query-filter) (edge-utils/state-filter query-filter)))}
                 (pagination-plugin/first-last-params
                   db [::spec/pagination-edges]))

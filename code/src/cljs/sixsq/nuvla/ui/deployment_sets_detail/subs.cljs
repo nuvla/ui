@@ -124,7 +124,6 @@
    :version  (str "v" (module-plugin/get-version-id
                         (map-indexed vector (:versions application))
                         (-> application :content :id)))
-   :status "yeah, good question"
    :last-update (time/time->format (js/Date.))})
 
 (reg-sub

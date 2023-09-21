@@ -50,10 +50,9 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "start" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "start"}]))
       :disabled (not (general-utils/can-operation?
                        "start" deployment-set))}
      [icons/PlayIcon]
@@ -64,10 +63,9 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "stop" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "stop"}]))
       :disabled (not (general-utils/can-operation?
                        "stop" deployment-set))}
      [icons/StopIcon]
@@ -79,10 +77,9 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "update" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "update"}]))
       :disabled (not (general-utils/can-operation?
                        "update" deployment-set))}
      [icons/RedoIcon]
@@ -103,6 +100,26 @@
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:delete])}]))
 
+(defn SaveButton
+  [{:keys [creating?]}]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        save-enabled? (subscribe [::subs/save-enabled? creating?])]
+    (fn [{:keys [deployment-set]}]
+      [ui/Popup
+       {:trigger
+        (r/as-element
+          [:div
+           [uix/MenuItem
+            {:name     (@tr [:save])
+             :icon     icons/i-floppy
+             :disabled (not @save-enabled?)
+             :class    (when @save-enabled? "primary-menu-item")
+             :on-click (if creating?
+                         #(dispatch [::events/create])
+                         #(dispatch [::events/persist! {:deployment-set deployment-set
+                                                        :success-msg    (@tr [:updated-successfully])}]))}]])
+        :content (@tr [:depl-group-required-fields-before-save])}])))
+
 (defn MenuBar
   [uuid]
   (let [deployment-set (subscribe [::subs/deployment-set])
@@ -114,36 +131,21 @@
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
-                ^{:key "delete"}
-                [DeleteButton @deployment-set]
-                ^{:key "stop"}
-                [StopButton @deployment-set]
-                ^{:key "update"}
-                [UpdateButton @deployment-set]
-                ^{:key "start"}
-                [StartButton @deployment-set])
+            ^{:key "delete"}
+            [DeleteButton @deployment-set]
+            ^{:key "stop"}
+            [StopButton @deployment-set]
+            ^{:key "update"}
+            [UpdateButton @deployment-set]
+            ^{:key "start"}
+            [StartButton @deployment-set]
+            ^{:key "save"}
+            [SaveButton {:deployment-set @deployment-set}])
           [components/RefreshMenu
-           {:action-id  events/refresh-action-id
+           {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?
-            :on-refresh #(events/refresh uuid)}]]]))))
+            :on-refresh #(events/refresh)}]]]))))
 
-
-(defn SaveButton
-  []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        save-disabled? (subscribe [::subs/save-disabled?])]
-    (fn []
-      [ui/Popup
-       {:trigger
-        (r/as-element
-          [:div
-           [uix/MenuItem
-            {:name     (@tr [:save])
-             :icon     icons/i-floppy
-             :disabled (not @save-disabled?)
-             :class    (when-not @save-disabled? "primary-menu-item")
-             :on-click #(dispatch [::events/create])}]])
-        :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBarCreate
   []
@@ -156,17 +158,13 @@
          [components/ResponsiveMenuBar
           (conj MenuItems
                 ^{:key "delete"}
-            [SaveButton @deployment-set])]]))))
+            [SaveButton {:creating? true}])]]))))
 
 (defn EditableCell
   [attribute creating?]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        deployment-set (subscribe [::subs/deployment-set])
+  (let [deployment-set (subscribe [::subs/deployment-set])
         can-edit?      (subscribe [::subs/can-edit?])
-        id             (:id @deployment-set)
-        on-change-fn   #(dispatch [::events/edit
-                                   id {attribute %}
-                                   (@tr [:updated-successfully])])]
+        on-change-fn   #(dispatch [::events/edit attribute %])]
     (if (or creating? @can-edit?)
       [components/EditableInput attribute @deployment-set on-change-fn]
       [ui/TableCell (get @deployment-set attribute)])))
@@ -210,18 +208,6 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:updated]))]
            [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]])]]]))
-
-
-(defn TabOverviewTags
-  [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :color     "teal"
-                 :raised    true}
-     [:h4 "Tags"]
-     [components/EditableTags
-      deployment-set #(dispatch [::events/edit id {:tags %}
-                                 (@tr [:updated-successfully])])]]))
 
 (def apps-picker-modal-id :modal/add-apps)
 
@@ -455,8 +441,7 @@
   [uuid creating?]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats    (subscribe [::subs/edges-summary-stats])
-        ]
+        edges-stats    (subscribe [::subs/edges-summary-stats])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])]
         [ui/TabPane
@@ -647,7 +632,8 @@
     [uix/Accordion
      [module-plugin/ModuleVersions
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-config]}]
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
@@ -656,7 +642,8 @@
     [uix/Accordion
      [module-plugin/EnvVariables
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-config]}]
      :label (@tr [:env-variables])]))
 
 (defn RegistriesCredsApp
@@ -665,7 +652,8 @@
     [uix/Accordion
      [module-plugin/RegistriesCredentials
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-config]}]
      :label (@tr [:private-registries])]))
 
 (defn ConfigureApps
@@ -972,7 +960,7 @@
                      :render   #(r/as-element
                                   [ConfigureApps
                                    0
-                                   (mapcat :applications @apps-sets)])}
+                                   (get-in @apps-sets [0 :applications])])}
                     {:menuItem {:key :edges
                                 :content
                                 (let [tab-title (str/capitalize (tr [:edges]))]
@@ -1001,6 +989,7 @@
                                 :disabled (= 0 @depl-count)}
                      :render #(r/as-element
                                 [DeploymentsTab uuid])}]
+          :ignore-chng-protection? true
           :menu    {:secondary true
                     :pointing  true}}]))))
 

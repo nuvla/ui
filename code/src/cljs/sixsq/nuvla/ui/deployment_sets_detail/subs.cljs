@@ -3,6 +3,7 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+            [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
@@ -16,8 +17,31 @@
   :-> ::spec/loading?)
 
 (reg-sub
-  ::deployment-set
+  ::deployment-set-stored
   :-> ::spec/deployment-set)
+
+(reg-sub
+  ::deployment-set-edited
+  :-> ::spec/deployment-set-edited)
+
+(reg-sub
+  ::deployment-set-stored-and-edited
+  :<- [::deployment-set-stored]
+  :<- [::deployment-set-edited]
+  (fn [[stored edited]]
+    [stored edited]))
+
+(reg-sub
+  ::deployment-set
+  :<- [::deployment-set-stored-and-edited]
+  (fn [[stored edited]]
+    (merge stored edited)))
+
+;; Please ignore unused new subs: They're used in follow up branch
+(reg-sub
+  ::deployment-set-id
+  :<- [::deployment-set]
+  :-> :id)
 
 (reg-sub
   ::deployment-set-name
@@ -281,15 +305,24 @@
     (general-utils/ids->inclusion-filter-string (->> edges :resources (map :id)))))
 
 (reg-sub
-  ::save-disabled?
-  :<- [::deployment-set]
+  ::unsaved-changes?
+  :<- [::deployment-set-stored-and-edited]
+  (fn [[stored edited]]
+    (utils/unsaved-changes? stored edited)))
+
+(reg-sub
+  ::save-enabled?
+  :<- [::deployment-set-edited]
   :<- [::edges-in-deployment-group-response]
   :<- [::apps-creation]
-  (fn [[deployment-set edges apps]]
+  :<- [::applications-sets]
+  :<- [::unsaved-changes?]
+  (fn [[deployment-set-edited edges apps-creation apps-sets unsaved-changes?] [_ creating?]]
     (and
-      (nonblank-string (:name deployment-set))
+      (nonblank-string (:name deployment-set-edited))
       (seq edges)
-      (seq apps))))
+      (seq (if creating? apps-creation apps-sets))
+      (or creating? unsaved-changes?))))
 
 (reg-sub
   ::opened-modal

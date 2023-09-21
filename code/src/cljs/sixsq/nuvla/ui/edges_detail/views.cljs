@@ -983,15 +983,6 @@
        [StatsTable (sort-by :name container-stats)])]))
 
 
-(defn edit-action
-  [uuid body close-fn]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/edit
-               uuid body
-               (@tr [:updated-successfully])])
-    (close-fn)))
-
-
 (defn EditableCell
   [attribute]
   (let [tr           (subscribe [::i18n-subs/tr])

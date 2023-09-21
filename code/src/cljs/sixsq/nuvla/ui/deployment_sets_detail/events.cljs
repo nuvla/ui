@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
             [sixsq.nuvla.ui.plugins.module :as module-plugin :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
@@ -477,24 +478,56 @@
     (let [current-selection (get-in db (subs/create-apps-creation-db-path current-route))]
       {:fx [[:dispatch [::apps-store-events/get-modules
                         apps-store-spec/allapps-key
-                        {:external-filter    (general-utils/ids->exclude-filter-str
-                                               (map :id current-selection))
-                         :order-by           "name:asc"
+                        {:external-filter
+                         (general-utils/join-and
+                           (general-utils/ids->exclude-filter-str
+                             (map :id current-selection))
+                           (when (seq current-selection)
+                             "subtype!='applications_sets'"))
+                         :order-by "name:asc"
                          :pagination-db-path [pagination-db-path]}]]]})))
+
+(defn enrich-app
+  [app]
+  (let [versions (:versions app)
+        published-versions (filter (comp true? :published) (:versions app))
+        version-id (:href (or (last published-versions) (last versions)))
+        app-with-content (assoc-in app [:content :id] version-id)
+        version-no (get-version-id (map-indexed vector versions) version-id)]
+    (assoc app-with-content :version version-no)))
 
 (reg-event-fx
   ::add-app-from-picker
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
-    (let [db-path                 (subs/create-apps-creation-db-path current-route)
-          versions                (:versions app)
-          published-versions      (filter (comp true? :published) (:versions app))
-          version-id              (:href (or (last published-versions) (last versions)))
-          version-no              (get-version-id (map-indexed vector versions) version-id)
-          app-with-content        (assoc-in app [:content :id] version-id)
-          app-with-version-number (assoc app-with-content :version version-no)
-          current-selection       (or (get-in db db-path) [])
-          new-selection           (conj current-selection app-with-version-number)]
-      {:db (assoc-in db db-path new-selection)
+    (if (= (:subtype app)
+           "applications_sets")
+      {::cimi-api-fx/get [(:id app) #(dispatch [::add-apps-set-apps %])]}
+      (let [db-path  (subs/create-apps-creation-db-path current-route)
+            app-with-version-number (enrich-app app)]
+        {:db (update-in db db-path (fnil conj []) app-with-version-number)
+         :fx [[:dispatch [::fetch-app-picker-apps
+                          ::spec/pagination-apps-picker]]]}))))
+
+(reg-event-fx
+  ::add-apps-set-apps
+  (fn [_ [_ apps-sets]]
+    (let [app-ids (->> apps-sets
+                       :content
+                       :applications-sets
+                       (mapcat :applications)
+                       (map :id))]
+      {::cimi-api-fx/search
+       [:module
+        {:filter (general-utils/ids->inclusion-filter-string
+                   app-ids)}
+        #(dispatch [::add-apps-to-selection (:resources %)])]})))
+
+(reg-event-fx
+  ::add-apps-to-selection
+  (fn [{db :db} [_ apps]]
+    (let [db-path  (subs/create-apps-creation-db-path (:current-route db))
+          apps (mapv enrich-app apps)]
+      {:db (update-in db db-path (fnil into []) apps)
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]]})))
 
@@ -503,7 +536,7 @@
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
     (let [db-path (subs/create-apps-creation-db-path current-route)]
       {:db (update-in db db-path (fn [apps]
-                                   (remove #(= (:id %) (:href app)) apps)))
+                                   (vec (remove #(= (:id %) (:href app)) apps))))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]]})))
 

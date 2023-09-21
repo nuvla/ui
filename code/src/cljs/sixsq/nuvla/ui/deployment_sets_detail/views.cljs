@@ -241,23 +241,22 @@
         detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
         follow-trial?  (get price :follow-customer-trial false)
         button-icon    (if (and price (not follow-trial?)) :cart icons/i-rocket)
-        button-color   (if follow-trial? "green" "blue")
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :deploy-for)])
                          (format-money (/ (:cent-amount-daily price) 100)) "/"
                          (@tr [:day]))
         button-content "Add to selection"
-        on-click       (fn [event]
-                         (dispatch [::events/add-app-from-picker app])
-                         (dispatch [::events/set-opened-modal nil])
-                         (.preventDefault event)
-                         (.stopPropagation event))
         button-ops     {:fluid    true
-                        :color    button-color
+                        :color    "blue"
                         :icon     button-icon
-                        :content  button-content
-                        :on-click on-click}
+                        ;; :on-click (fn [event]
+                        ;;             (dispatch [::events/add-app-from-picker app])
+                        ;;             (dispatch [::events/set-opened-modal nil])
+                        ;;             (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
+                        ;;             (.preventDefault event)
+                        ;;             (.stopPropagation event))
+                        :content  button-content}
         desc-summary   (-> description
                            utils-values/markdown->summary
                            (general-utils/truncate 60))]
@@ -266,18 +265,25 @@
       :subtype subtype
       :name name
       :id id
-      :desc-summary [:<> [:p desc-summary]
-                     [:p
-                      [:div (str "Project: " (-> (or (:path app) "")
-                                                 (str/split "/")
-                                                 first))]
-                      [:div "Vendor: " [AuthorVendorForModule app :span]]
-                      [:div (str "Price: " deploy-price)]]]
+      :desc-summary [:<>
+                     [:p desc-summary]
+                     [:div
+                      [:p (str "Project: " (-> (or (:path app) "")
+                                               (str/split "/")
+                                               first))]
+                      [:p "Vendor: " [AuthorVendorForModule app :span]]
+                      [:p (str "Price: " deploy-price)]]]
       :tags tags
       :published published
       :detail-href detail-href
       :button-ops button-ops
-      :target :_blank}]))
+      :target :_blank
+      :on-click (fn [event]
+                  (dispatch [::events/add-app-from-picker app])
+                  (dispatch [::events/set-opened-modal nil])
+                  (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
+                  (.preventDefault event)
+                  (.stopPropagation event))}]))
 
 (defn AddButton
   [id]

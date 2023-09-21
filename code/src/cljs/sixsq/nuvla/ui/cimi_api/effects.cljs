@@ -61,11 +61,11 @@
 
 (defn api-call-error-check
   [api-call on-success on-error]
-  (go
-    (let [response (<! (api-call))]
-      (if (instance? js/Error response)
-        (on-error response)
-        (on-success response)))))
+   (go
+     (let [response (<! (api-call))]
+       (if (instance? js/Error response)
+         (on-error response)
+         (on-success response)))))
 
 (reg-fx ::cloud-entry-point
         (fn [[callback]]

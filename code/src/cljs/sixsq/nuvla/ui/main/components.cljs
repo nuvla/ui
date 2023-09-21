@@ -80,9 +80,10 @@
 
 
 (defn ResponsiveMenuBar
-  [Children & [Refresh]]
+  [Children & [Refresh {:keys [max-items-to-show]
+                        :or   {max-items-to-show 2}}]]
   (let [mobile?            (subscribe [::subs/is-mobile-device?])
-        n                  (if @mobile? 0 2)
+        n                  (if @mobile? 0 max-items-to-show)
         Children           (remove nil? Children)
         ChildrenFirstPart  (take n Children)
         ChildrenSecondPart (drop n Children)]

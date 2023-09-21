@@ -328,12 +328,12 @@
 (defn applications-sets->overwrites
   [db i {:keys [applications] :as _applications-sets}]
   (let [targets                 (subs/get-db-targets-selected-ids db i)
-        fleets                  (get-target-fleet-ids (get db ::spec/deployment-set))
+        fleet                   (get-target-fleet-ids (get db ::spec/deployment-set))
         applications-overwrites (map (partial application-overwrites db i)
                                      applications)]
     (cond-> {}
             (seq targets) (assoc :targets targets)
-            (seq fleets) (assoc :fleets fleets)
+            (seq fleet) (assoc :fleet fleet)
             (seq applications-overwrites) (assoc :applications applications-overwrites))))
 
 (reg-event-fx

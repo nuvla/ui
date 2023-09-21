@@ -927,7 +927,7 @@
        :columns columns}]
      [pagination-plugin/Pagination
       {:db-path                [::spec/pagination-edges]
-       :change-event           [::events/get-edges-documents]
+       :change-event           [::events/get-edge-documents]
        :total-items            (-> @edges :count)
        :i-per-page-multipliers [1 2 4]}]]))
 

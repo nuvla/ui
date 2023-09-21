@@ -47,15 +47,15 @@
 
 (defn StartButton
   [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        enabled? (general-utils/can-operation? "start" deployment-set)]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "start" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
-      :disabled (not (general-utils/can-operation?
-                       "start" deployment-set))}
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "start"}]))
+      :disabled (not enabled?)
+      :class    (when enabled? "primary-menu-item")}
      [icons/PlayIcon]
      (@tr [:start])]))
 
@@ -64,10 +64,9 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "stop" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "stop"}]))
       :disabled (not (general-utils/can-operation?
                        "stop" deployment-set))}
      [icons/StopIcon]
@@ -76,26 +75,28 @@
 
 (defn UpdateButton
   [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? (general-utils/can-operation?
+                       "update" deployment-set)]
     [ui/MenuItem
      {:on-click (fn [_]
-                  (dispatch [::events/operation id "update" {}
-                             #(dispatch [::bulk-progress-plugin/monitor
-                                         [::spec/bulk-jobs] (:location %)])
-                             #()]))
-      :disabled (not (general-utils/can-operation?
-                       "update" deployment-set))}
+                  (dispatch [::events/operation
+                             {:resource-id id
+                              :operation "update"}]))
+      :disabled (not enabled?)
+      :class    (when enabled? "primary-menu-item")}
      [icons/RedoIcon]
      (@tr [:update])]))
 
 
 (defn DeleteButton
-  [{:keys [id name description] :as _deployment-set}]
+  [{:keys [id name description] :as deployment-set}]
   (let [tr      (subscribe [::i18n-subs/tr])
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
+                                  {:disabled (not (general-utils/can-operation? "delete" deployment-set))}
                                   [icons/TrashIconFull]
                                   (@tr [:delete])])
       :content     [:h3 content]
@@ -103,8 +104,28 @@
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:delete])}]))
 
+(defn SaveButton
+  [{:keys [creating?]}]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        save-enabled? (subscribe [::subs/save-enabled? creating?])]
+    (fn [{:keys [deployment-set]}]
+      [ui/Popup
+       {:trigger
+        (r/as-element
+          [:div
+           [uix/MenuItem
+            {:name     (@tr [:save])
+             :icon     icons/i-floppy
+             :disabled (not @save-enabled?)
+             :class    (when @save-enabled? "primary-menu-item")
+             :on-click (if creating?
+                         #(dispatch [::events/create])
+                         #(dispatch [::events/persist! {:deployment-set deployment-set
+                                                        :success-msg    (@tr [:updated-successfully])}]))}]])
+        :content (@tr [:depl-group-required-fields-before-save])}])))
+
 (defn MenuBar
-  [uuid]
+  []
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])]
     (fn []
@@ -114,36 +135,22 @@
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
-                ^{:key "delete"}
-                [DeleteButton @deployment-set]
-                ^{:key "stop"}
-                [StopButton @deployment-set]
-                ^{:key "update"}
-                [UpdateButton @deployment-set]
-                ^{:key "start"}
-                [StartButton @deployment-set])
+            ^{:key "delete"}
+            [DeleteButton @deployment-set]
+            ^{:key "stop"}
+            [StopButton @deployment-set]
+            ^{:key "update"}
+            [UpdateButton @deployment-set]
+            ^{:key "start"}
+            [StartButton @deployment-set]
+            ^{:key "save"}
+            [SaveButton {:deployment-set @deployment-set}])
           [components/RefreshMenu
-           {:action-id  events/refresh-action-id
+           {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?
-            :on-refresh #(events/refresh uuid)}]]]))))
+            :on-refresh #(events/refresh)}]
+          {:max-items-to-show 4}]]))))
 
-
-(defn SaveButton
-  []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        save-disabled? (subscribe [::subs/save-disabled?])]
-    (fn []
-      [ui/Popup
-       {:trigger
-        (r/as-element
-          [:div
-           [uix/MenuItem
-            {:name     (@tr [:save])
-             :icon     icons/i-floppy
-             :disabled (not @save-disabled?)
-             :class    (when-not @save-disabled? "primary-menu-item")
-             :on-click #(dispatch [::events/create])}]])
-        :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBarCreate
   []
@@ -156,24 +163,32 @@
          [components/ResponsiveMenuBar
           (conj MenuItems
                 ^{:key "delete"}
-            [SaveButton @deployment-set])]]))))
+            [SaveButton {:creating? true}])]]))))
 
 (defn EditableCell
   [attribute creating?]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        deployment-set (subscribe [::subs/deployment-set])
+  (let [deployment-set (subscribe [::subs/deployment-set])
         can-edit?      (subscribe [::subs/can-edit?])
-        id             (:id @deployment-set)
-        on-change-fn   #(dispatch [::events/edit
-                                   id {attribute %}
-                                   (@tr [:updated-successfully])])]
+        on-change-fn   #(dispatch [::events/edit attribute %])]
     (if (or creating? @can-edit?)
       [components/EditableInput attribute @deployment-set on-change-fn]
       [ui/TableCell (get @deployment-set attribute)])))
 
+(defn OperationalStatusSummary
+  [ops-status]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (if (= (:status ops-status)
+           "OK")
+      [:div "Everything is up-to-date"]
+      [:div
+       (str "Pending: "
+             (str/join ", "
+               (map (fn [[k v]]
+                      (str (count v) " " (@tr [k])))
+                 (dissoc ops-status :status))))])))
 
 (defn TabOverviewDeploymentSet
-  [{:keys [id created updated created-by state]} creating?]
+  [{:keys [id created updated created-by state operational-status]} creating?]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
@@ -184,10 +199,17 @@
                 :padded false}
       [ui/TableBody
        (when-not creating?
-         [ui/TableRow
-          [ui/TableCell "Id"]
-          (when id
-            [ui/TableCell [utils-values/AsLink id :label (general-utils/id->uuid id)]])])
+         [:<>
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:state]))]
+           [ui/TableCell state]]
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:operational-status]))]
+           [ui/TableCell [OperationalStatusSummary operational-status]]]
+          [ui/TableRow
+           [ui/TableCell "Id"]
+           (when id
+             [ui/TableCell [utils-values/AsLink id :label (general-utils/id->uuid id)]])]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
         ^{:key (or id "name")}
@@ -197,9 +219,7 @@
         ^{:key (or id "description")}
         [EditableCell :description creating?]]
        (when-not creating?
-         [:<> [ui/TableRow
-               [ui/TableCell (str/capitalize (@tr [:state]))]
-               [ui/TableCell state]]
+         [:<>
           (when created-by
             [ui/TableRow
              [ui/TableCell (str/capitalize (@tr [:created-by]))]
@@ -210,18 +230,6 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:updated]))]
            [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]])]]]))
-
-
-(defn TabOverviewTags
-  [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :color     "teal"
-                 :raised    true}
-     [:h4 "Tags"]
-     [components/EditableTags
-      deployment-set #(dispatch [::events/edit id {:tags %}
-                                 (@tr [:updated-successfully])])]]))
 
 (def apps-picker-modal-id :modal/add-apps)
 
@@ -410,20 +418,22 @@
                                  :target     (create-target-url "UNKNOWN")}]]))
 
 (defn create-nav-fn
-  [tab added-params]
-  #(dispatch [::routing-events/change-query-param
-              {:push-state? true
-               :partial-query-params
-               (merge
-                 {(routes-utils/db-path->query-param-key [::spec/tab])
-                  tab}
-                 added-params)}]))
+  ([tab added-params]
+   (create-nav-fn tab added-params false))
+  ([tab added-params reset-params?]
+   #(dispatch [::routing-events/change-query-param
+               {:push-state? true
+                (if reset-params? :query-params :partial-query-params)
+                (merge
+                  {(routes-utils/db-path->query-param-key [::spec/tab])
+                   tab}
+                  added-params)}])))
 
 (defn- DeploymentStatesFilter [state-filter]
   [dv/StatisticStates true ::deployments-subs/deployments-summary-all
    (mapv (fn [state] (assoc state
                        :on-click
-                       ((partial create-nav-fn "deployments") {:depl-state (:label state)})
+                       #(create-nav-fn "deployments" {:depl-state (:label state)})
                        :selected? (or
                                     (= state-filter (:label state))
                                     (and
@@ -444,7 +454,7 @@
                                 (nil? (:count @deployments))
                                 (= 0 (:count @deployments)))
                     :content  "Show me"
-                    :on-click  (create-nav-fn "deployments" nil)}]])))
+                    :on-click  (create-nav-fn "deployments" nil true)}]])))
 
 
 (defn EdgeOverviewContent [edges-stats]
@@ -455,14 +465,13 @@
                :content  "Show me"
                :disabled (or (nil? (:total edges-stats))
                            (= 0 (:total edges-stats)))
-               :on-click (create-nav-fn "edges" nil)}]])
+               :on-click (create-nav-fn "edges" nil true)}]])
 
 (defn TabOverview
   [uuid creating?]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats    (subscribe [::subs/edges-summary-stats])
-        ]
+        edges-stats    (subscribe [::subs/edges-summary-stats])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])]
         [ui/TabPane
@@ -653,7 +662,8 @@
     [uix/Accordion
      [module-plugin/ModuleVersions
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-config]}]
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
@@ -662,7 +672,8 @@
     [uix/Accordion
      [module-plugin/EnvVariables
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-config]}]
      :label (@tr [:env-variables])]))
 
 (defn RegistriesCredsApp
@@ -671,7 +682,8 @@
     [uix/Accordion
      [module-plugin/RegistriesCredentials
       {:db-path [::spec/apps-sets i]
-       :href    module-id}]
+       :href    module-id
+       :change-event [::events/edit-config]}]
      :label (@tr [:private-registries])]))
 
 (defn ConfigureApps
@@ -874,7 +886,7 @@
 
 (defn EdgesTabView
   [selected-state]
-  (dispatch [::events/get-edges-documents])
+  (dispatch [::events/get-edge-documents])
   (let [tr            (subscribe [::i18n-subs/tr])
         edges         (subscribe [::subs/edges-documents-response])
         columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}
@@ -978,7 +990,7 @@
                      :render   #(r/as-element
                                   [ConfigureApps
                                    0
-                                   (mapcat :applications @apps-sets)])}
+                                   (get-in @apps-sets [0 :applications])])}
                     {:menuItem {:key :edges
                                 :content
                                 (let [tab-title (str/capitalize (tr [:edges]))]
@@ -1007,6 +1019,7 @@
                                 :disabled (= 0 @depl-count)}
                      :render #(r/as-element
                                 [DeploymentsTab uuid])}]
+          :ignore-chng-protection? true
           :menu    {:secondary true
                     :pointing  true}}]))))
 
@@ -1025,7 +1038,6 @@
          [ui/Container {:fluid true}
           [uix/PageHeader "bullseye" (or name id)]
           [MenuBar uuid]
-          [job-views/ProgressJobAction]
           [bulk-progress-plugin/MonitoredJobs
            {:db-path [::spec/bulk-jobs]}]
           [components/ErrorJobsMessage
@@ -1049,7 +1061,6 @@
        [ui/Container {:fluid true}
         [uix/PageHeader "bullseye" (or @depl-set-name @name (@tr [:set-a-name]))]
         [MenuBarCreate]
-        [job-views/ProgressJobAction]
         [TabsDeploymentSet {:creating? true}]]])))
 
 

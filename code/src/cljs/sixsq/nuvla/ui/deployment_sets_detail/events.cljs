@@ -274,6 +274,11 @@
                            :pagination-db-path    ::spec/pagination-deployments}]]
               [:dispatch [::deployments-events/get-deployments-summary-all filter-constraint]]]}))))
 
+(reg-event-db
+  ::set-deployment-set-edited
+  (fn [db [_ deployment-set-edited]]
+    (assoc db ::spec/deployment-set-edited deployment-set-edited)))
+
 (reg-event-fx
   ::edit
   (fn [{{:keys [::spec/deployment-set
@@ -281,8 +286,8 @@
     (let [updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc key value))]
-      {:db (assoc db ::spec/deployment-set-edited updated-deployment-set)
-       :fx [[:dispatch [::main-events/changes-protection?
+      {:fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
+            [:dispatch [::main-events/changes-protection?
                         (utils/unsaved-changes?
                           deployment-set updated-deployment-set)]]]})))
 
@@ -305,6 +310,7 @@
                           {:header  success-msg
                            :content success-msg
                            :type    :success}]))
+             (dispatch [::set-deployment-set-edited nil])
              (dispatch [::set-deployment-set %])
              (dispatch [::main-events/changes-protection? false])))]})))
 
@@ -369,6 +375,7 @@
       {:fx [[::cimi-api-fx/add
              [:deployment-set body
               #(do
+                 (dispatch [::set-deployment-set-edited nil])
                  (dispatch [::main-events/changes-protection? false])
                  (dispatch [::routing-events/navigate routes/deployment-sets-details
                             {:uuid (general-utils/id->uuid (:resource-id %))}]))]]]})))

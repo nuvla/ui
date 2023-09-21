@@ -242,6 +242,12 @@
         button-ops     {:fluid    true
                         :color    "blue"
                         :icon     button-icon
+                        ;; :on-click (fn [event]
+                        ;;             (dispatch [::events/add-app-from-picker app])
+                        ;;             (dispatch [::events/set-opened-modal nil])
+                        ;;             (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
+                        ;;             (.preventDefault event)
+                        ;;             (.stopPropagation event))
                         :content  button-content}
         desc-summary   (-> description
                            utils-values/markdown->summary
@@ -306,7 +312,7 @@
     (dispatch [::events/fetch-app-picker-apps ::spec/pagination-apps-picker])
     (fn []
       [ui/Modal {:size :fullscreen
-                 :open      @open?
+                 :open       @open?
                  :close-icon true
                  :on-close   close-fn}
        [uix/ModalHeader {:header (@tr [:create-deployment-group])}]

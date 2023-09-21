@@ -502,15 +502,3 @@
                                    (vec (remove #(= (:id %) (:href app)) apps))))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]]})))
-
-
-
-(comment
-  (update-in {} [:a :b] (fn [a]
-                          (fnil conj :a)))
-  (update-in {} [:a :b] (fnil conj []) 1)
-
-  (let [a {:s "hi"}]
-    (case (:s a)
-      "hi" "hello"))
-  )

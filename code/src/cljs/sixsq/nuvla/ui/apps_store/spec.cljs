@@ -11,12 +11,10 @@
 (s/def ::pagination-myapps any?)
 (s/def ::modules-search any?)
 
-(def modules-search-default (full-text-search-plugin/build-spec))
-
 (def defaults
   {::modules        nil
    ::tab            (tab-plugin/build-spec :default-tab :appstore)
-   ::modules-search modules-search-default})
+   ::modules-search (full-text-search-plugin/build-spec)})
 
 (def appstore-key :appstore)
 (def allapps-key :allapps)

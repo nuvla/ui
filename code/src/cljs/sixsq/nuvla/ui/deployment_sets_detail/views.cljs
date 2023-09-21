@@ -18,7 +18,6 @@
             [sixsq.nuvla.ui.edges.views :as edges-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
-            [sixsq.nuvla.ui.job.views :as job-views]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]

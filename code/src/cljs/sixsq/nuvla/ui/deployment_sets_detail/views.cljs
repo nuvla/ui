@@ -239,16 +239,10 @@
                          (format-money (/ (:cent-amount-daily price) 100)) "/"
                          (@tr [:day]))
         button-content "Add to selection"
-        on-click       (fn [event]
-                         (dispatch [::events/add-app-from-picker app])
-                         (dispatch [::events/set-opened-modal nil])
-                         (.preventDefault event)
-                         (.stopPropagation event))
         button-ops     {:fluid    true
                         :color    "blue"
                         :icon     button-icon
-                        :content  button-content
-                        :on-click on-click}
+                        :content  button-content}
         desc-summary   (-> description
                            utils-values/markdown->summary
                            (general-utils/truncate 60))]
@@ -269,7 +263,13 @@
       :published published
       :detail-href detail-href
       :button-ops button-ops
-      :target :_blank}]))
+      :target :_blank
+      :on-click (fn [event]
+                  (dispatch [::events/add-app-from-picker app])
+                  (dispatch [::events/set-opened-modal nil])
+                  (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
+                  (.preventDefault event)
+                  (.stopPropagation event))}]))
 
 (defn AddButton
   [id]

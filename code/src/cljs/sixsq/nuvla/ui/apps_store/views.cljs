@@ -25,7 +25,7 @@
 
 (defn ModuleCardView
   [{:keys [logo-url subtype name id desc-summary tags published target
-           show-published-tick? detail-href button-ops]}]
+           show-published-tick? detail-href on-click button-ops]}]
   [uix/Card
    {:image         logo-url
     :header        [:<>
@@ -36,6 +36,7 @@
     :corner-button (when (and published show-published-tick?)
                      [ui/Label {:corner true} [icons/Icon {:name apps-utils/publish-icon}]])
     :href          detail-href
+    :on-click      on-click
     :button        [uix/Button button-ops]
     :target        target}])
 

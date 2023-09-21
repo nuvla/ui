@@ -47,14 +47,15 @@
 
 (defn StartButton
   [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        enabled? (general-utils/can-operation? "start" deployment-set)]
     [ui/MenuItem
      {:on-click (fn [_]
                   (dispatch [::events/operation
                              {:resource-id id
                               :operation "start"}]))
-      :disabled (not (general-utils/can-operation?
-                       "start" deployment-set))}
+      :disabled (not enabled?)
+      :class    (when enabled? "primary-menu-item")}
      [icons/PlayIcon]
      (@tr [:start])]))
 
@@ -74,25 +75,28 @@
 
 (defn UpdateButton
   [{:keys [id] :as deployment-set}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? (general-utils/can-operation?
+                       "update" deployment-set)]
     [ui/MenuItem
      {:on-click (fn [_]
                   (dispatch [::events/operation
                              {:resource-id id
                               :operation "update"}]))
-      :disabled (not (general-utils/can-operation?
-                       "update" deployment-set))}
+      :disabled (not enabled?)
+      :class    (when enabled? "primary-menu-item")}
      [icons/RedoIcon]
      (@tr [:update])]))
 
 
 (defn DeleteButton
-  [{:keys [id name description] :as _deployment-set}]
+  [{:keys [id name description] :as deployment-set}]
   (let [tr      (subscribe [::i18n-subs/tr])
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
+                                  {:disabled (not (general-utils/can-operation? "delete" deployment-set))}
                                   [icons/TrashIconFull]
                                   (@tr [:delete])])
       :content     [:h3 content]
@@ -121,7 +125,7 @@
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBar
-  [uuid]
+  []
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])]
     (fn []
@@ -144,7 +148,8 @@
           [components/RefreshMenu
            {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?
-            :on-refresh #(events/refresh)}]]]))))
+            :on-refresh #(events/refresh)}]
+          {:max-items-to-show 4}]]))))
 
 
 (defn MenuBarCreate

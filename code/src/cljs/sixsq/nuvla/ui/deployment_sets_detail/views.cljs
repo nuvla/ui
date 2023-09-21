@@ -171,9 +171,21 @@
       [components/EditableInput attribute @deployment-set on-change-fn]
       [ui/TableCell (get @deployment-set attribute)])))
 
+(defn OperationalStatusSummary
+  [ops-status]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (if (= (:status ops-status)
+           "OK")
+      [:div "Everything is up-to-date"]
+      [:div
+       (str "Pending: "
+             (str/join ", "
+               (map (fn [[k v]]
+                      (str (count v) " " (@tr [k])))
+                 (dissoc ops-status :status))))])))
 
 (defn TabOverviewDeploymentSet
-  [{:keys [id created updated created-by state]} creating?]
+  [{:keys [id created updated created-by state operational-status]} creating?]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
@@ -184,10 +196,17 @@
                 :padded false}
       [ui/TableBody
        (when-not creating?
-         [ui/TableRow
-          [ui/TableCell "Id"]
-          (when id
-            [ui/TableCell [utils-values/AsLink id :label (general-utils/id->uuid id)]])])
+         [:<>
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:state]))]
+           [ui/TableCell state]]
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:operational-status]))]
+           [ui/TableCell [OperationalStatusSummary operational-status]]]
+          [ui/TableRow
+           [ui/TableCell "Id"]
+           (when id
+             [ui/TableCell [utils-values/AsLink id :label (general-utils/id->uuid id)]])]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
         ^{:key (or id "name")}
@@ -197,9 +216,7 @@
         ^{:key (or id "description")}
         [EditableCell :description creating?]]
        (when-not creating?
-         [:<> [ui/TableRow
-               [ui/TableCell (str/capitalize (@tr [:state]))]
-               [ui/TableCell state]]
+         [:<>
           (when created-by
             [ui/TableRow
              [ui/TableCell (str/capitalize (@tr [:created-by]))]

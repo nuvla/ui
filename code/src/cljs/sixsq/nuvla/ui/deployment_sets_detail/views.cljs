@@ -1019,7 +1019,6 @@
          [ui/Container {:fluid true}
           [uix/PageHeader "bullseye" (or name id)]
           [MenuBar uuid]
-          [job-views/ProgressJobAction]
           [bulk-progress-plugin/MonitoredJobs
            {:db-path [::spec/bulk-jobs]}]
           [components/ErrorJobsMessage
@@ -1043,7 +1042,6 @@
        [ui/Container {:fluid true}
         [uix/PageHeader "bullseye" (or @depl-set-name @name (@tr [:set-a-name]))]
         [MenuBarCreate]
-        [job-views/ProgressJobAction]
         [TabsDeploymentSet {:creating? true}]]])))
 
 

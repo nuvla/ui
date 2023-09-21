@@ -22,32 +22,41 @@
 
 (def view-type (r/atom :cards))
 
+(def ^:const NEW "NEW")
 (def ^:const STARTED "STARTED")
-(def ^:const CREATED "CREATED")
+(def ^:const UPDATED "UPDATED")
 (def ^:const STOPPED "STOPPED")
 (def ^:const PENDING "PENDING")
+(def ^:const PARTIAL "PARTIAL")
 
 (defn state->icon
   [state]
-  (if (str/ends-with? state "ING")
-    icons/i-sync
-    (get {STARTED icons/i-play
-          STOPPED icons/i-stop
-          CREATED icons/i-circle-outline} state)))
+  (cond
+    (str/ends-with? state "ING") icons/i-sync
+    (str/starts-with? state "PARTIAL") icons/i-close
+    :else (get {NEW     icons/i-sticky-note
+                STARTED icons/i-play
+                UPDATED icons/i-play
+                STOPPED icons/i-stop} state)))
 
 (defn StatisticStates
   [clickable?]
-  (let [summary  (subscribe [::subs/deployment-sets-summary])
-        terms    (general-utils/aggregate-to-map
-                   (get-in @summary [:aggregations :terms:state :buckets]))
-        started  (:STARTED terms 0)
-        starting (:STARTING terms 0)
-        creating (:CREATING terms 0)
-        created  (:CREATED terms 0)
-        stopping (:STOPPING terms 0)
-        stopped  (:STOPPED terms 0)
-        pending  (+ starting creating stopping)
-        total    (:count @summary)]
+  (let [summary           (subscribe [::subs/deployment-sets-summary])
+        terms             (general-utils/aggregate-to-map
+                            (get-in @summary [:aggregations :terms:state :buckets]))
+        new               (:NEW terms 0)
+        started           (+ (:STARTED terms 0)
+                             (:UPDATED terms 0))
+        starting          (:STARTING terms 0)
+        updating          (:UPDATING terms 0)
+        stopping          (:STOPPING terms 0)
+        stopped           (:STOPPED terms 0)
+        pending           (+ starting stopping updating)
+        partially-stopped (:PARTIALLY-STOPPED terms 0)
+        partially-started (:PARTIALLY-STARTED terms 0)
+        partially-updated (:PARTIALLY-UPDATED terms 0)
+        partial           (+ partially-stopped partially-started partially-updated)
+        total             (:count @summary)]
     [ui/GridColumn {:width 8}
      [ui/StatisticGroup {:size  "tiny"
                          :style {:justify-content "center"}}
@@ -55,10 +64,10 @@
                          :icons          [icons/i-bullseye]
                          :label          "TOTAL"
                          :positive-color nil}
-                        {:value          created
-                         :icons          [(str "fal " (state->icon CREATED))]
-                         :label          CREATED
-                         :positive-color "blue"}
+                        {:value          new
+                         :icons          [(str "fal " (state->icon NEW))]
+                         :label          NEW
+                         :positive-color "black"}
                         {:value          started
                          :icons          [(str "fal " (state->icon STARTED))]
                          :label          STARTED
@@ -66,11 +75,15 @@
                         {:value          stopped
                          :icons          [(str "fal " (state->icon STOPPED))]
                          :label          STOPPED
-                         :positive-color "red"}
+                         :positive-color "black"}
                         {:value          pending
                          :icons          [(str "fal " (state->icon PENDING))]
                          :label          PENDING
-                         :positive-color "brown"}]]
+                         :positive-color "brown"}
+                        {:value          partial
+                         :icons          [(str "fal " (state->icon PARTIAL))]
+                         :label          PARTIAL
+                         :positive-color "red"}]]
         ^{:key (str "stat-" (:label stat-props))}
         [components/StatisticState
          (assoc stat-props

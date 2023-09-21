@@ -447,18 +447,18 @@
           ordering     (or ordering spec/default-ordering)
           query-filter (routing-utils/get-query-param current-route edges-state-filter-key)]
       (cond-> {:db (assoc db ::spec/edge-documents nil)}
-              edges
-              (assoc ::cimi-api-fx/search
-                     [:nuvlabox
-                      (->> {:orderby (ordering->order-string ordering)
-                            :filter  (general-utils/join-and
-                                       "id!=null"
-                                       (general-utils/ids->inclusion-filter-string (-> edges
-                                                                                       :resources))
-                                       (when (seq query-filter) (edge-utils/state-filter query-filter)))}
-                           (pagination-plugin/first-last-params
-                             db [::spec/pagination-edges]))
-                      #(dispatch [::set-edges-documents %])])))))
+        edges
+        (assoc ::cimi-api-fx/search
+          [:nuvlabox
+           (->> {:orderby (ordering->order-string ordering)
+                 :filter  (general-utils/join-and
+                            "id!=null"
+                            (general-utils/ids->inclusion-filter-string (-> edges
+                                                                            :resources))
+                            (when (seq query-filter) (edge-utils/state-filter query-filter)))}
+                (pagination-plugin/first-last-params
+                  db [::spec/pagination-edges]))
+           #(dispatch [::set-edges-documents %])])))))
 
 (reg-event-db
   ::set-opened-modal

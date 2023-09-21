@@ -395,20 +395,22 @@
                                  :target     (create-target-url "UNKNOWN")}]]))
 
 (defn create-nav-fn
-  [tab added-params]
-  #(dispatch [::routing-events/change-query-param
-              {:push-state? true
-               :partial-query-params
-               (merge
-                 {(routes-utils/db-path->query-param-key [::spec/tab])
-                  tab}
-                 added-params)}]))
+  ([tab added-params]
+   (create-nav-fn tab added-params false))
+  ([tab added-params reset-params?]
+   #(dispatch [::routing-events/change-query-param
+               {:push-state? true
+                (if reset-params? :query-params :partial-query-params)
+                (merge
+                  {(routes-utils/db-path->query-param-key [::spec/tab])
+                   tab}
+                  added-params)}])))
 
 (defn- DeploymentStatesFilter [state-filter]
   [dv/StatisticStates true ::deployments-subs/deployments-summary-all
    (mapv (fn [state] (assoc state
                        :on-click
-                       ((partial create-nav-fn "deployments") {:depl-state (:label state)})
+                       #(create-nav-fn "deployments" {:depl-state (:label state)})
                        :selected? (or
                                     (= state-filter (:label state))
                                     (and
@@ -429,7 +431,7 @@
                                 (nil? (:count @deployments))
                                 (= 0 (:count @deployments)))
                     :content  "Show me"
-                    :on-click  (create-nav-fn "deployments" nil)}]])))
+                    :on-click  (create-nav-fn "deployments" nil true)}]])))
 
 
 (defn EdgeOverviewContent [edges-stats]
@@ -440,7 +442,7 @@
                :content  "Show me"
                :disabled (or (nil? (:total edges-stats))
                            (= 0 (:total edges-stats)))
-               :on-click (create-nav-fn "edges" nil)}]])
+               :on-click (create-nav-fn "edges" nil true)}]])
 
 (defn TabOverview
   [uuid creating?]
@@ -861,7 +863,7 @@
 
 (defn EdgesTabView
   [selected-state]
-  (dispatch [::events/get-edges-documents])
+  (dispatch [::events/get-edge-documents])
   (let [tr            (subscribe [::i18n-subs/tr])
         edges         (subscribe [::subs/edges-documents-response])
         columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}

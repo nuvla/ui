@@ -18,7 +18,6 @@
             [sixsq.nuvla.ui.edges.views :as edges-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
-            [sixsq.nuvla.ui.job.views :as job-views]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
@@ -419,11 +418,9 @@
 
 (defn create-nav-fn
   ([tab added-params]
-   (create-nav-fn tab added-params false))
-  ([tab added-params reset-params?]
    #(dispatch [::routing-events/change-query-param
                {:push-state? true
-                (if reset-params? :query-params :partial-query-params)
+                :partial-query-params
                 (merge
                   {(routes-utils/db-path->query-param-key [::spec/tab])
                    tab}
@@ -454,7 +451,7 @@
                                 (nil? (:count @deployments))
                                 (= 0 (:count @deployments)))
                     :content  "Show me"
-                    :on-click  (create-nav-fn "deployments" nil true)}]])))
+                    :on-click  (create-nav-fn "deployments" nil)}]])))
 
 
 (defn EdgeOverviewContent [edges-stats]
@@ -465,7 +462,7 @@
                :content  "Show me"
                :disabled (or (nil? (:total edges-stats))
                            (= 0 (:total edges-stats)))
-               :on-click (create-nav-fn "edges" nil true)}]])
+               :on-click (create-nav-fn "edges" {:edges-state nil})}]])
 
 (defn TabOverview
   [uuid creating?]
@@ -930,7 +927,7 @@
        :columns columns}]
      [pagination-plugin/Pagination
       {:db-path                [::spec/pagination-edges]
-       :change-event           [::events/get-edges-documents]
+       :change-event           [::events/get-edge-documents]
        :total-items            (-> @edges :count)
        :i-per-page-multipliers [1 2 4]}]]))
 

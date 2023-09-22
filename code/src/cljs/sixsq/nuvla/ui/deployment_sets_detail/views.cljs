@@ -43,9 +43,13 @@
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
+(defn- create-wrng-msg
+  [apps-count edges-count action]
+  (str "You're about to " action " " apps-count " app" (if (< 1 apps-count) "s " " ") "on " edges-count " device" (if (< 1 edges-count) "s. " ". ") "Proceed?"))
+
 
 (defn StartButton
-  [{:keys [id] :as deployment-set}]
+  [{:keys [id] :as deployment-set} warn-msg]
   (let [tr (subscribe [::i18n-subs/tr])
         enabled? (general-utils/can-operation? "start" deployment-set)]
     [ui/MenuItem
@@ -59,7 +63,7 @@
      (@tr [:start])]))
 
 (defn StopButton
-  [{:keys [id] :as deployment-set}]
+  [{:keys [id] :as deployment-set} warn-msg]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      {:on-click (fn [_]
@@ -73,7 +77,7 @@
 
 
 (defn UpdateButton
-  [{:keys [id] :as deployment-set}]
+  [{:keys [id] :as deployment-set} warn-msg]
   (let [tr       (subscribe [::i18n-subs/tr])
         enabled? (general-utils/can-operation?
                        "update" deployment-set)]
@@ -89,11 +93,10 @@
 
 
 (defn DeleteButton
-  [{:keys [id name description] :as deployment-set}]
+  [{:keys [id name description] :as deployment-set} warn-msg]
   (let [tr          (subscribe [::i18n-subs/tr])
         content     (str (or name id) (when description " - ") description)
-        apps-count  (count @(subscribe [::subs/apps]))
-        edges-count @(subscribe [::subs/edges-count])]
+        ]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
@@ -104,7 +107,7 @@
       :header      (@tr [:delete-deployment-set])
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:delete])
-      :modal-action [:p (str "You're about to stop " apps-count " app" (if (< 1 apps-count) "s " " ") "on " edges-count " device" (if (< 1 edges-count) "s. " ". ") "Proceed?")]
+      :modal-action [:p warn-msg]
       :with-confirm-step? true}]))
 
 (defn SaveButton
@@ -130,22 +133,26 @@
 (defn MenuBar
   []
   (let [deployment-set (subscribe [::subs/deployment-set])
-        loading?       (subscribe [::subs/loading?])]
+        loading?       (subscribe [::subs/loading?])
+        apps-count     (subscribe [::subs/apps-count])
+        edges-count    (subscribe [::subs/edges-count])
+        ]
     (fn []
-      (let [MenuItems (cimi-detail-views/format-operations
-                        @deployment-set
-                        #{"start" "stop" "delete" "update"})]
+      (let [MenuItems   (cimi-detail-views/format-operations
+                          @deployment-set
+                          #{"start" "stop" "delete" "update"})
+            warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
             ^{:key "delete"}
-            [DeleteButton @deployment-set]
+            [DeleteButton @deployment-set (warn-msg-fn "remove")]
             ^{:key "stop"}
-            [StopButton @deployment-set]
+            [StopButton @deployment-set (warn-msg-fn "stop")]
             ^{:key "update"}
             [UpdateButton @deployment-set]
             ^{:key "start"}
-            [StartButton @deployment-set]
+            [StartButton @deployment-set (warn-msg-fn "start")]
             ^{:key "save"}
             [SaveButton {:deployment-set @deployment-set}])
           [components/RefreshMenu

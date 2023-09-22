@@ -58,6 +58,12 @@
          (mapcat :applications))))
 
 (reg-sub
+  ::apps-count
+  :<- [::apps]
+  (fn [apps]
+    (count apps)))
+
+(reg-sub
   ::can-edit?
   :<- [::deployment-set]
   (fn [deployment-set]

@@ -90,8 +90,10 @@
 
 (defn DeleteButton
   [{:keys [id name description] :as deployment-set}]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        content (str (or name id) (when description " - ") description)]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        content     (str (or name id) (when description " - ") description)
+        apps-count  (count @(subscribe [::subs/apps]))
+        edges-count @(subscribe [::subs/edges-count])]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
@@ -101,7 +103,9 @@
       :content     [:h3 content]
       :header      (@tr [:delete-deployment-set])
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
-      :button-text (@tr [:delete])}]))
+      :button-text (@tr [:delete])
+      :modal-action [:p (str "You're about to stop " apps-count " app" (if (< 1 apps-count) "s " " ") "on " edges-count " device" (if (< 1 edges-count) "s. " ". ") "Proceed?")]
+      :with-confirm-step? true}]))
 
 (defn SaveButton
   [{:keys [creating?]}]

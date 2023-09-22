@@ -194,6 +194,7 @@
                       [ui/Icon {:name "external"}]
                       primary-url-name])]
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
+     [ui/TableCell (-> deployment :updated time/parse-iso8601 time/ago)]
      [ui/TableCell @creator]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:style {:overflow      "hidden",
@@ -240,6 +241,7 @@
                                    {:field-key :url
                                     :no-sort?  true}
                                    {:field-key :created}
+                                   {:field-key :updated}
                                    {:field-key :created-by}
                                    {:field-key :tags}
                                    {:field-key :infrastructure

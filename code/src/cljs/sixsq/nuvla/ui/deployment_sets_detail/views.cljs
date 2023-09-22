@@ -178,8 +178,11 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (if (= (:status ops-status)
            "OK")
-      [:div "Everything is up-to-date"]
       [:div
+       [ui/Icon {:name :circle :color "green"}]
+       "Everything is up-to-date"]
+      [:div
+       [ui/Icon {:name :circle :color "red"}]
        (str "Pending: "
              (str/join ", "
                (map (fn [[k v]]

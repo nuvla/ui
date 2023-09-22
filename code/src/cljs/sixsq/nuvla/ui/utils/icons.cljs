@@ -547,7 +547,7 @@
   [opts]
   [I opts i-shield])
 
-(def i-close "fa-close")
+(def i-close "fal fa-close")
 (defn CloseIcon
   [opts]
   [I opts i-close])
@@ -641,7 +641,7 @@
   [opts]
   [I opts i-check-square-outline])
 
-(def i-sticky-note "sticky note")
+(def i-sticky-note "fal sticky note")
 (defn StickyNoteIcon
   [opts]
   [I opts i-sticky-note])

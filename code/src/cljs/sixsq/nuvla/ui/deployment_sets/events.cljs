@@ -29,7 +29,9 @@
 (defn state-filter
   [state]
   (case state
-    "PENDING" "state='CREATING' or state='STARTING' or state='STOPPING'"
+    "STARTED" "state='STARTED' or state='UPDATED'"
+    "PARTIAL" "state^='PARTIALLY'"
+    "PENDING" "state='STARTING' or state='UPDATING' or state='STOPPING'"
     (str "state='" state "'")))
 
 (reg-event-fx

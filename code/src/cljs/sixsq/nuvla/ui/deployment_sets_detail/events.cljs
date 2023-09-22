@@ -372,13 +372,14 @@
                                         (fn [app] (str (:id app) "_" (:version app)))
                                         (get-in db apps-path))}
                             deployment-set-edited)]
-      {:fx [[::cimi-api-fx/add
+      {:fx [[:dispatch [::main-events/changes-protection? false]]
+            [::cimi-api-fx/add
              [:deployment-set body
               #(do
                  (dispatch [::set-deployment-set-edited nil])
-                 (dispatch [::main-events/changes-protection? false])
                  (dispatch [::routing-events/navigate routes/deployment-sets-details
-                            {:uuid (general-utils/id->uuid (:resource-id %))}]))]]]})))
+                            {:uuid (general-utils/id->uuid (:resource-id %))}]))
+              :on-error #(dispatch [::main-events/changes-protection? true])]]]})))
 
 (reg-event-db
   ::set

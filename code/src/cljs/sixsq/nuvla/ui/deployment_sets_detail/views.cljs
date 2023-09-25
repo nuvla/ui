@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :refer [AuthorVendorForModule]]
             [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-            [sixsq.nuvla.ui.dashboard.views :as dashboard-views ]
+            [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
@@ -131,11 +131,12 @@
 (defn DeleteButton
   [deployment-set warn-msg]
   (let [tr          (subscribe [::i18n-subs/tr])
-        content     (depl-set->modal-content deployment-set)]
+        content     (depl-set->modal-content deployment-set)
+        enabled?    (subscribe [::subs/operation-enabled? "delete"])]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
-                                  {:disabled (not (general-utils/can-operation? "delete" deployment-set))}
+                                  {:disabled (not @enabled?)}
                                   [icons/TrashIconFull]
                                   (@tr [:delete])])
       :content     [:h3 content]
@@ -147,7 +148,7 @@
 
 (defn SaveButton
   [{:keys [creating?]}]
-  (let [tr             (subscribe [::i18n-subs/tr])
+  (let [tr            (subscribe [::i18n-subs/tr])
         save-enabled? (subscribe [::subs/save-enabled? creating?])]
     (fn [{:keys [deployment-set]}]
       [ui/Popup
@@ -214,7 +215,7 @@
          [components/ResponsiveMenuBar
           (conj MenuItems
                 ^{:key "delete"}
-            [SaveButton {:creating? true}])]]))))
+                [SaveButton {:creating? true}])]]))))
 
 (defn EditableCell
   [attribute creating?]
@@ -300,8 +301,8 @@
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :deploy-for)])
-                         (format-money (/ (:cent-amount-daily price) 100)) "/"
-                         (@tr [:day]))
+                            (format-money (/ (:cent-amount-daily price) 100)) "/"
+                            (@tr [:day]))
         button-content "Add to selection"
         button-ops     {:fluid    true
                         :color    "blue"
@@ -311,10 +312,10 @@
                            utils-values/markdown->summary
                            (general-utils/truncate 60))]
     [apps-store-views/ModuleCardView
-     {:logo-url logo-url
-      :subtype subtype
-      :name name
-      :id id
+     {:logo-url     logo-url
+      :subtype      subtype
+      :name         name
+      :id           id
       :desc-summary [:<>
                      [:p desc-summary]
                      [:div
@@ -323,23 +324,23 @@
                                                first))]
                       [:p "Vendor: " [AuthorVendorForModule app :span]]
                       [:p (str "Price: " deploy-price)]]]
-      :tags tags
-      :published published
-      :detail-href detail-href
-      :button-ops button-ops
-      :target :_blank
-      :on-click (fn [event]
-                  (dispatch [::events/add-app-from-picker app])
-                  (dispatch [::events/set-opened-modal nil])
-                  (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
-                  (.preventDefault event)
-                  (.stopPropagation event))}]))
+      :tags         tags
+      :published    published
+      :detail-href  detail-href
+      :button-ops   button-ops
+      :target       :_blank
+      :on-click     (fn [event]
+                      (dispatch [::events/add-app-from-picker app])
+                      (dispatch [::events/set-opened-modal nil])
+                      (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
+                      (.preventDefault event)
+                      (.stopPropagation event))}]))
 
 (defn AddButton
   [id]
   [ui/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
-              :icon icons/i-plus-large
-              :style {:align-self "center"}}])
+              :icon     icons/i-plus-large
+              :style    {:align-self "center"}}])
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -363,13 +364,13 @@
 
 (defn AppsPickerModal
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        open?        (subscribe [::subs/modal-open? apps-picker-modal-id])
-        close-fn     #(dispatch [::events/set-opened-modal nil])
-        tab-key      apps-store-spec/allapps-key]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        open?    (subscribe [::subs/modal-open? apps-picker-modal-id])
+        close-fn #(dispatch [::events/set-opened-modal nil])
+        tab-key  apps-store-spec/allapps-key]
     (dispatch [::events/fetch-app-picker-apps ::spec/pagination-apps-picker])
     (fn []
-      [ui/Modal {:size :fullscreen
+      [ui/Modal {:size       :fullscreen
                  :open       @open?
                  :close-icon true
                  :on-close   close-fn}
@@ -447,11 +448,11 @@
                                                               :target   :_self}]])}])}
                          (when creating?
                            {:field-key :remove
-                            :cell (fn [{:keys [row-data]}]
-                                    [icons/XMarkIcon
-                                     {:style {:cursor :pointer}
-                                      :color "red"
-                                      :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
+                          :cell      (fn [{:keys [row-data]}]
+                                       [icons/XMarkIcon
+                                        {:style    {:cursor :pointer}
+                                         :color    "red"
+                                         :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                     :rows @apps-row}]])
          [:div {:style {:display :flex :justify-content :center :align-items :center}}
           (when creating?
@@ -461,8 +462,8 @@
                             :margin-bottm "1rem"}}
               [AddButton apps-picker-modal-id]]])]
          (when no-apps?
-           [:div {:style {:margin-top "1rem"
-                          :margin-left "auto"
+           [:div {:style {:margin-top   "1rem"
+                          :margin-left  "auto"
                           :margin-right "auto"}}
             (@tr [:add-your-first-app])])]))))
 
@@ -1104,8 +1105,8 @@
                      :render #(r/as-element
                                 [DeploymentsTab uuid])}]
           :ignore-chng-protection? true
-          :menu    {:secondary true
-                    :pointing  true}}]))))
+          :menu                    {:secondary true
+                                    :pointing  true}}]))))
 
 (defn- DeploymentSetView
   [uuid]
@@ -1136,8 +1137,8 @@
 (defn DeploymentSetCreate
   []
   (dispatch [::events/init-create])
-  (let [tr (subscribe [::i18n-subs/tr])
-        name (subscribe [::route-subs/query-param :name])
+  (let [tr            (subscribe [::i18n-subs/tr])
+        name          (subscribe [::route-subs/query-param :name])
         depl-set-name (subscribe [::subs/deployment-set-name])]
     (fn []
       [:<>

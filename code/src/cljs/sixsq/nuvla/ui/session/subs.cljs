@@ -200,9 +200,7 @@
   :<- [::identifier]
   :<- [::peers]
   (fn [[current-user-id identifier peers] [_ user-id]]
-    (if (= user-id current-user-id)
-      identifier
-      (get peers user-id user-id))))
+    (utils/resolve-user current-user-id identifier peers user-id)))
 
 (reg-sub
   ::resolve-users
@@ -210,9 +208,8 @@
   :<- [::identifier]
   :<- [::peers]
   (fn [[current-user-id identifier peers] [_ users]]
-    (into [] (map #(if (= % current-user-id)
-                     identifier
-                     (get peers % %)) users))))
+    (into [] (map (partial utils/resolve-user
+                           current-user-id identifier peers) users))))
 
 (reg-sub
   ::groups
@@ -241,10 +238,9 @@
   :<- [::groups-mapping]
   (fn [[current-user-id identifier peers groups] [_ id]]
     (if (string? id)
-      (cond
-        (str/starts-with? id "group/") (or (get groups id) (utils/remove-group-prefix id))
-        (= id current-user-id) identifier
-        :else (or (get peers id) id))
+      (if (str/starts-with? id "group/")
+        (or (get groups id) (utils/remove-group-prefix id))
+        (utils/resolve-user current-user-id identifier peers id))
       id)))
 
 (reg-sub

@@ -82,10 +82,16 @@
           [:dispatch [::main-events/changes-protection? false]]]}))
 
 (reg-event-fx
+  ::clear-deployments
+  (fn []
+    {:fx [[:dispatch [::deployments-events/reset-deployments-summary-all]]]}))
+
+(reg-event-fx
   ::init-create
   (fn [{db :db}]
     {:db (merge db spec/defaults)
-     :fx [[:dispatch [::main-events/action-interval-delete
+     :fx [[:dispatch [::clear-deployments]]
+          [:dispatch [::main-events/action-interval-delete
                       {:id refresh-action-depl-set-id}]]]}))
 
 (reg-event-fx

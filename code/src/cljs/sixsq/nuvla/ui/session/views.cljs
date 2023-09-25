@@ -119,8 +119,7 @@
 
 (defn UserMenuItem
   []
-  (let [user         (subscribe [::subs/user])
-        is-group?    (subscribe [::subs/is-group?])
+  (let [is-group?    (subscribe [::subs/is-group?])
         on-click     #(dispatch [::routing-events/navigate routes/profile])
         is-mobile?   (subscribe [::main-subs/is-mobile-device?])
         active-claim (subscribe [::subs/active-claim])]
@@ -128,10 +127,10 @@
       (let [name (subscribe [::subs/resolve-principal @active-claim])]
         [ui/MenuItem {:className "nuvla-close-menu-item"
                       :on-click  on-click}
-         (if @is-group? [icons/UserGroupIcon {:class "large"}] [icons/UserLargeIcon {:class "large"}])
-         (-> @name
-             utils/remove-group-prefix
-             (general-utils/truncate (if @is-mobile? 6 20)))]))))
+         (if @is-group?
+           [icons/UserGroupIcon {:class "large"}]
+           [icons/UserLargeIcon {:class "large"}])
+         (general-utils/truncate @name (if @is-mobile? 6 20))]))))
 
 
 (defn LogoutMenuItem

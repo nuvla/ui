@@ -21,3 +21,9 @@
 (defn get-roles
   [session]
   (set (some-> session :roles (str/split #"\s+"))))
+
+(defn resolve-user
+  [current-user-id identifier peers user-id]
+  (if (= user-id current-user-id)
+    identifier
+    (get peers user-id user-id)))

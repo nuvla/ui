@@ -4,6 +4,25 @@
 
 ## Released
 
+## [2.33.14] - 2023-09-25
+
+- Sticky menu bar - Adds max-items-to-show to RefreshMenuBar
+- Apps - Hide automatically created apps-sets from my apps (#1361)
+- Deployment group - Update button
+- Deployment group - Changes protection
+- Deployment group - Save button enabled when changes applied
+- Deployment group - Removes automatic saving when editing details
+- Deployment group - Action button highlighted when callable
+- Deployment group - Disable actions based on available operations on resource
+- Deployment group - App picker cards
+- Deployment group - Configure apps and detection
+- Deployment group - Reset filter when clicking "Show me"
+- Deployment group - Adds operational status summary to depl state overview
+- Deployment group - Removes ProgressJobAction, only keeping MonitoredJobs
+- Deployment group - Statistics and cards adapted to new state machine
+- Deployment - Shows updated column in deployments table
+- Session - Display current group name instead of id on the top bar
+
 ## [2.33.13] - 2023-09-05
 
 - Deployment groups page

@@ -142,6 +142,11 @@
                            #(dispatch [::set-deployments-summary-all %])]}))
 
 (reg-event-fx
+  ::reset-deployments-summary-all
+  (fn []
+    {:fx [[:dispatch [::set-deployments-summary-all nil]]]}))
+
+(reg-event-fx
   ::set-additional-filter
   (fn [{db :db} [_ additional-filter]]
     {:db (assoc db ::spec/additional-filter additional-filter

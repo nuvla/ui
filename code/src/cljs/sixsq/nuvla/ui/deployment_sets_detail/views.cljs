@@ -224,7 +224,7 @@
 
 (defn OperationalStatusSummary
   [ops-status]
-  (let [tr-fn (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (if (= (:status ops-status)
            "OK")
       [:div
@@ -233,7 +233,7 @@
       [:div
        [ui/Icon {:name :circle :color "red"}]
        (str "Pending: "
-             (ops-status-pending-str @tr-fn ops-status))])))
+             (ops-status-pending-str @tr ops-status))])))
 
 (defn TabOverviewDeploymentSet
   [{:keys [id created updated created-by state operational-status]} creating?]

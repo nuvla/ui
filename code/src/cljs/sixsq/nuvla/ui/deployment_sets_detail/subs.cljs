@@ -37,29 +37,16 @@
   (fn [[stored edited]]
     (merge stored edited)))
 
-;; Please ignore unused new subs: They're used in follow up branch
-(reg-sub
-  ::deployment-set-id
-  :<- [::deployment-set]
-  :-> :id)
 
 (reg-sub
   ::deployment-set-name
   :<- [::deployment-set]
   :-> :name)
 
-(reg-sub
-  ::apps
-  :<- [::deployment-set]
-  (fn [deployment-set]
-    (->> deployment-set
-         :applications-sets
-         (mapcat :overwrites)
-         (mapcat :applications))))
 
 (reg-sub
   ::apps-count
-  :<- [::apps]
+  :<- [::applications-sets-apps-targets]
   (fn [apps]
     (count apps)))
 
@@ -68,12 +55,6 @@
   :<- [::deployment-set]
   (fn [deployment-set]
     (general-utils/can-edit? deployment-set)))
-
-(reg-sub
-  ::can-delete?
-  :<- [::deployment-set]
-  (fn [deployment-set]
-    (general-utils/can-delete? deployment-set)))
 
 (reg-sub
   ::deployment-set-not-found?
@@ -131,6 +112,7 @@
                         (map-indexed vector (:versions application))
                         (-> application :content :id)))
    :last-update (time/time->format (js/Date.))})
+
 
 (reg-sub
   ::applications-overview-row-data

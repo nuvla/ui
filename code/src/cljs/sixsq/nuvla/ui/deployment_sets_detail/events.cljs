@@ -510,7 +510,7 @@
     (assoc app :version version-no)))
 
 (reg-event-fx
-  ::do-add-app-from-picker
+  ::do-add-app
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
     (let [db-path                 (subs/create-apps-creation-db-path current-route)
           app-with-version-number (enrich-app app)]
@@ -534,7 +534,7 @@
             version-id (version-id-to-add app)]
         {::apps-fx/get-module [path
                                (get-version-id (map-indexed vector versions) version-id)
-                               #(dispatch [::do-add-app-from-picker %])]
+                               #(dispatch [::do-add-app %])]
          :fx [[:dispatch [::fetch-app-picker-apps
                           ::spec/pagination-apps-picker]]]}))))
 
@@ -557,9 +557,16 @@
   (fn [{db :db} [_ apps]]
     (let [db-path  (subs/create-apps-creation-db-path (:current-route db))
           apps (mapv enrich-app apps)]
-      {:db (update-in db db-path (fnil into []) apps)
-       :fx [[:dispatch [::fetch-app-picker-apps
-                        ::spec/pagination-apps-picker]]]})))
+      {:fx (into
+             [[:db (update-in db db-path (fnil into []) [])]
+              [:dispatch [::fetch-app-picker-apps
+                          ::spec/pagination-apps-picker]]]
+             (map (fn [{:keys [path versions] :as app}]
+                    (let [version-id (version-id-to-add app)]
+                      [::apps-fx/get-module [path
+                                             (get-version-id (map-indexed vector versions) version-id)
+                                             #(dispatch [::do-add-app %])]]))
+                  apps))})))
 
 (reg-event-fx
   ::remove-app-from-creation-data

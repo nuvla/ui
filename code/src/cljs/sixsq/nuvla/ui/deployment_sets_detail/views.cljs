@@ -356,10 +356,11 @@
                                                   cell-data]
                                        :target   :_self}])
                                    :version
-                                   (fn [{:keys [cell-data _row-data]}]
-                                     [ui/Popup
-                                      {:trigger (r/as-element [:div (:name cell-data)])
-                                       :content (some-> cell-data :updated time/time->format)}])
+                                   (fn [{{version :name :keys [updated]} :cell-data}]
+                                     (when updated
+                                       [ui/Popup
+                                        (cond-> {:content (r/as-element [:p (time/time->format updated)])
+                                                 :trigger (r/as-element [:p version " " [icons/InfoIconFull]])})]))
                                    nil)})
                         (keys (cond->
                                 (dissoc (first @apps-row) :idx :href)

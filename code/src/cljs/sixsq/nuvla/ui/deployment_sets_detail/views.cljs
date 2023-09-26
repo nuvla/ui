@@ -433,7 +433,7 @@
   [dv/StatisticStates true ::deployments-subs/deployments-summary-all
    (mapv (fn [state] (assoc state
                        :on-click
-                       #(create-nav-fn "deployments" {:depl-state (:label state)})
+                       (create-nav-fn "deployments" {:depl-state (:label state)})
                        :selected? (or
                                     (= state-filter (:label state))
                                     (and
@@ -966,7 +966,7 @@
         deployment-set (subscribe [::subs/deployment-set])
         apps-sets      (subscribe [::subs/applications-sets])
         edges          (subscribe [::subs/all-edges-ids])
-        depl-count     (subscribe [::deployments-subs/deployments-count])]
+        depl-all       (subscribe [::deployments-subs/deployments-summary-all])]
     (fn []
       (when (or @deployment-set creating?)
         [tab/Tab
@@ -1016,7 +1016,7 @@
                                                              tab-title])
                                                  :content (tr [:depl-group-save-and-start-to-enable-tab])}])
                                     tab-title))
-                                :disabled (= 0 @depl-count)}
+                                :disabled (zero? (:total @depl-all))}
                      :render #(r/as-element
                                 [DeploymentsTab uuid])}]
           :ignore-chng-protection? true

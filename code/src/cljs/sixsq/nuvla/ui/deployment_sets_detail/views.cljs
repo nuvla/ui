@@ -53,6 +53,10 @@
                       (str (count v) " " (tr-fn [k])))
                  (dissoc ops-status :status))))
 
+(defn- depl-set->modal-content
+  [{:keys [name id description]}]
+  (str (or name id) (when description " - ") description))
+
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
   (let [tr (subscribe [::i18n-subs/tr])
@@ -68,7 +72,7 @@
                        :class    (when enabled? "primary-menu-item")}
                       [icons/PlayIcon]
                       (@tr [:start])])
-      :content     [:h3 " "#_content]
+      :content     [:h3 (depl-set->modal-content deployment-set)]
       :header      (@tr [:start-deployment-set])
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:start])
@@ -90,7 +94,7 @@
                                         "stop" deployment-set))}
                       [icons/StopIcon]
                       (@tr [:stop])])
-      :content     [:h3 " "#_content]
+      :content     [:h3 (depl-set->modal-content deployment-set)]
       :header      (@tr [:stop-deployment-set])
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:stop])
@@ -114,7 +118,7 @@
                        :class    (when enabled? "primary-menu-item")}
                       [icons/RedoIcon]
                       (@tr [:update])])
-      :content     [:h3 " "#_content]
+      :content     [:h3 (depl-set->modal-content deployment-set)]
       :header      (@tr [:update-deployment-set])
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:update])
@@ -123,10 +127,11 @@
     ))
 
 
+
 (defn DeleteButton
-  [{:keys [id name description] :as deployment-set} warn-msg]
+  [deployment-set warn-msg]
   (let [tr          (subscribe [::i18n-subs/tr])
-        content     (str (or name id) (when description " - ") description)]
+        content     (depl-set->modal-content deployment-set)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem

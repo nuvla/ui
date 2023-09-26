@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.about.subs :as about-subs]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
             [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
             [sixsq.nuvla.ui.deployments.events :as events]
@@ -172,7 +174,8 @@
         url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
         creator               (subscribe [::session-subs/resolve-user created-by])
         edge-id               (:nuvlabox deployment)
-        edge-status            (subscribe [::subs/deployment-edges-stati edge-id])]
+        edge-status            (subscribe [::subs/deployment-edges-stati edge-id])
+        ff                    (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])]
     [:<>
      [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
@@ -193,6 +196,11 @@
                      [:a {:href url, :target "_blank", :rel "noreferrer"}
                       [ui/Icon {:name "external"}]
                       primary-url-name])]
+     (when @ff
+       [ui/TableCell (some-> (deployment :deployment-set)
+                       ((fn [depl-set-id]
+                          [:a {:href depl-set-id}
+                           [ui/Icon {:name "bullseye"}]])))])
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell (-> deployment :updated time/parse-iso8601 time/ago)]
      [ui/TableCell @creator]
@@ -213,7 +221,8 @@
 
 (defn VerticalDataTable
   [_deployments-list _options]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        ff (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
@@ -240,6 +249,8 @@
                                     :sort-key  :state}
                                    {:field-key :url
                                     :no-sort?  true}
+                                   (when @ff
+                                     {:field-key :deployment-set})
                                    {:field-key :created}
                                    {:field-key :updated}
                                    {:field-key :created-by}

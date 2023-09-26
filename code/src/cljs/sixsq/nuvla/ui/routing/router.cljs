@@ -170,6 +170,10 @@
      {:name      ::routes/deployment-sets-details
       :view      #'deployment-sets-view
       :link-text "deployment-sets"}]
+    ["deployment-set/:uuid"
+     {:name      ::routes/deployment-set-details
+      :view      #'deployment-sets-view
+      :link-text "deployment-sets"}]
     ["documentation"
      {:name      ::routes/documentation
       :view      #'documentation

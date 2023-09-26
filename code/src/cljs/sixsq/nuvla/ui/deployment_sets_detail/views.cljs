@@ -385,7 +385,8 @@
   (let [tr       (subscribe [::i18n-subs/tr])
         apps-row (if creating?
                    (subscribe [::subs/apps-creation-row-data])
-                   (subscribe [::subs/applications-overview-row-data]))]
+                   (subscribe [::subs/applications-overview-row-data]))
+        k->tr-k  {:app-name :name}]
     (fn []
       (let [no-apps? (empty? @apps-row)]
         [:<>
@@ -393,10 +394,14 @@
            [:div {:style {:height "100%"}}
             [Table {:columns
                     (into
-
                       (mapv
                         (fn [k]
                           {:field-key k
+                           :header-content (-> (or
+                                                 (@tr [(k->tr-k k k)])
+                                                 k)
+                                               name
+                                               str/capitalize)
                            :cell (when (= k :app-name)
                                    (fn [{:keys [cell-data row-data]}]
                                      [module-plugin/LinkToApp

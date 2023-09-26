@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps.effects :as apps-fx]
             [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
@@ -504,21 +505,36 @@
 (defn enrich-app
   [app]
   (let [versions (:versions app)
-        published-versions (filter (comp true? :published) (:versions app))
-        version-id (:href (or (last published-versions) (last versions)))
-        app-with-content (assoc-in app [:content :id] version-id)
+        version-id (-> app :content :id)
         version-no (get-version-id (map-indexed vector versions) version-id)]
-    (assoc app-with-content :version version-no)))
+    (assoc app :version version-no)))
+
+(reg-event-fx
+  ::do-add-app-from-picker
+  (fn [{{:keys [current-route] :as db} :db} [_ app]]
+    (let [db-path                 (subs/create-apps-creation-db-path current-route)
+          app-with-version-number (enrich-app app)]
+      {:db (update-in db db-path (fnil conj []) app-with-version-number)
+       :fx [[:dispatch [::fetch-app-picker-apps
+                        ::spec/pagination-apps-picker]]]})))
+
+(defn version-id-to-add
+  [app]
+  (let [versions (:versions app)
+        published-versions (filter (comp true? :published) (:versions app))]
+    (:href (or (last published-versions) (last versions)))))
 
 (reg-event-fx
   ::add-app-from-picker
-  (fn [{{:keys [current-route] :as db} :db} [_ app]]
+  (fn [_ [_ app]]
     (if (= (:subtype app)
            "applications_sets")
       {::cimi-api-fx/get [(:id app) #(dispatch [::add-apps-set-apps %])]}
-      (let [db-path  (subs/create-apps-creation-db-path current-route)
-            app-with-version-number (enrich-app app)]
-        {:db (update-in db db-path (fnil conj []) app-with-version-number)
+      (let [{:keys [path versions]} app
+            version-id (version-id-to-add app)]
+        {::apps-fx/get-module [path
+                               (get-version-id (map-indexed vector versions) version-id)
+                               #(dispatch [::do-add-app-from-picker %])]
          :fx [[:dispatch [::fetch-app-picker-apps
                           ::spec/pagination-apps-picker]]]}))))
 

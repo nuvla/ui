@@ -346,19 +346,26 @@
                       (mapv
                         (fn [k]
                           {:field-key k
-                           :cell (when (= k :app-name)
+                           :cell (case k
+                                   :app
                                    (fn [{:keys [cell-data row-data]}]
                                      [module-plugin/LinkToApp
                                       {:db-path  [::spec/apps-sets (:idx row-data)]
                                        :href     (:href row-data)
                                        :children [:<>
                                                   cell-data]
-                                       :target   :_self}]))})
+                                       :target   :_self}])
+                                   :version
+                                   (fn [{:keys [cell-data _row-data]}]
+                                     [ui/Popup
+                                      {:trigger (r/as-element [:div (:name cell-data)])
+                                       :content (some-> cell-data :updated time/time->format)}])
+                                   nil)})
                         (keys (cond->
                                 (dissoc (first @apps-row) :idx :href)
 
                                 creating?
-                                (dissoc :last-update :status))))
+                                (dissoc :status))))
                       (when creating?
                         [{:field-key :remove
                           :cell (fn [{:keys [row-data]}]

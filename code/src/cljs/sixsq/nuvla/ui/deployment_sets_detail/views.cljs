@@ -225,18 +225,21 @@
       [components/EditableInput attribute @deployment-set on-change-fn]
       [ui/TableCell (get @deployment-set attribute)])))
 
-
+(def ops-status->color
+  {"OK" "green"
+   "NOK" "red"})
 
 (defn OperationalStatusSummary
   [ops-status]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (if (= (:status ops-status)
+  (let [tr (subscribe [::i18n-subs/tr])
+        status (:status ops-status)]
+    (if (= status
            "OK")
       [:div
-       [ui/Icon {:name :circle :color "green"}]
+       [ui/Icon {:name :circle :color (ops-status->color status)}]
        "Everything is up-to-date"]
       [:div
-       [ui/Icon {:name :circle :color "red"}]
+       [ui/Icon {:name :circle :color (ops-status->color status)}]
        (str "Pending: "
              (ops-status-pending-str @tr ops-status))])))
 
@@ -303,12 +306,6 @@
         button-ops     {:fluid    true
                         :color    "blue"
                         :icon     button-icon
-                        ;; :on-click (fn [event]
-                        ;;             (dispatch [::events/add-app-from-picker app])
-                        ;;             (dispatch [::events/set-opened-modal nil])
-                        ;;             (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
-                        ;;             (.preventDefault event)
-                        ;;             (.stopPropagation event))
                         :content  button-content}
         desc-summary   (-> description
                            utils-values/markdown->summary
@@ -386,7 +383,8 @@
         locale   (subscribe [::i18n-subs/locale])
         apps-row (if creating?
                    (subscribe [::subs/apps-creation-row-data])
-                   (subscribe [::subs/applications-overview-row-data]))]
+                   (subscribe [::subs/applications-overview-row-data]))
+        k->tr-k  {:app-name :name}]
     (fn []
       (let [no-apps? (empty? @apps-row)]
         [:<>
@@ -394,10 +392,12 @@
            [:div {:style {:height "100%"}}
             [Table {:columns
                     (into
-
                       (mapv
                         (fn [k]
                           {:field-key k
+                           :header-content (-> (or (@tr [(k->tr-k k k)]) k)
+                                               name
+                                               str/capitalize)
                            :cell (case k
                                    :app
                                    (fn [{:keys [cell-data row-data]}]
@@ -1019,7 +1019,9 @@
                                :total-items            @count
                                :change-event           [::events/get-deployments-for-deployment-sets uuid]
                                :i-per-page-multipliers [1 2 4]}])
-       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]]))
+       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]
+       ;; FIXME: Make this more generic by passing all columns to show/hide
+       :hide-depl-group-column? true}]]))
 
 (defn TabsDeploymentSet
   [{:keys [uuid creating?]}]
@@ -1097,7 +1099,10 @@
           :no-deployment-set-message-header
           :no-deployment-set-message-content]
          [ui/Container {:fluid true}
-          [uix/PageHeader "bullseye" (or name id)]
+          [uix/PageHeader "bullseye" (or name id) :color (ops-status->color
+                                                           (-> @depl-set
+                                                               :operational-status
+                                                               :status))]
           [MenuBar uuid]
           [bulk-progress-plugin/MonitoredJobs
            {:db-path [::spec/bulk-jobs]}]

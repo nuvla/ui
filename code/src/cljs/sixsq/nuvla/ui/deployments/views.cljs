@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.about.subs :as about-subs]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
             [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
             [sixsq.nuvla.ui.deployments.events :as events]
@@ -163,10 +165,18 @@
           {:action-id  events/refresh-action-deployments-id
            :on-refresh refresh}]]]])))
 
+(defn- DeplSetLink
+  [depl-set-id]
+  (when depl-set-id
+    (let [name (subscribe [::subs/deployment-set-name depl-set-id])]
+      [:a {:href depl-set-id}
+       [ui/Icon {:name "bullseye"}]
+       @name])))
+
 
 (defn RowFn
   [{:keys [id state module tags created-by] :as deployment}
-   {:keys [no-module-name show-options?] :as _options}]
+   {:keys [no-module-name show-options?] :as options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
@@ -193,6 +203,8 @@
                      [:a {:href url, :target "_blank", :rel "noreferrer"}
                       [ui/Icon {:name "external"}]
                       primary-url-name])]
+     (when (:show-depl-set-column? options)
+       [ui/TableCell [DeplSetLink (deployment :deployment-set)]])
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell (-> deployment :updated time/parse-iso8601 time/ago)]
      [ui/TableCell @creator]
@@ -212,9 +224,12 @@
 
 
 (defn VerticalDataTable
-  [_deployments-list _options]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  [_deployments-list {:keys [hide-depl-group-column?] :as _options}]
+  (let [tr (subscribe [::i18n-subs/tr])
+        ff (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
+        show-depl-set-column? (and @ff (not hide-depl-group-column?))]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
+      (dispatch [::events/get-deployment-groups-names deployments-list])
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
         (let [selectable? (or (nil? show-options?) show-options?)
@@ -240,6 +255,9 @@
                                     :sort-key  :state}
                                    {:field-key :url
                                     :no-sort?  true}
+                                   (when show-depl-set-column?
+                                     {:field-key :deployment-set
+                                      :no-sort?  true})
                                    {:field-key :created}
                                    {:field-key :updated}
                                    {:field-key :created-by}
@@ -251,7 +269,9 @@
                    :rows          deployments-list
                    :sort-config   {:db-path     ::spec/ordering
                                    :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                   :row-render    (fn [deployment] [RowFn deployment (assoc options :show-options? selectable?)])
+                   :row-render    (fn [deployment] [RowFn deployment (assoc options
+                                                                       :show-options? selectable?
+                                                                       :show-depl-set-column? show-depl-set-column?)])
                    :table-props   (merge style/single-line {:stackable true})
                    :select-config (when selectable?
                                     {:bulk-actions        [{:event [::events/bulk-update-params]

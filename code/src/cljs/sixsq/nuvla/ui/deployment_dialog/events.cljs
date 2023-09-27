@@ -395,10 +395,10 @@
 
 (reg-event-fx
   ::edit-deployment
-  (fn [{{:keys [::spec/deployment] :as db} :db} [_ operation exec-mode]]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ operation]]
     (let [resource-id   (:id deployment)
           operation     (or operation "start")
-          dep           (assoc deployment :execution-mode exec-mode)
+          dep           (dissoc deployment :execution-mode)
           edit-callback (fn [response]
                           (if (instance? js/Error response)
                             (do

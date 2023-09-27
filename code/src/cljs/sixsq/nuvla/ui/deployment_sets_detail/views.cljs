@@ -383,6 +383,7 @@
 (defn- AppsOverviewTable
   [creating?]
   (let [tr       (subscribe [::i18n-subs/tr])
+        locale   (subscribe [::i18n-subs/locale])
         apps-row (if creating?
                    (subscribe [::subs/apps-creation-row-data])
                    (subscribe [::subs/applications-overview-row-data]))]
@@ -397,19 +398,28 @@
                       (mapv
                         (fn [k]
                           {:field-key k
-                           :cell (when (= k :app-name)
+                           :cell (case k
+                                   :app
                                    (fn [{:keys [cell-data row-data]}]
                                      [module-plugin/LinkToApp
                                       {:db-path  [::spec/apps-sets (:idx row-data)]
                                        :href     (:href row-data)
                                        :children [:<>
                                                   cell-data]
-                                       :target   :_self}]))})
+                                       :target   :_self}])
+                                   :version
+                                   (fn [{{:keys [label created]} :cell-data}]
+                                     [ui/Popup
+                                      (cond-> {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
+                                                                               " "
+                                                                               (time/ago (time/parse-iso8601 created) @locale))])
+                                               :trigger (r/as-element [:p label " " [icons/InfoIconFull]])})])
+                                   nil)})
                         (keys (cond->
                                 (dissoc (first @apps-row) :idx :href)
 
                                 creating?
-                                (dissoc :last-update :status))))
+                                (dissoc :status))))
                       (when creating?
                         [{:field-key :remove
                           :cell (fn [{:keys [row-data]}]

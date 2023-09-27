@@ -105,13 +105,13 @@
 
 
 (defn- app->app-row-data [{:keys [application i]}]
-  {:idx i
-   :href (:id application)
-   :app-name (:name application)
-   :version  (str "v" (module-plugin/get-version-id
-                        (map-indexed vector (:versions application))
-                        (-> application :content :id)))
-   :last-update (time/time->format (js/Date.))})
+  {:idx         i
+   :href        (:id application)
+   :app         (:name application)
+   :version     {:label   (str "v" (module-plugin/get-version-id
+                                     (map-indexed vector (:versions application))
+                                     (-> application :content :id)))
+                 :created (-> application :content :created)}})
 
 
 (reg-sub
@@ -204,7 +204,7 @@
 
 (defn create-db-path [db-path temp-id]
   (cond->> db-path
-    (nonblank-string (str temp-id)) (into [::spec/temp-db temp-id])))
+           (nonblank-string (str temp-id)) (into [::spec/temp-db temp-id])))
 
 (defn- get-temp-db-id [current-route]
   (routing-utils/get-query-param current-route creation-temp-id-key))
@@ -213,12 +213,12 @@
 (defn current-route->edges-db-path
   [current-route]
   (create-db-path [::spec/edges]
-    (get-temp-db-id current-route)))
+                  (get-temp-db-id current-route)))
 
 (defn create-apps-creation-db-path
   [current-route]
   (create-db-path [::spec/apps-creation]
-    (get-temp-db-id current-route)))
+                  (get-temp-db-id current-route)))
 
 (reg-sub
   ::apps-creation
@@ -232,7 +232,7 @@
   (fn [apps]
     (map-indexed
       (fn [idx app]
-        (app->app-row-data {:i idx
+        (app->app-row-data {:i           idx
                             :application app}))
       apps)))
 

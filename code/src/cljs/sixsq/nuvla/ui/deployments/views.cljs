@@ -168,7 +168,7 @@
 
 (defn RowFn
   [{:keys [id state module tags created-by] :as deployment}
-   {:keys [no-module-name show-options?] :as _options}]
+   {:keys [no-module-name show-options?] :as options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
@@ -196,7 +196,7 @@
                      [:a {:href url, :target "_blank", :rel "noreferrer"}
                       [ui/Icon {:name "external"}]
                       primary-url-name])]
-     (when @ff
+     (when (and @ff (not (:hide-depl-group-column? options)))
        [ui/TableCell (some-> (deployment :deployment-set)
                        ((fn [depl-set-id]
                           [:a {:href depl-set-id}
@@ -249,7 +249,7 @@
                                     :sort-key  :state}
                                    {:field-key :url
                                     :no-sort?  true}
-                                   (when @ff
+                                   (when (and @ff (not (:hide-depl-group-column? options)))
                                      {:field-key :deployment-set})
                                    {:field-key :created}
                                    {:field-key :updated}

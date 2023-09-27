@@ -1011,7 +1011,9 @@
                                :total-items            @count
                                :change-event           [::events/get-deployments-for-deployment-sets uuid]
                                :i-per-page-multipliers [1 2 4]}])
-       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]}]]))
+       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]
+       ;; FIXME: Make this more generic by passing all columns to show/hide
+       :hide-depl-group-column? true}]]))
 
 (defn TabsDeploymentSet
   [{:keys [uuid creating?]}]

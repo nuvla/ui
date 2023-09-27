@@ -43,55 +43,95 @@
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
+(defn- create-wrng-msg
+  [apps-count edges-count action]
+  (str "You're about to " action " " apps-count " app" (if (< 1 apps-count) "s " " ") "on " edges-count " device" (if (< 1 edges-count) "s. " ". ") "Proceed?"))
+
+(defn- ops-status-pending-str [tr-fn ops-status]
+  (str/join ", "
+               (map (fn [[k v]]
+                      (str (count v) " " (tr-fn [k])))
+                 (dissoc ops-status :status))))
+
+(defn- depl-set->modal-content
+  [{:keys [name id description]}]
+  (str (or name id) (when description " - ") description))
 
 (defn StartButton
-  [{:keys [id] :as deployment-set}]
+  [{:keys [id] :as deployment-set} warn-msg]
   (let [tr (subscribe [::i18n-subs/tr])
         enabled? (general-utils/can-operation? "start" deployment-set)]
-    [ui/MenuItem
-     {:on-click (fn [_]
-                  (dispatch [::events/operation
-                             {:resource-id id
-                              :operation "start"}]))
-      :disabled (not enabled?)
-      :class    (when enabled? "primary-menu-item")}
-     [icons/PlayIcon]
-     (@tr [:start])]))
+    [uix/ModalDanger
+     {:on-confirm  (fn [_]
+                                   (dispatch [::events/operation
+                                              {:resource-id id
+                                               :operation "start"}]))
+      :trigger     (r/as-element
+                     [ui/MenuItem
+                      {:disabled (not enabled?)
+                       :class    (when enabled? "primary-menu-item")}
+                      [icons/PlayIcon]
+                      (@tr [:start])])
+      :content     [:h3 (depl-set->modal-content deployment-set)]
+      :header      (@tr [:start-deployment-set])
+      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :button-text (@tr [:start])
+      :modal-action [:p warn-msg]
+      :with-confirm-step? true}]
+    ))
 
 (defn StopButton
-  [{:keys [id] :as deployment-set}]
+  [{:keys [id] :as deployment-set} warn-msg]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/MenuItem
-     {:on-click (fn [_]
-                  (dispatch [::events/operation
-                             {:resource-id id
-                              :operation "stop"}]))
-      :disabled (not (general-utils/can-operation?
-                       "stop" deployment-set))}
-     [icons/StopIcon]
-     (@tr [:stop])]))
+  [uix/ModalDanger
+     {:on-confirm  (fn [_]
+                     (dispatch [::events/operation
+                                {:resource-id id
+                                 :operation "stop"}]))
+      :trigger     (r/as-element
+                     [ui/MenuItem
+                      {:disabled (not (general-utils/can-operation?
+                                        "stop" deployment-set))}
+                      [icons/StopIcon]
+                      (@tr [:stop])])
+      :content     [:h3 (depl-set->modal-content deployment-set)]
+      :header      (@tr [:stop-deployment-set])
+      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :button-text (@tr [:stop])
+      :modal-action [:p warn-msg]
+      :with-confirm-step? true}]))
 
 
 (defn UpdateButton
-  [{:keys [id] :as deployment-set}]
+  [{:keys [id] :as deployment-set} warn-msg]
   (let [tr       (subscribe [::i18n-subs/tr])
         enabled? (general-utils/can-operation?
-                       "update" deployment-set)]
-    [ui/MenuItem
-     {:on-click (fn [_]
-                  (dispatch [::events/operation
-                             {:resource-id id
-                              :operation "update"}]))
-      :disabled (not enabled?)
-      :class    (when enabled? "primary-menu-item")}
-     [icons/RedoIcon]
-     (@tr [:update])]))
+                   "update" deployment-set)]
+    [uix/ModalDanger
+     {:on-confirm  (fn [_]
+                     (dispatch [::events/operation
+                                {:resource-id id
+                                 :operation "update"}]))
+      :trigger     (r/as-element
+                     [ui/MenuItem
+                      {:disabled (not enabled?)
+                       :class    (when enabled? "primary-menu-item")}
+                      [icons/RedoIcon]
+                      (@tr [:update])])
+      :content     [:h3 (depl-set->modal-content deployment-set)]
+      :header      (@tr [:update-deployment-set])
+      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :button-text (@tr [:update])
+      :modal-action [:p warn-msg]
+      :with-confirm-step? true}]
+    ))
+
 
 
 (defn DeleteButton
-  [{:keys [id name description] :as deployment-set}]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        content (str (or name id) (when description " - ") description)]
+  [deployment-set warn-msg]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        content     (depl-set->modal-content deployment-set)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete])
       :trigger     (r/as-element [ui/MenuItem
@@ -101,7 +141,9 @@
       :content     [:h3 content]
       :header      (@tr [:delete-deployment-set])
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
-      :button-text (@tr [:delete])}]))
+      :button-text (@tr [:delete])
+      :modal-action [:p warn-msg]
+      :with-confirm-step? true}]))
 
 (defn SaveButton
   [{:keys [creating?]}]
@@ -126,22 +168,32 @@
 (defn MenuBar
   []
   (let [deployment-set (subscribe [::subs/deployment-set])
-        loading?       (subscribe [::subs/loading?])]
+        loading?       (subscribe [::subs/loading?])
+        apps-count     (subscribe [::subs/apps-count])
+        edges-count    (subscribe [::subs/edges-count])
+        tr             (subscribe [::i18n-subs/tr])]
     (fn []
-      (let [MenuItems (cimi-detail-views/format-operations
-                        @deployment-set
-                        #{"start" "stop" "delete" "update"})]
+      (let [MenuItems   (cimi-detail-views/format-operations
+                          @deployment-set
+                          #{"start" "stop" "delete" "update"})
+            warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj MenuItems
             ^{:key "delete"}
-            [DeleteButton @deployment-set]
+            [DeleteButton @deployment-set (warn-msg-fn "remove")]
             ^{:key "stop"}
-            [StopButton @deployment-set]
+            [StopButton @deployment-set (warn-msg-fn "stop")]
             ^{:key "update"}
-            [UpdateButton @deployment-set]
+            [UpdateButton @deployment-set
+             (str
+               "You're about to start these updates: "
+               (ops-status-pending-str
+                 @tr
+                 (:operational-status @deployment-set))
+               ". Proceed?")]
             ^{:key "start"}
-            [StartButton @deployment-set]
+            [StartButton @deployment-set (warn-msg-fn "start")]
             ^{:key "save"}
             [SaveButton {:deployment-set @deployment-set}])
           [components/RefreshMenu
@@ -173,6 +225,8 @@
       [components/EditableInput attribute @deployment-set on-change-fn]
       [ui/TableCell (get @deployment-set attribute)])))
 
+
+
 (defn OperationalStatusSummary
   [ops-status]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -184,10 +238,7 @@
       [:div
        [ui/Icon {:name :circle :color "red"}]
        (str "Pending: "
-             (str/join ", "
-               (map (fn [[k v]]
-                      (str (count v) " " (@tr [k])))
-                 (dissoc ops-status :status))))])))
+             (ops-status-pending-str @tr ops-status))])))
 
 (defn TabOverviewDeploymentSet
   [{:keys [id created updated created-by state operational-status]} creating?]

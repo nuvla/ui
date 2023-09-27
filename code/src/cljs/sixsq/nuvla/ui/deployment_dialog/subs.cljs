@@ -85,9 +85,7 @@
     (let [cred-unknown? @(subscribe [::creds-subs/credential-check-status-unknown? cred-id])
           cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])]
       (if (clouds-utils/infra-support-pull? infra-service)
-        (if (and cred-unknown? (not cred-loading?))
-          "pull"
-          "mixed")
+        "pull"
         "push"))))
 
 (reg-sub

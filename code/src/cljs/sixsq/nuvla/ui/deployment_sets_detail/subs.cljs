@@ -121,10 +121,10 @@
   {:idx         i
    :href        (:id application)
    :app         (:name application)
-   :version     {:name    (str "v" (module-plugin/get-version-id
+   :version     {:label   (str "v" (module-plugin/get-version-id
                                      (map-indexed vector (:versions application))
                                      (-> application :content :id)))
-                 :updated (-> application :content :updated)}})
+                 :created (-> application :content :created)}})
 
 (reg-sub
   ::applications-overview-row-data

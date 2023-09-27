@@ -332,6 +332,7 @@
 (defn- AppsOverviewTable
   [creating?]
   (let [tr       (subscribe [::i18n-subs/tr])
+        locale   (subscribe [::i18n-subs/locale])
         apps-row (if creating?
                    (subscribe [::subs/apps-creation-row-data])
                    (subscribe [::subs/applications-overview-row-data]))]
@@ -356,11 +357,12 @@
                                                   cell-data]
                                        :target   :_self}])
                                    :version
-                                   (fn [{{version :name :keys [updated]} :cell-data}]
-                                     (when updated
-                                       [ui/Popup
-                                        (cond-> {:content (r/as-element [:p (time/time->format updated)])
-                                                 :trigger (r/as-element [:p version " " [icons/InfoIconFull]])})]))
+                                   (fn [{{:keys [label created]} :cell-data}]
+                                     [ui/Popup
+                                      (cond-> {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
+                                                                               " "
+                                                                               (time/ago (time/parse-iso8601 created) @locale))])
+                                               :trigger (r/as-element [:p label " " [icons/InfoIconFull]])})])
                                    nil)})
                         (keys (cond->
                                 (dissoc (first @apps-row) :idx :href)

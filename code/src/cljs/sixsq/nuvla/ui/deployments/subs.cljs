@@ -97,4 +97,4 @@
   ::deployment-set-name
   :<- [::deployments-sets-ids->names]
   (fn [depl-set-ids->names [_ id]]
-    (depl-set-ids->names id)))
+    (get depl-set-ids->names id)))

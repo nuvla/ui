@@ -384,7 +384,8 @@
         apps-row (if creating?
                    (subscribe [::subs/apps-creation-row-data])
                    (subscribe [::subs/applications-overview-row-data]))
-        k->tr-k  {:app-name :name}]
+        k->tr-k  {:app-name :name}
+        route    (subscribe [::route-subs/current-route])]
     (fn []
       (let [no-apps? (empty? @apps-row)]
         [:<>
@@ -401,32 +402,48 @@
                            :cell (case k
                                    :app
                                    (fn [{:keys [cell-data row-data]}]
-                                     [module-plugin/LinkToApp
-                                      {:db-path  [::spec/apps-sets (:idx row-data)]
-                                       :href     (:href row-data)
-                                       :children [:<>
-                                                  cell-data]
-                                       :target   :_self}])
+                                     [:<>
+                                      [ui/Popup
+                                       {:content (r/as-element [:p "Configure app"])
+                                        :trigger (r/as-element [:a
+                                                                {:href     (routes-utils/gen-href
+                                                                             @route
+                                                                             {:query-params
+                                                                              {:deployment-sets-detail-tab :apps
+                                                                               :apps-tab (:href row-data)}})
+                                                                 :children [icons/StoreIcon]
+                                                                 :target   :_self}
+                                                                cell-data
+                                                                [:span {:style {:margin-left "0.5rem"}}
+                                                                 [icons/GearIcon]]])}]
+                                      ])
                                    :version
                                    (fn [{{:keys [label created]} :cell-data}]
                                      [ui/Popup
-                                      (cond-> {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
-                                                                               " "
-                                                                               (time/ago (time/parse-iso8601 created) @locale))])
-                                               :trigger (r/as-element [:p label " " [icons/InfoIconFull]])})])
+                                      {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
+                                                                    " "
+                                                                    (time/ago (time/parse-iso8601 created) @locale))])
+                                       :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
                                    nil)})
-                        (keys (cond->
-                                (dissoc (first @apps-row) :idx :href)
-
-                                creating?
-                                (dissoc :status))))
-                      (when creating?
-                        [{:field-key :remove
+                        (keys (dissoc (first @apps-row) :idx :href)))
+                      (remove nil?
+                        [{:field-key :app-details
                           :cell (fn [{:keys [row-data]}]
-                                  [icons/XMarkIcon
-                                   {:style {:cursor :pointer}
-                                    :color "red"
-                                    :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
+                                  [ui/Popup
+                                   {:content (r/as-element [:p "Open app in marketplace"])
+                                    :trigger (r/as-element [:span
+                                                            [module-plugin/LinkToApp
+                                                             {:db-path  [::spec/apps-sets (:idx row-data)]
+                                                              :href     (:href row-data)
+                                                              :children [icons/]
+                                                              :target   :_self}]])}])}
+                         (when creating?
+                           {:field-key :remove
+                            :cell (fn [{:keys [row-data]}]
+                                    [icons/XMarkIcon
+                                     {:style {:cursor :pointer}
+                                      :color "red"
+                                      :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                     :rows @apps-row}]])
          [:div {:style {:display :flex :justify-content :center :align-items :center}}
           (when creating?

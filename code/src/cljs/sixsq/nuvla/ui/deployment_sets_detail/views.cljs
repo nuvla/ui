@@ -377,6 +377,9 @@
        [ui/ModalContent
         [AppsPicker tab-key ::spec/pagination-apps-picker]]])))
 
+(defn- create-app-config-query-key [i id]
+  (keyword (str "configure-set-" i "-app-" id)))
+
 (defn- AppsOverviewTable
   [creating?]
   (let [tr       (subscribe [::i18n-subs/tr])
@@ -393,39 +396,44 @@
            [:div {:style {:height "100%"}}
             [Table {:columns
                     (into
-                      (mapv
-                        (fn [k]
-                          {:field-key k
-                           :header-content (-> (or (@tr [(k->tr-k k k)]) k)
-                                               name
-                                               str/capitalize)
-                           :cell (case k
-                                   :app
-                                   (fn [{:keys [cell-data row-data]}]
-                                     [:<>
-                                      [ui/Popup
-                                       {:content (r/as-element [:p "Configure app"])
-                                        :trigger (r/as-element [:a
-                                                                {:href     (routes-utils/gen-href
-                                                                             @route
-                                                                             {:query-params
-                                                                              {:deployment-sets-detail-tab :apps
-                                                                               :apps-tab (:href row-data)}})
-                                                                 :children [icons/StoreIcon]
-                                                                 :target   :_self}
-                                                                cell-data
-                                                                [:span {:style {:margin-left "0.5rem"}}
-                                                                 [icons/GearIcon]]])}]
-                                      ])
-                                   :version
-                                   (fn [{{:keys [label created]} :cell-data}]
-                                     [ui/Popup
-                                      {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
-                                                                    " "
-                                                                    (time/ago (time/parse-iso8601 created) @locale))])
-                                       :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
-                                   nil)})
-                        (keys (dissoc (first @apps-row) :idx :href)))
+                      (vec
+                        (map-indexed
+                          (fn [i k]
+                            {:field-key k
+                             :header-content (-> (or (@tr [(k->tr-k k k)]) k)
+                                                 name
+                                                 str/capitalize)
+                             :cell (case k
+                                     :app
+                                     (fn [{:keys [cell-data row-data]}]
+                                       [:<>
+                                        [ui/Popup
+                                         {:content (r/as-element [:p "Configure app"])
+                                          :trigger
+                                          (r/as-element
+                                            [:a
+                                             {:href (routes-utils/gen-href
+                                                      @route
+                                                      {:query-params
+                                                       (merge
+                                                         {(routes-utils/db-path->query-param-key [::apps-config])
+                                                          (create-app-config-query-key i (:href row-data))}
+                                                         {:deployment-sets-detail-tab :apps})})
+                                              :children [icons/StoreIcon]
+                                              :target   :_self}
+                                             cell-data
+                                             [:span {:style {:margin-left "0.5rem"}}
+                                              [icons/GearIcon]]])}]
+                                        ])
+                                     :version
+                                     (fn [{{:keys [label created]} :cell-data}]
+                                       [ui/Popup
+                                        {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
+                                                                      " "
+                                                                      (time/ago (time/parse-iso8601 created) @locale))])
+                                         :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
+                                     nil)})
+                          (keys (dissoc (first @apps-row) :idx :href))))
                       (remove nil?
                         [{:field-key :app-details
                           :cell (fn [{:keys [row-data]}]
@@ -764,33 +772,40 @@
        :change-event [::events/edit-config]}]
      :label (@tr [:private-registries])]))
 
+(defn- AppName [{:keys [idx id]}]
+  (let [app (subscribe [::module-plugin/module
+                         [::spec/apps-sets idx] id])]
+    (fn []
+      [:span (or (:name @app) (:id @app))])))
+
+
 (defn ConfigureApps
   [i applications]
   ^{:key (str "set-" i)}
-  [ui/Tab
-   {:menu  {:attached false}
+  [tab/Tab
+   {:db-path [::apps-config]
     :panes (map
              (fn [{:keys [id]}]
-               (let [app @(subscribe [::module-plugin/module
-                                      [::spec/apps-sets i] id])]
-                 {:menuItem {:content (or (:name app) (:id app))
-                             :icon    "cubes"
-                             :key     (keyword (str "configure-set-" i "-app-" id))}
-                  :render   #(r/as-element
-                               [ui/TabPane
-                                [ui/Popup {:trigger (r/as-element
-                                                      [:span
-                                                       [module-plugin/LinkToApp
-                                                        {:db-path  [::spec/apps-sets i]
-                                                         :href     id
-                                                         :children [:<>
-                                                                    [ui/Icon {:class icons/i-link}]
-                                                                    "Go to app"]}]])
-                                           :content "Open application in a new window"}]
-                                [ModuleVersionsApp i id]
-                                [EnvVariablesApp i id]
-                                [RegistriesCredsApp i id]])})
-               ) applications)}])
+               {:menuItem {:content (r/as-element
+                                      [AppName {:idx i :id id}])
+                           :icon    "cubes"
+                           :key     (create-app-config-query-key i id)}
+                :render   #(r/as-element
+                             [ui/TabPane
+                              [ui/Popup {:trigger (r/as-element
+                                                    [:span
+                                                     [module-plugin/LinkToApp
+                                                      {:db-path  [::spec/apps-sets i]
+                                                       :href     id
+                                                       :children [:<>
+                                                                  [ui/Icon {:class icons/i-link}]
+                                                                  "Go to app"]}]])
+                                         :content "Open application in a new window"}]
+                              [ModuleVersionsApp i id]
+                              [EnvVariablesApp i id]
+                              [RegistriesCredsApp i id]])}
+               )
+             applications)}])
 
 (defn BoldLabel
   [txt]

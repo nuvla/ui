@@ -59,8 +59,8 @@
 
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr (subscribe [::i18n-subs/tr])
-        enabled? (general-utils/can-operation? "start" deployment-set)]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? (subscribe [::subs/operation-enabled? "start"])]
     [uix/ModalDanger
      {:on-confirm  (fn [_]
                                    (dispatch [::events/operation
@@ -68,8 +68,8 @@
                                                :operation "start"}]))
       :trigger     (r/as-element
                      [ui/MenuItem
-                      {:disabled (not enabled?)
-                       :class    (when enabled? "primary-menu-item")}
+                      {:disabled (not @enabled?)
+                       :class    (when @enabled? "primary-menu-item")}
                       [icons/PlayIcon]
                       (@tr [:start])])
       :content     [:h3 (depl-set->modal-content deployment-set)]
@@ -82,7 +82,8 @@
 
 (defn StopButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? (subscribe [::subs/operation-enabled? "stop"])]
   [uix/ModalDanger
      {:on-confirm  (fn [_]
                      (dispatch [::events/operation
@@ -90,8 +91,7 @@
                                  :operation "stop"}]))
       :trigger     (r/as-element
                      [ui/MenuItem
-                      {:disabled (not (general-utils/can-operation?
-                                        "stop" deployment-set))}
+                      {:disabled (not @enabled?)}
                       [icons/StopIcon]
                       (@tr [:stop])])
       :content     [:h3 (depl-set->modal-content deployment-set)]
@@ -105,8 +105,7 @@
 (defn UpdateButton
   [{:keys [id] :as deployment-set} warn-msg]
   (let [tr       (subscribe [::i18n-subs/tr])
-        enabled? (general-utils/can-operation?
-                   "update" deployment-set)]
+        enabled? (subscribe [::subs/operation-enabled? "update"])]
     [uix/ModalDanger
      {:on-confirm  (fn [_]
                      (dispatch [::events/operation
@@ -114,8 +113,8 @@
                                  :operation "update"}]))
       :trigger     (r/as-element
                      [ui/MenuItem
-                      {:disabled (not enabled?)
-                       :class    (when enabled? "primary-menu-item")}
+                      {:disabled (not @enabled?)
+                       :class    (when @enabled? "primary-menu-item")}
                       [icons/RedoIcon]
                       (@tr [:update])])
       :content     [:h3 (depl-set->modal-content deployment-set)]
@@ -174,29 +173,25 @@
         edges-count    (subscribe [::subs/edges-count])
         tr             (subscribe [::i18n-subs/tr])]
     (fn []
-      (let [MenuItems   (cimi-detail-views/format-operations
-                          @deployment-set
-                          #{"start" "stop" "delete" "update"})
-            warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
+      (let [warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
         [components/StickyBar
          [components/ResponsiveMenuBar
-          (conj MenuItems
-            ^{:key "delete"}
-            [DeleteButton @deployment-set (warn-msg-fn "remove")]
-            ^{:key "stop"}
-            [StopButton @deployment-set (warn-msg-fn "stop")]
-            ^{:key "update"}
-            [UpdateButton @deployment-set
-             (str
-               "You're about to start these updates: "
-               (ops-status-pending-str
-                 @tr
-                 (:operational-status @deployment-set))
-               ". Proceed?")]
-            ^{:key "start"}
-            [StartButton @deployment-set (warn-msg-fn "start")]
-            ^{:key "save"}
-            [SaveButton {:deployment-set @deployment-set}])
+          [^{:key "save"}
+           [SaveButton {:deployment-set @deployment-set}]
+           ^{:key "start"}
+           [StartButton @deployment-set (warn-msg-fn "start")]
+           ^{:key "update"}
+           [UpdateButton @deployment-set
+            (str
+              "You're about to start these updates: "
+              (ops-status-pending-str
+                @tr
+                (:operational-status @deployment-set))
+              ". Proceed?")]
+           ^{:key "stop"}
+           [StopButton @deployment-set (warn-msg-fn "stop")]
+           ^{:key "delete"}
+           [DeleteButton @deployment-set (warn-msg-fn "remove")]]
           [components/RefreshMenu
            {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?

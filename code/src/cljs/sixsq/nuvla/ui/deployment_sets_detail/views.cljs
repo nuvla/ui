@@ -737,15 +737,6 @@
        :change-event [::events/edit-config]}]
      :label (@tr [:env-variables])]))
 
-(defn RegistriesCredsApp
-  [i module-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/Accordion
-     [module-plugin/RegistriesCredentials
-      {:db-path [::spec/apps-sets i]
-       :href    module-id
-       :change-event [::events/edit-config]}]
-     :label (@tr [:private-registries])]))
 
 (defn ConfigureApps
   [i applications]
@@ -771,8 +762,7 @@
                                                                     "Go to app"]}]])
                                            :content "Open application in a new window"}]
                                 [ModuleVersionsApp i id]
-                                [EnvVariablesApp i id]
-                                [RegistriesCredsApp i id]])})
+                                [EnvVariablesApp i id]])})
                ) applications)}])
 
 (defn BoldLabel

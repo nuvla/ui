@@ -326,12 +326,13 @@
 
 (defn application-overwrites
   [db i {:keys [id version] :as _application}]
-  (let [db-path     [::spec/apps-sets i]
-        env-changed (module-plugin/db-changed-env-vars db db-path id)
-        regs-creds  (module-plugin/db-module-registries-credentials
-                      db db-path id)]
+  (let [db-path         [::spec/apps-sets i]
+        version-changed (module-plugin/db-changed-version db db-path id)
+        env-changed     (module-plugin/db-changed-env-vars db db-path id)
+        regs-creds      (module-plugin/db-module-registries-credentials
+                          db db-path id)]
     (cond-> {:id      id
-             :version version}
+             :version (or version-changed version)}
             (seq env-changed) (assoc :environmental-variables env-changed)
             (seq regs-creds) (assoc :registries-credentials regs-creds))))
 
@@ -459,18 +460,18 @@
           ordering     (or ordering spec/default-ordering)
           query-filter (routing-utils/get-query-param current-route edges-state-filter-key)]
       (cond-> {:db (assoc db ::spec/edge-documents nil)}
-        edges
-        (assoc ::cimi-api-fx/search
-          [:nuvlabox
-           (->> {:orderby (ordering->order-string ordering)
-                 :filter  (general-utils/join-and
-                            "id!=null"
-                            (general-utils/ids->inclusion-filter-string (-> edges
-                                                                            :resources))
-                            (when (seq query-filter) (edge-utils/state-filter query-filter)))}
-                (pagination-plugin/first-last-params
-                  db [::spec/pagination-edges]))
-           #(dispatch [::set-edges-documents %])])))))
+              edges
+              (assoc ::cimi-api-fx/search
+                     [:nuvlabox
+                      (->> {:orderby (ordering->order-string ordering)
+                            :filter  (general-utils/join-and
+                                       "id!=null"
+                                       (general-utils/ids->inclusion-filter-string (-> edges
+                                                                                       :resources))
+                                       (when (seq query-filter) (edge-utils/state-filter query-filter)))}
+                           (pagination-plugin/first-last-params
+                             db [::spec/pagination-edges]))
+                      #(dispatch [::set-edges-documents %])])))))
 
 (reg-event-db
   ::set-opened-modal
@@ -495,12 +496,12 @@
                              (map :id current-selection))
                            (when (seq current-selection)
                              "subtype!='applications_sets'"))
-                         :order-by "name:asc"
+                         :order-by           "name:asc"
                          :pagination-db-path [pagination-db-path]}]]]})))
 
 (defn enrich-app
   [app]
-  (let [versions (:versions app)
+  (let [versions   (:versions app)
         version-id (-> app :content :id)
         version-no (get-version-id (map-indexed vector versions) version-id)]
     (assoc app :version version-no)))
@@ -516,7 +517,7 @@
 
 (defn version-id-to-add
   [app]
-  (let [versions (:versions app)
+  (let [versions           (:versions app)
         published-versions (filter (comp true? :published) (:versions app))]
     (:href (or (last published-versions) (last versions)))))
 
@@ -531,8 +532,8 @@
         {::apps-fx/get-module [path
                                (get-version-id (map-indexed vector versions) version-id)
                                #(dispatch [::do-add-app %])]
-         :fx [[:dispatch [::fetch-app-picker-apps
-                          ::spec/pagination-apps-picker]]]}))))
+         :fx                  [[:dispatch [::fetch-app-picker-apps
+                                           ::spec/pagination-apps-picker]]]}))))
 
 (reg-event-fx
   ::add-apps-set-apps
@@ -551,8 +552,8 @@
 (reg-event-fx
   ::add-apps-to-selection
   (fn [{db :db} [_ apps]]
-    (let [db-path  (subs/create-apps-creation-db-path (:current-route db))
-          apps (mapv enrich-app apps)]
+    (let [db-path (subs/create-apps-creation-db-path (:current-route db))
+          apps    (mapv enrich-app apps)]
       {:fx (into
              [[:db (update-in db db-path (fnil into []) [])]
               [:dispatch [::fetch-app-picker-apps

@@ -430,12 +430,12 @@
                         [{:field-key :app-details
                           :cell (fn [{:keys [row-data]}]
                                   [ui/Popup
-                                   {:content (r/as-element [:p "Open app in marketplace"])
+                                   {:content (r/as-element [:p "Open app details in marketplace"])
                                     :trigger (r/as-element [:span
                                                             [module-plugin/LinkToApp
                                                              {:db-path  [::spec/apps-sets (:idx row-data)]
                                                               :href     (:href row-data)
-                                                              :children [icons/]
+                                                              :children [icons/ArrowRightFromBracketIcon]
                                                               :target   :_self}]])}])}
                          (when creating?
                            {:field-key :remove

@@ -129,23 +129,28 @@
 (defn DeleteButton
   [deployment-set warn-msg]
   (let [tr          (subscribe [::i18n-subs/tr])
-        content     (depl-set->modal-content deployment-set)]
+        content     (depl-set->modal-content deployment-set)
+        deletable?  (general-utils/can-operation? "delete" deployment-set)
+        forceable?  (general-utils/can-operation? "force-delete" deployment-set)]
     [uix/ModalDanger
-     {:on-confirm  #(dispatch [::events/delete])
+     {:on-confirm  #(dispatch [::events/delete {:deletable? deletable?
+                                                :forceable? forceable?}])
       :trigger     (r/as-element [ui/MenuItem
-                                  {:disabled (not (general-utils/can-operation? "delete" deployment-set))}
+                                  {:disabled (and
+                                               (not forceable?)
+                                               (not deletable?))}
                                   [icons/TrashIconFull]
                                   (@tr [:delete])])
       :content     [:h3 content]
       :header      (@tr [:delete-deployment-set])
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:delete])
-      :modal-action [:p warn-msg]
+      :modal-action [:p (if deletable? warn-msg "Force delete will leave orphaned containers. Proceed?")]
       :with-confirm-step? true}]))
 
 (defn SaveButton
   [{:keys [creating?]}]
-  (let [tr             (subscribe [::i18n-subs/tr])
+  (let [tr            (subscribe [::i18n-subs/tr])
         save-enabled? (subscribe [::subs/save-enabled? creating?])]
     (fn [{:keys [deployment-set]}]
       [ui/Popup
@@ -171,29 +176,25 @@
         edges-count    (subscribe [::subs/edges-count])
         tr             (subscribe [::i18n-subs/tr])]
     (fn []
-      (let [MenuItems   (cimi-detail-views/format-operations
-                          @deployment-set
-                          #{"start" "stop" "delete" "update"})
-            warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
+      (let [warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
         [components/StickyBar
          [components/ResponsiveMenuBar
-          (conj MenuItems
-            ^{:key "delete"}
-            [DeleteButton @deployment-set (warn-msg-fn "remove")]
-            ^{:key "stop"}
-            [StopButton @deployment-set (warn-msg-fn "stop")]
-            ^{:key "update"}
-            [UpdateButton @deployment-set
-             (str
-               "You're about to start these updates: "
-               (ops-status-pending-str
-                 @tr
-                 (:operational-status @deployment-set))
-               ". Proceed?")]
-            ^{:key "start"}
-            [StartButton @deployment-set (warn-msg-fn "start")]
-            ^{:key "save"}
-            [SaveButton {:deployment-set @deployment-set}])
+          [^{:key "save"}
+           [SaveButton {:deployment-set @deployment-set}]
+           ^{:key "start"}
+           [StartButton @deployment-set (warn-msg-fn "start")]
+           ^{:key "update"}
+           [UpdateButton @deployment-set
+            (str
+              "You're about to start these updates: "
+              (ops-status-pending-str
+                @tr
+                (:operational-status @deployment-set))
+              ". Proceed?")]
+           ^{:key "stop"}
+           [StopButton @deployment-set (warn-msg-fn "stop")]
+           ^{:key "delete"}
+           [DeleteButton @deployment-set (warn-msg-fn "remove")]]
           [components/RefreshMenu
            {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?

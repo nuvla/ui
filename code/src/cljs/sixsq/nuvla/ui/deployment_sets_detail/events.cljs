@@ -322,7 +322,14 @@
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db}]
     (let [id (:id deployment-set)]
-      {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate routes/deployment-sets])]})))
+      {::cimi-api-fx/delete [id (fn [response]
+                                  (dispatch
+                                    [::job-events/wait-job-to-complete
+                                     {:job-id (:location response)
+                                      :on-complete
+                                      #(dispatch
+                                         [::routing-events/navigate routes/deployment-sets])
+                                      :refresh-interval-ms 100}]))]})))
 
 (defn application-overwrites
   [db i {:keys [id version] :as _application}]

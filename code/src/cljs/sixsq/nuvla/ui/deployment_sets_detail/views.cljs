@@ -127,7 +127,6 @@
     ))
 
 
-
 (defn DeleteButton
   [deployment-set warn-msg]
   (let [tr          (subscribe [::i18n-subs/tr])

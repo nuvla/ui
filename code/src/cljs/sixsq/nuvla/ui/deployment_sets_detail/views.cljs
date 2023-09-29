@@ -123,8 +123,7 @@
       :danger-msg  (@tr [:danger-action-cannot-be-undone])
       :button-text (@tr [:update])
       :modal-action [:p warn-msg]
-      :with-confirm-step? true}]
-    ))
+      :with-confirm-step? true}]))
 
 
 (defn DeleteButton

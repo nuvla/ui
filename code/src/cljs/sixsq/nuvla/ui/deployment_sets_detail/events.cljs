@@ -326,10 +326,15 @@
                                   (dispatch
                                     [::job-events/wait-job-to-complete
                                      {:job-id (:location response)
+                                      :refresh-interval-ms 1000
                                       :on-complete
-                                      #(dispatch
-                                         [::routing-events/navigate routes/deployment-sets])
-                                      :refresh-interval-ms 100}]))]})))
+                                      #(do
+                                         (dispatch [::routing-events/navigate routes/deployment-sets])
+                                         (when-not (= "SUCCESS" (:state %))
+                                           (cimi-api-fx/default-error-message
+                                             %
+                                             "Failed to delete deployment set"))())}]))]})))
+
 
 (defn application-overwrites
   [db i {:keys [id version] :as _application}]

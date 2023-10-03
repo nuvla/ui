@@ -34,6 +34,7 @@
                                                                    pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [format-money]]
+            [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -387,7 +388,7 @@
         apps-row (if creating?
                    (subscribe [::subs/apps-creation-row-data])
                    (subscribe [::subs/applications-overview-row-data]))
-        k->tr-k  {:app-name :name}
+        k->tr-k  {:app :name}
         route    (subscribe [::route-subs/current-route])]
     (fn []
       (let [no-apps? (empty? @apps-row)]
@@ -400,7 +401,7 @@
                         (map-indexed
                           (fn [i k]
                             {:field-key k
-                             :header-content (-> (or (@tr [(k->tr-k k k)]) k)
+                             :header-content (-> (or (@tr [(k->tr-k k)]) k)
                                                  name
                                                  str/capitalize)
                              :cell (case k
@@ -423,8 +424,7 @@
                                               :target   :_self}
                                              cell-data
                                              [:span {:style {:margin-left "0.5rem"}}
-                                              [icons/GearIcon]]])}]
-                                        ])
+                                              [icons/GearIcon]]])}]])
                                      :version
                                      (fn [{{:keys [label created]} :cell-data}]
                                        [ui/Popup
@@ -435,7 +435,8 @@
                                      nil)})
                           (keys (dissoc (first @apps-row) :idx :href))))
                       (remove nil?
-                        [{:field-key :app-details
+                        [{:field-key :details
+                          :header-content (utils-general/capitalize-words (@tr [:details]))
                           :cell (fn [{:keys [row-data]}]
                                   [ui/Popup
                                    {:content (r/as-element [:p "Open app details in marketplace"])

@@ -273,6 +273,19 @@
     (env-vars-value-by-index (db-module-env-vars db db-path href) index)))
 
 (reg-sub
+  ::module-env-vars-in-error
+  (fn [db [_ db-path href]]
+    (let [module   (db-module db db-path href)
+          env-vars (module-env-vars module)]
+      (->> env-vars
+           (keep (fn [{:keys [name value required] ::keys [new-value]}]
+                   (when (and required (if (some? new-value)
+                                         (str/blank? new-value)
+                                         (str/blank? value)))
+                     name)))
+           (into #{})))))
+
+(reg-sub
   ::registries-loading?
   (fn [db [_ db-path href]]
     (get-in db (db-module-loading-registries-path db-path href) false)))
@@ -351,44 +364,47 @@
         :options     @options}])))
 
 (defn EnvVarInput
-  [db-path href read-only? i {env-name  :name
-                              env-value :value}]
+  [db-path href read-only? error? i {env-name  :name
+                                     env-value :value}]
   (let [updated-env-value @(subscribe [::module-env-value db-path href i])
         value             (or updated-env-value env-value "")
         on-change         #(dispatch [::update-env db-path href i %])]
     (if (is-cred-env-var? env-name)
       [EnvCredential env-name value on-change]
-      [ui/Input
+      [ui/FormInput
        {:type          "text"
         :name          env-name
         :default-value value
         :read-only     read-only?
+        :error         error?
         :fluid         true
         :on-change     (ui-callback/input-callback on-change)}])))
 
 (defn AsFormInput
-  [db-path href read-only?
+  [db-path href read-only? error?
    i {env-name        :name
       env-description :description
       env-required    :required :as env-variable}]
   [ui/FormField {:required env-required}
    [:label env-name ff/nbsp (ff/help-popup env-description)]
-   [EnvVarInput db-path href read-only? i env-variable]])
+   [EnvVarInput db-path href read-only? error? i env-variable]])
 
 (defn EnvVariables
-  [{:keys [db-path href change-event read-only?]
+  [{:keys [db-path href change-event read-only? show-error?]
     :or   {read-only? false}
     :as   _opts}]
   (dispatch [::helpers/set db-path change-event-env-variables change-event])
   (let [tr            @(subscribe [::i18n-subs/tr])
         module        @(subscribe [::module db-path href])
-        env-variables (module-env-vars module)]
+        env-variables (module-env-vars module)
+        vars-in-error @(subscribe [::module-env-vars-in-error db-path href])]
     (if (seq env-variables)
       [ui/Form
        (map-indexed
          (fn [i env-variable]
-           ^{:key (str (:name env-variable) "_" i)}
-           [AsFormInput db-path href read-only? i env-variable])
+           (let [var-in-error (boolean (vars-in-error (:name env-variable)))]
+             ^{:key (str (:name env-variable) "_" i)}
+             [AsFormInput db-path href read-only? var-in-error i env-variable]))
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 

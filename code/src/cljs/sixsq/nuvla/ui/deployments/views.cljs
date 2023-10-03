@@ -257,7 +257,7 @@
                                     :no-sort?  true}
                                    (when show-depl-set-column?
                                      {:field-key :deployment-set
-                                      :no-sort?  true})
+                                      :sort-key  :deployment-set-name})
                                    {:field-key :created}
                                    {:field-key :updated}
                                    {:field-key :created-by}

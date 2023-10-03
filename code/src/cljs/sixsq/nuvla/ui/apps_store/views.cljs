@@ -168,7 +168,7 @@
                  :key     spec/myapps-key
                  :icon    (r/as-element [icons/StarIcon])}
       :render   #(r/as-element [TabDefault spec/myapps-key])}
-     {:menuItem {:content (utils-general/capitalize-words (tr [:navigate-apps]))
+     {:menuItem {:content (utils-general/capitalize-words (tr [:navigate-projects]))
                  :key     spec/navigate-key
                  :icon    (r/as-element [icons/FolderIcon])}
       :render   #(r/as-element [TabNavigator spec/navigate-key])}]))

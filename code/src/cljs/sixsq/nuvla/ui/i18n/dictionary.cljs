@@ -501,6 +501,7 @@
         :name-deployment-set                           "Name your deployment set"
         :name-of-url                                   "name of this url"
         :navigate-apps                                 "navigate apps"
+        :navigate-projects                             "navigate projects"
         :new                                           "new"
         :new-component                                 "new component"
         :new-dataset                                   "new dataset"

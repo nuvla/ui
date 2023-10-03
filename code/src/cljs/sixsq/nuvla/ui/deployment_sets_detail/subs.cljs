@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require [clojure.string :as str]
-            [re-frame.core :refer [reg-sub]]
+            [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
@@ -328,3 +328,15 @@
   :<- [::opened-modal]
   (fn [opened-modal [_ id]]
     (= id opened-modal)))
+
+(reg-sub
+  ::deployment-set-valid?
+  (fn [[_ apps-sets]]
+    (apply concat
+           (map-indexed
+             (fn [i {:keys [applications]}]
+               (for [{:keys [id]} applications]
+                 (subscribe [::module-plugin/module-env-vars-in-error [::spec/apps-sets i] id])))
+             apps-sets)))
+  (fn [vars-in-error _]
+    (every? empty? vars-in-error)))

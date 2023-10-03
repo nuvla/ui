@@ -59,19 +59,28 @@
 
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        enabled? (subscribe [::subs/operation-enabled? "start"])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        apps-sets      @(subscribe [::subs/applications-sets])
+        valid?         @(subscribe [::subs/deployment-set-valid? apps-sets])
+        enabled?       (and valid? @(subscribe [::subs/operation-enabled? "start"]))
+        start-button   (r/as-element
+                         [ui/MenuItem
+                          {:disabled (not enabled?)
+                           :class    (when enabled? "primary-menu-item")}
+                          [icons/PlayIcon]
+                          (@tr [:start])])
+        guarded-button (if valid?
+                         start-button
+                         (r/as-element
+                           [ui/Popup
+                            {:trigger start-button
+                             :content (@tr [:depl-group-validation-error-before-action])}]))]
     [uix/ModalDanger
      {:on-confirm  (fn [_]
                                    (dispatch [::events/operation
                                               {:resource-id id
                                                :operation "start"}]))
-      :trigger     (r/as-element
-                     [ui/MenuItem
-                      {:disabled (not @enabled?)
-                       :class    (when @enabled? "primary-menu-item")}
-                      [icons/PlayIcon]
-                      (@tr [:start])])
+      :trigger     guarded-button
       :content     [:h3 (depl-set->modal-content deployment-set)]
       :header      (@tr [:start-deployment-set])
       :danger-msg  warn-msg
@@ -101,19 +110,28 @@
 
 (defn UpdateButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        enabled? (subscribe [::subs/operation-enabled? "update"])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        apps-sets      @(subscribe [::subs/applications-sets])
+        valid?         @(subscribe [::subs/deployment-set-valid? apps-sets])
+        enabled?       (and valid? @(subscribe [::subs/operation-enabled? "update"]))
+        update-button  (r/as-element
+                         [ui/MenuItem
+                          {:disabled (not enabled?)
+                           :class    (when enabled? "primary-menu-item")}
+                          [icons/RedoIcon]
+                          (@tr [:update])])
+        guarded-button (if valid?
+                         update-button
+                         (r/as-element
+                           [ui/Popup
+                            {:trigger update-button
+                             :content (@tr [:depl-group-validation-error-before-action])}]))]
     [uix/ModalDanger
      {:on-confirm  (fn [_]
                      (dispatch [::events/operation
                                 {:resource-id id
                                  :operation "update"}]))
-      :trigger     (r/as-element
-                     [ui/MenuItem
-                      {:disabled (not @enabled?)
-                       :class    (when @enabled? "primary-menu-item")}
-                      [icons/RedoIcon]
-                      (@tr [:update])])
+      :trigger     guarded-button
       :content     [:h3 (depl-set->modal-content deployment-set)]
       :header      (@tr [:update-deployment-set])
       :danger-msg  warn-msg

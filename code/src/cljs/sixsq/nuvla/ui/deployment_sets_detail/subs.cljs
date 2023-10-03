@@ -331,12 +331,12 @@
 
 (reg-sub
   ::deployment-set-valid?
-  (fn [[_ apps-sets]]
-    (apply concat
-           (map-indexed
-             (fn [i {:keys [applications]}]
-               (for [{:keys [id]} applications]
-                 (subscribe [::module-plugin/module-env-vars-in-error [::spec/apps-sets i] id])))
-             apps-sets)))
-  (fn [vars-in-error _]
-    (every? empty? vars-in-error)))
+  (fn [db]
+    (->> (applications-sets db)
+         (map-indexed
+           (fn [i {:keys [applications]}]
+             (every? (fn [{:keys [id]}]
+                       (empty? (module-plugin/db-module-env-vars-in-error
+                                 db [::spec/apps-sets i] id)))
+                     applications)))
+         (every? true?))))

@@ -272,18 +272,22 @@
   (fn [db [_ db-path href index]]
     (env-vars-value-by-index (db-module-env-vars db db-path href) index)))
 
+(defn db-module-env-vars-in-error
+  [db db-path href]
+  (let [module   (db-module db db-path href)
+        env-vars (module-env-vars module)]
+    (->> env-vars
+         (keep (fn [{:keys [name value required] ::keys [new-value]}]
+                 (when (and required (if (some? new-value)
+                                       (str/blank? new-value)
+                                       (str/blank? value)))
+                   name)))
+         (into #{}))))
+
 (reg-sub
   ::module-env-vars-in-error
   (fn [db [_ db-path href]]
-    (let [module   (db-module db db-path href)
-          env-vars (module-env-vars module)]
-      (->> env-vars
-           (keep (fn [{:keys [name value required] ::keys [new-value]}]
-                   (when (and required (if (some? new-value)
-                                         (str/blank? new-value)
-                                         (str/blank? value)))
-                     name)))
-           (into #{})))))
+    (db-module-env-vars-in-error db db-path href)))
 
 (reg-sub
   ::registries-loading?

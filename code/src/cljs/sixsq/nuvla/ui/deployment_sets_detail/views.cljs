@@ -60,8 +60,7 @@
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
   (let [tr             (subscribe [::i18n-subs/tr])
-        apps-sets      @(subscribe [::subs/applications-sets])
-        valid?         @(subscribe [::subs/deployment-set-valid? apps-sets])
+        valid?         @(subscribe [::subs/deployment-set-valid?])
         enabled?       (and valid? @(subscribe [::subs/operation-enabled? "start"]))
         start-button   (r/as-element
                          [ui/MenuItem
@@ -111,8 +110,7 @@
 (defn UpdateButton
   [{:keys [id] :as deployment-set} warn-msg]
   (let [tr             (subscribe [::i18n-subs/tr])
-        apps-sets      @(subscribe [::subs/applications-sets])
-        valid?         @(subscribe [::subs/deployment-set-valid? apps-sets])
+        valid?         @(subscribe [::subs/deployment-set-valid?])
         enabled?       (and valid? @(subscribe [::subs/operation-enabled? "update"]))
         update-button  (r/as-element
                          [ui/MenuItem

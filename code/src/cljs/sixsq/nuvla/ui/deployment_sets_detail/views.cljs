@@ -439,7 +439,7 @@
                           :header-content (utils-general/capitalize-words (@tr [:details]))
                           :cell (fn [{:keys [row-data]}]
                                   [ui/Popup
-                                   {:content (r/as-element [:p "Open app details in marketplace"])
+                                   {:content (r/as-element [:p "Open app details"])
                                     :trigger (r/as-element [:span
                                                             [module-plugin/LinkToApp
                                                              {:db-path  [::spec/apps-sets (:idx row-data)]

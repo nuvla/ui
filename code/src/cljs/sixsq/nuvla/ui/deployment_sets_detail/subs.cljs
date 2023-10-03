@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require [clojure.string :as str]
-            [re-frame.core :refer [reg-sub subscribe]]
+            [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]

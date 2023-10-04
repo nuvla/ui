@@ -34,6 +34,6 @@ test('Marketplace shows only published apps', async ({ page }, { project, config
   expect(page.locator('.nuvla-apps').getByRole('link', { name: 'Deployments' })).toHaveClass(/active/);
   await page.locator('#nuvla-ui-header-breadcrumb').getByText('Apps').click();
   await page.waitForURL(`${baseURL}/ui/apps`);
-  await page.getByRole('link', { name: 'Navigate Apps' }).click();
+  await page.getByRole('link', { name: 'Navigate Projects' }).click();
   await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
 });

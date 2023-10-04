@@ -470,11 +470,14 @@
                                             (assoc events/edges-state-filter-key status-filter))})})]
     [ui/StatisticGroup {:size  "tiny"
                         :style {:padding "0.2rem"}}
-     [dashboard-views/Statistic {:value  total
-                                 :icon   icons/i-box
+     [components/StatisticState {:clickable? true
+                                 :value  total
+                                 :stacked? true
+                                 :icons  [icons/i-box]
                                  :label  "TOTAL"
                                  :color  "black"
-                                 :target (create-target-url nil)}]
+                                 :on-click  #(dispatch [::routing-events/navigate
+                                                        (:resource (create-target-url nil))])}]
      [dashboard-views/Statistic {:value          online
                                  :icon           icons/i-power
                                  :label          edges-utils/status-online

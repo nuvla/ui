@@ -32,9 +32,9 @@
      :on-refresh refresh}]])
 
 (defn Statistic
-  [{:keys [value icon class label target positive-color icon-color color]
+  [{:keys [value icon class label target positive-color color]
     :or   {positive-color "black"}}]
-  (let [color        (or color (if (pos? value) positive-color "grey"))
+  (let [color        (if (pos? value) (or color positive-color) "grey")
         {:keys [resource tab-event]} target
         interactive? (or tab-event resource)]
     [ui/Statistic {:style    {:cursor (when interactive? "pointer")}

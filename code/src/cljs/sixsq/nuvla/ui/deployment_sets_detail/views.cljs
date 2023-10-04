@@ -480,19 +480,16 @@
                                  :label          edges-utils/status-online
                                  :positive-color "green"
                                  :color          "green"
-                                 :icon-color     "green"
                                  :target         (create-target-url "ONLINE")}]
      [dashboard-views/Statistic {:value      offline
                                  :icon       icons/i-power
                                  :label      edges-utils/status-offline
                                  :color      "red"
-                                 :icon-color "red"
                                  :target     (create-target-url "OFFLINE")}]
      [dashboard-views/Statistic {:value      unknown
                                  :icon       icons/i-power
                                  :label      edges-utils/status-unknown
                                  :color      "orange"
-                                 :icon-color "orange"
                                  :target     (create-target-url "UNKNOWN")}]]))
 
 (defn create-nav-fn

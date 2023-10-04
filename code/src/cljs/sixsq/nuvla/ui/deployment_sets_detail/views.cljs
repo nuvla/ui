@@ -34,7 +34,6 @@
                                                                    pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [format-money]]
-            [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -436,7 +435,7 @@
                           (keys (dissoc (first @apps-row) :idx :href))))
                       (remove nil?
                         [{:field-key :details
-                          :header-content (utils-general/capitalize-words (@tr [:details]))
+                          :header-content (general-utils/capitalize-words (@tr [:details]))
                           :cell (fn [{:keys [row-data]}]
                                   [ui/Popup
                                    {:content (r/as-element [:p "Open app details"])

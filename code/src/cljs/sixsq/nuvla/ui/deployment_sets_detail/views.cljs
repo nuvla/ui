@@ -74,11 +74,9 @@
                       (@tr [:start])])
       :content     [:h3 (depl-set->modal-content deployment-set)]
       :header      (@tr [:start-deployment-set])
-      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :danger-msg  warn-msg
       :button-text (@tr [:start])
-      :modal-action [:p warn-msg]
-      :with-confirm-step? true}]
-    ))
+      :with-confirm-step? true}]))
 
 (defn StopButton
   [{:keys [id] :as deployment-set} warn-msg]
@@ -96,9 +94,8 @@
                       (@tr [:stop])])
       :content     [:h3 (depl-set->modal-content deployment-set)]
       :header      (@tr [:stop-deployment-set])
-      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :danger-msg  warn-msg
       :button-text (@tr [:stop])
-      :modal-action [:p warn-msg]
       :with-confirm-step? true}]))
 
 
@@ -119,11 +116,9 @@
                       (@tr [:update])])
       :content     [:h3 (depl-set->modal-content deployment-set)]
       :header      (@tr [:update-deployment-set])
-      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :danger-msg  warn-msg
       :button-text (@tr [:update])
-      :modal-action [:p warn-msg]
-      :with-confirm-step? true}]
-    ))
+      :with-confirm-step? true}]))
 
 
 
@@ -140,9 +135,8 @@
                                   (@tr [:delete])])
       :content     [:h3 content]
       :header      (@tr [:delete-deployment-set])
-      :danger-msg  (@tr [:danger-action-cannot-be-undone])
+      :danger-msg  warn-msg
       :button-text (@tr [:delete])
-      :modal-action [:p warn-msg]
       :with-confirm-step? true}]))
 
 (defn SaveButton

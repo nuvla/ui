@@ -329,14 +329,21 @@
   (fn [opened-modal [_ id]]
     (= id opened-modal)))
 
+(defn missing-required-env-vars?
+  [db]
+  (->> (applications-sets db)
+       (map-indexed
+         (fn [i {:keys [applications]}]
+           (every? (fn [{:keys [id]}]
+                     (empty? (module-plugin/db-module-env-vars-in-error
+                               db [::spec/apps-sets i] id)))
+                   applications)))
+       (some false?)))
+
 (reg-sub
-  ::deployment-set-valid?
+  ::deployment-set-validation
   (fn [db]
-    (->> (applications-sets db)
-         (map-indexed
-           (fn [i {:keys [applications]}]
-             (every? (fn [{:keys [id]}]
-                       (empty? (module-plugin/db-module-env-vars-in-error
-                                 db [::spec/apps-sets i] id)))
-                     applications)))
-         (every? true?))))
+    (let [errors (cond-> []
+                         (missing-required-env-vars? db) (conj [:depl-group-mandatory-app-env-var-missing]))]
+      {:valid? (not (seq errors))
+       :errors errors})))

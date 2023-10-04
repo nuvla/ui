@@ -160,11 +160,11 @@
                              :style   {:margin-right 0}
                              :name    i}])]
          [ui/StatisticValue
-          (or value "-")]
+          (or value 0)]
          [ui/StatisticLabel label]]
         [:<>
          [ui/StatisticValue
-          (or value "-")
+          (or value 0)
           "\u2002"
           [ui/IconGroup
            (for [i icons]

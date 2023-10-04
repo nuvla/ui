@@ -1536,7 +1536,7 @@
                    :on-click #(dispatch [::events/set-vuln-severity-selector
                                          (if (= label "collected") nil label)])}
      [ui/StatisticValue {:style selected-style}
-      (or value "-")]
+      (or value 0)]
      [ui/StatisticLabel [ui/Popup
                          {:trigger        (r/as-element [:span {:style selected-style} label])
                           :content        label-popup

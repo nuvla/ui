@@ -45,8 +45,8 @@
                                   (dispatch tab-event))
                                 (when resource
                                   (dispatch [::routing-events/navigate resource])))}
-     [icons/Icon (merge {:name icon} (when icon-color {:color icon-color}))]
-     [ui/StatisticValue (or value "-")]
+     [icons/Icon (merge {:name icon} {:color color})]
+     [ui/StatisticValue (or value 0)]
      [ui/StatisticLabel label]]))
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]

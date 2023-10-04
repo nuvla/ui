@@ -119,7 +119,7 @@
   (when data
     ^{:key label}
     [ui/Statistic {:size "tiny"}
-     [ui/StatisticValue value]
+     [ui/StatisticValue (or value 0)]
      [ui/StatisticLabel label]]))
 
 

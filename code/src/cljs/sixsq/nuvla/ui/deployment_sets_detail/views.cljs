@@ -387,7 +387,7 @@
         apps-row (if creating?
                    (subscribe [::subs/apps-creation-row-data])
                    (subscribe [::subs/applications-overview-row-data]))
-        k->tr-k  {:app-name :name}
+        k->tr-k  {:app :name}
         route    (subscribe [::route-subs/current-route])]
     (fn []
       (let [no-apps? (empty? @apps-row)]
@@ -400,7 +400,7 @@
                         (map-indexed
                           (fn [i k]
                             {:field-key k
-                             :header-content (-> (or (@tr [(k->tr-k k k)]) k)
+                             :header-content (-> (or (@tr [(k->tr-k k)]) k)
                                                  name
                                                  str/capitalize)
                              :cell (case k
@@ -423,8 +423,7 @@
                                               :target   :_self}
                                              cell-data
                                              [:span {:style {:margin-left "0.5rem"}}
-                                              [icons/GearIcon]]])}]
-                                        ])
+                                              [icons/GearIcon]]])}]])
                                      :version
                                      (fn [{{:keys [label created]} :cell-data}]
                                        [ui/Popup
@@ -435,10 +434,11 @@
                                      nil)})
                           (keys (dissoc (first @apps-row) :idx :href))))
                       (remove nil?
-                        [{:field-key :app-details
+                        [{:field-key :details
+                          :header-content (general-utils/capitalize-words (@tr [:details]))
                           :cell (fn [{:keys [row-data]}]
                                   [ui/Popup
-                                   {:content (r/as-element [:p "Open app details in marketplace"])
+                                   {:content (r/as-element [:p "Open app details"])
                                     :trigger (r/as-element [:span
                                                             [module-plugin/LinkToApp
                                                              {:db-path  [::spec/apps-sets (:idx row-data)]
@@ -1057,7 +1057,7 @@
          {:db-path [::spec/tab]
           :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
                                 :key     :overview
-                                :icon    "info"}
+                                :icon    icons/i-eye}
                      :render   #(r/as-element [TabOverview uuid creating?])}
                     {:menuItem {:key :apps
                                 :content
@@ -1070,6 +1070,7 @@
                                                              tab-title])
                                                  :content (tr [:save-before-configuring-apps])}])
                                     tab-title))
+                                :icon icons/i-gear
                                 :disabled (empty? @apps-sets)}
                      :render   #(r/as-element
                                   [ConfigureApps
@@ -1086,6 +1087,7 @@
                                                              tab-title])
                                                  :content (tr [:depl-group-add-one-edge-to-enable-tab])}])
                                     tab-title))
+                                :icon icons/i-box
                                 :disabled (empty? @edges)}
                      :render   #(r/as-element
                                   [EdgesTab])}
@@ -1100,6 +1102,7 @@
                                                              tab-title])
                                                  :content (tr [:depl-group-save-and-start-to-enable-tab])}])
                                     tab-title))
+                                :icon icons/i-rocket
                                 :disabled (zero? (:total @depl-all))}
                      :render #(r/as-element
                                 [DeploymentsTab uuid])}]

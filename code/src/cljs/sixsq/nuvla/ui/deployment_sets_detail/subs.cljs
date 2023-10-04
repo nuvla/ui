@@ -312,6 +312,14 @@
       (or creating? unsaved-changes?))))
 
 (reg-sub
+  ::operation-enabled?
+  :<- [::deployment-set]
+  :<- [::save-enabled?]
+  (fn [[deployment-set save-enabled?] [_ operation]]
+    (and (not save-enabled?)
+         (general-utils/can-operation? operation deployment-set))))
+
+(reg-sub
   ::opened-modal
   :-> ::spec/opened-modal)
 

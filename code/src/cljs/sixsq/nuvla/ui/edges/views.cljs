@@ -25,7 +25,6 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -67,18 +66,18 @@
 (defn StatisticStatesEdgeView
   []
   (fn [{:keys [states] :as states->counts} clickable? restricted-view?]
-    (let [tr      (subscribe [::i18n-subs/tr])]
+    (let [tr (subscribe [::i18n-subs/tr])]
       [ui/StatisticGroup {:widths (when-not clickable? 4)
                           :size   "tiny"}
        (for [state (or states edges-states)]
          ^{:key (str "stat-state-" (:label state))}
          [components/StatisticState
           (merge state
-            {:value                    (states->counts (:key state))
-             :stacked?                 true
-             :clickable?               (or (:clickable? state) clickable?)
-             :set-state-selector-event ::events/set-state-selector
-             :state-selector-subs      ::subs/state-selector})])
+                 {:value                    (states->counts (:key state))
+                  :stacked?                 true
+                  :clickable?               (or (:clickable? state) clickable?)
+                  :set-state-selector-event ::events/set-state-selector
+                  :state-selector-subs      ::subs/state-selector})])
        (when (and clickable? (not restricted-view?))
          [ui/Button
           {:icon     true
@@ -104,10 +103,10 @@
             online          (:1 online-statuses)
             offline         (:0 online-statuses)]
         [StatisticStatesEdgeView
-         {:total           total
-          :online          online
-          :offline         offline
-          :unknown         (- total (+ online offline))}
+         {:total   total
+          :online  online
+          :offline offline
+          :unknown (- total (+ online offline))}
          clickable?]))))
 
 (defn StatisticStates
@@ -238,7 +237,7 @@
            [ui/Segment {:basic true}
             (when playbooks-toggle
               [ui/Message {:icon true}
-               [icons/Icon {:name   (if @playbooks-cronjob icons/i-circle-check icons/i-spinner)
+               [icons/Icon {:name    (if @playbooks-cronjob icons/i-circle-check icons/i-spinner)
                             :loading (if @playbooks-cronjob false true)}]
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
@@ -601,8 +600,8 @@
                       [ui/Message {:content (str/capitalize
                                               (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]))]
 
-                 (let [{nb-rel                     :nb-rel
-                        nb-assets                  :nb-assets
+                 (let [{nb-rel                      :nb-rel
+                        nb-assets                   :nb-assets
                         {:keys [compose-files url]} :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
@@ -746,7 +745,7 @@
   []
   (let [nb-release (subscribe [::subs/nuvlabox-releases])
         new-modal  (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-edge-on-k8s])]
-    (if @new-modal ^{:key (count @nb-release)}[add-modal/AddModal] ^{:key (count @nb-release)}[AddModal])))
+    (if @new-modal ^{:key (count @nb-release)} [add-modal/AddModal] ^{:key (count @nb-release)} [AddModal])))
 
 
 (defn NuvlaboxRow
@@ -768,8 +767,8 @@
      [ui/TableCell (str refresh-interval "s")]
      [ui/TableCell (when next-heartbeat-moment
                      [uix/TimeAgo (utils/last-time-online
-                                   next-heartbeat-moment
-                                   refresh-interval)])]
+                                    next-heartbeat-moment
+                                    refresh-interval)])]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]]))
 
@@ -794,8 +793,8 @@
 
 (defn NuvlaEdgeTableView
   [{:keys [bulk-edit bulk-deploy columns edges]}]
-  (let [{bulk-edit-modal     :modal
-         trigger             :trigger-config} bulk-edit
+  (let [{bulk-edit-modal :modal
+         trigger         :trigger-config} bulk-edit
         bulk-deploy-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
         {bulk-deploy-modal   :modal
          bulk-deploy-trigger :trigger-config} (when @bulk-deploy-enabled? bulk-deploy)]
@@ -814,14 +813,14 @@
              :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
              :row-props         {:role  "link"
                                  :style {:cursor "pointer"}}
-             :select-config     {:bulk-actions (filterv
-                                                 some?
-                                                 [trigger
-                                                  bulk-deploy-trigger])
+             :select-config     {:bulk-actions        (filterv
+                                                        some?
+                                                        [trigger
+                                                         bulk-deploy-trigger])
                                  :total-count-sub-key [::subs/nuvlaboxes-count]
-                                 :resources-sub-key [::subs/nuvlaboxes-resources]
-                                 :select-db-path [::spec/select]
-                                 :rights-needed :edit}}]]))
+                                 :resources-sub-key   [::subs/nuvlaboxes-resources]
+                                 :select-db-path      [::spec/select]
+                                 :rights-needed       :edit}}]]))
 
 
 (defn NuvlaboxTable
@@ -830,7 +829,7 @@
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                 (:nuvlabox-workers @current-cluster))]
+                                                       (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
@@ -842,11 +841,11 @@
                            {:field-key :created}
                            {:field-key :created-by}
                            {:field-key      :refresh-interval
-                            :header-content (str/lower-case (@tr [:report-interval]))}
+                            :header-content (str/lower-case (@tr [:telemetry]))}
                            {:field-key :last-online :no-sort? true}
                            {:field-key      :version :no-sort? true
                             :header-content [:<> (@tr [:version])
-                                             (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]}
+                                             (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
                            {:field-key :tags :no-sort? true}]
         bulk-edit         (bulk-edit-modal/create-bulk-edit-modal
                             {:db-path                [::spec/select]
@@ -857,17 +856,17 @@
                              :no-edit-rights-sub-key ::subs/edges-without-edit-rights
                              :singular               (@tr [:edge])
                              :plural                 (@tr [:edges])
-                             :filter-fn               (partial utils/build-bulk-filter [::spec/select])})]
-    [NuvlaEdgeTableView {:bulk-edit   bulk-edit
+                             :filter-fn              (partial utils/build-bulk-filter [::spec/select])})]
+    [NuvlaEdgeTableView {:bulk-edit bulk-edit
                          :bulk-deploy {:trigger-config {:icon (fn [] [icons/RocketIcon])
                                                         :name "Bulk Deploy App"
                                                         :event (fn []
-                                                                (let [id (random-uuid)]
-                                                                  (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
-                                                                  (dispatch [::routing-events/navigate
-                                                                             routes/deployment-sets-details
-                                                                             {:uuid :create}
-                                                                             {depl-group-subs/creation-temp-id-key id}])))}} :columns columns :edges selected-nbs}]))
+                                                                 (let [id (random-uuid)]
+                                                                   (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
+                                                                   (dispatch [::routing-events/navigate
+                                                                              routes/deployment-sets-details
+                                                                              {:uuid :create}
+                                                                              {depl-group-subs/creation-temp-id-key id}])))}} :columns columns :edges selected-nbs}]))
 
 
 (defn NuvlaboxMapPoint
@@ -923,15 +922,15 @@
          {:db-path            [::spec/edges-search]
           :change-event       [::pagination-plugin/change-page
                                [::spec/pagination] 1]
-          :placeholder-suffix  (str " " @(subscribe [::subs/state-selector]))
+          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
           :style              {:width "100%"}}]
         ^{:key (random-uuid)}
         [:div {:style {:margin-top "10px"}}
          [filter-comp/ButtonFilter
-          {:resource-name  spec/resource-name
-           :default-filter @additional-filter
-           :open?          filter-open?
-           :on-done        #(dispatch [::events/set-additional-filter %])
+          {:resource-name                    spec/resource-name
+           :default-filter                   @additional-filter
+           :open?                            filter-open?
+           :on-done                          #(dispatch [::events/set-additional-filter %])
            :show-clear-button-outside-modal? true}]]]])))
 
 

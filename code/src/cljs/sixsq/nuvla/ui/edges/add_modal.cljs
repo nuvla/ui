@@ -9,7 +9,6 @@
             [sixsq.nuvla.ui.edges.subs :as subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -62,16 +61,16 @@
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         playbooks-cronjob    (subscribe [::subs/nuvlabox-playbooks-cronjob])
-        private-ssh-key-file  (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
+        private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
         public-keys          (when (seq @nuvlabox-ssh-keys)
                                (str (str/join "\\n" (:public-keys @nuvlabox-ssh-keys)) "\\n"))
         zip-url              (r/atom nil)
         envsubst             (cond-> {"${NUVLABOX_UUID}"  nuvlabox-id
                                       "${NUVLAEDGE_UUID}" nuvlabox-id}
-                               public-keys (assoc "${NUVLABOX_SSH_PUB_KEY}" public-keys
-                                                  "${NUVLAEDGE_SSH_PUB_KEY}" public-keys))
-        download-files        (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
-                                                           (partial general-utils/envsubst-str envsubst))]
+                                     public-keys (assoc "${NUVLABOX_SSH_PUB_KEY}" public-keys
+                                                        "${NUVLAEDGE_SSH_PUB_KEY}" public-keys))
+        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
+                                                          (partial general-utils/envsubst-str envsubst))]
     (when playbooks-toggle
       (dispatch [::events/enable-host-level-management nuvlabox-id]))
     (zip/create download-files #(reset! zip-url %))
@@ -111,7 +110,7 @@
            [ui/Segment {:basic true}
             (when playbooks-toggle
               [ui/Message {:icon true}
-               [icons/Icon {:name   (if @playbooks-cronjob icons/i-circle-check icons/i-spinner)
+               [icons/Icon {:name    (if @playbooks-cronjob icons/i-circle-check icons/i-spinner)
                             :loading (if @playbooks-cronjob false true)}]
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
@@ -129,7 +128,7 @@
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
                               " ")
                    (values/copy-value-to-clipboard
-                    "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
+                     "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
 
             (when @new-private-ssh-key
@@ -173,9 +172,9 @@
                 [:h5 {:style {:margin "0.5em 0 1em 0"}}
                  (@tr [:install])
                  (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
-                [:div {:style {:font "1em Inconsolata, monospace"
+                [:div {:style {:font       "1em Inconsolata, monospace"
                                :margin-top "1rem"}} execute-command
-                 (ff/help-popup (@tr [:target-node-name-hint]))]]]
+                 [uix/HelpPopup (@tr [:target-node-name-hint])]]]]
               [:<>
                [ui/Segment {:loading    (nil? @zip-url)
                             :text-align :center}
@@ -324,10 +323,10 @@
 
 (defn- InstallMethod
   [_]
-  (let [tr        (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [install-strategy-error install-strategy playbooks-toggle default-ttl usb-trigger-key-ttl]}]
       (if
-       (nil? (#{docker-based compose-install usb-install} @install-strategy))
+        (nil? (#{docker-based compose-install usb-install} @install-strategy))
         [:div {:display :flex}
          [ui/CardGroup {:centered    true
                         :itemsPerRow 2}
@@ -335,17 +334,17 @@
            {:on-click (fn [] (reset! install-strategy docker-based))}
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker"]
-            [icons/DockerIcon {:size  :massive}] ]]
+            [icons/DockerIcon {:size :massive}]]]
 
           [ui/Card
            {:on-click (fn [] (reset! install-strategy k8s-based))
-            :raised true
-            :style (when (= k8s-based @install-strategy)
-                     {:outline  "5px #21ba45 solid"})}
+            :raised   true
+            :style    (when (= k8s-based @install-strategy)
+                        {:outline "5px #21ba45 solid"})}
            [ui/CardContent {:text-align :center}
             [ui/Header "Kubernetes"]
-            [ui/Image {:src     "/ui/images/kubernetes.svg"
-                       :style   {:width "110px"}}]]]]]
+            [ui/Image {:src   "/ui/images/kubernetes.svg"
+                       :style {:width "110px"}}]]]]]
         [ui/Form
          [ui/Header {:style {:text-align "center"}} "Docker"]
          [ui/Segment {:raised true}
@@ -405,11 +404,11 @@
                       :size        "mini"
                       :type        "number"
                       :on-change   (ui-callback/input-callback
-                                    #(cond
-                                       (number? (general-utils/str->int %))
-                                       (reset! usb-trigger-key-ttl
-                                               (general-utils/str->int %))
-                                       (empty? %) (reset! usb-trigger-key-ttl 0)))
+                                     #(cond
+                                        (number? (general-utils/str->int %))
+                                        (reset! usb-trigger-key-ttl
+                                                (general-utils/str->int %))
+                                        (empty? %) (reset! usb-trigger-key-ttl 0)))
                       :step        1
                       :min         0}]
            [ui/Popup {:content  (@tr [:nuvlabox-modal-usb-expires-popup] [default-ttl])
@@ -420,7 +419,7 @@
           [:a {:href   usb-doc-url
                :target "_blank"}
            (@tr [:nuvlabox-modal-more-info])]]
-         [:a {:href ""
+         [:a {:href     ""
               :on-click (fn [] (reset! install-strategy nil))} [icons/ArrowLeftIcon] "back to selection"]]))))
 
 
@@ -435,9 +434,9 @@
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (subscribe [::subs/nuvlabox-releases-by-id])
-        first-nb-release            (->> @nb-releases
-                                         (remove :pre-release)
-                                         first)
+        first-nb-release           (->> @nb-releases
+                                        (remove :pre-release)
+                                        first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
         default-data               {:refresh-interval 30, :version default-major-version}
         creation-data              (r/atom default-data)
@@ -528,7 +527,7 @@
       (when (and (= (count @vpn-infra-opts) 1)
                  (nil? (:vpn-server-id @creation-data)))
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
-      [ui/Modal {:open      @visible?
+      [ui/Modal {:open       @visible?
                  :close-icon true
                  :on-close   on-close-fn}
        (cond
@@ -614,8 +613,8 @@
                       [ui/Message {:content (str/capitalize
                                               (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]))]
 
-                 (let [{nb-rel                     :nb-rel
-                        nb-assets                  :nb-assets
+                 (let [{nb-rel                      :nb-rel
+                        nb-assets                   :nb-assets
                         {:keys [compose-files url]} :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
@@ -674,10 +673,10 @@
                      (@tr [:nuvlabox-modal-install-method])]
 
                     [InstallMethod {:install-strategy-error install-strategy-error
-                                    :install-strategy install-strategy
-                                    :playbooks-toggle playbooks-toggle
-                                    :default-ttl default-ttl
-                                    :usb-trigger-key-ttl usb-trigger-key-ttl}]])]
+                                    :install-strategy       install-strategy
+                                    :playbooks-toggle       playbooks-toggle
+                                    :default-ttl            default-ttl
+                                    :usb-trigger-key-ttl    usb-trigger-key-ttl}]])]
 
                 [ui/ModalActions
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]

@@ -174,12 +174,6 @@
                           :name    i}])]]
          [ui/StatisticLabel label]])])))
 
-
-(defn InfoPopup
-  [message]
-  [ui/Popup {:content message
-             :trigger (r/as-element [ui/Icon {:class icons/i-info}])}])
-
 (defn NotFoundPortal
   [subs message-header message-content]
   (let [tr         (subscribe [::i18n-subs/tr])

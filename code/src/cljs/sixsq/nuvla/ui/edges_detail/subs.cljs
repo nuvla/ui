@@ -3,7 +3,9 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
-            [sixsq.nuvla.ui.utils.general :as general-utils]))
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (reg-sub
   ::loading?
@@ -14,6 +16,12 @@
   ::nuvlabox-status
   (fn [db]
     (::spec/nuvlabox-status db)))
+
+(reg-sub
+  ::next-heartbeat-moment
+  :<- [::nuvlabox-status]
+  (fn [{:keys [next-heartbeat]}]
+    (some-> next-heartbeat time/parse-iso8601)))
 
 (reg-sub
   ::nuvlaedge-release
@@ -98,10 +106,51 @@
     (::spec/nuvlabox db)))
 
 (reg-sub
+  ::capabilities
+  :<- [::nuvlabox]
+  :-> (comp set :capabilities))
+
+(reg-sub
+  ::has-capability-heartbeat?
+  :<- [::capabilities]
+  (fn [capabilities]
+    (contains? capabilities "NUVLA_HEARTBEAT")))
+
+(reg-sub
   ::can-decommission?
   :<- [::nuvlabox]
   (fn [nuvlabox]
     (general-utils/can-operation? "decommission" nuvlabox)))
+
+;(defn NextTelemetryStatus
+;  [{:keys [next-heartbeat] :as _nb-status}]
+;  (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])
+;        tr                       @(subscribe [::i18n-subs/tr])
+;        next-heartbeat-moment    (some-> next-heartbeat time/parse-iso8601)
+;        next-heartbeat-times-ago (when next-heartbeat-moment
+;                                   [uix/TimeAgo next-heartbeat-moment])]
+;    (when next-heartbeat-moment
+;      [:<>
+;       (if (time/before-now? next-heartbeat-moment)
+;         [:p (tr [:nuvlaedge-next-telemetry-missing-since])
+;          next-heartbeat-times-ago "."]
+;         [:p (tr [:nuvlaedge-next-telemetry-expected])
+;          next-heartbeat-times-ago "."])
+;       [:p (tr [:nuvlaedge-last-telemetry-was])
+;        [uix/TimeAgo (utils/last-time-online
+;                       next-heartbeat-moment
+;                       refresh-interval)]
+;        "."]])))
+
+(reg-sub
+  ::last-telemetry-message
+
+  :<- [::next-heartbeat-moment]
+  (fn [[tr next-heartbeat-moment]]
+
+
+    )
+  )
 
 (reg-sub
   ::can-edit?

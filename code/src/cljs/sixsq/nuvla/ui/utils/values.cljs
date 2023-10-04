@@ -90,12 +90,13 @@
   ([value value-to-copy popup-text show?]
    [ui/CopyToClipboard {:text value-to-copy}
     [:span {:style {:cursor :pointer}} value " "
-     [ui/Popup {:content (r/as-element [:p popup-text])
-                :trigger (r/as-element [ui/Icon
-                                        {:class [(when (not show?) "hide")]
-                                         :name  "clipboard outline"
-                                         :color "blue"
-                                         :style {:color "black"}}])}]]]))
+     [ui/Popup {:content  (r/as-element [:p popup-text])
+                :position "top center"
+                :trigger  (r/as-element [ui/Icon
+                                         {:class [(when (not show?) "hide")]
+                                          :name  "clipboard outline"
+                                          :color "blue"
+                                          :style {:color "black"}}])}]]]))
 
 
 (defn markdown->hiccup

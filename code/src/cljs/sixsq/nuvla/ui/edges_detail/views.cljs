@@ -334,7 +334,7 @@
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
-              [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
+              [:label (@tr [:env-variables]) " " [uix/HelpPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
                             :on-key-down   #(-> % .stopPropagation)
@@ -678,7 +678,10 @@
                         @nuvlabox
                         #{"edit" "delete" "activate" "decommission"
                           "generate-new-api-key" "commission" "check-api"
-                          "create-log"})]
+                          "create-log"
+                          ; FIXME
+                          ; "set-offline" "heartbeat"
+                          })]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj
@@ -996,8 +999,18 @@
       [components/EditableInput attribute @nuvlabox on-change-fn]
       [ui/TableCell (get @nuvlabox attribute)])))
 
+(defn LabelReportInterval
+  [{:keys [label help interval]}]
+  [ui/Label label
+   [uix/HelpPopup help]
+   [ui/LabelDetail
+    (if interval
+      (str interval "s")
+      "-")]])
+
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated refresh-interval owner created-by state]}
+  [{:keys [id created updated refresh-interval
+           heartbeat-interval owner created-by state]}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
@@ -1036,8 +1049,16 @@
           [ui/TableCell (str/capitalize (@tr [:created-by]))]
           [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
        [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:report-interval]))]
-        [ui/TableCell (str refresh-interval " seconds")]]
+        [ui/TableCell (str/capitalize (@tr [:report]))]
+        [ui/TableCell
+         [LabelReportInterval
+          {:label (str/capitalize (@tr [:heartbeat]))
+           :help  (@tr [:heartbeat-help])
+           :interval heartbeat-interval}]
+         [LabelReportInterval
+          {:label (str/capitalize (@tr [:telemetry]))
+           :help  (@tr [:telemetry-help])
+           :interval refresh-interval}]]]
        (when nuvlabox-api-endpoint
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:nuvla-api-endpoint]))]
@@ -1178,24 +1199,23 @@
 
 
 (defn NextTelemetryStatus
-  [{:keys [next-heartbeat] :as _nb-status}]
+  [{:keys [online next-heartbeat last-heartbeat] :as _nb-status}]
   (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])
-        tr                       @(subscribe [::i18n-subs/tr])
-        next-heartbeat-moment    (some-> next-heartbeat time/parse-iso8601)
-        next-heartbeat-times-ago (when next-heartbeat-moment
-                                   [uix/TimeAgo next-heartbeat-moment])]
-    (when next-heartbeat-moment
-      [:<>
-       (if (time/before-now? next-heartbeat-moment)
-         [:p (tr [:nuvlaedge-next-telemetry-missing-since])
-          next-heartbeat-times-ago "."]
+        tr                    @(subscribe [::i18n-subs/tr])
+        next-heartbeat-moment (some-> next-heartbeat time/parse-iso8601)
+        capability-heartbeat? @(subscribe [::subs/has-capability-heartbeat?])
+        last-telemetry-moment  (if capability-heartbeat?
+                                (some-> last-heartbeat time/parse-iso8601)
+                                (utils/last-time-online
+                                  next-heartbeat-moment
+                                  refresh-interval))]
+    [:<>
+     (if online
+       (when next-heartbeat-moment
          [:p (tr [:nuvlaedge-next-telemetry-expected])
-          next-heartbeat-times-ago "."])
+          [uix/TimeAgo next-heartbeat-moment] "."])
        [:p (tr [:nuvlaedge-last-telemetry-was])
-        [uix/TimeAgo (utils/last-time-online
-                       next-heartbeat-moment
-                       refresh-interval)]
-        "."]])))
+        [uix/TimeAgo last-telemetry-moment] "."])]))
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]

@@ -11,7 +11,6 @@
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
-            [sixsq.nuvla.ui.utils.form-fields :as form-fields]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -85,6 +84,19 @@
     [ui/MenuItem final-opts
      [icons/Icon {:name icon-name}]]))
 
+(defn HelpPopup
+  [description & {:keys [on] :or {on "hover"}}]
+  (when description
+    [ui/Popup
+     {:trigger        (r/as-element
+                        [:span
+                         [icons/QuestionCircleIcon
+                          {:style {:margin-left 2}}]])
+      :content        description
+      :on             on
+      :position       "top center"
+      :hide-on-scroll true}]))
+
 
 (defn ModalHeader
   [{:keys [header icon]}]
@@ -138,13 +150,14 @@
          [TR :click-to-download]])
       (when copy
         [ui/Popup
-         {:trigger (r/as-element
-                     [ui/CopyToClipboard {:text value}
+         {:trigger  (r/as-element
                       [:span
-                       [icons/Icon {:style {:margin-left 10}
-                                    :link  true
-                                    :size  "large"
-                                    :name  "clone"}]]])}
+                       [ui/CopyToClipboard {:text value}
+                        [icons/Icon {:style {:margin-left 10}
+                                     :link  true
+                                     :size  "large"
+                                     :name  "clone"}]]])
+          :position "top center"}
          [TR :click-to-copy]])]]]])
 
 (defn EditorCode
@@ -188,7 +201,7 @@
                            title-class]
                     :or   {title-size :h3, on-open #(), on-close #(), styled? true}}]
       [ui/Accordion {:id        id
-                     :fluid      true
+                     :fluid     true
                      :styled    styled?
                      :style     {:margin-top    "10px"
                                  :margin-bottom "10px"}
@@ -212,7 +225,7 @@
          label
 
          (when count
-           [:span form-fields/nbsp form-fields/nbsp [ui/Label {:circular true} count]])]]
+           [:span " " [ui/Label {:circular true} count]])]]
 
        (when @active? [ui/AccordionContent {:active @active?}
                        content])])))
@@ -279,22 +292,35 @@
            [SpanBlockJustified default-value])]))))
 
 
+(defn FieldLabel
+  [{:keys [name required? help-popup]}]
+  [:label name
+   (when required?
+     [:sup
+      [icons/AsteriskIcon
+       {:color "red"
+        :size  "tiny"
+        :style {:margin 0}}]])
+   (when help-popup
+     help-popup)])
+
 (defn TableRowField
   [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
-                   _required? _editable? _validate-form? _type _input-help-msg]}]
+                   _required? _editable? _validate-form? _type _help-popup]}]
   (let [local-validate? (r/atom false)]
     (fn [name & {:keys [key _placeholder default-value spec _on-change on-validation
-                        required? editable? validate-form? _type _input-help-msg]
+                        required? editable? validate-form? _type help-popup]
                  :or   {editable? true, spec any?}
                  :as   options}]
-      (let [name-label (cond-> name
-                               (and editable? required?) (utils-general/mandatory-name))
-            validate?  (boolean (or @local-validate? validate-form?))
-            error?     (and validate? (not (s/valid? spec default-value)))]
+      (let [validate? (boolean (or @local-validate? validate-form?))
+            error?    (and validate? (not (s/valid? spec default-value)))]
         (when on-validation
           (dispatch [on-validation key error?]))
         [ui/TableRow
-         [ui/TableCell {:collapsing true} name-label]
+         [ui/TableCell {:collapsing true}
+          [FieldLabel {:name       name
+                       :required?  (and editable? required?)
+                       :help-popup help-popup}]]
          ^{:key (or key name)}
          [TableRowCell options]]))))
 
@@ -330,11 +356,11 @@
           [:div
            [:span (str text "?")]
            [ui/Button {:aria-label action-aria-label
-                       :color    (or color :red)
-                       :disabled disabled?
-                       :active   true
-                       :style    {:margin-left "2rem"}
-                       :on-click (fn [] (reset! mode :confirming))}
+                       :color      (or color :red)
+                       :disabled   disabled?
+                       :active     true
+                       :style      {:margin-left "2rem"}
+                       :on-click   (fn [] (reset! mode :confirming))}
             [icons/CheckIconFull {:style {:margin 0}}]]]
           [:div
            [:span (str (@tr [:are-you-sure?]) " ")]
@@ -362,18 +388,18 @@
                               :loading  @clicked?
                               :active   true
                               :on-click #(do (reset! clicked? true)
-                           (on-confirm))}])]
+                                             (on-confirm))}])]
         [ui/Modal (cond->
-                   {:on-click   (fn [event]
-                                  (.stopPropagation event)
-                                  (.preventDefault event))
-                    :close-icon true
-                    :trigger    trigger
-                    :on-close   (fn [& args]
-                                  (when on-close
-                                    (apply on-close args))
-                                  (reset! confirmed? (nil? danger-msg))
-                                  (reset! clicked? false))}
+                    {:on-click   (fn [event]
+                                   (.stopPropagation event)
+                                   (.preventDefault event))
+                     :close-icon true
+                     :trigger    trigger
+                     :on-close   (fn [& args]
+                                   (when on-close
+                                     (apply on-close args))
+                                   (reset! confirmed? (nil? danger-msg))
+                                   (reset! clicked? false))}
                     (some? open) (assoc :open open))
 
          (when header [ui/ModalHeader {:class header-class}
@@ -394,9 +420,9 @@
          [ui/ModalActions
           (when modal-action modal-action)
           (if with-confirm-step?
-            [ButtonAskingForConfirmation {:button-fn button :text button-text
+            [ButtonAskingForConfirmation {:button-fn         button :text button-text
                                           :action-aria-label button-text
-                                          :disabled? (or (not @confirmed?) @clicked?)}]
+                                          :disabled?         (or (not @confirmed?) @clicked?)}]
             [button])]]))))
 
 
@@ -442,7 +468,7 @@
     (js/setInterval #(swap! refresh inc) 5000)
     (fn [time-str]
       ^{:key (str time-str @refresh)}
-      [:span (fn-update-ago time-str)])))
+      [:span (some-> time-str fn-update-ago)])))
 
 
 (defn CountDown
@@ -488,7 +514,7 @@
    "
   [{:keys [header description meta image on-click href target button tags content
            corner-button state left-state loading? on-select selected? extra]}]
-  [ui/Card (-> {:href href
+  [ui/Card (-> {:href   href
                 :target target}
                (merge (when on-click {:on-click (fn [event]
                                                   (on-click event)

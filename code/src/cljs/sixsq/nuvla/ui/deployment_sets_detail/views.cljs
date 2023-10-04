@@ -1058,7 +1058,7 @@
          {:db-path [::spec/tab]
           :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
                                 :key     :overview
-                                :icon    "info"}
+                                :icon    icons/i-eye}
                      :render   #(r/as-element [TabOverview uuid creating?])}
                     {:menuItem {:key :apps
                                 :content
@@ -1071,6 +1071,7 @@
                                                              tab-title])
                                                  :content (tr [:save-before-configuring-apps])}])
                                     tab-title))
+                                :icon icons/i-gear
                                 :disabled (empty? @apps-sets)}
                      :render   #(r/as-element
                                   [ConfigureApps
@@ -1087,6 +1088,7 @@
                                                              tab-title])
                                                  :content (tr [:depl-group-add-one-edge-to-enable-tab])}])
                                     tab-title))
+                                :icon icons/i-box
                                 :disabled (empty? @edges)}
                      :render   #(r/as-element
                                   [EdgesTab])}
@@ -1101,6 +1103,7 @@
                                                              tab-title])
                                                  :content (tr [:depl-group-save-and-start-to-enable-tab])}])
                                     tab-title))
+                                :icon icons/i-rocket
                                 :disabled (zero? (:total @depl-all))}
                      :render #(r/as-element
                                 [DeploymentsTab uuid])}]

@@ -111,12 +111,13 @@
             (target-selector/build-spec)))
 
 (defn load-module-configurations
-  [modules-by-id fx [id {:keys [applications]}]]
+  [db modules-by-id fx [id {:keys [applications]}]]
   (->> applications
        (map (fn [{module-id :id :keys [version
                                        environmental-variables
                                        registries-credentials]}]
-              (when (get modules-by-id module-id)
+              (when (and (get modules-by-id module-id)
+                         (nil? (module-plugin/db-module db [::spec/apps-sets id] module-id)))
                 [:dispatch [::module-plugin/load-module
                             [::spec/apps-sets id]
                             (str module-id "_" version)
@@ -159,7 +160,7 @@
                                   apps-sets)
           new-db            (reduce restore-applications
                                     db merged-configs)
-          fx                (reduce (partial load-module-configurations modules-by-id)
+          fx                (reduce (partial load-module-configurations db modules-by-id)
                                     [] merged-configs)
           all-apps-visible? (= total-apps-count (count apps))]
       (if all-apps-visible?
@@ -218,10 +219,14 @@
 (reg-event-fx
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set fx]]
-    (let [parent-ids (get-target-fleet-ids deployment-set)]
+    (let [deployment-set-edited (get db ::spec/deployment-set-edited)
+          parent-ids (get-target-fleet-ids deployment-set)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
                      ::spec/deployment-set deployment-set
-                     ::main-spec/loading? false)
+                     ::main-spec/loading? false
+                     ::spec/deployment-set-edited (if (some? deployment-set-edited)
+                                                    deployment-set-edited
+                                                    deployment-set))
        :fx [fx
             [:dispatch [::resolve-to-ancestor-resource
                         {:ids                    parent-ids
@@ -314,7 +319,7 @@
                           {:header  success-msg
                            :content success-msg
                            :type    :success}]))
-             (dispatch [::set-deployment-set-edited nil])
+             (dispatch [::set-deployment-set-edited %])
              (dispatch [::set-deployment-set %])
              (dispatch [::main-events/changes-protection? false])))]})))
 
@@ -380,7 +385,6 @@
             [::cimi-api-fx/add
              [:deployment-set body
               #(do
-                 (dispatch [::set-deployment-set-edited nil])
                  (dispatch [::routing-events/navigate routes/deployment-sets-details
                             {:uuid (general-utils/id->uuid (:resource-id %))}]))
               :on-error #(dispatch [::main-events/changes-protection? true])]]]})))

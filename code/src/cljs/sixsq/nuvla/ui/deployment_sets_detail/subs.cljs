@@ -304,12 +304,14 @@
   :<- [::apps-creation]
   :<- [::applications-sets]
   :<- [::unsaved-changes?]
-  (fn [[deployment-set-edited edges apps-creation apps-sets unsaved-changes?] [_ creating?]]
-    (and
-      (nonblank-string (:name deployment-set-edited))
-      (seq edges)
-      (seq (if creating? apps-creation apps-sets))
-      (or creating? unsaved-changes?))))
+  :<- [::deployment-set-validation]
+  (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes? deployment-set-validation] [_ creating?]]
+    (if creating?
+      (and (not (str/blank? (:name deployment-set-edited)))
+           (seq edges)
+           (seq apps-creation))
+      (and unsaved-changes?
+           (:valid? deployment-set-validation)))))
 
 (reg-sub
   ::operation-enabled?

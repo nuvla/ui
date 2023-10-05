@@ -251,8 +251,7 @@
 (defn- changed-env-vars
   [env-vars]
   (keep (fn [{:keys [::new-value :value :name]}]
-          (when (and (not (str/blank? new-value))
-                     (not= new-value value))
+          (when (some? new-value)
             {:name  name
              :value new-value})
           ) env-vars))

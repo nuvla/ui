@@ -39,7 +39,7 @@ test.describe('Full text search', () => {
       await expect(page.getByPlaceholder(/Search/)).toHaveValue('hello world', { timeout: 100 });
 
       if (pageName === 'apps') {
-        await page.getByText('Navigate Apps').click();
+        await page.getByText('Navigate Projects').click();
         await page.getByText('Marketplace').click();
         await expect(page.getByPlaceholder(/Search/)).toHaveValue('hello world', { timeout: 1000 });
       }

@@ -74,7 +74,7 @@ function expectModalHidden(page, errorMessage = 'Modal hidden?', timeout = 500) 
 async function setUp(page: Page, baseURL) {
   await page.getByRole('link', { name: 'apps' }).click();
   await page.waitForURL(`${baseURL}/ui/apps`);
-  await page.getByRole('link', { name: 'Navigate Apps' }).click();
+  await page.getByRole('link', { name: 'Navigate Projects' }).click();
   await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
   await page.getByText('DO NOT DELETE --- e2e test project', { exact: true }).click();
   await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview`);

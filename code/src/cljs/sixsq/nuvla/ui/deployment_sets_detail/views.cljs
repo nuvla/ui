@@ -1056,7 +1056,6 @@
                                     (r/as-element
                                       [ui/Popup {:trigger (r/as-element
                                                             [:span
-                                                             [icons/LayerGroupIcon]
                                                              tab-title])
                                                  :content (tr [:save-before-configuring-apps])}])
                                     tab-title))
@@ -1073,7 +1072,6 @@
                                     (r/as-element
                                       [ui/Popup {:trigger (r/as-element
                                                             [:span
-                                                             [icons/BoxIcon]
                                                              tab-title])
                                                  :content (tr [:depl-group-add-one-edge-to-enable-tab])}])
                                     tab-title))
@@ -1088,7 +1086,6 @@
                                     (r/as-element
                                       [ui/Popup {:trigger (r/as-element
                                                             [:span
-                                                             [icons/RocketIcon]
                                                              tab-title])
                                                  :content (tr [:depl-group-save-and-start-to-enable-tab])}])
                                     tab-title))

@@ -53,3 +53,4 @@
 (def api-sub-page ::api-sub-page)
 (def profile ::profile)
 (def catch-all ::catch-all)
+(def ui-demo ::ui-demo)

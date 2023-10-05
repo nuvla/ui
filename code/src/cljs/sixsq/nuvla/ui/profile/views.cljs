@@ -5,6 +5,9 @@
             [form-validator.core :as fv]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.about.events :as about-events]
+            [sixsq.nuvla.ui.about.subs :as about-subs]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.acl.views :as acl-views]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.config :as config]
@@ -1648,6 +1651,22 @@
                               :flex-wrap      "wrap"}}
         :panes   panes}])))
 
+(defn- ProfileHeader
+  [& props]
+  (let [user-identifier (subscribe [::session-subs/identifier])
+        is-internal?    (and
+                          (not (str/blank? @user-identifier) )
+                          (str/ends-with? @user-identifier "@sixsq.com"))
+        internal-ff     (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-internal])]
+    (if is-internal?
+      [ui/Modal
+       {:size "tiny"
+        :trigger  (r/as-element
+                    [:span [apply uix/PageHeader props]])}
+       [ui/ModalContent
+        [:button {:on-click #(dispatch [::about-events/set-feature-flag about-utils/feature-internal (not @internal-ff)])}
+         (if @internal-ff "DO HIDE" "DO SHOW")]]]
+      [apply uix/PageHeader props])))
 
 (defn profile
   [_path]
@@ -1657,7 +1676,7 @@
         can-enable-2fa?  (utils-general/can-operation? "enable-2fa" @user)
         can-disable-2fa? (utils-general/can-operation? "disable-2fa" @user)]
     [ui/Container {:fluid true}
-     [uix/PageHeader "user" (str/capitalize (@tr [:profile]))]
+     [ProfileHeader "user" (str/capitalize (@tr [:profile]))]
      [ui/Menu {:borderless true}
       [ui/MenuItem {:disabled @is-group?
                     :icon     "user secret"

@@ -464,10 +464,11 @@
   [_time-str]
   (let [locale        (subscribe [::i18n-subs/locale])
         fn-update-ago #(time/parse-ago % @locale)
-        refresh       (r/atom 0)]
+        refresh       (r/atom 0)
+        id            (random-uuid)]
     (js/setInterval #(swap! refresh inc) 5000)
     (fn [time-str]
-      ^{:key (str time-str @refresh)}
+      ^{:key (str id time-str @refresh)}
       [:span (some-> time-str fn-update-ago)])))
 
 

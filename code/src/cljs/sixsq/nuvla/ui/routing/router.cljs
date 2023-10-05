@@ -27,6 +27,7 @@
             [sixsq.nuvla.ui.routing.subs :as subs]
             [sixsq.nuvla.ui.routing.utils :as utils]
             [sixsq.nuvla.ui.session.views :as session-views]
+            [sixsq.nuvla.ui.ui-demo.views :refer [UiDemo]]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
             [sixsq.nuvla.ui.welcome.views :refer [home-view]]))
 
@@ -190,7 +191,11 @@
       {:name ::routes/api-sub-page}]]
     ["profile"
      {:name ::routes/profile
-      :view #'profile}]]
+      :view #'profile}]
+    ["ui-demo"
+     {:name      ::routes/ui-demo
+      :view      #'UiDemo
+      :link-text "ui-demo"}]]
    ["/*"
     {:name ::routes/catch-all
      :view #'UnknownResource}]])

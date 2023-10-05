@@ -121,6 +121,11 @@
                                                           :label-kw   :api
                                                           :icon       icons/i-code
                                                           :protected? false
-                                                          :order      90}}
+                                                          :order      90}
+                                       "ui-demo"         {:key        routes/ui-demo
+                                                          :label-kw   :ui-demo
+                                                          :icon       icons/i-world
+                                                          :feature-flag-kw about-utils/feature-internal
+                                                          :order 100}}
                ::open-modal           nil
                ::stripe               nil})

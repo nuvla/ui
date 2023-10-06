@@ -18,6 +18,14 @@
     (::spec/nuvlabox-status db)))
 
 (reg-sub
+  ::telemetry-outdated?
+  :<- [::nuvlabox-status]
+  (fn [{:keys [next-telemetry] :as _nuvlabox-status}]
+    (and (some? next-telemetry) (some-> next-telemetry
+                                        time/parse-iso8601
+                                        time/before-now?))))
+
+(reg-sub
   ::next-heartbeat-moment
   :<- [::nuvlabox-status]
   (fn [{:keys [next-heartbeat]}]

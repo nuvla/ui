@@ -461,12 +461,12 @@
 
 
 (defn ForceRerenderComponentByDelay
-  [Component delay]
+  [RenderFn delay]
   (r/with-let
     [refresh     (r/atom 0)
      interval-id (js/setInterval #(swap! refresh inc) delay)]
     ^{:key (str "reload-" interval-id "-" @refresh)}
-    Component
+    [RenderFn]
     (finally
       (js/clearInterval interval-id))))
 
@@ -475,18 +475,17 @@
   [time-str]
   (let [locale (subscribe [::i18n-subs/locale])]
     [ForceRerenderComponentByDelay
-     [:span (some-> time-str #(time/parse-ago % @locale))]
+     (fn []
+       [:span (some-> time-str (time/parse-ago @locale))])
      5000]))
-
 
 (defn CountDown
   [futur-moment]
-  (let [delta-seconds (/ (time/delta-milliseconds
-                           (time/now) futur-moment) 1000)]
-    [ForceRerenderComponentByDelay
-     [:span
-      (if (neg? delta-seconds) 0 (js/Math.round delta-seconds))]
-     1000]))
+  [ForceRerenderComponentByDelay
+   #(let [d (/ (time/delta-milliseconds (time/now) futur-moment) 1000)]
+      [:span
+       (if (neg? d) 0 (js/Math.round d))])
+   1000])
 
 
 (defn WarningMsgNoElements

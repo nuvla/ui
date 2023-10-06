@@ -1200,28 +1200,29 @@
    [StatusOrNotAvailable nb-status [HostInfo nb-status ssh-creds]]])
 
 (defn TelemetryLastTime
-  [label time-str]
-  (let [moment (some-> time-str time/parse-iso8601)]
-    [:div
-     label " was "
-     [uix/TimeAgo moment]]))
+  [last-telemetry]
+  [:div
+   "Last telemetry report was "
+   [uix/TimeAgo last-telemetry]])
 
 (defn TelemetryNextTime
-  [label time-str]
-  (let [moment (some-> time-str time/parse-iso8601)]
+  [next-telemetry]
+  (let [locale (subscribe [::i18n-subs/locale])
+        moment (some-> next-telemetry time/parse-iso8601)]
     [uix/ForceRerenderComponentByDelay
-     [:p
-      (if (time/before-now? moment)
-        [:<> "Missing " label " since "]
-        [:<> "Next " label " is expected "])
-      [uix/TimeAgo moment]]
-     2000]))
+     (fn []
+       [:p
+        (if (time/before-now? moment)
+          [:<> "Missing telemetry report since "]
+          [:<> "Next telemetry report is expected "])
+        (some-> next-telemetry (time/parse-ago @locale))])
+     5000]))
 
 (defn NextTelemetryStatus
   [{:keys [next-telemetry last-telemetry] :as _nb-status}]
   [:div
-   [TelemetryNextTime "telemetry report" next-telemetry]
-   [TelemetryLastTime "Last telemetry report" last-telemetry]])
+   [TelemetryNextTime next-telemetry]
+   [TelemetryLastTime last-telemetry]])
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]
@@ -2032,12 +2033,25 @@
       [OnlineStatusIcon online true true]]
      (or name id)]))
 
+(defn TelemetryOutdatedMessage
+  [{:keys [next-telemetry] :as _nb-status}]
+  [uix/ForceRerenderComponentByDelay
+   #(let [outdated? (some-> next-telemetry
+                            time/parse-iso8601
+                            time/before-now?)]
+      (when outdated?
+        [ui/Message
+         {:warning true
+          :icon    icons/i-warning
+          :content (r/as-element
+                     [uix/TR :nuvlaedge-outdated-telemetry-warning])}]))
+   15000])
+
 
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
-  (let [tr        @(subscribe [::i18n-subs/tr])
-        nb-status @(subscribe [::subs/nuvlabox-status])]
+  (let [nb-status @(subscribe [::subs/nuvlabox-status])]
     [components/LoadingPage {:dimmable? true}
      [:<>
       [components/NotFoundPortal
@@ -2050,9 +2064,6 @@
        [components/ErrorJobsMessage ::job-subs/jobs nil nil
         #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
        [job-views/ProgressJobAction nb-status]
-       (when (and nb-status (not (:online nb-status)))
-         [ui/Message {:warning true
-                      :icon    icons/i-warning
-                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
+       [TelemetryOutdatedMessage nb-status]]
       [TabsNuvlaBox]
       [AddPlaybookModal]]]))

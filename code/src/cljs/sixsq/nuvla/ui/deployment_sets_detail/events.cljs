@@ -65,16 +65,11 @@
   []
   (dispatch [::refresh]))
 
-(reg-event-db
-  ::clear-target-edges
-  (fn [db]
-    (dissoc db ::spec/edges ::spec/edges-documents)))
-
 (reg-event-fx
   ::init
-  (fn []
-    {:fx [[:dispatch [::clear-target-edges]]
-          [:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
+  (fn [{:keys [db]}]
+    {:db (merge db spec/defaults)
+     :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
           [:dispatch [::refresh]]
           [:dispatch [::main-events/changes-protection? false]]
@@ -261,9 +256,7 @@
 (reg-event-fx
   ::get-deployment-set
   (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id fx]]
-    {:db               (cond-> db
-                               (not= (:id deployment-set) id) (merge spec/defaults))
-     ::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
+    {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]]}))

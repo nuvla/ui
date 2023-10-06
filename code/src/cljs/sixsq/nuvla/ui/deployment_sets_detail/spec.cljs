@@ -37,6 +37,8 @@
    ::apps-sets                 nil
    ::deployment-set            nil
    ::deployment-set-edited     nil
+   ::edges                     nil
+   ::edges-documents           nil
    ::validate-form?            false
    ::deployments-summary-all   nil
    ::deployment-set-not-found? false

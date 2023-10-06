@@ -262,6 +262,7 @@
         :delete-resources                              "delete resources"
         :delta-min                                     "delta [min]"
         :depl-group-required-fields-before-save        "Requires a name, at least one app and one edge to save"
+        :depl-group-mandatory-app-env-var-missing      "All required environment variables for all apps need to be provided"
         :depl-group-add-one-edge-to-enable-tab         "Add at least one edge to enable this tab."
         :depl-group-save-and-start-to-enable-tab       "To add deployments Start this deployment group."
         :deploy                                        "deploy"

@@ -11,6 +11,8 @@
 (s/def ::edges (s/coll-of map? :kind vector?))
 (s/def ::edges-documents (s/coll-of map? :kind vector?))
 
+(s/def ::validate-form? boolean?)
+
 (def default-ordering [[:created :desc]])
 (def pagination-default (pagination-plugin/build-spec
                           :default-items-per-page 25))
@@ -35,6 +37,7 @@
    ::apps-sets                 nil
    ::deployment-set            nil
    ::deployment-set-edited     nil
+   ::validate-form?            false
    ::deployments-summary-all   nil
    ::deployment-set-not-found? false
    ::events                    (events-plugin/build-spec)

@@ -77,7 +77,8 @@
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
           [:dispatch [::refresh]]
-          [:dispatch [::main-events/changes-protection? false]]]}))
+          [:dispatch [::main-events/changes-protection? false]]
+          [:dispatch [::disable-form-validation]]]}))
 
 (reg-event-fx
   ::clear-deployments
@@ -321,7 +322,8 @@
                            :type    :success}]))
              (dispatch [::set-deployment-set-edited %])
              (dispatch [::set-deployment-set %])
-             (dispatch [::main-events/changes-protection? false])))]})))
+             (dispatch [::main-events/changes-protection? false])
+             (dispatch [::disable-form-validation])))]})))
 
 (reg-event-fx
   ::delete
@@ -586,3 +588,13 @@
                         :version    (apps-utils/module-version module-applications-sets)
                         :overwrites (map-indexed (partial applications-sets->overwrites db)
                                                  (-> module-applications-sets :content :applications-sets))}]]]]}))
+
+(reg-event-db
+  ::enable-form-validation
+  (fn [db]
+    (assoc db ::spec/validate-form? true)))
+
+(reg-event-db
+  ::disable-form-validation
+  (fn [db]
+    (assoc db ::spec/validate-form? false)))

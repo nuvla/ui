@@ -304,14 +304,12 @@
   :<- [::apps-creation]
   :<- [::applications-sets]
   :<- [::unsaved-changes?]
-  :<- [::deployment-set-validation]
-  (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes? deployment-set-validation] [_ creating?]]
+  (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes?] [_ creating?]]
     (if creating?
       (and (not (str/blank? (:name deployment-set-edited)))
            (seq edges)
            (seq apps-creation))
-      (and unsaved-changes?
-           (:valid? deployment-set-validation)))))
+      unsaved-changes?)))
 
 (reg-sub
   ::operation-enabled?
@@ -331,21 +329,54 @@
   (fn [opened-modal [_ id]]
     (= id opened-modal)))
 
-(defn missing-required-env-vars?
+(defn missing-required-env-vars
   [db]
   (->> (applications-sets db)
-       (map-indexed
+       (keep-indexed
          (fn [i {:keys [applications]}]
-           (every? (fn [{:keys [id]}]
-                     (empty? (module-plugin/db-module-env-vars-in-error
-                               db [::spec/apps-sets i] id)))
-                   applications)))
-       (some false?)))
+           (keep (fn [{:keys [id]}]
+                   (when (seq (module-plugin/db-module-env-vars-in-error
+                                db [::spec/apps-sets i] id))
+                     {:type    :missing-required-env-vars
+                      :path    [:apps-config i id]
+                      :message [:depl-group-mandatory-app-env-var-missing]}))
+                 applications)))
+       (apply concat)))
+
+(defn deployment-set-validation
+  "Returns an array of error maps of the form:
+   ```
+   {:type    <error type>
+    :path    <vector representing the `path` through the ui component hierarchy where the validation error occurred>
+    :message <vector to pass to the `tr` function to obtain a human-readable message for the error>}
+   ```
+  "
+  [db]
+  (let [errors (missing-required-env-vars db)]
+    {:valid? (not (seq errors))
+     :errors errors}))
 
 (reg-sub
   ::deployment-set-validation
-  (fn [db]
-    (let [errors (cond-> []
-                         (missing-required-env-vars? db) (conj [:depl-group-mandatory-app-env-var-missing]))]
-      {:valid? (not (seq errors))
-       :errors errors})))
+  deployment-set-validation)
+
+(reg-sub
+  ::apps-config-validation-error?
+  (fn [{:keys [::spec/validate-form?] :as db}]
+    (and validate-form?
+        (some #{:apps-config}
+              (map (comp first :path) (:errors (deployment-set-validation db)))))))
+
+(reg-sub
+  ::app-config-validation-error?
+  (fn [{:keys [::spec/validate-form?] :as db} [_ app-set-idx app-id]]
+    (and validate-form?
+         (some #{[:apps-config app-set-idx app-id]}
+               (map (comp vec (partial take 3) :path)
+                    (:errors (deployment-set-validation db)))))))
+
+(reg-sub
+  ::form-valid?
+  (fn [{:keys [::spec/validate-form?] :as db}]
+    (or (not validate-form?)
+        (:valid? (deployment-set-validation db)))))

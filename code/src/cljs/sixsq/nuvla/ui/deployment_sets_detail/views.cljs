@@ -33,6 +33,7 @@
             [sixsq.nuvla.ui.routing.utils :as routes-utils :refer [name->href
                                                                    pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [format-money]]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -40,6 +41,7 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.validation :as utils-validation]
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
@@ -70,7 +72,7 @@
       menu-item
       [ui/Popup
        {:trigger (r/as-element menu-item)
-        :content (str/join ". " (map @tr errors))}])))
+        :content (str/join ". " (map (comp @tr :message) errors))}])))
 
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
@@ -159,7 +161,8 @@
 (defn SaveButton
   [{:keys [creating?]}]
   (let [tr            (subscribe [::i18n-subs/tr])
-        save-enabled? (subscribe [::subs/save-enabled? creating?])]
+        save-enabled? (subscribe [::subs/save-enabled? creating?])
+        validation    (subscribe [::subs/deployment-set-validation])]
     (fn [{:keys [deployment-set]}]
       [ui/Popup
        {:trigger
@@ -172,8 +175,10 @@
              :class    (when @save-enabled? "primary-menu-item")
              :on-click (if creating?
                          #(dispatch [::events/create])
-                         #(dispatch [::events/persist! {:deployment-set deployment-set
-                                                        :success-msg    (@tr [:updated-successfully])}]))}]])
+                         (if (:valid? @validation)
+                           #(dispatch [::events/persist! {:deployment-set deployment-set
+                                                          :success-msg    (@tr [:updated-successfully])}])
+                           #(dispatch [::events/enable-form-validation])))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBar
@@ -771,10 +776,12 @@
 
 
 (defn- AppName [{:keys [idx id]}]
-  (let [app (subscribe [::module-plugin/module
-                        [::spec/apps-sets idx] id])]
+  (let [app    (subscribe [::module-plugin/module
+                           [::spec/apps-sets idx] id])
+        error? (subscribe [::subs/app-config-validation-error? idx id])]
     (fn []
-      [:span (or (:name @app) (:id @app))])))
+      [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
+       (or (:name @app) (:id @app))])))
 
 
 (defn ConfigureApps
@@ -1075,7 +1082,11 @@
                                                             [:span
                                                              tab-title])
                                                  :content (tr [:save-before-configuring-apps])}])
-                                    tab-title))
+                                    (let [error? @(subscribe [::subs/apps-config-validation-error?])]
+                                      (r/as-element
+                                        [:span
+                                         {:style {:color (if error? utils-forms/dark-red "black")}}
+                                         tab-title]))))
                                 :icon icons/i-gear
                                 :disabled (empty? @apps-sets)}
                      :render   #(r/as-element
@@ -1131,6 +1142,7 @@
                                                             (-> @depl-set
                                                                 :operational-status
                                                                 :status))]
+           [utils-validation/validation-error-message ::subs/form-valid?]
            [MenuBar uuid]
            [bulk-progress-plugin/MonitoredJobs
             {:db-path [::spec/bulk-jobs]}]

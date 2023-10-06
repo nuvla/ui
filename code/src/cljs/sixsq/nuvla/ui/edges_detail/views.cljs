@@ -1199,48 +1199,29 @@
    [:h4 "Host"]
    [StatusOrNotAvailable nb-status [HostInfo nb-status ssh-creds]]])
 
-
-(defn TelemetryHeartbeatTime
-  [label time-str]
-  (let [moment (some-> time-str time/parse-iso8601)]
-    [:<>
-     (if (time/before-now? moment)
-       (str label "missing since")
-       (str label "expected ")
-       )
-     [uix/TimeAgo moment]]
-    )
-  "Next telemetry report is expected "
-  )
-
-(defn TelemetryHeartbeatLastTime
+(defn TelemetryLastTime
   [label time-str]
   (let [moment (some-> time-str time/parse-iso8601)]
     [:div
      label " was "
-     [uix/TimeAgo moment]]
-    )
-  )
+     [uix/TimeAgo moment]]))
 
-(defn TelemetryHeartbeatNextTime
-  [_label _time-str]
-  (let [refresh (r/atom 0)]
-    (js/setInterval #(swap! refresh inc) 5000)
-    (fn [label time-str]
-      (let [moment (some-> time-str time/parse-iso8601)]
-        ^{:key (str label @refresh)}
-        [:p
-         (if (time/before-now? moment)
-           [:<> "Missing " label " since "]
-           [:<> "Next " label " is expected "])
-         [uix/TimeAgo moment]]))))
+(defn TelemetryNextTime
+  [label time-str]
+  (let [moment (some-> time-str time/parse-iso8601)]
+    [uix/ForceRerenderComponentByDelay
+     [:p
+      (if (time/before-now? moment)
+        [:<> "Missing " label " since "]
+        [:<> "Next " label " is expected "])
+      [uix/TimeAgo moment]]
+     2000]))
 
 (defn NextTelemetryStatus
-  [{:keys [next-telemetry
-           last-telemetry] :as _nb-status}]
+  [{:keys [next-telemetry last-telemetry] :as _nb-status}]
   [:div
-   [TelemetryHeartbeatNextTime "telemetry report" next-telemetry]
-   [TelemetryHeartbeatLastTime "Last telemetry report" last-telemetry]])
+   [TelemetryNextTime "telemetry report" next-telemetry]
+   [TelemetryLastTime "Last telemetry report" last-telemetry]])
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]

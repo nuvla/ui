@@ -460,27 +460,33 @@
                                   (on-confirm))}]])])))
 
 
+(defn ForceRerenderComponentByDelay
+  [Component delay]
+  (r/with-let
+    [refresh     (r/atom 0)
+     interval-id (js/setInterval #(swap! refresh inc) delay)]
+    ^{:key (str "reload-" interval-id "-" @refresh)}
+    Component
+    (finally
+      (js/clearInterval interval-id))))
+
+
 (defn TimeAgo
-  [_time-str]
-  (let [locale        (subscribe [::i18n-subs/locale])
-        fn-update-ago #(time/parse-ago % @locale)
-        refresh       (r/atom 0)
-        id            (random-uuid)]
-    (js/setInterval #(swap! refresh inc) 5000)
-    (fn [time-str]
-      ^{:key (str id time-str @refresh)}
-      [:span (some-> time-str fn-update-ago)])))
+  [time-str]
+  (let [locale (subscribe [::i18n-subs/locale])]
+    [ForceRerenderComponentByDelay
+     [:span (some-> time-str #(time/parse-ago % @locale))]
+     5000]))
 
 
 (defn CountDown
-  [_futur-moment]
-  (let [refresh (r/atom 0)]
-    (js/setInterval #(swap! refresh inc) 1000)
-    (fn [futur-moment]
-      (let [delta-seconds (/ (time/delta-milliseconds (time/now) futur-moment) 1000)]
-        ^{:key (str futur-moment @refresh)}
-        [:span
-         (if (neg? delta-seconds) 0 (js/Math.round delta-seconds))]))))
+  [futur-moment]
+  (let [delta-seconds (/ (time/delta-milliseconds
+                           (time/now) futur-moment) 1000)]
+    [ForceRerenderComponentByDelay
+     [:span
+      (if (neg? delta-seconds) 0 (js/Math.round delta-seconds))]
+     1000]))
 
 
 (defn WarningMsgNoElements

@@ -4,20 +4,12 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.general :as utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def nbsp "\u00a0")
-
-(defn help-popup [description & {:keys [on] :or {on "hover"}}]
-  (when description
-    (let [icon [ui/Icon {:name "help circle"}]]
-      [ui/Popup
-       {:trigger        (reagent/as-element icon)
-        :content        description
-        :on             on
-        :hide-on-scroll true}])))
 
 
 (defmulti form-field
@@ -38,8 +30,11 @@
     (fn [_update-fn _form-id {:keys [name _display-name help hidden sensitive _value-scope
                                      required _editable] :as _attribute}]
       ^{:key name}
-      [ui/FormField {:required required}
-       (when-not hidden [:label label nbsp (help-popup help)])
+      [ui/FormField
+       (when-not hidden
+         [uix/FieldLabel {:name       label
+                          :required?  required
+                          :help-popup [uix/HelpPopup help]}])
        (if values
          [ui/Dropdown {:selection     true
                        :search        true
@@ -67,8 +62,10 @@
     (fn [update-fn form-id {:keys [name _display-name help hidden _value-scope
                                    required editable] :as _attribute}]
       ^{:key name}
-      [ui/FormField {:required required}
-       (when-not hidden [:label label nbsp (help-popup help)])
+      [ui/FormField
+       [uix/FieldLabel {:name       label
+                        :required?  required
+                        :help-popup [uix/HelpPopup help]}]
        [ui/Input
         (cond-> {:type          "number"
                  :name          name
@@ -89,8 +86,11 @@
       (let [label     (or display-name name)
             read-only (not editable)]
         ^{:key name}
-        [ui/FormField {:required required}
-         (when-not hidden [:label label nbsp (help-popup help)])
+        [ui/FormField
+         (when-not hidden
+           [uix/FieldLabel {:name       label
+                            :required?  required
+                            :help-popup [uix/HelpPopup help]}])
          [ui/DatePicker (cond-> {:custom-input     (reagent/as-element [ui/Input {:style {:width "250px"}}])
                                  :show-time-select true
                                  :read-only        read-only
@@ -117,8 +117,11 @@
     (fn [update-fn form-id {:keys [name _display-name help hidden _value-scope
                                    required editable] :as _attribute}]
       ^{:key name}
-      [ui/FormField {:required required}
-       (when-not hidden [:label label nbsp (help-popup help)])
+      [ui/FormField
+       (when-not hidden
+         [uix/FieldLabel {:name       label
+                          :required?  required
+                          :help-popup [uix/HelpPopup help]}])
        [ui/Checkbox
         (cond-> {:name          name
                  :default-value default-value
@@ -132,8 +135,11 @@
                              required editable] :as _attribute}]
   (let [label (or display-name name)]
     ^{:key name}
-    [ui/FormField {:required required}
-     (when-not hidden [:label label nbsp (help-popup help)])
+    [ui/FormField
+     (when-not hidden
+       [uix/FieldLabel {:name       label
+                        :required?  required
+                        :help-popup [uix/HelpPopup help]}])
      [ui/Checkbox
       (cond-> {:name          name
                :default-value (or (:value value-scope) (:default value-scope) "")

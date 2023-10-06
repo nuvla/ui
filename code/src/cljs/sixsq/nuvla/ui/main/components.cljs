@@ -137,7 +137,7 @@
                           (or
                             (= label @state-selector)
                             (and (= label "TOTAL")
-                              (nil? @state-selector))))
+                                 (nil? @state-selector))))
          color          (if (pos? value) positive-color "grey")
          icon-key       (str label "-" icons)]
      [ui/Statistic {:style    (when clickable? {:cursor "pointer"})
@@ -173,12 +173,6 @@
                           :loading (and (pos? value) (= icons/i-spinner i))
                           :name    i}])]]
          [ui/StatisticLabel label]])])))
-
-
-(defn InfoPopup
-  [message]
-  [ui/Popup {:content message
-             :trigger (r/as-element [ui/Icon {:class icons/i-info}])}])
 
 (defn NotFoundPortal
   [subs message-header message-content]
@@ -243,34 +237,38 @@
     - activate by clicking on pencil icon
     - saves on enter key or button click
     - cancel on escape key"
-  [attribute element on-change-fn]
-  (let [new-value     (r/atom (get element attribute))
+  [{:keys [attribute resource on-change-fn type]
+    :or   {type "text"}}]
+  (let [new-value     (r/atom (get resource attribute))
         initial-value (r/atom @new-value)
         editing?      (r/atom false)
         close-fn      #(reset! editing? false)
         save-fn       #(do
                          (when (not= @new-value @initial-value)
-                           (on-change-fn @new-value)
+                           (on-change-fn
+                             (case type
+                               "number" (js/parseInt @new-value)
+                               @new-value))
                            (reset! initial-value @new-value))
                          (close-fn))]
-    (fn [_attribute _element _on-change-fn]
-      [ui/TableCell
-       (if @editing?
-         [ui/Input {:default-value @new-value
-                    :on-key-press  (partial forms/on-return-key
-                                            save-fn)
-                    :on-key-down   (partial forms/on-escape-key
-                                            #(do (reset! new-value @initial-value)
-                                                 (close-fn)))
-                    :on-change     (ui-callback/input-callback #(reset! new-value %))
-                    :focus         true
-                    :fluid         true
-                    :action        {:icon     "check"
-                                    :on-click save-fn}}]
-         [:<>
-          @new-value
-          ff/nbsp
-          [Pencil editing?]])])))
+    (fn [_opts]
+      (if @editing?
+        [ui/Input {:default-value @new-value
+                   :type          type
+                   :on-key-press  (partial forms/on-return-key
+                                           save-fn)
+                   :on-key-down   (partial forms/on-escape-key
+                                           #(do (reset! new-value @initial-value)
+                                                (close-fn)))
+                   :on-change     (ui-callback/input-callback #(reset! new-value %))
+                   :focus         true
+                   :fluid         true
+                   :action        {:icon     "check"
+                                   :on-click save-fn}}]
+        [:<>
+         @new-value
+         ff/nbsp
+         [Pencil editing?]]))))
 
 (defn TagsDropdown
   [{:keys [tags]}]

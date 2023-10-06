@@ -3,7 +3,9 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
-            [sixsq.nuvla.ui.utils.general :as general-utils]))
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (reg-sub
   ::loading?
@@ -14,6 +16,20 @@
   ::nuvlabox-status
   (fn [db]
     (::spec/nuvlabox-status db)))
+
+(reg-sub
+  ::telemetry-outdated?
+  :<- [::nuvlabox-status]
+  (fn [{:keys [next-telemetry] :as _nuvlabox-status}]
+    (and (some? next-telemetry) (some-> next-telemetry
+                                        time/parse-iso8601
+                                        time/before-now?))))
+
+(reg-sub
+  ::next-heartbeat-moment
+  :<- [::nuvlabox-status]
+  (fn [{:keys [next-heartbeat]}]
+    (some-> next-heartbeat time/parse-iso8601)))
 
 (reg-sub
   ::nuvlaedge-release

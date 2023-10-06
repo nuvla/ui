@@ -292,7 +292,7 @@
           [ui/ButtonGroup {:primary true
                            :style   {:padding-top 10}}
            [uix/Button
-            {:text  (@tr [:process])
+            {:text     (@tr [:process])
              :disabled disabled?
              :icon     icon
              :on-click on-click}]])))))
@@ -510,15 +510,19 @@
     1))
 
 (defn TableCell
-  [attribute {:keys [id] :as element}]
+  [attribute {:keys [id] :as resource}]
   (let [tr           (subscribe [::i18n-subs/tr])
         editable?    (subscribe [::subs/editable?])
         on-change-fn #(dispatch [::events/edit
                                  id {attribute %}
                                  (@tr [:updated-message])])]
-    (if @editable?
-      [components/EditableInput attribute element on-change-fn]
-      [ui/TableCell (get element attribute)])))
+    [ui/TableCell
+     (if @editable?
+       [components/EditableInput
+        {:attribute    attribute
+         :resource     resource
+         :on-change-fn on-change-fn}]
+       (get resource attribute))]))
 
 (defn ModalAppPreview
   [_module-filter]

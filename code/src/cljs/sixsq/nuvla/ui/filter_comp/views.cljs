@@ -11,7 +11,6 @@
             [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -436,7 +435,7 @@
                (@tr [:done])]]])]
          (when persist?
            [:div {:style {:align-self :start}}
-            [ff/help-popup (@tr [:additional-filter-help-text])]])
+            [uix/HelpPopup (@tr [:additional-filter-help-text])]])
          (when (and show-clear-button-outside-modal? active-filter?)
            ^{:key 1}
            [filter-popup

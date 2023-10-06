@@ -24,13 +24,13 @@
     {:fx [[:dispatch [::set-current-cols
                       (filterv #(not= col-key %) current-cols)]]]}))
 
-(def default-cols
+(def default-columns
   [:id :name :description :created :updated])
 
 (reg-event-db
   ::add-col
   (fn [{{:keys [::current-cols]
-         :or {current-cols default-cols}} :db} [_ col-key position]]
+         :or {current-cols default-columns}} :db} [_ col-key position]]
     (when-not (some #{col-key} current-cols)
       (let [new-cols (if position
                        (vec (concat (take position current-cols)
@@ -41,9 +41,15 @@
                [::set-current-cols
                 new-cols]]]}))))
 
+(reg-event-fx
+  ::reset-current-cols
+  (fn [{{defaults ::default-cols} :db}]
+    {:fx [[:dispatch [::set-current-cols (or defaults default-columns)]]]}))
+
 (reg-event-db
   ::set-current-cols
   (fn [db [_ cols]]
+(js/console.error cols)
     (assoc db ::current-cols cols)))
 
 (comment
@@ -53,7 +59,9 @@
   (dispatch [::add-col :updated 1])
 
   ;; remove column
+  (dispatch [::reset-current-cols])
   (dispatch [::remove-col :updated])
+  (dispatch [::remove-col :created])
 
   ;; no position adds as last column
   (dispatch [::add-col :updated])
@@ -61,38 +69,49 @@
   (dispatch [::add-col :updated])
 
   ;; setting default column
-  (dispatch [::set-current-cols default-cols]))
+  (dispatch [::set-current-cols default-columns])
+
+  (dispatch [::reset-current-cols])
+  )
 
 (reg-sub
   ::get-current-cols
   :-> ::current-cols)
 
+(reg-sub
+  ::get-default-cols
+  :-> ::default-cols)
+
 (reg-event-fx
   ::init-table-col-config
   [(inject-cofx :storage/get {:name "nuvla.ui.table.column-configs"})]
-  (fn []))
+  (fn [{{:keys [::current-cols] :as db} :db} [_ cols]]
+    (let [defaults (or
+                     (some->>
+                       cols
+                       (map :field-key))
+                     default-columns)]
+      {:db (assoc db ::default-cols defaults)
+       :fx [[:dispatch [::set-current-cols (or current-cols defaults)]]]})))
 
 
 (defn TableColsEditable
   [props]
-  (let [default-cols
-        (or
-          (:columns props)
-          default-cols)
-        available-cols (merge
+  (let [available-cols (merge
                          (let [ks (mapcat keys (:rows props))]
                            (zipmap
                              ks
                              (map (fn [k] {:field-key k}) ks)))
                          (into {} (map (juxt :field-key identity) (:columns props))))
-        current-cols   (subscribe [::get-current-cols])]
+        current-cols   (subscribe [::get-current-cols])
+        default-cols   (subscribe [::get-default-cols])]
+    (dispatch [::init-table-col-config (:columns props)  ])
     (fn []
       [Table (assoc props :col-config
-               {:default-cols default-cols
-                :available-cols available-cols
+               {:available-cols available-cols
                 :current-cols @current-cols}
                :columns (mapv (fn [k] (available-cols k))
-                          (or @current-cols default-cols)))])))
+                          (or @current-cols @default-columns)))])))
 
 (defn UiDemo
   []

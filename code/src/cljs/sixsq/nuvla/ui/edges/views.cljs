@@ -20,10 +20,10 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.ui-demo.views :refer [TableColsEditable]]
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
@@ -804,24 +804,25 @@
        [bulk-edit-modal])
      (when bulk-deploy-modal
        [bulk-deploy-modal])
-     [Table {:sort-config       {:db-path     ::spec/ordering
-                                 :fetch-event [::events/get-nuvlaboxes]}
-             :columns           columns
-             :rows              edges
-             :table-props       {:compact "very" :selectable true}
-             :cell-props        {:header {:single-line true}}
-             :row-render        (fn [row-data] [NuvlaboxRow row-data])
-             :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
-             :row-props         {:role  "link"
-                                 :style {:cursor "pointer"}}
-             :select-config     {:bulk-actions (filterv
-                                                 some?
-                                                 [trigger
-                                                  bulk-deploy-trigger])
-                                 :total-count-sub-key [::subs/nuvlaboxes-count]
-                                 :resources-sub-key [::subs/nuvlaboxes-resources]
-                                 :select-db-path [::spec/select]
-                                 :rights-needed :edit}}]]))
+     [TableColsEditable
+      {:sort-config       {:db-path     ::spec/ordering
+                           :fetch-event [::events/get-nuvlaboxes]}
+       :columns           columns
+       :rows              edges
+       :table-props       {:compact "very" :selectable true}
+       :cell-props        {:header {:single-line true}}
+       :row-render        (fn [row-data] [NuvlaboxRow row-data])
+       :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+       :row-props         {:role  "link"
+                           :style {:cursor "pointer"}}
+       :select-config     {:bulk-actions (filterv
+                                           some?
+                                           [trigger
+                                            bulk-deploy-trigger])
+                           :total-count-sub-key [::subs/nuvlaboxes-count]
+                           :resources-sub-key [::subs/nuvlaboxes-resources]
+                           :select-db-path [::spec/select]
+                           :rights-needed :edit}}]]))
 
 
 (defn NuvlaboxTable

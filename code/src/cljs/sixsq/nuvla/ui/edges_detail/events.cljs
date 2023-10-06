@@ -174,7 +174,7 @@
 
 (reg-event-fx
   ::edit
-  (fn [_ [_ resource-id data success-msg]]
+  (fn [{{:keys [::spec/nuvlabox]} :db} [_ resource-id data success-msg]]
     {::cimi-api-fx/edit [resource-id data
                          #(if (instance? js/Error %)
                             (let [{:keys [status message]} (response/parse-ex-info %)]
@@ -182,7 +182,8 @@
                                          {:header  (cond-> (str "error editing " resource-id)
                                                            status (str " (" status ")"))
                                           :content message
-                                          :type    :error}]))
+                                          :type    :error}])
+                              (dispatch [::set-nuvlabox nuvlabox]))
                             (do
                               (when success-msg
                                 (dispatch [::messages-events/add

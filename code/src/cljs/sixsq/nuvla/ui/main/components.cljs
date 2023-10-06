@@ -237,36 +237,38 @@
     - activate by clicking on pencil icon
     - saves on enter key or button click
     - cancel on escape key"
-  [{:keys [attribute resource on-change-fn type]
-    :or   {type "text"}}]
+  [{:keys [attribute resource on-change-fn
+           type label fluid]
+    :or   {fluid true}}]
   (let [new-value     (r/atom (get resource attribute))
         initial-value (r/atom @new-value)
         editing?      (r/atom false)
         close-fn      #(reset! editing? false)
         save-fn       #(do
                          (when (not= @new-value @initial-value)
-                           (on-change-fn
-                             (case type
-                               "number" (js/parseInt @new-value)
-                               @new-value))
+                           (on-change-fn @new-value)
                            (reset! initial-value @new-value))
                          (close-fn))]
     (fn [_opts]
       (if @editing?
-        [ui/Input {:default-value @new-value
-                   :type          type
-                   :on-key-press  (partial forms/on-return-key
-                                           save-fn)
-                   :on-key-down   (partial forms/on-escape-key
-                                           #(do (reset! new-value @initial-value)
-                                                (close-fn)))
-                   :on-change     (ui-callback/input-callback #(reset! new-value %))
-                   :focus         true
-                   :fluid         true
-                   :action        {:icon     "check"
-                                   :on-click save-fn}}]
+        [ui/Input
+         {:type          (or type "text")
+          :default-value @new-value
+          :on-key-press  (partial forms/on-return-key
+                                  save-fn)
+          :on-key-down   (partial forms/on-escape-key
+                                  #(do (reset! new-value @initial-value)
+                                       (close-fn)))
+          :on-change     (ui-callback/input-callback #(reset! new-value %))
+          :focus         true
+          :fluid         fluid
+          :action        (cond-> {:icon     "check"
+                                  :on-click save-fn
+                                  :content  label}
+                                 label (assoc :label-position "right"))}]
         [:<>
          @new-value
+         (when label [:<> " " label])
          ff/nbsp
          [Pencil editing?]]))))
 

@@ -985,7 +985,7 @@
 
 
 (defn Editable
-  [{:keys [attribute type]}]
+  [{:keys [attribute]}]
   (let [tr           (subscribe [::i18n-subs/tr])
         nuvlabox     (subscribe [::subs/nuvlabox])
         can-edit?    (subscribe [::subs/can-edit?])
@@ -997,7 +997,25 @@
       [components/EditableInput
        {:attribute    attribute
         :resource     @nuvlabox
-        :type         type
+        :on-change-fn on-change-fn}]
+      (get @nuvlabox attribute))))
+
+(defn NumbericEditable
+  [{:keys [attribute]}]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        nuvlabox     (subscribe [::subs/nuvlabox])
+        can-edit?    (subscribe [::subs/can-edit?])
+        id           (:id @nuvlabox)
+        on-change-fn #(dispatch [::events/edit
+                                 id {attribute (js/parseInt %)}
+                                 (@tr [:updated-successfully])])]
+    (if @can-edit?
+      [components/EditableInput
+       {:fluid        false
+        :label        "seconds"
+        :type         "number"
+        :attribute    attribute
+        :resource     @nuvlabox
         :on-change-fn on-change-fn}]
       (get @nuvlabox attribute))))
 
@@ -1007,9 +1025,10 @@
   [:div
    label
    [uix/HelpPopup help]
-   ": "
-   [Editable {:attribute attribute
-              :type      "number"}]])
+   ": every "
+   [NumbericEditable
+    {:attribute attribute
+     :type      "number"}]])
 
 (defn TabOverviewNuvlaBox
   [{:keys [id created updated owner created-by state] :as _nuvlabox}

@@ -1,20 +1,98 @@
 (ns sixsq.nuvla.ui.ui-demo.views
-  (:require [re-frame.core :refer [subscribe]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch inject-cofx reg-event-db
+                                   reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.cimi.views :refer [MenuBar]]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [clojure.string :as str]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+
+;; default-cols
+;; -> vector of field-keys
+;;    order important
+;; available-cols
+;; -> map of field-key->col-config
+;; current-cols
+;; -> vector of field-keys
+;;    order important
+;; only current-cols persisted in local-storage
+
+(reg-event-fx
+  ::remove-col
+  (fn [{{:keys [::current-cols]} :db} [_ col-key]]
+    {:fx [[:dispatch [::set-current-cols
+                      (filterv #(not= col-key %) current-cols)]]]}))
+
+(def default-cols
+  [:id :name :description :created :updated])
+
+(reg-event-db
+  ::add-col
+  (fn [{{:keys [::current-cols]
+         :or {current-cols default-cols}} :db} [_ col-key position]]
+    (when-not (some #{col-key} current-cols)
+      (let [new-cols (if position
+                       (vec (concat (take position current-cols)
+                              [col-key]
+                              (drop position current-cols)))
+                       (into current-cols [col-key]))]
+        {:fx [[:dispatch
+               [::set-current-cols
+                new-cols]]]}))))
+
+(reg-event-db
+  ::set-current-cols
+  (fn [db [_ cols]]
+    (assoc db ::current-cols cols)))
+
+(comment
+  (if (some #{:ka} [:k :b]) true false)
+
+  ;; add as second column
+  (dispatch [::add-col :updated 1])
+
+  ;; remove column
+  (dispatch [::remove-col :updated])
+
+  ;; no position adds as last column
+  (dispatch [::add-col :updated])
+  ;; adding same column again does not work
+  (dispatch [::add-col :updated])
+
+  ;; setting default column
+  (dispatch [::set-current-cols default-cols]))
+
+(reg-sub
+  ::get-current-cols
+  :-> ::current-cols)
+
+(reg-event-fx
+  ::init-table-col-config
+  [(inject-cofx :storage/get {:name "nuvla.ui.table.column-configs"})]
+  (fn []))
+
 
 (defn TableColsEditable
   [props]
-  (let [all-cols ((some-fn
-                    (comp #(some->> % ( map :field-key)) :columns)
-                    (comp keys first :rows))
-
-                  props)]
-    [Table props]))
+  (let [default-cols
+        (or
+          (:columns props)
+          default-cols)
+        available-cols (merge
+                         (let [ks (mapcat keys (:rows props))]
+                           (zipmap
+                             ks
+                             (map (fn [k] {:field-key k}) ks)))
+                         (into {} (map (juxt :field-key identity) (:columns props))))
+        current-cols   (subscribe [::get-current-cols])]
+    (fn []
+      [Table (assoc props :col-config
+               {:default-cols default-cols
+                :available-cols available-cols
+                :current-cols @current-cols}
+               :columns (mapv (fn [k] (available-cols k))
+                          (or @current-cols default-cols)))])))
 
 (defn UiDemo
   []

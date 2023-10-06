@@ -182,8 +182,7 @@
                                          {:header  (cond-> (str "error editing " resource-id)
                                                            status (str " (" status ")"))
                                           :content message
-                                          :type    :error}])
-                              (dispatch [::set-nuvlabox nuvlabox]))
+                                          :type    :error}]))
                             (do
                               (when success-msg
                                 (dispatch [::messages-events/add

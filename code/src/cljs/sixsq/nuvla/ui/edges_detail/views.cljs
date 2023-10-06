@@ -1001,7 +1001,7 @@
       (get @nuvlabox attribute))))
 
 (defn NumbericEditable
-  [{:keys [attribute]}]
+  [{:keys [attribute label]}]
   (let [tr           (subscribe [::i18n-subs/tr])
         nuvlabox     (subscribe [::subs/nuvlabox])
         can-edit?    (subscribe [::subs/can-edit?])
@@ -1012,23 +1012,22 @@
     (if @can-edit?
       [components/EditableInput
        {:fluid        false
-        :label        "seconds"
+        :label        label
         :type         "number"
         :attribute    attribute
         :resource     @nuvlabox
         :on-change-fn on-change-fn}]
-      (get @nuvlabox attribute))))
+      (str (get @nuvlabox attribute) " " label))))
 
 (defn LabelReportInterval
   [{:keys [label help attribute]}]
-  ;; FIXME add min max validation for the input
   [:div
    label
    [uix/HelpPopup help]
    ": every "
    [NumbericEditable
     {:attribute attribute
-     :type      "number"}]])
+     :label     "seconds"}]])
 
 (defn TabOverviewNuvlaBox
   [{:keys [id created updated owner created-by state] :as _nuvlabox}
@@ -1226,15 +1225,15 @@
 
 (defn TelemetryNextTime
   [next-telemetry]
-  (let [locale (subscribe [::i18n-subs/locale])
-        moment (some-> next-telemetry time/parse-iso8601)]
+  (let [locale                (subscribe [::i18n-subs/locale])
+        next-telemetry-moment (some-> next-telemetry time/parse-iso8601)]
     [uix/ForceRerenderComponentByDelay
      (fn []
        [:p
-        (if (time/before-now? moment)
-          [:<> "Missing telemetry report since "]
+        (if (time/before-now? next-telemetry-moment)
+          [:<> "Missing telemetry report for "]
           [:<> "Next telemetry report is expected "])
-        (some-> next-telemetry (time/parse-ago @locale))])
+        (some-> next-telemetry-moment (time/format-distance @locale))])
      5000]))
 
 (defn NextTelemetryStatus

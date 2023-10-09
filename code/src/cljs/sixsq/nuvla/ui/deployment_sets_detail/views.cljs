@@ -61,13 +61,13 @@
 
 (defn GuardedMenuItem
   [{:keys [validation-sub enabled] :or {enabled true}} & children]
-  (let [tr             (subscribe [::i18n-subs/tr])
+  (let [tr        (subscribe [::i18n-subs/tr])
         {:keys [valid? errors]} @(subscribe validation-sub)
-        enabled?       (and valid? enabled)
-        menu-item      [ui/MenuItem
-                        {:disabled (not enabled?)
-                         :class    (when enabled? "primary-menu-item")}
-                        children]]
+        enabled?  (and valid? enabled)
+        menu-item [ui/MenuItem
+                   {:disabled (not enabled?)
+                    :class    (when enabled? "primary-menu-item")}
+                   children]]
     (if valid?
       menu-item
       [ui/Popup
@@ -76,8 +76,8 @@
 
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        enabled?       @(subscribe [::subs/operation-enabled? "start"])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? @(subscribe [::subs/operation-enabled? "start"])]
     [uix/ModalDanger
      {:on-confirm         (fn [_]
                             (dispatch [::events/operation
@@ -100,27 +100,27 @@
   [{:keys [id] :as deployment-set} warn-msg]
   (let [tr       (subscribe [::i18n-subs/tr])
         enabled? (subscribe [::subs/operation-enabled? "stop"])]
-  [uix/ModalDanger
-     {:on-confirm  (fn [_]
-                     (dispatch [::events/operation
-                                {:resource-id id
-                                 :operation "stop"}]))
-      :trigger     (r/as-element
-                     [ui/MenuItem
-                      {:disabled (not @enabled?)}
-                      [icons/StopIcon]
-                      (@tr [:stop])])
-      :content     [:h3 (depl-set->modal-content deployment-set)]
-      :header      (@tr [:stop-deployment-set])
-      :danger-msg  warn-msg
-      :button-text (@tr [:stop])
+    [uix/ModalDanger
+     {:on-confirm         (fn [_]
+                            (dispatch [::events/operation
+                                       {:resource-id id
+                                        :operation   "stop"}]))
+      :trigger            (r/as-element
+                            [ui/MenuItem
+                             {:disabled (not @enabled?)}
+                             [icons/StopIcon]
+                             (@tr [:stop])])
+      :content            [:h3 (depl-set->modal-content deployment-set)]
+      :header             (@tr [:stop-deployment-set])
+      :danger-msg         warn-msg
+      :button-text        (@tr [:stop])
       :with-confirm-step? true}]))
 
 
 (defn UpdateButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        enabled?       @(subscribe [::subs/operation-enabled? "update"])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? @(subscribe [::subs/operation-enabled? "update"])]
     [uix/ModalDanger
      {:on-confirm         (fn [_]
                             (dispatch [::events/operation
@@ -147,15 +147,15 @@
         content  (depl-set->modal-content deployment-set)
         enabled? (subscribe [::subs/operation-enabled? "delete"])]
     [uix/ModalDanger
-     {:on-confirm  #(dispatch [::events/delete])
-      :trigger     (r/as-element [ui/MenuItem
-                                  {:disabled (not @enabled?)}
-                                  [icons/TrashIconFull]
-                                  (@tr [:delete])])
-      :content     [:h3 content]
-      :header      (@tr [:delete-deployment-set])
-      :danger-msg  warn-msg
-      :button-text (@tr [:delete])
+     {:on-confirm         #(dispatch [::events/delete])
+      :trigger            (r/as-element [ui/MenuItem
+                                         {:disabled (not @enabled?)}
+                                         [icons/TrashIconFull]
+                                         (@tr [:delete])])
+      :content            [:h3 content]
+      :header             (@tr [:delete-deployment-set])
+      :danger-msg         warn-msg
+      :button-text        (@tr [:delete])
       :with-confirm-step? true}]))
 
 (defn SaveButton
@@ -233,9 +233,14 @@
   (let [deployment-set (subscribe [::subs/deployment-set])
         can-edit?      (subscribe [::subs/can-edit?])
         on-change-fn   #(dispatch [::events/edit attribute %])]
-    (if (or creating? @can-edit?)
-      [components/EditableInput attribute @deployment-set on-change-fn]
-      [ui/TableCell (get @deployment-set attribute)])))
+    [ui/TableCell
+     (if (or creating? @can-edit?)
+       (get @deployment-set attribute)
+       [components/EditableInput
+        {:resource     @deployment-set
+         :attribute    attribute
+         :on-change-fn on-change-fn}]
+       )]))
 
 (def ops-status->color
   {"OK"  "green"
@@ -1068,59 +1073,57 @@
     (fn []
       (when (or @deployment-set creating?)
         [tab/Tab
-         {:db-path [::spec/tab]
-          :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
-                                :key     :overview
-                                :icon    icons/i-eye}
-                     :render   #(r/as-element [TabOverview uuid creating?])}
-                    {:menuItem {:key :apps
-                                :content
-                                (let [tab-title (tr [:apps-config])]
-                                  (if creating?
-                                    (r/as-element
-                                      [ui/Popup {:trigger (r/as-element
-                                                            [:span
-                                                             tab-title])
-                                                 :content (tr [:save-before-configuring-apps])}])
-                                    (let [error? @(subscribe [::subs/apps-config-validation-error?])]
-                                      (r/as-element
-                                        [:span
-                                         {:style {:color (if error? utils-forms/dark-red "black")}}
-                                         tab-title]))))
-                                :icon icons/i-gear
-                                :disabled (empty? @apps-sets)}
-                     :render   #(r/as-element
-                                  [ConfigureApps
-                                   0
-                                   (get-in @apps-sets [0 :applications])])}
-                    {:menuItem {:key :edges
-                                :content
-                                (let [tab-title (str/capitalize (tr [:edges]))]
-                                  (if creating?
-                                    (r/as-element
-                                      [ui/Popup {:trigger (r/as-element
-                                                            [:span
-                                                             tab-title])
-                                                 :content (tr [:depl-group-add-one-edge-to-enable-tab])}])
-                                    tab-title))
-                                :icon icons/i-box
-                                :disabled (empty? @edges)}
-                     :render   #(r/as-element
-                                  [EdgesTab])}
-                    {:menuItem {:key :deployments
-                                :content
-                                (let [tab-title (str/capitalize (str/capitalize (tr [:deployments])))]
-                                  (if creating?
-                                    (r/as-element
-                                      [ui/Popup {:trigger (r/as-element
-                                                            [:span
-                                                             tab-title])
-                                                 :content (tr [:depl-group-save-and-start-to-enable-tab])}])
-                                    tab-title))
-                                :icon icons/i-rocket
-                                :disabled (zero? (:total @depl-all))}
-                     :render #(r/as-element
-                                [DeploymentsTab uuid])}]
+         {:db-path                 [::spec/tab]
+          :panes                   [{:menuItem {:content (str/capitalize (tr [:overview]))
+                                                :key     :overview
+                                                :icon    icons/i-eye}
+                                     :render   #(r/as-element [TabOverview uuid creating?])}
+                                    {:menuItem {:key      :apps
+                                                :content
+                                                (let [tab-title (tr [:apps-config])]
+                                                  (if creating?
+                                                    (r/as-element
+                                                      [ui/Popup {:trigger (r/as-element
+                                                                            [:span
+                                                                             tab-title])
+                                                                 :content (tr [:save-before-configuring-apps])}])
+                                                    (let [error? @(subscribe [::subs/apps-config-validation-error?])]
+                                                      (r/as-element
+                                                        [:span
+                                                         {:style {:color (if error? utils-forms/dark-red "black")}}
+                                                         tab-title]))))
+                                                :icon     icons/i-gear
+                                                :disabled (empty? @apps-sets)}
+                                     :render   #(r/as-element
+                                                  [ConfigureApps
+                                                   0
+                                                   (get-in @apps-sets [0 :applications])])}
+                                    {:menuItem {:key      :edges
+                                                :content
+                                                (let [tab-title (str/capitalize (tr [:edges]))]
+                                                  (if creating?
+                                                    (r/as-element
+                                                      [ui/Popup {:trigger (r/as-element [:span tab-title])
+                                                                 :content (tr [:depl-group-add-one-edge-to-enable-tab])}])
+                                                    tab-title))
+                                                :icon     icons/i-box
+                                                :disabled (empty? @edges)}
+                                     :render   #(r/as-element
+                                                  [EdgesTab])}
+                                    {:menuItem {:key      :deployments
+                                                :content
+                                                (let [tab-title (str/capitalize (str/capitalize (tr [:deployments])))]
+                                                  (if creating?
+                                                    (r/as-element
+                                                      [ui/Popup {:trigger (r/as-element
+                                                                            [:span
+                                                                             tab-title])
+                                                                 :content (tr [:depl-group-save-and-start-to-enable-tab])}])
+                                                    tab-title))
+                                                :icon     icons/i-rocket
+                                                :disabled (zero? (:total @depl-all))}
+                                     :render   #(r/as-element
+                                                  [DeploymentsTab uuid])}]
           :ignore-chng-protection? true
           :menu                    {:secondary true
                                     :pointing  true}}]))))

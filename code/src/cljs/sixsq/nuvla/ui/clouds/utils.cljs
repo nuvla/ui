@@ -124,10 +124,6 @@
         (cond-> (and (= template-type "coe") coe-manager-install) (assoc-in [:template :cluster-params :coe-manager-install] coe-manager-install))
         (cond-> (and (= template-type "coe") management-credential) (assoc-in [:template :management-credential] management-credential)))))
 
-(defn infra-support-pull?
-  [{:keys [capabilities] :as _infrastructure-service}]
-  (contains? (set capabilities) "NUVLA_JOB_PULL"))
-
 (defn swarm-manager?
   [{:keys [swarm-enabled swarm-manager] :as _infra-service}]
   (and (true? swarm-enabled)

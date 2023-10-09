@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -47,39 +48,40 @@
         [ui/TableHeaderCell {:row-span 2 :text-align "left"} (str/capitalize (@tr [:rights]))]
         [ui/TableHeaderCell (merge border-left-style {:col-span 3})
          (str/capitalize (@tr [:edit]))
-         [InfoIcon :acl-rights-edit]]
+         [uix/HelpPopup (@tr [:acl-rights-edit])]]
         [ui/TableHeaderCell (merge border-left-style {:col-span 3})
          (str/capitalize (@tr [:view]))
-         [InfoIcon :acl-rights-view]]
+         [uix/HelpPopup (@tr [:acl-rights-view])]]
         [ui/TableHeaderCell (merge border-left-style {:row-span 2})
          (str/capitalize (@tr [:manage]))
-         [InfoIcon :acl-rights-manage]]
+         [uix/HelpPopup (@tr [:acl-rights-manage])]]
         [ui/TableHeaderCell (merge border-left-style {:row-span 2})
          (str/capitalize (@tr [:delete]))
-         [InfoIcon :acl-rights-delete]]
+         [uix/HelpPopup (@tr [:acl-rights-delete])]]
         [ui/TableHeaderCell {:row-span 2}]]
        [ui/TableRow
-        [ui/TableHeaderCell border-left-style "Acl" [InfoIcon :acl-rights-edit-acl]]
-        [ui/TableHeaderCell "Data" [InfoIcon :acl-rights-edit-data]]
-        [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-edit-meta]]
-        [ui/TableHeaderCell border-left-style "Acl" [InfoIcon :acl-rights-view-acl]]
-        [ui/TableHeaderCell "Data" [InfoIcon :acl-rights-view-data]]
-        [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-view-meta]]]]
+        [ui/TableHeaderCell border-left-style "Acl"
+         [uix/HelpPopup (@tr [:acl-rights-edit-acl])]]
+        [ui/TableHeaderCell "Data" [uix/HelpPopup (@tr [:acl-rights-edit-data])]]
+        [ui/TableHeaderCell "Meta" [uix/HelpPopup (@tr [:acl-rights-edit-meta])]]
+        [ui/TableHeaderCell border-left-style "Acl" [uix/HelpPopup (@tr [:acl-rights-view-acl])]]
+        [ui/TableHeaderCell "Data" [uix/HelpPopup (@tr [:acl-rights-view-data])]]
+        [ui/TableHeaderCell "Meta" [uix/HelpPopup (@tr [:acl-rights-view-meta])]]]]
       [ui/TableHeader
        [ui/TableRow
         [ui/TableHeaderCell {:text-align "left"} (str/capitalize (@tr [:rights]))]
         [ui/TableHeaderCell
          (str/capitalize (@tr [:edit]))
-         [InfoIcon :acl-rights-edit]]
+         [uix/HelpPopup (@tr [:acl-rights-edit])]]
         [ui/TableHeaderCell
          (str/capitalize (@tr [:view]))
-         [InfoIcon :acl-rights-view]]
+         [uix/HelpPopup (@tr [:acl-rights-view])]]
         [ui/TableHeaderCell
          (str/capitalize (@tr [:manage]))
-         [InfoIcon :acl-rights-manage]]
+         [uix/HelpPopup (@tr [:acl-rights-manage])]]
         [ui/TableHeaderCell
          (str/capitalize (@tr [:delete]))
-         [InfoIcon :acl-rights-delete]]
+         [uix/HelpPopup (@tr [:acl-rights-delete])]]
         [ui/TableHeaderCell]]])))
 
 
@@ -240,8 +242,7 @@
           [ui/TableRow
            [ui/TableHeaderCell
             (str/capitalize (@tr [:owners]))
-            [InfoIcon :acl-owners]
-
+            [uix/HelpPopup (@tr [:acl-owners])]
             [icons/Icon {:name     (if is-advanced? icons/i-compress icons/i-expand)
                          :style    {:float "right"}
                          :link     true

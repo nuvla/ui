@@ -9,7 +9,7 @@
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -344,7 +344,7 @@
     {::cimi-api-fx/search [:credential
                            {:filter  (str "subtype='" subtype "'")
                             :orderby "name:asc, id:asc"
-                            :select "id, name"
+                            :select  "id, name"
                             :last    10000}
                            #(setter (map (fn [{id :id, name :name}]
                                            {:key id, :value id, :text name})
@@ -388,8 +388,10 @@
    i {env-name        :name
       env-description :description
       env-required    :required :as env-variable}]
-  [ui/FormField {:required env-required}
-   [:label env-name ff/nbsp (ff/help-popup env-description)]
+  [ui/FormField
+   [uix/FieldLabel {:name       env-name
+                    :required?  env-required
+                    :help-popup [uix/HelpPopup env-description]}]
    [EnvVarInput db-path href read-only? error? i env-variable]])
 
 (defn EnvVariables
@@ -423,15 +425,15 @@
         preselected?   (and (some? value)
                             (zero? (count options)))
         registry-label (r/as-element
-                         [:label (or name id) ff/nbsp
-                          (when description (ff/help-popup description))])
+                         [uix/FieldLabel {:name       (or name id)
+                                          :required?  required?
+                                          :help-popup (when description [uix/HelpPopup description])}])
         disabled?      (or preselected? read-only?)
         placeholder    (if preselected?
                          (tr [:preselected])
                          (tr [:select-credential]))]
     [ui/FormDropdown
-     {:required    required?
-      :label       registry-label
+     {:label       registry-label
       :selection   true
       :value       value
       :disabled    disabled?

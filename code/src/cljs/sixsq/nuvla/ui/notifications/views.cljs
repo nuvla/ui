@@ -491,7 +491,7 @@
                         :on-change      (ui-callback/value #(dispatch [::events/update-notification-subscription-config
                                                                        :criteria
                                                                        {:reset-start-date (js/Number %)}]))}]
-             [:div (ff/help-popup "min: 1, max: 31")]]
+             [:div [uix/HelpPopup "min: 1, max: 31"]]]
             [:div {:on-click #(dispatch (when (not disabled?) [::events/choose-custom-reset]))
                    :style    {:display :flex :align-items :center :align-self "end"}}
              [:input {:type      :radio
@@ -516,7 +516,7 @@
                         :label          (@tr [:days])
                         :label-position :right
                         :on-change      (ui-callback/value #(dispatch [::events/update-custom-days %]))}]
-             [:div (ff/help-popup "min: 1, max: 999")]]]])))))
+             [:div [uix/HelpPopup "min: 1, max: 999"]]]]])))))
 
 (def default-start-date 1)
 (def default-custom-interval 1)
@@ -1026,15 +1026,15 @@
    {:style {:font-weight 600}}
    [ui/TableRow
     [ui/TableCell [:span (str/capitalize (@tr [:name]))]
-     [:span ff/nbsp (ff/help-popup (@tr [:subscription-name]))]]
+     [uix/HelpPopup (@tr [:subscription-name])]]
     [ui/TableCell [:span (str/capitalize (@tr [:criteria]))]
-     [:span ff/nbsp (ff/help-popup (@tr [:criteria-for-notifications]))]]
+     [uix/HelpPopup (@tr [:criteria-for-notifications])]]
     [ui/TableCell
      [:span (str/capitalize (@tr [:enable]))]
-     [:span ff/nbsp (ff/help-popup (@tr [:notifications-enable-disable-help]))]]
+     [uix/HelpPopup (@tr [:notifications-enable-disable-help])]]
     [ui/TableCell
      [:span (str/capitalize (@tr [:notification-methods]))]
-     [:span ff/nbsp (ff/help-popup (@tr [:notifications-methods-help]))]]
+     [uix/HelpPopup (@tr [:notifications-methods-help])]]
     [ui/TableCell
      [:span (str/capitalize "action")]]]])
 

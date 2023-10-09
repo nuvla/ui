@@ -16,7 +16,6 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.utils.form-fields :as forms]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -172,7 +171,7 @@
       [uix/Accordion
        [:<>
         [:div (@tr [:module-publish-port]) " "
-         [:span forms/nbsp (forms/help-popup (@tr [:module-ports-help]))]]
+         [uix/HelpPopup (@tr [:module-ports-help])]]
         (if (empty? @ports)
           [ui/Message
            (str/capitalize (str (@tr [:no-ports]) "."))]
@@ -258,7 +257,7 @@
       [uix/Accordion
        [:<>
         [:div "Container volumes (i.e. mounts) "
-         [:span forms/nbsp (forms/help-popup (@tr [:module-mount-help]))]]
+         [uix/HelpPopup (@tr [:module-mount-help])]]
         (if (empty? @mounts)
           [ui/Message
            (str/capitalize (str (@tr [:no-mounts]) "."))]

@@ -296,7 +296,7 @@
 (defn mandatory-icon
   []
   [:sup " "
-   [icons/Icon {:class :cog
+   [icons/Icon {:class :asterisk
                 :size  :tiny
                 :color :red}]])
 

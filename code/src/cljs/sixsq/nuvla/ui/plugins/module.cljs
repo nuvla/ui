@@ -42,6 +42,10 @@
   [db-path href]
   (db-module-subpath db-path href ::overwrite))
 
+(defn- db-new-version-module-href-path
+  [db-path href]
+  (db-module-subpath db-path href ::new-version-module-href-path))
+
 (defn- db-module-loading-registries-path
   [db-path href]
   (db-module-subpath db-path href ::loading?))
@@ -189,13 +193,6 @@
        :fx [[:dispatch [::resolve-private-registries db-path href private-registries]]
             [:dispatch [::resolve-registries-creds db-path href private-registries]]]})))
 
-(reg-event-fx
-  ::change-version
-  (fn [{db :db} [_ db-path href]]
-    (let [change-event (get-in db (conj db-path change-event-module-version))]
-      {:fx [[:dispatch [::load-module db-path href]]
-            (when change-event
-              [:dispatch (conj change-event href)])]})))
 
 (reg-event-fx
   ::update-env
@@ -239,6 +236,36 @@
         versions-indexed  (module-versions-indexed module)]
     (get-version-id versions-indexed module-content-id)))
 
+(reg-sub
+  ::new-version-module-href
+  (fn [db [_ db-path href]]
+    (get-in db (db-new-version-module-href-path db-path href))))
+
+(defn- db-version-href
+  [db db-path href version-module-href]
+  (let [module           (db-module db db-path href)
+        versions-indexed (module-versions-indexed module)]
+    (str (:id module) "_" (get-version-id versions-indexed version-module-href))))
+
+(reg-event-fx
+  ::change-version
+  (fn [{db :db} [_ db-path href version-module-href]]
+    (let [new-version-href (db-version-href db db-path href version-module-href)
+          change-event     (get-in db (conj db-path change-event-module-version))]
+      {:db (assoc-in db (db-new-version-module-href-path db-path href) version-module-href)
+       :fx [[:dispatch [::load-module db-path new-version-href]]
+            (when change-event
+              [:dispatch (conj change-event new-version-href)])]})))
+
+(defn db-changed-version
+  [db db-path href]
+  (let [module                  (db-module db db-path href)
+        versions-indexed        (module-versions-indexed module)
+        version-module-href     (-> module :content :id)
+        new-version-module-href (get-in db (db-new-version-module-href-path db-path href))]
+    (when (and (not (str/blank? new-version-module-href))
+               (not= new-version-module-href version-module-href))
+      (get-version-id versions-indexed new-version-module-href))))
 
 (defn- db-module-env-vars
   [db db-path href]
@@ -489,19 +516,19 @@
   [{:keys [db-path href change-event read-only?]
     :or   {read-only? false}
     :as   _opts}]
-  (let [module           (subscribe [::module db-path href])
-        versions-indexed (subscribe [::module-versions-indexed db-path href])
-        options          (subscribe [::module-versions-options db-path href])]
+  (let [module                  (subscribe [::module db-path href])
+        new-version-module-href (subscribe [::new-version-module-href db-path href])
+        options                 (subscribe [::module-versions-options db-path href])]
     (dispatch [::helpers/set db-path change-event-module-version change-event])
-    (let [{:keys [id content]} @module]
+    (let [{:keys [content]} @module
+          value (or @new-version-module-href (:id content))]
       [ui/FormDropdown
-       {:value     (:id content)
+       {:value     value
         :scrolling true
         :upward    false
         :selection true
         :on-change (ui-callback/value
-                     #(dispatch [::change-version db-path
-                                 (str id "_" (get-version-id @versions-indexed %))]))
+                     #(dispatch [::change-version db-path href %]))
         :fluid     true
         :options   @options
         :disabled  read-only?}])))

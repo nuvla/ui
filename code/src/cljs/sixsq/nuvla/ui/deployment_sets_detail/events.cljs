@@ -1,15 +1,14 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.apps.effects :as apps-fx]
             [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
-            [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
-            [sixsq.nuvla.ui.deployments.spec :as deployments-spec]
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.edges.spec :as edges-spec]
             [sixsq.nuvla.ui.edges.utils :as edge-utils]
@@ -19,7 +18,6 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
-            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
             [sixsq.nuvla.ui.plugins.module :as module-plugin :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
@@ -67,19 +65,15 @@
   []
   (dispatch [::refresh]))
 
-(reg-event-db
-  ::clear-target-edges
-  (fn [db]
-    (dissoc db ::spec/edges ::spec/edges-documents)))
-
 (reg-event-fx
   ::init
-  (fn []
-    {:fx [[:dispatch [::clear-target-edges]]
-          [:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
+  (fn [{:keys [db]}]
+    {:db (merge db spec/defaults)
+     :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
           [:dispatch [::refresh]]
-          [:dispatch [::main-events/changes-protection? false]]]}))
+          [:dispatch [::main-events/changes-protection? false]]
+          [:dispatch [::disable-form-validation]]]}))
 
 (reg-event-fx
   ::clear-deployments
@@ -113,12 +107,13 @@
             (target-selector/build-spec)))
 
 (defn load-module-configurations
-  [modules-by-id fx [id {:keys [applications]}]]
+  [db modules-by-id fx [id {:keys [applications]}]]
   (->> applications
        (map (fn [{module-id :id :keys [version
                                        environmental-variables
                                        registries-credentials]}]
-              (when (get modules-by-id module-id)
+              (when (and (get modules-by-id module-id)
+                         (nil? (module-plugin/db-module db [::spec/apps-sets id] module-id)))
                 [:dispatch [::module-plugin/load-module
                             [::spec/apps-sets id]
                             (str module-id "_" version)
@@ -161,7 +156,7 @@
                                   apps-sets)
           new-db            (reduce restore-applications
                                     db merged-configs)
-          fx                (reduce (partial load-module-configurations modules-by-id)
+          fx                (reduce (partial load-module-configurations db modules-by-id)
                                     [] merged-configs)
           all-apps-visible? (= total-apps-count (count apps))]
       (if all-apps-visible?
@@ -220,10 +215,14 @@
 (reg-event-fx
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set fx]]
-    (let [parent-ids (get-target-fleet-ids deployment-set)]
+    (let [deployment-set-edited (get db ::spec/deployment-set-edited)
+          parent-ids (get-target-fleet-ids deployment-set)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
                      ::spec/deployment-set deployment-set
-                     ::main-spec/loading? false)
+                     ::main-spec/loading? false
+                     ::spec/deployment-set-edited (if (some? deployment-set-edited)
+                                                    deployment-set-edited
+                                                    deployment-set))
        :fx [fx
             [:dispatch [::resolve-to-ancestor-resource
                         {:ids                    parent-ids
@@ -257,9 +256,7 @@
 (reg-event-fx
   ::get-deployment-set
   (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id fx]]
-    {:db               (cond-> db
-                               (not= (:id deployment-set) id) (merge spec/defaults))
-     ::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
+    {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]]}))
@@ -316,9 +313,10 @@
                           {:header  success-msg
                            :content success-msg
                            :type    :success}]))
-             (dispatch [::set-deployment-set-edited nil])
+             (dispatch [::set-deployment-set-edited %])
              (dispatch [::set-deployment-set %])
-             (dispatch [::main-events/changes-protection? false])))]})))
+             (dispatch [::main-events/changes-protection? false])
+             (dispatch [::disable-form-validation])))]})))
 
 (reg-event-fx
   ::delete
@@ -382,7 +380,6 @@
             [::cimi-api-fx/add
              [:deployment-set body
               #(do
-                 (dispatch [::set-deployment-set-edited nil])
                  (dispatch [::routing-events/navigate routes/deployment-sets-details
                             {:uuid (general-utils/id->uuid (:resource-id %))}]))
               :on-error #(dispatch [::main-events/changes-protection? true])]]]})))
@@ -504,21 +501,36 @@
 (defn enrich-app
   [app]
   (let [versions (:versions app)
-        published-versions (filter (comp true? :published) (:versions app))
-        version-id (:href (or (last published-versions) (last versions)))
-        app-with-content (assoc-in app [:content :id] version-id)
+        version-id (-> app :content :id)
         version-no (get-version-id (map-indexed vector versions) version-id)]
-    (assoc app-with-content :version version-no)))
+    (assoc app :version version-no)))
+
+(reg-event-fx
+  ::do-add-app
+  (fn [{{:keys [current-route] :as db} :db} [_ app]]
+    (let [db-path                 (subs/create-apps-creation-db-path current-route)
+          app-with-version-number (enrich-app app)]
+      {:db (update-in db db-path (fnil conj []) app-with-version-number)
+       :fx [[:dispatch [::fetch-app-picker-apps
+                        ::spec/pagination-apps-picker]]]})))
+
+(defn version-id-to-add
+  [app]
+  (let [versions (:versions app)
+        published-versions (filter (comp true? :published) (:versions app))]
+    (:href (or (last published-versions) (last versions)))))
 
 (reg-event-fx
   ::add-app-from-picker
-  (fn [{{:keys [current-route] :as db} :db} [_ app]]
+  (fn [_ [_ app]]
     (if (= (:subtype app)
            "applications_sets")
       {::cimi-api-fx/get [(:id app) #(dispatch [::add-apps-set-apps %])]}
-      (let [db-path  (subs/create-apps-creation-db-path current-route)
-            app-with-version-number (enrich-app app)]
-        {:db (update-in db db-path (fnil conj []) app-with-version-number)
+      (let [{:keys [path versions]} app
+            version-id (version-id-to-add app)]
+        {::apps-fx/get-module [path
+                               (get-version-id (map-indexed vector versions) version-id)
+                               #(dispatch [::do-add-app %])]
          :fx [[:dispatch [::fetch-app-picker-apps
                           ::spec/pagination-apps-picker]]]}))))
 
@@ -541,9 +553,16 @@
   (fn [{db :db} [_ apps]]
     (let [db-path  (subs/create-apps-creation-db-path (:current-route db))
           apps (mapv enrich-app apps)]
-      {:db (update-in db db-path (fnil into []) apps)
-       :fx [[:dispatch [::fetch-app-picker-apps
-                        ::spec/pagination-apps-picker]]]})))
+      {:fx (into
+             [[:db (update-in db db-path (fnil into []) [])]
+              [:dispatch [::fetch-app-picker-apps
+                          ::spec/pagination-apps-picker]]]
+             (map (fn [{:keys [path versions] :as app}]
+                    (let [version-id (version-id-to-add app)]
+                      [::apps-fx/get-module [path
+                                             (get-version-id (map-indexed vector versions) version-id)
+                                             #(dispatch [::do-add-app %])]]))
+                  apps))})))
 
 (reg-event-fx
   ::remove-app-from-creation-data
@@ -562,3 +581,13 @@
                         :version    (apps-utils/module-version module-applications-sets)
                         :overwrites (map-indexed (partial applications-sets->overwrites db)
                                                  (-> module-applications-sets :content :applications-sets))}]]]]}))
+
+(reg-event-db
+  ::enable-form-validation
+  (fn [db]
+    (assoc db ::spec/validate-form? true)))
+
+(reg-event-db
+  ::disable-form-validation
+  (fn [db]
+    (assoc db ::spec/validate-form? false)))

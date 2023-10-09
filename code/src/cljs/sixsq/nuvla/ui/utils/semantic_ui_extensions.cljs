@@ -232,10 +232,11 @@
 
 
 (defn PageHeader
-  [icon title & {:keys [inline]}]
+  [icon title & {:keys [inline color]}]
   [:h2 (when inline {:style {:display    :inline
                              :word-break :break-all}})
-   [icons/Icon {:name icon}] " " title])
+   [icons/Icon {:name icon
+                :color color}] " " title])
 
 
 (defn SpanBlockJustified

@@ -37,37 +37,24 @@
   (fn [[stored edited]]
     (merge stored edited)))
 
-;; Please ignore unused new subs: They're used in follow up branch
-(reg-sub
-  ::deployment-set-id
-  :<- [::deployment-set]
-  :-> :id)
 
 (reg-sub
   ::deployment-set-name
   :<- [::deployment-set]
   :-> :name)
 
+
 (reg-sub
-  ::apps
-  :<- [::deployment-set]
-  (fn [deployment-set]
-    (->> deployment-set
-         :applications-sets
-         (mapcat :overwrites)
-         (mapcat :applications))))
+  ::apps-count
+  :<- [::applications-sets-apps-targets]
+  (fn [apps]
+    (count apps)))
 
 (reg-sub
   ::can-edit?
   :<- [::deployment-set]
   (fn [deployment-set]
     (general-utils/can-edit? deployment-set)))
-
-(reg-sub
-  ::can-delete?
-  :<- [::deployment-set]
-  (fn [deployment-set]
-    (general-utils/can-delete? deployment-set)))
 
 (reg-sub
   ::deployment-set-not-found?
@@ -118,13 +105,14 @@
 
 
 (defn- app->app-row-data [{:keys [application i]}]
-  {:idx i
-   :href (:id application)
-   :app-name (:name application)
-   :version  (str "v" (module-plugin/get-version-id
-                        (map-indexed vector (:versions application))
-                        (-> application :content :id)))
-   :last-update (time/time->format (js/Date.))})
+  {:idx         i
+   :href        (:id application)
+   :app         (:name application)
+   :version     {:label   (str "v" (module-plugin/get-version-id
+                                     (map-indexed vector (:versions application))
+                                     (-> application :content :id)))
+                 :created (-> application :content :created)}})
+
 
 (reg-sub
   ::applications-overview-row-data
@@ -216,7 +204,7 @@
 
 (defn create-db-path [db-path temp-id]
   (cond->> db-path
-    (nonblank-string (str temp-id)) (into [::spec/temp-db temp-id])))
+           (nonblank-string (str temp-id)) (into [::spec/temp-db temp-id])))
 
 (defn- get-temp-db-id [current-route]
   (routing-utils/get-query-param current-route creation-temp-id-key))
@@ -225,12 +213,12 @@
 (defn current-route->edges-db-path
   [current-route]
   (create-db-path [::spec/edges]
-    (get-temp-db-id current-route)))
+                  (get-temp-db-id current-route)))
 
 (defn create-apps-creation-db-path
   [current-route]
   (create-db-path [::spec/apps-creation]
-    (get-temp-db-id current-route)))
+                  (get-temp-db-id current-route)))
 
 (reg-sub
   ::apps-creation
@@ -244,7 +232,7 @@
   (fn [apps]
     (map-indexed
       (fn [idx app]
-        (app->app-row-data {:i idx
+        (app->app-row-data {:i           idx
                             :application app}))
       apps)))
 
@@ -316,12 +304,20 @@
   :<- [::apps-creation]
   :<- [::applications-sets]
   :<- [::unsaved-changes?]
-  (fn [[deployment-set-edited edges apps-creation apps-sets unsaved-changes?] [_ creating?]]
-    (and
-      (nonblank-string (:name deployment-set-edited))
-      (seq edges)
-      (seq (if creating? apps-creation apps-sets))
-      (or creating? unsaved-changes?))))
+  (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes?] [_ creating?]]
+    (if creating?
+      (and (not (str/blank? (:name deployment-set-edited)))
+           (seq edges)
+           (seq apps-creation))
+      unsaved-changes?)))
+
+(reg-sub
+  ::operation-enabled?
+  :<- [::deployment-set]
+  :<- [::save-enabled?]
+  (fn [[deployment-set save-enabled?] [_ operation]]
+    (and (not save-enabled?)
+         (general-utils/can-operation? operation deployment-set))))
 
 (reg-sub
   ::opened-modal
@@ -332,3 +328,55 @@
   :<- [::opened-modal]
   (fn [opened-modal [_ id]]
     (= id opened-modal)))
+
+(defn missing-required-env-vars
+  [db]
+  (->> (applications-sets db)
+       (keep-indexed
+         (fn [i {:keys [applications]}]
+           (keep (fn [{:keys [id]}]
+                   (when (seq (module-plugin/db-module-env-vars-in-error
+                                db [::spec/apps-sets i] id))
+                     {:type    :missing-required-env-vars
+                      :path    [:apps-config i id]
+                      :message [:depl-group-mandatory-app-env-var-missing]}))
+                 applications)))
+       (apply concat)))
+
+(defn deployment-set-validation
+  "Returns an array of error maps of the form:
+   ```
+   {:type    <error type>
+    :path    <vector representing the `path` through the ui component hierarchy where the validation error occurred>
+    :message <vector to pass to the `tr` function to obtain a human-readable message for the error>}
+   ```
+  "
+  [db]
+  (let [errors (missing-required-env-vars db)]
+    {:valid? (not (seq errors))
+     :errors errors}))
+
+(reg-sub
+  ::deployment-set-validation
+  deployment-set-validation)
+
+(reg-sub
+  ::apps-config-validation-error?
+  (fn [{:keys [::spec/validate-form?] :as db}]
+    (and validate-form?
+        (some #{:apps-config}
+              (map (comp first :path) (:errors (deployment-set-validation db)))))))
+
+(reg-sub
+  ::app-config-validation-error?
+  (fn [{:keys [::spec/validate-form?] :as db} [_ app-set-idx app-id]]
+    (and validate-form?
+         (some #{[:apps-config app-set-idx app-id]}
+               (map (comp vec (partial take 3) :path)
+                    (:errors (deployment-set-validation db)))))))
+
+(reg-sub
+  ::form-valid?
+  (fn [{:keys [::spec/validate-form?] :as db}]
+    (or (not validate-form?)
+        (:valid? (deployment-set-validation db)))))

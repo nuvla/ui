@@ -676,10 +676,7 @@
                         @nuvlabox
                         #{"edit" "delete" "activate" "decommission"
                           "generate-new-api-key" "commission" "check-api"
-                          "create-log"
-                          ; FIXME
-                          ; "set-offline" "heartbeat"
-                          })]
+                          "create-log" "set-offline" "heartbeat"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj

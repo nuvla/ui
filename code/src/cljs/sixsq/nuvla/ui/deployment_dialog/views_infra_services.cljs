@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-infra-services
   (:require [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.clouds-detail.views :as clouds-detail]
-            [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
@@ -9,7 +8,6 @@
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]))
 
 (defn summary-row
@@ -53,36 +51,16 @@
 
 (defn cred-item
   [{:keys [id name description] :as credential}]
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        selected-credential (subscribe [::subs/selected-credential])
-        status              (subscribe [::creds-subs/credential-check-status id])
-        last-check          (subscribe [::creds-subs/credential-check-last-check id])
+  (let [selected-credential (subscribe [::subs/selected-credential])
         selected?           (= id (:id @selected-credential))]
     [ui/ListItem (cond-> {:active   selected?
                           :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
-      [ui/IconGroup {:size "big"}
-       [icons/KeyIcon]
-       (when (some? @status)
-         [ui/Icon {:corner true
-                   :name   (cond
-                             (= @status "INVALID") "thumbs down"
-                             (= @status "VALID") "thumbs up"
-                             :else "question")
-                   :color  (cond
-                             (= @status "INVALID") "red"
-                             (= @status "VALID") "green"
-                             :else "grey")}])]]
+      [icons/KeyIcon {:size "big"}]]
      [ui/ListContent
       [ui/ListHeader (or name id)]
       (when description
-        [ui/ListDescription description])
-      [ui/ListDescription
-       (@tr [:last-check])
-       [:span
-        (if @last-check
-          [uix/TimeAgo @last-check]
-          (@tr [:not-available]))]]]]))
+        [ui/ListDescription description])]]))
 
 
 (defn creds-list

@@ -282,9 +282,6 @@
         icon-name icons/i-stop]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module parent]} deployment
-            cred-loading?     (subscribe [::creds-subs/credential-check-loading? parent])
-            cred-invalid?     (subscribe [::creds-subs/credential-check-status-invalid? parent])
-            cred-check-status (creds-utils/credential-check-status @cred-loading? @cred-invalid?)
             text1             (str (or name id) (when description " - ") description)
             text2             (str (@tr [:created-from-module]) (or (:name module) (:id module)))
             button            (action-button
@@ -292,7 +289,6 @@
                                  :menu-item?  menu-item?
                                  :on-click    (fn [event]
                                                 (reset! open? true)
-                                                (dispatch [::events/check-credential parent])
                                                 (.stopPropagation event)
                                                 (.preventDefault event))
                                  :disabled?   (not (general-utils/can-operation? "stop" deployment))
@@ -314,11 +310,9 @@
           :content            [:<> [:h3 text1] [:p text2]]
           :header             (@tr [:shutdown-deployment])
           :danger-msg         (@tr [:deployment-shutdown-msg])
-          :button-text        (@tr [(cond
-                                      (= "pull" (:execution-mode deployment)) :schedule-shutdown
-                                      (= :ok cred-check-status) :shutdown
-                                      :else :shutdown-force)])
-          :modal-action       [creds-comp/CredentialCheckPopup parent]}]))))
+          :button-text        (@tr [(if (= "pull" (:execution-mode deployment))
+                                      :schedule-shutdown
+                                      :shutdown)])}]))))
 
 
 (defn DeleteButton

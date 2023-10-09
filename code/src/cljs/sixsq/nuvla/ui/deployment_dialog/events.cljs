@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.credentials.events :as creds-events]
             [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
             [sixsq.nuvla.ui.data.spec :as data-spec]
             [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
@@ -64,11 +63,10 @@
 (reg-event-fx
   ::set-selected-credential
   (fn [{{:keys [::spec/deployment
-                ::spec/data-step-active?] :as db} :db} [_ {:keys [id] :as credential}]]
+                ::spec/data-step-active?] :as db} :db} [_ {:keys [id] :as _credential}]]
     {:db         (assoc db ::spec/selected-credential-id id
                            ::spec/deployment (assoc deployment :parent id))
-     :dispatch-n [(when data-step-active? [::set-data-filters])
-                  [::creds-events/check-credential credential 2]]}))
+     :dispatch-n [(when data-step-active? [::set-data-filters])]}))
 
 (reg-event-db
   ::set-active-step
@@ -177,20 +175,16 @@
                             :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-registries registry-ids reg-creds-ids %])]}))
 
-(reg-event-fx
+(reg-event-db
   ::set-credential-registry
-  (fn [{{:keys [::spec/registries-creds
-                ::spec/infra-registries-creds
-                ::spec/deployment] :as db} :db} [_ infra-id cred-id]]
-    (let [update-registries-creds (update registries-creds infra-id assoc :cred-id cred-id)
-          credential              (->> infra-id
-                                       (get infra-registries-creds)
-                                       (some #(when (= (:id %) cred-id) %)))]
-      {:db       (assoc db ::spec/registries-creds update-registries-creds
-                           ::spec/deployment (deployment-update-registries
-                                               deployment
-                                               update-registries-creds))
-       :dispatch [::creds-events/check-credential credential 2]})))
+  (fn [{:keys [::spec/registries-creds
+               ::spec/infra-registries-creds
+               ::spec/deployment] :as db} [_ infra-id cred-id]]
+    (let [update-registries-creds (update registries-creds infra-id assoc :cred-id cred-id)]
+      (assoc db ::spec/registries-creds update-registries-creds
+                ::spec/deployment (deployment-update-registries
+                                    deployment
+                                    update-registries-creds)))))
 
 (reg-event-fx
   ::set-deployment

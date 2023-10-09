@@ -300,11 +300,3 @@
       href)
     (and (= href "credential-template/generate-ssh-key")
          (nil? private-key))))
-
-
-(defn credential-check-status
-  [loading? invalid?]
-  (cond
-    loading? :loading
-    invalid? :warning
-    :else :ok))

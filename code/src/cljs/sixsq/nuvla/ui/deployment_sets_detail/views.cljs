@@ -1103,10 +1103,7 @@
                                                 (let [tab-title (str/capitalize (tr [:edges]))]
                                                   (if creating?
                                                     (r/as-element
-                                                      [ui/Popup {:trigger (r/as-element
-                                                                            [:span
-                                                                             [:span
-                                                                              tab-title])
+                                                      [ui/Popup {:trigger (r/as-element [:span tab-title])
                                                                  :content (tr [:depl-group-add-one-edge-to-enable-tab])}])
                                                     tab-title))
                                                 :icon     icons/i-box

@@ -789,6 +789,7 @@
   ^{:key (str "set-" i)}
   [tab/Tab
    {:db-path [::apps-config]
+    :ignore-chng-protection? true
     :panes   (map
                (fn [{:keys [id]}]
                  {:menuItem {:content (r/as-element

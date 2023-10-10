@@ -73,14 +73,15 @@
 (comment
   (if (some #{:ka} [:k :b]) true false)
 
+
   ;; add as second column
   (dispatch [::add-col
              {:col-key :updated :position 1 :db-path ::table-cols-config}])
 
   ;; remove column
   (dispatch [::reset-current-cols ::table-cols-config])
-  (dispatch [::remove-col :updated ::table-cols-config])
-  (dispatch [::remove-col :created ::table-cols-config])
+  (dispatch [::remove-col :state :sixsq.nuvla.ui.edges.views/table-cols-config])
+  (dispatch [::remove-col :created :sixsq.nuvla.ui.edges.views/table-cols-config])
 
   ;; no position adds as last column
   (dispatch [::add-col {:col-key :updated
@@ -92,7 +93,7 @@
   ;; setting default column
   (dispatch [::set-current-cols default-columns ::table-cols-config])
 
-  (dispatch [::reset-current-cols]))
+  (dispatch [::reset-current-cols :sixsq.nuvla.ui.edges.views/table-cols-config]))
 
 (reg-sub
   ::get-all-current-cols
@@ -163,12 +164,12 @@
                          (into {} (map (juxt :field-key identity) columns)))
         current-cols   (subscribe [::get-current-cols db-path])
         default-cols   (subscribe [::get-default-cols db-path])
-        add-col-fn        (fn [col-key position]
-                            (dispatch [::add-col {:col-key col-key
-                                                  :position position
-                                                  :db-path db-path}]))
+        add-col-fn     (fn [col-key position]
+                         (dispatch [::add-col {:col-key col-key
+                                               :position position
+                                               :db-path db-path}]))
         remove-col-fn (fn [col-key]
-                                   (dispatch [::remove-col col-key db-path]))]
+                        (dispatch [::remove-col col-key db-path]))]
     (dispatch [::init-table-col-config columns db-path])
     (fn [props]
       [:div

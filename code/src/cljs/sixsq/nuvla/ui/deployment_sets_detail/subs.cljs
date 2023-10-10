@@ -87,6 +87,17 @@
   :-> applications-sets)
 
 (reg-sub
+  ::applications
+  (fn [db]
+    (->> (applications-sets db)
+         (map-indexed
+           (fn [i {:keys [applications]}]
+             (map (fn [{:keys [id]}]
+                    (module-plugin/db-module db [::spec/apps-sets i] id)
+                    ) applications)))
+         (apply concat))))
+
+(reg-sub
   ::applications-sets-apps-targets
   (fn [db]
     (->> (applications-sets db)
@@ -220,11 +231,13 @@
   (create-db-path [::spec/apps-creation]
                   (get-temp-db-id current-route)))
 
+(defn apps-creation [{:keys [current-route] :as db}]
+  (let [apps-db-path (create-apps-creation-db-path current-route)]
+    (get-in db apps-db-path)))
+
 (reg-sub
   ::apps-creation
-  (fn [{:keys [current-route] :as db}]
-    (let [apps-db-path (create-apps-creation-db-path current-route)]
-      (get-in db apps-db-path))))
+  apps-creation)
 
 (reg-sub
   ::apps-creation-row-data
@@ -234,6 +247,20 @@
       (fn [idx app]
         (app->app-row-data {:i           idx
                             :application app}))
+      apps)))
+
+(reg-sub
+  ::apps-edited
+  :-> ::spec/apps-edited)
+
+(reg-sub
+  ::apps-row-data
+  :<- [::apps-creation-row-data]
+  :<- [::applications-overview-row-data]
+  :<- [::apps-edited]
+  (fn [[apps-creation apps apps-edited] [_ creating?]]
+    (if (or creating? apps-edited)
+      apps-creation
       apps)))
 
 (reg-sub
@@ -294,8 +321,10 @@
 (reg-sub
   ::unsaved-changes?
   :<- [::deployment-set-stored-and-edited]
-  (fn [[stored edited]]
-    (utils/unsaved-changes? stored edited)))
+  :<- [::apps-edited]
+  (fn [[[stored edited] apps-edited]]
+    (or apps-edited
+        (utils/unsaved-changes? stored edited))))
 
 (reg-sub
   ::save-enabled?
@@ -329,7 +358,14 @@
   (fn [opened-modal [_ id]]
     (= id opened-modal)))
 
-(defn missing-required-env-vars
+(defn apps-errors
+  [db]
+  (when-not (seq (apps-creation db))
+    [{:type    :missing-apps
+      :path    [:apps]
+      :message [:depl-group-apps-missing]}]))
+
+(defn env-vars-errors
   [db]
   (->> (applications-sets db)
        (keep-indexed
@@ -352,13 +388,21 @@
    ```
   "
   [db]
-  (let [errors (missing-required-env-vars db)]
+  (let [errors (concat (apps-errors db)
+                       (env-vars-errors db))]
     {:valid? (not (seq errors))
      :errors errors}))
 
 (reg-sub
   ::deployment-set-validation
   deployment-set-validation)
+
+(reg-sub
+  ::apps-validation-error?
+  (fn [{:keys [::spec/validate-form?] :as db}]
+    (and validate-form?
+         (some #{:apps}
+               (map (comp first :path) (:errors (deployment-set-validation db)))))))
 
 (reg-sub
   ::apps-config-validation-error?

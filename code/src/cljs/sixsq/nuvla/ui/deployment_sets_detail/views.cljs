@@ -191,8 +191,8 @@
              :on-click (if creating?
                          #(dispatch [::events/create])
                          (if (:valid? @validation)
-                           #(dispatch [::events/persist! {:deployment-set deployment-set
-                                                          :success-msg    (@tr [:updated-successfully])}])
+                           #(dispatch [::events/do-edit {:deployment-set deployment-set
+                                                         :success-msg    (@tr [:updated-successfully])}])
                            #(dispatch [::events/enable-form-validation])))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
@@ -368,7 +368,7 @@
                       (.stopPropagation event))}]))
 
 (defn AddButton
-  [id]
+  [id creating?]
   [ui/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
               :icon     icons/i-plus-large
               :style    {:align-self "center"}}])
@@ -394,7 +394,7 @@
          :change-event [::events/fetch-app-picker-apps pagination-db-path]}]])))
 
 (defn AppsPickerModal
-  []
+  [creating?]
   (let [tr       (subscribe [::i18n-subs/tr])
         open?    (subscribe [::subs/modal-open? apps-picker-modal-id])
         close-fn #(dispatch [::events/set-opened-modal nil])
@@ -405,7 +405,9 @@
                  :open       @open?
                  :close-icon true
                  :on-close   close-fn}
-       [uix/ModalHeader {:header (@tr [:create-deployment-group])}]
+       [uix/ModalHeader {:header (@tr (if creating?
+                                        [:create-deployment-group]
+                                        [:edit-deployment-group]))}]
        [ui/ModalContent
         [AppsPicker tab-key ::spec/pagination-apps-picker]]])))
 
@@ -414,13 +416,12 @@
 
 (defn- AppsOverviewTable
   [creating?]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        locale   (subscribe [::i18n-subs/locale])
-        apps-row (if creating?
-                   (subscribe [::subs/apps-creation-row-data])
-                   (subscribe [::subs/applications-overview-row-data]))
-        k->tr-k  {:app :name}
-        route    (subscribe [::route-subs/current-route])]
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        locale                 (subscribe [::i18n-subs/locale])
+        apps-row               (subscribe [::subs/apps-row-data])
+        apps-validation-error? (subscribe [::subs/apps-validation-error?])
+        k->tr-k                {:app :name}
+        route                  (subscribe [::route-subs/current-route])]
     (fn []
       (let [no-apps? (empty? @apps-row)]
         [:<>
@@ -477,26 +478,27 @@
                                                                               :href     (:href row-data)
                                                                               :children [icons/ArrowRightFromBracketIcon]
                                                                               :target   :_self}]])}])}
-                               (when creating?
-                                 {:field-key :remove
-                                  :cell      (fn [{:keys [row-data]}]
-                                               [icons/XMarkIcon
-                                                {:style    {:cursor :pointer}
-                                                 :color    "red"
-                                                 :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
+                               {:field-key :remove
+                                :cell      (fn [{:keys [row-data]}]
+                                             [icons/XMarkIcon
+                                              {:style    {:cursor :pointer}
+                                               :color    "red"
+                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data creating?])}])}]))
                     :rows @apps-row}]])
          [:div {:style {:display :flex :justify-content :center :align-items :center}}
-          (when creating?
-            [:<>
-             [AppsPickerModal]
-             [:div {:style {:margin-top   "1rem"
-                            :margin-bottm "1rem"}}
-              [AddButton apps-picker-modal-id]]])]
-         (when no-apps?
+          [:<>
+           [AppsPickerModal creating?]
            [:div {:style {:margin-top   "1rem"
-                          :margin-left  "auto"
-                          :margin-right "auto"}}
-            (@tr [:add-your-first-app])])]))))
+                          :margin-bottm "1rem"}}
+            [AddButton apps-picker-modal-id creating?]]]]
+         [:div {:style {:margin-top   "1rem"
+                        :margin-left  "auto"
+                        :margin-right "auto"}}
+          (if @apps-validation-error?
+            [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
+            (if no-apps?
+              (@tr [:add-your-first-app])
+              (@tr [:add-app])))]]))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]

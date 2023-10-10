@@ -7,7 +7,8 @@
             [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.cimi.views :refer [MenuBar]]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.icons :as icons]))
 
 ;; default-cols
 ;; -> vector of field-keys
@@ -131,6 +132,25 @@
       {:db (assoc-in db [::default-cols db-path] defaults)
        :fx [[:dispatch [::store-cols cols db-path]]]})))
 
+(defn ConfigureVisibleColumns
+  [{:keys [available-cols db-path]}]
+  (let [current-cols (subscribe [::get-current-cols db-path])
+        default-cols (subscribe [::get-default-cols db-path])
+        new-cols     (r/atom (or @current-cols []))])
+  (fn []
+    ()
+    [ui/Modal
+     {:trigger [icons/AddIcon]}
+     [ui/ModalContent
+      [:div
+       ()]]]))
+
+(defn AddColumnModal
+  []
+  (fn []
+    [ui/Modal
+     {:trigger [icons/AddIcon]}
+     [ui/ModalContent]]))
 
 (defn TableColsEditable
   [{:keys [columns rows]} db-path]
@@ -142,13 +162,22 @@
                              (map (fn [k] {:field-key k}) ks)))
                          (into {} (map (juxt :field-key identity) columns)))
         current-cols   (subscribe [::get-current-cols db-path])
-        default-cols   (subscribe [::get-default-cols db-path])]
+        default-cols   (subscribe [::get-default-cols db-path])
+        add-col-fn        (fn [col-key position]
+                            (dispatch [::add-col {:col-key col-key
+                                                  :position position
+                                                  :db-path db-path}]))
+        remove-col-fn (fn [col-key]
+                                   (dispatch [::remove-col col-key db-path]))]
     (dispatch [::init-table-col-config columns db-path])
     (fn [props]
       [:div
        [Table (assoc props :col-config
-                {:available-cols available-cols
-                 :current-cols   @current-cols}
+                {:default-cols   @default-cols
+                 :available-cols available-cols
+                 :current-cols   @current-cols
+                 :remove-col-fn  remove-col-fn
+                 :add-col-fn     add-col-fn}
                 :columns (->> (or @current-cols @default-cols)
                               (mapv (fn [k] (available-cols k)))
                               (remove nil?)

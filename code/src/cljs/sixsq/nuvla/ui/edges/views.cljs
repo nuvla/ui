@@ -822,7 +822,8 @@
                            :total-count-sub-key [::subs/nuvlaboxes-count]
                            :resources-sub-key [::subs/nuvlaboxes-resources]
                            :select-db-path [::spec/select]
-                           :rights-needed :edit}}]]))
+                           :rights-needed :edit}}
+      ::table-cols-config]]))
 
 
 (defn NuvlaboxTable

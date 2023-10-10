@@ -3,7 +3,6 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 

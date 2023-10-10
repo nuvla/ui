@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-registries
   (:require [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.credentials.components :as creds-comp]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
@@ -53,12 +52,7 @@
         :default-value (@tr [:preselected])}]
       [ui/FormDropdown
        (cond->
-         {:label         (r/as-element
-                           [:<>
-                            Label
-                            (when cred-id
-                              [:span " "
-                               [creds-comp/CredentialCheckPopup cred-id]])])
+         {:label         (r/as-element Label)
           :selection     true
           :default-value cred-id
           :placeholder   (@tr [:select-credential])

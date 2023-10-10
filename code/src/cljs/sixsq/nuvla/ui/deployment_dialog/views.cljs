@@ -2,9 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.credentials.components :as creds-comp]
-            [sixsq.nuvla.ui.credentials.subs :as creds-subs]
-            [sixsq.nuvla.ui.credentials.utils :as creds-utils]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
@@ -34,21 +31,6 @@
   [step-state]
   [step-icon step-state])
 
-
-(defmethod StepIcon :infra-services
-  [{:keys [step-id] :as step-state}]
-  (let [cred-id                (subscribe [::subs/selected-credential-id])
-        credential-loading?    (subscribe [::creds-subs/credential-check-loading? @cred-id])
-        credential-valid?      (subscribe [::creds-subs/credential-check-status-valid? @cred-id])
-        check-status           (creds-utils/credential-check-status
-                                 @credential-loading? (not @credential-valid?))
-        credentials-completed? (subscribe [::subs/credentials-completed?])]
-    (dispatch [::events/set-deploy-status step-id check-status])
-    (or (when (and @credentials-completed? (not= :ok check-status))
-          [creds-comp/CredentialCheckPopup @cred-id])
-        [step-icon step-state])))
-
-
 (defmethod StepIcon :module-version
   [step-state]
   (let [tr                   (subscribe [::i18n-subs/tr])
@@ -66,42 +48,6 @@
                  :disabled is-ok?
                  :position "top center"}]
       [step-icon step-state])))
-
-
-(defmethod StepIcon :registries
-  [{:keys [step-id] :as step-state}]
-  (let [registries-completed? (subscribe [::subs/registries-completed?])
-        registries-creds      (subscribe [::subs/registries-creds])]
-    (or
-      (when @registries-completed?
-        (let
-          [selected-reg-creds (->> (vals @registries-creds)
-                                   (map (fn [{:keys [cred-id preselected?]}]
-                                          (when-not preselected? cred-id)))
-                                   (remove nil?))
-           creds-reg-status   (map
-                                (fn [cred-reg-id]
-                                  (let [loading? (subscribe [::creds-subs/credential-check-loading?
-                                                             cred-reg-id])
-                                        invalid? (subscribe
-                                                   [::creds-subs/credential-check-status-invalid?
-                                                    cred-reg-id])]
-                                    [cred-reg-id
-                                     (creds-utils/credential-check-status @loading? @invalid?)]))
-                                selected-reg-creds)
-           focused-cred-reg   (or (some (fn [[_ status :as c]] (when (= status :warning) c))
-                                        creds-reg-status)
-                                  (some (fn [[_ status :as c]] (when (= status :loading) c))
-                                        creds-reg-status)
-                                  (first creds-reg-status))
-
-           [cred-reg reg-cred-status] focused-cred-reg]
-
-          (dispatch [::events/set-deploy-status step-id (or reg-cred-status :ok)])
-          (when (and cred-reg (not= :ok reg-cred-status))
-            [creds-comp/CredentialCheckPopup cred-reg])))
-      [step-icon step-state]
-      )))
 
 
 (defn deployment-step-state

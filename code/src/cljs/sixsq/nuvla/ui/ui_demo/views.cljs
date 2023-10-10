@@ -1,12 +1,14 @@
 (ns sixsq.nuvla.ui.ui-demo.views
-  (:require [clojure.string :as str]
+  (:require [clojure.edn :as edn]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.cimi.views :refer [MenuBar]]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 ;; default-cols
 ;; -> vector of field-keys
@@ -18,101 +20,136 @@
 ;;    order important
 ;; only current-cols persisted in local-storage
 
+(def local-storage-key
+  "nuvla.ui.table.column-configs")
+
 (reg-event-fx
   ::remove-col
-  (fn [{{:keys [::current-cols]} :db} [_ col-key]]
+  (fn [{{:keys [::current-cols]} :db} [_ col-key db-path]]
     {:fx [[:dispatch [::set-current-cols
-                      (filterv #(not= col-key %) current-cols)]]]}))
+                      (filterv #(not= col-key %) (get current-cols db-path))
+                      db-path]]]}))
 
 (def default-columns
   [:id :name :description :created :updated])
 
-(reg-event-db
+(reg-event-fx
   ::add-col
-  (fn [{{:keys [::current-cols]
-         :or {current-cols default-columns}} :db} [_ col-key position]]
-    (when-not (some #{col-key} current-cols)
-      (let [new-cols (if position
-                       (vec (concat (take position current-cols)
-                              [col-key]
-                              (drop position current-cols)))
-                       (into current-cols [col-key]))]
-        {:fx [[:dispatch
-               [::set-current-cols
-                new-cols]]]}))))
+  (fn [{{:keys [::current-cols
+                ::default-cols]} :db} [_ {:keys [col-key position db-path]}]]
+    (let [cols (get current-cols db-path
+                 (get default-cols db-path))]
+      (when-not (some #{col-key} cols)
+        (let [new-cols (if position
+                         (vec (concat (take position cols)
+                                [col-key]
+                                (drop position cols)))
+                         (into cols [col-key]))]
+          {:fx [[:dispatch
+                 [::set-current-cols
+                  new-cols
+                  db-path]]]})))))
 
 (reg-event-fx
   ::reset-current-cols
-  (fn [{{defaults ::default-cols} :db}]
-    {:fx [[:dispatch [::set-current-cols (or defaults default-columns)]]]}))
+  (fn [{{defaults ::default-cols} :db} [_ db-path]]
+    {:fx [[:dispatch [::set-current-cols (get defaults db-path default-columns) db-path]]]}))
+
+
+(reg-event-fx
+  ::set-current-cols
+  [(inject-cofx :storage/get {:name local-storage-key})]
+  (fn [{storage :storage/get} [_ cols db-path]]
+    {:fx [[:dispatch [::store-cols cols db-path]]]
+     :storage/set {:session? false
+                   :name     local-storage-key
+                   :value    (merge (edn/read-string storage) {db-path cols})}}))
 
 (reg-event-db
-  ::set-current-cols
-  (fn [db [_ cols]]
-(js/console.error cols)
-    (assoc db ::current-cols cols)))
+  ::store-cols
+  (fn [db [_ cols db-path]]
+    (assoc-in db [::current-cols db-path] cols)))
 
 (comment
   (if (some #{:ka} [:k :b]) true false)
 
   ;; add as second column
-  (dispatch [::add-col :updated 1])
+  (dispatch [::add-col
+             {:col-key :updated :position 1 :db-path ::table-cols-config}])
 
   ;; remove column
-  (dispatch [::reset-current-cols])
-  (dispatch [::remove-col :updated])
-  (dispatch [::remove-col :created])
+  (dispatch [::reset-current-cols ::table-cols-config])
+  (dispatch [::remove-col :updated ::table-cols-config])
+  (dispatch [::remove-col :created ::table-cols-config])
 
   ;; no position adds as last column
-  (dispatch [::add-col :updated])
+  (dispatch [::add-col {:col-key :updated
+                        :db-path ::table-cols-config}])
   ;; adding same column again does not work
-  (dispatch [::add-col :updated])
+  (dispatch [::add-col {:col-key :updated
+                        :db-path ::table-cols-config}])
 
   ;; setting default column
-  (dispatch [::set-current-cols default-columns])
+  (dispatch [::set-current-cols default-columns ::table-cols-config])
 
-  (dispatch [::reset-current-cols])
-  )
+  (dispatch [::reset-current-cols]))
 
 (reg-sub
-  ::get-current-cols
+  ::get-all-current-cols
   :-> ::current-cols)
 
 (reg-sub
-  ::get-default-cols
+  ::get-all-default-cols
   :-> ::default-cols)
+
+(reg-sub
+  ::get-current-cols
+  :<- [::get-all-current-cols]
+  (fn [current-cols [_ db-path]]
+    (get current-cols db-path)))
+
+(reg-sub
+  ::get-default-cols
+  :<- [::get-all-default-cols]
+  (fn [default-cols [_ db-path]]
+    (get default-cols db-path)))
+
 
 (reg-event-fx
   ::init-table-col-config
-  [(inject-cofx :storage/get {:name "nuvla.ui.table.column-configs"})]
-  (fn [{{:keys [::current-cols] :as db} :db} [_ cols]]
+  [(inject-cofx :storage/get {:name local-storage-key})]
+  (fn [{{:keys [::current-cols] :as db} :db} [_ cols db-path]]
     (let [defaults (or
                      (some->>
                        cols
                        (map :field-key))
-                     default-columns)]
-      {:db (assoc db ::default-cols defaults)
-       :fx [[:dispatch [::set-current-cols (or current-cols defaults)]]]})))
+                     default-columns)
+          cols     (get current-cols db-path defaults)]
+      {:db (assoc-in db [::default-cols db-path] defaults)
+       :fx [[:dispatch [::store-cols cols db-path]]]})))
 
 
 (defn TableColsEditable
-  [props]
-  (let [available-cols (merge
-                         (let [ks (mapcat keys (:rows props))]
+  [{:keys [columns rows]} db-path]
+  (let [db-path (or db-path ::table-cols-config)
+        available-cols (merge
+                         (let [ks (mapcat keys rows)]
                            (zipmap
                              ks
                              (map (fn [k] {:field-key k}) ks)))
-                         (into {} (map (juxt :field-key identity) (:columns props))))
-        current-cols   (subscribe [::get-current-cols])
-        default-cols   (subscribe [::get-default-cols])
-        ]
-    (dispatch [::init-table-col-config (:columns props)  ])
-    (fn []
-      [Table (assoc props :col-config
-               {:available-cols available-cols
-                :current-cols @current-cols}
-               :columns (mapv (fn [k] (available-cols k))
-                          (or @current-cols @default-cols)))])))
+                         (into {} (map (juxt :field-key identity) columns)))
+        current-cols   (subscribe [::get-current-cols db-path])
+        default-cols   (subscribe [::get-default-cols db-path])]
+    (dispatch [::init-table-col-config columns db-path])
+    (fn [props]
+      [:div
+       [Table (assoc props :col-config
+                {:available-cols available-cols
+                 :current-cols   @current-cols}
+                :columns (->> (or @current-cols @default-cols)
+                              (mapv (fn [k] (available-cols k)))
+                              (remove nil?)
+                              vec))]])))
 
 (defn UiDemo
   []

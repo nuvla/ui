@@ -565,7 +565,8 @@
       {:db (update-in db db-path (fnil conj []) app-with-version-number)
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
-            [:dispatch [::set-apps-edited true]]]})))
+            [:dispatch [::set-apps-edited true]]
+            [:dispatch [::main-events/changes-protection? true]]]})))
 
 (defn version-id-to-add
   [app]
@@ -625,7 +626,8 @@
                                    (vec (remove #(= (:id %) (:href app)) apps))))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
-            [:dispatch [::set-apps-edited true]] ] } ) ) )
+            [:dispatch [::set-apps-edited true]]
+            [:dispatch [::main-events/changes-protection? true]]]})))
 
 (reg-event-fx
   ::edit-config

@@ -250,12 +250,11 @@
         on-change-fn   #(dispatch [::events/edit attribute %])]
     [ui/TableCell
      (if (or creating? @can-edit?)
-       (get @deployment-set attribute)
        [components/EditableInput
         {:resource     @deployment-set
          :attribute    attribute
          :on-change-fn on-change-fn}]
-       )]))
+       (get @deployment-set attribute))]))
 
 (def ops-status->color
   {"OK"  "green"
@@ -1015,7 +1014,7 @@
                        {:field-key :created}
                        {:field-key :created-by}
                        {:field-key      :refresh-interval
-                        :header-content (str/lower-case (@tr [:report-interval]))}
+                        :header-content (some-> (@tr [:report-interval]) str/lower-case)}
                        {:field-key :last-online :no-sort? true}
                        {:field-key :version :no-sort? true}
                        {:field-key :tags :no-sort? true}]

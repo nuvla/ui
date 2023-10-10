@@ -47,7 +47,10 @@
 
 (defn- create-wrng-msg
   [apps-count edges-count action]
-  (str "You're about to " action " " apps-count " app" (if (< 1 apps-count) "s " " ") "on " edges-count " device" (if (< 1 edges-count) "s. " ". ") "Proceed?"))
+  (str "You're about to " action " " apps-count " app"
+       (if (< 1 apps-count) "s " " ") "on "
+       edges-count " device"
+       (if (< 1 edges-count) "s. " ". ") "Proceed?"))
 
 (defn- ops-status-pending-str [tr-fn ops-status]
   (str/join ", "
@@ -136,26 +139,38 @@
       :header             (@tr [:update-deployment-set])
       :danger-msg         warn-msg
       :button-text        (@tr [:update])
-      :with-confirm-step? true}]
-    ))
-
+      :modal-action       [:p warn-msg]
+      :with-confirm-step? true}]))
 
 
 (defn DeleteButton
   [deployment-set warn-msg]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        content  (depl-set->modal-content deployment-set)
-        enabled? (subscribe [::subs/operation-enabled? "delete"])]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        content       (depl-set->modal-content deployment-set)
+        deletable?    (general-utils/can-operation? "delete" deployment-set)
+        forceable?    (general-utils/can-operation? "force-delete" deployment-set)
+        {:keys [header danger-msg button-text]}
+        (if forceable?
+          {:header      (@tr [:force-delete-deployment-set])
+           :button-text (@tr [:force-delete])
+           :danger-msg  (str "Warning! Doing a force delete will leave orphaned containers! "
+                             warn-msg)}
+          {:header      (@tr [:delete-deployment-set])
+           :button-text (@tr [:delete])
+           :danger-msg  warn-msg})]
     [uix/ModalDanger
-     {:on-confirm         #(dispatch [::events/delete])
+     {:on-confirm         #(dispatch [::events/delete {:deletable? deletable?
+                                                       :forceable? forceable?}])
       :trigger            (r/as-element [ui/MenuItem
-                                         {:disabled (not @enabled?)}
+                                         {:disabled (and
+                                                      (not forceable?)
+                                                      (not deletable?))}
                                          [icons/TrashIconFull]
-                                         (@tr [:delete])])
+                                         button-text])
       :content            [:h3 content]
-      :header             (@tr [:delete-deployment-set])
-      :danger-msg         warn-msg
-      :button-text        (@tr [:delete])
+      :header             header
+      :danger-msg         danger-msg
+      :button-text        button-text
       :with-confirm-step? true}]))
 
 (defn SaveButton
@@ -207,7 +222,7 @@
            ^{:key "stop"}
            [StopButton @deployment-set (warn-msg-fn "stop")]
            ^{:key "delete"}
-           [DeleteButton @deployment-set (warn-msg-fn "remove")]]
+           [DeleteButton @deployment-set (warn-msg-fn "delete")]]
           [components/RefreshMenu
            {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?
@@ -793,28 +808,28 @@
   [i applications]
   ^{:key (str "set-" i)}
   [tab/Tab
-   {:db-path [::apps-config]
+   {:db-path                 [::apps-config]
     :ignore-chng-protection? true
-    :panes   (map
-               (fn [{:keys [id]}]
-                 {:menuItem {:content (r/as-element
-                                        [AppName {:idx i :id id}])
-                             :icon    "cubes"
-                             :key     (create-app-config-query-key i id)}
-                  :render   #(r/as-element
-                               [ui/TabPane
-                                [ui/Popup {:trigger (r/as-element
-                                                      [:span
-                                                       [module-plugin/LinkToApp
-                                                        {:db-path  [::spec/apps-sets i]
-                                                         :href     id
-                                                         :children [:<>
-                                                                    [ui/Icon {:class icons/i-link}]
-                                                                    "Go to app"]}]])
-                                           :content "Open application in a new window"}]
-                                [ModuleVersionsApp i id]
-                                [EnvVariablesApp i id]])})
-               applications)}])
+    :panes                   (map
+                               (fn [{:keys [id]}]
+                                 {:menuItem {:content (r/as-element
+                                                        [AppName {:idx i :id id}])
+                                             :icon    "cubes"
+                                             :key     (create-app-config-query-key i id)}
+                                  :render   #(r/as-element
+                                               [ui/TabPane
+                                                [ui/Popup {:trigger (r/as-element
+                                                                      [:span
+                                                                       [module-plugin/LinkToApp
+                                                                        {:db-path  [::spec/apps-sets i]
+                                                                         :href     id
+                                                                         :children [:<>
+                                                                                    [ui/Icon {:class icons/i-link}]
+                                                                                    "Go to app"]}]])
+                                                           :content "Open application in a new window"}]
+                                                [ModuleVersionsApp i id]
+                                                [EnvVariablesApp i id]])})
+                               applications)}])
 
 (defn BoldLabel
   [txt]

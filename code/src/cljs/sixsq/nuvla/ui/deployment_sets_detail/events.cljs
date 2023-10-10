@@ -320,9 +320,25 @@
 
 (reg-event-fx
   ::delete
-  (fn [{{:keys [::spec/deployment-set]} :db}]
-    (let [id (:id deployment-set)]
-      {::cimi-api-fx/delete [id #(dispatch [::routing-events/navigate routes/deployment-sets])]})))
+  (fn [{{:keys [::spec/deployment-set]} :db} [_ {:keys [forceable? deletable?]}]]
+    (let [id (:id deployment-set)
+          cb (fn [response]
+               (dispatch
+                 [::job-events/wait-job-to-complete
+                  {:job-id (:location response)
+                   :refresh-interval-ms 1000
+                   :on-complete
+                   #(do
+                      (dispatch [::routing-events/navigate routes/deployment-sets])
+                      (when-not (= "SUCCESS" (:state %))
+                        (cimi-api-fx/default-error-message
+                          %
+                          "Failed to delete deployment set")) ())}]))]
+      (cond
+        deletable?
+        {::cimi-api-fx/delete    [id cb]}
+        forceable?
+        {::cimi-api-fx/operation [id "force-delete" cb]}))))
 
 (defn application-overwrites
   [db i {:keys [id version] :as _application}]

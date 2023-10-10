@@ -3,6 +3,7 @@
 
 (def dictionary
   {:en {
+        :force-delete-deployment-set                   "Force delete deployment set?"
         :report                                        "report"
         :heartbeat-help                                "NuvlaEdge has to contact Nuvla each defined number of seconds to be considered as online."
         :telemetry-help                                "NuvlaEdge should send its telemetry report to Nuvla each defined number of seconds."

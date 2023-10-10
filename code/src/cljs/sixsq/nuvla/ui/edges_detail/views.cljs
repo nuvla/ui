@@ -183,8 +183,6 @@
                (< (second p) 16))))))
 
 
-
-
 (defn- calc-new-modules-on-release-change [form-data new-release]
   (let [form-modules     (:modules form-data)
         form-release-old (get-in form-data [:nuvlabox-release :release])]
@@ -334,7 +332,7 @@
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
-              [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
+              [:label (@tr [:env-variables]) " " [uix/HelpPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
                             :on-key-down   #(-> % .stopPropagation)
@@ -678,7 +676,7 @@
                         @nuvlabox
                         #{"edit" "delete" "activate" "decommission"
                           "generate-new-api-key" "commission" "check-api"
-                          "create-log"})]
+                          "create-log" "set-offline" "heartbeat"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj
@@ -983,8 +981,8 @@
        [StatsTable (sort-by :name container-stats)])]))
 
 
-(defn EditableCell
-  [attribute]
+(defn Editable
+  [{:keys [attribute]}]
   (let [tr           (subscribe [::i18n-subs/tr])
         nuvlabox     (subscribe [::subs/nuvlabox])
         can-edit?    (subscribe [::subs/can-edit?])
@@ -993,11 +991,43 @@
                                  id {attribute %}
                                  (@tr [:updated-successfully])])]
     (if @can-edit?
-      [components/EditableInput attribute @nuvlabox on-change-fn]
-      [ui/TableCell (get @nuvlabox attribute)])))
+      [components/EditableInput
+       {:attribute    attribute
+        :resource     @nuvlabox
+        :on-change-fn on-change-fn}]
+      (get @nuvlabox attribute))))
+
+(defn NumbericEditable
+  [{:keys [attribute label]}]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        nuvlabox     (subscribe [::subs/nuvlabox])
+        can-edit?    (subscribe [::subs/can-edit?])
+        id           (:id @nuvlabox)
+        on-change-fn #(dispatch [::events/edit
+                                 id {attribute (js/parseInt %)}
+                                 (@tr [:updated-successfully])])]
+    (if @can-edit?
+      [components/EditableInput
+       {:fluid        false
+        :label        label
+        :type         "number"
+        :attribute    attribute
+        :resource     @nuvlabox
+        :on-change-fn on-change-fn}]
+      (str (get @nuvlabox attribute) " " label))))
+
+(defn LabelReportInterval
+  [{:keys [label help attribute]}]
+  [:div
+   label
+   [uix/HelpPopup help]
+   ": every "
+   [NumbericEditable
+    {:attribute attribute
+     :label     "seconds"}]])
 
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated refresh-interval owner created-by state]}
+  [{:keys [id created updated owner created-by state] :as _nuvlabox}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
@@ -1021,10 +1051,10 @@
           [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]])]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
-        [EditableCell :name]]
+        [ui/TableCell [Editable {:attribute :name}]]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:description]))]
-        [EditableCell :description]]
+        [ui/TableCell [Editable {:attribute :description}]]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:owner]))]
         [ui/TableCell @(subscribe [::session-subs/resolve-user owner])]]
@@ -1036,8 +1066,16 @@
           [ui/TableCell (str/capitalize (@tr [:created-by]))]
           [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
        [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:report-interval]))]
-        [ui/TableCell (str refresh-interval " seconds")]]
+        [ui/TableCell (str/capitalize (@tr [:report]))]
+        [ui/TableCell
+         [LabelReportInterval
+          {:label     (str/capitalize (@tr [:heartbeat]))
+           :help      (@tr [:heartbeat-help])
+           :attribute :heartbeat-interval}]
+         [LabelReportInterval
+          {:label     (str/capitalize (@tr [:telemetry]))
+           :help      (@tr [:telemetry-help])
+           :attribute :refresh-interval}]]]
        (when nuvlabox-api-endpoint
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:nuvla-api-endpoint]))]
@@ -1176,26 +1214,30 @@
    [:h4 "Host"]
    [StatusOrNotAvailable nb-status [HostInfo nb-status ssh-creds]]])
 
+(defn TelemetryLastTime
+  [last-telemetry]
+  [:div
+   "Last telemetry report was "
+   [uix/TimeAgo last-telemetry]])
+
+(defn TelemetryNextTime
+  [next-telemetry]
+  (let [locale                (subscribe [::i18n-subs/locale])
+        next-telemetry-moment (some-> next-telemetry time/parse-iso8601)]
+    [uix/ForceRerenderComponentByDelay
+     (fn []
+       [:p
+        (if (time/before-now? next-telemetry-moment)
+          [:<> "Missing telemetry report for "]
+          [:<> "Next telemetry report is expected "])
+        (some-> next-telemetry-moment (time/format-distance @locale))])
+     5000]))
 
 (defn NextTelemetryStatus
-  [{:keys [next-heartbeat] :as _nb-status}]
-  (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])
-        tr                       @(subscribe [::i18n-subs/tr])
-        next-heartbeat-moment    (some-> next-heartbeat time/parse-iso8601)
-        next-heartbeat-times-ago (when next-heartbeat-moment
-                                   [uix/TimeAgo next-heartbeat-moment])]
-    (when next-heartbeat-moment
-      [:<>
-       (if (time/before-now? next-heartbeat-moment)
-         [:p (tr [:nuvlaedge-next-telemetry-missing-since])
-          next-heartbeat-times-ago "."]
-         [:p (tr [:nuvlaedge-next-telemetry-expected])
-          next-heartbeat-times-ago "."])
-       [:p (tr [:nuvlaedge-last-telemetry-was])
-        [uix/TimeAgo (utils/last-time-online
-                       next-heartbeat-moment
-                       refresh-interval)]
-        "."]])))
+  [{:keys [next-telemetry last-telemetry] :as _nb-status}]
+  [:div
+   [TelemetryNextTime next-telemetry]
+   [TelemetryLastTime last-telemetry]])
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]
@@ -2006,12 +2048,25 @@
       [OnlineStatusIcon online true true]]
      (or name id)]))
 
+(defn TelemetryOutdatedMessage
+  [{:keys [next-telemetry] :as _nb-status}]
+  [uix/ForceRerenderComponentByDelay
+   #(let [outdated? (some-> next-telemetry
+                            time/parse-iso8601
+                            time/before-now?)]
+      (when outdated?
+        [ui/Message
+         {:warning true
+          :icon    icons/i-warning
+          :content (r/as-element
+                     [uix/TR :nuvlaedge-outdated-telemetry-warning])}]))
+   15000])
+
 
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
-  (let [tr        @(subscribe [::i18n-subs/tr])
-        nb-status @(subscribe [::subs/nuvlabox-status])]
+  (let [nb-status @(subscribe [::subs/nuvlabox-status])]
     [components/LoadingPage {:dimmable? true}
      [:<>
       [components/NotFoundPortal
@@ -2024,9 +2079,6 @@
        [components/ErrorJobsMessage ::job-subs/jobs nil nil
         #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
        [job-views/ProgressJobAction nb-status]
-       (when (and nb-status (not (:online nb-status)))
-         [ui/Message {:warning true
-                      :icon    icons/i-warning
-                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])]
+       [TelemetryOutdatedMessage nb-status]]
       [TabsNuvlaBox]
       [AddPlaybookModal]]]))

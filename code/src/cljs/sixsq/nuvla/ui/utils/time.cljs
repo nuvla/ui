@@ -8,6 +8,7 @@
                                 isAfter
                                 isBefore
                                 parseISO
+                                Locale
                                 startOfDay
                                 subDays
                                 subMilliseconds]]
@@ -80,7 +81,7 @@
 
 (defn ago
   "Returns a human-readable string on how much time is remaining before the
-   given expiry date (javascript Date). Uses English as the natural language
+   given date (javascript Date). Uses English as the natural language
    unless another locale is given."
   ([date]
    (ago date default-locale))
@@ -105,12 +106,11 @@
     (isAfter ts (js/Date.))))
 
 
-(defn remaining
-  "Returns a human-readable string on how much time is remaining before the
-   given expiry date (in ISO8601 format). Uses English as the natural language
-   unless another locale is given."
-  ([expiry-iso8601]
-   (remaining expiry-iso8601 default-locale))
+(defn format-distance
+  "Return the distance between the given date and now in words.
+   Uses English as the natural language unless another locale is given."
+  ([date]
+   (format-distance date default-locale))
   ([expiry-iso8601 locale]
    (or (some-> expiry-iso8601
                (parse-iso8601)

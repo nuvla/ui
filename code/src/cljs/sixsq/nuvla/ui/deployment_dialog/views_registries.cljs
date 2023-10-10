@@ -1,14 +1,13 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-registries
   (:require [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.credentials.components :as creds-comp]
             [sixsq.nuvla.ui.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -40,22 +39,20 @@
         creds-options  (subscribe [::subs/infra-registries-creds-by-parent-options
                                    private-registry-id])
         registry-descr (:description @registry)
-        {:keys [cred-id preselected?]} info]
+        {:keys [cred-id preselected?]} info
+        Label [uix/FieldLabel
+               {:name       [:span registry-name]
+                :help-popup (when registry-descr [uix/HelpPopup registry-descr])
+                :required?  true}]]
     (if (and preselected?
              (not (some #(= cred-id (:value %)) @creds-options)))
       [ui/FormInput
        {:disabled      true
-        :label         (r/as-element [:label registry-name ff/nbsp
-                                      (when registry-descr (ff/help-popup registry-descr))])
+        :label         (r/as-element Label)
         :default-value (@tr [:preselected])}]
       [ui/FormDropdown
        (cond->
-         {:required      true
-          :label         (r/as-element [:label registry-name ff/nbsp
-                                        (when registry-descr (ff/help-popup registry-descr))
-                                        (when cred-id
-                                          [:span " "
-                                           [creds-comp/CredentialCheckPopup cred-id]])])
+         {:label         (r/as-element Label)
           :selection     true
           :default-value cred-id
           :placeholder   (@tr [:select-credential])

@@ -94,7 +94,7 @@
        (if (not= @compatibility "docker-compose")
          [:<>
           [:div (@tr [:module-files])
-           [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
+           [uix/HelpPopup (@tr [:module-files-help])]]
 
           (if (empty? @files)
             [ui/Message
@@ -178,7 +178,7 @@
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} (@tr [:env-substitution])
-           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
+           [uix/HelpPopup (@tr [:module-docker-compose-help])]]
           [uix/EditorYaml {:value     @docker-compose
                            :on-change (fn [value]
                                         (dispatch [::events/update-docker-compose value])
@@ -209,7 +209,7 @@
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} (@tr [:env-substitution])
-           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
+           [uix/HelpPopup (@tr [:module-docker-compose-help])]
            [DockerComposeCompatibility]]
           [uix/EditorYaml {:value     @docker-compose
                            :on-change (fn [value]
@@ -449,7 +449,7 @@
                           [ui/TableCell {:collapsing true
                                          :style      {:padding-bottom 8}}
                            (@tr [:grant-nuvla-access]) ff/nbsp
-                           [components/InfoPopup (@tr [:module-requires-user-rights])]]
+                           [uix/HelpPopup (@tr [:module-requires-user-rights])]]
                           [ui/TableCell [RequiresUserRightsCheckbox]]]]
       :validation-event ::apps-events/set-details-validation-error}]))
 

@@ -2,8 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
-            [sixsq.nuvla.ui.clouds.utils :as clouds-utils]
-            [sixsq.nuvla.ui.credentials.subs :as creds-subs]
             [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -17,6 +15,11 @@
   ::deployment-state
   :<- [::deployment]
   :-> :state)
+
+(reg-sub
+  ::execution-mode
+  :<- [::deployment]
+  :-> :execution-mode)
 
 (reg-sub
   ::deployment-start?
@@ -68,6 +71,9 @@
 (reg-sub
   ::modal-action-button-icon
   :<- [::deployment-start?]
+
+
+
   (fn [start?]
     (if start? icons/i-rocket "redo")))
 
@@ -78,33 +84,20 @@
     (if start? "start" "update")))
 
 (reg-sub
-  ::execution-mode
-  :<- [::selected-infra-service]
-  :<- [::selected-credential-id]
-  (fn [[infra-service cred-id]]
-    (let [cred-unknown? @(subscribe [::creds-subs/credential-check-status-unknown? cred-id])
-          cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])]
-      (if (clouds-utils/infra-support-pull? infra-service)
-        (if (and cred-unknown? (not cred-loading?))
-          "pull"
-          "mixed")
-        "push"))))
-
-(reg-sub
   ::modal-action-button-text
   :<- [::i18n-subs/tr]
   :<- [::deployment-start?]
   :<- [::is-deploy-status? :ok]
   :<- [::execution-mode]
-  (fn [[tr start? deploy-status-ok? execution-mode]]
-    (let [execution-mode-pull? (= execution-mode "pull")]
+  :<- [::selected-infra-service]
+  (fn [[tr start? deploy-status-ok? execution-mode {:keys [capabilities]}]]
+    (let [pull? (or (= execution-mode "pull")
+                    (contains? (set capabilities) "NUVLA_JOB_PULL"))]
       (tr [(cond
-             (and start? execution-mode-pull?) :schedule-deploy
-             (and (not start?) execution-mode-pull?) :schedule-update
-             (and start? deploy-status-ok?) :deploy
-             (and start? (not deploy-status-ok?)) :deploy-force
+             (and start? pull?) :schedule-deploy
+             (and (not start?) pull?) :schedule-update
              (and (not start?) deploy-status-ok?) :update
-             :else :update-force)]))))
+             :else :deploy)]))))
 
 (reg-sub
   ::modal-action-button-color
@@ -115,29 +108,23 @@
 (reg-sub
   ::step-completed?
   (fn []
-    [(subscribe [::selected-credential-id])
-     (subscribe [::data-completed?])
+    [(subscribe [::data-completed?])
      (subscribe [::env-variables-completed?])
      (subscribe [::price-completed?])
      (subscribe [::license-completed?])
      (subscribe [::registries-completed?])
-     (subscribe [::credentials-completed?])
-     (subscribe [::deploy-status-registries :registries])])
-  (fn [[cred-id data-completed? env-variables-completed? price-completed? license-completed?
-        registries-completed? credentials-completed? registries-status]
+     (subscribe [::credentials-completed?])])
+  (fn [[data-completed? env-variables-completed? price-completed? license-completed?
+        registries-completed? credentials-completed?]
        [_ step-id]]
-    (let [cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])
-          cred-valid?   @(subscribe [::creds-subs/credential-check-status-valid? cred-id])]
-      (case step-id
-        :data data-completed?
-        :infra-services (and credentials-completed?
-                             (not cred-loading?)
-                             cred-valid?)
-        :env-variables env-variables-completed?
-        :registries (and registries-completed? (= :ok registries-status))
-        :license license-completed?
-        :pricing price-completed?
-        false))))
+    (case step-id
+      :data data-completed?
+      :infra-services credentials-completed?
+      :env-variables env-variables-completed?
+      :registries registries-completed?
+      :license license-completed?
+      :pricing price-completed?
+      false)))
 
 (reg-sub
   ::step-active?
@@ -363,11 +350,6 @@
       (when selected-infra-service [selected-infra-service]))))
 
 (reg-sub
-  ::deploy-status-registries
-  (fn [db [_ step-id]]
-    (get-in db [::spec/step-states step-id :status])))
-
-(reg-sub
   ::infra-registries
   (fn [db]
     (::spec/infra-registries db)))
@@ -535,21 +517,17 @@
   :<- [::price]
   :<- [::price-completed?]
   :<- [::version-completed?]
-  :<- [::selected-credential-id]
   (fn [[deployment data-completed? data-step-active? credentials-completed? env-variables-completed?
-        registries-completed? license license-completed? price price-completed? version-completed?
-        selected-credential-id]]
-    (let [cred-invalid? @(subscribe [::creds-subs/credential-check-status-invalid? selected-credential-id])]
-      (or (not deployment)
-          (and (not data-completed?) data-step-active?)
-          (not credentials-completed?)
-          (not env-variables-completed?)
-          (not registries-completed?)
-          (and price (not price-completed?))
-          (and license (not license-completed?))
-          (not registries-completed?)
-          (not version-completed?)
-          cred-invalid?))))
+        registries-completed? license license-completed? price price-completed? version-completed?]]
+    (or (not deployment)
+        (and (not data-completed?) data-step-active?)
+        (not credentials-completed?)
+        (not env-variables-completed?)
+        (not registries-completed?)
+        (and price (not price-completed?))
+        (and license (not license-completed?))
+        (not registries-completed?)
+        (not version-completed?))))
 
 (reg-sub
   ::check-dct

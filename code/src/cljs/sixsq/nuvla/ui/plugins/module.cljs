@@ -9,7 +9,7 @@
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -41,6 +41,10 @@
 (defn- db-module-overwrite-path
   [db-path href]
   (db-module-subpath db-path href ::overwrite))
+
+(defn- db-new-version-module-href-path
+  [db-path href]
+  (db-module-subpath db-path href ::new-version-module-href-path))
 
 (defn- db-module-loading-registries-path
   [db-path href]
@@ -189,13 +193,6 @@
        :fx [[:dispatch [::resolve-private-registries db-path href private-registries]]
             [:dispatch [::resolve-registries-creds db-path href private-registries]]]})))
 
-(reg-event-fx
-  ::change-version
-  (fn [{db :db} [_ db-path href]]
-    (let [change-event (get-in db (conj db-path change-event-module-version))]
-      {:fx [[:dispatch [::load-module db-path href]]
-            (when change-event
-              [:dispatch (conj change-event href)])]})))
 
 (reg-event-fx
   ::update-env
@@ -239,6 +236,36 @@
         versions-indexed  (module-versions-indexed module)]
     (get-version-id versions-indexed module-content-id)))
 
+(reg-sub
+  ::new-version-module-href
+  (fn [db [_ db-path href]]
+    (get-in db (db-new-version-module-href-path db-path href))))
+
+(defn- db-version-href
+  [db db-path href version-module-href]
+  (let [module           (db-module db db-path href)
+        versions-indexed (module-versions-indexed module)]
+    (str (:id module) "_" (get-version-id versions-indexed version-module-href))))
+
+(reg-event-fx
+  ::change-version
+  (fn [{db :db} [_ db-path href version-module-href]]
+    (let [new-version-href (db-version-href db db-path href version-module-href)
+          change-event     (get-in db (conj db-path change-event-module-version))]
+      {:db (assoc-in db (db-new-version-module-href-path db-path href) version-module-href)
+       :fx [[:dispatch [::load-module db-path new-version-href]]
+            (when change-event
+              [:dispatch (conj change-event new-version-href)])]})))
+
+(defn db-changed-version
+  [db db-path href]
+  (let [module                  (db-module db db-path href)
+        versions-indexed        (module-versions-indexed module)
+        version-module-href     (-> module :content :id)
+        new-version-module-href (get-in db (db-new-version-module-href-path db-path href))]
+    (when (and (not (str/blank? new-version-module-href))
+               (not= new-version-module-href version-module-href))
+      (get-version-id versions-indexed new-version-module-href))))
 
 (defn- db-module-env-vars
   [db db-path href]
@@ -251,8 +278,7 @@
 (defn- changed-env-vars
   [env-vars]
   (keep (fn [{:keys [::new-value :value :name]}]
-          (when (and (not (str/blank? new-value))
-                     (not= new-value value))
+          (when (some? new-value)
             {:name  name
              :value new-value})
           ) env-vars))
@@ -271,6 +297,23 @@
   ::module-env-value
   (fn [db [_ db-path href index]]
     (env-vars-value-by-index (db-module-env-vars db db-path href) index)))
+
+(defn db-module-env-vars-in-error
+  [db db-path href]
+  (let [module   (db-module db db-path href)
+        env-vars (module-env-vars module)]
+    (->> env-vars
+         (keep (fn [{:keys [name value required] ::keys [new-value]}]
+                 (when (and required (if (some? new-value)
+                                       (str/blank? new-value)
+                                       (str/blank? value)))
+                   name)))
+         (into #{}))))
+
+(reg-sub
+  ::module-env-vars-in-error
+  (fn [db [_ db-path href]]
+    (db-module-env-vars-in-error db db-path href)))
 
 (reg-sub
   ::registries-loading?
@@ -328,7 +371,7 @@
     {::cimi-api-fx/search [:credential
                            {:filter  (str "subtype='" subtype "'")
                             :orderby "name:asc, id:asc"
-                            :select "id, name"
+                            :select  "id, name"
                             :last    10000}
                            #(setter (map (fn [{id :id, name :name}]
                                            {:key id, :value id, :text name})
@@ -351,29 +394,32 @@
         :options     @options}])))
 
 (defn EnvVarInput
-  [db-path href read-only? i {env-name  :name
-                              env-value :value}]
+  [db-path href read-only? error? i {env-name  :name
+                                     env-value :value}]
   (let [updated-env-value @(subscribe [::module-env-value db-path href i])
         value             (or updated-env-value env-value "")
         on-change         #(dispatch [::update-env db-path href i %])]
     (if (is-cred-env-var? env-name)
       [EnvCredential env-name value on-change]
-      [ui/Input
+      [ui/FormInput
        {:type          "text"
         :name          env-name
         :default-value value
         :read-only     read-only?
+        :error         error?
         :fluid         true
         :on-change     (ui-callback/input-callback on-change)}])))
 
 (defn AsFormInput
-  [db-path href read-only?
+  [db-path href read-only? error?
    i {env-name        :name
       env-description :description
       env-required    :required :as env-variable}]
-  [ui/FormField {:required env-required}
-   [:label env-name ff/nbsp (ff/help-popup env-description)]
-   [EnvVarInput db-path href read-only? i env-variable]])
+  [ui/FormField
+   [uix/FieldLabel {:name       env-name
+                    :required?  env-required
+                    :help-popup [uix/HelpPopup env-description]}]
+   [EnvVarInput db-path href read-only? error? i env-variable]])
 
 (defn EnvVariables
   [{:keys [db-path href change-event read-only?]
@@ -382,13 +428,15 @@
   (dispatch [::helpers/set db-path change-event-env-variables change-event])
   (let [tr            @(subscribe [::i18n-subs/tr])
         module        @(subscribe [::module db-path href])
-        env-variables (module-env-vars module)]
+        env-variables (module-env-vars module)
+        vars-in-error @(subscribe [::module-env-vars-in-error db-path href])]
     (if (seq env-variables)
       [ui/Form
        (map-indexed
          (fn [i env-variable]
-           ^{:key (str (:name env-variable) "_" i)}
-           [AsFormInput db-path href read-only? i env-variable])
+           (let [var-in-error (boolean (vars-in-error (:name env-variable)))]
+             ^{:key (str (:name env-variable) "_" i)}
+             [AsFormInput db-path href read-only? var-in-error i env-variable]))
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 
@@ -404,15 +452,15 @@
         preselected?   (and (some? value)
                             (zero? (count options)))
         registry-label (r/as-element
-                         [:label (or name id) ff/nbsp
-                          (when description (ff/help-popup description))])
+                         [uix/FieldLabel {:name       (or name id)
+                                          :required?  required?
+                                          :help-popup (when description [uix/HelpPopup description])}])
         disabled?      (or preselected? read-only?)
         placeholder    (if preselected?
                          (tr [:preselected])
                          (tr [:select-credential]))]
     [ui/FormDropdown
-     {:required    required?
-      :label       registry-label
+     {:label       registry-label
       :selection   true
       :value       value
       :disabled    disabled?
@@ -468,19 +516,19 @@
   [{:keys [db-path href change-event read-only?]
     :or   {read-only? false}
     :as   _opts}]
-  (let [module           (subscribe [::module db-path href])
-        versions-indexed (subscribe [::module-versions-indexed db-path href])
-        options          (subscribe [::module-versions-options db-path href])]
+  (let [module                  (subscribe [::module db-path href])
+        new-version-module-href (subscribe [::new-version-module-href db-path href])
+        options                 (subscribe [::module-versions-options db-path href])]
     (dispatch [::helpers/set db-path change-event-module-version change-event])
-    (let [{:keys [id content]} @module]
+    (let [{:keys [content]} @module
+          value (or @new-version-module-href (:id content))]
       [ui/FormDropdown
-       {:value     (:id content)
+       {:value     value
         :scrolling true
         :upward    false
         :selection true
         :on-change (ui-callback/value
-                     #(dispatch [::change-version db-path
-                                 (str id "_" (get-version-id @versions-indexed %))]))
+                     #(dispatch [::change-version db-path href %]))
         :fluid     true
         :options   @options
         :disabled  read-only?}])))

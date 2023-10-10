@@ -174,12 +174,6 @@
                           :name    i}])]]
          [ui/StatisticLabel label]])])))
 
-
-(defn InfoPopup
-  [message]
-  [ui/Popup {:content message
-             :trigger (r/as-element [ui/Icon {:class icons/i-info}])}])
-
 (defn NotFoundPortal
   [subs message-header message-content]
   (let [tr         (subscribe [::i18n-subs/tr])
@@ -243,34 +237,39 @@
     - activate by clicking on pencil icon
     - saves on enter key or button click
     - cancel on escape key"
-  [attribute element on-change-fn]
-  (let [new-value     (r/atom (get element attribute))
-        initial-value (r/atom @new-value)
-        editing?      (r/atom false)
-        close-fn      #(reset! editing? false)
-        save-fn       #(do
-                         (when (not= @new-value @initial-value)
-                           (on-change-fn @new-value)
-                           (reset! initial-value @new-value))
-                         (close-fn))]
-    (fn [_attribute _element _on-change-fn]
-      [ui/TableCell
-       (if @editing?
-         [ui/Input {:default-value @new-value
-                    :on-key-press  (partial forms/on-return-key
-                                            save-fn)
-                    :on-key-down   (partial forms/on-escape-key
-                                            #(do (reset! new-value @initial-value)
-                                                 (close-fn)))
-                    :on-change     (ui-callback/input-callback #(reset! new-value %))
-                    :focus         true
-                    :fluid         true
-                    :action        {:icon     "check"
-                                    :on-click save-fn}}]
-         [:<>
-          @new-value
-          ff/nbsp
-          [Pencil editing?]])])))
+  [_opts]
+  (let [new-value (r/atom nil)
+        editing?  (r/atom false)
+        close-fn  #(reset! editing? false)]
+    (fn [{:keys [attribute resource on-change-fn
+                 type label fluid]
+          :or   {fluid true}}]
+      (let [save-fn #(do
+                       (when (some-> @new-value (not= (get resource attribute)))
+                         (on-change-fn @new-value)
+                         (reset! new-value nil))
+                       (close-fn))
+            value   (or @new-value (get resource attribute))]
+        (if @editing?
+          [ui/Input
+           {:type          (or type "text")
+            :default-value value
+            :on-key-press  (partial forms/on-return-key save-fn)
+            :on-key-down   (partial forms/on-escape-key
+                                    #(do (reset! new-value nil)
+                                         (close-fn)))
+            :on-change     (ui-callback/input-callback #(reset! new-value %))
+            :focus         true
+            :fluid         fluid
+            :action        (cond-> {:icon     "check"
+                                    :on-click save-fn
+                                    :content  label}
+                                   label (assoc :label-position "right"))}]
+          [:<>
+           value
+           (when label [:<> " " label])
+           ff/nbsp
+           [Pencil editing?]])))))
 
 (defn TagsDropdown
   [{:keys [tags]}]

@@ -4,8 +4,8 @@
             [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -42,7 +42,8 @@
                                                          :environmental-variables
                                                          index :value] %)])]
     [ui/FormField {:required env-required}
-     [:label env-name ff/nbsp (ff/help-popup env-description)]
+     [uix/FieldLabel {:name env-name
+                      :help-popup [uix/HelpPopup env-description]} ]
      (if (module-plugin/is-cred-env-var? env-name)
        [module-plugin/EnvCredential env-name env-value on-change]
        [ui/Input

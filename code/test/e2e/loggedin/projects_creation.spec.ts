@@ -9,7 +9,7 @@ test('Creating a new project', async ({ page }, { config }) => {
   await page.getByRole('link', { name: 'Apps' }).nth(0).click();
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/apps`));
 
-  await page.getByText('Navigate Apps').nth(0).click();
+  await page.getByText('Navigate Projects').nth(0).click();
   await expect(page).toHaveURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
   await page.locator('a:has-text("Add")').click();
   await page.getByRole('link', { name: 'Project' }).nth(1).click();

@@ -4,5 +4,6 @@
 
 (defn unsaved-changes?
   [deployment-set deployment-set-edited]
-  (not= (select-keys deployment-set-edited editable-keys)
-        (select-keys deployment-set editable-keys)))
+  (and (some? deployment-set-edited)
+       (not= (select-keys deployment-set-edited editable-keys)
+             (select-keys deployment-set editable-keys))))

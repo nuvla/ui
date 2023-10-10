@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -405,6 +406,18 @@
                  :class [:select-all]}
         button-text]]]]))
 
+(defn- ColumnsDropDown
+  [{:keys [current-cols available-cols default-cols add-col-fn]} position]
+  (let [cols-not-visible (->> (keys available-cols)
+                              (remove (set current-cols)))
+        sorted-cols     (sort
+                          (fn [k1 k2]
+                            (let [pos-fn (fn [k]
+                                           (let [po (.indexOf (or [:created :acl :infrastructure-service-group] []) k)]
+                                             (if (neg? po) 100 po)))]
+                              (- (pos-fn k1) (pos-fn k2))))
+                          cols-not-visible)]
+    "bla"))
 
 (defn Table
   "Expects a single config map with a required `:rows` vector of documents.
@@ -460,7 +473,6 @@
         page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed]))
         get-row-props  (fn [row]
                          (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
-
     [:div
      (when selectable?
        [BulkActionBar {:selectable?         selectable?
@@ -488,22 +500,39 @@
            ^{:key (or field-key (random-uuid))}
            [ui/TableHeaderCell
             (merge (:header cell-props) header-cell-props)
-            [:div
-             (cond
-               (fn? header-content)
-               (header-content)
+            [ui/Popup
+             {:trigger
+              (r/as-element
+                [:div
+                 (when-let [remove-fn (-> props :col-config :remove-col-fn)]
+                   [uix/LinkIcon {:color "red"
+                                  :name "remove circle"
+                                  :on-click #(remove-fn field-key)}])
+                 (cond
+                   (fn? header-content)
+                   (header-content)
 
-               header-content
-               header-content
+                   header-content
+                   header-content
 
-               :else
-               (or (tr [field-key]) field-key))
-             (when (and
-                    sort-config
-                    (not no-sort?))
-               [Sort (merge
-                      sort-config
-                      (select-keys col [:field-key :disable-sort :sort-key]))])]])]]
+                   :else
+                   (or (tr [field-key]) field-key))
+                 (when (and
+                         sort-config
+                         (not no-sort?))
+                   [Sort (merge
+                           sort-config
+                           (select-keys col [:field-key :disable-sort :sort-key]))])])
+              :position "right center"
+;; top center top left top right bottom center bottom leftbottom rightright centerleft center
+              ;; :disabled true
+              :hoverable true
+              :basic   true
+              :content
+              (r/as-element
+                [ColumnsDropDown (:col-config props)]
+                )}]
+            ])]]
        [ui/TableBody (:body-props props)
         (doall
          (for [[idx row] (map-indexed vector rows)

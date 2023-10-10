@@ -301,8 +301,8 @@
 
 
 (defn LinkIcon
-  [{:keys [name on-click]}]
-  [:a [icons/Icon {:name name, :link true, :on-click on-click}]])
+  [{:keys [name on-click color]}]
+  [:a [icons/Icon {:name name, :link true, :on-click on-click :color color}]])
 
 
 (defn Link

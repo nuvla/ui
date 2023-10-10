@@ -254,23 +254,3 @@
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/deployments-without-edit-rights deployments)})))
-
-(reg-event-fx
-  ::get-deployment-groups-names
-  (fn [_ [_ depl-list]]
-    (let [depl-set-ids (->> (map :deployment-set depl-list)
-                            (remove nil?)
-                            (into #{}))]
-      {::cimi-api-fx/search
-       [:deployment-set
-        {:filter (general-utils/ids->inclusion-filter-string depl-set-ids)
-         :select "name,id"}
-        #(dispatch [::set-deployment-groups-names %])]})))
-
-(reg-event-db
-  ::set-deployment-groups-names
-  (fn [db [_ response]]
-    (let [depl-set-ids->name (->> (:resources response)
-                                  (map (juxt :id :name))
-                                  (into {}))]
-      (assoc db ::spec/depl-set-ids->names depl-set-ids->name))))

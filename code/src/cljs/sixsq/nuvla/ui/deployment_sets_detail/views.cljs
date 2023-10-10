@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :refer [AuthorVendorForModule]]
             [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-            [sixsq.nuvla.ui.dashboard.views :as dashboard-views ]
+            [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
@@ -33,6 +33,7 @@
             [sixsq.nuvla.ui.routing.utils :as routes-utils :refer [name->href
                                                                    pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [format-money]]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -40,118 +41,143 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.validation :as utils-validation]
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 (defn- create-wrng-msg
   [apps-count edges-count action]
-  (str "You're about to " action " " apps-count " app" (if (< 1 apps-count) "s " " ") "on " edges-count " device" (if (< 1 edges-count) "s. " ". ") "Proceed?"))
+  (str "You're about to " action " " apps-count " app"
+       (if (< 1 apps-count) "s " " ") "on "
+       edges-count " device"
+       (if (< 1 edges-count) "s. " ". ") "Proceed?"))
 
 (defn- ops-status-pending-str [tr-fn ops-status]
   (str/join ", "
-               (map (fn [[k v]]
-                      (str (count v) " " (tr-fn [k])))
+            (map (fn [[k v]]
+                   (str (count v) " " (tr-fn [k])))
                  (dissoc ops-status :status))))
 
 (defn- depl-set->modal-content
   [{:keys [name id description]}]
   (str (or name id) (when description " - ") description))
 
+(defn GuardedMenuItem
+  [{:keys [validation-sub enabled] :or {enabled true}} & children]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        {:keys [valid? errors]} @(subscribe validation-sub)
+        enabled?  (and valid? enabled)
+        menu-item [ui/MenuItem
+                   {:disabled (not enabled?)
+                    :class    (when enabled? "primary-menu-item")}
+                   children]]
+    (if valid?
+      menu-item
+      [ui/Popup
+       {:trigger (r/as-element menu-item)
+        :content (str/join ". " (map (comp @tr :message) errors))}])))
+
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr (subscribe [::i18n-subs/tr])
-        enabled? (general-utils/can-operation? "start" deployment-set)]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? @(subscribe [::subs/operation-enabled? "start"])]
     [uix/ModalDanger
-     {:on-confirm  (fn [_]
-                                   (dispatch [::events/operation
-                                              {:resource-id id
-                                               :operation "start"}]))
-      :trigger     (r/as-element
-                     [ui/MenuItem
-                      {:disabled (not enabled?)
-                       :class    (when enabled? "primary-menu-item")}
-                      [icons/PlayIcon]
-                      (@tr [:start])])
-      :content     [:h3 (depl-set->modal-content deployment-set)]
-      :header      (@tr [:start-deployment-set])
-      :danger-msg  (@tr [:danger-action-cannot-be-undone])
-      :button-text (@tr [:start])
-      :modal-action [:p warn-msg]
+     {:on-confirm         (fn [_]
+                            (dispatch [::events/operation
+                                       {:resource-id id
+                                        :operation   "start"}]))
+      :trigger            (r/as-element
+                            [GuardedMenuItem
+                             {:enabled        enabled?
+                              :validation-sub [::subs/deployment-set-validation]}
+                             [icons/PlayIcon]
+                             (@tr [:start])])
+      :content            [:h3 (depl-set->modal-content deployment-set)]
+      :header             (@tr [:start-deployment-set])
+      :danger-msg         warn-msg
+      :button-text        (@tr [:start])
       :with-confirm-step? true}]
     ))
 
 (defn StopButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr (subscribe [::i18n-subs/tr])]
-  [uix/ModalDanger
-     {:on-confirm  (fn [_]
-                     (dispatch [::events/operation
-                                {:resource-id id
-                                 :operation "stop"}]))
-      :trigger     (r/as-element
-                     [ui/MenuItem
-                      {:disabled (not (general-utils/can-operation?
-                                        "stop" deployment-set))}
-                      [icons/StopIcon]
-                      (@tr [:stop])])
-      :content     [:h3 (depl-set->modal-content deployment-set)]
-      :header      (@tr [:stop-deployment-set])
-      :danger-msg  (@tr [:danger-action-cannot-be-undone])
-      :button-text (@tr [:stop])
-      :modal-action [:p warn-msg]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? (subscribe [::subs/operation-enabled? "stop"])]
+    [uix/ModalDanger
+     {:on-confirm         (fn [_]
+                            (dispatch [::events/operation
+                                       {:resource-id id
+                                        :operation   "stop"}]))
+      :trigger            (r/as-element
+                            [ui/MenuItem
+                             {:disabled (not @enabled?)}
+                             [icons/StopIcon]
+                             (@tr [:stop])])
+      :content            [:h3 (depl-set->modal-content deployment-set)]
+      :header             (@tr [:stop-deployment-set])
+      :danger-msg         warn-msg
+      :button-text        (@tr [:stop])
       :with-confirm-step? true}]))
 
 
 (defn UpdateButton
   [{:keys [id] :as deployment-set} warn-msg]
   (let [tr       (subscribe [::i18n-subs/tr])
-        enabled? (general-utils/can-operation?
-                   "update" deployment-set)]
+        enabled? @(subscribe [::subs/operation-enabled? "update"])]
     [uix/ModalDanger
-     {:on-confirm  (fn [_]
-                     (dispatch [::events/operation
-                                {:resource-id id
-                                 :operation "update"}]))
-      :trigger     (r/as-element
-                     [ui/MenuItem
-                      {:disabled (not enabled?)
-                       :class    (when enabled? "primary-menu-item")}
-                      [icons/RedoIcon]
-                      (@tr [:update])])
-      :content     [:h3 (depl-set->modal-content deployment-set)]
-      :header      (@tr [:update-deployment-set])
-      :danger-msg  (@tr [:danger-action-cannot-be-undone])
-      :button-text (@tr [:update])
-      :modal-action [:p warn-msg]
+     {:on-confirm         (fn [_]
+                            (dispatch [::events/operation
+                                       {:resource-id id
+                                        :operation   "update"}]))
+      :trigger            (r/as-element
+                            [GuardedMenuItem
+                             {:enabled        enabled?
+                              :validation-sub [::subs/deployment-set-validation]}
+                             [icons/RedoIcon]
+                             (@tr [:update])])
+      :content            [:h3 (depl-set->modal-content deployment-set)]
+      :header             (@tr [:update-deployment-set])
+      :danger-msg         warn-msg
+      :button-text        (@tr [:update])
+      :modal-action       [:p warn-msg]
       :with-confirm-step? true}]))
 
 
 (defn DeleteButton
   [deployment-set warn-msg]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        content     (depl-set->modal-content deployment-set)
-        deletable?  (general-utils/can-operation? "delete" deployment-set)
-        forceable?  (general-utils/can-operation? "force-delete" deployment-set)]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        content       (depl-set->modal-content deployment-set)
+        deletable?    (general-utils/can-operation? "delete" deployment-set)
+        forceable?    (general-utils/can-operation? "force-delete" deployment-set)
+        {:keys [header danger-msg button-text]}
+        (if forceable?
+          {:header      (@tr [:force-delete-deployment-set])
+           :button-text (@tr [:force-delete])
+           :danger-msg  (str "Warning! Doing a force delete will leave orphaned containers! "
+                             warn-msg)}
+          {:header      (@tr [:delete-deployment-set])
+           :button-text (@tr [:delete])
+           :danger-msg  warn-msg})]
     [uix/ModalDanger
-     {:on-confirm  #(dispatch [::events/delete {:deletable? deletable?
-                                                :forceable? forceable?}])
-      :trigger     (r/as-element [ui/MenuItem
-                                  {:disabled (and
-                                               (not forceable?)
-                                               (not deletable?))}
-                                  [icons/TrashIconFull]
-                                  (@tr [:delete])])
-      :content     [:h3 content]
-      :header      (@tr [:delete-deployment-set])
-      :danger-msg  (@tr [:danger-action-cannot-be-undone])
-      :button-text (@tr [:delete])
-      :modal-action [:p (if deletable? warn-msg "Force delete will leave orphaned containers. Proceed?")]
+     {:on-confirm         #(dispatch [::events/delete {:deletable? deletable?
+                                                       :forceable? forceable?}])
+      :trigger            (r/as-element [ui/MenuItem
+                                         {:disabled (and
+                                                      (not forceable?)
+                                                      (not deletable?))}
+                                         [icons/TrashIconFull]
+                                         button-text])
+      :content            [:h3 content]
+      :header             header
+      :danger-msg         danger-msg
+      :button-text        button-text
       :with-confirm-step? true}]))
 
 (defn SaveButton
   [{:keys [creating?]}]
   (let [tr            (subscribe [::i18n-subs/tr])
-        save-enabled? (subscribe [::subs/save-enabled? creating?])]
+        save-enabled? (subscribe [::subs/save-enabled? creating?])
+        validation    (subscribe [::subs/deployment-set-validation])]
     (fn [{:keys [deployment-set]}]
       [ui/Popup
        {:trigger
@@ -164,8 +190,10 @@
              :class    (when @save-enabled? "primary-menu-item")
              :on-click (if creating?
                          #(dispatch [::events/create])
-                         #(dispatch [::events/persist! {:deployment-set deployment-set
-                                                        :success-msg    (@tr [:updated-successfully])}]))}]])
+                         (if (:valid? @validation)
+                           #(dispatch [::events/persist! {:deployment-set deployment-set
+                                                          :success-msg    (@tr [:updated-successfully])}])
+                           #(dispatch [::events/enable-form-validation])))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBar
@@ -194,7 +222,7 @@
            ^{:key "stop"}
            [StopButton @deployment-set (warn-msg-fn "stop")]
            ^{:key "delete"}
-           [DeleteButton @deployment-set (warn-msg-fn "remove")]]
+           [DeleteButton @deployment-set (warn-msg-fn "delete")]]
           [components/RefreshMenu
            {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?
@@ -213,24 +241,29 @@
          [components/ResponsiveMenuBar
           (conj MenuItems
                 ^{:key "delete"}
-            [SaveButton {:creating? true}])]]))))
+                [SaveButton {:creating? true}])]]))))
 
 (defn EditableCell
   [attribute creating?]
   (let [deployment-set (subscribe [::subs/deployment-set])
         can-edit?      (subscribe [::subs/can-edit?])
         on-change-fn   #(dispatch [::events/edit attribute %])]
-    (if (or creating? @can-edit?)
-      [components/EditableInput attribute @deployment-set on-change-fn]
-      [ui/TableCell (get @deployment-set attribute)])))
+    [ui/TableCell
+     (if (or creating? @can-edit?)
+       (get @deployment-set attribute)
+       [components/EditableInput
+        {:resource     @deployment-set
+         :attribute    attribute
+         :on-change-fn on-change-fn}]
+       )]))
 
 (def ops-status->color
-  {"OK" "green"
+  {"OK"  "green"
    "NOK" "red"})
 
 (defn OperationalStatusSummary
   [ops-status]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr     (subscribe [::i18n-subs/tr])
         status (:status ops-status)]
     (if (= status
            "OK")
@@ -240,7 +273,7 @@
       [:div
        [ui/Icon {:name :circle :color (ops-status->color status)}]
        (str "Pending: "
-             (ops-status-pending-str @tr ops-status))])))
+            (ops-status-pending-str @tr ops-status))])))
 
 (defn TabOverviewDeploymentSet
   [{:keys [id created updated created-by state operational-status]} creating?]
@@ -299,21 +332,21 @@
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :deploy-for)])
-                         (format-money (/ (:cent-amount-daily price) 100)) "/"
-                         (@tr [:day]))
+                            (format-money (/ (:cent-amount-daily price) 100)) "/"
+                            (@tr [:day]))
         button-content "Add to selection"
-        button-ops     {:fluid    true
-                        :color    "blue"
-                        :icon     button-icon
-                        :content  button-content}
+        button-ops     {:fluid   true
+                        :color   "blue"
+                        :icon    button-icon
+                        :content button-content}
         desc-summary   (-> description
                            utils-values/markdown->summary
                            (general-utils/truncate 60))]
     [apps-store-views/ModuleCardView
-     {:logo-url logo-url
-      :subtype subtype
-      :name name
-      :id id
+     {:logo-url     logo-url
+      :subtype      subtype
+      :name         name
+      :id           id
       :desc-summary [:<>
                      [:p desc-summary]
                      [:div
@@ -322,23 +355,23 @@
                                                first))]
                       [:p "Vendor: " [AuthorVendorForModule app :span]]
                       [:p (str "Price: " deploy-price)]]]
-      :tags tags
-      :published published
-      :detail-href detail-href
-      :button-ops button-ops
-      :target :_blank
-      :on-click (fn [event]
-                  (dispatch [::events/add-app-from-picker app])
-                  (dispatch [::events/set-opened-modal nil])
-                  (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
-                  (.preventDefault event)
-                  (.stopPropagation event))}]))
+      :tags         tags
+      :published    published
+      :detail-href  detail-href
+      :button-ops   button-ops
+      :target       :_blank
+      :on-click     (fn [event]
+                      (dispatch [::events/add-app-from-picker app])
+                      (dispatch [::events/set-opened-modal nil])
+                      (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
+                      (.preventDefault event)
+                      (.stopPropagation event))}]))
 
 (defn AddButton
   [id]
   [ui/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
-              :icon icons/i-plus-large
-              :style {:align-self "center"}}])
+              :icon     icons/i-plus-large
+              :style    {:align-self "center"}}])
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -362,13 +395,13 @@
 
 (defn AppsPickerModal
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        open?        (subscribe [::subs/modal-open? apps-picker-modal-id])
-        close-fn     #(dispatch [::events/set-opened-modal nil])
-        tab-key      apps-store-spec/allapps-key]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        open?    (subscribe [::subs/modal-open? apps-picker-modal-id])
+        close-fn #(dispatch [::events/set-opened-modal nil])
+        tab-key  apps-store-spec/allapps-key]
     (dispatch [::events/fetch-app-picker-apps ::spec/pagination-apps-picker])
     (fn []
-      [ui/Modal {:size :fullscreen
+      [ui/Modal {:size       :fullscreen
                  :open       @open?
                  :close-icon true
                  :on-close   close-fn}
@@ -386,7 +419,7 @@
         apps-row (if creating?
                    (subscribe [::subs/apps-creation-row-data])
                    (subscribe [::subs/applications-overview-row-data]))
-        k->tr-k  {:app-name :name}
+        k->tr-k  {:app :name}
         route    (subscribe [::route-subs/current-route])]
     (fn []
       (let [no-apps? (empty? @apps-row)]
@@ -398,59 +431,59 @@
                       (vec
                         (map-indexed
                           (fn [i k]
-                            {:field-key k
-                             :header-content (-> (or (@tr [(k->tr-k k k)]) k)
+                            {:field-key      k
+                             :header-content (-> (or (@tr [(k->tr-k k)]) k)
                                                  name
                                                  str/capitalize)
-                             :cell (case k
-                                     :app
-                                     (fn [{:keys [cell-data row-data]}]
-                                       [:<>
-                                        [ui/Popup
-                                         {:content (r/as-element [:p "Configure app"])
-                                          :trigger
-                                          (r/as-element
-                                            [:a
-                                             {:href (routes-utils/gen-href
-                                                      @route
-                                                      {:query-params
-                                                       (merge
-                                                         {(routes-utils/db-path->query-param-key [::apps-config])
-                                                          (create-app-config-query-key i (:href row-data))}
-                                                         {:deployment-sets-detail-tab :apps})})
-                                              :children [icons/StoreIcon]
-                                              :target   :_self}
-                                             cell-data
-                                             [:span {:style {:margin-left "0.5rem"}}
-                                              [icons/GearIcon]]])}]
-                                        ])
-                                     :version
-                                     (fn [{{:keys [label created]} :cell-data}]
-                                       [ui/Popup
-                                        {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
-                                                                      " "
-                                                                      (time/ago (time/parse-iso8601 created) @locale))])
-                                         :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
-                                     nil)})
+                             :cell           (case k
+                                               :app
+                                               (fn [{:keys [cell-data row-data]}]
+                                                 [:<>
+                                                  [ui/Popup
+                                                   {:content (r/as-element [:p "Configure app"])
+                                                    :trigger
+                                                    (r/as-element
+                                                      [:a
+                                                       {:href     (routes-utils/gen-href
+                                                                    @route
+                                                                    {:query-params
+                                                                     (merge
+                                                                       {(routes-utils/db-path->query-param-key [::apps-config])
+                                                                        (create-app-config-query-key i (:href row-data))}
+                                                                       {:deployment-sets-detail-tab :apps})})
+                                                        :children [icons/StoreIcon]
+                                                        :target   :_self}
+                                                       cell-data
+                                                       [:span {:style {:margin-left "0.5rem"}}
+                                                        [icons/GearIcon]]])}]])
+                                               :version
+                                               (fn [{{:keys [label created]} :cell-data}]
+                                                 [ui/Popup
+                                                  {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
+                                                                                   " "
+                                                                                   (time/ago (time/parse-iso8601 created) @locale))])
+                                                   :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
+                                               nil)})
                           (keys (dissoc (first @apps-row) :idx :href))))
                       (remove nil?
-                        [{:field-key :app-details
-                          :cell (fn [{:keys [row-data]}]
-                                  [ui/Popup
-                                   {:content (r/as-element [:p "Open app details in marketplace"])
-                                    :trigger (r/as-element [:span
-                                                            [module-plugin/LinkToApp
-                                                             {:db-path  [::spec/apps-sets (:idx row-data)]
-                                                              :href     (:href row-data)
-                                                              :children [icons/ArrowRightFromBracketIcon]
-                                                              :target   :_self}]])}])}
-                         (when creating?
-                           {:field-key :remove
-                            :cell (fn [{:keys [row-data]}]
-                                    [icons/XMarkIcon
-                                     {:style {:cursor :pointer}
-                                      :color "red"
-                                      :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
+                              [{:field-key      :details
+                                :header-content (general-utils/capitalize-words (@tr [:details]))
+                                :cell           (fn [{:keys [row-data]}]
+                                                  [ui/Popup
+                                                   {:content (r/as-element [:p "Open app details"])
+                                                    :trigger (r/as-element [:span
+                                                                            [module-plugin/LinkToApp
+                                                                             {:db-path  [::spec/apps-sets (:idx row-data)]
+                                                                              :href     (:href row-data)
+                                                                              :children [icons/ArrowRightFromBracketIcon]
+                                                                              :target   :_self}]])}])}
+                               (when creating?
+                                 {:field-key :remove
+                                  :cell      (fn [{:keys [row-data]}]
+                                               [icons/XMarkIcon
+                                                {:style    {:cursor :pointer}
+                                                 :color    "red"
+                                                 :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                     :rows @apps-row}]])
          [:div {:style {:display :flex :justify-content :center :align-items :center}}
           (when creating?
@@ -460,8 +493,8 @@
                             :margin-bottm "1rem"}}
               [AddButton apps-picker-modal-id]]])]
          (when no-apps?
-           [:div {:style {:margin-top "1rem"
-                          :margin-left "auto"
+           [:div {:style {:margin-top   "1rem"
+                          :margin-left  "auto"
                           :margin-right "auto"}}
             (@tr [:add-your-first-app])])]))))
 
@@ -539,7 +572,7 @@
                                 (nil? (:count @deployments))
                                 (= 0 (:count @deployments)))
                     :content  "Show me"
-                    :on-click  (create-nav-fn "deployments" nil)}]])))
+                    :on-click (create-nav-fn "deployments" nil)}]])))
 
 
 (defn EdgeOverviewContent [edges-stats]
@@ -549,7 +582,7 @@
                :icon     #(r/as-element [icons/BoxIcon])
                :content  "Show me"
                :disabled (or (nil? (:total edges-stats))
-                           (= 0 (:total edges-stats)))
+                             (= 0 (:total edges-stats)))
                :on-click (create-nav-fn "edges" {:edges-state nil})}]])
 
 (defn TabOverview
@@ -746,8 +779,8 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/Accordion
      [module-plugin/ModuleVersions
-      {:db-path [::spec/apps-sets i]
-       :href    module-id
+      {:db-path      [::spec/apps-sets i]
+       :href         module-id
        :change-event [::events/edit-config]}]
      :label (@tr [:select-version])]))
 
@@ -756,55 +789,47 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/Accordion
      [module-plugin/EnvVariables
-      {:db-path [::spec/apps-sets i]
-       :href    module-id
+      {:db-path      [::spec/apps-sets i]
+       :href         module-id
        :change-event [::events/edit-config]}]
      :label (@tr [:env-variables])]))
 
-(defn RegistriesCredsApp
-  [i module-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/Accordion
-     [module-plugin/RegistriesCredentials
-      {:db-path [::spec/apps-sets i]
-       :href    module-id
-       :change-event [::events/edit-config]}]
-     :label (@tr [:private-registries])]))
 
 (defn- AppName [{:keys [idx id]}]
-  (let [app (subscribe [::module-plugin/module
-                         [::spec/apps-sets idx] id])]
+  (let [app    (subscribe [::module-plugin/module
+                           [::spec/apps-sets idx] id])
+        error? (subscribe [::subs/app-config-validation-error? idx id])]
     (fn []
-      [:span (or (:name @app) (:id @app))])))
+      [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
+       (or (:name @app) (:id @app))])))
 
 
 (defn ConfigureApps
   [i applications]
   ^{:key (str "set-" i)}
   [tab/Tab
-   {:db-path [::apps-config]
-    :panes (map
-             (fn [{:keys [id]}]
-               {:menuItem {:content (r/as-element
-                                      [AppName {:idx i :id id}])
-                           :icon    "cubes"
-                           :key     (create-app-config-query-key i id)}
-                :render   #(r/as-element
-                             [ui/TabPane
-                              [ui/Popup {:trigger (r/as-element
-                                                    [:span
-                                                     [module-plugin/LinkToApp
-                                                      {:db-path  [::spec/apps-sets i]
-                                                       :href     id
-                                                       :children [:<>
-                                                                  [ui/Icon {:class icons/i-link}]
-                                                                  "Go to app"]}]])
-                                         :content "Open application in a new window"}]
-                              [ModuleVersionsApp i id]
-                              [EnvVariablesApp i id]
-                              [RegistriesCredsApp i id]])}
-               )
-             applications)}])
+   {:db-path                 [::apps-config]
+    :ignore-chng-protection? true
+    :panes                   (map
+                               (fn [{:keys [id]}]
+                                 {:menuItem {:content (r/as-element
+                                                        [AppName {:idx i :id id}])
+                                             :icon    "cubes"
+                                             :key     (create-app-config-query-key i id)}
+                                  :render   #(r/as-element
+                                               [ui/TabPane
+                                                [ui/Popup {:trigger (r/as-element
+                                                                      [:span
+                                                                       [module-plugin/LinkToApp
+                                                                        {:db-path  [::spec/apps-sets i]
+                                                                         :href     id
+                                                                         :children [:<>
+                                                                                    [ui/Icon {:class icons/i-link}]
+                                                                                    "Go to app"]}]])
+                                                           :content "Open application in a new window"}]
+                                                [ModuleVersionsApp i id]
+                                                [EnvVariablesApp i id]])})
+                               applications)}])
 
 (defn BoldLabel
   [txt]
@@ -1041,16 +1066,16 @@
     [:div {:class :nuvla-deployments}
      [DeploymentStatesFilter @depl-state-filter]
      [dv/DeploymentTable
-      {:no-actions         true
-       :empty-msg          (tr [:empty-deployment-module-msg])
-       :pagination-db-path ::spec/pagination-deployments
-       :pagination         (fn []
-                             [pagination-plugin/Pagination
-                              {:db-path                [::spec/pagination-deployments]
-                               :total-items            @count
-                               :change-event           [::events/get-deployments-for-deployment-sets uuid]
-                               :i-per-page-multipliers [1 2 4]}])
-       :fetch-event        [::events/get-deployments-for-deployment-sets uuid]
+      {:no-actions              true
+       :empty-msg               (tr [:empty-deployment-module-msg])
+       :pagination-db-path      ::spec/pagination-deployments
+       :pagination              (fn []
+                                  [pagination-plugin/Pagination
+                                   {:db-path                [::spec/pagination-deployments]
+                                    :total-items            @count
+                                    :change-event           [::events/get-deployments-for-deployment-sets uuid]
+                                    :i-per-page-multipliers [1 2 4]}])
+       :fetch-event             [::events/get-deployments-for-deployment-sets uuid]
        ;; FIXME: Make this more generic by passing all columns to show/hide
        :hide-depl-group-column? true}]]))
 
@@ -1064,90 +1089,93 @@
     (fn []
       (when (or @deployment-set creating?)
         [tab/Tab
-         {:db-path [::spec/tab]
-          :panes   [{:menuItem {:content (str/capitalize (tr [:overview]))
-                                :key     :overview
-                                :icon    "info"}
-                     :render   #(r/as-element [TabOverview uuid creating?])}
-                    {:menuItem {:key :apps
-                                :content
-                                (let [tab-title (tr [:apps-config])]
-                                  (if creating?
-                                    (r/as-element
-                                      [ui/Popup {:trigger (r/as-element
-                                                            [:span
-                                                             [icons/LayerGroupIcon]
-                                                             tab-title])
-                                                 :content (tr [:save-before-configuring-apps])}])
-                                    tab-title))
-                                :disabled (empty? @apps-sets)}
-                     :render   #(r/as-element
-                                  [ConfigureApps
-                                   0
-                                   (get-in @apps-sets [0 :applications])])}
-                    {:menuItem {:key :edges
-                                :content
-                                (let [tab-title (str/capitalize (tr [:edges]))]
-                                  (if creating?
-                                    (r/as-element
-                                      [ui/Popup {:trigger (r/as-element
-                                                            [:span
-                                                             [icons/BoxIcon]
-                                                             tab-title])
-                                                 :content (tr [:depl-group-add-one-edge-to-enable-tab])}])
-                                    tab-title))
-                                :disabled (empty? @edges)}
-                     :render   #(r/as-element
-                                  [EdgesTab])}
-                    {:menuItem {:key :deployments
-                                :content
-                                (let [tab-title (str/capitalize (str/capitalize (tr [:deployments])))]
-                                  (if creating?
-                                    (r/as-element
-                                      [ui/Popup {:trigger (r/as-element
-                                                            [:span
-                                                             [icons/RocketIcon]
-                                                             tab-title])
-                                                 :content (tr [:depl-group-save-and-start-to-enable-tab])}])
-                                    tab-title))
-                                :disabled (zero? (:total @depl-all))}
-                     :render #(r/as-element
-                                [DeploymentsTab uuid])}]
+         {:db-path                 [::spec/tab]
+          :panes                   [{:menuItem {:content (str/capitalize (tr [:overview]))
+                                                :key     :overview
+                                                :icon    icons/i-eye}
+                                     :render   #(r/as-element [TabOverview uuid creating?])}
+                                    {:menuItem {:key      :apps
+                                                :content
+                                                (let [tab-title (tr [:apps-config])]
+                                                  (if creating?
+                                                    (r/as-element
+                                                      [ui/Popup {:trigger (r/as-element
+                                                                            [:span
+                                                                             tab-title])
+                                                                 :content (tr [:save-before-configuring-apps])}])
+                                                    (let [error? @(subscribe [::subs/apps-config-validation-error?])]
+                                                      (r/as-element
+                                                        [:span
+                                                         {:style {:color (if error? utils-forms/dark-red "black")}}
+                                                         tab-title]))))
+                                                :icon     icons/i-gear
+                                                :disabled (empty? @apps-sets)}
+                                     :render   #(r/as-element
+                                                  [ConfigureApps
+                                                   0
+                                                   (get-in @apps-sets [0 :applications])])}
+                                    {:menuItem {:key      :edges
+                                                :content
+                                                (let [tab-title (str/capitalize (tr [:edges]))]
+                                                  (if creating?
+                                                    (r/as-element
+                                                      [ui/Popup {:trigger (r/as-element [:span tab-title])
+                                                                 :content (tr [:depl-group-add-one-edge-to-enable-tab])}])
+                                                    tab-title))
+                                                :icon     icons/i-box
+                                                :disabled (empty? @edges)}
+                                     :render   #(r/as-element
+                                                  [EdgesTab])}
+                                    {:menuItem {:key      :deployments
+                                                :content
+                                                (let [tab-title (str/capitalize (str/capitalize (tr [:deployments])))]
+                                                  (if creating?
+                                                    (r/as-element
+                                                      [ui/Popup {:trigger (r/as-element
+                                                                            [:span
+                                                                             tab-title])
+                                                                 :content (tr [:depl-group-save-and-start-to-enable-tab])}])
+                                                    tab-title))
+                                                :icon     icons/i-rocket
+                                                :disabled (zero? (:total @depl-all))}
+                                     :render   #(r/as-element
+                                                  [DeploymentsTab uuid])}]
           :ignore-chng-protection? true
-          :menu    {:secondary true
-                    :pointing  true}}]))))
+          :menu                    {:secondary true
+                                    :pointing  true}}]))))
 
 (defn- DeploymentSetView
   [uuid]
   (dispatch [::events/init uuid])
   (let [depl-set (subscribe [::subs/deployment-set])]
-   (fn []
-     (let [{:keys [id name]} @depl-set]
-       [components/LoadingPage {:dimmable? true}
-        [:<>
-         [components/NotFoundPortal
-          ::subs/deployment-set-not-found?
-          :no-deployment-set-message-header
-          :no-deployment-set-message-content]
-         [ui/Container {:fluid true}
-          [uix/PageHeader "bullseye" (or name id) :color (ops-status->color
-                                                           (-> @depl-set
-                                                               :operational-status
-                                                               :status))]
-          [MenuBar uuid]
-          [bulk-progress-plugin/MonitoredJobs
-           {:db-path [::spec/bulk-jobs]}]
-          [components/ErrorJobsMessage
-           ::job-subs/jobs nil nil
-           #(dispatch [::tab/change-tab {:db-path [::spec/tab]
-                                         :tab-key :jobs}])]
-          [TabsDeploymentSet {:uuid uuid}]]]]))))
+    (fn []
+      (let [{:keys [id name]} @depl-set]
+        [components/LoadingPage {:dimmable? true}
+         [:<>
+          [components/NotFoundPortal
+           ::subs/deployment-set-not-found?
+           :no-deployment-set-message-header
+           :no-deployment-set-message-content]
+          [ui/Container {:fluid true}
+           [uix/PageHeader "bullseye" (or name id) :color (ops-status->color
+                                                            (-> @depl-set
+                                                                :operational-status
+                                                                :status))]
+           [utils-validation/validation-error-message ::subs/form-valid?]
+           [MenuBar uuid]
+           [bulk-progress-plugin/MonitoredJobs
+            {:db-path [::spec/bulk-jobs]}]
+           [components/ErrorJobsMessage
+            ::job-subs/jobs nil nil
+            #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                          :tab-key :jobs}])]
+           [TabsDeploymentSet {:uuid uuid}]]]]))))
 
 (defn DeploymentSetCreate
   []
   (dispatch [::events/init-create])
-  (let [tr (subscribe [::i18n-subs/tr])
-        name (subscribe [::route-subs/query-param :name])
+  (let [tr            (subscribe [::i18n-subs/tr])
+        name          (subscribe [::route-subs/query-param :name])
         depl-set-name (subscribe [::subs/deployment-set-name])]
     (fn []
       [:<>

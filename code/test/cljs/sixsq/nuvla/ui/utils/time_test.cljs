@@ -77,7 +77,7 @@
   (is (= "Invalid date" (time/invalid "fr"))))
 
 
-(deftest remaining-test
+(deftest format-distance-test
   (doseq [[milliseconds {expected-en :en
                          expected-fr :fr}]
           {172800000000 {:en "over 5 years", :fr "plus de 5 ans"},
@@ -94,9 +94,9 @@
            1800000      {:en "30 minutes", :fr "30 minutes"},
            2592000000   {:en "about 1 month", :fr "environ 1 mois"}}]
     (let [past-moment (time/add-milliseconds test-date milliseconds)]
-      (is (= expected-en (time/remaining past-moment)))
-      (is (= expected-en (time/remaining past-moment "en")))
-      (is (= expected-fr (time/remaining past-moment "fr"))))))
+      (is (= expected-en (time/format-distance past-moment)))
+      (is (= expected-en (time/format-distance past-moment "en")))
+      (is (= expected-fr (time/format-distance past-moment "fr"))))))
 
 
 (deftest delta-tests

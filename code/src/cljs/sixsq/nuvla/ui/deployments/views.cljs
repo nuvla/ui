@@ -166,12 +166,11 @@
            :on-refresh refresh}]]]])))
 
 (defn- DeplSetLink
-  [depl-set-id]
+  [depl-set-id depl-set-name]
   (when depl-set-id
-    (let [name (subscribe [::subs/deployment-set-name depl-set-id])]
-      [:a {:href depl-set-id}
-       [ui/Icon {:name "bullseye"}]
-       @name])))
+    [:a {:href depl-set-id}
+     [ui/Icon {:name "bullseye"}]
+     depl-set-name]))
 
 
 (defn RowFn
@@ -182,7 +181,7 @@
         url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
         creator               (subscribe [::session-subs/resolve-user created-by])
         edge-id               (:nuvlabox deployment)
-        edge-status            (subscribe [::subs/deployment-edges-stati edge-id])]
+        edge-status           (subscribe [::subs/deployment-edges-stati edge-id])]
     [:<>
      [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                     (general-utils/id->short-uuid id)]]
@@ -204,7 +203,7 @@
                       [ui/Icon {:name "external"}]
                       primary-url-name])]
      (when (:show-depl-set-column? options)
-       [ui/TableCell [DeplSetLink (deployment :deployment-set)]])
+       [ui/TableCell [DeplSetLink (deployment :deployment-set) (deployment :deployment-set-name)]])
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell (-> deployment :updated time/parse-iso8601 time/ago)]
      [ui/TableCell @creator]
@@ -229,7 +228,6 @@
         ff (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
         show-depl-set-column? (and @ff (not hide-depl-group-column?))]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
-      (dispatch [::events/get-deployment-groups-names deployments-list])
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
         (let [selectable? (or (nil? show-options?) show-options?)
@@ -257,7 +255,7 @@
                                     :no-sort?  true}
                                    (when show-depl-set-column?
                                      {:field-key :deployment-set
-                                      :no-sort?  true})
+                                      :sort-key  :deployment-set-name})
                                    {:field-key :created}
                                    {:field-key :updated}
                                    {:field-key :created-by}

@@ -19,6 +19,11 @@
   :-> :state)
 
 (reg-sub
+  ::execution-mode
+  :<- [::deployment]
+  :-> :execution-mode)
+
+(reg-sub
   ::deployment-start?
   :<- [::deployment-state]
   (fn [state]
@@ -68,6 +73,9 @@
 (reg-sub
   ::modal-action-button-icon
   :<- [::deployment-start?]
+
+
+
   (fn [start?]
     (if start? icons/i-rocket "redo")))
 
@@ -76,19 +84,6 @@
   :<- [::deployment-start?]
   (fn [start?]
     (if start? "start" "update")))
-
-(reg-sub
-  ::execution-mode
-  :<- [::selected-infra-service]
-  :<- [::selected-credential-id]
-  (fn [[infra-service cred-id]]
-    (let [cred-unknown? @(subscribe [::creds-subs/credential-check-status-unknown? cred-id])
-          cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])]
-      (if (clouds-utils/infra-support-pull? infra-service)
-        (if (and cred-unknown? (not cred-loading?))
-          "pull"
-          "mixed")
-        "push"))))
 
 (reg-sub
   ::modal-action-button-text

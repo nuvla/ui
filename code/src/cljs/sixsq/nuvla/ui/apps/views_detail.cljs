@@ -25,7 +25,6 @@
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -688,7 +687,7 @@
       [uix/Accordion
        [:<>
         [:div (@tr [:env-variables])
-         [:span ff/nbsp (ff/help-popup (@tr [:module-env-variables-help]))]]
+         [uix/HelpPopup (@tr [:module-env-variables-help])]]
         (if (empty? @env-variables)
           [ui/Message
            (@tr [:module-no-env-variables])]
@@ -768,7 +767,7 @@
       [uix/Accordion
        [:<>
         [:div (@tr [:urls])
-         [:span ff/nbsp (ff/help-popup (@tr [:module-urls-help]))]]
+         [uix/HelpPopup (@tr [:module-urls-help])]]
         (if (empty? @urls)
           [ui/Message
            (str/capitalize (str (@tr [:no-urls]) "."))]
@@ -849,7 +848,7 @@
 
        [:<>
         [:div (@tr [:module-output-parameters])
-         [:span ff/nbsp (ff/help-popup (@tr [:module-output-parameters-help]))]]
+         [uix/HelpPopup (@tr [:module-output-parameters-help])]]
         (if (empty? @output-parameters)
           [ui/Message
            (str/capitalize (str (@tr [:no-output-parameters]) "."))]
@@ -918,7 +917,7 @@
       [uix/Accordion
        [:<>
         [:div (@tr [:module-data-type])
-         [:span ff/nbsp (ff/help-popup (@tr [:module-data-type-help]))]]
+         [uix/HelpPopup (@tr [:module-data-type-help])]]
         (if (empty? @data-types)
           [ui/Message
            (str/capitalize (str (@tr [:no-databindings]) "."))]
@@ -986,7 +985,7 @@
         [uix/Accordion
          [:<>
           [:div (@tr [:private-registries])
-           [:span ff/nbsp (ff/help-popup (@tr [:private-registries-help]))]]
+           [uix/HelpPopup (@tr [:private-registries-help])]]
           (if (empty? @registries)
             [ui/Message
              (@tr [:private-registries-not-used])]

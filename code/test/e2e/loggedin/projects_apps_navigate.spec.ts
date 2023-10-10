@@ -7,7 +7,7 @@ test('Navigate from projects to apps', async ({ page }, { config }) => {
   await page.getByRole('link', { name: 'Apps' }).nth(0).click();
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/apps`));
 
-  await page.getByText('Navigate Apps').nth(0).click();
+  await page.getByText('Navigate Projects').nth(0).click();
   await expect(page).toHaveURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
 
   await page.getByText('DO NOT DELETE --- e2e test project').click();

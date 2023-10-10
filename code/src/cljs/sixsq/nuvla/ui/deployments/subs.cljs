@@ -88,13 +88,3 @@
 (reg-sub
   ::deployments-without-edit-rights
   :-> ::spec/deployments-without-edit-rights)
-
-(reg-sub
-  ::deployments-sets-ids->names
-  :-> ::spec/depl-set-ids->names)
-
-(reg-sub
-  ::deployment-set-name
-  :<- [::deployments-sets-ids->names]
-  (fn [depl-set-ids->names [_ id]]
-    (get depl-set-ids->names id)))

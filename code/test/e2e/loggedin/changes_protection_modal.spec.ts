@@ -40,6 +40,7 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   await page.waitForTimeout(100);
   await page.evaluate(() => document.querySelector('[data-testid=protection-modal]')?.parentElement?.click());
   // await page.getByTestId('protection-modal').locator('..').click();
+  await page.waitForTimeout(200);
   expect(page.getByRole('button', { name: 'ignore changes' })).toBeHidden();
   expect(page.url()).toBe(url);
 
@@ -47,11 +48,13 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   // clicks X to close it
   // Open modal
   await openModal();
+  await page.waitForTimeout(200);
   await page.locator('.close').click();
   expectModalHidden(page, 'Modal still hides after clicking X 1st time?');
   await page.goBack();
+  await page.waitForTimeout(200);
   await page.locator('.close').click({ timeout: 2000 });
-  expectModalHidden(page, 'Modal still after navigating back 2nd time?');
+  expectModalHidden(page, 'Modal still hides after navigating back 2nd time?');
 
   await openModal();
   expectModalHidden(page, 'Modal still hides after clicking X 3rd time?', 200);
@@ -74,7 +77,7 @@ function expectModalHidden(page, errorMessage = 'Modal hidden?', timeout = 500) 
 async function setUp(page: Page, baseURL) {
   await page.getByRole('link', { name: 'apps' }).click();
   await page.waitForURL(`${baseURL}/ui/apps`);
-  await page.getByRole('link', { name: 'Navigate Apps' }).click();
+  await page.getByRole('link', { name: 'Navigate Projects' }).click();
   await page.waitForURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
   await page.getByText('DO NOT DELETE --- e2e test project', { exact: true }).click();
   await page.waitForURL(`${baseURL}/ui/apps/do-not-delete--e2e-test-project?apps-project-tab=overview`);

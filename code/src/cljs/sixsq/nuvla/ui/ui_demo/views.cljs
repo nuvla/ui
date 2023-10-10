@@ -104,14 +104,15 @@
                              (map (fn [k] {:field-key k}) ks)))
                          (into {} (map (juxt :field-key identity) (:columns props))))
         current-cols   (subscribe [::get-current-cols])
-        default-cols   (subscribe [::get-default-cols])]
+        default-cols   (subscribe [::get-default-cols])
+        ]
     (dispatch [::init-table-col-config (:columns props)  ])
     (fn []
       [Table (assoc props :col-config
                {:available-cols available-cols
                 :current-cols @current-cols}
                :columns (mapv (fn [k] (available-cols k))
-                          (or @current-cols @default-columns)))])))
+                          (or @current-cols @default-cols)))])))
 
 (defn UiDemo
   []

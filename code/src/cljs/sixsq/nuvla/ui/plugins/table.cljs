@@ -8,9 +8,9 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix :refer [TR]]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (s/def ::pass-through-props (s/nilable map?))
 (s/def ::table-props ::pass-through-props)
@@ -413,11 +413,20 @@
         sorted-cols     (sort
                           (fn [k1 k2]
                             (let [pos-fn (fn [k]
-                                           (let [po (.indexOf (or [:created :acl :infrastructure-service-group] []) k)]
+                                           (let [po (.indexOf (or default-cols []) k)]
                                              (if (neg? po) 100 po)))]
                               (- (pos-fn k1) (pos-fn k2))))
                           cols-not-visible)]
-    "bla"))
+    [ui/Dropdown
+     {:options (mapv (fn [col-key]
+                       {:key   col-key
+                        :label [TR col-key]
+                        :value col-key})
+                 sorted-cols)
+      :trigger [TR :add-columns]
+      :on-change (ui-callback/value
+                   (fn [key-string]
+                     (add-col-fn (keyword key-string) position)))}]))
 
 (defn Table
   "Expects a single config map with a required `:rows` vector of documents.
@@ -494,7 +503,7 @@
             {:style {:width "30px"}}
             [HeaderCellCeckbox {:db-path select-db-path :resources-sub-key resources-sub-key
                                 :page-selected?-sub page-selected? :rights-needed rights-needed}]])
-         (for [col columns
+         (for [[idx col] (map-indexed vector columns)
                :when col
                :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
            ^{:key (or field-key (random-uuid))}
@@ -530,8 +539,7 @@
               :basic   true
               :content
               (r/as-element
-                [ColumnsDropDown (:col-config props)]
-                )}]
+                [ColumnsDropDown (:col-config props) (inc idx)])}]
             ])]]
        [ui/TableBody (:body-props props)
         (doall

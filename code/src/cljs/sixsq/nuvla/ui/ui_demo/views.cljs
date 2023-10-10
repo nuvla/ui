@@ -7,8 +7,7 @@
             [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.cimi.views :refer [MenuBar]]
             [sixsq.nuvla.ui.plugins.table :refer [Table]]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 ;; default-cols
 ;; -> vector of field-keys
@@ -118,13 +117,17 @@
 (reg-event-fx
   ::init-table-col-config
   [(inject-cofx :storage/get {:name local-storage-key})]
-  (fn [{{:keys [::current-cols] :as db} :db} [_ cols db-path]]
+  (fn [{{:keys [::current-cols] :as db} :db
+        cols-config                     :storage/get} [_ cols db-path]]
     (let [defaults (or
                      (some->>
                        cols
                        (map :field-key))
                      default-columns)
-          cols     (get current-cols db-path defaults)]
+          cols     (or
+                     (get (edn/read-string cols-config) db-path)
+                     (get current-cols db-path)
+                     defaults)]
       {:db (assoc-in db [::default-cols db-path] defaults)
        :fx [[:dispatch [::store-cols cols db-path]]]})))
 

@@ -32,9 +32,9 @@
      :on-refresh refresh}]])
 
 (defn Statistic
-  [{:keys [value icon class label target positive-color icon-color color]
+  [{:keys [value icon class label target positive-color color]
     :or   {positive-color "black"}}]
-  (let [color        (or color (if (pos? value) positive-color "grey"))
+  (let [color        (if (pos? value) (or color positive-color) "grey")
         {:keys [resource tab-event]} target
         interactive? (or tab-event resource)]
     [ui/Statistic {:style    {:cursor (when interactive? "pointer")}
@@ -45,8 +45,9 @@
                                   (dispatch tab-event))
                                 (when resource
                                   (dispatch [::routing-events/navigate resource])))}
-     [icons/Icon (merge {:name icon} (when icon-color {:color icon-color}))]
-     [ui/StatisticValue (or value "-")]
+     [icons/Icon {:name  icon
+                  :color color}]
+     [ui/StatisticValue (or value 0)]
      [ui/StatisticLabel label]]))
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]

@@ -131,13 +131,13 @@
   ([{:keys [value icons label clickable? positive-color set-state-selector-event
             state-selector-subs stacked? on-click selected?]
      :or   {positive-color "black"}}]
-   (let [state-selector (subscribe [state-selector-subs])
+   (let [state-selector (when state-selector-subs @(subscribe [state-selector-subs]))
          is-selected?   (if (some? selected?)
                           selected?
                           (or
-                            (= label @state-selector)
+                            (= label state-selector)
                             (and (= label "TOTAL")
-                                 (nil? @state-selector))))
+                              (nil? state-selector))))
          color          (if (pos? value) positive-color "grey")
          icon-key       (str label "-" icons)]
      [ui/Statistic {:style    (when clickable? {:cursor "pointer"})
@@ -160,11 +160,11 @@
                              :style   {:margin-right 0}
                              :name    i}])]
          [ui/StatisticValue
-          (or value "-")]
+          (or value 0)]
          [ui/StatisticLabel label]]
         [:<>
          [ui/StatisticValue
-          (or value "-")
+          (or value 0)
           "\u2002"
           [ui/IconGroup
            (for [i icons]

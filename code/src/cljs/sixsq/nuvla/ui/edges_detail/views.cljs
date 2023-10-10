@@ -1229,7 +1229,7 @@
        [:p
         (if (time/before-now? next-telemetry-moment)
           [:<> "Missing telemetry report for "]
-          [:<> "Next telemetry report is expected "])
+          [:<> "Next telemetry report is expected in "])
         (some-> next-telemetry-moment (time/format-distance @locale))])
      5000]))
 
@@ -1250,13 +1250,14 @@
      [ui/MessageList {:items status-notes}]]))
 
 (defn OperationalStatus
-  [{:keys [status online] :as _nb-status}]
-  (let [tr @(subscribe [::i18n-subs/tr])]
+  [{:keys [status] :as nb-status}]
+  (let [tr        @(subscribe [::i18n-subs/tr])
+        outdated? (utils/telemetry-outdated? nb-status)]
     (when status
       [:div {:style {:margin "0.5em 0 1em 0"}}
-       (if online
-         (tr [:nuvlaedge-operational-status])
-         (tr [:nuvlaedge-operational-status-was]))
+       (if outdated?
+         (tr [:nuvlaedge-operational-status-was])
+         (tr [:nuvlaedge-operational-status]))
        [ui/Popup
         {:trigger        (r/as-element
                            [ui/Label
@@ -2049,18 +2050,16 @@
      (or name id)]))
 
 (defn TelemetryOutdatedMessage
-  [{:keys [next-telemetry] :as _nb-status}]
+  [nb-status]
   [uix/ForceRerenderComponentByDelay
-   #(let [outdated? (some-> next-telemetry
-                            time/parse-iso8601
-                            time/before-now?)]
+   #(let [outdated? (utils/telemetry-outdated? nb-status)]
       (when outdated?
         [ui/Message
          {:warning true
           :icon    icons/i-warning
           :content (r/as-element
                      [uix/TR :nuvlaedge-outdated-telemetry-warning])}]))
-   15000])
+   5000])
 
 
 (defn EdgeDetails

@@ -7,8 +7,7 @@
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def creation-temp-id-key :temp-id)
 

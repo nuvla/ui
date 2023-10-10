@@ -282,3 +282,9 @@
         offline         (:0 online-statuses)
         unknown         (- total (+ online offline))]
     {:total total :online online :offline offline :unknown unknown}))
+
+(defn telemetry-outdated?
+  [{:keys [next-telemetry] :as _nb-status}]
+  (and (some? next-telemetry) (some-> next-telemetry
+                                      time/parse-iso8601
+                                      time/before-now?)))

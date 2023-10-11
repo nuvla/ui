@@ -458,13 +458,9 @@
      - `:bulk-actions`, a vector of at least one ::bulk-action. A ::bulk-action must be an
                         entire component to render or an event and name.
     Enabled sort for all columns, column wise disabling via `:no-sort?` key in column definition.
-
-    A custom render function for a whole row can be provided with:
-    - `:row-render`
-    This overrides any `:cell` custom render function passed or props passed to column definitions.
 "
   [{:keys [cell-props columns rows
-           row-click-handler row-props row-render
+           row-click-handler row-props
            sort-config select-config]
     :as   props}]
   (let [{:keys [bulk-actions select-db-path total-count-sub-key
@@ -532,46 +528,39 @@
                    [Sort (merge
                            sort-config
                            (select-keys col [:field-key :disable-sort :sort-key]))])])
-              :position "right center"
-;; top center top left top right bottom center bottom leftbottom rightright centerleft center
-              ;; :disabled true
+              :position "top right"
+              :disabled (not (-> props :col-config :remove-col-fn))
               :hoverable true
               :basic   true
               :content
-              (r/as-element
+              #(r/as-element
                 [ColumnsDropDown (:col-config props) (inc idx)])}]
             ])]]
        [ui/TableBody (:body-props props)
         (doall
          (for [[idx row] (map-indexed vector rows)
                :let [id (or (:id row) (random-uuid))]]
-           (cond
-             row-render
-             ^{:key id}
-             [ui/TableRow (get-row-props row)
-              (when selectable?
-                [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
-                               :selected-all-sub select-all? :resources-sub-key resources-sub-key
-                               :rights-needed rights-needed
-                               :edge-name (or
-                                           (and select-label-accessor
-                                                (select-label-accessor row))
-                                           (:name row)
-                                           (:id row))
-                               :idx idx}])
-              [row-render row]]
-             :else
-             ^{:key id}
-             [ui/TableRow (get-row-props row)
-              (for [{:keys [field-key accessor cell cell-props]} columns
-                    :let [cell-data ((or accessor field-key) row)]]
-                ^{:key (str id "-" field-key)}
-                [ui/TableCell
-                 cell-props
-                 (cond
-                   cell [cell {:row-data  row
-                               :cell-data cell-data}]
-                   :else (str cell-data))])])))]]]]))
+           [ui/TableRow (get-row-props row)
+            (when selectable?
+              [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
+                             :selected-all-sub select-all? :resources-sub-key resources-sub-key
+                             :rights-needed rights-needed
+                             :edge-name (or
+                                          (and select-label-accessor
+                                            (select-label-accessor row))
+                                          (:name row)
+                                          (:id row))
+                             :idx idx}])
+            (for [{:keys [field-key accessor cell cell-props]} columns
+                  :let [cell-data ((or accessor field-key) row)]]
+              ^{:key (str id "-" field-key)}
+              [ui/TableCell
+               cell-props
+               (cond
+                 cell [cell {:row-data  row
+                             :cell-data cell-data
+                             :field-key field-key}]
+                 :else (str cell-data))])]))]]]]))
 
 
 (s/fdef Table :args (s/cat :opts (s/keys
@@ -582,7 +571,6 @@
                                             ::header-props
                                             ::body-props
                                             ::cell-props
-                                            ::row-render
                                             ::bulk-actions
                                             ::helpers/db-path
                                             ::sort-config

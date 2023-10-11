@@ -11,7 +11,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix :refer [TR]]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (s/def ::pass-through-props (s/nilable map?))
@@ -668,6 +668,7 @@
         (doall
           (for [[idx row] (map-indexed vector rows)
                 :let [id (or (:id row) (random-uuid))]]
+            ^{:key (:id row)}
             [ui/TableRow (get-row-props row)
              (when selectable?
                [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path

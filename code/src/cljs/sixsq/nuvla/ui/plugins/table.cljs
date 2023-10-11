@@ -655,43 +655,44 @@
             ^{:key (or field-key (random-uuid))}
             [ui/TableHeaderCell
              (merge (:header cell-props) header-cell-props)
-             [ui/Popup
-              {:trigger
-               (r/as-element
-                 [:div
-                  (when-let [remove-fn (-> props :col-config :remove-col-fn)]
-                    (when (< 1 (count columns))
-                      [uix/LinkIcon {:color "red"
-                                     :disabled (< (count columns) 2)
-                                     :name "remove circle"
-                                     :on-click #(remove-fn field-key)}]))
-                  (cond
-                    (fn? header-content)
-                    (header-content)
+             [:div {:style {:display :flex}}
+              (when-let [remove-fn (-> props :col-config :remove-col-fn)]
+                (when (< 1 (count columns))
+                  [uix/LinkIcon {:color "red"
+                                 :disabled (< (count columns) 2)
+                                 :name "remove circle"
+                                 :on-click #(remove-fn field-key)}]))
+              [ui/Popup
+               {:trigger
+                (r/as-element
+                  [:div {:style {:flex-grow 1}}
+                   (cond
+                     (fn? header-content)
+                     (header-content)
 
-                    header-content
-                    header-content
+                     header-content
+                     header-content
 
-                    :else
-                    (or (tr [field-key]) field-key))
-                  (when (and
-                          sort-config
-                          (not no-sort?))
-                    [Sort (merge
-                            sort-config
-                            (select-keys col [:field-key :disable-sort :sort-key]))])])
-               :position "top right"
-               :disabled (not (-> props :col-config :remove-col-fn))
-               :hoverable true
-               :basic   true
-               :content
-               (r/as-element
-                 [:div {:style {:display :flex}}
-                  [:a {:on-click (fn [] (let [reset-fn (-> props :col-config :reset-cols-fn)]
-                                          (reset-fn)))
-                       :href ""}
-                   "RESET default columns"]
-                  [ColumnsDropDown (:col-config props) (inc idx)]])}]])]]
+                     :else
+                     (or (tr [field-key]) field-key))
+                   (when (and
+                           sort-config
+                           (not no-sort?))
+                     [Sort (merge
+                             sort-config
+                             (select-keys col [:field-key :disable-sort :sort-key]))])])
+                :position "top right"
+                :disabled (not (-> props :col-config :remove-col-fn))
+                :hoverable true
+                :basic   true
+                :content
+                (r/as-element
+                  [:div {:style {:display :flex}}
+                   [:a {:on-click (fn [] (let [reset-fn (-> props :col-config :reset-cols-fn)]
+                                           (reset-fn)))
+                        :href ""}
+                    "RESET default columns"]
+                   [ColumnsDropDown (:col-config props) (inc idx)]])}]]])]]
         [ui/TableBody (:body-props props)
          (doall
            (for [[idx row] (map-indexed vector rows)

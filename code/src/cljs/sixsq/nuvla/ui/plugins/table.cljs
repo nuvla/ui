@@ -636,9 +636,11 @@
               (r/as-element
                 [:div
                  (when-let [remove-fn (-> props :col-config :remove-col-fn)]
-                   [uix/LinkIcon {:color "red"
-                                  :name "remove circle"
-                                  :on-click #(remove-fn field-key)}])
+                   (when (< 1 (count columns))
+                     [uix/LinkIcon {:color "red"
+                                    :disabled (< (count columns) 2)
+                                    :name "remove circle"
+                                    :on-click #(remove-fn field-key)}]))
                  (cond
                    (fn? header-content)
                    (header-content)

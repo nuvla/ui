@@ -410,7 +410,8 @@
 
 (defn- ColumnsDropDown
   [{:keys [current-cols available-cols default-cols add-col-fn]} position]
-  (let [cols-not-visible (->> (keys available-cols)
+  (let [tr               (subscribe [::i18n-subs/tr])
+        cols-not-visible (->> (keys available-cols)
                               (remove (set current-cols)))
         sorted-cols     (sort
                           (fn [k1 k2]
@@ -423,10 +424,10 @@
      {:options
       (mapv (fn [col-key]
               {:key   col-key
-               :label [TR col-key]
-               :value col-key})
+               :value col-key
+               :text  (or (@tr [col-key]) col-key)})
         sorted-cols)
-      :trigger [TR :add-columns]
+      :trigger (@tr [:add-column-to-right] )
       :on-change (ui-callback/value
                    (fn [key-string]
                      (add-col-fn (keyword key-string) position)))}]))
@@ -657,34 +658,38 @@
               :basic   true
               :content
               (r/as-element
-                [ColumnsDropDown (:col-config props) (inc idx)])}]
-            ])]]
+                [:div {:style {:display :flex}}
+                 [:a {:on-click (fn [] (let [reset-fn (-> props :col-config :reset-cols-fn)]
+                                         (reset-fn)))
+                      :href ""}
+                  "RESET default columns"]
+                 [ColumnsDropDown (:col-config props) (inc idx)]])}]])]]
        [ui/TableBody (:body-props props)
         (doall
-         (for [[idx row] (map-indexed vector rows)
-               :let [id (or (:id row) (random-uuid))]]
-           [ui/TableRow (get-row-props row)
-            (when selectable?
-              [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
-                             :selected-all-sub select-all? :resources-sub-key resources-sub-key
-                             :rights-needed rights-needed
-                             :edge-name (or
-                                          (and select-label-accessor
-                                            (select-label-accessor row))
-                                          (:name row)
-                                          (:id row))
-                             :idx idx}])
-            (for [{:keys [field-key accessor cell cell-props]} columns
-                  :let [cell-data ((or accessor field-key) row)]]
-              ^{:key (str id "-" field-key)}
-              [ui/TableCell
-               cell-props
-               (cond
-                 cell (if (string? cell) cell
-                        [cell {:row-data  row
-                               :cell-data cell-data
-                               :field-key field-key}])
-                 :else (str cell-data))])]))]]]]))
+          (for [[idx row] (map-indexed vector rows)
+                :let [id (or (:id row) (random-uuid))]]
+            [ui/TableRow (get-row-props row)
+             (when selectable?
+               [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
+                              :selected-all-sub select-all? :resources-sub-key resources-sub-key
+                              :rights-needed rights-needed
+                              :edge-name (or
+                                           (and select-label-accessor
+                                             (select-label-accessor row))
+                                           (:name row)
+                                           (:id row))
+                              :idx idx}])
+             (for [{:keys [field-key accessor cell cell-props]} columns
+                   :let [cell-data ((or accessor field-key) row)]]
+               ^{:key (str id "-" field-key)}
+               [ui/TableCell
+                cell-props
+                (cond
+                  cell (if (string? cell) cell
+                         [cell {:row-data  row
+                                :cell-data cell-data
+                                :field-key field-key}])
+                  :else (str cell-data))])]))]]]]))
 
 (defn TableColsEditable
   [{:keys [columns rows]} db-path]
@@ -703,8 +708,7 @@
                                                :db-path db-path}]))
         remove-col-fn (fn [col-key]
                         (dispatch [::remove-col col-key db-path]))
-        reset-cols-fn (fn [col-key]
-                        (dispatch [::reset-current-cols col-key db-path]))]
+        reset-cols-fn #(dispatch [::reset-current-cols db-path])]
     (dispatch [::init-table-col-config columns db-path])
     (fn [props]
       [:div

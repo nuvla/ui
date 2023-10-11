@@ -18,7 +18,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.module :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
@@ -240,50 +240,52 @@
                                                                   :show-depl-set-column? show-depl-set-column?)])]
           [:<>
            [BulkEditTagsModal]
-           [Table {:columns       (mapv (fn [col]
-                                          (when col (assoc col :cell table-cell)))
-                                    [{:field-key :id}
-                                     (when-not no-module-name
-                                       {:field-key      :module.name
-                                        :cell-props {:style {:overflow      "hidden",
-                                                             :text-overflow "ellipsis",
-                                                             :max-width     "20ch"}}
-                                        :header-content (@tr [:module])})
-                                     {:field-key :version :no-sort? true}
-                                     {:field-key :status
-                                      :sort-key  :state}
-                                     {:field-key :url
-                                      :no-sort?  true}
-                                     (when show-depl-set-column?
-                                       {:field-key :deployment-set
-                                        :sort-key  :deployment-set-name})
-                                     {:field-key :created}
-                                     {:field-key :updated}
-                                     {:field-key :created-by}
-                                     {:field-key :tags}
-                                     {:field-key :infrastructure
-:cell-props {:style {:overflow      "hidden",
-                                                                      :text-overflow "ellipsis",
-                                                                      :max-width     "20ch"}}
-                                      :no-sort?  true}
-                                     (when selectable? {:field-key :actions
-                                                        :no-sort?  true})])
-                   :rows          deployments-list
-                   :sort-config   {:db-path     ::spec/ordering
-                                   :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                   :table-props   (merge style/single-line {:stackable true})
-                   :select-config (when selectable?
-                                    {:bulk-actions        [{:event [::events/bulk-update-params]
-                                                            :name  (str/capitalize (@tr [:update]))}
-                                                           {:event [::events/open-modal-bulk-stop]
-                                                            :name  (str/capitalize (@tr [:stop]))}
-                                                           {:event [::events/open-modal-bulk-delete]
-                                                            :name  (str/capitalize (@tr [:delete]))}
-                                                           trigger]
-                                     :select-db-path      [::spec/select]
-                                     :total-count-sub-key [::subs/deployments-count]
-                                     :resources-sub-key   deployments-resources-subs-key
-                                     :rights-needed       :edit})}]])))))
+           [TableColsEditable {:columns
+                               (mapv (fn [col]
+                                       (when col (assoc col :cell table-cell)))
+                                 [{:field-key :id}
+                                  (when-not no-module-name
+                                    {:field-key      :module.name
+                                     :cell-props {:style {:overflow      "hidden",
+                                                          :text-overflow "ellipsis",
+                                                          :max-width     "20ch"}}
+                                     :header-content (@tr [:module])})
+                                  {:field-key :version :no-sort? true}
+                                  {:field-key :status
+                                   :sort-key  :state}
+                                  {:field-key :url
+                                   :no-sort?  true}
+                                  (when show-depl-set-column?
+                                    {:field-key :deployment-set
+                                     :sort-key  :deployment-set-name})
+                                  {:field-key :created}
+                                  {:field-key :updated}
+                                  {:field-key :created-by}
+                                  {:field-key :tags}
+                                  {:field-key :infrastructure
+                                   :cell-props {:style {:overflow      "hidden",
+                                                        :text-overflow "ellipsis",
+                                                        :max-width     "20ch"}}
+                                   :no-sort?  true}
+                                  (when selectable? {:field-key :actions
+                                                     :no-sort?  true})])
+                               :rows          deployments-list
+                               :sort-config   {:db-path     ::spec/ordering
+                                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+                               :table-props   (merge style/single-line {:stackable true})
+                               :select-config (when selectable?
+                                                {:bulk-actions        [{:event [::events/bulk-update-params]
+                                                                        :name  (str/capitalize (@tr [:update]))}
+                                                                       {:event [::events/open-modal-bulk-stop]
+                                                                        :name  (str/capitalize (@tr [:stop]))}
+                                                                       {:event [::events/open-modal-bulk-delete]
+                                                                        :name  (str/capitalize (@tr [:delete]))}
+                                                                       trigger]
+                                                 :select-db-path      [::spec/select]
+                                                 :total-count-sub-key [::subs/deployments-count]
+                                                 :resources-sub-key   deployments-resources-subs-key
+                                                 :rights-needed       :edit})}
+            ::table-cols-config]])))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]

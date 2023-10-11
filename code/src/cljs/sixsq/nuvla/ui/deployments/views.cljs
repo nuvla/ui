@@ -18,7 +18,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.module :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [TableColsEditable Table]]
+            [sixsq.nuvla.ui.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
@@ -240,7 +240,7 @@
                                                                   :show-depl-set-column? show-depl-set-column?)])]
           [:<>
            [BulkEditTagsModal]
-           [Table {:columns
+           [TableColsEditable {:columns
                                (mapv (fn [col]
                                        (when col (assoc col :cell table-cell)))
                                  [{:field-key :id}

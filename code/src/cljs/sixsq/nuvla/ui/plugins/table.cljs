@@ -6,6 +6,7 @@
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.cimi.views :refer [SelectFieldsView]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -25,7 +26,7 @@
 (s/def ::order #{"asc" "desc"})
 
 (s/def ::sort-direction
- (s/nilable (s/keys :req-un [::field ::order])))
+  (s/nilable (s/keys :req-un [::field ::order])))
 
 (defn build-ordering
   ([] (build-ordering [[:created "desc"]]))
@@ -110,7 +111,7 @@
 (s/def ::select-label-accessor (s/nilable fn?))
 (s/def ::select-config (s/nilable (s/keys :req-un [::bulk-actions ::select-db-path
                                                    ::total-count-sub-key ::resources-sub-key]
-                                          :opt-un [::rights-needed ::select-label-accessor])))
+                                    :opt-un [::rights-needed ::select-label-accessor])))
 ;; Bulk selection db entries
 (s/def ::bulk-edit-success-msg (s/nilable string?))
 (s/def ::select-all? (s/nilable boolean?))
@@ -147,8 +148,8 @@
   (if select-all?
     filter-string
     (->> selected-set
-         (map #(str "id='" % "'"))
-         (apply general-utils/join-or))))
+      (map #(str "id='" % "'"))
+      (apply general-utils/join-or))))
 
 (defn- all-page-selected?
   [selected-set visible-deps-ids-set]
@@ -170,19 +171,19 @@
 
 
 (reg-event-fx
- ::select-all-in-page
- (fn [{db :db} [_ {:keys [resources db-path]}]]
+  ::select-all-in-page
+  (fn [{db :db} [_ {:keys [resources db-path]}]]
     (let [selected-set       (get-in-db db db-path ::selected-set #{})
           visible-dep-ids    (visible-ids resources)
           all-page-selected? (all-page-selected? selected-set visible-dep-ids)
           new-selected-set   (if all-page-selected?
                                (set/difference selected-set
-                                               visible-dep-ids)
+                                 visible-dep-ids)
                                (set/union visible-dep-ids
-                                          selected-set))]
+                                 selected-set))]
       {:db (-> db
-               (assoc-in (conj (or db-path []) ::selected-set) new-selected-set)
-               (assoc-in (conj (or db-path []) ::select-all?) false))})))
+             (assoc-in (conj (or db-path []) ::selected-set) new-selected-set)
+             (assoc-in (conj (or db-path []) ::select-all?) false))})))
 
 
 (reg-event-db
@@ -191,23 +192,23 @@
     (let [selected-set (get-in-db db db-path ::selected-set #{})
           select-all?  (get-in-db db db-path ::select-all?)
           new-set      (cond select-all?
-                             (disj (set resources) id)
+                         (disj (set resources) id)
 
-                             (is-selected? selected-set id)
-                             (disj selected-set id)
+                         (is-selected? selected-set id)
+                         (disj selected-set id)
 
-                             :else
-                             (conj selected-set id))]
+                         :else
+                         (conj selected-set id))]
       (-> db
-          (assoc-in (conj (or db-path []) ::selected-set) new-set)
-          (assoc-in (conj (or db-path []) ::select-all?) false)))))
+        (assoc-in (conj (or db-path []) ::selected-set) new-set)
+        (assoc-in (conj (or db-path []) ::select-all?) false)))))
 
 (reg-event-db
   ::select-all
   (fn [db [_ db-path status]]
     (-> db
-        (assoc-in (conj (or db-path []) ::select-all?) (not= status :all))
-        (assoc-in (conj (or db-path []) ::selected-set) #{}))))
+      (assoc-in (conj (or db-path []) ::select-all?) (not= status :all))
+      (assoc-in (conj (or db-path []) ::selected-set) #{}))))
 
 (reg-sub
   ::bulk-update-modal
@@ -250,46 +251,46 @@
     (set/intersection selected-set (visible-ids resources))))
 
 (reg-sub
- ::selection-status
- (fn [[_ db-path resources-sub-key]]
-   [(subscribe [::selected-set-sub db-path])
-    (subscribe [::select-all?-sub db-path])
-    (subscribe [::is-all-page-selected? db-path resources-sub-key])
-    (subscribe resources-sub-key)])
- (fn [[selected-set select-all? is-all-page-selected? resources] [_ _ _ total-count]]
-   (let [number-of-selected (count selected-set)
-         visible-on-page    (count resources)]
-     (cond
-       (or select-all? (= total-count number-of-selected))
-       :all
+  ::selection-status
+  (fn [[_ db-path resources-sub-key]]
+    [(subscribe [::selected-set-sub db-path])
+     (subscribe [::select-all?-sub db-path])
+     (subscribe [::is-all-page-selected? db-path resources-sub-key])
+     (subscribe resources-sub-key)])
+  (fn [[selected-set select-all? is-all-page-selected? resources] [_ _ _ total-count]]
+    (let [number-of-selected (count selected-set)
+          visible-on-page    (count resources)]
+      (cond
+        (or select-all? (= total-count number-of-selected))
+        :all
 
-       (zero? number-of-selected)
-       :none
+        (zero? number-of-selected)
+        :none
 
-       (and
-        (<= 0 number-of-selected)
-        (= number-of-selected visible-on-page)
-        is-all-page-selected?)
-       :page
+        (and
+          (<= 0 number-of-selected)
+          (= number-of-selected visible-on-page)
+          is-all-page-selected?)
+        :page
 
-       (and
-        (< visible-on-page number-of-selected)
-        is-all-page-selected?)
-       :page-plus
+        (and
+          (< visible-on-page number-of-selected)
+          is-all-page-selected?)
+        :page-plus
 
-       (pos? number-of-selected)
-       :some
+        (pos? number-of-selected)
+        :some
 
-       :else
-       :none))))
+        :else
+        :none))))
 
 (reg-sub
- ::editable-resources-on-page
- (fn [[_ resources-sub-key _]]
-   (subscribe resources-sub-key))
- (fn [resources [_ _ rights-needed]]
-   (if-not rights-needed resources
-           (filter (partial general-utils/can-operation? rights-needed) resources))))
+  ::editable-resources-on-page
+  (fn [[_ resources-sub-key _]]
+    (subscribe resources-sub-key))
+  (fn [resources [_ _ rights-needed]]
+    (if-not rights-needed resources
+      (filter (partial general-utils/can-operation? rights-needed) resources))))
 
 (defn CellCheckbox
   [{:keys [id selected-all-sub selected-set-sub db-path
@@ -340,12 +341,12 @@
                                                      (str/capitalize (@tr [:all])))
                                                    (when on-page-selection?
                                                      (str on-page-selected
-                                                          " "
-                                                          (@tr [(or resource-type :items)])
-                                                          " "
-                                                          (@tr [:on-this-page])
-                                                          " "
-                                                          (@tr [:are-selected])))
+                                                       " "
+                                                       (@tr [(or resource-type :items)])
+                                                       " "
+                                                       (@tr [:on-this-page])
+                                                       " "
+                                                       (@tr [:are-selected])))
                                                    (when off-page-selection?
                                                      (if on-page-selection?
                                                        (str "(" off-page-selection-text ")")
@@ -371,23 +372,23 @@
       [:div
        [ui/Popup {:trigger
                   (r/as-element
-                   [:div
-                    [ui/Menu {:style {:border          :none
-                                      :box-shadow      :none
-                                      :background-color :transparent}
-                              :borderless (= 1 (count bulk-actions))
-                              :stackable  true}
-                     (for [[idx action ] (map-indexed vector bulk-actions)
-                           :let [{:keys [name event icon]} action]]
-                       [ui/MenuItem
-                        {:disabled nothing-selected?
-                         :class :bulk-action-bar-item
-                         :on-click (fn []
-                                     (if (fn? event) (event payload)
-                                       (dispatch event)))
-                         :key idx}
-                        (when icon [icon])
-                        name])]])
+                    [:div
+                     [ui/Menu {:style {:border          :none
+                                       :box-shadow      :none
+                                       :background-color :transparent}
+                               :borderless (= 1 (count bulk-actions))
+                               :stackable  true}
+                      (for [[idx action] (map-indexed vector bulk-actions)
+                            :let [{:keys [name event icon]} action]]
+                        [ui/MenuItem
+                         {:disabled nothing-selected?
+                          :class :bulk-action-bar-item
+                          :on-click (fn []
+                                      (if (fn? event) (event payload)
+                                        (dispatch event)))
+                          :key idx}
+                         (when icon [icon])
+                         name])]])
                   :basic    true
                   :disabled (not= :none @selection-status)
                   :content  (@tr [:select-at-least-one-item])}]]
@@ -412,7 +413,7 @@
   [{:keys [current-cols available-cols default-cols add-col-fn]} position]
   (let [tr               (subscribe [::i18n-subs/tr])
         cols-not-visible (->> (keys available-cols)
-                              (remove (set current-cols)))
+                           (remove (set current-cols)))
         sorted-cols     (sort
                           (fn [k1 k2]
                             (let [pos-fn (fn [k]
@@ -427,7 +428,7 @@
                :value col-key
                :text  (or (@tr [col-key]) col-key)})
         sorted-cols)
-      :trigger (@tr [:add-column-to-right] )
+      :trigger (@tr [:add-column-to-right])
       :on-change (ui-callback/value
                    (fn [key-string]
                      (add-col-fn (keyword key-string) position)))}]))
@@ -484,11 +485,24 @@
 (reg-event-fx
   ::set-current-cols
   [(inject-cofx :storage/get {:name local-storage-key})]
-  (fn [{storage :storage/get} [_ cols db-path]]
-    {:fx [[:dispatch [::store-cols cols db-path]]]
-     :storage/set {:session? false
-                   :name     local-storage-key
-                   :value    (merge (edn/read-string storage) {db-path cols})}}))
+  (fn [{storage :storage/get
+        {:keys [::default-cols]} :db} [_ cols db-path]]
+    (let [defaults (get default-cols db-path)
+          new-cols (if
+                     (seq? cols)
+                     cols
+                     (sort
+                       (fn [k1 k2]
+                         (let [pos-fn (fn [k]
+                                        (let [po (.indexOf (or defaults []) k)]
+                                          (if (neg? po) 100 po)))]
+                           (- (pos-fn k1) (pos-fn k2))))
+                       (vec cols)))]
+      ()
+      {:fx [[:dispatch [::store-cols new-cols db-path]]]
+       :storage/set {:session? false
+                     :name     local-storage-key
+                     :value    (merge (edn/read-string storage) {db-path cols})}})))
 
 (reg-event-db
   ::store-cols
@@ -532,26 +546,34 @@
       {:db (assoc-in db [::default-cols db-path] defaults)
        :fx [[:dispatch [::store-cols cols db-path]]]})))
 
-;; TODO: Add modal to configure all columns at once
 (defn ConfigureVisibleColumns
-  [{:keys [available-cols db-path]}]
-  (let [current-cols (subscribe [::get-current-cols db-path])
-        default-cols (subscribe [::get-default-cols db-path])
-        new-cols     (r/atom (or @current-cols []))])
-  (fn []
-    ()
-    [ui/Modal
-     {:trigger [icons/AddIcon]}
-     [ui/ModalContent
-      [:div
-       ]]]))
-
-(defn AddColumnModal
-  []
-  (fn []
-    [ui/Modal
-     {:trigger [icons/AddIcon]}
-     [ui/ModalContent]]))
+  [db-path available-fields]
+  (let [default-cols  (subscribe [::get-default-cols db-path])
+        current-cols  (subscribe [::get-current-cols db-path])
+        selected-cols (r/atom (set @current-cols))
+        show?         (r/atom false)
+        available-col-keys (set (keys available-fields))]
+    (fn []
+      [SelectFieldsView
+       {:title-tr-key :columns
+        :show? show?
+        :selections-atom selected-cols
+        :reset-to-default-fn #(reset! selected-cols (set @default-cols))
+        :selected-fields-sub current-cols
+        :available-fields available-col-keys
+        :update-fn     #(dispatch [::set-current-cols % db-path])
+        :trigger       [uix/Button {:basic true
+                                    :icon :options
+                                    :floated :left
+                                    :style {:margin-top -15
+                                            :padding 0
+                                            :box-shadow :none
+                                            :position :relative
+                                            :z-index 1000}
+                                    :text "Column options"
+                                    :on-click (fn []
+                                                (reset! selected-cols (set @current-cols))
+                                                (reset! show? true))}]}])))
 
 
 (defn Table
@@ -615,86 +637,88 @@
                        :db-path             select-db-path
                        :bulk-actions        bulk-actions
                        :resources-sub-key   resources-sub-key}])
-     [:div {:style {:overflow :auto
-                    :padding 0}}
-      [ui/Table (:table-props props)
-       [ui/TableHeader (:header-props props)
-        [ui/TableRow
-         (when selectable?
-           [ui/TableHeaderCell
-            {:style {:width "30px"}}
-            [HeaderCellCeckbox {:db-path select-db-path :resources-sub-key resources-sub-key
-                                :page-selected?-sub page-selected? :rights-needed rights-needed}]])
-         (for [[idx col] (map-indexed vector columns)
-               :when col
-               :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
-           ^{:key (or field-key (random-uuid))}
-           [ui/TableHeaderCell
-            (merge (:header cell-props) header-cell-props)
-            [ui/Popup
-             {:trigger
-              (r/as-element
-                [:div
-                 (when-let [remove-fn (-> props :col-config :remove-col-fn)]
-                   (when (< 1 (count columns))
-                     [uix/LinkIcon {:color "red"
-                                    :disabled (< (count columns) 2)
-                                    :name "remove circle"
-                                    :on-click #(remove-fn field-key)}]))
+     [:div (-> props :col-config :col-config-modal)
+      [:div {:style {:overflow :auto
+                     :padding 0
+                     :position :relative}}
+       [ui/Table (:table-props props)
+        [ui/TableHeader (:header-props props)
+         [ui/TableRow
+          (when selectable?
+            [ui/TableHeaderCell
+             {:style {:width "30px"}}
+             [HeaderCellCeckbox {:db-path select-db-path :resources-sub-key resources-sub-key
+                                 :page-selected?-sub page-selected? :rights-needed rights-needed}]])
+          (for [[idx col] (map-indexed vector columns)
+                :when col
+                :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
+            ^{:key (or field-key (random-uuid))}
+            [ui/TableHeaderCell
+             (merge (:header cell-props) header-cell-props)
+             [ui/Popup
+              {:trigger
+               (r/as-element
+                 [:div
+                  (when-let [remove-fn (-> props :col-config :remove-col-fn)]
+                    (when (< 1 (count columns))
+                      [uix/LinkIcon {:color "red"
+                                     :disabled (< (count columns) 2)
+                                     :name "remove circle"
+                                     :on-click #(remove-fn field-key)}]))
+                  (cond
+                    (fn? header-content)
+                    (header-content)
+
+                    header-content
+                    header-content
+
+                    :else
+                    (or (tr [field-key]) field-key))
+                  (when (and
+                          sort-config
+                          (not no-sort?))
+                    [Sort (merge
+                            sort-config
+                            (select-keys col [:field-key :disable-sort :sort-key]))])])
+               :position "top right"
+               :disabled (not (-> props :col-config :remove-col-fn))
+               :hoverable true
+               :basic   true
+               :content
+               (r/as-element
+                 [:div {:style {:display :flex}}
+                  [:a {:on-click (fn [] (let [reset-fn (-> props :col-config :reset-cols-fn)]
+                                          (reset-fn)))
+                       :href ""}
+                   "RESET default columns"]
+                  [ColumnsDropDown (:col-config props) (inc idx)]])}]])]]
+        [ui/TableBody (:body-props props)
+         (doall
+           (for [[idx row] (map-indexed vector rows)
+                 :let [id (or (:id row) (random-uuid))]]
+             ^{:key (:id row)}
+             [ui/TableRow (get-row-props row)
+              (when selectable?
+                [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
+                               :selected-all-sub select-all? :resources-sub-key resources-sub-key
+                               :rights-needed rights-needed
+                               :edge-name (or
+                                            (and select-label-accessor
+                                              (select-label-accessor row))
+                                            (:name row)
+                                            (:id row))
+                               :idx idx}])
+              (for [{:keys [field-key accessor cell cell-props]} columns
+                    :let [cell-data ((or accessor field-key) row)]]
+                ^{:key (str id "-" field-key)}
+                [ui/TableCell
+                 cell-props
                  (cond
-                   (fn? header-content)
-                   (header-content)
-
-                   header-content
-                   header-content
-
-                   :else
-                   (or (tr [field-key]) field-key))
-                 (when (and
-                         sort-config
-                         (not no-sort?))
-                   [Sort (merge
-                           sort-config
-                           (select-keys col [:field-key :disable-sort :sort-key]))])])
-              :position "top right"
-              :disabled (not (-> props :col-config :remove-col-fn))
-              :hoverable true
-              :basic   true
-              :content
-              (r/as-element
-                [:div {:style {:display :flex}}
-                 [:a {:on-click (fn [] (let [reset-fn (-> props :col-config :reset-cols-fn)]
-                                         (reset-fn)))
-                      :href ""}
-                  "RESET default columns"]
-                 [ColumnsDropDown (:col-config props) (inc idx)]])}]])]]
-       [ui/TableBody (:body-props props)
-        (doall
-          (for [[idx row] (map-indexed vector rows)
-                :let [id (or (:id row) (random-uuid))]]
-            ^{:key (:id row)}
-            [ui/TableRow (get-row-props row)
-             (when selectable?
-               [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
-                              :selected-all-sub select-all? :resources-sub-key resources-sub-key
-                              :rights-needed rights-needed
-                              :edge-name (or
-                                           (and select-label-accessor
-                                             (select-label-accessor row))
-                                           (:name row)
-                                           (:id row))
-                              :idx idx}])
-             (for [{:keys [field-key accessor cell cell-props]} columns
-                   :let [cell-data ((or accessor field-key) row)]]
-               ^{:key (str id "-" field-key)}
-               [ui/TableCell
-                cell-props
-                (cond
-                  cell (if (string? cell) cell
-                         [cell {:row-data  row
-                                :cell-data cell-data
-                                :field-key field-key}])
-                  :else (str cell-data))])]))]]]]))
+                   cell (if (string? cell) cell
+                          [cell {:row-data  row
+                                 :cell-data cell-data
+                                 :field-key field-key}])
+                   :else (str cell-data))])]))]]]]]))
 
 (defn TableColsEditable
   [{:keys [columns rows]} db-path]
@@ -717,13 +741,14 @@
     (dispatch [::init-table-col-config columns db-path])
     (fn [props]
       [:div
-       [Table (assoc props :col-config
-                {:default-cols   @default-cols
-                 :available-cols available-cols
-                 :current-cols   @current-cols
-                 :remove-col-fn  remove-col-fn
-                 :add-col-fn     add-col-fn
-                 :reset-cols-fn  reset-cols-fn}
+       [Table (assoc props
+                :col-config {:default-cols   @default-cols
+                             :available-cols available-cols
+                             :current-cols   @current-cols
+                             :remove-col-fn  remove-col-fn
+                             :add-col-fn     add-col-fn
+                             :reset-cols-fn  reset-cols-fn
+                             :col-config-modal [ConfigureVisibleColumns db-path available-cols]}
                 :columns (->> (or @current-cols @default-cols)
                               (mapv (fn [k] (available-cols k)))
                               (remove nil?)
@@ -742,5 +767,4 @@
                                             ::helpers/db-path
                                             ::sort-config
                                             ::select-config
-                                            ::wide?])
-                      :opts any?))
+                                            ::wide?])))

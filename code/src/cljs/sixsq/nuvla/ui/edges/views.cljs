@@ -20,7 +20,6 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -748,30 +747,62 @@
         new-modal  (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-edge-on-k8s])]
     (if @new-modal ^{:key (count @nb-release)} [add-modal/AddModal] ^{:key (count @nb-release)} [AddModal])))
 
-
+(def field-key->table-cell
+  {:online  '[ui/TableCell {:collapsing true}
+              [OnlineStatusIcon online nil true]]
+   :state   '[ui/TableCell {:collapsing true}
+              [ui/Icon {:class (utils/state->icon state)}]]
+   :name    '[ui/TableCell (or name uuid)]
+   :description '[ui/TableCell description]
+   :created '[ui/TableCell (time/parse-ago created locale)]
+   :created-by '[ui/TableCell @creator]
+   :refresh-interval '[ui/TableCell (str refresh-interval "s")]
+   :last-online   '[ui/TableCell (when next-heartbeat-moment
+                                   [uix/TimeAgo (utils/last-time-online
+                                                  next-heartbeat-moment
+                                                  refresh-interval)])]
+   :version  '[ui/TableCell (or engine-version (str version ".y.z"))]
+   :tags     '[ui/TableCell [uix/Tags tags]]})
+;; (into {} (mapv (fn [[k [_ cell-props-or-cell perhaps-cell]]]
+;;                                                [k (cond->
+;;                                                     {:cell (or perhaps-cell cell-props-or-cell)}
+;;                                                     perhaps-cell
+;;                                                     (assoc :cell-props cell-props-or-cell)) ])
+;;                                          '{:online  [ui/TableCell {:collapsing true}
+;;                                                      [OnlineStatusIcon online nil true]]
+;;                                            :state   [ui/TableCell {:collapsing true}
+;;                                                      [ui/Icon {:class (utils/state->icon state)}]]
+;;                                            :name    [ui/TableCell (or name uuid)]
+;;                                            :description [ui/TableCell description]
+;;                                            :created [ui/TableCell (time/parse-ago created locale)]
+;;                                            :created-by [ui/TableCell @creator]
+;;                                            :refresh-interval [ui/TableCell (str refresh-interval "s")]
+;;                                            :last-online   [ui/TableCell (when next-heartbeat-moment
+;;                                                                           [uix/TimeAgo (utils/last-time-online
+;;                                                                                          next-heartbeat-moment
+;;                                                                                          refresh-interval)])]
+;;                                            :version  [ui/TableCell (or engine-version (str version ".y.z"))]
+;;                                            :tags     [ui/TableCell [uix/Tags tags]]}))
 (defn NuvlaboxRow
-  [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox}]
+  [{{:keys [id name description created state tags online refresh-interval version created-by]} :row-data
+    field-key :field-key}]
   (let [uuid                  (general-utils/id->uuid id)
         locale                @(subscribe [::i18n-subs/locale])
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
-        creator               (subscribe [::session-subs/resolve-user created-by])]
-    [:<>
-     [ui/TableCell {:collapsing true}
-      [OnlineStatusIcon online nil true]]
-     [ui/TableCell {:collapsing true}
-      [ui/Icon {:class (utils/state->icon state)}]]
-     [ui/TableCell (or name uuid)]
-     [ui/TableCell description]
-     [ui/TableCell (time/parse-ago created locale)]
-     [ui/TableCell @creator]
-     [ui/TableCell (str refresh-interval "s")]
-     [ui/TableCell (when next-heartbeat-moment
-                     [uix/TimeAgo (utils/last-time-online
-                                    next-heartbeat-moment
-                                    refresh-interval)])]
-     [ui/TableCell (or engine-version (str version ".y.z"))]
-     [ui/TableCell [uix/Tags tags]]]))
+        creator               (subscribe [::session-subs/resolve-user created-by])
+        field-key->table-cell {:description description,
+                               :tags [uix/Tags tags],
+                               :refresh-interval (str refresh-interval "s"),
+                               :name (or name uuid),
+                               :created (time/parse-ago created locale),
+                               :state [ui/Icon {:class (utils/state->icon state)}]
+                               :online [OnlineStatusIcon online nil true]
+                               :created-by @creator,
+                               :last-online
+                               (when next-heartbeat-moment [uix/TimeAgo (utils/last-time-online next-heartbeat-moment refresh-interval)]),
+                               :version (or engine-version (str version ".y.z"))}]
+    (field-key->table-cell field-key)))
 
 (defn Pagination
   [view-type]
@@ -811,7 +842,6 @@
        :rows              edges
        :table-props       {:compact "very" :selectable true}
        :cell-props        {:header {:single-line true}}
-       :row-render        (fn [row-data] [NuvlaboxRow row-data])
        :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
        :row-props         {:role  "link"
                            :style {:cursor "pointer"}}
@@ -837,19 +867,21 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])
-        columns           [{:field-key :online :header-content [icons/HeartbeatIcon]}
-                           {:field-key :state}
-                           {:field-key :name}
-                           {:field-key :description}
-                           {:field-key :created}
-                           {:field-key :created-by}
-                           {:field-key      :refresh-interval
-                            :header-content (str/lower-case (@tr [:telemetry]))}
-                           {:field-key :last-online :no-sort? true}
-                           {:field-key      :version :no-sort? true
-                            :header-content [:<> (@tr [:version])
-                                             (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
-                           {:field-key :tags :no-sort? true}]
+        columns           (mapv (fn [col-config]
+                                  (assoc col-config :cell NuvlaboxRow))
+                            [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
+                             {:field-key :state :cell-props {:collapsing true}}
+                             {:field-key :name}
+                             {:field-key :description}
+                             {:field-key :created}
+                             {:field-key :created-by}
+                             {:field-key      :refresh-interval
+                              :header-content (str/lower-case (@tr [:telemetry]))}
+                             {:field-key :last-online :no-sort? true}
+                             {:field-key      :version :no-sort? true
+                              :header-content [:<> (@tr [:version])
+                                               (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
+                             {:field-key :tags :no-sort? true}])
         bulk-edit         (bulk-edit-modal/create-bulk-edit-modal
                             {:db-path                [::spec/select]
                              :refetch-event          ::events/get-nuvlaboxes

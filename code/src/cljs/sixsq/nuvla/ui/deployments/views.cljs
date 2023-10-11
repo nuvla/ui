@@ -182,43 +182,36 @@
         creator               (subscribe [::session-subs/resolve-user created-by])
         edge-id               (:nuvlabox deployment)
         edge-status           (subscribe [::subs/deployment-edges-stati edge-id])
-        field-key->table-cell {:id [ui/TableCell [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
-                                                  (general-utils/id->short-uuid id)]]
+        field-key->table-cell {:id [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
+                                    (general-utils/id->short-uuid id)]
                                :module.name (when-not no-module-name
-                                              [ui/TableCell {:style {:overflow      "hidden",
-                                                                     :text-overflow "ellipsis",
-                                                                     :max-width     "20ch"}}
-                                               [:div {:class "app-icon-name"
-                                                      :style {:display     :flex
-                                                              :align-items :center}}
-                                                [:img {:src   (or (:thumb-nail module) (:logo-url module))
-                                                       :style {:width  "42px"
-                                                               :height "30px"}}]
-                                                [:div (:name module)]]])
-                               :version [ui/TableCell (utils/deployment-version deployment)]
-                               :status [ui/TableCell state]
-                               :url [ui/TableCell (when url
-                                                    [:a {:href url, :target "_blank", :rel "noreferrer"}
-                                                     [ui/Icon {:name "external"}]
-                                                     primary-url-name])]
+                                              [:div {:class "app-icon-name"
+                                                     :style {:display     :flex
+                                                             :align-items :center}}
+                                               [:img {:src   (or (:thumb-nail module) (:logo-url module))
+                                                      :style {:width  "42px"
+                                                              :height "30px"}}]
+                                               [:div (:name module)]])
+                               :version (utils/deployment-version deployment)
+                               :status state
+                               :url (when url
+                                      [:a {:href url, :target "_blank", :rel "noreferrer"}
+                                       [ui/Icon {:name "external"}]
+                                       primary-url-name])
                                :deployment-set  (when (:show-depl-set-column? options)
-                                                  [ui/TableCell [DeplSetLink (deployment :deployment-set) (deployment :deployment-set-name)]])
-                               :created [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
-                               :updated [ui/TableCell (-> deployment :updated time/parse-iso8601 time/ago)]
-                               :created-by [ui/TableCell @creator]
-                               :tags [ui/TableCell [uix/Tags tags]]
-                               :infrastructure [ui/TableCell {:style {:overflow      "hidden",
-                                                                      :text-overflow "ellipsis",
-                                                                      :max-width     "20ch"}}
-                                                [utils/CloudNuvlaEdgeLink deployment
-                                                 :color (when edge-id (vc/status->color @edge-status))]]
+                                                  [DeplSetLink (deployment :deployment-set) (deployment :deployment-set-name)])
+                               :created (-> deployment :created time/parse-iso8601 time/ago)
+                               :updated (-> deployment :updated time/parse-iso8601 time/ago)
+                               :created-by @creator
+                               :tags [uix/Tags tags]
+                               :infrastructure [utils/CloudNuvlaEdgeLink deployment
+                                                :color (when edge-id (vc/status->color @edge-status))]
                                :actions (when show-options?
-                                          [ui/TableCell
-                                           (cond
-                                             (general-utils/can-operation? "stop" deployment)
-                                             [deployments-detail-views/ShutdownButton deployment]
-                                             (general-utils/can-delete? deployment)
-                                             [deployments-detail-views/DeleteButton deployment])])}]
+                                          (cond
+                                            (general-utils/can-operation? "stop" deployment)
+                                            [deployments-detail-views/ShutdownButton deployment]
+                                            (general-utils/can-delete? deployment)
+                                            [deployments-detail-views/DeleteButton deployment]))}]
     (field-key->table-cell field-key)))
 
 
@@ -243,8 +236,8 @@
                                             :plural                 (@tr [:deployments])
                                             :filter-fn              build-bulk-filter})
               table-cell (fn [props] [DeploymentTableCell props (assoc options
-                                                    :show-options? selectable?
-                                                    :show-depl-set-column? show-depl-set-column?)])]
+                                                                  :show-options? selectable?
+                                                                  :show-depl-set-column? show-depl-set-column?)])]
           [:<>
            [BulkEditTagsModal]
            [Table {:columns       (mapv (fn [col]
@@ -252,6 +245,9 @@
                                     [{:field-key :id}
                                      (when-not no-module-name
                                        {:field-key      :module.name
+                                        :cell-props {:style {:overflow      "hidden",
+                                                             :text-overflow "ellipsis",
+                                                             :max-width     "20ch"}}
                                         :header-content (@tr [:module])})
                                      {:field-key :version :no-sort? true}
                                      {:field-key :status
@@ -266,6 +262,9 @@
                                      {:field-key :created-by}
                                      {:field-key :tags}
                                      {:field-key :infrastructure
+:cell-props {:style {:overflow      "hidden",
+                                                                      :text-overflow "ellipsis",
+                                                                      :max-width     "20ch"}}
                                       :no-sort?  true}
                                      (when selectable? {:field-key :actions
                                                         :no-sort?  true})])

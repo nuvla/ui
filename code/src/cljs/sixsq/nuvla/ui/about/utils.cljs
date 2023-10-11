@@ -4,16 +4,18 @@
 (def feature-deployment-set-key "deployment-set")
 (def feature-applications-sets-key "applications-sets")
 (def feature-edge-on-k8s "edge-on-k8s")
-(def feature-internal "internal")
+(def feature-internal-ui-demo-page "internal")
 
 (def feature-flags [{:k     feature-deployment-set-key
                      :label "Page deployment set visible in left menu."}
                     {:k     feature-applications-sets-key
                      :label "Applications sets support"}
                     {:k     feature-edge-on-k8s
-                     :label "k8s installation method available in Add Edge modal."}])
+                     :label "k8s installation method available in Add Edge modal."}
+                    {:k     feature-internal-ui-demo-page
+                     :label "show internal ui demo/docu page."}])
 
-(def existing-feature-flags-keys (->> (conj feature-flags {:k feature-internal}) (map :k) (conj ) set))
+(def existing-feature-flags-keys (->> feature-flags (map :k) set))
 
 (defn set-feature-flag
   [enabled-feature-flags k enable?]

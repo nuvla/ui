@@ -449,9 +449,11 @@
 (reg-event-fx
   ::remove-col
   (fn [{{:keys [::current-cols]} :db} [_ col-key db-path]]
-    {:fx [[:dispatch [::set-current-cols
-                      (filterv #(not= col-key %) (get current-cols db-path))
-                      db-path]]]}))
+    (let [cur-cols (get current-cols db-path)]
+      (when (< 1 (count cur-cols))
+        {:fx [[:dispatch [::set-current-cols
+                          (filterv #(not= col-key %) cur-cols)
+                          db-path]]]}))))
 
 (def default-columns
   [:id :name :description :created :updated])
@@ -738,4 +740,5 @@
                                             ::helpers/db-path
                                             ::sort-config
                                             ::select-config
-                                            ::wide?])))
+                                            ::wide?])
+                      :opts any?))

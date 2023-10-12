@@ -652,22 +652,22 @@
                                  :page-selected?-sub page-selected? :rights-needed rights-needed}]])
           (for [[idx col] (map-indexed vector columns)
                 :when col
-                :let [{:keys [field-key header-content header-cell-props no-sort?]} col
-                      last? (= idx (dec (count columns)))]]
+                :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
             ^{:key (or field-key (random-uuid))}
             [ui/TableHeaderCell
              (merge (:header cell-props) header-cell-props)
-             [:div {:style {:display :flex}}
-              (when-let [remove-fn (-> props :col-config :remove-col-fn)]
-                (when (< 1 (count columns))
-                  [uix/LinkIcon {:color "red"
-                                 :disabled (< (count columns) 2)
-                                 :name "remove circle"
-                                 :on-click #(remove-fn field-key)}]))
+             [:div {:style {:display :flex}
+                    :class :show-child-on-hover}
               [ui/Popup
                {:trigger
                 (r/as-element
                   [:div {:style {:flex-grow 1}}
+                   (when (and
+                           sort-config
+                           (not no-sort?))
+                     [Sort (merge
+                             sort-config
+                             (select-keys col [:field-key :disable-sort :sort-key]))])
                    (cond
                      (fn? header-content)
                      (header-content)
@@ -677,12 +677,13 @@
 
                      :else
                      (or (tr [field-key]) field-key))
-                   (when (and
-                           sort-config
-                           (not no-sort?))
-                     [Sort (merge
-                             sort-config
-                             (select-keys col [:field-key :disable-sort :sort-key]))])])
+                   [:span {:style {:margin-left "0.2rem"}} (when-let [remove-fn (-> props :col-config :remove-col-fn)]
+                                                             (when (< 1 (count columns))
+                                                               [uix/LinkIcon {:color "red"
+                                                                              :disabled (< (count columns) 2)
+                                                                              :name "remove circle"
+                                                                              :on-click #(remove-fn field-key)
+                                                                              :class :toggle-invisible-on-parent-hover}]))]])
                 :position "top right"
                 :disabled (not (-> props :col-config :remove-col-fn))
                 :hoverable true
@@ -723,7 +724,8 @@
                           [cell {:row-data  row
                                  :cell-data cell-data
                                  :field-key field-key}])
-                   :else (str cell-data))])]))]]]]]))
+                   :else (str cell-data))])
+              (when (:col-config props) [ui/TableCell])]))]]]]]))
 
 (defn TableColsEditable
   [{:keys [columns rows default-columns]} db-path]

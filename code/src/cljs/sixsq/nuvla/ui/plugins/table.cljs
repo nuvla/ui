@@ -562,18 +562,16 @@
         :selected-fields-sub current-cols
         :available-fields available-col-keys
         :update-fn     #(dispatch [::set-current-cols % db-path])
-        :trigger       [uix/Button {:basic true
-                                    :icon :options
-                                    :floated :left
-                                    :style {:margin-top -15
-                                            :padding 0
-                                            :box-shadow :none
-                                            :position :relative
-                                            :z-index 1000}
-                                    :text "Column options"
-                                    :on-click (fn []
-                                                (reset! selected-cols (set @current-cols))
-                                                (reset! show? true))}]}])))
+        :trigger       [uix/Button
+                        {:basic true
+                         :icon :options
+                         :style {:padding 0
+                                 :box-shadow :none
+                                 :position :relative
+                                 :z-index 1000}
+                         :on-click (fn []
+                                     (reset! selected-cols (set @current-cols))
+                                     (reset! show? true))}]}])))
 
 
 (defn Table
@@ -637,11 +635,11 @@
                        :db-path             select-db-path
                        :bulk-actions        bulk-actions
                        :resources-sub-key   resources-sub-key}])
-     [:div (-> props :col-config :col-config-modal)
+     [:div
       [:div {:style {:overflow :auto
                      :padding 0
                      :position :relative}}
-       [ui/Table (:table-props props)
+       [ui/Table (merge {:stackable false} (:table-props props))
         [ui/TableHeader (:header-props props)
          [ui/TableRow
           (when selectable?
@@ -651,7 +649,8 @@
                                  :page-selected?-sub page-selected? :rights-needed rights-needed}]])
           (for [[idx col] (map-indexed vector columns)
                 :when col
-                :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
+                :let [{:keys [field-key header-content header-cell-props no-sort?]} col
+                      last? (= idx (dec (count columns)))]]
             ^{:key (or field-key (random-uuid))}
             [ui/TableHeaderCell
              (merge (:header cell-props) header-cell-props)
@@ -692,7 +691,9 @@
                                            (reset-fn)))
                         :href ""}
                     "RESET default columns"]
-                   [ColumnsDropDown (:col-config props) (inc idx)]])}]]])]]
+                   [ColumnsDropDown (:col-config props) (inc idx)]])}]]])
+          (when-let [col-cong-button (-> props :col-config :col-config-modal)]
+            [ui/TableHeaderCell [:div col-cong-button]])]]
         [ui/TableBody (:body-props props)
          (doall
            (for [[idx row] (map-indexed vector rows)

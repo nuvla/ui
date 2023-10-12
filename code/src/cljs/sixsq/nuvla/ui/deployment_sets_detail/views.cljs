@@ -367,7 +367,7 @@
                       (.stopPropagation event))}]))
 
 (defn AddButton
-  [id creating?]
+  [id]
   [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
                :icon     icons/i-plus-large
                :style    {:align-self "center"}}])
@@ -481,14 +481,14 @@
                                              [icons/XMarkIcon
                                               {:style    {:cursor :pointer}
                                                :color    "red"
-                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data creating?])}])}]))
+                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
                     :rows @apps-row}]])
          [:div {:style {:display :flex :justify-content :center :align-items :center}}
           [:<>
            [AppsPickerModal creating?]
            [:div {:style {:margin-top   "1rem"
                           :margin-bottm "1rem"}}
-            [AddButton apps-picker-modal-id creating?]]]]
+            [AddButton apps-picker-modal-id]]]]
          [:div {:style {:margin-top   "1rem"
                         :margin-left  "auto"
                         :margin-right "auto"}}

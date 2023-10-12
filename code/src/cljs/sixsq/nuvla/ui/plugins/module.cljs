@@ -263,7 +263,7 @@
   (let [module                  (db-module db db-path href)
         versions-indexed        (module-versions-indexed module)
         new-version-module-href (get-in db (db-new-version-module-href-path db-path href))]
-    (when (not (str/blank? new-version-module-href))
+    (when-not (str/blank? new-version-module-href)
       (get-version-id versions-indexed new-version-module-href))))
 
 (defn- db-module-env-vars

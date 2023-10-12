@@ -632,7 +632,7 @@
 
 (reg-event-fx
   ::remove-app-from-creation-data
-  (fn [{{:keys [current-route] :as db} :db} [_ app creating?]]
+  (fn [{{:keys [current-route] :as db} :db} [_ app]]
     (let [db-path (subs/create-apps-creation-db-path current-route)]
       {:db (update-in db db-path (fn [apps]
                                    (vec (remove #(= (:id %) (:href app)) apps))))

@@ -10,7 +10,6 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -555,7 +554,11 @@
         available-col-keys (set (keys available-fields))]
     (fn []
       [SelectFieldsView
-       {:title-tr-key :columns
+       {:field->view (into {}
+                       (map (fn [[k v]]
+                              [k (:header-content v)])
+                         available-fields))
+        :title-tr-key :columns
         :show? show?
         :selections-atom selected-cols
         :reset-to-default-fn #(reset! selected-cols (set @default-cols))

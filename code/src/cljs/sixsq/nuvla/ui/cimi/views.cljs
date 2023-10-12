@@ -21,7 +21,7 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix :refer [TR]]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -297,27 +297,31 @@
           [SearchField field])
         [FilterField]]])))
 
-(defn FormatFieldItem [selections-atom item]
-  [ui/ListItem
-   [ui/ListContent
-    [ui/ListHeader
-     [ui/Checkbox {:checked         (contains? @selections-atom item)
-                   :label           item
-                   :on-change       (ui-callback/checked (fn [checked]
-                                                           (if checked
-                                                             (swap! selections-atom set/union #{item})
-                                                             (swap! selections-atom set/difference #{item}))))}]]]])
+(defn FormatFieldItem [selections-atom item field->view]
+  (let [view (get field->view item)
+        tr (subscribe [::i18n-subs/tr])
+        label-string (if (keyword? item) (or (@tr [item]) item) item)]
+    [ui/ListItem
+     [ui/ListContent
+      [ui/ListHeader {:style {:display :flex}}
+       [ui/Checkbox {:checked         (contains? @selections-atom item)
+                     :label           (if view " " label-string)
+                     :on-change       (ui-callback/checked (fn [checked]
+                                                             (if checked
+                                                               (swap! selections-atom set/union #{item})
+                                                               (swap! selections-atom set/difference #{item}))))}]
+       view]]]))
 
-(defn format-field-list [available-fields-atom selections-atom]
+(defn format-field-list [available-fields-atom selections-atom field->view]
   (let [items (sort available-fields-atom)]
     (vec (concat [ui/ListSA]
-           (map (partial FormatFieldItem selections-atom) items)))))
+           (map (fn [item] [FormatFieldItem selections-atom item field->view]) items )))))
 
 (defn SelectFieldsView
   [{:keys [show? selected-id-sub selections-atom
            selected-fields-sub available-fields
            update-fn trigger title-tr-key
-           reset-to-default-fn]}]
+           reset-to-default-fn field->view]}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Modal
      {:closeIcon true
@@ -335,7 +339,7 @@
      [uix/ModalHeader {:header (@tr [(or title-tr-key :fields)])}]
      [ui/ModalContent
       {:scrolling true}
-      [format-field-list available-fields selections-atom]]
+      [format-field-list available-fields selections-atom field->view]]
      [ui/ModalActions
       (when (fn? reset-to-default-fn)
         [uix/Button

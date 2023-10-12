@@ -258,14 +258,12 @@
             (when change-event
               [:dispatch (conj change-event new-version-href)])]})))
 
-(defn db-changed-version
+(defn db-new-version
   [db db-path href]
   (let [module                  (db-module db db-path href)
         versions-indexed        (module-versions-indexed module)
-        version-module-href     (-> module :content :id)
         new-version-module-href (get-in db (db-new-version-module-href-path db-path href))]
-    (when (and (not (str/blank? new-version-module-href))
-               (not= new-version-module-href version-module-href))
+    (when (not (str/blank? new-version-module-href))
       (get-version-id versions-indexed new-version-module-href))))
 
 (defn- db-module-env-vars

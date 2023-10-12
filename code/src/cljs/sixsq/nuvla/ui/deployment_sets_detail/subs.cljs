@@ -103,14 +103,15 @@
     (->> (applications-sets db)
          (map-indexed
            (fn [i {:keys [applications]}]
-             (map (fn [{:keys [id]}]
+             (keep (fn [{:keys [id]}]
                     (let [targets (get-db-targets-selected-ids db i)]
-                      {:i                      i
-                       :application            (module-plugin/db-module db [::spec/apps-sets i] id)
-                       :registries-credentials (module-plugin/db-module-registries-credentials
-                                                 db [::spec/apps-sets i] id)
-                       :targets                targets
-                       :targets-count          (count targets)})
+                      (when-let [module (module-plugin/db-module db [::spec/apps-sets i] id)]
+                        {:i                      i
+                         :application            module
+                         :registries-credentials (module-plugin/db-module-registries-credentials
+                                                   db [::spec/apps-sets i] id)
+                         :targets                targets
+                         :targets-count          (count targets)}))
                     ) applications)))
          (apply concat))))
 
@@ -250,16 +251,16 @@
       apps)))
 
 (reg-sub
-  ::apps-edited
-  :-> ::spec/apps-edited)
+  ::apps-edited?
+  :-> ::spec/apps-edited?)
 
 (reg-sub
   ::apps-row-data
   :<- [::apps-creation-row-data]
   :<- [::applications-overview-row-data]
-  :<- [::apps-edited]
-  (fn [[apps-creation apps apps-edited] [_ creating?]]
-    (if (or creating? apps-edited)
+  :<- [::apps-edited?]
+  (fn [[apps-creation apps apps-edited?] [_ creating?]]
+    (if (or creating? apps-edited?)
       apps-creation
       apps)))
 
@@ -321,9 +322,9 @@
 (reg-sub
   ::unsaved-changes?
   :<- [::deployment-set-stored-and-edited]
-  :<- [::apps-edited]
-  (fn [[[stored edited] apps-edited]]
-    (or apps-edited
+  :<- [::apps-edited?]
+  (fn [[[stored edited] apps-edited?]]
+    (or apps-edited?
         (utils/unsaved-changes? stored edited))))
 
 (reg-sub

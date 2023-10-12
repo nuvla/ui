@@ -67,10 +67,10 @@
   (let [tr        (subscribe [::i18n-subs/tr])
         {:keys [valid? errors]} @(subscribe validation-sub)
         enabled?  (and valid? enabled)
-        menu-item [ui/MenuItem
-                   {:disabled (not enabled?)
-                    :class    (when enabled? "primary-menu-item")}
-                   children]]
+        menu-item (into [ui/MenuItem
+                         {:disabled (not enabled?)
+                          :class    (when enabled? "primary-menu-item")}]
+                        children)]
     (if valid?
       menu-item
       [ui/Popup
@@ -191,8 +191,8 @@
              :on-click (if creating?
                          #(dispatch [::events/create])
                          (if (:valid? @validation)
-                           #(dispatch [::events/persist! {:deployment-set deployment-set
-                                                          :success-msg    (@tr [:updated-successfully])}])
+                           #(dispatch [::events/do-edit {:deployment-set deployment-set
+                                                         :success-msg    (@tr [:updated-successfully])}])
                            #(dispatch [::events/enable-form-validation])))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
@@ -250,12 +250,11 @@
         on-change-fn   #(dispatch [::events/edit attribute %])]
     [ui/TableCell
      (if (or creating? @can-edit?)
-       (get @deployment-set attribute)
        [components/EditableInput
         {:resource     @deployment-set
          :attribute    attribute
          :on-change-fn on-change-fn}]
-       )]))
+       (get @deployment-set attribute))]))
 
 (def ops-status->color
   {"OK"  "green"
@@ -369,9 +368,9 @@
 
 (defn AddButton
   [id]
-  [ui/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
-              :icon     icons/i-plus-large
-              :style    {:align-self "center"}}])
+  [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
+               :icon     icons/i-plus-large
+               :style    {:align-self "center"}}])
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -394,7 +393,7 @@
          :change-event [::events/fetch-app-picker-apps pagination-db-path]}]])))
 
 (defn AppsPickerModal
-  []
+  [creating?]
   (let [tr       (subscribe [::i18n-subs/tr])
         open?    (subscribe [::subs/modal-open? apps-picker-modal-id])
         close-fn #(dispatch [::events/set-opened-modal nil])
@@ -405,7 +404,9 @@
                  :open       @open?
                  :close-icon true
                  :on-close   close-fn}
-       [uix/ModalHeader {:header (@tr [:create-deployment-group])}]
+       [uix/ModalHeader {:header (@tr (if creating?
+                                        [:create-deployment-group]
+                                        [:edit-deployment-group]))}]
        [ui/ModalContent
         [AppsPicker tab-key ::spec/pagination-apps-picker]]])))
 
@@ -414,13 +415,11 @@
 
 (defn- AppsOverviewTable
   [creating?]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        locale   (subscribe [::i18n-subs/locale])
-        apps-row (if creating?
-                   (subscribe [::subs/apps-creation-row-data])
-                   (subscribe [::subs/applications-overview-row-data]))
-        k->tr-k  {:app :name}
-        route    (subscribe [::route-subs/current-route])]
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        locale                 (subscribe [::i18n-subs/locale])
+        apps-row               (subscribe [::subs/apps-row-data])
+        apps-validation-error? (subscribe [::subs/apps-validation-error?])
+        k->tr-k                {:app :name}]
     (fn []
       (let [no-apps? (empty? @apps-row)]
         [:<>
@@ -444,13 +443,13 @@
                                                     :trigger
                                                     (r/as-element
                                                       [:a
-                                                       {:href     (routes-utils/gen-href
-                                                                    @route
-                                                                    {:query-params
-                                                                     (merge
-                                                                       {(routes-utils/db-path->query-param-key [::apps-config])
-                                                                        (create-app-config-query-key i (:href row-data))}
-                                                                       {:deployment-sets-detail-tab :apps})})
+                                                       {:href "#"
+                                                        :on-click #(dispatch [::events/navigate-internal
+                                                                              {:query-params
+                                                                               (merge
+                                                                                 {(routes-utils/db-path->query-param-key [::apps-config])
+                                                                                  (create-app-config-query-key i (:href row-data))}
+                                                                                 {:deployment-sets-detail-tab :apps})}])
                                                         :children [icons/StoreIcon]
                                                         :target   :_self}
                                                        cell-data
@@ -477,26 +476,27 @@
                                                                               :href     (:href row-data)
                                                                               :children [icons/ArrowRightFromBracketIcon]
                                                                               :target   :_self}]])}])}
-                               (when creating?
-                                 {:field-key :remove
-                                  :cell      (fn [{:keys [row-data]}]
-                                               [icons/XMarkIcon
-                                                {:style    {:cursor :pointer}
-                                                 :color    "red"
-                                                 :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
+                               {:field-key :remove
+                                :cell      (fn [{:keys [row-data]}]
+                                             [icons/XMarkIcon
+                                              {:style    {:cursor :pointer}
+                                               :color    "red"
+                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
                     :rows @apps-row}]])
          [:div {:style {:display :flex :justify-content :center :align-items :center}}
-          (when creating?
-            [:<>
-             [AppsPickerModal]
-             [:div {:style {:margin-top   "1rem"
-                            :margin-bottm "1rem"}}
-              [AddButton apps-picker-modal-id]]])]
-         (when no-apps?
+          [:<>
+           [AppsPickerModal creating?]
            [:div {:style {:margin-top   "1rem"
-                          :margin-left  "auto"
-                          :margin-right "auto"}}
-            (@tr [:add-your-first-app])])]))))
+                          :margin-bottm "1rem"}}
+            [AddButton apps-picker-modal-id]]]]
+         [:div {:style {:margin-top   "1rem"
+                        :margin-left  "auto"
+                        :margin-right "auto"}}
+          (if @apps-validation-error?
+            [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
+            (if no-apps?
+              (@tr [:add-your-first-app])
+              (@tr [:add-app])))]]))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
@@ -578,12 +578,12 @@
 (defn EdgeOverviewContent [edges-stats]
   [:<>
    [StatisticStatesEdgeView edges-stats]
-   [ui/Button {:class    "center"
-               :icon     #(r/as-element [icons/BoxIcon])
-               :content  "Show me"
-               :disabled (or (nil? (:total edges-stats))
-                             (= 0 (:total edges-stats)))
-               :on-click (create-nav-fn "edges" {:edges-state nil})}]])
+   [uix/Button {:class    "center"
+                :icon     icons/i-box
+                :content  "Show me"
+                :disabled (or (nil? (:total edges-stats))
+                              (= 0 (:total edges-stats)))
+                :on-click (create-nav-fn "edges" {:edges-state nil})}]])
 
 (defn TabOverview
   [uuid creating?]
@@ -810,26 +810,26 @@
   [tab/Tab
    {:db-path                 [::apps-config]
     :ignore-chng-protection? true
-    :panes                   (map
-                               (fn [{:keys [id]}]
-                                 {:menuItem {:content (r/as-element
-                                                        [AppName {:idx i :id id}])
-                                             :icon    "cubes"
-                                             :key     (create-app-config-query-key i id)}
-                                  :render   #(r/as-element
-                                               [ui/TabPane
-                                                [ui/Popup {:trigger (r/as-element
-                                                                      [:span
-                                                                       [module-plugin/LinkToApp
-                                                                        {:db-path  [::spec/apps-sets i]
-                                                                         :href     id
-                                                                         :children [:<>
-                                                                                    [ui/Icon {:class icons/i-link}]
-                                                                                    "Go to app"]}]])
-                                                           :content "Open application in a new window"}]
-                                                [ModuleVersionsApp i id]
-                                                [EnvVariablesApp i id]])})
-                               applications)}])
+    :panes   (map
+               (fn [{id :href}]
+                 {:menuItem {:content (r/as-element
+                                        [AppName {:idx i :id id}])
+                             :icon    "cubes"
+                             :key     (create-app-config-query-key i id)}
+                  :render   #(r/as-element
+                               [ui/TabPane
+                                [ui/Popup {:trigger (r/as-element
+                                                      [:span
+                                                       [module-plugin/LinkToApp
+                                                        {:db-path  [::spec/apps-sets i]
+                                                         :href     id
+                                                         :children [:<>
+                                                                    [ui/Icon {:class icons/i-link}]
+                                                                    "Go to app"]}]])
+                                           :content "Open application in a new window"}]
+                                [ModuleVersionsApp i id]
+                                [EnvVariablesApp i id]])})
+               applications)}])
 
 (defn BoldLabel
   [txt]
@@ -1013,7 +1013,7 @@
                        {:field-key :created}
                        {:field-key :created-by}
                        {:field-key      :refresh-interval
-                        :header-content (str/lower-case (@tr [:report-interval]))}
+                        :header-content (some-> (@tr [:report-interval]) str/lower-case)}
                        {:field-key :last-online :no-sort? true}
                        {:field-key :version :no-sort? true}
                        {:field-key :tags :no-sort? true}]
@@ -1084,6 +1084,7 @@
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set (subscribe [::subs/deployment-set])
         apps-sets      (subscribe [::subs/applications-sets])
+        apps           (subscribe [::subs/apps-row-data])
         edges          (subscribe [::subs/all-edges-ids])
         depl-all       (subscribe [::deployments-subs/deployments-summary-all])]
     (fn []
@@ -1113,7 +1114,7 @@
                                      :render   #(r/as-element
                                                   [ConfigureApps
                                                    0
-                                                   (get-in @apps-sets [0 :applications])])}
+                                                   @apps])}
                                     {:menuItem {:key      :edges
                                                 :content
                                                 (let [tab-title (str/capitalize (tr [:edges]))]

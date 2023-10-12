@@ -31,5 +31,5 @@
    (into [:div {:style {:height          "100%"
                         :display         "flex"
                         :flex-direction  "column"
-                        :justify-content "space-evenly"}}
-          children])])
+                        :justify-content "space-evenly"}}]
+         children)])

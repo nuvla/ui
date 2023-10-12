@@ -411,10 +411,10 @@
 (defn TitledCardDeployments
   [& children]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [TitledCard {:class :nuvla-deployments
-                 :icon  icons/i-rocket
-                 :label (str/capitalize (@tr [:deployments]))}
-     children]))
+    (into [TitledCard {:class :nuvla-deployments
+                       :icon  icons/i-rocket
+                       :label (str/capitalize (@tr [:deployments]))}]
+          children)))
 
 (defn DeploymentsOverviewSegment
   [{:keys [sub-key show-me-event on-click]}]

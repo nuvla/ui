@@ -723,7 +723,12 @@
                    :else (str cell-data))])]))]]]]]))
 
 (defn TableColsEditable
-  [{:keys [columns rows]} db-path]
+  [{:keys [columns rows default-columns]} db-path]
+  (dispatch [::init-table-col-config
+             (if default-columns
+               (filterv (comp default-columns :field-key) columns)
+               columns)
+             db-path])
   (let [db-path (or db-path ::table-cols-config)
         available-cols (merge
                          (let [ks (mapcat keys rows)]
@@ -740,7 +745,6 @@
         remove-col-fn (fn [col-key]
                         (dispatch [::remove-col col-key db-path]))
         reset-cols-fn #(dispatch [::reset-current-cols db-path])]
-    (dispatch [::init-table-col-config columns db-path])
     (fn [props]
       [:div
        [Table (assoc props

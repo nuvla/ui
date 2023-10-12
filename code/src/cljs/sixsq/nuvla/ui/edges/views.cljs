@@ -839,6 +839,7 @@
       {:sort-config       {:db-path     ::spec/ordering
                            :fetch-event [::events/get-nuvlaboxes]}
        :columns           columns
+       :default-columns #{:online :state :name :last-online :version :tags}
        :rows              edges
        :table-props       {:compact "very" :selectable true}
        :cell-props        {:header {:single-line true}}
@@ -862,7 +863,7 @@
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                       (:nuvlabox-workers @current-cluster))]
+                                                 (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
@@ -870,18 +871,18 @@
         columns           (mapv (fn [col-config]
                                   (assoc col-config :cell NuvlaboxRow))
                             [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
-                             {:field-key :state :cell-props {:collapsing true}}
-                             {:field-key :name}
-                             {:field-key :description}
-                             {:field-key :created}
-                             {:field-key :created-by}
-                             {:field-key      :refresh-interval
-                              :header-content (str/lower-case (@tr [:telemetry]))}
-                             {:field-key :last-online :no-sort? true}
-                             {:field-key      :version :no-sort? true
-                              :header-content [:<> (@tr [:version])
-                                               (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
-                             {:field-key :tags :no-sort? true}])
+                              {:field-key :state :cell-props {:collapsing true}}
+                              {:field-key :name}
+                              {:field-key :description}
+                              {:field-key :created}
+                              {:field-key :created-by}
+                              {:field-key      :refresh-interval
+                               :header-content (str/lower-case (@tr [:telemetry]))}
+                              {:field-key :last-online :no-sort? true}
+                              {:field-key      :version :no-sort? true
+                               :header-content [:<> (@tr [:version])
+                                                (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
+                              {:field-key :tags :no-sort? true}])
         bulk-edit         (bulk-edit-modal/create-bulk-edit-modal
                             {:db-path                [::spec/select]
                              :refetch-event          ::events/get-nuvlaboxes

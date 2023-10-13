@@ -1,30 +1,31 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-            [sixsq.nuvla.ui.apps.effects :as apps-fx]
             [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
+            [sixsq.nuvla.ui.apps.effects :as apps-fx]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
-            [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
+            [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs :refer [get-target-fleet-ids]]
+            [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.edges.spec :as edges-spec]
-            [sixsq.nuvla.ui.edges.utils :as edge-utils]
+            [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.job.events :as job-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [ordering->order-string]]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin :refer [ordering->order-string]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -36,15 +37,6 @@
   (if-not (str/starts-with? uuid "deployment-set/")
     (str "deployment-set/" uuid)
     uuid))
-
-(defn get-target-fleet-ids
-  [depl-set]
-  (->> depl-set
-       :applications-sets
-       (mapcat :overwrites)
-       (mapcat (juxt :targets :fleet))
-       (remove nil?)
-       flatten))
 
 (reg-event-fx
   ::refresh
@@ -227,7 +219,7 @@
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set fx]]
     (let [deployment-set-edited (get db ::spec/deployment-set-edited)
-          parent-ids            (get-target-fleet-ids deployment-set)]
+          parent-ids (set (into (get-target-fleet-ids deployment-set) (get-target-fleet-ids deployment-set-edited)))]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
                      ::spec/deployment-set deployment-set
                      ::main-spec/loading? false
@@ -581,33 +573,51 @@
 
 (def edges-state-filter-key :edges-state)
 
+
 (reg-event-fx
   ::get-edge-documents
   (fn [{{:keys [::spec/ordering
-                current-route] :as db} :db} _]
+                current-route
+                ::spec/changed-edges] :as db} :db} _]
     (let [edges        (get-in db
-                               (subs/current-route->edges-db-path
-                                 current-route))
+                         (subs/current-route->edges-db-path
+                           current-route))
           ordering     (or ordering spec/default-ordering)
-          query-filter (routing-utils/get-query-param current-route edges-state-filter-key)]
+          query-filter (routing-utils/get-query-param current-route edges-state-filter-key)
+          changed-ids  (remove nil? (flatten (vals changed-edges)))]
       (cond-> {:db (assoc db ::spec/edge-documents nil)}
               edges
               (assoc ::cimi-api-fx/search
                      [:nuvlabox
                       (->> {:orderby (ordering->order-string ordering)
-                            :filter  (general-utils/join-and
-                                       "id!=null"
-                                       (general-utils/ids->inclusion-filter-string (-> edges
-                                                                                       :resources))
-                                       (when (seq query-filter) (edge-utils/state-filter query-filter)))}
+                            :filter  (if (seq changed-ids)
+                                       (general-utils/ids->inclusion-filter-string
+                                         changed-ids)
+                                       (general-utils/join-and
+                                         "id!=null"
+                                         (general-utils/ids->inclusion-filter-string (-> edges
+                                                                                         :resources))
+                                         (when (seq query-filter) (edges-utils/state-filter query-filter))))}
                            (pagination-plugin/first-last-params
                              db [::spec/pagination-edges]))
                       #(dispatch [::set-edges-documents %])])))))
 
-(reg-event-db
+(reg-event-fx
+  ::init-edges-tab
+  (fn [{db :db}]
+    {:db (assoc db ::spec/changed-edges nil)
+     :fx [[:dispatch [::get-edge-documents]]]}))
+
+(def apps-picker-modal-id :modal/add-apps)
+(def edges-picker-modal-id :modal/add-edges)
+
+(reg-event-fx
   ::set-opened-modal
-  (fn [db [_ id]]
-    (assoc db ::spec/opened-modal id)))
+  (fn [{db :db} [_ id]]
+    {:db (assoc db ::spec/opened-modal id)
+     :fx (if (= id edges-picker-modal-id)
+           [[:dispatch [::get-edges-for-edge-picker-modal]]]
+           [[:dispatch [::reset-edge-picker]]])}))
 
 (reg-event-db
   ::set-edges-documents
@@ -743,3 +753,119 @@
                             (assoc route-data
                               :change-event [::main-events/changes-protection? true])])]]}))
 
+(defn get-full-filter-string
+  [{:keys [::spec/edge-picker-state-selector
+           ::spec/edge-picker-additional-filter] :as db}]
+  (general-utils/join-and
+    "id!=null"
+    (when edge-picker-state-selector (edges-utils/state-filter edge-picker-state-selector))
+    edge-picker-additional-filter
+    (full-text-search-plugin/filter-text
+      db [::spec/edge-picker-full-text-search])))
+
+(reg-event-fx
+  ::get-edges-for-edge-picker-modal
+  (fn []
+    {:fx [[:dispatch [::get-picker-edges]]
+          [:dispatch [::get-edge-picker-edges-summary]]]}))
+
+(reg-event-fx
+  ::get-picker-edges
+  (fn [{{:keys [::spec/edge-picker-ordering
+                ::spec/edges] :as db} :db} _]
+    (let [ordering (or edge-picker-ordering spec/default-ordering)]
+      {::cimi-api-fx/search
+       [:nuvlabox
+        (->> {:orderby (ordering->order-string ordering)
+              :filter  (general-utils/join-and
+                         (get-full-filter-string db)
+                         (general-utils/ids->exclude-filter-str (:resources edges)))}
+             (pagination-plugin/first-last-params
+               db [::spec/edge-picker-pagination]))
+        #(dispatch [::set-edge-picker-edges %])]})))
+
+(reg-event-db
+  ::set-edge-picker-edges
+  (fn [db [_ response]]
+    (assoc db ::spec/edge-picker-edges response)))
+
+
+(reg-event-fx
+  ::get-edge-picker-edges-summary
+  (fn [{{:keys [::spec/edge-picker-additional-filter
+                ::spec/edges] :as db} :db}]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      (edges-utils/get-query-aggregation-params
+        (full-text-search-plugin/filter-text
+          db [::spec/edge-picker-full-text-search])
+        edges-spec/state-summary-agg-term
+        (general-utils/join-and edge-picker-additional-filter
+          (general-utils/ids->exclude-filter-str
+            (:resources edges))))
+      #(dispatch [::set-edge-picker-edges-summary %])]}))
+
+(reg-event-db
+  ::set-edge-picker-edges-summary
+  (fn [db [_ nuvlaboxes-summary]]
+    (assoc db ::spec/edge-picker-edges-summary nuvlaboxes-summary)))
+
+(reg-event-fx
+  ::set-edge-picker-additional-filter
+  (fn [{db :db} [_ filter]]
+    {:db (-> db
+             (assoc ::spec/edge-picker-additional-filter filter)
+             (assoc-in [::spec/edge-picker-pagination :active-page] 1))
+     :fx [[:dispatch [::get-edges-for-edge-picker-modal]]
+          [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]]}))
+
+(reg-event-fx
+  ::set-edge-picker-selected-state
+  (fn [{db :db} [_ state]]
+    {:db (assoc db ::spec/edge-picker-state-selector state)
+     :fx [[:dispatch [::get-picker-edges]]]}))
+
+(reg-event-db
+  ::reset-edge-picker
+  (fn [db]
+    (assoc db
+      ::spec/edge-picker-additional-filter ""
+      ::spec/edge-picker-state-selector nil
+      ::spec/select nil
+      ::spec/edge-picker-full-text-search nil
+      ::spec/edge-picker-ordering spec/default-ordering
+      ::spec/edge-picker-pagination spec/pagination-default)))
+
+(reg-event-fx
+  ::add-edges
+  (fn [{db :db} [_ response]]
+    (let [edge-ids (map :id (:resources response))
+          apps-set (get-in db [::spec/deployment-set-edited :applications-sets])]
+      {:fx [[:dispatch [::set-opened-modal nil]]
+            [:dispatch [::edit :applications-sets
+                        (mapv
+                          (fn [app-set]
+                            (update app-set :overwrites
+                              (partial mapv
+                                (fn [app-set-overwrite]
+                                  (update app-set-overwrite :fleet into edge-ids)))))
+                          apps-set)]]
+            [:dispatch [::refresh]]]})))
+
+(reg-event-fx
+  ::get-selected-edge-ids
+  (fn [{{:keys [::spec/select] :as db} :db} _]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:filter (table-plugin/build-bulk-filter
+                 select
+                 (get-full-filter-string db))
+       :select "id"}
+      #(dispatch [::add-edges %])]}))
+
+(reg-event-fx
+  ::show-fleet-changes-only
+  (fn [{{:keys [::spec/changed-edges] :as db} :db} [_ changed-fleet]]
+    {:db (assoc db ::spec/changed-edges
+           (if changed-edges nil changed-fleet))
+     :fx [[:dispatch [::get-edge-documents]]]}))

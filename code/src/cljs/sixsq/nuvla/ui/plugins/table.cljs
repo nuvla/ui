@@ -184,11 +184,11 @@
 
 (reg-event-db
   ::select-id
-  (fn [db [_ id db-path resources]]
+  (fn [db [_ id db-path resource-ids]]
     (let [selected-set (get-in-db db db-path ::selected-set #{})
           select-all?  (get-in-db db db-path ::select-all?)
           new-set      (cond select-all?
-                             (disj (set resources) id)
+                             (disj (set resource-ids) id)
 
                              (is-selected? selected-set id)
                              (disj selected-set id)
@@ -451,7 +451,7 @@
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
         selectable?    (and
                          select-config
-                         (s/valid? ::select-config select-config)
+                        ;;  (s/valid? ::select-config select-config)
                          (seq (:bulk-actions select-config))
                          (or (not rights-needed)
                            (some (partial general-utils/can-operation? rights-needed) rows)))
@@ -460,7 +460,6 @@
         page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed]))
         get-row-props  (fn [row]
                          (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
-
     [:div
      (when selectable?
        [BulkActionBar {:selectable?         selectable?
@@ -526,6 +525,16 @@
              :else
              ^{:key id}
              [ui/TableRow (get-row-props row)
+              (when selectable?
+                [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
+                               :selected-all-sub select-all? :resources-sub-key resources-sub-key
+                               :rights-needed rights-needed
+                               :edge-name (or
+                                           (and select-label-accessor
+                                                (select-label-accessor row))
+                                           (:name row)
+                                           (:id row))
+                               :idx idx}])
               (for [{:keys [field-key accessor cell cell-props]} columns
                     :let [cell-data ((or accessor field-key) row)]]
                 ^{:key (str id "-" field-key)}

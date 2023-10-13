@@ -36,6 +36,16 @@
 
 (s/def ::apps-edited? boolean?)
 
+(s/def ::edge-picker-edges any?)
+(s/def ::edge-picker-full-text-search (s/nilable string?))
+(s/def ::edge-picker-ordering (s/coll-of (s/cat :field keyword? :order #{"desc" "asc" :desc :asc})))
+(s/def ::edge-picker-additional-filter string?)
+(s/def ::edge-picker-state-selector string?)
+(s/def ::edge-picker-pagination any?)
+(s/def ::edge-picker-edges-summary any?)
+
+(s/def ::select (s/nilable any?))
+
 (def defaults
   {::module-applications-sets  nil
    ::apps-sets                 nil
@@ -60,5 +70,6 @@
    ::pagination-edges          pagination-default
    ::pagination-apps-picker    (pagination-plugin/build-spec
                                  :default-items-per-page 16)
+   ::edge-picker-pagination   pagination-default
    ::opened-modal              nil
    ::apps-edited?              false})

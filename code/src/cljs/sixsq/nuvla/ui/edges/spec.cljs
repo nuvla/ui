@@ -46,7 +46,7 @@
    :created-by :refresh-interval :last-online :version :tags :manager])
 
 (s/def ::ordering
-  (s/cat :field (set columns) :order #{"desc" "asc"}))
+ (s/coll-of (s/cat :field (set columns) :order #{"desc" "asc" :desc :asc})))
 
 (def default-ordering [[:created :desc]])
 

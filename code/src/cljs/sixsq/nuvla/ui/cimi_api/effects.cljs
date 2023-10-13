@@ -4,7 +4,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :refer [<!]]
             [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-fx]]
+            [re-frame.core :refer [dispatch reg-event-fx reg-fx]]
             [sixsq.nuvla.client.api :as api]
             [sixsq.nuvla.client.async :as async-client]
             [sixsq.nuvla.client.authn :as authn]
@@ -79,6 +79,7 @@
       (let [api-call #(api/get @CLIENT resource-id)
             on-error (or on-error (partial default-get-on-error resource-id))]
         (api-call-error-check api-call on-success on-error)))))
+
 
 (reg-fx
   ::search

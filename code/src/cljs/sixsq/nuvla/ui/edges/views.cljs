@@ -432,7 +432,7 @@
                                         (remove :pre-release)
                                         first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
-        default-data               {:refresh-interval 30, :version default-major-version}
+        default-data               {:version default-major-version}
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release

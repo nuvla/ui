@@ -32,6 +32,8 @@
 
 (s/def ::opened-modal (s/nilable keyword?))
 
+(s/def ::apps-edited? boolean?)
+
 (def defaults
   {::module-applications-sets  nil
    ::apps-sets                 nil
@@ -56,4 +58,5 @@
    ::pagination-edges          pagination-default
    ::pagination-apps-picker    (pagination-plugin/build-spec
                                  :default-items-per-page 16)
-   ::opened-modal              nil})
+   ::opened-modal              nil
+   ::apps-edited?              false})

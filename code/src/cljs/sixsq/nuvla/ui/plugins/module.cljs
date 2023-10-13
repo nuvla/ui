@@ -119,7 +119,7 @@
 
 (reg-event-fx
   ::set-module
-  (fn [{db :db} [_ db-path href module]]
+  (fn [{db :db} [_ db-path href module on-success-event]]
     (let [overwrite-map               (get-in db (db-module-overwrite-path db-path href))
           update-env-vars             #(overwrite-env % (:env overwrite-map))
           overwrite-module-env        #(update-module-env-vars % update-env-vars)
@@ -130,13 +130,14 @@
                overwrite-module-env
                overwrite-module-regs-creds
                (set-db-module db db-path href))
-       :fx [[:dispatch [::load-infra-registries db-path href]]]})))
+       :fx (cond-> [[:dispatch [::load-infra-registries db-path href]]]
+                   on-success-event (conj [:dispatch on-success-event]))})))
 
 (reg-event-fx
   ::load-module
-  (fn [{db :db} [_ db-path href overwrite]]
+  (fn [{db :db} [_ db-path href overwrite on-success-event]]
     {:db               (assoc-in db (db-module-overwrite-path db-path href) overwrite)
-     ::cimi-api-fx/get [href #(dispatch [::set-module db-path href %])]}))
+     ::cimi-api-fx/get [href #(dispatch [::set-module db-path href % on-success-event])]}))
 
 (reg-event-db
   ::set-resolved-private-registries
@@ -257,14 +258,12 @@
             (when change-event
               [:dispatch (conj change-event new-version-href)])]})))
 
-(defn db-changed-version
+(defn db-new-version
   [db db-path href]
   (let [module                  (db-module db db-path href)
         versions-indexed        (module-versions-indexed module)
-        version-module-href     (-> module :content :id)
         new-version-module-href (get-in db (db-new-version-module-href-path db-path href))]
-    (when (and (not (str/blank? new-version-module-href))
-               (not= new-version-module-href version-module-href))
+    (when-not (str/blank? new-version-module-href)
       (get-version-id versions-indexed new-version-module-href))))
 
 (defn- db-module-env-vars

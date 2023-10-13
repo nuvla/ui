@@ -612,7 +612,8 @@
      [:div
       [:div {:style {:overflow :auto
                      :padding 0
-                     :position :relative}}
+                     :position :relative}
+             :class :table-fixed-row-height}
        [ui/Table (merge {:stackable false} (:table-props props))
         [ui/TableHeader (:header-props props)
          [ui/TableRow

@@ -545,36 +545,7 @@
       {:db (assoc-in db [::default-cols db-path] defaults)
        :fx [[:dispatch [::store-cols cols db-path]]]})))
 
-(defn ConfigureVisibleColumns
-  [db-path available-fields]
-  (let [default-cols  (subscribe [::get-default-cols db-path])
-        current-cols  (subscribe [::get-current-cols db-path])
-        selected-cols (r/atom (set @current-cols))
-        show?         (r/atom false)
-        available-col-keys (set (keys available-fields))]
-    (fn []
-      [SelectFieldsView
-       {:field->view (into {}
-                       (map (fn [[k v]]
-                              [k (:header-content v)])
-                         available-fields))
-        :title-tr-key :columns
-        :show? show?
-        :selections-atom selected-cols
-        :reset-to-default-fn #(reset! selected-cols (set @default-cols))
-        :selected-fields-sub current-cols
-        :available-fields available-col-keys
-        :update-fn     #(dispatch [::set-current-cols % db-path])
-        :trigger       [uix/Button
-                        {:basic true
-                         :icon :options
-                         :style {:padding 0
-                                 :box-shadow :none
-                                 :position :relative
-                                 :z-index 1000}
-                         :on-click (fn []
-                                     (reset! selected-cols (set @current-cols))
-                                     (reset! show? true))}]}])))
+
 
 
 (defn Table
@@ -726,6 +697,37 @@
                                  :field-key field-key}])
                    :else (str cell-data))])
               (when (:col-config props) [ui/TableCell])]))]]]]]))
+
+(defn ConfigureVisibleColumns
+  [db-path available-fields]
+  (let [default-cols  (subscribe [::get-default-cols db-path])
+        current-cols  (subscribe [::get-current-cols db-path])
+        selected-cols (r/atom (set @current-cols))
+        show?         (r/atom false)
+        available-col-keys (set (keys available-fields))]
+    (fn []
+      [SelectFieldsView
+       {:field->view (into {}
+                       (map (fn [[k v]]
+                              [k (:header-content v)])
+                         available-fields))
+        :title-tr-key :columns
+        :show? show?
+        :selections-atom selected-cols
+        :reset-to-default-fn #(reset! selected-cols (set @default-cols))
+        :selected-fields-sub current-cols
+        :available-fields available-col-keys
+        :update-fn     #(dispatch [::set-current-cols % db-path])
+        :trigger       [uix/Button
+                        {:basic true
+                         :icon :options
+                         :style {:padding 0
+                                 :box-shadow :none
+                                 :position :relative
+                                 :z-index 1000}
+                         :on-click (fn []
+                                     (reset! selected-cols (set @current-cols))
+                                     (reset! show? true))}]}])))
 
 (defn TableColsEditable
   [{:keys [columns rows default-columns]} db-path]

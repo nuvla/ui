@@ -305,12 +305,12 @@
      [ui/ListContent
       [ui/ListHeader {:style {:display :flex}}
        [ui/Checkbox {:checked         (contains? @selections-atom item)
-                     :label           (if view " " label-string)
+                     :label           (if view (r/as-element [:label view]) label-string)
                      :on-change       (ui-callback/checked (fn [checked]
                                                              (if checked
                                                                (swap! selections-atom set/union #{item})
                                                                (swap! selections-atom set/difference #{item}))))}]
-       view]]]))
+       #_[:label view]]]]))
 
 (defn format-field-list [available-fields-atom selections-atom field->view]
   (let [items (sort available-fields-atom)]

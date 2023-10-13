@@ -473,7 +473,8 @@
                        :bulk-actions        bulk-actions
                        :resources-sub-key   resources-sub-key}])
      [:div {:style {:overflow :auto
-                    :padding 0}}
+                    :padding 0}
+            :class :table-fixed-row-height}
       [ui/Table (:table-props props)
        [ui/TableHeader (:header-props props)
         [ui/TableRow

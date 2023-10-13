@@ -1113,3 +1113,13 @@ i.link.icons {
   color: white !important;
 }
 /**  general **/
+
+.table-fixed-row-height td:not(:first-child),
+.table-fixed-row-height td:not(:first-child) > div {
+  height: 30px;
+  text-wrap: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  margin: 0 2px 0 0 !important;
+}

@@ -43,6 +43,8 @@
       (clear-unload-protection))))
 
 
+(def ^:const double-state-marker "double")
+
 (defn- stop-browser-back
   "It's not possible to disable navigate back in modern browsers.
 
@@ -51,11 +53,11 @@
    2. Navigating back then goes to same page, triggers 'popstate' event, which pushes current route again.
        see: https://stackoverflow.com/a/64572567"
   [f]
-  (.pushState js/window.history nil "" (.-href js/window.location))
+  (.pushState js/window.history double-state-marker "" (.-href js/window.location))
   (set!
     js/window.onpopstate
     (fn []
-      (.pushState js/window.history nil "" (.-href js/window.location))
+      (.pushState js/window.history double-state-marker "" (.-href js/window.location))
       (when (fn? f) (f)))))
 
 (defn- start-browser-back
@@ -65,7 +67,8 @@
   (cond
     nav-back? (.go js/window.history -2)
     (fn? f)   (f)
-    :else     (.back js/window.history)))
+    :else (when (= double-state-marker (.-state js/window.history))
+            (.back js/window.history))))
 
 
 (reg-fx

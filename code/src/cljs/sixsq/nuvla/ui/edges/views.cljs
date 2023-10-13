@@ -747,42 +747,6 @@
         new-modal  (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-edge-on-k8s])]
     (if @new-modal ^{:key (count @nb-release)} [add-modal/AddModal] ^{:key (count @nb-release)} [AddModal])))
 
-(def field-key->table-cell
-  {:online  '[ui/TableCell {:collapsing true}
-              [OnlineStatusIcon online nil true]]
-   :state   '[ui/TableCell {:collapsing true}
-              [ui/Icon {:class (utils/state->icon state)}]]
-   :name    '[ui/TableCell (or name uuid)]
-   :description '[ui/TableCell description]
-   :created '[ui/TableCell (time/parse-ago created locale)]
-   :created-by '[ui/TableCell @creator]
-   :refresh-interval '[ui/TableCell (str refresh-interval "s")]
-   :last-online   '[ui/TableCell (when next-heartbeat-moment
-                                   [uix/TimeAgo (utils/last-time-online
-                                                  next-heartbeat-moment
-                                                  refresh-interval)])]
-   :version  '[ui/TableCell (or engine-version (str version ".y.z"))]
-   :tags     '[ui/TableCell [uix/Tags tags]]})
-;; (into {} (mapv (fn [[k [_ cell-props-or-cell perhaps-cell]]]
-;;                                                [k (cond->
-;;                                                     {:cell (or perhaps-cell cell-props-or-cell)}
-;;                                                     perhaps-cell
-;;                                                     (assoc :cell-props cell-props-or-cell)) ])
-;;                                          '{:online  [ui/TableCell {:collapsing true}
-;;                                                      [OnlineStatusIcon online nil true]]
-;;                                            :state   [ui/TableCell {:collapsing true}
-;;                                                      [ui/Icon {:class (utils/state->icon state)}]]
-;;                                            :name    [ui/TableCell (or name uuid)]
-;;                                            :description [ui/TableCell description]
-;;                                            :created [ui/TableCell (time/parse-ago created locale)]
-;;                                            :created-by [ui/TableCell @creator]
-;;                                            :refresh-interval [ui/TableCell (str refresh-interval "s")]
-;;                                            :last-online   [ui/TableCell (when next-heartbeat-moment
-;;                                                                           [uix/TimeAgo (utils/last-time-online
-;;                                                                                          next-heartbeat-moment
-;;                                                                                          refresh-interval)])]
-;;                                            :version  [ui/TableCell (or engine-version (str version ".y.z"))]
-;;                                            :tags     [ui/TableCell [uix/Tags tags]]}))
 (defn NuvlaboxRow
   [{{:keys [id name description created state tags online refresh-interval version created-by]} :row-data
     field-key :field-key}]

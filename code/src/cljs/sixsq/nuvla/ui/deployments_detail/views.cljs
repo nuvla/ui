@@ -439,7 +439,7 @@
         (@tr [:deployment-access-url]) " "
         [:a {:href (name->href routes/credentials)}
          (@tr [:create-vpn-credential])] " " (@tr [:and]) " "
-        [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
+        [:a {:href "https://docs.nuvla.io/nuvla/user-guide/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
 
 
 (defn up-to-date?

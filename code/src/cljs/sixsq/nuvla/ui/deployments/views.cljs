@@ -261,7 +261,7 @@
                                    {:field-key :created-by}
                                    {:field-key :tags}
                                    {:field-key :infrastructure
-                                    :no-sort?  true}
+                                    :sort-key  :nuvlabox-name}
                                    (when selectable? {:field-key :actions
                                                       :no-sort?  true})]
                    :rows          deployments-list

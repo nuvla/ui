@@ -748,13 +748,15 @@
     (if @new-modal ^{:key (count @nb-release)} [add-modal/AddModal] ^{:key (count @nb-release)} [AddModal])))
 
 (defn NuvlaboxRow
-  [{{:keys [id name description created state tags online refresh-interval version created-by]} :row-data
+  [{{:keys [id name description created state tags online
+            refresh-interval version created-by owner]} :row-data
     field-key :field-key}]
   (let [uuid                  (general-utils/id->uuid id)
         locale                @(subscribe [::i18n-subs/locale])
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])
+        owner                 (subscribe [::session-subs/resolve-user owner])
         field-key->table-cell {:description description,
                                :tags [uix/Tags tags],
                                :refresh-interval (str refresh-interval "s"),
@@ -762,7 +764,8 @@
                                :created (time/parse-ago created locale),
                                :state [ui/Icon {:class (utils/state->icon state)}]
                                :online [OnlineStatusIcon online nil true]
-                               :created-by @creator,
+                               :created-by @creator
+                               :owner @owner
                                :last-online
                                (when next-heartbeat-moment [uix/TimeAgo (utils/last-time-online next-heartbeat-moment refresh-interval)]),
                                :version (or engine-version (str version ".y.z"))}]
@@ -835,18 +838,19 @@
         columns           (mapv (fn [col-config]
                                   (assoc col-config :cell NuvlaboxRow))
                             [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
-                              {:field-key :state :cell-props {:collapsing true}}
-                              {:field-key :name}
-                              {:field-key :description}
-                              {:field-key :created}
-                              {:field-key :created-by}
-                              {:field-key      :refresh-interval
-                               :header-content (str/lower-case (@tr [:telemetry]))}
-                              {:field-key :last-online :no-sort? true}
-                              {:field-key      :version :no-sort? true
-                               :header-content [:<> (@tr [:version])
-                                                (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
-                              {:field-key :tags :no-sort? true}])
+                             {:field-key :state :cell-props {:collapsing true}}
+                             {:field-key :name}
+                             {:field-key :description}
+                             {:field-key :created}
+                             {:field-key :created-by}
+                             {:field-key :owner}
+                             {:field-key      :refresh-interval
+                              :header-content (str/lower-case (@tr [:telemetry]))}
+                             {:field-key :last-online :no-sort? true}
+                             {:field-key      :version :no-sort? true
+                              :header-content [:<> (@tr [:version])
+                                               (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
+                             {:field-key :tags :no-sort? true}])
         bulk-edit         (bulk-edit-modal/create-bulk-edit-modal
                             {:db-path                [::spec/select]
                              :refetch-event          ::events/get-nuvlaboxes
@@ -857,7 +861,7 @@
                              :singular               (@tr [:edge])
                              :plural                 (@tr [:edges])
                              :filter-fn              (partial utils/build-bulk-filter [::spec/select])})]
-    [NuvlaEdgeTableView {:bulk-edit bulk-edit
+    [NuvlaEdgeTableView {:bulk-edit   bulk-edit
                          :bulk-deploy {:trigger-config {:icon (fn [] [icons/RocketIcon])
                                                         :name "Bulk Deploy App"
                                                         :event (fn []
@@ -866,7 +870,9 @@
                                                                    (dispatch [::routing-events/navigate
                                                                               routes/deployment-sets-details
                                                                               {:uuid :create}
-                                                                              {depl-group-subs/creation-temp-id-key id}])))}} :columns columns :edges selected-nbs}]))
+                                                                              {depl-group-subs/creation-temp-id-key id}])))}}
+                         :columns     columns
+                         :edges       selected-nbs}]))
 
 
 (defn NuvlaboxMapPoint

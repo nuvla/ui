@@ -731,19 +731,13 @@
                                      (reset! show? true))}]}])))
 
 (defn TableColsEditable
-  [{:keys [columns rows default-columns]} db-path]
+  [{:keys [columns default-columns]} db-path]
   (dispatch [::init-table-col-config
              (if default-columns
                (filterv (comp default-columns :field-key) columns)
                columns)
              db-path])
   (let [db-path (or db-path ::table-cols-config)
-        available-cols (merge
-                         (let [ks (mapcat keys rows)]
-                           (zipmap
-                             ks
-                             (map (fn [k] {:field-key k}) ks)))
-                         (into {} (map (juxt :field-key identity) columns)))
         current-cols   (subscribe [::get-current-cols db-path])
         default-cols   (subscribe [::get-default-cols db-path])
         add-col-fn     (fn [col-key position]
@@ -753,20 +747,26 @@
         remove-col-fn (fn [col-key]
                         (dispatch [::remove-col col-key db-path]))
         reset-cols-fn #(dispatch [::reset-current-cols db-path])]
-    (fn [props]
-      [:div
-       [Table (assoc props
-                :col-config {:default-cols   @default-cols
-                             :available-cols available-cols
-                             :current-cols   @current-cols
-                             :remove-col-fn  remove-col-fn
-                             :add-col-fn     add-col-fn
-                             :reset-cols-fn  reset-cols-fn
-                             :col-config-modal [ConfigureVisibleColumns db-path available-cols]}
-                :columns (->> (or @current-cols @default-cols)
-                              (mapv (fn [k] (available-cols k)))
-                              (remove nil?)
-                              vec))]])))
+    (fn [{:keys [rows columns] :as props}]
+      (let [available-cols (merge
+                             (let [ks (mapcat keys rows)]
+                               (zipmap
+                                 ks
+                                 (map (fn [k] {:field-key k}) ks)))
+                             (into {} (map (juxt :field-key identity) columns)))]
+        [:div
+         [Table (assoc props
+                  :col-config {:default-cols   @default-cols
+                               :available-cols available-cols
+                               :current-cols   @current-cols
+                               :remove-col-fn  remove-col-fn
+                               :add-col-fn     add-col-fn
+                               :reset-cols-fn  reset-cols-fn
+                               :col-config-modal [ConfigureVisibleColumns db-path available-cols]}
+                  :columns (->> (or @current-cols @default-cols)
+                                (mapv (fn [k] (available-cols k)))
+                                (remove nil?)
+                                vec))]]))))
 
 
 (s/fdef Table :args (s/cat :opts (s/keys

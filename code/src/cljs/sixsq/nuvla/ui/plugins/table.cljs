@@ -655,7 +655,7 @@
                                                                               :name "remove circle"
                                                                               :on-click #(remove-fn field-key)
                                                                               :class :toggle-invisible-on-parent-hover}]))]])
-                :position "top right"
+                :position "top left"
                 :disabled (not (-> props :col-config :remove-col-fn))
                 :hoverable true
                 :basic   true

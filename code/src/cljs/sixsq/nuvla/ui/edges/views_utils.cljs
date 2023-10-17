@@ -79,9 +79,7 @@
                                      @creator)])
                         (when next-heartbeat-moment
                           [:div (str (@tr [:last-online]) " ")
-                                [uix/TimeAgo (utils/last-time-online
-                                               next-heartbeat-moment
-                                               refresh-interval)]])]
+                                [uix/TimeAgo next-heartbeat-moment]])]
           :state       state
           :description (when-not (str/blank? description) description)
           :tags        tags}]))))

@@ -1027,7 +1027,7 @@
      :label     "seconds"}]])
 
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated owner created-by state] :as _nuvlabox}
+  [{:keys [id created updated owner created-by state] :as nuvlabox}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
@@ -1068,10 +1068,11 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:report]))]
         [ui/TableCell
-         [LabelReportInterval
-          {:label     (str/capitalize (@tr [:heartbeat]))
-           :help      (@tr [:heartbeat-help])
-           :attribute :heartbeat-interval}]
+         (when (utils/has-capability-heartbeat? nuvlabox)
+           [LabelReportInterval
+            {:label     (str/capitalize (@tr [:heartbeat]))
+             :help      (@tr [:heartbeat-help])
+             :attribute :heartbeat-interval}])
          [LabelReportInterval
           {:label     (str/capitalize (@tr [:telemetry]))
            :help      (@tr [:telemetry-help])

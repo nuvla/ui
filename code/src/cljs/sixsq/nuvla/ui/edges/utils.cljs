@@ -30,6 +30,8 @@
 (def vuln-low-color "#21b802")
 (def vuln-unknown-color "#949494")
 
+(def capability-heartbeat "NUVLA_HEARTBEAT")
+
 (defn score-vulnerability
   [{:keys [vulnerability-score] :as item}]
   (let [set-fn #(assoc item :severity %1 :color %2)]
@@ -231,13 +233,6 @@
        (some str/blank?)
        boolean))
 
-(defn last-time-online [next-heartbeat-moment refresh-interval]
-  (->> refresh-interval
-       (* 2)
-       (+ 10)
-       (* 1000)
-       (time/subtract-milliseconds next-heartbeat-moment)))
-
 (defn edges-details-url
   [id]
   (name->href routes/edges-details {:uuid id}))
@@ -288,3 +283,9 @@
   (and (some? next-telemetry) (some-> next-telemetry
                                       time/parse-iso8601
                                       time/before-now?)))
+
+(defn has-capability?
+  [capability {:keys [capabilities] :as _nuvlabox}]
+  (contains? (set capabilities) capability))
+
+(def has-capability-heartbeat? (partial has-capability? capability-heartbeat))

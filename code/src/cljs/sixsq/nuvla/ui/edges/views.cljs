@@ -804,7 +804,8 @@
        [bulk-deploy-modal])
      [TableColsEditable
       {:sort-config       {:db-path     ::spec/ordering
-                           :fetch-event [::events/get-nuvlaboxes]}
+                           :fetch-event [::events/get-nuvlaboxes]
+                           :no-remove-icon-cols #{:state :online}}
        :columns           columns
        :default-columns #{:online :state :name :last-online :version :tags}
        :rows              edges

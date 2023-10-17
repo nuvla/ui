@@ -81,17 +81,11 @@
     (let [ordering (get db db-path)]
       (some #(when (= sort-key (first %)) (second %)) ordering))))
 
-(defn Sort [{:keys [db-path field-key sort-key fetch-event]}]
-  (when db-path
-    (let [sort-key         (or sort-key field-key)
-          direction        @(subscribe [::sort-direction db-path sort-key])
-          direction->class {"asc"  " ascending"
-                            "desc" " descending"}]
-      [uix/LinkIcon {:name     (str "sort" (direction->class direction))
-                     :on-click #(dispatch [::sort {:field        sort-key
-                                                   :direction   direction
-                                                   :db-path     db-path
-                                                   :fetch-event fetch-event}])}])))
+(defn SortIcon [direction]
+  (let [direction->class {"asc"  " ascending"
+                          "desc" " descending"}]
+      (when direction
+        [uix/LinkIcon {:name     (str "sort" (direction->class direction))}])))
 
 ;; Bulk selection, table plugin args
 (s/def ::name string?)
@@ -544,7 +538,33 @@
       {:db (assoc-in db [::default-cols db-path] defaults)
        :fx [[:dispatch [::store-cols cols db-path]]]})))
 
+(defn- HeaderCellContent
+  [{:keys [db-path sort-key no-sort? header-content field-key fetch-event]}]
+  (let [tr               @(subscribe [::i18n-subs/tr])
+        sort-key         (or sort-key field-key)
+        direction        (when db-path @(subscribe [::sort-direction db-path  sort-key]))
+        sort-enabled?    (and
+                           db-path
+                           (or sort-key field-key)
+                           (not no-sort?))
+        sort-fn          #(dispatch [::sort {:field       sort-key
+                                             :direction   direction
+                                             :db-path     db-path
+                                             :fetch-event fetch-event}])]
+    [:span {:on-click (when sort-enabled? sort-fn)
+            :style    (when sort-enabled?
+                        {:cursor :pointer})}
+     (cond
+       (fn? header-content)
+       (header-content)
 
+       header-content
+       header-content
+
+       :else
+       (or (tr [field-key]) field-key))
+     (when sort-enabled?
+       [SortIcon direction])]))
 
 
 (defn Table
@@ -633,23 +653,13 @@
                {:trigger
                 (r/as-element
                   [:div {:style {:flex-grow 1}}
-                   (when (and
-                           sort-config
-                           (not no-sort?))
-                     [Sort (merge
-                             sort-config
-                             (select-keys col [:field-key :disable-sort :sort-key]))])
-                   (cond
-                     (fn? header-content)
-                     (header-content)
-
-                     header-content
-                     header-content
-
-                     :else
-                     (or (tr [field-key]) field-key))
+                   [HeaderCellContent
+                    (merge sort-config
+                      {:header-content header-content}
+                      (select-keys col [:sort-key :field-key :no-sort?]))]
                    [:span {:style {:margin-left "0.2rem"}} (when-let [remove-fn (-> props :col-config :remove-col-fn)]
-                                                             (when (< 1 (count columns))
+                                                             (when (and (< 1 (count columns))
+                                                                        (:no-remove-icon? col))
                                                                [uix/LinkIcon {:color "red"
                                                                               :disabled (< (count columns) 2)
                                                                               :name "remove circle"
@@ -730,7 +740,7 @@
                                      (reset! show? true))}]}])))
 
 (defn TableColsEditable
-  [{:keys [columns default-columns]} db-path]
+  [{:keys [columns default-columns no-remove-icon-cols]} db-path]
   (dispatch [::init-table-col-config
              (if default-columns
                (filterv (comp default-columns :field-key) columns)
@@ -751,7 +761,10 @@
                              (let [ks (mapcat keys rows)]
                                (zipmap
                                  ks
-                                 (map (fn [k] {:field-key k}) ks)))
+                                 (map (fn [k]
+                                        {:field-key k
+                                         :no-remove-icon? (get no-remove-icon-cols k)})
+                                   ks)))
                              (into {} (map (juxt :field-key identity) columns)))]
         [:div
          [Table (assoc props

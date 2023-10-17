@@ -480,7 +480,6 @@
   (fn [{{defaults ::default-cols} :db} [_ db-path]]
     {:fx [[:dispatch [::set-current-cols (get defaults db-path default-columns) db-path]]]}))
 
-
 (reg-event-fx
   ::set-current-cols
   [(inject-cofx :storage/get {:name local-storage-key})]
@@ -488,7 +487,7 @@
         {:keys [::default-cols]} :db} [_ cols db-path]]
     (let [defaults (get default-cols db-path)
           new-cols (if
-                     (seq? cols)
+                     (sequential? cols)
                      cols
                      (sort
                        (fn [k1 k2]

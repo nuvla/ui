@@ -657,14 +657,15 @@
                     (merge sort-config
                       {:header-content header-content}
                       (select-keys col [:sort-key :field-key :no-sort?]))]
-                   [:span {:style {:margin-left "0.2rem"}} (when-let [remove-fn (-> props :col-config :remove-col-fn)]
-                                                             (when (and (< 1 (count columns))
-                                                                        (:no-remove-icon? col))
-                                                               [uix/LinkIcon {:color "red"
-                                                                              :disabled (< (count columns) 2)
-                                                                              :name "remove circle"
-                                                                              :on-click #(remove-fn field-key)
-                                                                              :class :toggle-invisible-on-parent-hover}]))]])
+                   (when-let [remove-fn (-> props :col-config :remove-col-fn)]
+                     (when (and (< 1 (count columns))
+                             (not (:no-remove-icon? col)))
+                       [:span {:style {:margin-left "0.2rem"}}
+                        [uix/LinkIcon {:color "red"
+                                       :disabled (< (count columns) 2)
+                                       :name "remove circle"
+                                       :on-click #(remove-fn field-key)
+                                       :class :toggle-invisible-on-parent-hover}]]))])
                 :position "top left"
                 :disabled (not (-> props :col-config :remove-col-fn))
                 :hoverable true
@@ -678,7 +679,7 @@
                     "RESET default columns"]
                    [ColumnsDropDown (:col-config props) (inc idx)]])}]]])
           (when-let [col-cong-button (-> props :col-config :col-config-modal)]
-            [ui/TableHeaderCell [:div col-cong-button]])]]
+            [ui/TableHeaderCell {:style {:width "30px"}} [:div col-cong-button]])]]
         [ui/TableBody (:body-props props)
          (doall
            (for [[idx row] (map-indexed vector rows)
@@ -695,18 +696,19 @@
                                             (:name row)
                                             (:id row))
                                :idx idx}])
-              (for [{:keys [field-key accessor cell cell-props]} columns
-                    :let [cell-data ((or accessor field-key) row)]]
+              (for [[idx {:keys [field-key accessor cell cell-props]}] (map-indexed vector columns)
+                    :let [cell-data ((or accessor field-key) row)
+                          last? (= idx (dec (count columns)))]]
                 ^{:key (str id "-" field-key)}
                 [ui/TableCell
-                 cell-props
+                 (cond-> cell-props
+                   last? (assoc :colspan 2))
                  (cond
                    cell (if (string? cell) cell
                           [cell {:row-data  row
                                  :cell-data cell-data
                                  :field-key field-key}])
-                   :else (str cell-data))])
-              (when (:col-config props) [ui/TableCell])]))]]]]]))
+                   :else (str cell-data))])]))]]]]]))
 
 (defn ConfigureVisibleColumns
   [db-path available-fields]

@@ -789,7 +789,6 @@
         :total-items            total-elements
         :i-per-page-multipliers [1 2 4]}])))
 
-
 (defn NuvlaEdgeTableView
   [{:keys [bulk-edit bulk-deploy columns edges]}]
   (let [{bulk-edit-modal :modal

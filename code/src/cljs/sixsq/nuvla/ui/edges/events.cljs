@@ -144,6 +144,7 @@
              (assoc ::spec/additional-filter filter)
              (assoc-in [::spec/pagination :active-page] 1))
      :fx [[:dispatch [::get-nuvlaboxes]]
+          [:dispatch [::get-nuvlaboxes-summary]]
           [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]
           [:dispatch [::get-nuvlabox-locations]]]}))
 
@@ -224,13 +225,13 @@
 
 (reg-event-fx
   ::get-nuvlaboxes-summary
-  (fn [{db :db}]
+  (fn [{{:keys [::spec/additional-filter] :as db} :db}]
     {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params
                              (full-text-search-plugin/filter-text
                                db [::spec/edges-search])
                              spec/state-summary-agg-term
-                             nil)
+                             additional-filter)
                            #(dispatch [::set-nuvlaboxes-summary %])]}))
 
 (reg-event-fx

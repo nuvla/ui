@@ -278,7 +278,7 @@
         checked?  (r/atom false)
         icon-name icons/i-stop]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
-      (let [{:keys [id name description module parent]} deployment
+      (let [{:keys [id name description module]} deployment
             text1             (str (or name id) (when description " - ") description)
             text2             (str (@tr [:created-from-module]) (or (:name module) (:id module)))
             button            (action-button
@@ -307,9 +307,7 @@
           :content            [:<> [:h3 text1] [:p text2]]
           :header             (@tr [:shutdown-deployment])
           :danger-msg         (@tr [:deployment-shutdown-msg])
-          :button-text        (@tr [(if (= "pull" (:execution-mode deployment))
-                                      :schedule-shutdown
-                                      :shutdown)])}]))))
+          :button-text        (@tr [:shutdown])}]))))
 
 
 (defn DeleteButton

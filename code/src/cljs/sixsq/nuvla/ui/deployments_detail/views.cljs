@@ -30,7 +30,8 @@
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -582,6 +583,7 @@
         deployment      (subscribe [::subs/deployment])
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
+        nuvlabox        (subscribe [::subs/nuvlabox])
         {:keys [id state module tags acl owner created-by
                 deployment-set deployment-set-name]} @deployment
         owners          (:owners acl)
@@ -628,7 +630,8 @@
         [ui/TableRow
          [ui/TableCell (@tr [:infrastructure])]
          [ui/TableCell
-          [deployments-utils/CloudNuvlaEdgeLink @deployment]]]
+          [deployments-utils/CloudNuvlaEdgeLink @deployment
+           :color (when @nuvlabox (vc/status->color (:online @nuvlabox)))]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]

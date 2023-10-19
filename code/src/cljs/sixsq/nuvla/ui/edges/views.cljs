@@ -802,9 +802,9 @@
      (when bulk-deploy-modal
        [bulk-deploy-modal])
      [TableColsEditable
-      {:sort-config       {:db-path     ::spec/ordering
-                           :fetch-event [::events/get-nuvlaboxes]
-                           :no-remove-icon-cols #{:state :online}}
+      {:cols-without-rmv-icon #{:state :online}
+       :sort-config       {:db-path     ::spec/ordering
+                           :fetch-event [::events/get-nuvlaboxes]}
        :columns           columns
        :default-columns #{:online :state :name :last-online :version :tags}
        :rows              edges

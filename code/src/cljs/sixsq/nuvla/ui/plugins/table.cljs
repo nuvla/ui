@@ -660,7 +660,7 @@
                    (when-let [remove-fn (-> props :col-config :remove-col-fn)]
                      (when (and (< 1 (count columns))
                              (not (:no-remove-icon? col)))
-                       [:span {:style {:margin-left "0.2rem"}}
+                       [:span {:style {:margin-left "0.8rem"}}
                         [uix/LinkIcon {:color "red"
                                        :disabled (< (count columns) 2)
                                        :name "remove circle"
@@ -741,8 +741,12 @@
                                      (reset! selected-cols (set @current-cols))
                                      (reset! show? true))}]}])))
 
+(defn- no-rmv-column? [cols-without-rmv-icon k]
+  (boolean
+    (get cols-without-rmv-icon k)))
+
 (defn TableColsEditable
-  [{:keys [columns default-columns no-remove-icon-cols]} db-path]
+  [{:keys [columns default-columns cols-without-rmv-icon]} db-path]
   (dispatch [::init-table-col-config
              (if default-columns
                (filterv (comp default-columns :field-key) columns)
@@ -760,14 +764,17 @@
         reset-cols-fn #(dispatch [::reset-current-cols db-path])]
     (fn [{:keys [rows columns] :as props}]
       (let [available-cols (merge
-                             (let [ks (mapcat keys rows)]
+                             (let [ks (set (mapcat keys rows))]
                                (zipmap
                                  ks
                                  (map (fn [k]
                                         {:field-key k
-                                         :no-remove-icon? (get no-remove-icon-cols k)})
+                                         :no-remove-icon? (no-rmv-column? cols-without-rmv-icon k)})
                                    ks)))
-                             (into {} (map (juxt :field-key identity) columns)))]
+                             (into {} (map (juxt :field-key
+                                             (fn [col]
+                                               (assoc col :no-remove-icon?
+                                                  (no-rmv-column? cols-without-rmv-icon (:field-key col))))) columns)))]
         [:div
          [Table (assoc props
                   :col-config {:default-cols   @default-cols

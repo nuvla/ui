@@ -171,8 +171,8 @@
                                     [] merged-configs)
           all-apps-visible? (= total-apps-count (count apps))]
       (if all-apps-visible?
-        {:db             new-db
-         :fx             fx}
+        {:db new-db
+         :fx fx}
         {:fx [[:dispatch [::messages-events/add
                           {:header  "Unable to load selected applications sets"
                            :content (str "Loaded " (count apps) " out of " total-apps-count ".")
@@ -227,7 +227,7 @@
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set fx]]
     (let [deployment-set-edited (get db ::spec/deployment-set-edited)
-          parent-ids (get-target-fleet-ids deployment-set)]
+          parent-ids            (get-target-fleet-ids deployment-set)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
                      ::spec/deployment-set deployment-set
                      ::main-spec/loading? false
@@ -235,10 +235,7 @@
                                                     deployment-set-edited
                                                     deployment-set))
        :fx [fx
-            [:dispatch [::resolve-to-ancestor-resource
-                        {:ids                    parent-ids
-                         :storage-event          ::set-edges
-                         :ancestor-resource-name "nuvlabox"}]]
+            [:dispatch [::get-edges parent-ids]]
             [:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]})))
 
 (reg-event-fx
@@ -266,7 +263,7 @@
 
 (reg-event-fx
   ::get-deployment-set
-  (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id fx]]
+  (fn [_ [_ id fx]]
     {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
@@ -331,13 +328,26 @@
              (dispatch [::disable-form-validation])))]})))
 
 (reg-event-fx
+  ::recompute-fleet
+  (fn [{{:keys [::spec/deployment-set]} :db} [_ on-complete]]
+    (let [id (:id deployment-set)
+          on-success (fn []
+                       (when on-complete (on-complete))
+                       (refresh))]
+      {::cimi-api-fx/operation
+       [id "recompute-fleet" on-success
+        :on-error #(cimi-api-fx/default-error-message
+                     %
+                     "Failed to recompute fleet")]})))
+
+(reg-event-fx
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db} [_ {:keys [forceable? deletable?]}]]
     (let [id (:id deployment-set)
           cb (fn [response]
                (dispatch
                  [::job-events/wait-job-to-complete
-                  {:job-id (:location response)
+                  {:job-id              (:location response)
                    :refresh-interval-ms 1000
                    :on-complete
                    #(do
@@ -348,7 +358,7 @@
                           "Failed to delete deployment set")) ())}]))]
       (cond
         deletable?
-        {::cimi-api-fx/delete    [id cb]}
+        {::cimi-api-fx/delete [id cb]}
         forceable?
         {::cimi-api-fx/operation [id "force-delete" cb]}))))
 
@@ -416,13 +426,13 @@
 (reg-event-fx
   ::do-edit
   (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited?] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
-    (let [apps-path  (subs/create-apps-creation-db-path current-route)
-          body       (merge (when apps-edited?
-                              {:fleet   (:resources edges)
-                               :modules (map
-                                          (fn [app] (str (:id app) "_" (or (:version app) 0)))
-                                          (get-in db apps-path))})
-                            deployment-set)]
+    (let [apps-path (subs/create-apps-creation-db-path current-route)
+          body      (merge (when apps-edited?
+                             {:fleet   (:resources edges)
+                              :modules (map
+                                         (fn [app] (str (:id app) "_" (or (:version app) 0)))
+                                         (get-in db apps-path))})
+                           deployment-set)]
       {:fx [[:dispatch [::persist! {:deployment-set body
                                     :success-msg    success-msg}]]]})))
 
@@ -467,40 +477,17 @@
                 (assoc-in db [::spec/apps-sets i ::spec/targets-selected]))})))
 
 (reg-event-fx
-  ::resolve-to-ancestor-resource
-  (fn [{{:keys [::spec/edges]} :db} [_ {:keys [ids storage-event
-                                               ancestor-resource-name]}]]
-    (when-not edges
-      (let [ancestor-ids              (filterv #(str/starts-with? % ancestor-resource-name) ids)
-            descendant-ids            (vec (remove (set ancestor-ids) ids))
-            resolved?                 (empty? descendant-ids)
-            callback                  (fn [response]
-                                        (let [resources  (:resources response)
-                                              parent-ids (remove nil? (map :parent resources))]
-                                          (cond
-                                            (or (empty? resources) (instance? js/Error response))
-                                            (cimi-api-fx/default-error-message response "loading edges for credentials failed")
-
-                                            resolved?
-                                            (dispatch [storage-event response])
-
-                                            :else
-                                            (dispatch [::resolve-to-ancestor-resource
-                                                       {:ids                    (into ancestor-ids parent-ids)
-                                                        :storage-event          storage-event
-                                                        :ancestor-resource-name ancestor-resource-name}]))))
-            ids-to-query              (if resolved? ancestor-ids descendant-ids)
-            next-parent-resource-name (general-utils/id->resource-name (first ids-to-query))
-            ids-filter                (general-utils/ids->inclusion-filter-string ids-to-query)]
-        (when (every? seq [next-parent-resource-name ids-filter])
-          {::cimi-api-fx/search [next-parent-resource-name
-                                 (cond->
-                                   {:filter ids-filter
-                                    :last   10000
-                                    :select "id, parent"}
-                                   (= "nuvlabox" next-parent-resource-name)
-                                   (merge {:aggregation edges-spec/state-summary-agg-term}))
-                                 callback]})))))
+  ::get-edges
+  (fn [_ [_ ids]]
+    (let [callback   (fn [response]
+                       (dispatch [::set-edges response]))
+          ids-filter (general-utils/ids->inclusion-filter-string ids)]
+      {::cimi-api-fx/search [:nuvlabox
+                             {:filter      ids-filter
+                              :last        10000
+                              :select      "id, parent"
+                              :aggregation edges-spec/state-summary-agg-term}
+                             callback]})))
 
 (reg-event-fx
   ::set-edges
@@ -667,3 +654,10 @@
      :fx [[:dispatch (into [::routing-events/navigate-partial
                             (assoc route-data
                               :change-event [::main-events/changes-protection? true])])]]}))
+
+(defn abc [f]
+  )
+
+(abc)
+
+

@@ -707,13 +707,6 @@
                    :edit-event ::events/edit})]))
 
 
-(defn depl-state->status
-  [state]
-  (case (if (some? state) (str/lower-case state) "")
-    "started" :online
-    :offline))
-
-
 (defn StatusIcon
   [status & {:keys [corner] :or {corner "bottom center"} :as _position}]
   [ui/Popup
@@ -726,27 +719,13 @@
 
 (defn PageHeader
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        deployment (subscribe [::subs/deployment])]
+  (let [deployment (subscribe [::subs/deployment])]
     (fn []
-      (let [module-name (get-in @deployment [:module :name] "")
-            state       (:state @deployment)]
+      (let [module-name (get-in @deployment [:module :name] "")]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
           [icons/RocketIcon]
-          module-name]
-         [:p {:style {:margin "0.5em 0 1em 0"}}
-          [StatusIcon (depl-state->status state)]
-          [:span {:style {:font-weight "bold"}}
-           "State "
-           [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:class icons/i-circle-question}])
-             :content        (@tr [:deployment-state])
-             :position       "bottom center"
-             :on             "hover"
-             :size           "tiny"
-             :hide-on-scroll true}] ": "]
-          state]]))))
+          module-name]]))))
 
 
 (defn DeploymentDetails

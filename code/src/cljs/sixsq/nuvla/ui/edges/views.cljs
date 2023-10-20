@@ -749,10 +749,10 @@
 
 
 (defn NuvlaboxRow
-  [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox}]
+  [{:keys [id name description created state tags online refresh-interval version created-by] :as nuvlabox}]
   (let [uuid                  (general-utils/id->uuid id)
         locale                @(subscribe [::i18n-subs/locale])
-        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+        last-heartbeat-moment @(subscribe [::subs/last-online nuvlabox])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])]
     [:<>
@@ -765,10 +765,8 @@
      [ui/TableCell (time/parse-ago created locale)]
      [ui/TableCell @creator]
      [ui/TableCell (str refresh-interval "s")]
-     [ui/TableCell (when next-heartbeat-moment
-                     [uix/TimeAgo (utils/last-time-online
-                                    next-heartbeat-moment
-                                    refresh-interval)])]
+     [ui/TableCell (when last-heartbeat-moment
+                     [uix/TimeAgo last-heartbeat-moment])]
      [ui/TableCell (or engine-version (str version ".y.z"))]
      [ui/TableCell [uix/Tags tags]]]))
 

@@ -169,7 +169,7 @@
     (when (seq nuvlaboxes)
       {::cimi-api-fx/search
        [:nuvlabox-status
-        {:select "parent,next-heartbeat,id,nuvlabox-engine-version,online"
+        {:select "id,parent,next-heartbeat,nuvlabox-engine-version,online,last-heartbeat"
          :filter (apply general-utils/join-or
                         (map #(str "parent='" (:id %) "'") nuvlaboxes))}
         #(dispatch [::set-nuvlaedges-status %])]})))

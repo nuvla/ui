@@ -289,3 +289,24 @@
   (contains? (set capabilities) capability))
 
 (def has-capability-heartbeat? (partial has-capability? capability-heartbeat))
+
+(defn compute-last-from-next
+  [next-timestamp-moment interval]
+  (->> interval
+       (* 2)
+       (+ 10)
+       (* 1000)
+       (time/subtract-milliseconds next-timestamp-moment)))
+
+(defn parse-compute-last-from-next
+  [next-timestamp interval]
+  (some-> next-timestamp
+          time/parse-iso8601
+          (compute-last-from-next interval)
+          time/time->utc-str))
+
+(defn compute-last-heartbeat
+  [{:keys [refresh-interval] :as _nuvlabox}
+   {:keys [next-heartbeat last-heartbeat] :as _nuvlabox-status}]
+  (or last-heartbeat
+      (parse-compute-last-from-next next-heartbeat refresh-interval)))

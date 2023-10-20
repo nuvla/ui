@@ -1217,9 +1217,10 @@
 
 (defn TelemetryLastTime
   [last-telemetry]
-  [:div
-   "Last telemetry report was "
-   [uix/TimeAgo last-telemetry]])
+  (when last-telemetry
+    [:div
+     "Last telemetry report was "
+     [uix/TimeAgo last-telemetry]]))
 
 (defn TelemetryNextTime
   [next-telemetry]
@@ -1227,18 +1228,23 @@
         next-telemetry-moment (some-> next-telemetry time/parse-iso8601)]
     [uix/ForceRerenderComponentByDelay
      (fn []
-       [:p
-        (if (time/before-now? next-telemetry-moment)
-          [:<> "Missing telemetry report for "]
-          [:<> "Next telemetry report is expected in "])
-        (some-> next-telemetry-moment (time/format-distance @locale))])
+       (when next-telemetry-moment
+         [:p
+          (if (time/before-now? next-telemetry-moment)
+            [:<> "Missing telemetry report for "]
+            [:<> "Next telemetry report is expected in "])
+          (time/format-distance next-telemetry-moment @locale)]))
      5000]))
 
 (defn NextTelemetryStatus
-  [{:keys [next-telemetry last-telemetry] :as _nb-status}]
-  [:div
-   [TelemetryNextTime next-telemetry]
-   [TelemetryLastTime last-telemetry]])
+  [{:keys [next-telemetry last-telemetry next-heartbeat] :as _nb-status}]
+  (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])]
+    [:div
+     ; next-heartbeat was equivalent to next-telemetry in api-server before v.6.2.0
+     [TelemetryNextTime (or next-telemetry next-heartbeat)]
+     [TelemetryLastTime (or last-telemetry
+                            (utils/parse-compute-last-from-next
+                              next-heartbeat refresh-interval))]]))
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]

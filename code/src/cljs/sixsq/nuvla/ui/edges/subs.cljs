@@ -52,6 +52,12 @@
     (some-> (get-in status [edge-id :next-heartbeat]) time/parse-iso8601)))
 
 (reg-sub
+  ::last-online
+  :<- [::edges-status]
+  (fn [edges-status [_ {:keys [id] :as nuvlabox}]]
+    (utils/compute-last-heartbeat nuvlabox (get edges-status id))))
+
+(reg-sub
   ::engine-version
   :<- [::edges-status]
   (fn [edges-status [_ edge-id]]
@@ -174,7 +180,7 @@
     (->> (utils/sort-by-version nuvlabox-releases)
          (map
            (fn [{:keys [id release pre-release]}]
-             {:key release, :text (str release (when pre-release " - pre-release")),
+             {:key   release, :text (str release (when pre-release " - pre-release")),
               :value id, :pre-release pre-release})))))
 
 (reg-sub

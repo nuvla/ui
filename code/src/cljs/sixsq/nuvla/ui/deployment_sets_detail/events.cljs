@@ -485,7 +485,7 @@
       {::cimi-api-fx/search [:nuvlabox
                              {:filter      ids-filter
                               :last        10000
-                              :select      "id, parent"
+                              :select      "id"
                               :aggregation edges-spec/state-summary-agg-term}
                              callback]})))
 
@@ -654,10 +654,4 @@
      :fx [[:dispatch (into [::routing-events/navigate-partial
                             (assoc route-data
                               :change-event [::main-events/changes-protection? true])])]]}))
-
-(defn abc [f]
-  )
-
-(abc)
-
 

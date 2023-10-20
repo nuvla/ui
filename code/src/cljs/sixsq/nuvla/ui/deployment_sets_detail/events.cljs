@@ -362,25 +362,41 @@
         forceable?
         {::cimi-api-fx/operation [id "force-delete" cb]}))))
 
+(defn merge-env-vars
+  [env-vars1 env-vars2]
+  (let [m1 (->> env-vars1
+                (map (juxt :name :value))
+                (into {}))
+        m2 (->> env-vars2
+                (map (juxt :name :value))
+                (into {}))]
+    (->> (merge m1 m2)
+         (mapv (fn [[k v]] {:name k :value v})))))
+
 (defn application-overwrites
-  [db i {:keys [id version] :as _application}]
+  [db i {:keys [id version] :as _application} current-overwrites]
   (let [db-path         [::spec/apps-sets i]
         version-changed (module-plugin/db-new-version db db-path id)
-        env-changed     (module-plugin/db-changed-env-vars db db-path id)
+        env-changed     (merge-env-vars
+                          (:environmental-variables current-overwrites)
+                          (module-plugin/db-changed-env-vars db db-path id))
         regs-creds      (module-plugin/db-module-registries-credentials
                           db db-path id)]
     (cond-> {:id      id
-             :version (or version-changed version)}
+             :version (or version-changed (:version current-overwrites) version)}
             (seq env-changed) (assoc :environmental-variables env-changed)
             (seq regs-creds) (assoc :registries-credentials regs-creds))))
 
 
 (defn applications-sets->overwrites
-  [db i {:keys [applications] :as _applications-sets}]
+  [db i {:keys [applications] :as _applications-sets} current-overwrites]
   (let [targets                 (subs/get-db-targets-selected-ids db i)
         fleet                   (get-target-fleet-ids (get db ::spec/deployment-set))
-        applications-overwrites (map (partial application-overwrites db i)
-                                     applications)]
+        applications-overwrites (map (fn [[app current-app-overwrites]]
+                                       (application-overwrites db i app current-app-overwrites))
+                                     (map vector
+                                          applications
+                                          (concat (:applications current-overwrites) (repeat nil))))]
     (cond-> {}
             (seq targets) (assoc :targets targets)
             (seq fleet) (assoc :fleet fleet)
@@ -390,13 +406,19 @@
   ::save-start
   (fn [{{:keys [::spec/create-name
                 ::spec/create-description
-                ::spec/module-applications-sets] :as db} :db} [_ start?]]
+                ::spec/module-applications-sets
+                ::spec/deployment-set] :as db} :db} [_ start?]]
     (let [body (cond->
                  {:name              create-name
                   :applications-sets [{:id         (:id module-applications-sets)
                                        :version    (apps-utils/module-version module-applications-sets)
-                                       :overwrites (map-indexed (partial applications-sets->overwrites db)
-                                                                (-> module-applications-sets :content :applications-sets))}]
+                                       :overwrites (map-indexed
+                                                     (fn [i [app-set current-overwrites]]
+                                                       (applications-sets->overwrites db i app-set current-overwrites))
+                                                     (map vector
+                                                          (-> module-applications-sets :content :applications-sets)
+                                                          (concat (get-in deployment-set [:applications-sets 0 :overwrites])
+                                                                  (repeat nil))))}]
                   :start             start?}
                  (not (str/blank? create-description)) (assoc :description create-description))]
       {::cimi-api-fx/add
@@ -423,16 +445,62 @@
                             {:uuid (general-utils/id->uuid (:resource-id %))}]))
               :on-error #(dispatch [::main-events/changes-protection? true])]]]})))
 
+(defn overwritten-app-version
+  [deployment-set app]
+  (->> (get-in deployment-set [:applications-sets 0 :overwrites])
+       first
+       :applications
+       (filter #(= (:id %) (:id app)))
+       first
+       :version))
+
+(defn overwritten-app-env-vars
+  [deployment-set app]
+  (tap> [:overwritten-app-env-vars
+         app
+         deployment-set
+         (->> (get-in deployment-set [:applications-sets 0 :overwrites])
+              first
+              :applications
+              (filter #(= (:id %) (:id app)))
+              first
+              :environmental-variables)])
+  (->> (get-in deployment-set [:applications-sets 0 :overwrites])
+       first
+       :applications
+       (filter #(= (:id %) (:id app)))
+       first
+       :environmental-variables))
+
+(defn new-overwrites
+  [deployment-set apps]
+  (map (fn [app]
+         (let [env-vars (overwritten-app-env-vars deployment-set app)]
+           (cond->
+             {:id                      (:id app)
+              :version                 (or (:version app)
+                                           (overwritten-app-version deployment-set app))}
+             (seq env-vars) (assoc :environmental-variables env-vars))))
+       apps))
+
+(defn new-modules
+  [deployment-set apps]
+  (map
+    (fn [app] (str (:id app) "_" (or (:version app)
+                                     (overwritten-app-version deployment-set app))))
+    apps))
+
 (reg-event-fx
   ::do-edit
-  (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited?] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
+  (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited? ::spec/deployment-set-edited] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
     (let [apps-path (subs/create-apps-creation-db-path current-route)
+          apps      (get-in db apps-path)
           body      (merge (when apps-edited?
-                             {:fleet   (:resources edges)
-                              :modules (map
-                                         (fn [app] (str (:id app) "_" (or (:version app) 0)))
-                                         (get-in db apps-path))})
-                           deployment-set)]
+                             {:fleet      (:resources edges)
+                              :modules    (new-modules deployment-set-edited apps)
+                              :overwrites (new-overwrites deployment-set-edited apps)})
+                           deployment-set
+                           deployment-set-edited)]
       {:fx [[:dispatch [::persist! {:deployment-set body
                                     :success-msg    success-msg}]]]})))
 
@@ -630,12 +698,18 @@
 
 (reg-event-fx
   ::edit-config
-  (fn [{{:keys [::spec/module-applications-sets] :as db} :db}]
+  (fn [{{:keys [::spec/module-applications-sets
+                ::spec/deployment-set] :as db} :db}]
     {:fx [[:dispatch [::edit :applications-sets
                       [{:id         (:id module-applications-sets)
                         :version    (apps-utils/module-version module-applications-sets)
-                        :overwrites (map-indexed (partial applications-sets->overwrites db)
-                                                 (-> module-applications-sets :content :applications-sets))}]]]]}))
+                        :overwrites (map-indexed
+                                      (fn [i [app-set current-overwrites]]
+                                        (applications-sets->overwrites db i app-set current-overwrites))
+                                      (map vector
+                                           (-> module-applications-sets :content :applications-sets)
+                                           (concat (get-in deployment-set [:applications-sets 0 :overwrites])
+                                                   (repeat nil))))}]]]]}))
 
 (reg-event-db
   ::enable-form-validation

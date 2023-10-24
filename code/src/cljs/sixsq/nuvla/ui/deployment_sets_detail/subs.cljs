@@ -115,13 +115,17 @@
          (apply concat))))
 
 
+(defn- get-app-version-no
+  [application]
+  (module-plugin/get-version-id
+    (map-indexed vector (:versions application))
+    (-> application :content :id)))
+
 (defn- app->app-row-data [{:keys [application i]}]
   {:idx         i
    :href        (:id application)
    :app         (:name application)
-   :version     {:label   (str "v" (module-plugin/get-version-id
-                                     (map-indexed vector (:versions application))
-                                     (-> application :content :id)))
+   :version     {:label   (str "v" (get-app-version-no application))
                  :created (-> application :content :created)}})
 
 
@@ -366,18 +370,24 @@
       :message [:depl-group-apps-missing]}]))
 
 (defn env-vars-errors
-  [db]
-  (->> (applications-sets db)
-       (keep-indexed
-         (fn [i {:keys [applications]}]
-           (keep (fn [{:keys [id]}]
-                   (when (seq (module-plugin/db-module-env-vars-in-error
-                                db [::spec/apps-sets i] id))
-                     {:type    :missing-required-env-vars
-                      :path    [:apps-config i id]
-                      :message [:depl-group-mandatory-app-env-var-missing]}))
-                 applications)))
-       (apply concat)))
+  [{:keys [::spec/apps-edited?] :as db}]
+  (let [apps (if apps-edited?
+               (map (fn [{:keys [id] :as app}]
+                      [0 {:id id :version (get-app-version-no app)}])
+                    (apps-creation db))
+               (->> (applications-sets db)
+                    (keep-indexed
+                      (fn [i {:keys [applications]}]
+                        (map (fn [app] [i app]) applications)))
+                    (apply concat)))]
+    (->> apps
+         (keep
+           (fn [[i {:keys [id]}]]
+             (when (seq (module-plugin/db-module-env-vars-in-error
+                          db [::spec/apps-sets i] id))
+               {:type    :missing-required-env-vars
+                :path    [:apps-config i id]
+                :message [:depl-group-mandatory-app-env-var-missing]}))))))
 
 (defn deployment-set-validation
   "Returns an array of error maps of the form:

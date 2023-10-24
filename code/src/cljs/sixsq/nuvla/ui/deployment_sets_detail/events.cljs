@@ -394,6 +394,7 @@
   [db i {:keys [applications] :as _applications-sets} current-overwrites]
   (let [targets                 (subs/get-db-targets-selected-ids db i)
         fleet                   (get-target-fleet-ids (get db ::spec/deployment-set))
+        fleet-filter            (get db ::spec/fleet-filter)
         applications-overwrites (map (fn [[app current-app-overwrites]]
                                        (application-overwrites db i app current-app-overwrites))
                                      (map vector
@@ -402,6 +403,7 @@
     (cond-> {}
             (seq targets) (assoc :targets targets)
             (seq fleet) (assoc :fleet fleet)
+            fleet-filter (assoc :fleet-filter fleet-filter)
             (seq applications-overwrites) (assoc :applications applications-overwrites))))
 
 (reg-event-fx
@@ -481,9 +483,9 @@
   (map (fn [app]
          (let [env-vars (overwritten-app-env-vars deployment-set app)]
            (cond->
-             {:id                      (:id app)
-              :version                 (or (:version app)
-                                           (overwritten-app-version deployment-set app))}
+             {:id      (:id app)
+              :version (or (:version app)
+                           (overwritten-app-version deployment-set app))}
              (seq env-vars) (assoc :environmental-variables env-vars))))
        apps))
 
@@ -498,12 +500,12 @@
   ::do-edit
   (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited? ::spec/deployment-set-edited] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
     (let [apps-path    (subs/create-apps-creation-db-path current-route)
-          apps      (get-in db apps-path)
+          apps         (get-in db apps-path)
           fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))
           body         (merge (when apps-edited?
                                 (merge
-                                  {:fleet   (:resources edges)
-                                   :modules (new-modules deployment-set-edited apps)
+                                  {:fleet      (:resources edges)
+                                   :modules    (new-modules deployment-set-edited apps)
                                    :overwrites (new-overwrites deployment-set-edited apps)}
                                   (when fleet-filter {:fleet-filter fleet-filter})))
                               deployment-set)]

@@ -734,7 +734,7 @@
         :raw                                           "raw"
         :reactivate-subscription                       "Reactivate your subscription now"
         :reactivate-subscription-need-pm               "To reactivate your subscription add a payment method first"
-        :recompute-deployment-set-fleet                "Recompute deployment set fleet?"
+        :recompute-deployment-set-fleet                "Recompute deployment group fleet?"
         :recompute-fleet                               "Recompute fleet"
         :recompute-fleet-warning                       "This operation will potentially change the target edges of this deployment set."
         :recompute-fleet-info                          "Target edges are based on a filter."

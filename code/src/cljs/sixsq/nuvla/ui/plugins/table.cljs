@@ -426,16 +426,6 @@
                    (fn [key-string]
                      (add-col-fn (keyword key-string) position)))}]))
 
-;;;;;; CONFIGURE TABLE COLUMNS ;;;;;;;;;;;;;
-;; default-cols
-;; -> vector of field-keys
-;;    order important
-;; available-cols
-;; -> map of field-key->col-config
-;; current-cols
-;; -> vector of field-keys
-;;    order important
-;; only current-cols persisted in local-storage
 
 (def local-storage-key
   "nuvla.ui.table.column-configs")
@@ -641,43 +631,28 @@
              {:style {:width "30px"}}
              [HeaderCellCeckbox {:db-path select-db-path :resources-sub-key resources-sub-key
                                  :page-selected?-sub page-selected? :rights-needed rights-needed}]])
-          (for [[idx col] (map-indexed vector columns)
+          (for [col columns
                 :when col
-                :let [{:keys [field-key header-content header-cell-props no-sort?]} col]]
+                :let [{:keys [field-key header-content header-cell-props]} col]]
             ^{:key (or field-key (random-uuid))}
             [ui/TableHeaderCell
              (merge (:header cell-props) header-cell-props)
              [:div {:style {:display :flex}
                     :class :show-child-on-hover}
-              [ui/Popup
-               {:trigger
-                (r/as-element
-                  [:div {:style {:flex-grow 1}}
-                   [HeaderCellContent
-                    (merge sort-config
-                      {:header-content header-content}
-                      (select-keys col [:sort-key :field-key :no-sort?]))]
-                   (when-let [remove-fn (-> props :col-config :remove-col-fn)]
-                     (when (and (< 1 (count columns))
-                             (not (:no-remove-icon? col)))
-                       [:span {:style {:margin-left "0.8rem"}}
-                        [uix/LinkIcon {:color "red"
-                                       :disabled (< (count columns) 2)
-                                       :name "remove circle"
-                                       :on-click #(remove-fn field-key)
-                                       :class :toggle-invisible-on-parent-hover}]]))])
-                :position "top left"
-                :disabled (not (-> props :col-config :remove-col-fn))
-                :hoverable true
-                :basic   true
-                :content
-                (r/as-element
-                  [:div {:style {:display :flex}}
-                   [:a {:on-click (fn [] (let [reset-fn (-> props :col-config :reset-cols-fn)]
-                                           (reset-fn)))
-                        :href ""}
-                    "RESET default columns"]
-                   [ColumnsDropDown (:col-config props) (inc idx)]])}]]])
+              [:div {:style {:flex-grow 1}}
+               [HeaderCellContent
+                (merge sort-config
+                  {:header-content header-content}
+                  (select-keys col [:sort-key :field-key :no-sort?]))]
+               (when-let [remove-fn (-> props :col-config :remove-col-fn)]
+                 (when (and (< 1 (count columns))
+                         (not (:no-remove-icon? col)))
+                   [:span {:style {:margin-left "0.8rem"}}
+                    [uix/LinkIcon {:color "red"
+                                   :disabled (< (count columns) 2)
+                                   :name "remove circle"
+                                   :on-click #(remove-fn field-key)
+                                   :class :toggle-invisible-on-parent-hover}]]))] ]])
           (when-let [col-cong-button (-> props :col-config :col-config-modal)]
             [ui/TableHeaderCell {:style {:width "30px"}} [:div col-cong-button]])]]
         [ui/TableBody (:body-props props)

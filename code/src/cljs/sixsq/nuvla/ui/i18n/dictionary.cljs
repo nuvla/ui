@@ -737,6 +737,7 @@
         :recompute-deployment-set-fleet                "Recompute deployment set fleet?"
         :recompute-fleet                               "Recompute fleet"
         :recompute-fleet-warning                       "This operation will potentially change the target edges of this deployment set."
+        :recompute-fleet-info                          "Target edges are based on a filter."
         :reduction-off                                 "off"
         :refresh                                       "refresh"
         :register                                      "register"

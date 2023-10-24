@@ -233,7 +233,8 @@
                      ::main-spec/loading? false
                      ::spec/deployment-set-edited (if (some? deployment-set-edited)
                                                     deployment-set-edited
-                                                    deployment-set))
+                                                    deployment-set)
+                     ::spec/fleet-filter (-> deployment-set :applications-sets first :overwrites first :fleet-filter))
        :fx [fx
             [:dispatch [::get-edges parent-ids]]
             [:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]})))
@@ -329,12 +330,13 @@
 
 (reg-event-fx
   ::recompute-fleet
-  (fn [{{:keys [::spec/deployment-set]} :db} [_ on-complete]]
-    (let [id (:id deployment-set)
+  (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ on-complete]]
+    (let [id         (:id deployment-set)
           on-success (fn []
                        (when on-complete (on-complete))
                        (refresh))]
-      {::cimi-api-fx/operation
+      {:db (dissoc db ::spec/deployment-set-edited)
+       ::cimi-api-fx/operation
        [id "recompute-fleet" on-success
         :on-error #(cimi-api-fx/default-error-message
                      %
@@ -430,13 +432,15 @@
   ::create
   (fn [{{:keys [current-route
                 ::spec/deployment-set-edited] :as db} :db}]
-    (let [edges-path (subs/current-route->edges-db-path current-route)
-          apps-path  (subs/create-apps-creation-db-path current-route)
-          body       (merge {:fleet   (:resources (get-in db edges-path))
-                             :modules (map
-                                        (fn [app] (str (:id app) "_" (:version app)))
-                                        (get-in db apps-path))}
-                            deployment-set-edited)]
+    (let [edges-path   (subs/current-route->edges-db-path current-route)
+          fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))
+          apps-path    (subs/create-apps-creation-db-path current-route)
+          body         (merge {:fleet   (:resources (get-in db edges-path))
+                               :modules (map
+                                          (fn [app] (str (:id app) "_" (:version app)))
+                                          (get-in db apps-path))}
+                              (when fleet-filter {:fleet-filter fleet-filter})
+                              deployment-set-edited)]
       {:fx [[:dispatch [::main-events/changes-protection? false]]
             [::cimi-api-fx/add
              [:deployment-set body
@@ -493,14 +497,16 @@
 (reg-event-fx
   ::do-edit
   (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited? ::spec/deployment-set-edited] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
-    (let [apps-path (subs/create-apps-creation-db-path current-route)
+    (let [apps-path    (subs/create-apps-creation-db-path current-route)
           apps      (get-in db apps-path)
-          body      (merge (when apps-edited?
-                             {:fleet      (:resources edges)
-                              :modules    (new-modules deployment-set-edited apps)
-                              :overwrites (new-overwrites deployment-set-edited apps)})
-                           deployment-set
-                           deployment-set-edited)]
+          fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))
+          body         (merge (when apps-edited?
+                                (merge
+                                  {:fleet   (:resources edges)
+                                   :modules (new-modules deployment-set-edited apps)
+                                   :overwrites (new-overwrites deployment-set-edited apps)}
+                                  (when fleet-filter {:fleet-filter fleet-filter})))
+                              deployment-set)]
       {:fx [[:dispatch [::persist! {:deployment-set body
                                     :success-msg    success-msg}]]]})))
 
@@ -564,6 +570,12 @@
       {:db (assoc-in db path
                      (update response :resources #(mapv :id %)))
        :fx [[:dispatch [::get-edge-documents]]]})))
+
+(reg-event-fx
+  ::set-fleet-filter
+  (fn [{db :db} [_ fleet-filter deployment-set-id]]
+    (let [path (subs/create-db-path [::spec/fleet-filter] (str deployment-set-id))]
+      {:db (assoc-in db path fleet-filter)})))
 
 (def edges-state-filter-key :edges-state)
 

@@ -230,6 +230,11 @@
   (create-db-path [::spec/edges]
                   (get-temp-db-id current-route)))
 
+(defn current-route->fleet-filter-db-path
+  [current-route]
+  (create-db-path [::spec/fleet-filter]
+                  (get-temp-db-id current-route)))
+
 (defn create-apps-creation-db-path
   [current-route]
   (create-db-path [::spec/apps-creation]
@@ -321,6 +326,12 @@
   :<- [::edges-in-deployment-group-response]
   (fn [edges]
     (general-utils/ids->inclusion-filter-string (->> edges :resources (map :id)))))
+
+(reg-sub
+  ::fleet-filter
+  (fn [{:keys [current-route] :as db}]
+    (let [path (current-route->fleet-filter-db-path current-route)]
+      (get-in db path))))
 
 (reg-sub
   ::unsaved-changes?

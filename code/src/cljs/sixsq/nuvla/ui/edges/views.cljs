@@ -20,7 +20,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.plugins.table :refer [Table] :as table-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -832,6 +832,7 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])
+        all-selected?     (subscribe [::table-plugin/select-all?-sub [::spec/select]])
         columns           [{:field-key :online :header-content [icons/HeartbeatIcon]}
                            {:field-key :state}
                            {:field-key :name}
@@ -861,6 +862,8 @@
                                                         :event (fn []
                                                                  (let [id (random-uuid)]
                                                                    (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
+                                                                   (when @all-selected?
+                                                                     (dispatch [::events/set-fleet-filter ::depl-group-events/set-fleet-filter id]))
                                                                    (dispatch [::routing-events/navigate
                                                                               routes/deployment-sets-details
                                                                               {:uuid :create}

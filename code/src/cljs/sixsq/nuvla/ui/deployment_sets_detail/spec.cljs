@@ -11,6 +11,8 @@
 (s/def ::edges (s/coll-of map? :kind vector?))
 (s/def ::edges-documents (s/coll-of map? :kind vector?))
 
+(s/def ::fleet-filter string?)
+
 (s/def ::validate-form? boolean?)
 
 (def default-ordering [[:created :desc]])

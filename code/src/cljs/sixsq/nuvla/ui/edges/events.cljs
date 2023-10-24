@@ -138,6 +138,11 @@
       #(dispatch [storage-event % id])]}))
 
 (reg-event-fx
+  ::set-fleet-filter
+  (fn [{db :db} [_ storage-event id]]
+    (dispatch [storage-event (get-full-filter-string db) id])))
+
+(reg-event-fx
   ::set-additional-filter
   (fn [{db :db} [_ filter]]
     {:db (-> db

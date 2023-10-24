@@ -134,11 +134,12 @@
                                        {:resource-id id
                                         :operation   "update"}]))
       :trigger            (r/as-element
-                            [GuardedMenuItem
-                             {:enabled        enabled?
-                              :validation-sub [::subs/deployment-set-validation]}
-                             [icons/RedoIcon]
-                             (@tr [:update])])
+                            [:div
+                             [GuardedMenuItem
+                              {:enabled        enabled?
+                               :validation-sub [::subs/deployment-set-validation]}
+                              [icons/RedoIcon]
+                              (@tr [:update])]])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:update-deployment-set])
       :danger-msg         warn-msg
@@ -152,6 +153,7 @@
   [deployment-set]
   (let [tr                   (subscribe [::i18n-subs/tr])
         can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" deployment-set)
+        unsaved-changes?     (subscribe [::subs/unsaved-changes?])
         open?                (subscribe [::subs/modal-open? recompute-fleet-modal-id])
         confirm-fn           (fn []
                                (dispatch [::events/recompute-fleet
@@ -160,7 +162,7 @@
     [uix/ModalDanger
      {:on-confirm  confirm-fn
       :trigger     (r/as-element [ui/MenuItem
-                                  {:disabled (not can-recompute-fleet?)
+                                  {:disabled (or @unsaved-changes? (not can-recompute-fleet?))
                                    :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
                                   [icons/ArrowRotateIcon]
                                   (@tr [:recompute-fleet])])
@@ -229,6 +231,7 @@
         loading?       (subscribe [::subs/loading?])
         apps-count     (subscribe [::subs/apps-count])
         edges-count    (subscribe [::subs/edges-count])
+        fleet-filter   (subscribe [::subs/fleet-filter])
         tr             (subscribe [::i18n-subs/tr])]
     (fn []
       (let [warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
@@ -248,8 +251,9 @@
               ". Proceed?")]
            ^{:key "stop"}
            [StopButton @deployment-set (warn-msg-fn "stop")]
-           ^{:key "recompute-fleet"}
-           [RecomputeFleetButton @deployment-set]
+           (when @fleet-filter
+             ^{:key "recompute-fleet"}
+             [RecomputeFleetButton @deployment-set])
            ^{:key "delete"}
            [DeleteButton @deployment-set (warn-msg-fn "delete")]]
           [components/RefreshMenu
@@ -603,6 +607,18 @@
                     :content  "Show me"
                     :on-click (create-nav-fn "deployments" nil)}]])))
 
+(defn FleetFilterMessage []
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        fleet-filter         (subscribe [::subs/fleet-filter])
+        deployment-set       (subscribe [::subs/deployment-set])
+        can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" @deployment-set)
+        unsaved-changes?     (subscribe [::subs/unsaved-changes?])]
+    (when @fleet-filter
+      [:p (@tr [:recompute-fleet-info]) " "
+       (when (and can-recompute-fleet? (not @unsaved-changes?))
+         [:a {:href "#"
+              :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
+          (@tr [:recompute-fleet])])])))
 
 (defn EdgeOverviewContent [edges-stats]
   [:<>
@@ -612,7 +628,8 @@
                 :content  "Show me"
                 :disabled (or (nil? (:total edges-stats))
                               (= 0 (:total edges-stats)))
-                :on-click (create-nav-fn "edges" {:edges-state nil})}]])
+                :on-click (create-nav-fn "edges" {:edges-state nil})}]
+   [FleetFilterMessage]])
 
 (defn TabOverview
   [uuid creating?]
@@ -1078,7 +1095,8 @@
       {:db-path                [::spec/pagination-edges]
        :change-event           [::events/get-edge-documents]
        :total-items            (-> @edges :count)
-       :i-per-page-multipliers [1 2 4]}]]))
+       :i-per-page-multipliers [1 2 4]}]
+     [FleetFilterMessage]]))
 
 (defn EdgesTab
   []

@@ -273,6 +273,7 @@
         :depl-group-save-and-start-to-enable-tab       "To add deployments Start this deployment group."
         :deploy                                        "deploy"
         :deploy-for                                    "deploy for "
+        :deploy-with-edges-filter                      "Create deployment group with edges based on filter: "
         :deployment                                    "deployment"
         :deployment-access-url                         "To access URLs of this deployment, you might need to"
         :deployment-based-different-module             "Deployments based on different applications"

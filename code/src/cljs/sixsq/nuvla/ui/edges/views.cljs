@@ -808,6 +808,17 @@
     :select-config     select-config}
    ::table-cols-config])
 
+(defn bulk-deploy
+  ([] (bulk-deploy false))
+  ([filter-based-fleet]
+   (let [id (random-uuid)]
+     (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
+     (when filter-based-fleet
+       (dispatch [::events/set-fleet-filter ::depl-group-events/set-fleet-filter id]))
+     (dispatch [::routing-events/navigate
+                routes/deployment-sets-details
+                {:uuid :create}
+                {depl-group-subs/creation-temp-id-key id}]))))
 
 (defn NuvlaboxTable
   []
@@ -919,25 +930,42 @@
 
 (defn- ControlBar
   []
-  (let [additional-filter (subscribe [::subs/additional-filter])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        search-filter     (subscribe [::subs/search-filter])
+        additional-filter (subscribe [::subs/additional-filter])
+        state-selector    (subscribe [::subs/state-selector])
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [:div
-        [full-text-search-plugin/FullTextSearch
-         {:db-path            [::spec/edges-search]
-          :change-event       [::pagination-plugin/change-page
-                               [::spec/pagination] 1]
-          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
-          :style              {:width "100%"}}]
-        ^{:key (random-uuid)}
-        [:div {:style {:margin-top "10px"}}
-         [filter-comp/ButtonFilter
-          {:resource-name                    spec/resource-name
-           :default-filter                   @additional-filter
-           :open?                            filter-open?
-           :on-done                          #(dispatch [::events/set-additional-filter %])
-           :show-clear-button-outside-modal? true}]]]])))
+       [:div {:style {:display :flex}}
+        [:div
+         [full-text-search-plugin/FullTextSearch
+          {:db-path            [::spec/edges-search]
+           :change-event       [::pagination-plugin/change-page
+                                [::spec/pagination] 1]
+           :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
+           :style              {:width "100%"}}]
+         ^{:key (random-uuid)}
+         [:div {:style {:margin-top "10px"}}
+          [filter-comp/ButtonFilter
+           {:resource-name                    spec/resource-name
+            :default-filter                   @additional-filter
+            :open?                            filter-open?
+            :on-done                          #(dispatch [::events/set-additional-filter %])
+            :show-clear-button-outside-modal? true}]]]
+        (when (and (or @search-filter @additional-filter) (not @state-selector))
+          (let [deploy-button [ui/Button
+                               {:icon     true
+                                :style    {:margin "0px 10px auto"}
+                                :on-click #(bulk-deploy true)}
+                               [icons/RocketIcon]]]
+            [ui/Popup {:content        (str (@tr [:deploy-with-edges-filter])
+                                            "\n"
+                                            (utils/get-deploy-filter-string @search-filter @additional-filter))
+                       :position       "bottom center"
+                       :hide-on-scroll true
+                       :hoverable      true
+                       :trigger        (r/as-element deploy-button)}]))]])))
 
 
 (defn NuvlaBoxesOrClusters

@@ -725,7 +725,8 @@
 
 (defn EdgeOverviewContent
   [edges-stats creating?]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        fleet-filter (subscribe [::subs/fleet-filter])]
     [:<>
      (when (pos? (:total edges-stats))
        [:<>
@@ -740,7 +741,9 @@
                      :on-click (create-nav-fn "edges" {:edges-state nil})}]])
      [:div
       {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
-      (when-not creating?
+      (when-not (or
+                  creating?
+                  @fleet-filter)
         ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
         ;; and retrieving deployment-set and deployment-set-edited
         [:div

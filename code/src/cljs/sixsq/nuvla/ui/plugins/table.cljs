@@ -451,7 +451,7 @@
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
         selectable?    (and
                          select-config
-                        ;;  (s/valid? ::select-config select-config)
+                         (s/valid? ::select-config select-config)
                          (seq (:bulk-actions select-config))
                          (or (not rights-needed)
                            (some (partial general-utils/can-operation? rights-needed) rows)))

@@ -861,7 +861,7 @@
                                                         :name "Bulk Deploy App"
                                                         :event (fn []
                                                                  (let [id (random-uuid)]
-                                                                   (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges])
+                                                                   (dispatch [::events/get-selected-edge-ids [::depl-group-events/set-edges]])
                                                                    (when @all-selected?
                                                                      (dispatch [::events/set-fleet-filter ::depl-group-events/set-fleet-filter id]))
                                                                    (dispatch [::routing-events/navigate

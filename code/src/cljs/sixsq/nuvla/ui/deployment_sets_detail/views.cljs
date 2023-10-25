@@ -621,16 +621,6 @@
               :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
           (@tr [:recompute-fleet])])])))
 
-(defn EdgeOverviewContent [edges-stats]
-  [:<>
-   [StatisticStatesEdgeView edges-stats]
-   [uix/Button {:class    "center"
-                :icon     icons/i-box
-                :content  "Show me"
-                :disabled (or (nil? (:total edges-stats))
-                              (= 0 (:total edges-stats)))
-                :on-click (create-nav-fn "edges" {:edges-state nil})}]
-   [FleetFilterMessage]])
 
 (defn- ResolvedUser
   [user-id]
@@ -734,7 +724,7 @@
              (when added (str (count added) " added")))])))))
 
 (defn EdgeOverviewContent
-  [edges-stats]
+  [edges-stats creating?]
   (let [tr (subscribe [::i18n-subs/tr])]
     [:<>
      (when (pos? (:total edges-stats))
@@ -750,13 +740,17 @@
                      :on-click (create-nav-fn "edges" {:edges-state nil})}]])
      [:div
       {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
-      [:div
-       [AddButton events/edges-picker-modal-id]]
+      (when-not creating?
+        ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
+        ;; and retrieving deployment-set and deployment-set-edited
+        [:div
+         [AddButton events/edges-picker-modal-id]])
       [:div {:style {:margin-top "1rem"}}
        (if (pos? (:total edges-stats))
          (@tr [:add-your-first-edge])
          (@tr [:add-an-edge]))]
-      [EdgesPickerModal]]]))
+      [EdgesPickerModal]
+      [FleetFilterMessage]]]))
 
 (defn TabOverview
   [uuid creating?]
@@ -783,7 +777,7 @@
             {:class :nuvla-edges
              :icon  icons/i-box
              :label (str (@tr [:nuvlaedge]) "s")}
-            [EdgeOverviewContent @edges-stats]]]
+            [EdgeOverviewContent @edges-stats creating?]]]
           [ui/GridColumn {:stretched true}
            [DeploymentsStatesCard]]]]))))
 

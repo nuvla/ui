@@ -3,6 +3,7 @@
             [sixsq.nuvla.ui.plugins.events :as events-plugin]))
 
 (s/def ::deployment any?)
+(s/def ::nuvlabox any?)
 (s/def ::loading? boolean?)
 (s/def ::module-versions any?)
 (s/def ::deployment-parameters any?)
@@ -14,6 +15,7 @@
 (def defaults
   {::not-found?                false
    ::deployment                nil
+   ::nuvlabox                  nil
    ::deployment-parameters     nil
    ::loading?                  true
    ::module-versions           nil

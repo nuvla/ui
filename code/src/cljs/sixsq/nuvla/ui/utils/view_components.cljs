@@ -24,12 +24,12 @@
                :raised    true
                :style {:height          "100%"
                        :display         "flex"
-                       :flex-direction  "column"
-                       :justify-content "space-evenly"}}
+                       :flex-direction  "column"}}
    [:h4 {:class [:ui-header :ui-card-header]}
     [icons/Icon {:name icon}] label]
-   (into [:div {:style {:height          "100%"
-                        :display         "flex"
-                        :flex-direction  "column"
-                        :justify-content "space-evenly"}}]
-         children)])
+   [:div
+    (into [:div {:style {:height          "100%"
+                         :display         "flex"
+                         :flex-direction  "column"
+                         :justify-content "space-evenly"}}]
+      children)]])

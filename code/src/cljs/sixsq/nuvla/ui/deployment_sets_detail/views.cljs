@@ -712,28 +712,27 @@
                      :on-click add-to-select}]]])))
 
 (defn- UnstoredEdgeChanges
-  []
-  (let [fleet-changes (subscribe [::subs/fleet-changes])]
-    (fn []
-      (when @fleet-changes
-        (let [removed (:removed @fleet-changes)
-              added   (:added @fleet-changes)]
-          [:span
-           (str "You have unsaved fleet changes" ": "
-             (when removed (str (count removed) " removed"))
-             (when (and removed added) ", ")
-             (when added (str (count added) " added")))])))))
+  [fleet-changes]
+  (let [removed (:removed @fleet-changes)
+        added   (:added @fleet-changes)]
+    [:span
+     (str "You have unsaved fleet changes" ": "
+       (when removed (str (count removed) " removed"))
+       (when (and removed added) ", ")
+       (when added (str (count added) " added")))]))
 
 (defn EdgeOverviewContent
   [edges-stats creating?]
   (let [tr (subscribe [::i18n-subs/tr])
-        fleet-filter (subscribe [::subs/fleet-filter])]
+        fleet-filter (subscribe [::subs/fleet-filter])
+        fleet-changes (subscribe [::subs/fleet-changes])]
     [:<>
      (when (pos? (:total edges-stats))
        [:<>
         [StatisticStatesEdgeView edges-stats]
-        [:div {:style {:margin "1.4rem auto"}}
-         [UnstoredEdgeChanges]]
+        (when @fleet-changes
+          [:div {:style {:margin "1.4rem auto"}}
+           [UnstoredEdgeChanges @fleet-changes]])
         [uix/Button {:class    "center"
                      :icon     icons/i-box
                      :content  "Show me"

@@ -196,7 +196,7 @@
                                  :background-color "antiquewhite"}}]
      [ui/Dropdown {:placeholder "value"
                    :options     [{:key "true", :value true, :text "true"}
-                                 {:key "false", :value true, :text "false"}
+                                 {:key "false", :value false, :text "false"}
                                  {:key  utils/value-null, :value utils/value-null,
                                   :text utils/value-null}]
                    :value       value

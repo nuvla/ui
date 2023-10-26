@@ -150,7 +150,6 @@
                                               (if (= label "TOTAL") nil label)])))}
       (if stacked?
         [:<>
-         (js/console.error "selected" is-selected?)
          [ui/IconGroup
           {:style {:margin-right "auto"
                    :margin-left  "auto"}

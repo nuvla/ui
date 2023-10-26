@@ -10,6 +10,11 @@
 
 (s/def ::edges (s/coll-of map? :kind vector?))
 (s/def ::edges-documents (s/coll-of map? :kind vector?))
+(s/def ::edges-full-text-search (s/nilable string?))
+(s/def ::edges-ordering (s/coll-of (s/cat :field keyword? :order #{"desc" "asc" :desc :asc})))
+(s/def ::edges-additional-filter string?)
+(s/def ::edges-state-selector string?)
+(s/def ::edges-pagination any?)
 
 (s/def ::fleet-filter string?)
 
@@ -27,7 +32,7 @@
 (s/def ::module-applications-sets (s/nilable map?))
 
 (s/def ::pagination-deployments any?)
-(s/def ::pagination-edges any?)
+(s/def ::edges-pagination any?)
 (s/def ::pagination-apps-picker any?)
 
 (s/def ::deployments-summary-all any?)
@@ -44,7 +49,9 @@
 (s/def ::edge-picker-pagination any?)
 (s/def ::edge-picker-edges-summary any?)
 
-(s/def ::select (s/nilable any?))
+(s/def ::edges-select (s/nilable any?))
+
+(s/def ::edge-picker-select (s/nilable any?))
 
 (def defaults
   {::module-applications-sets  nil
@@ -67,7 +74,7 @@
    ::prices-accepted?          false
    ::ordering                  default-ordering
    ::pagination-deployments    pagination-default
-   ::pagination-edges          pagination-default
+   ::edges-pagination          pagination-default
    ::pagination-apps-picker    (pagination-plugin/build-spec
                                  :default-items-per-page 16)
    ::edge-picker-pagination   pagination-default

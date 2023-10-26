@@ -218,8 +218,7 @@
 (reg-event-fx
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set fx]]
-    (let [deployment-set-edited (get db ::spec/deployment-set-edited)
-          parent-ids (set (into (get-target-fleet-ids deployment-set) (get-target-fleet-ids deployment-set-edited)))]
+    (let [deployment-set-edited (get db ::spec/deployment-set-edited)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
                      ::spec/deployment-set deployment-set
                      ::main-spec/loading? false
@@ -228,7 +227,7 @@
                                                     deployment-set)
                      ::spec/fleet-filter (-> deployment-set :applications-sets first :overwrites first :fleet-filter))
        :fx [fx
-            [:dispatch [::get-edges parent-ids]]
+            [:dispatch [::get-edges]]
             [:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]})))
 
 (reg-event-fx
@@ -546,12 +545,19 @@
 
 (reg-event-fx
   ::get-edges
-  (fn [_ [_ ids]]
+  (fn [{{:keys [::spec/deployment-set
+                ::spec/deployment-set-edited
+                ::spec/edges-additional-filter] :as db} :db} _]
     (let [callback   (fn [response]
                        (dispatch [::set-edges response]))
-          ids-filter (general-utils/ids->inclusion-filter-string ids)]
+          ids-filter (general-utils/ids->inclusion-filter-string
+                      (set (into (get-target-fleet-ids deployment-set) (get-target-fleet-ids deployment-set-edited))))]
       {::cimi-api-fx/search [:nuvlabox
-                             {:filter      ids-filter
+                             {:filter     (general-utils/join-and
+                                            ids-filter
+                                            edges-additional-filter
+                                            (full-text-search-plugin/filter-text
+                                              db [::spec/edges-full-text-search]))
                               :last        10000
                               :select      "id"
                               :aggregation edges-spec/state-summary-agg-term}
@@ -565,25 +571,19 @@
                      (update response :resources #(mapv :id %)))
        :fx [[:dispatch [::get-edge-documents]]]})))
 
-(reg-event-fx
-  ::set-fleet-filter
-  (fn [{db :db} [_ fleet-filter deployment-set-id]]
-    (let [path (subs/create-db-path [::spec/fleet-filter] (str deployment-set-id))]
-      {:db (assoc-in db path fleet-filter)})))
-
 (def edges-state-filter-key :edges-state)
-
 
 (reg-event-fx
   ::get-edge-documents
   (fn [{{:keys [::spec/ordering
                 current-route
-                ::spec/changed-edges] :as db} :db} _]
+                ::spec/changed-edges
+                ::spec/edges-additional-filter] :as db} :db} _]
     (let [edges        (get-in db
                          (subs/current-route->edges-db-path
                            current-route))
           ordering     (or ordering spec/default-ordering)
-          query-filter (routing-utils/get-query-param current-route edges-state-filter-key)
+          state-filter (routing-utils/get-query-param current-route edges-state-filter-key)
           changed-ids  (remove nil? (flatten (vals changed-edges)))]
       (cond-> {:db (assoc db ::spec/edge-documents nil)}
               edges
@@ -591,16 +591,33 @@
                      [:nuvlabox
                       (->> {:orderby (ordering->order-string ordering)
                             :filter  (if (seq changed-ids)
-                                       (general-utils/ids->inclusion-filter-string
-                                         changed-ids)
+                                       (general-utils/join-and
+                                         (general-utils/ids->inclusion-filter-string
+                                           changed-ids)
+                                         edges-additional-filter
+                                         (full-text-search-plugin/filter-text
+                                           db [::spec/edges-full-text-search])
+                                         (when (seq state-filter)
+                                           (edges-utils/state-filter state-filter)))
                                        (general-utils/join-and
                                          "id!=null"
                                          (general-utils/ids->inclusion-filter-string (-> edges
                                                                                          :resources))
-                                         (when (seq query-filter) (edges-utils/state-filter query-filter))))}
+                                         (when (seq state-filter)
+                                           (edges-utils/state-filter state-filter))))}
                            (pagination-plugin/first-last-params
-                             db [::spec/pagination-edges]))
+                             db [::spec/edges-pagination]))
                       #(dispatch [::set-edges-documents %])])))))
+
+(reg-event-fx
+  ::set-fleet-filter
+  (fn [{db :db} [_ fleet-filter deployment-set-id]]
+    (let [path (subs/create-db-path [::spec/fleet-filter] (str deployment-set-id))]
+      {:db (assoc-in db path fleet-filter)})))
+
+
+
+
 
 (reg-event-fx
   ::init-edges-tab
@@ -624,6 +641,14 @@
   (fn [db [_ edges-response]]
     (assoc db ::spec/edges-documents edges-response)))
 
+(reg-event-fx
+  ::set-edges-additional-filter
+  (fn [{db :db} [_ filter]]
+    {:db (-> db
+             (assoc ::spec/edges-additional-filter filter)
+             (assoc-in [::spec/edges-pagination :active-page] 1))
+     :fx [[:dispatch [::get-edges]]
+          [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/edges-select]]]]}))
 
 (reg-event-fx
   ::fetch-app-picker-apps
@@ -735,6 +760,8 @@
                                            (concat (get-in deployment-set [:applications-sets 0 :overwrites])
                                                    (repeat nil))))}]]]]}))
 
+
+
 (reg-event-db
   ::enable-form-validation
   (fn [db]
@@ -817,7 +844,7 @@
              (assoc ::spec/edge-picker-additional-filter filter)
              (assoc-in [::spec/edge-picker-pagination :active-page] 1))
      :fx [[:dispatch [::get-edges-for-edge-picker-modal]]
-          [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]]}))
+          [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/edge-picker-select]]]]}))
 
 (reg-event-fx
   ::set-edge-picker-selected-state
@@ -831,7 +858,7 @@
     (assoc db
       ::spec/edge-picker-additional-filter ""
       ::spec/edge-picker-state-selector nil
-      ::spec/select nil
+      ::spec/edge-picker-select nil
       ::spec/edge-picker-full-text-search nil
       ::spec/edge-picker-ordering spec/default-ordering
       ::spec/edge-picker-pagination spec/pagination-default)))
@@ -854,11 +881,11 @@
 
 (reg-event-fx
   ::get-selected-edge-ids
-  (fn [{{:keys [::spec/select] :as db} :db} _]
+  (fn [{{:keys [:sixsq.nuvla.ui.deployment-sets-detail.spec/edge-picker-select] :as db} :db} _]
     {::cimi-api-fx/search
      [:nuvlabox
       {:filter (table-plugin/build-bulk-filter
-                 select
+                 edge-picker-select
                  (get-full-filter-string db))
        :select "id"}
       #(dispatch [::add-edges %])]}))

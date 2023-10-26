@@ -485,6 +485,10 @@
     (:resources edges)))
 
 (reg-sub
+  ::edges-additional-filter
+  :-> ::spec/edges-additional-filter)
+
+(reg-sub
   ::edge-picker-additional-filter
   :-> ::spec/edge-picker-additional-filter)
 

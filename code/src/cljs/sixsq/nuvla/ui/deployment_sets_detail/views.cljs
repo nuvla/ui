@@ -637,7 +637,7 @@
         additional-filter (subscribe [::subs/edge-picker-additional-filter])
         filter-open?      (r/atom false)]
     (fn []
-      (let [select-fn (fn [id] (dispatch [::table-plugin/select-id id [::spec/select] (map :id @edges)]))]
+      (let [select-fn (fn [id] (dispatch [::table-plugin/select-id id [::spec/edge-picker-select] (map :id @edges)]))]
         [:<>
          [:div {:style {:display :flex}}
           [:div
@@ -684,7 +684,7 @@
                                      :style {:cursor "pointer"}}
                  :select-config     {:total-count-sub-key [::subs/edge-picker-edges-count]
                                      :resources-sub-key   [::subs/edge-picker-edges-resources]
-                                     :select-db-path      [::spec/select]}}]
+                                     :select-db-path      [::spec/edge-picker-select]}}]
          [pagination-plugin/Pagination
           {:db-path                [::spec/edge-picker-pagination]
            :change-event           [::events/get-picker-edges]
@@ -714,8 +714,8 @@
 
 (defn- UnstoredEdgeChanges
   [fleet-changes]
-  (let [removed (:removed @fleet-changes)
-        added   (:added @fleet-changes)]
+  (let [removed (:removed fleet-changes)
+        added   (:added fleet-changes)]
     [:span
      (str "You have unsaved fleet changes" ": "
        (when removed (str (count removed) " removed"))
@@ -1171,64 +1171,86 @@
                         items)}]])))
 
 (defn EdgesTabView
-  [selected-state]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        edges         (subscribe [::subs/edges-documents-response])
-        fleet-changes (subscribe [::subs/fleet-changes])
-        only-changes? (subscribe [::subs/show-only-changed-fleet?])
-        columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}
-                       {:field-key :state}
-                       {:field-key :name}
-                       {:field-key :description}
-                       {:field-key :created}
-                       {:field-key :created-by}
-                       {:field-key      :refresh-interval
-                        :header-content (some-> (@tr [:report-interval]) str/lower-case)}
-                       {:field-key :last-online :no-sort? true}
-                       {:field-key :version :no-sort? true}
-                       {:field-key :tags :no-sort? true}]
-        edges-stats   (subscribe [::subs/edges-summary-stats])
-        current-route (subscribe [::route-subs/current-route])]
-    [:div {:class :nuvla-edges}
-     [edges-views/StatisticStatesEdgeView
-      (assoc @edges-stats
-        :states (mapv (fn [state]
-                        (let [label (:label state)]
-                          (assoc state
-                            :selected?
-                            (or
-                              (= label selected-state)
-                              (and
-                                (= label "TOTAL")
-                                (empty? selected-state)))
-                            :on-click
-                            #(dispatch
-                               [::routing-events/navigate
-                                (routes-utils/gen-href @current-route
-                                                       {:partial-query-params
-                                                        {events/edges-state-filter-key
-                                                         (if (= "TOTAL" label)
-                                                           nil
-                                                           label)}})])))
-                        ) edges-views/edges-states))
-      true true]
-     (when @fleet-changes
-       [:div {:style {:margin-top "1rem"
-                      :margin-bottom "1rem"}}
-        [:div [UnstoredEdgeChanges]]
-        [:div [ui/Checkbox {:checked @only-changes?
-                            :basic true
-                            :label "Show only unsaved changes"
-                            :on-click #(dispatch [::events/show-fleet-changes-only @fleet-changes])}]]])
-     [edges-views/NuvlaEdgeTableView
-      {:edges   (:resources @edges)
-       :columns columns}]
-     [pagination-plugin/Pagination
-      {:db-path                [::spec/pagination-edges]
-       :change-event           [::events/get-edge-documents]
-       :total-items            (-> @edges :count)
-       :i-per-page-multipliers [1 2 4]}]
-     [FleetFilterMessage]]))
+  []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        edges             (subscribe [::subs/edges-documents-response])
+        fleet-changes     (subscribe [::subs/fleet-changes])
+        only-changes?     (subscribe [::subs/show-only-changed-fleet?])
+        columns           [{:field-key :online :header-content [icons/HeartbeatIcon]}
+                           {:field-key :state}
+                           {:field-key :name}
+                           {:field-key :description}
+                           {:field-key :created}
+                           {:field-key :created-by}
+                           {:field-key      :refresh-interval
+                            :header-content (some-> (@tr [:report-interval]) str/lower-case)}
+                           {:field-key :last-online :no-sort? true}
+                           {:field-key :version :no-sort? true}
+                           {:field-key :tags :no-sort? true}]
+        edges-stats       (subscribe [::subs/edges-summary-stats])
+        current-route     (subscribe [::route-subs/current-route])
+        filter-open?      (r/atom false)
+        additional-filter (subscribe [::subs/edges-additional-filter])]
+    (fn [selected-state]
+      [:div {:style {:padding-top "10px"}
+             :class :nuvla-edges}
+       [:div {:style {:display :flex}}
+        [:div
+         [full-text-search-plugin/FullTextSearch
+          {:db-path [::spec/edges-full-text-search]
+           :change-event [::pagination-plugin/change-page [::spec/edges-pagination] 1]}]
+         ^{:key @additional-filter}
+         [:div {:style {:margin-top "0.4rem"}}
+          [filter-comp/ButtonFilter
+           {:resource-name                    edges-spec/resource-name
+            :default-filter                   @additional-filter
+            :open?                            filter-open?
+            :on-done                          #(dispatch [::events/set-edges-additional-filter %])
+            :show-clear-button-outside-modal? true
+            :persist? false}]]]
+        [:div {:class :nuvla-edges
+               :style {:margin "0 auto 0 6rem"}}
+         [edges-views/StatisticStatesEdgeView
+          (assoc @edges-stats
+            :states (mapv (fn [state]
+                            (let [label (:label state)]
+                              (assoc state
+                                :selected?
+                                (or
+                                  (= label selected-state)
+                                  (and
+                                    (= label "TOTAL")
+                                    (empty? selected-state)))
+                                :on-click
+                                #(dispatch
+                                   [::routing-events/navigate
+                                    (routes-utils/gen-href @current-route
+                                      {:partial-query-params
+                                       {events/edges-state-filter-key
+                                        (if (= "TOTAL" label)
+                                          nil
+                                          label)}})])))) edges-views/edges-states))
+          true true]]]
+       (when @fleet-changes
+         [:div {:style {:margin-top "1rem"
+                        :margin-bottom "1rem"}}
+          [:div [UnstoredEdgeChanges]]
+          [:div [ui/Checkbox {:checked @only-changes?
+                              :basic true
+                              :label "Show only unsaved changes"
+                              :on-click #(dispatch [::events/show-fleet-changes-only @fleet-changes])}]]])
+       [edges-views/NuvlaEdgeTableView
+        {:edges   (:resources @edges)
+         :columns columns
+         :select-config nil #_{:total-count-sub-key [::subs/edges-count]
+                               :resources-sub-key   [::subs/edges-documents-response]
+                               :select-db-path      [::spec/edges-select]}}]
+       [pagination-plugin/Pagination
+        {:db-path                [::spec/edges-pagination]
+         :change-event           [::events/get-edges]
+         :total-items            (-> @edges :count)
+         :i-per-page-multipliers [1 2 4]}]
+       [FleetFilterMessage]])))
 
 (defn EdgesTab
   []

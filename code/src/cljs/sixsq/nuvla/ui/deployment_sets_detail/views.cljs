@@ -630,17 +630,12 @@
 
 (defn EdgePickerContent
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        edges             (subscribe [::subs/edge-picker-edges-resources])
+  (let [edges             (subscribe [::subs/edge-picker-edges-resources])
         edges-count       (subscribe [::subs/edge-picker-edges-count])
         edges-stats       (subscribe [::subs/edge-picker-edges-summary-stats])
         selected-state    (subscribe [::subs/state-selector])
         additional-filter (subscribe [::subs/edge-picker-additional-filter])
-        filter-open?      (r/atom false)
-        add-to-select {:icon  (fn [] [icons/BoxIcon])
-                       :name  (@tr [:add-to-depl-group])
-                       :event (fn []
-                                (dispatch [::events/get-selected-edge-ids]))}]
+        filter-open?      (r/atom false)]
     (fn []
       (let [select-fn (fn [id] (dispatch [::table-plugin/select-id id [::spec/select] (map :id @edges)]))]
         [:<>
@@ -686,8 +681,7 @@
                  :cell-props        {:header {:single-line true}}
                  :row-props         {:role  "link"
                                      :style {:cursor "pointer"}}
-                 :select-config     {:bulk-actions        [add-to-select]
-                                     :total-count-sub-key [::subs/edge-picker-edges-count]
+                 :select-config     {:total-count-sub-key [::subs/edge-picker-edges-count]
                                      :resources-sub-key   [::subs/edge-picker-edges-resources]
                                      :select-db-path      [::spec/select]}}]
          [pagination-plugin/Pagination
@@ -698,17 +692,24 @@
 
 (defn EdgesPickerModal
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        open?    (subscribe [::subs/modal-open? events/edges-picker-modal-id])
-        close-fn #(do (dispatch [::events/set-opened-modal nil]))]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        open?         (subscribe [::subs/modal-open? events/edges-picker-modal-id])
+        close-fn      #(do (dispatch [::events/set-opened-modal nil]))
+        add-to-select  (fn []
+                         (dispatch [::events/get-selected-edge-ids]))]
     (fn []
-      [ui/Modal {:size       :fullscreen
+      [ui/Modal {:sizjje       :fullscreen
                  :open        @open?
                  :close-icon true
                  :on-close   close-fn}
        [uix/ModalHeader {:header (@tr [:add-edges])}]
        [ui/ModalContent
-        [EdgePickerContent]]])))
+        [EdgePickerContent]]
+       [ui/ModalActions
+        [uix/Button {:text     (@tr [:add-to-depl-group])
+                     :positive true
+                     :active   true
+                     :on-click add-to-select}]]])))
 
 (defn- UnstoredEdgeChanges
   []

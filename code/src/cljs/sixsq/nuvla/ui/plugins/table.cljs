@@ -105,9 +105,9 @@
 (s/def ::select-db-path (s/* keyword?))
 (s/def ::rights-needed keyword?)
 (s/def ::select-label-accessor (s/nilable fn?))
-(s/def ::select-config (s/nilable (s/keys :req-un [::bulk-actions ::select-db-path
+(s/def ::select-config (s/nilable (s/keys :req-un [::select-db-path
                                                    ::total-count-sub-key ::resources-sub-key]
-                                          :opt-un [::rights-needed ::select-label-accessor])))
+                                          :opt-un [::bulk-actions ::rights-needed ::select-label-accessor])))
 ;; Bulk selection db entries
 (s/def ::bulk-edit-success-msg (s/nilable string?))
 (s/def ::select-all? (s/nilable boolean?))
@@ -357,38 +357,39 @@
     [:div
      {:style  {:position :sticky :top "39px" :z-index 998}
       :class [(if selectable? :visible :invisible)]}
-     [:div {:style {:display :flex
-                    :border "1px solid rgb(230 230 230)"
-                    :border-radius "0.28rem"
-                    :background-color "rgb(249 250 251)"
-                    :justify-content :space-between
-                    :align-items :center
-                    :height "40px"
-                    :gap "1rem"}}
-      [:div
-       [ui/Popup {:trigger
-                  (r/as-element
-                   [:div
-                    [ui/Menu {:style {:border          :none
-                                      :box-shadow      :none
-                                      :background-color :transparent}
-                              :stackable  true}
-                     (for [[idx action ] (map-indexed vector bulk-actions)
-                           :let [{:keys [name event icon]} action]]
-                       [ui/MenuItem
-                        {:disabled nothing-selected?
-                         :class :bulk-action-bar-item
-                         :on-click (fn []
-                                     (if (fn? event) (event payload)
-                                       (dispatch event)))
-                         :key idx}
-                        (when icon [icon])
-                        name])]])
-                  :basic    true
-                  :disabled (not= :none @selection-status)
-                  :content  (@tr [:select-at-least-one-item])}]]
-      [:div {:style {:padding-right "1rem"}}
-       @bulk-edit-success-message]]
+     (when (seq bulk-actions)
+       [:div {:style {:display :flex
+                      :border "1px solid rgb(230 230 230)"
+                      :border-radius "0.28rem"
+                      :background-color "rgb(249 250 251)"
+                      :justify-content :space-between
+                      :align-items :center
+                      :height "40px"
+                      :gap "1rem"}}
+        [:div
+         [ui/Popup {:trigger
+                    (r/as-element
+                      [:div
+                       [ui/Menu {:style {:border          :none
+                                         :box-shadow      :none
+                                         :background-color :transparent}
+                                 :stackable  true}
+                        (for [[idx action ] (map-indexed vector bulk-actions)
+                              :let [{:keys [name event icon]} action]]
+                          [ui/MenuItem
+                           {:disabled nothing-selected?
+                            :class :bulk-action-bar-item
+                            :on-click (fn []
+                                        (if (fn? event) (event payload)
+                                          (dispatch event)))
+                            :key idx}
+                           (when icon [icon])
+                           name])]])
+                    :basic    true
+                    :disabled (not= :none @selection-status)
+                    :content  (@tr [:select-at-least-one-item])}]]
+        [:div {:style {:padding-right "1rem"}}
+         @bulk-edit-success-message]])
      [:div
       {:style {:heigh "2rem"
                :padding-left "1rem"
@@ -451,7 +452,6 @@
         selectable?    (and
                          select-config
                          (s/valid? ::select-config select-config)
-                         (seq (:bulk-actions select-config))
                          (or (not rights-needed)
                            (some (partial general-utils/can-operation? rights-needed) rows)))
         selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))

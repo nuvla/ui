@@ -149,16 +149,18 @@
                                    (dispatch [set-state-selector-event
                                               (if (= label "TOTAL") nil label)])))}
       (if stacked?
-        [:<> [ui/IconGroup
-              {:style {:margin-right "auto"
-                       :margin-left  "auto"}
-               :role  :button}
-              (for [i icons]
-                [icons/Icon {:key     icon-key
-                             :size    (when (and clickable? is-selected?) "large")
-                             :loading (and (pos? value) (= icons/i-spinner i))
-                             :style   {:margin-right 0}
-                             :name    i}])]
+        [:<>
+         (js/console.error "selected" is-selected?)
+         [ui/IconGroup
+          {:style {:margin-right "auto"
+                   :margin-left  "auto"}
+           :role  :button}
+          (for [i icons]
+            [icons/Icon {:key     icon-key
+                         :size    (when (and clickable? is-selected?) "large")
+                         :loading (and (pos? value) (= icons/i-spinner i))
+                         :style   {:margin-right 0}
+                         :name    i}])]
          [ui/StatisticValue
           (or value 0)]
          [ui/StatisticLabel label]]

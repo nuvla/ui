@@ -653,7 +653,8 @@
               :on-done                          #(dispatch [::events/set-edge-picker-additional-filter %])
               :show-clear-button-outside-modal? true
               :persist? false}]]]
-          [:div {:style {:margin "0 auto 0 5rem"}}
+          [:div {:class :nuvla-edges
+                 :style {:margin "0 auto 0 6rem"}}
            [edges-views/StatisticStatesEdgeView
             (assoc @edges-stats
               :states (mapv (fn [state]
@@ -698,7 +699,7 @@
         add-to-select  (fn []
                          (dispatch [::events/get-selected-edge-ids]))]
     (fn []
-      [ui/Modal {:sizjje       :fullscreen
+      [ui/Modal {:size       :medium
                  :open        @open?
                  :close-icon true
                  :on-close   close-fn}

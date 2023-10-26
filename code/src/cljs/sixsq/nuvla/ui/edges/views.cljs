@@ -73,11 +73,11 @@
          ^{:key (str "stat-state-" (:label state))}
          [components/StatisticState
           (merge state
-                 {:value                    (states->counts (:key state))
-                  :stacked?                 true
-                  :clickable?               (or (:clickable? state) clickable?)
-                  :set-state-selector-event ::events/set-state-selector
-                  :state-selector-subs      ::subs/state-selector})])
+            {:value                    (states->counts (:key state))
+             :stacked?                 true
+             :clickable?               (or (:clickable? state) clickable?)
+             :set-state-selector-event ::events/set-state-selector
+             :state-selector-subs      ::subs/state-selector})])
        (when (and clickable? (not restricted-view?))
          [ui/Button
           {:icon     true

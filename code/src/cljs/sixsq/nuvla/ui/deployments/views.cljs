@@ -266,7 +266,7 @@
                                    :cell-props {:style {:overflow      "hidden",
                                                         :text-overflow "ellipsis",
                                                         :max-width     "20ch"}}
-                                   :no-sort?  true}
+                                   :sort-key  :nuvlabox-name}
                                   (when selectable? {:field-key :actions
                                                      :no-sort?  true})])
                                :rows          deployments-list

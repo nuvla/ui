@@ -18,6 +18,10 @@
   (fn [db]
     (::spec/deployment db)))
 
+(reg-sub
+  ::nuvlabox
+  :-> ::spec/nuvlabox)
+
 
 (reg-sub
   ::deployment-acl

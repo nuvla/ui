@@ -56,9 +56,10 @@
     [ui/ListItem (cond-> {:active   selected?
                           :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
-      [icons/KeyIcon {:size "big"}]]
+      [icons/KeyIcon {:color (if selected? "blue" "black")
+                      :size  "large"}]]
      [ui/ListContent
-      [ui/ListHeader (or name id)]
+      [ui/ListHeader (when selected? {:as :a}) (or name id)]
       (when description
         [ui/ListDescription description])]]))
 

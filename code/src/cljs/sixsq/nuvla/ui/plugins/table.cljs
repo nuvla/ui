@@ -604,7 +604,7 @@
                            (some (partial general-utils/can-operation? rights-needed) rows)))
         selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))
         select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
-        page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key rights-needed]))
+        page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key]))
         get-row-props  (fn [row]
                          (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
     [:div

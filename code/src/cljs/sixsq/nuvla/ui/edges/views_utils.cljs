@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.edges.views-utils
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
-            [reagent.core :as r]
             [sixsq.nuvla.ui.edges.events :as events]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.subs :as subs]
@@ -56,9 +55,9 @@
 (defn NuvlaboxCard
   [_nuvlabox _managers]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
+    (fn [{:keys [id name description created state tags online created-by] :as nuvlabox} managers]
       (let [href                  (name->href routes/edges-details {:uuid (general-utils/id->uuid id)})
-            next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+            last-heartbeat-moment @(subscribe [::subs/last-online nuvlabox])
             creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}
         [uix/Card
@@ -77,11 +76,9 @@
                         (when @creator
                           [:div (str (@tr [:by]) " "
                                      @creator)])
-                        (when next-heartbeat-moment
+                        (when last-heartbeat-moment
                           [:div (str (@tr [:last-online]) " ")
-                                [uix/TimeAgo (utils/last-time-online
-                                               next-heartbeat-moment
-                                               refresh-interval)]])]
+                                [uix/TimeAgo last-heartbeat-moment]])]
           :state       state
           :description (when-not (str/blank? description) description)
           :tags        tags}]))))

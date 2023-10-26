@@ -521,7 +521,7 @@
             " "
             (@tr [:credential-go-to])
             " "
-            [:a {:href "https://docs.nuvla.io/nuvla/vpn", :target "_blank"} (@tr [:documentation])]
+            [:a {:href "https://docs.nuvla.io/nuvla/user-guide/vpn", :target "_blank"} (@tr [:documentation])]
             " "
             (@tr [:credential-for-details-vpn])]]]
 

@@ -398,7 +398,8 @@
                      :trigger    trigger
                      :on-close   (fn [& args]
                                    (when on-close
-                                     (apply on-close args))
+                                     (apply on-close args)))
+                     :on-unmount (fn []
                                    (reset! confirmed? (nil? danger-msg))
                                    (reset! clicked? false))}
                     (some? open) (assoc :open open))

@@ -15,6 +15,7 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -195,7 +196,7 @@
                                  :background-color "antiquewhite"}}]
      [ui/Dropdown {:placeholder "value"
                    :options     [{:key "true", :value true, :text "true"}
-                                 {:key "false", :value true, :text "false"}
+                                 {:key "false", :value false, :text "false"}
                                  {:key  utils/value-null, :value utils/value-null,
                                   :text utils/value-null}]
                    :value       value
@@ -261,7 +262,11 @@
                                            (assoc @data i (-> (nth @data i)
                                                               (dissoc :operation :value)
                                                               (assoc :attribute %)))))
-                   :options     @attribute-options
+                   :options     (remove (fn [{k :key}]
+                                          (and
+                                            (nonblank-string k)
+                                            (str/starts-with? k "acl/")))
+                                  @attribute-options)
                    :style       {:background-color "beige"}}
                   attribute (assoc :value attribute))]
          [ValueAttribute attribute-info resource-name data i]

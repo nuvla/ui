@@ -87,17 +87,8 @@
   ::modal-action-button-text
   :<- [::i18n-subs/tr]
   :<- [::deployment-start?]
-  :<- [::is-deploy-status? :ok]
-  :<- [::execution-mode]
-  :<- [::selected-infra-service]
-  (fn [[tr start? deploy-status-ok? execution-mode {:keys [capabilities]}]]
-    (let [pull? (or (= execution-mode "pull")
-                    (contains? (set capabilities) "NUVLA_JOB_PULL"))]
-      (tr [(cond
-             (and start? pull?) :schedule-deploy
-             (and (not start?) pull?) :schedule-update
-             (and (not start?) deploy-status-ok?) :update
-             :else :deploy)]))))
+  (fn [[tr start?]]
+    (tr [(if start? :deploy :update)])))
 
 (reg-sub
   ::modal-action-button-color

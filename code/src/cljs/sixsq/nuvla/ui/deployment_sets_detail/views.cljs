@@ -63,19 +63,22 @@
   (str (or name id) (when description " - ") description))
 
 (defn GuardedMenuItem
-  [{:keys [validation-sub enabled] :or {enabled true}} & children]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        {:keys [valid? errors]} @(subscribe validation-sub)
-        enabled?  (and valid? enabled)
-        menu-item (into [ui/MenuItem
-                         {:disabled (not enabled?)
-                          :class    (when enabled? "primary-menu-item")}]
-                        children)]
-    (if valid?
-      menu-item
-      [ui/Popup
-       {:trigger (r/as-element menu-item)
-        :content (str/join ". " (map (comp @tr :message) errors))}])))
+  [{:keys [validation-sub]} & _children]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        validation (subscribe validation-sub)]
+    (fn [{:keys [enabled] :or {enabled true}} & children]
+      (let [{:keys [valid? errors]} @validation
+            enabled?  (and valid? enabled)
+            menu-item (into [ui/MenuItem
+                             {:as       :a
+                              :disabled (not enabled?)
+                              :class    (when enabled? "primary-menu-item")}]
+                            children)]
+        (if valid?
+          menu-item
+          [ui/Popup
+           {:trigger (r/as-element menu-item)
+            :content (str/join ". " (map (comp @tr :message) errors))}])))))
 
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
@@ -87,11 +90,12 @@
                                        {:resource-id id
                                         :operation   "start"}]))
       :trigger            (r/as-element
-                            [GuardedMenuItem
-                             {:enabled        enabled?
-                              :validation-sub [::subs/deployment-set-validation]}
-                             [icons/PlayIcon]
-                             (@tr [:start])])
+                            [:div
+                             [GuardedMenuItem
+                              {:enabled        enabled?
+                               :validation-sub [::subs/deployment-set-validation]}
+                              [icons/PlayIcon]
+                              (@tr [:start])]])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:start-deployment-set])
       :danger-msg         warn-msg
@@ -130,11 +134,12 @@
                                        {:resource-id id
                                         :operation   "update"}]))
       :trigger            (r/as-element
-                            [GuardedMenuItem
-                             {:enabled        enabled?
-                              :validation-sub [::subs/deployment-set-validation]}
-                             [icons/RedoIcon]
-                             (@tr [:update])])
+                            [:div
+                             [GuardedMenuItem
+                              {:enabled        enabled?
+                               :validation-sub [::subs/deployment-set-validation]}
+                              [icons/RedoIcon]
+                              (@tr [:update])]])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:update-deployment-set])
       :danger-msg         warn-msg
@@ -142,13 +147,37 @@
       :modal-action       [:p warn-msg]
       :with-confirm-step? true}]))
 
+(def recompute-fleet-modal-id :modal/recompute-fleet)
+
+(defn RecomputeFleetButton
+  [deployment-set]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" deployment-set)
+        unsaved-changes?     (subscribe [::subs/unsaved-changes?])
+        open?                (subscribe [::subs/modal-open? recompute-fleet-modal-id])
+        confirm-fn           (fn []
+                               (dispatch [::events/recompute-fleet
+                                          #(dispatch [::events/set-opened-modal nil])]))
+        close-fn             #(dispatch [::events/set-opened-modal nil])]
+    [uix/ModalDanger
+     {:on-confirm  confirm-fn
+      :trigger     (r/as-element [ui/MenuItem
+                                  {:disabled (or @unsaved-changes? (not can-recompute-fleet?))
+                                   :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
+                                  [icons/ArrowRotateIcon]
+                                  (@tr [:recompute-fleet])])
+      :open        @open?
+      :on-close    close-fn
+      :header      (@tr [:recompute-deployment-set-fleet])
+      :danger-msg  (@tr [:recompute-fleet-warning])
+      :button-text (@tr [:recompute-fleet])}]))
 
 (defn DeleteButton
   [deployment-set warn-msg]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        content       (depl-set->modal-content deployment-set)
-        deletable?    (general-utils/can-operation? "delete" deployment-set)
-        forceable?    (general-utils/can-operation? "force-delete" deployment-set)
+  (let [tr         (subscribe [::i18n-subs/tr])
+        content    (depl-set->modal-content deployment-set)
+        deletable? (general-utils/can-operation? "delete" deployment-set)
+        forceable? (general-utils/can-operation? "force-delete" deployment-set)
         {:keys [header danger-msg button-text]}
         (if forceable?
           {:header      (@tr [:force-delete-deployment-set])
@@ -202,6 +231,7 @@
         loading?       (subscribe [::subs/loading?])
         apps-count     (subscribe [::subs/apps-count])
         edges-count    (subscribe [::subs/edges-count])
+        fleet-filter   (subscribe [::subs/fleet-filter])
         tr             (subscribe [::i18n-subs/tr])]
     (fn []
       (let [warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
@@ -221,6 +251,9 @@
               ". Proceed?")]
            ^{:key "stop"}
            [StopButton @deployment-set (warn-msg-fn "stop")]
+           (when @fleet-filter
+             ^{:key "recompute-fleet"}
+             [RecomputeFleetButton @deployment-set])
            ^{:key "delete"}
            [DeleteButton @deployment-set (warn-msg-fn "delete")]]
           [components/RefreshMenu
@@ -443,7 +476,7 @@
                                                     :trigger
                                                     (r/as-element
                                                       [:a
-                                                       {:href "#"
+                                                       {:href     "#"
                                                         :on-click #(dispatch [::events/navigate-internal
                                                                               {:query-params
                                                                                (merge
@@ -513,29 +546,29 @@
     [ui/StatisticGroup {:size  "tiny"
                         :style {:padding "0.2rem"}}
      [components/StatisticState {:clickable? true
-                                 :value  total
-                                 :stacked? true
-                                 :icons  [icons/i-box]
-                                 :label  "TOTAL"
-                                 :color  "black"
-                                 :on-click  #(dispatch [::routing-events/navigate
-                                                        (:resource (create-target-url nil))])}]
+                                 :value      total
+                                 :stacked?   true
+                                 :icons      [icons/i-box]
+                                 :label      "TOTAL"
+                                 :color      "black"
+                                 :on-click   #(dispatch [::routing-events/navigate
+                                                         (:resource (create-target-url nil))])}]
      [dashboard-views/Statistic {:value          online
                                  :icon           icons/i-power
                                  :label          edges-utils/status-online
                                  :positive-color "green"
                                  :color          "green"
                                  :target         (create-target-url "ONLINE")}]
-     [dashboard-views/Statistic {:value      offline
-                                 :icon       icons/i-power
-                                 :label      edges-utils/status-offline
-                                 :color      "red"
-                                 :target     (create-target-url "OFFLINE")}]
-     [dashboard-views/Statistic {:value      unknown
-                                 :icon       icons/i-power
-                                 :label      edges-utils/status-unknown
-                                 :color      "orange"
-                                 :target     (create-target-url "UNKNOWN")}]]))
+     [dashboard-views/Statistic {:value  offline
+                                 :icon   icons/i-power
+                                 :label  edges-utils/status-offline
+                                 :color  "red"
+                                 :target (create-target-url "OFFLINE")}]
+     [dashboard-views/Statistic {:value  unknown
+                                 :icon   icons/i-power
+                                 :label  edges-utils/status-unknown
+                                 :color  "orange"
+                                 :target (create-target-url "UNKNOWN")}]]))
 
 (defn create-nav-fn
   ([tab added-params]
@@ -574,6 +607,18 @@
                     :content  "Show me"
                     :on-click (create-nav-fn "deployments" nil)}]])))
 
+(defn FleetFilterMessage []
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        fleet-filter         (subscribe [::subs/fleet-filter])
+        deployment-set       (subscribe [::subs/deployment-set])
+        can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" @deployment-set)
+        unsaved-changes?     (subscribe [::subs/unsaved-changes?])]
+    (when @fleet-filter
+      [:p (@tr [:recompute-fleet-info]) " "
+       (when (and can-recompute-fleet? (not @unsaved-changes?))
+         [:a {:href "#"
+              :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
+          (@tr [:recompute-fleet])])])))
 
 (defn EdgeOverviewContent [edges-stats]
   [:<>
@@ -583,7 +628,8 @@
                 :content  "Show me"
                 :disabled (or (nil? (:total edges-stats))
                               (= 0 (:total edges-stats)))
-                :on-click (create-nav-fn "edges" {:edges-state nil})}]])
+                :on-click (create-nav-fn "edges" {:edges-state nil})}]
+   [FleetFilterMessage]])
 
 (defn TabOverview
   [uuid creating?]
@@ -810,26 +856,26 @@
   [tab/Tab
    {:db-path                 [::apps-config]
     :ignore-chng-protection? true
-    :panes   (map
-               (fn [{id :href}]
-                 {:menuItem {:content (r/as-element
-                                        [AppName {:idx i :id id}])
-                             :icon    "cubes"
-                             :key     (create-app-config-query-key i id)}
-                  :render   #(r/as-element
-                               [ui/TabPane
-                                [ui/Popup {:trigger (r/as-element
-                                                      [:span
-                                                       [module-plugin/LinkToApp
-                                                        {:db-path  [::spec/apps-sets i]
-                                                         :href     id
-                                                         :children [:<>
-                                                                    [ui/Icon {:class icons/i-link}]
-                                                                    "Go to app"]}]])
-                                           :content "Open application in a new window"}]
-                                [ModuleVersionsApp i id]
-                                [EnvVariablesApp i id]])})
-               applications)}])
+    :panes                   (map
+                               (fn [{id :href}]
+                                 {:menuItem {:content (r/as-element
+                                                        [AppName {:idx i :id id}])
+                                             :icon    "cubes"
+                                             :key     (create-app-config-query-key i id)}
+                                  :render   #(r/as-element
+                                               [ui/TabPane
+                                                [ui/Popup {:trigger (r/as-element
+                                                                      [:span
+                                                                       [module-plugin/LinkToApp
+                                                                        {:db-path  [::spec/apps-sets i]
+                                                                         :href     id
+                                                                         :children [:<>
+                                                                                    [ui/Icon {:class icons/i-link}]
+                                                                                    "Go to app"]}]])
+                                                           :content "Open application in a new window"}]
+                                                [ModuleVersionsApp i id]
+                                                [EnvVariablesApp i id]])})
+                               applications)}])
 
 (defn BoldLabel
   [txt]
@@ -1049,7 +1095,8 @@
       {:db-path                [::spec/pagination-edges]
        :change-event           [::events/get-edge-documents]
        :total-items            (-> @edges :count)
-       :i-per-page-multipliers [1 2 4]}]]))
+       :i-per-page-multipliers [1 2 4]}]
+     [FleetFilterMessage]]))
 
 (defn EdgesTab
   []

@@ -20,7 +20,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [TableColsEditable]]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin :refer [TableColsEditable]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -432,7 +432,7 @@
                                         (remove :pre-release)
                                         first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
-        default-data               {:refresh-interval 30, :version default-major-version}
+        default-data               {:version default-major-version}
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
@@ -749,11 +749,11 @@
 
 (defn NuvlaboxRow
   [{{:keys [id name description created state tags online
-            refresh-interval version created-by owner]} :row-data
+            refresh-interval version created-by owner] :as nuvlabox} :row-data
     field-key :field-key}]
   (let [uuid                  (general-utils/id->uuid id)
         locale                @(subscribe [::i18n-subs/locale])
-        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+        last-heartbeat-moment @(subscribe [::subs/last-online nuvlabox])
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])
         owner                 (subscribe [::session-subs/resolve-user owner])
@@ -767,7 +767,8 @@
                                :created-by @creator
                                :owner @owner
                                :last-online
-                               (when next-heartbeat-moment [uix/TimeAgo (utils/last-time-online next-heartbeat-moment refresh-interval)]),
+                               (when last-heartbeat-moment
+                                 [uix/TimeAgo last-heartbeat-moment]),
                                :version (or engine-version (str version ".y.z"))}]
     (field-key->table-cell field-key)))
 
@@ -835,6 +836,7 @@
                             (:resources @nuvlaboxes))
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])
+        all-selected?     (subscribe [::table-plugin/select-all?-sub [::spec/select]])
         columns           (mapv (fn [col-config]
                                   (assoc col-config :cell NuvlaboxRow))
                             [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
@@ -867,6 +869,8 @@
                                                         :event (fn []
                                                                  (let [id (random-uuid)]
                                                                    (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
+                                                                   (when @all-selected?
+                                                                     (dispatch [::events/set-fleet-filter ::depl-group-events/set-fleet-filter id]))
                                                                    (dispatch [::routing-events/navigate
                                                                               routes/deployment-sets-details
                                                                               {:uuid :create}

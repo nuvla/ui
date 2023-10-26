@@ -372,7 +372,6 @@
                     [ui/Menu {:style {:border          :none
                                       :box-shadow      :none
                                       :background-color :transparent}
-                              :borderless (= 1 (count bulk-actions))
                               :stackable  true}
                      (for [[idx action ] (map-indexed vector bulk-actions)
                            :let [{:keys [name event icon]} action]]

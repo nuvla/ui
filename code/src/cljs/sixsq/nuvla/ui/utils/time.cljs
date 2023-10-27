@@ -7,8 +7,8 @@
                                 intlFormatDistance
                                 isAfter
                                 isBefore
-                                parseISO
                                 Locale
+                                parseISO
                                 startOfDay
                                 subDays
                                 subMilliseconds]]

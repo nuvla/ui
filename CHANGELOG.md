@@ -4,6 +4,84 @@
 
 ## Released
 
+## [2.34.0] - 2023-10-27
+
+- Table plugin - Issue 1014 configurable tables columns (#1410)
+- Demo page - Adds hidden internal UI demo page
+- Removes rights-needed parameter from subscribe page-selected call (#1424)
+- Cloud detail - Hide swarm disabled popup from deploy modal
+- Filter parser - Align grammar with api-server and optimization use defparser (#1425)
+- Filter comp - Impossible to set attribute value to false bugfix
+- Filter comp - Removes acl attributes from filter options
+- Deployment - Allow to sort by Edge device (#1408)
+- Deployment detail - Shutdown modal do not show schedule word anymore on primary action button
+- Deployment detail - Show NuvlaEdge status color (#1418)
+- Deployment detail - Remove not useful deployment state header (#1419)
+- Edges - Bulk Deploy App should create deployment group based on edge filter when edge selection is filter based
+- Edge - Use next-heartbeat instead of computing it from refresh-interval bugfix (#1413)
+- Edge - Better retro compatible display of last-online
+- Edge detail - Do not show Heartbeat edition when Nuvlaedge hasn't heartbeat capability
+- Edge detail - Better retro compatible display of last and next telemetry
+- Deployment group - Add or remove applications from deployment group
+- Deployment group detail - Show action Recompute fleet when the server makes it available
+- Add additional filters to edges summary state
+- Fix url to vpn documentation
+- Saving after changing protection was enabled can lead to unexpected navigation to previous page (#1411)
+- Deployment modal - Do not show schedule word anymore on primary action button (#1416)
+- Deployment modal - Enhance visibility of selection on selected crede… (#1417)
+- Deployment group detail - Delete modal wait job to finish (#1390)
+- Deployment group detail - Delete modal group delete and force delete actions
+- Unify state filter icons design and behavior (#1399)
+  - Shows 0 in statistic value instead of "-"
+  - Grey color if 0
+  - Highlight "Total" in edge card depl group details
+- Deployment modal stop checking credentials (#1404)
+  - Credentials components - removed
+  - Deployment modal - Do not check credentials
+- Deployment set detail page - Select version not working in apps tab (#1384)
+- Pull only - use ne status new fields and do not set execution-mode from ui (#1382)
+- Deployment modal - do not set execution-mode of deployment (wip)
+- Deployment modal - directly assume pull mode if it is supported HelpPopup, FieldLabel, NE telemetry heartbeat wip
+- Edge detail - status telemetry use new fields
+- Components - EditableInput support type and label
+- Edge detail - On edit error reload old data from db
+- Edge detail - refresh-interval and telemetry-interval label and numeric type
+- Components - Fix EditableInput to allow value to go back to the document value on error and simplify
+- Deployment group detail page - Highlight ui regions with validation errors
+- Deployment group detail page
+  - Better detection of editions
+  - Save button enable logic improved
+  - changed-env-vars now keeps all changed values (even empty strings)
+  - Report validation errors in subscription. Extract menu item component capable of showing validation errors in popover.
+  - Add mandatory parameter check on env vars
+- Deployment group - Remove duplicated icons in depl group create page
+- Renames "Navigate Apps" "Navigate Projects" (#1396)
+- Adds action specific warning messages (#1394)
+- Deployment group detail page - Save and other actions enabled at the same time
+- Deployment group (#1397)
+  - Sort on deployment set name in deployments table
+  - Do not show "App" in apps table
+  - Shorten popup message to "Open app details"
+  - Adds icons to tabs
+- Deployment group detail - Removes private container registries from apps config (#1388)
+- Apps link in app card navigates to app config (#1386)
+  - Moves app marketplace link to new column
+  - Arrow icon for marketplace link
+- Fixing occasional crash on deployments page (#1385)
+- Depl groups misc (#1381)
+  - Translates app-name to Name
+  - Adds ops status color to page header icon
+  - Adds deployment-set column to deployment table
+  - Hides depl group link column on depl details page
+  - Fetches deloyment set names for deployments table
+- Deployment set detail page - Display version date in app version tooltip
+- Display elapsed time from creation in tooltip
+- Info icon shown next to version in apps table to indicate the presence of extra info
+- Fix depl state filter (#1379)
+- Deployment set detail page - Display version date in app version tooltip
+- Deployment set detail page - app-name should be name in apps list
+- Deployment set detail page - Deployment stats buggy, showing deployments while creating
+
 ## [2.33.14] - 2023-09-25
 
 - Sticky menu bar - Adds max-items-to-show to RefreshMenuBar

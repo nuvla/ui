@@ -1170,6 +1170,40 @@
                             :completed (when subs @(subscribe [subs]))))
                         items)}]])))
 
+(defn- EdgeTabStatesFilterView
+  []
+  (let [current-route (subscribe [::route-subs/current-route])
+        edges-stats (subscribe [::subs/edges-summary-stats])]
+    (fn [selected-state]
+      [edges-views/StatisticStatesEdgeView
+       (assoc @edges-stats
+         :states (mapv (fn [state]
+                         (let [label (:label state)]
+                           (assoc state
+                             :selected?
+                             (or
+                               (= label selected-state)
+                               (and
+                                 (= label "TOTAL")
+                                 (empty? selected-state)))
+                             :on-click
+                             #(dispatch
+                                [::routing-events/navigate
+                                 (routes-utils/gen-href @current-route
+                                   {:partial-query-params
+                                    {events/edges-state-filter-key
+                                     (if (= "TOTAL" label)
+                                       nil
+                                       label)}}) nil nil])))) edges-views/edges-states))
+       true true])))
+
+(defn- EdgeTabStatesFilter
+  []
+  (let [selected-state (subscribe [::route-subs/query-param events/edges-state-filter-key])]
+    (fn []
+      (dispatch [::events/get-edges])
+      [EdgeTabStatesFilterView @selected-state])))
+
 (defn EdgesTabView
   []
   (let [tr                (subscribe [::i18n-subs/tr])
@@ -1187,11 +1221,9 @@
                            {:field-key :last-online :no-sort? true}
                            {:field-key :version :no-sort? true}
                            {:field-key :tags :no-sort? true}]
-        edges-stats       (subscribe [::subs/edges-summary-stats])
-        current-route     (subscribe [::route-subs/current-route])
         filter-open?      (r/atom false)
         additional-filter (subscribe [::subs/edges-additional-filter])]
-    (fn [selected-state]
+    (fn []
       [:div {:style {:padding-top "10px"}
              :class :nuvla-edges}
        [:div {:style {:display :flex}}
@@ -1210,27 +1242,7 @@
             :persist? false}]]]
         [:div {:class :nuvla-edges
                :style {:margin "0 auto 0 6rem"}}
-         [edges-views/StatisticStatesEdgeView
-          (assoc @edges-stats
-            :states (mapv (fn [state]
-                            (let [label (:label state)]
-                              (assoc state
-                                :selected?
-                                (or
-                                  (= label selected-state)
-                                  (and
-                                    (= label "TOTAL")
-                                    (empty? selected-state)))
-                                :on-click
-                                #(dispatch
-                                   [::routing-events/navigate
-                                    (routes-utils/gen-href @current-route
-                                      {:partial-query-params
-                                       {events/edges-state-filter-key
-                                        (if (= "TOTAL" label)
-                                          nil
-                                          label)}})])))) edges-views/edges-states))
-          true true]]]
+         [EdgeTabStatesFilter]]]
        (when @fleet-changes
          [:div {:style {:margin-top "1rem"
                         :margin-bottom "1rem"}}
@@ -1255,9 +1267,8 @@
 (defn EdgesTab
   []
   (dispatch [::events/init-edges-tab])
-  (let [state (subscribe [::route-subs/query-param events/edges-state-filter-key])]
-    (fn []
-      [EdgesTabView @state])))
+  (fn []
+    [EdgesTabView]))
 
 (defn DeploymentsTab
   [uuid]

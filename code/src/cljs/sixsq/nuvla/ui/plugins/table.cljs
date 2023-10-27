@@ -402,30 +402,6 @@
                  :class [:select-all]}
         button-text]]]]))
 
-(defn- ColumnsDropDown
-  [{:keys [current-cols available-cols default-cols add-col-fn]} position]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        cols-not-visible (->> (keys available-cols)
-                           (remove (set current-cols)))
-        sorted-cols     (sort
-                          (fn [k1 k2]
-                            (let [pos-fn (fn [k]
-                                           (let [po (.indexOf (or default-cols []) k)]
-                                             (if (neg? po) 100 po)))]
-                              (- (pos-fn k1) (pos-fn k2))))
-                          cols-not-visible)]
-    [ui/Dropdown
-     {:options
-      (mapv (fn [col-key]
-              {:key   col-key
-               :value col-key
-               :text  (or (@tr [col-key]) col-key)})
-        sorted-cols)
-      :trigger (@tr [:add-column-to-right])
-      :on-change (ui-callback/value
-                   (fn [key-string]
-                     (add-col-fn (keyword key-string) position)))}]))
-
 
 (def local-storage-key
   "nuvla.ui.table.column-configs")
@@ -672,6 +648,7 @@
                                             (:id row))
                                :idx idx}])
               (for [[idx {:keys [field-key accessor cell cell-props]}] (map-indexed vector columns)
+                    :when (or field-key accessor)
                     :let [cell-data ((or accessor field-key) row)
                           last? (= idx (dec (count columns)))]]
                 ^{:key (str id "-" field-key)}

@@ -546,13 +546,12 @@
 (reg-event-fx
   ::get-edges
   (fn [{{:keys [::spec/edges-ordering
-                ::spec/deployment-set
                 ::spec/deployment-set-edited
                 ::spec/edges-additional-filter] :as db} :db} _]
     (let [callback   (fn [response]
                        (dispatch [::set-edges response]))
           ids-filter (general-utils/ids->inclusion-filter-string
-                      (set (into (get-target-fleet-ids deployment-set) (get-target-fleet-ids deployment-set-edited))))]
+                       (get-target-fleet-ids deployment-set-edited))]
       {::cimi-api-fx/search [:nuvlabox
                              {:filter     (general-utils/join-and
                                             ids-filter
@@ -865,6 +864,15 @@
       ::spec/edge-picker-ordering spec/default-ordering
       ::spec/edge-picker-pagination spec/pagination-default)))
 
+(defn- update-fleets [update-fleet apps-set]
+  (mapv
+    (fn [app-set]
+      (update app-set :overwrites
+        (partial mapv
+          (fn [app-set-overwrite]
+            (update app-set-overwrite :fleet update-fleet)))))
+    apps-set))
+
 (reg-event-fx
   ::add-edges
   (fn [{db :db} [_ response]]
@@ -872,13 +880,21 @@
           apps-set (get-in db [::spec/deployment-set-edited :applications-sets])]
       {:fx [[:dispatch [::set-opened-modal nil]]
             [:dispatch [::edit :applications-sets
-                        (mapv
-                          (fn [app-set]
-                            (update app-set :overwrites
-                              (partial mapv
-                                (fn [app-set-overwrite]
-                                  (update app-set-overwrite :fleet into edge-ids)))))
+                        (update-fleets
+                          (fn [fleet] (into (or fleet []) edge-ids))
                           apps-set)]]
+            [:dispatch [::refresh]]]})))
+
+(reg-event-fx
+  ::remove-edges
+  (fn [{db :db} [_ {:keys [select-all selected-set]}]]
+    (let [remove-fn (fn [edges]
+                      (remove (fn [edge]
+                                (or select-all
+                                  ((set selected-set) edge))) edges))
+          apps-set (get-in db [::spec/deployment-set-edited :applications-sets])]
+      {:fx [[:dispatch [::edit :applications-sets
+                        (update-fleets remove-fn apps-set)]]
             [:dispatch [::refresh]]]})))
 
 (reg-event-fx

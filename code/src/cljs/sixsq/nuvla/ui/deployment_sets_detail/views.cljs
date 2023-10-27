@@ -1210,39 +1210,44 @@
         edges             (subscribe [::subs/edges-documents-response])
         fleet-changes     (subscribe [::subs/fleet-changes])
         only-changes?     (subscribe [::subs/show-only-changed-fleet?])
-        columns           [{:field-key :online :header-content [icons/HeartbeatIcon]}
-                           {:field-key :state}
-                           {:field-key :name}
-                           {:field-key :description}
-                           {:field-key :created}
-                           {:field-key :created-by}
-                           {:field-key      :refresh-interval
-                            :header-content (some-> (@tr [:report-interval]) str/lower-case)}
-                           {:field-key :last-online :no-sort? true}
-                           {:field-key :version :no-sort? true}
-                           {:field-key :tags :no-sort? true}]
+        columns          (mapv (fn [col-config]
+                                 (assoc col-config :cell edges-views/NuvlaboxRow))
+                           [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
+                            {:field-key :state :cell-props {:collapsing true}}
+                            {:field-key :name}
+                            {:field-key :description}
+                            {:field-key :created}
+                            {:field-key :created-by}
+                            {:field-key      :refresh-interval
+                             :header-content (some-> (@tr [:report-interval]) str/lower-case)}
+                            {:field-key :last-online :no-sort? true}
+                            {:field-key :version :no-sort? true}
+                            {:field-key :tags :no-sort? true}])
         filter-open?      (r/atom false)
         additional-filter (subscribe [::subs/edges-additional-filter])]
     (fn []
       [:div {:style {:padding-top "10px"}
              :class :nuvla-edges}
-       [:div {:style {:display :flex}}
-        [:div
-         [full-text-search-plugin/FullTextSearch
-          {:db-path [::spec/edges-full-text-search]
-           :change-event [::pagination-plugin/change-page [::spec/edges-pagination] 1]}]
-         ^{:key @additional-filter}
-         [:div {:style {:margin-top "0.4rem"}}
-          [filter-comp/ButtonFilter
-           {:resource-name                    edges-spec/resource-name
-            :default-filter                   @additional-filter
-            :open?                            filter-open?
-            :on-done                          #(dispatch [::events/set-edges-additional-filter %])
-            :show-clear-button-outside-modal? true
-            :persist? false}]]]
-        [:div {:class :nuvla-edges
-               :style {:margin "0 auto 0 6rem"}}
-         [EdgeTabStatesFilter]]]
+       [ui/Grid {:stackable true
+                 :reversed "mobile"}
+        [ui/GridColumn {:width 4}
+         [:div
+          [full-text-search-plugin/FullTextSearch
+           {:db-path [::spec/edges-full-text-search]
+            :change-event [::pagination-plugin/change-page [::spec/edges-pagination] 1]}]
+          ^{:key @additional-filter}
+          [:div {:style {:margin-top "0.4rem"}}
+           [filter-comp/ButtonFilter
+            {:resource-name                    edges-spec/resource-name
+             :default-filter                   @additional-filter
+             :open?                            filter-open?
+             :on-done                          #(dispatch [::events/set-edges-additional-filter %])
+             :show-clear-button-outside-modal? true
+             :persist? false}]]]]
+        [ui/GridColumn {:width 7}
+         [:div {:class :nuvla-edges
+                :style {:margin "0 auto 0 6rem"}}
+          [EdgeTabStatesFilter]]]]
        (when @fleet-changes
          [:div {:style {:margin-top "1rem"
                         :margin-bottom "1rem"}}
@@ -1256,9 +1261,13 @@
          :columns columns
          :sort-config {:db-path    ::spec/edges-ordering
                        :fetch-event [::events/get-edges]}
-         :select-config nil #_{:total-count-sub-key [::subs/edges-count]
-                               :resources-sub-key   [::subs/edges-documents-response]
-                               :select-db-path      [::spec/edges-select]}}]
+         :select-config {:bulk-actions [{:event (fn [select-data]
+                                                  (dispatch [::events/remove-edges select-data]))
+                                          :name "Remove edges"
+                                          :icon icons/BoxIcon}]
+                         :total-count-sub-key [::subs/edges-count]
+                         :resources-sub-key   [::subs/edges-documents-response]
+                         :select-db-path      [::spec/edges-select]}}]
        [pagination-plugin/Pagination
         {:db-path                [::spec/edges-pagination]
          :change-event           [::events/get-edges]

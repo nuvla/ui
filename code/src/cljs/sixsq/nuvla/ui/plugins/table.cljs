@@ -659,7 +659,12 @@
                           [cell {:row-data  row
                                  :cell-data cell-data
                                  :field-key field-key}])
-                   :else (str cell-data))])]))]]]]]))
+                   :else (str (if (or
+                                    (not (coll? cell-data))
+                                    (seq cell-data))
+                                cell-data
+                                "")))])]))]]]]]))
+
 
 (defn ConfigureVisibleColumns
   [db-path available-fields]

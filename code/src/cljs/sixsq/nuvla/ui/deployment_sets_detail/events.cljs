@@ -545,7 +545,8 @@
 
 (reg-event-fx
   ::get-edges
-  (fn [{{:keys [::spec/deployment-set
+  (fn [{{:keys [::spec/edges-ordering
+                ::spec/deployment-set
                 ::spec/deployment-set-edited
                 ::spec/edges-additional-filter] :as db} :db} _]
     (let [callback   (fn [response]
@@ -560,7 +561,8 @@
                                               db [::spec/edges-full-text-search]))
                               :last        10000
                               :select      "id"
-                              :aggregation edges-spec/state-summary-agg-term}
+                              :aggregation edges-spec/state-summary-agg-term
+                              :orderby (ordering->order-string edges-ordering)}
                              callback]})))
 
 (reg-event-fx
@@ -575,14 +577,14 @@
 
 (reg-event-fx
   ::get-edge-documents
-  (fn [{{:keys [::spec/ordering
+  (fn [{{:keys [::spec/edges-ordering
                 current-route
                 ::spec/changed-edges
                 ::spec/edges-additional-filter] :as db} :db} _]
     (let [edges        (get-in db
                          (subs/current-route->edges-db-path
                            current-route))
-          ordering     (or ordering spec/default-ordering)
+          ordering     (or edges-ordering spec/default-ordering)
           state-filter (routing-utils/get-query-param current-route edges-state-filter-key)
           changed-ids  (remove nil? (flatten (vals changed-edges)))]
       (cond-> {:db (assoc db ::spec/edge-documents nil)}

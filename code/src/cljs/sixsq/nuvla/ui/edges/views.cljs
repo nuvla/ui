@@ -790,9 +790,9 @@
 
 
 (defn NuvlaEdgeTableView
-  [{:keys [columns edges select-config]}]
-  [Table {:sort-config       {:db-path     ::spec/ordering
-                              :fetch-event [::events/get-nuvlaboxes]}
+  [{:keys [columns edges select-config sort-config]}]
+  [Table {:sort-config       (or sort-config {:db-path     ::spec/ordering
+                                              :fetch-event [::events/get-nuvlaboxes]})
           :columns           columns
           :rows              edges
           :table-props       {:compact "very" :selectable true}

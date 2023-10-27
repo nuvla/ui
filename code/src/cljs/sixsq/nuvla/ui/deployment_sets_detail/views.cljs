@@ -1254,6 +1254,8 @@
        [edges-views/NuvlaEdgeTableView
         {:edges   (:resources @edges)
          :columns columns
+         :sort-config {:db-path    ::spec/edges-ordering
+                       :fetch-event [::events/get-edges]}
          :select-config nil #_{:total-count-sub-key [::subs/edges-count]
                                :resources-sub-key   [::subs/edges-documents-response]
                                :select-db-path      [::spec/edges-select]}}]

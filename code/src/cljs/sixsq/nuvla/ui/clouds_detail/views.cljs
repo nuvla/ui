@@ -51,12 +51,7 @@
              (utils/swarm-worker? infra-service)
              {:popup-txt  "Swarm Worker"
               :label-txt  "Swarm"
-              :label-icon icons/i-robot}
-
-             (utils/swarm-disabled? infra-service)
-             {:popup-txt   "Swarm Disabled"
-              :label-txt   "Swarm Disabled"
-              :label-color "grey"})]
+              :label-icon icons/i-robot})]
     (when label-txt
       [ui/Popup
        {:size    "tiny"

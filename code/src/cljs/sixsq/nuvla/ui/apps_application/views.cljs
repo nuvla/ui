@@ -15,7 +15,6 @@
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.views :as deployments-views]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]

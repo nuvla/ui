@@ -30,7 +30,8 @@
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.values :as values]))
+            [sixsq.nuvla.ui.utils.values :as values]
+            [sixsq.nuvla.ui.utils.view-components :as vc]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -278,7 +279,7 @@
         checked?  (r/atom false)
         icon-name icons/i-stop]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
-      (let [{:keys [id name description module parent]} deployment
+      (let [{:keys [id name description module]} deployment
             text1             (str (or name id) (when description " - ") description)
             text2             (str (@tr [:created-from-module]) (or (:name module) (:id module)))
             button            (action-button
@@ -307,9 +308,7 @@
           :content            [:<> [:h3 text1] [:p text2]]
           :header             (@tr [:shutdown-deployment])
           :danger-msg         (@tr [:deployment-shutdown-msg])
-          :button-text        (@tr [(if (= "pull" (:execution-mode deployment))
-                                      :schedule-shutdown
-                                      :shutdown)])}]))))
+          :button-text        (@tr [:shutdown])}]))))
 
 
 (defn DeleteButton
@@ -582,6 +581,7 @@
         deployment      (subscribe [::subs/deployment])
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
+        nuvlabox        (subscribe [::subs/nuvlabox])
         {:keys [id state module tags acl owner created-by
                 deployment-set deployment-set-name]} @deployment
         owners          (:owners acl)
@@ -628,7 +628,8 @@
         [ui/TableRow
          [ui/TableCell (@tr [:infrastructure])]
          [ui/TableCell
-          [deployments-utils/CloudNuvlaEdgeLink @deployment]]]
+          [deployments-utils/CloudNuvlaEdgeLink @deployment
+           :color (when @nuvlabox (vc/status->color (:online @nuvlabox)))]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]
@@ -707,13 +708,6 @@
                    :edit-event ::events/edit})]))
 
 
-(defn depl-state->status
-  [state]
-  (case (if (some? state) (str/lower-case state) "")
-    "started" :online
-    :offline))
-
-
 (defn StatusIcon
   [status & {:keys [corner] :or {corner "bottom center"} :as _position}]
   [ui/Popup
@@ -726,27 +720,13 @@
 
 (defn PageHeader
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        deployment (subscribe [::subs/deployment])]
+  (let [deployment (subscribe [::subs/deployment])]
     (fn []
-      (let [module-name (get-in @deployment [:module :name] "")
-            state       (:state @deployment)]
+      (let [module-name (get-in @deployment [:module :name] "")]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
           [icons/RocketIcon]
-          module-name]
-         [:p {:style {:margin "0.5em 0 1em 0"}}
-          [StatusIcon (depl-state->status state)]
-          [:span {:style {:font-weight "bold"}}
-           "State "
-           [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:class icons/i-circle-question}])
-             :content        (@tr [:deployment-state])
-             :position       "bottom center"
-             :on             "hover"
-             :size           "tiny"
-             :hide-on-scroll true}] ": "]
-          state]]))))
+          module-name]]))))
 
 
 (defn DeploymentDetails

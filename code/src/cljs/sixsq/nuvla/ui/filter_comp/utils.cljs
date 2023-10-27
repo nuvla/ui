@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.filter-comp.utils
   (:require [clojure.string :as str]
-            [instaparse.core :as insta]))
+            [instaparse.core :as insta :refer-macros [defparser]]
+            [instaparse.transform :as insta-transform]))
 
 
 (def ^:const value-null "<NULL>")
@@ -37,93 +38,106 @@
        (into (sorted-map))))
 
 
-(def cimi-parser
-  (insta/parser
-    "Filter          ::= AndExpr | AndExpr <'or'> Filter
-     AndExpr         ::= Comp | Comp <'and'> AndExpr
-     Comp            ::= Attribute EqOp Value
-     | Attribute RelOp OrdinalValue
-     | Attribute PrefixOp StringValue
-     | Attribute FullTextOp StringValue
-     | WS <'('> Filter <')'> WS
+(defparser cimi-parser
+           "
+Filter              = Or
+Or                  = And {<'or'> And}
+And                 = CompOr {<'and'> CompOr}
+<CompOr>            = Comp | WS <'('> Or <')'> WS
 
-     FullTextOp      ::= '=='
-     PrefixOp        ::= '^='
-     EqOp            ::= '=' | '!='
-     RelOp           ::= '<' | '<=' | '>=' | '>'
+Comp                = Attribute EqOp Value
+                       | Attribute RelOp OrdinalValue
+                       | Attribute PrefixOp StringValue
+                       | Attribute FullTextOp StringValue
+                       | Attribute  GeoOp WktValue
+                       | Value EqOp Attribute
+                       | OrdinalValue RelOp Attribute
+                       | StringValue PrefixOp Attribute
+                       | StringValue FullTextOp Attribute
 
-     Attribute       ::= WS NamespaceTerm ('/' NamespaceTerm)* WS
+FullTextOp          = '=='
+PrefixOp            = '^='
+EqOp                = '=' | '!='
+RelOp               = '<' | '<=' | '>=' | '>'
+GeoOp               = 'intersects' | 'disjoint' | 'within' | 'contains'
 
-     <NamespaceTerm> ::= (Term ':' Term) | Term
-     <Term>          ::= #'([a-zA-Z][\\w-]*[\\w]+)|[a-zA-Z]'
-     <OrdinalValue>  ::= IntValue | DateValue | StringValue
-     <NominalValue>  ::= BoolValue | NullValue
-     <Value>         ::= OrdinalValue | NominalValue
-     IntValue        ::= WS #'\\d+' WS
-     DateValue       ::= WS #'\\d+-\\d+(-\\d+)?(T\\d+:\\d+:\\d+(\\.\\d+)?(Z|[+-]\\d+:\\d+))?' WS
-     <StringValue>   ::= WS (DoubleQuoteString | SingleQuoteString) WS
-     BoolValue       ::= WS ('true' | 'false') WS
-     NullValue       ::= WS 'null' WS
 
-     <WS>            ::= <#'\\s*'>
+Attribute           = WS NamespaceTerm ('/' NamespaceTerm)* WS
 
-     DoubleQuoteString ::= #\"\\\"[^\\\"\\\\]*(?:\\\\.[^\\\"\\\\]*)*\\\"\"
-     SingleQuoteString ::= #\"'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'\""))
+<NamespaceTerm>     = (Term ':' Term) | Term
+<Term>              = #'([a-zA-Z][\\w-]*[\\w]+)|[a-zA-Z]'
+<OrdinalValue>      = IntValue | DateValue | StringValue
+<NominalValue>      = BoolValue | NullValue
+<Value>             = OrdinalValue | NominalValue
+IntValue            = WS #'\\d+' WS
+DateValue           = WS #'\\d+-\\d+(-\\d+)?(T\\d+:\\d+:\\d+(\\.\\d+)?(Z|[+-]\\d+:\\d+))?' WS
+WktValue            = StringValue
+StringValue         = WS (DoubleQuoteString | SingleQuoteString) WS
+BoolValue           = WS ('true' | 'false') WS
+NullValue           = WS 'null' WS
 
+<WS>                = <#'\\s*'>
+
+<DoubleQuoteString> = #\"\\\"[^\\\"\\\\]*(?:\\\\.[^\\\"\\\\]*)*\\\"\"
+<SingleQuoteString> = #\"'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'\"
+             ")
+
+
+(defn parse-filter
+  [s]
+  (insta/parse cimi-parser s))
 
 (defn filter-syntax-error
   [text]
-  (let [res (cimi-parser text)]
+  (let [res (parse-filter text)]
     (when (insta/failure? res)
       (->> res insta/get-failure prn-str str/split-lines rest (str/join "\n")))))
 
+(def transform-map
+  {:And         (fn [& args]
+                  (if (= (count args) 1)
+                    [(first args)]
+                    [(first args)
+                     {:el "logic" :value "and"}
+                     (second args)]))
+   :Filter      (fn [& args]
+                  (first args))
+   :Or          (fn [& args]
+                  (if (= (count args) 1)
+                    [(first args)]
+                    [(first args)
+                     {:el "logic" :value "or"}
+                     (second args)]))
+   :Comp        (fn [a o v]
+                  (if (string? a)
+                    {:el        "attribute"
+                     :attribute a
+                     :operation o
+                     :value     v}
+                    [{:el "logic" :value "("}
+                     a
+                     {:el "logic" :value ")"}]))
+   :EqOp        identity
+   :FullTextOp  identity
+   :PrefixOp    identity
+   :RelOp       identity
+   :Attribute   str
+   :IntValue    int
+   :StringValue #(subs % 1 (dec (count %)))
+   :BoolValue   #(case %
+                   "true" true
+                   "false" false)
+   :NullValue   (constantly value-null)
+   :DateValue   identity})
 
 (defn transform->data
-  [parsed]
-  (->>
-    parsed
-    #_:clj-kondo/ignore
-    (insta/transform                                        ;FIXME: Kondo can't find this, but it seems to exist!
-      {:AndExpr           (fn [& args]
-                            (if (= (count args) 1)
-                              [(first args)]
-                              [(first args)
-                               {:el "logic" :value "and"}
-                               (second args)]))
-       :Filter            (fn [& args]
-                            (if (= (count args) 1)
-                              [(first args)]
-                              [(first args)
-                               {:el "logic" :value "or"}
-                               (second args)]))
-       :EqOp              identity
-       :FullTextOp        identity
-       :PrefixOp           identity
-       :RelOp             identity
-       :Comp              (fn [a o v]
-                            (if (string? a)
-                              {:el        "attribute"
-                               :attribute a
-                               :operation o
-                               :value     v}
-                              [{:el "logic" :value "("}
-                               a
-                               {:el "logic" :value ")"}]))
-       :Attribute         str
-       :IntValue          int
-       :DoubleQuoteString #(subs % 1 (dec (count %)))
-       :SingleQuoteString #(subs % 1 (dec (count %)))
-       :BoolValue         #(case %
-                             "true" true
-                             "false" false)
-       :NullValue         (constantly value-null)
-       :DateValue         identity})
-    flatten))
+  [parsed-tree]
+  (flatten (insta-transform/transform transform-map parsed-tree)))
 
 
 (defn filter-str->data
   [filter-str]
-  (let [parsed-filter (cimi-parser filter-str)]
+  (let [parsed-filter (parse-filter filter-str)]
     (when-not (insta/failure? parsed-filter)
       (as-> (transform->data parsed-filter) res
             (interpose {:el "empty"} res)
@@ -135,14 +149,13 @@
 
 (defn data->filter-str
   [data]
-  (->>
-    data
-    (remove #(= (:el %) "empty"))
-    (map
-      #(let [{:keys [el attribute operation value]} %]
-         (cond
-           (= el "logic") value
-           (value-is-null? value) (str/join [attribute operation "null"])
-           (string? value) (str/join [attribute operation (when value (str "'" value "'"))])
-           :else (str/join [attribute operation (when value value)]))))
-    (str/join " ")))
+  (->> (remove #(= (:el %) "empty") data)
+       (map
+         #(let [{:keys [el attribute operation value]} %]
+            (cond
+              (= el "logic") value
+              (value-is-null? value) (str/join [attribute operation "null"])
+              (false? value) (str/join [attribute operation "false"])
+              (string? value) (str/join [attribute operation (when value (str "'" value "'"))])
+              :else (str/join [attribute operation (when value value)]))))
+       (str/join " ")))

@@ -21,7 +21,7 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix :refer [TR]]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -297,56 +297,78 @@
           [SearchField field])
         [FilterField]]])))
 
-(defn FormatFieldItem [selections-atom item]
-  [ui/ListItem
-   [ui/ListContent
-    [ui/ListHeader
-     [ui/Checkbox {:default-checked (contains? @selections-atom item)
-                   :label           item
-                   :on-change       (ui-callback/checked (fn [checked]
-                                                           (if checked
-                                                             (swap! selections-atom set/union #{item})
-                                                             (swap! selections-atom set/difference #{item}))))}]]]])
+(defn FormatFieldItem [selections-atom item field->view]
+  (let [view (get field->view item)
+        tr (subscribe [::i18n-subs/tr])
+        label-string (if (keyword? item) (or (@tr [item]) item) item)]
+    [ui/ListItem
+     [ui/ListContent
+      [ui/ListHeader {:style {:display :flex}}
+       [ui/Checkbox {:checked         (contains? @selections-atom item)
+                     :label           (if view (r/as-element [:label view]) label-string)
+                     :on-change       (ui-callback/checked (fn [checked]
+                                                             (if checked
+                                                               (swap! selections-atom set/union #{item})
+                                                               (swap! selections-atom set/difference #{item}))))}]
+       #_[:label view]]]]))
 
-(defn format-field-list [available-fields-atom selections-atom]
-  (let [items (sort @available-fields-atom)]
+(defn format-field-list [available-fields-atom selections-atom field->view]
+  (let [items (sort available-fields-atom)]
     (vec (concat [ui/ListSA]
-                 (map (partial FormatFieldItem selections-atom) items)))))
+           (map (fn [item] [FormatFieldItem selections-atom item field->view]) items )))))
+
+(defn SelectFieldsView
+  [{:keys [show? selected-id-sub selections-atom
+           selected-fields-sub available-fields
+           update-fn trigger title-tr-key
+           reset-to-default-fn field->view]}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Modal
+     {:closeIcon true
+      :open      @show?
+      :on-close  #(reset! show? false)
+      :trigger   (r/as-element
+                   (or trigger
+                     [uix/MenuItem
+                      {:name     (@tr [:columns])
+                       :icon     icons/i-columns
+                       :disabled (and selected-id-sub (nil? @selected-id-sub))
+                       :on-click (fn []
+                                   (reset! selections-atom (set @selected-fields-sub))
+                                   (reset! show? true))}]))}
+     [uix/ModalHeader {:header (@tr [(or title-tr-key :fields)])}]
+     [ui/ModalContent
+      {:scrolling true}
+      [format-field-list available-fields selections-atom field->view]]
+     [ui/ModalActions
+      (when (fn? reset-to-default-fn)
+        [uix/Button
+         {:text     "Select default columns"
+          :on-click reset-to-default-fn}])
+      [uix/Button
+       {:text     (@tr [:cancel])
+        :on-click #(reset! show? false)}]
+      [uix/Button
+       {:text     (@tr [:update])
+        :primary  true
+        :on-click (fn []
+                    (reset! show? false)
+                    (if (fn? update-fn)
+                      (update-fn @selections-atom)
+                      (dispatch [::events/set-selected-fields @selections-atom])))}]]]))
 
 (defn SelectFields []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        available-fields (subscribe [::subs/available-fields])
+  (let [available-fields (subscribe [::subs/available-fields])
         selected-fields  (subscribe [::subs/selected-fields])
         selected-id      (subscribe [::subs/collection-name])
         selections       (r/atom (set @selected-fields))
         show?            (r/atom false)]
     (fn []
-      [ui/Modal
-       {:closeIcon true
-        :open      @show?
-        :on-close  #(reset! show? false)
-        :trigger   (r/as-element
-                     [uix/MenuItem
-                      {:name     (@tr [:columns])
-                       :icon     icons/i-columns
-                       :disabled (nil? @selected-id)
-                       :on-click (fn []
-                                   (reset! selections (set @selected-fields))
-                                   (reset! show? true))}])}
-       [uix/ModalHeader {:header (@tr [:fields])}]
-       [ui/ModalContent
-        {:scrolling true}
-        (format-field-list available-fields selections)]
-       [ui/ModalActions
-        [uix/Button
-         {:text     (@tr [:cancel])
-          :on-click #(reset! show? false)}]
-        [uix/Button
-         {:text     (@tr [:update])
-          :primary  true
-          :on-click (fn []
-                      (reset! show? false)
-                      (dispatch [::events/set-selected-fields @selections]))}]]])))
+      [SelectFieldsView {:show? show?
+                         :selected-id-sub selected-id
+                         :selections-atom selections
+                         :selected-fields-sub selected-fields
+                         :available-fields @available-fields}])))
 
 (defn ResourceAddForm
   []

@@ -137,7 +137,7 @@
                           (or
                             (= label state-selector)
                             (and (= label "TOTAL")
-                              (nil? state-selector))))
+                                 (nil? state-selector))))
          color          (if (pos? value) positive-color "grey")
          icon-key       (str label "-" icons)]
      [ui/Statistic {:style    (when clickable? {:cursor "pointer"})
@@ -250,25 +250,26 @@
                          (on-change-fn @new-value)
                          (reset! new-value nil))
                        (close-fn))
-            value   (or @new-value (get resource attribute))]
+            value   (or @new-value (get resource attribute))
+            Label   (when label [:<> " " label])]
         (if @editing?
-          [ui/Input
-           {:type          (or type "text")
-            :default-value value
-            :on-key-press  (partial forms/on-return-key save-fn)
-            :on-key-down   (partial forms/on-escape-key
-                                    #(do (reset! new-value nil)
-                                         (close-fn)))
-            :on-change     (ui-callback/input-callback #(reset! new-value %))
-            :focus         true
-            :fluid         fluid
-            :action        (cond-> {:icon     "check"
-                                    :on-click save-fn
-                                    :content  label}
-                                   label (assoc :label-position "right"))}]
+          [:span
+           [ui/Input
+            {:type          (or type "text")
+             :default-value value
+             :on-key-press  (partial forms/on-return-key save-fn)
+             :on-key-down   (partial forms/on-escape-key
+                                     #(do (reset! new-value nil)
+                                          (close-fn)))
+             :on-change     (ui-callback/input-callback #(reset! new-value %))
+             :focus         true
+             :fluid         fluid
+             :action        {:icon     "check"
+                             :on-click save-fn}}]
+           Label]
           [:<>
            value
-           (when label [:<> " " label])
+           Label
            ff/nbsp
            [Pencil editing?]])))))
 

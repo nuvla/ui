@@ -88,14 +88,14 @@
 
 ;; Bulk selection, table plugin args
 (s/def ::name string?)
-(s/def ::component fn?)
+(s/def ::menuitem any?)
 (s/def ::event (s/or :k (s/* keyword?) :fn fn?))
 (s/def ::icon (s/nilable fn?))
 (s/def ::total-count-sub-key (s/* keyword?))
 (s/def ::resources-sub-key (s/* keyword?))
 
-(s/def ::bulk-action (s/keys :req-un [::name ::event]
-                       :opt-un [::component ::icon]))
+(s/def ::bulk-action (s/keys :req-un []
+                       :opt-un [::menuitem ::name ::event ::icon]))
 
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector?)))
 (s/def ::select-db-path (s/* keyword?))
@@ -363,40 +363,42 @@
                       :height "40px"
                       :gap "1rem"}}
         [:div
-         [ui/Popup {:trigger
-                    (r/as-element
-                      [:div
-                       [ui/Menu {:style {:border          :none
-                                         :box-shadow      :none
-                                         :background-color :transparent}
-                                 :stackable  true}
-                        (for [[idx action ] (map-indexed vector bulk-actions)
-                              :let [{:keys [name event icon]} action]]
-                          [ui/MenuItem
-                           {:disabled nothing-selected?
-                            :class :bulk-action-bar-item
-                            :on-click (fn []
-                                        (if (fn? event) (event payload)
-                                          (dispatch event)))
-                            :key idx}
-                           (when icon [icon])
-                           name])]])
-                    :basic    true
-                    :disabled (not= :none @selection-status)
-                    :content  (@tr [:select-at-least-one-item])}]]
+         [ui/Menu {:style {:border          :none
+                           :box-shadow      :none
+                           :background-color :transparent}
+                   :borderless (= 1 (count bulk-actions))
+                   :stackable  true}
+          (for [[idx action ] (map-indexed vector bulk-actions)
+                :let [{:keys [name event icon menuitem]} action]]
+            (or menuitem
+              [ui/Popup {:trigger
+                         (r/as-element
+                           [:div
+                            [ui/MenuItem
+                             {:disabled nothing-selected?
+                              :class    :bulk-action-bar-item
+                              :on-click (fn []
+                                          (if (fn? event) (event payload)
+                                            (dispatch event)))
+                              :key      idx}
+                             (when icon [icon])
+                             name]])
+                         :basic    true
+                         :disabled (not= :none @selection-status)
+                         :content  (@tr [:select-at-least-one-item])}]))]]
         [:div {:style {:padding-right "1rem"}}
          @bulk-edit-success-message]])
      [:div
-      {:style {:heigh "2rem"
-               :padding-left "1rem"
-               :border "1px solid rgb(230 230 230)"
-               :border-radius "0.28rem"
+      {:style {:heigh            "2rem"
+               :padding-left     "1rem"
+               :border           "1px solid rgb(230 230 230)"
+               :border-radius    "0.28rem"
                :background-color "#f0eeef"}}
       [:div {:style {:display         :flex
                      :justify-content :center
                      :align-items     :center}}
        [:span (or selected-all-text manual-selection-text)]
-       [:button {:style {:width "120px" :text-align :center :border :none}
+       [:button {:style    {:width "120px" :text-align :center :border :none}
                  :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
                  :class [:select-all]}
         button-text]]]]))

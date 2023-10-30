@@ -814,7 +814,7 @@
    (let [id (random-uuid)]
      (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
      (when filter-based-fleet
-       (dispatch [::events/set-fleet-filter ::depl-group-events/set-fleet-filter id]))
+       (dispatch [::events/set-fleet-filter id]))
      (dispatch [::routing-events/navigate
                 routes/deployment-sets-details
                 {:uuid :create}
@@ -822,13 +822,17 @@
 
 (defn NuvlaboxTable
   []
-  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+  (let [search-filter     (subscribe [::subs/search-filter])
+        additional-filter (subscribe [::subs/additional-filter])
+        state-selector    (subscribe [::subs/state-selector])
+        nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
                                                  (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))
+        selection         (subscribe [::table-plugin/selected-set-sub [::spec/select]])
         maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])
         all-selected?     (subscribe [::table-plugin/select-all?-sub [::spec/select]])
@@ -872,13 +876,39 @@
                                           (dispatch [::routing-events/navigate
                                                      routes/deployment-sets-details
                                                      {:uuid :create}
-                                                     {depl-group-subs/creation-temp-id-key id}])))})]
+                                                     {depl-group-subs/creation-temp-id-key id}])))})
+ dynamic-bulk-deploy       (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
+                                                                                                           (not @all-selected?)
+                                                                                                           (not @state-selector))
+                                                                            message                      (str (@tr [:deploy-with-edges-filter])
+                                                                                                           "\n"
+                                                                                                           (if (or @search-filter @additional-filter)
+                                                                                                             (utils/get-deploy-filter-string @search-filter @additional-filter)
+                                                                                                             (@tr [:deploy-with-cacth-all-edges-filter])))
+                                                                            wrong-filter-message         (cond
+                                                                                                           (or (seq @selection) @all-selected?)
+                                                                                                           (@tr [:deploy-with-edges-clear-selection])
+                                                                                                           @state-selector
+                                                                                                           (@tr [:deploy-with-edges-state-filter-not-allowed]))
+                                                                            deploy-menuitem              [ui/MenuItem
+                                                                                                          {:disabled (not dynamic-bulk-deploy-enabled?)
+                                                                                                           :class    :bulk-action-bar-item
+                                                                                                           :on-click #(bulk-deploy true)
+                                                                                                           :key      :dynamic-bulk-deploy}
+                                                                                                          [icons/RocketIcon]
+                                                                                                          (@tr [:dynamic-bulk-deploy])]]
+                                                                        [ui/Popup {:basic   true
+                                                                                   :content (if dynamic-bulk-deploy-enabled?
+                                                                                              message
+                                                                                              wrong-filter-message)
+                                                                                   :trigger (r/as-element [:div deploy-menuitem])}])]
     [:<>
      (when bulk-edit-modal   [bulk-edit-modal])
      [NuvlaEdgeTableView {:select-config {:bulk-actions (filterv
                                                           some?
                                                           [trigger
-                                                           bulk-deploy-trigger])
+                                                           bulk-deploy-trigger
+                                                           {:menuitem  dynamic-bulk-deploy}])
                                           :total-count-sub-key [::subs/nuvlaboxes-count]
                                           :resources-sub-key   [::subs/nuvlaboxes-resources]
                                           :select-db-path      [::spec/select]
@@ -930,10 +960,7 @@
 
 (defn- ControlBar
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        search-filter     (subscribe [::subs/search-filter])
-        additional-filter (subscribe [::subs/additional-filter])
-        state-selector    (subscribe [::subs/state-selector])
+  (let [additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
@@ -952,20 +979,7 @@
             :default-filter                   @additional-filter
             :open?                            filter-open?
             :on-done                          #(dispatch [::events/set-additional-filter %])
-            :show-clear-button-outside-modal? true}]]]
-        (when (and (or @search-filter @additional-filter) (not @state-selector))
-          (let [deploy-button [ui/Button
-                               {:icon     true
-                                :style    {:margin "0px 10px auto"}
-                                :on-click #(bulk-deploy true)}
-                               [icons/RocketIcon]]]
-            [ui/Popup {:content        (str (@tr [:deploy-with-edges-filter])
-                                            "\n"
-                                            (utils/get-deploy-filter-string @search-filter @additional-filter))
-                       :position       "bottom center"
-                       :hide-on-scroll true
-                       :hoverable      true
-                       :trigger        (r/as-element deploy-button)}]))]])))
+            :show-clear-button-outside-modal? true}]]]]])))
 
 
 (defn NuvlaBoxesOrClusters

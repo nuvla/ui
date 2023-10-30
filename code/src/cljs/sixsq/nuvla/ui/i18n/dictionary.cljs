@@ -106,6 +106,8 @@
         :by                                            "by"
         :ca                                            "public certificate of the Certificate Authority (CA)"
         :cancel                                        "cancel"
+        :cancel-deployment-set-operation               "Cancel current operation"
+        :cancel-deployment-set-operation-warn-msg      "You are about to cancel the currently running operation. Are you sure ?"
         :card-number                                   "Card Number"
         :category                                      "category"
         :cert                                          "client's public certificate"

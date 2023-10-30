@@ -633,6 +633,15 @@
                     :content  "Show me"
                     :on-click (create-nav-fn "deployments" nil)}]])))
 
+(defn polish-fleet-filter
+  [tr fleet-filter]
+  (let [polished (-> fleet-filter
+                     (str/replace "(id!=null) and " "")
+                     (str/replace "(id!=null)" ""))]
+    (if (empty? polished)
+      (tr [:deploy-with-catch-all-edges-filter])
+      polished)))
+
 (defn FleetFilterMessage []
   (let [tr                   (subscribe [::i18n-subs/tr])
         fleet-filter         (subscribe [::subs/fleet-filter])
@@ -640,9 +649,13 @@
         can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" @deployment-set)
         unsaved-changes?     (subscribe [::subs/unsaved-changes?])]
     (when @fleet-filter
-      [:p (@tr [:recompute-fleet-info]) " "
+      [:p {:style {:align-self "center"}}
+       [ui/Popup {:trigger (r/as-element
+                             [:span (@tr [:recompute-fleet-info])])
+                  :content (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
+       " "
        (when (and can-recompute-fleet? (not @unsaved-changes?))
-         [:a {:href "#"
+         [:a {:href     "#"
               :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
           (@tr [:recompute-fleet])])])))
 

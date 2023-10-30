@@ -239,6 +239,22 @@
   (fn [db [_ callback-fn]]
     (assoc db ::spec/ignore-changes-modal callback-fn)))
 
+(reg-event-db
+  ::close-revert-modal
+  (fn [db]
+    (assoc db ::spec/revert-changes-modal nil)))
+
+(reg-event-fx
+  ::revert-changes
+  (fn [{{:keys [::spec/revert-changes-modal]} :db} _]
+    (revert-changes-modal)
+    {:fx [[:dispatch [::close-revert-modal]]]}))
+
+(reg-event-db
+  ::revert-changes-modal
+  (fn [db [_ callback-fn]]
+    (assoc db ::spec/revert-changes-modal callback-fn)))
+
 (reg-event-fx
   ::set-notifications
   (fn [{{:keys [::messages-spec/messages]} :db} [_ {:keys [resources]}]]

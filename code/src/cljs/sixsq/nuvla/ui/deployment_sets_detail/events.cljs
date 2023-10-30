@@ -320,6 +320,11 @@
              (dispatch [::disable-form-validation])))]})))
 
 (reg-event-fx
+  ::cancel-editing
+  (fn [_ [_]]
+    {:fx [[:dispatch [::init]]]}))
+
+(reg-event-fx
   ::recompute-fleet
   (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ on-complete]]
     (let [id         (:id deployment-set)

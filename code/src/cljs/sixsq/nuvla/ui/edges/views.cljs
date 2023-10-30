@@ -877,31 +877,31 @@
                                                      routes/deployment-sets-details
                                                      {:uuid :create}
                                                      {depl-group-subs/creation-temp-id-key id}])))})
- dynamic-bulk-deploy       (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
-                                                                                                           (not @all-selected?)
-                                                                                                           (not @state-selector))
-                                                                            message                      (str (@tr [:deploy-with-edges-filter])
-                                                                                                           "\n"
-                                                                                                           (if (or @search-filter @additional-filter)
-                                                                                                             (utils/get-deploy-filter-string @search-filter @additional-filter)
-                                                                                                             (@tr [:deploy-with-cacth-all-edges-filter])))
-                                                                            wrong-filter-message         (cond
-                                                                                                           (or (seq @selection) @all-selected?)
-                                                                                                           (@tr [:deploy-with-edges-clear-selection])
-                                                                                                           @state-selector
-                                                                                                           (@tr [:deploy-with-edges-state-filter-not-allowed]))
-                                                                            deploy-menuitem              [ui/MenuItem
-                                                                                                          {:disabled (not dynamic-bulk-deploy-enabled?)
-                                                                                                           :class    :bulk-action-bar-item
-                                                                                                           :on-click #(bulk-deploy true)
-                                                                                                           :key      :dynamic-bulk-deploy}
-                                                                                                          [icons/RocketIcon]
-                                                                                                          (@tr [:dynamic-bulk-deploy])]]
-                                                                        [ui/Popup {:basic   true
-                                                                                   :content (if dynamic-bulk-deploy-enabled?
-                                                                                              message
-                                                                                              wrong-filter-message)
-                                                                                   :trigger (r/as-element [:div deploy-menuitem])}])]
+        dynamic-bulk-deploy (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
+                                                                 (not @all-selected?)
+                                                                 (not @state-selector))
+                                  message                      (str (@tr [:deploy-with-edges-filter])
+                                                                 "\n"
+                                                                 (if (or @search-filter @additional-filter)
+                                                                   (utils/get-deploy-filter-string @search-filter @additional-filter)
+                                                                   (@tr [:deploy-with-cacth-all-edges-filter])))
+                                  wrong-filter-message         (cond
+                                                                 (or (seq @selection) @all-selected?)
+                                                                 (@tr [:deploy-with-edges-clear-selection])
+                                                                 @state-selector
+                                                                 (@tr [:deploy-with-edges-state-filter-not-allowed]))
+                                  deploy-menuitem              [ui/MenuItem
+                                                                {:disabled (not dynamic-bulk-deploy-enabled?)
+                                                                 :class    :bulk-action-bar-item
+                                                                 :on-click #(bulk-deploy true)
+                                                                 :key      :dynamic-bulk-deploy}
+                                                                [icons/RocketIcon]
+                                                                (@tr [:dynamic-bulk-deploy])]]
+                              [ui/Popup {:basic   true
+                                         :content (if dynamic-bulk-deploy-enabled?
+                                                    message
+                                                    wrong-filter-message)
+                                         :trigger (r/as-element [:div deploy-menuitem])}])]
     [:<>
      (when bulk-edit-modal   [bulk-edit-modal])
      [NuvlaEdgeTableView {:select-config {:bulk-actions (filterv

@@ -98,6 +98,7 @@
                               (str/capitalize (@tr [:start]))]])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:start-deployment-set])
+      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         warn-msg
       :button-text        (@tr [:start])
       :with-confirm-step? true}]
@@ -119,6 +120,7 @@
                              (str/capitalize (@tr [:stop]))])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:stop-deployment-set])
+      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         warn-msg
       :button-text        (@tr [:stop])
       :with-confirm-step? true}]))
@@ -142,6 +144,7 @@
                               (str/capitalize (@tr [:update]))]])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:update-deployment-set])
+      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         warn-msg
       :button-text        (@tr [:update])
       :modal-action       [:p warn-msg]
@@ -163,6 +166,7 @@
                              (str/capitalize (@tr [:cancel]))])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:cancel-deployment-set-operation])
+      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         (@tr [:cancel-deployment-set-operation-warn-msg])
       :button-text        (@tr [:cancel])
       :with-confirm-step? true}]))

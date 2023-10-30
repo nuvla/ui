@@ -83,6 +83,7 @@
         :architecture                                  "architecture"
         :are-selected                                  "are selected"
         :are-you-sure?                                 "Are you sure?"
+        :are-you-sure-you-want-to-continue?            "Are you sure you want to continue?"
         :attributes                                    "attributes"
         :author                                        "author"
         :automatic-refresh-in                          "automatic refresh in"

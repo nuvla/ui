@@ -19,6 +19,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
@@ -225,10 +226,23 @@
                            #(dispatch [::events/enable-form-validation])))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
+(defn CancelButton
+  []
+  (let [tr              (subscribe [::i18n-subs/tr])
+        cancel-enabled? (subscribe [::subs/cancel-enabled?])]
+    (fn []
+      (let [on-confirm #(dispatch [::events/cancel-editing])]
+        [uix/MenuItem
+         {:name     (@tr [:cancel])
+          :icon     icons/i-eraser
+          :disabled (not @cancel-enabled?)
+          :on-click #(dispatch [::main-events/revert-changes-modal on-confirm])}]))))
+
 (defn MenuBar
   []
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])
+        save-enabled?  (subscribe [::subs/save-enabled?])
         apps-count     (subscribe [::subs/apps-count])
         edges-count    (subscribe [::subs/edges-count])
         fleet-filter   (subscribe [::subs/fleet-filter])
@@ -239,6 +253,9 @@
          [components/ResponsiveMenuBar
           [^{:key "save"}
            [SaveButton {:deployment-set @deployment-set}]
+           (when @save-enabled?
+             ^{:key "cancel"}
+             [CancelButton])
            ^{:key "start"}
            [StartButton @deployment-set (warn-msg-fn "start")]
            ^{:key "update"}

@@ -356,6 +356,12 @@
       unsaved-changes?)))
 
 (reg-sub
+  ::cancel-enabled?
+  :<- [::save-enabled?]
+  (fn [save-enabled? [_]]
+    save-enabled?))
+
+(reg-sub
   ::operation-enabled?
   :<- [::deployment-set]
   :<- [::save-enabled?]

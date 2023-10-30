@@ -574,6 +574,12 @@
        :fx [[:dispatch [::get-edge-documents]]]})))
 
 (reg-event-fx
+  ::reset-fleet-filter
+  (fn [{db :db} [_ deployment-set-id]]
+    (let [path (subs/create-db-path [::spec/fleet-filter] (str deployment-set-id))]
+      {:db (assoc-in db path nil)})))
+
+(reg-event-fx
   ::set-fleet-filter
   (fn [{db :db} [_ fleet-filter deployment-set-id]]
     (let [path (subs/create-db-path [::spec/fleet-filter] (str deployment-set-id))]
@@ -660,7 +666,7 @@
   (fn [_ [_ app]]
     (if (= (:subtype app)
            "applications_sets")
-      {::cimi-api-fx/get [(:id app) #(dispatch [::add-apps-set-apps %])]}
+      {:fx [[:dispatch [::fetch-apps-set-add-apps (:id app)]]]}
       (let [{:keys [path versions]} app
             version-id (version-id-to-add app)]
         {::apps-fx/get-module [path
@@ -668,6 +674,11 @@
                                #(dispatch [::do-add-app %])]
          :fx                  [[:dispatch [::fetch-app-picker-apps
                                            ::spec/pagination-apps-picker]]]}))))
+
+(reg-event-fx
+  ::fetch-apps-set-add-apps
+  (fn [_ [_ apps-set-module-id]]
+    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-set-apps %])]}))
 
 (reg-event-fx
   ::add-apps-set-apps

@@ -3,6 +3,7 @@
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as utils :refer [get-full-filter-string]]
             [sixsq.nuvla.ui.main.events :as main-events]
@@ -138,9 +139,14 @@
       #(dispatch [storage-event % id])]}))
 
 (reg-event-fx
+  ::reset-fleet-filter
+  (fn [_ [_ id]]
+    (dispatch [::depl-group-events/reset-fleet-filter id])))
+
+(reg-event-fx
   ::set-fleet-filter
-  (fn [{db :db} [_ storage-event id]]
-    (dispatch [storage-event (get-full-filter-string db) id])))
+  (fn [{db :db} [_ id]]
+    (dispatch [::depl-group-events/set-fleet-filter (get-full-filter-string db) id])))
 
 (reg-event-fx
   ::set-additional-filter

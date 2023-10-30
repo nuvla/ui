@@ -1257,7 +1257,13 @@
                               :label "Show only unsaved changes"
                               :on-click #(dispatch [::events/show-fleet-changes-only @fleet-changes])}]]])
        [edges-views/NuvlaEdgeTableView
-        {:edges   (:resources @edges)
+        {:edges   (mapv (fn [row]
+                          (if
+                            (some #{(:id row)} (:removed @fleet-changes))
+                            (assoc row :table-row-prop {:style {:text-decoration "line-through"
+                                                                :opacity 0.5}})
+                            row))
+                    (:resources @edges))
          :columns columns
          :sort-config {:db-path    ::spec/edges-ordering
                        :fetch-event [::events/get-edges]}

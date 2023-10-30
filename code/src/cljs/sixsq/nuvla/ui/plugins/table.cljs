@@ -11,8 +11,7 @@
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (s/def ::pass-through-props (s/nilable map?))
 (s/def ::table-props ::pass-through-props)
@@ -581,7 +580,9 @@
         select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
         page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key]))
         get-row-props  (fn [row]
-                         (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
+                         (update (merge row-props {:on-click #(when row-click-handler (row-click-handler row))})
+                           :style
+                           merge (:style (:table-row-prop row))))]
     [:div
      (when selectable?
        [BulkActionBar {:selectable?         selectable?

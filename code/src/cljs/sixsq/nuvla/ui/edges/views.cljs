@@ -793,19 +793,20 @@
 (defn NuvlaEdgeTableView
   [{:keys [columns edges select-config sort-config]}]
   [TableColsEditable
-      {:cols-without-rmv-icon #{:state :online}
-       :sort-config       (or sort-config {:db-path     ::spec/ordering
-                                           :fetch-event [::events/get-nuvlaboxes]})
-       :columns           columns
-       :default-columns #{:online :state :name :last-online :version :tags}
-       :rows              edges
-       :table-props       {:compact "very" :selectable true}
-       :cell-props        {:header {:single-line true}}
-       :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
-       :row-props         {:role  "link"
-                           :style {:cursor "pointer"}}
-       :select-config     select-config}
-      ::table-cols-config])
+   {:cols-without-rmv-icon #{:state :online}
+    :sort-config       (or sort-config {:db-path     ::spec/ordering
+                                        :fetch-event [::events/get-nuvlaboxes]})
+    :columns           columns
+    :default-columns   #{:online :state :name :last-online :version :tags}
+    :rows              edges
+    :table-props       {:compact "very" :selectable true}
+    :cell-props        {:header {:single-line true}}
+    :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+    :row-props         {:role  "link"
+                        :style {:cursor "pointer"}}
+    :row-props-fn      {}
+    :select-config     select-config}
+   ::table-cols-config])
 
 
 (defn NuvlaboxTable

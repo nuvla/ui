@@ -1251,7 +1251,7 @@
        (when @fleet-changes
          [:div {:style {:margin-top "1rem"
                         :margin-bottom "1rem"}}
-          [:div [UnstoredEdgeChanges]]
+          [:div [UnstoredEdgeChanges @fleet-changes]]
           [:div [ui/Checkbox {:checked @only-changes?
                               :basic true
                               :label "Show only unsaved changes"

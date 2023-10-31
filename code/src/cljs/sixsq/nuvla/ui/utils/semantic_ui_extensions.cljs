@@ -377,11 +377,11 @@
             [icons/XMarkIcon {:style {:margin 0}}]]])))))
 
 (defn ModalDanger
-  [{:keys [_button-text _on-confirm danger-msg _header _content _trigger _open _on-close _modal-action
+  [{:keys [_button-text _on-confirm danger-msg danger-msg-header _header _content _trigger _open _on-close _modal-action
            control-confirmed? header-class with-confirm-step?]}]
   (let [confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
         clicked?   (r/atom false)]
-    (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action]}]
+    (fn [{:keys [button-text on-confirm danger-msg danger-msg-header header content trigger open on-close modal-action]}]
       (let [button (fn [added-text]
                      [Button {:text     (str added-text button-text)
                               :negative true
@@ -413,7 +413,8 @@
           (when content content)
           (when danger-msg
             [ui/Message {:error true}
-             [ui/MessageHeader {:style {:margin-bottom 10}} [TR :danger-action-cannot-be-undone]]
+             [ui/MessageHeader {:style {:margin-bottom 10}}
+              (or danger-msg-header [TR :danger-action-cannot-be-undone])]
              [ui/MessageContent [ui/Checkbox {:label     danger-msg
                                               :checked   @confirmed?
                                               :fitted    true

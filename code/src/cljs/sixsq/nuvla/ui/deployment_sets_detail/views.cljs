@@ -95,9 +95,10 @@
                               {:enabled        enabled?
                                :validation-sub [::subs/deployment-set-validation]}
                               [icons/PlayIcon]
-                              (@tr [:start])]])
+                              (str/capitalize (@tr [:start]))]])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:start-deployment-set])
+      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         warn-msg
       :button-text        (@tr [:start])
       :with-confirm-step? true}]
@@ -116,9 +117,10 @@
                             [ui/MenuItem
                              {:disabled (not @enabled?)}
                              [icons/StopIcon]
-                             (@tr [:stop])])
+                             (str/capitalize (@tr [:stop]))])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:stop-deployment-set])
+      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         warn-msg
       :button-text        (@tr [:stop])
       :with-confirm-step? true}]))
@@ -139,12 +141,34 @@
                               {:enabled        enabled?
                                :validation-sub [::subs/deployment-set-validation]}
                               [icons/RedoIcon]
-                              (@tr [:update])]])
+                              (str/capitalize (@tr [:update]))]])
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:update-deployment-set])
+      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         warn-msg
       :button-text        (@tr [:update])
       :modal-action       [:p warn-msg]
+      :with-confirm-step? true}]))
+
+(defn CancelOperationButton
+  [{:keys [id] :as deployment-set}]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enabled? (subscribe [::subs/operation-enabled? "cancel"])]
+    [uix/ModalDanger
+     {:on-confirm         (fn [_]
+                            (dispatch [::events/operation
+                                       {:resource-id id
+                                        :operation   "cancel"}]))
+      :trigger            (r/as-element
+                            [ui/MenuItem
+                             {:disabled (not @enabled?)}
+                             [icons/BanIcon]
+                             (str/capitalize (@tr [:cancel]))])
+      :content            [:h3 (depl-set->modal-content deployment-set)]
+      :header             (@tr [:cancel-deployment-set-operation])
+      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
+      :danger-msg         (@tr [:cancel-deployment-set-operation-warn-msg])
+      :button-text        (@tr [:cancel])
       :with-confirm-step? true}]))
 
 (def recompute-fleet-modal-id :modal/recompute-fleet)
@@ -165,7 +189,7 @@
                                   {:disabled (or @unsaved-changes? (not can-recompute-fleet?))
                                    :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
                                   [icons/ArrowRotateIcon]
-                                  (@tr [:recompute-fleet])])
+                                  (str/capitalize (@tr [:recompute-fleet]))])
       :open        @open?
       :on-close    close-fn
       :header      (@tr [:recompute-deployment-set-fleet])
@@ -181,11 +205,11 @@
         {:keys [header danger-msg button-text]}
         (if forceable?
           {:header      (@tr [:force-delete-deployment-set])
-           :button-text (@tr [:force-delete])
+           :button-text (str/capitalize (@tr [:force-delete]))
            :danger-msg  (str "Warning! Doing a force delete will leave orphaned containers! "
                              warn-msg)}
           {:header      (@tr [:delete-deployment-set])
-           :button-text (@tr [:delete])
+           :button-text (str/capitalize (@tr [:delete]))
            :danger-msg  warn-msg})]
     [uix/ModalDanger
      {:on-confirm         #(dispatch [::events/delete {:deletable? deletable?
@@ -251,6 +275,7 @@
               ". Proceed?")]
            ^{:key "stop"}
            [StopButton @deployment-set (warn-msg-fn "stop")]
+           [CancelOperationButton @deployment-set]
            (when @fleet-filter
              ^{:key "recompute-fleet"}
              [RecomputeFleetButton @deployment-set])

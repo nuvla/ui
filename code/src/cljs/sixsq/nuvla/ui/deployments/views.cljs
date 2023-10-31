@@ -241,34 +241,35 @@
           [:<>
            [BulkEditTagsModal]
            [TableColsEditable {:columns
-                               (mapv (fn [col]
-                                       (when col (assoc col :cell table-cell)))
-                                 [{:field-key :id}
-                                  (when-not no-module-name
-                                    {:field-key      :module.name
+                               (remove nil?
+                                 (mapv (fn [col]
+                                         (when col (assoc col :cell table-cell)))
+                                   [{:field-key :id}
+                                    (when-not no-module-name
+                                      {:field-key      :module.name
+                                       :cell-props {:style {:overflow      "hidden",
+                                                            :text-overflow "ellipsis",
+                                                            :max-width     "20ch"}}
+                                       :header-content (@tr [:module])})
+                                    {:field-key :version :no-sort? true}
+                                    {:field-key :status
+                                     :sort-key  :state}
+                                    {:field-key :url
+                                     :no-sort?  true}
+                                    (when show-depl-set-column?
+                                      {:field-key :deployment-set
+                                       :sort-key  :deployment-set-name})
+                                    {:field-key :created}
+                                    {:field-key :updated}
+                                    {:field-key :created-by}
+                                    {:field-key :tags}
+                                    {:field-key :infrastructure
                                      :cell-props {:style {:overflow      "hidden",
                                                           :text-overflow "ellipsis",
                                                           :max-width     "20ch"}}
-                                     :header-content (@tr [:module])})
-                                  {:field-key :version :no-sort? true}
-                                  {:field-key :status
-                                   :sort-key  :state}
-                                  {:field-key :url
-                                   :no-sort?  true}
-                                  (when show-depl-set-column?
-                                    {:field-key :deployment-set
-                                     :sort-key  :deployment-set-name})
-                                  {:field-key :created}
-                                  {:field-key :updated}
-                                  {:field-key :created-by}
-                                  {:field-key :tags}
-                                  {:field-key :infrastructure
-                                   :cell-props {:style {:overflow      "hidden",
-                                                        :text-overflow "ellipsis",
-                                                        :max-width     "20ch"}}
-                                   :sort-key  :nuvlabox-name}
-                                  (when selectable? {:field-key :actions
-                                                     :no-sort?  true})])
+                                     :sort-key  :nuvlabox-name}
+                                    (when selectable? {:field-key :actions
+                                                       :no-sort?  true})]))
                                :rows          deployments-list
                                :sort-config   {:db-path     ::spec/ordering
                                                :fetch-event (or (:fetch-event options) [::events/get-deployments])}

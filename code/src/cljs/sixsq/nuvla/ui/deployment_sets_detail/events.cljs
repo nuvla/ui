@@ -550,19 +550,19 @@
                 ::spec/edges-additional-filter] :as db} :db} _]
     (let [callback   (fn [response]
                        (dispatch [::set-edges response]))
-          ids-filter (general-utils/ids->inclusion-filter-string
-                       (get-target-fleet-ids deployment-set-edited))]
-      {::cimi-api-fx/search [:nuvlabox
-                             {:filter     (general-utils/join-and
-                                            ids-filter
-                                            edges-additional-filter
-                                            (full-text-search-plugin/filter-text
-                                              db [::spec/edges-full-text-search]))
-                              :last        10000
-                              :select      "id"
-                              :aggregation edges-spec/state-summary-agg-term
-                              :orderby (ordering->order-string edges-ordering)}
-                             callback]})))
+          fleet      (get-target-fleet-ids deployment-set-edited)
+          ]
+      (when (seq fleet) {::cimi-api-fx/search [:nuvlabox
+                                               {:filter     (general-utils/join-and
+                                                               (general-utils/ids->inclusion-filter-string (get-target-fleet-ids deployment-set-edited))
+                                                              edges-additional-filter
+                                                              (full-text-search-plugin/filter-text
+                                                                db [::spec/edges-full-text-search]))
+                                                :last        10000
+                                                :select      "id"
+                                                :aggregation edges-spec/state-summary-agg-term
+                                                :orderby (ordering->order-string edges-ordering)}
+                                               callback]}))))
 
 (reg-event-fx
   ::set-edges

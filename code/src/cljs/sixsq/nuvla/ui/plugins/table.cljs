@@ -445,9 +445,14 @@
   (fn [{storage :storage/get
         {:keys [::default-cols]} :db} [_ cols db-path]]
     (let [defaults (get default-cols db-path)
-          new-cols (if
+          new-cols (cond
                      (sequential? cols)
                      cols
+
+                     (= (set defaults) cols)
+                     defaults
+
+                     :else
                      (sort
                        (fn [k1 k2]
                          (let [pos-fn (fn [k]
@@ -491,15 +496,17 @@
   [(inject-cofx :storage/get {:name local-storage-key})]
   (fn [{{:keys [::current-cols] :as db} :db
         cols-config                     :storage/get} [_ cols db-path]]
-    (let [defaults (or
-                     (some->>
-                       cols
-                       (map :field-key))
-                     default-columns)
+    (let [defaults (distinct
+                     (or
+                       (some->>
+                         cols
+                         (map :field-key))
+                       default-columns))
           cols     (or
                      (get (edn/read-string cols-config) db-path)
                      (get current-cols db-path)
                      defaults)]
+      (js/console.error defaults)
       {:db (assoc-in db [::default-cols db-path] defaults)
        :fx [[:dispatch [::store-cols cols db-path]]]})))
 
@@ -569,7 +576,6 @@
     :as   props}]
   (let [{:keys [bulk-actions select-db-path total-count-sub-key
                 resources-sub-key rights-needed select-label-accessor]} select-config
-        tr             @(subscribe [::i18n-subs/tr])
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
         selectable?    (and
                          select-config

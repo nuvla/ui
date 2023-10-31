@@ -127,7 +127,7 @@
 
 (reg-event-fx
   ::get-selected-edge-ids
-  (fn [{{:keys [::spec/select] :as db} :db} [_ storage-event id]]
+  (fn [{{:keys [::spec/select] :as db} :db} [_ event]]
     {::cimi-api-fx/search
      [:nuvlabox
       {:filter (table-plugin/build-bulk-filter
@@ -135,7 +135,7 @@
                  (get-full-filter-string db))
        :select "id"
        :aggregation spec/state-summary-agg-term}
-      #(dispatch [storage-event % id])]}))
+      #(dispatch (conj event %))]}))
 
 (reg-event-fx
   ::set-fleet-filter
@@ -222,10 +222,10 @@
                      ::main-spec/loading? false)})))
 
 
-(reg-event-fx
+(reg-event-db
   ::set-nuvlaboxes-summary
-  (fn [{db :db} [_ nuvlaboxes-summary]]
-    {:db (assoc db ::spec/nuvlaboxes-summary nuvlaboxes-summary)}))
+  (fn [db [_ nuvlaboxes-summary]]
+    (assoc db ::spec/nuvlaboxes-summary nuvlaboxes-summary)))
 
 
 (reg-event-fx

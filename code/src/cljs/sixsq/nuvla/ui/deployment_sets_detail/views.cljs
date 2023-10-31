@@ -14,8 +14,10 @@
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.views :as dv]
+            [sixsq.nuvla.ui.edges.spec :as edges-spec]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.edges.views :as edges-views]
+            [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.job.subs :as job-subs]
             [sixsq.nuvla.ui.main.components :as components]
@@ -25,7 +27,7 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as tab]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.step-group :as step-group]
-            [sixsq.nuvla.ui.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.plugins.table :as table-plugin :refer [Table]]
             [sixsq.nuvla.ui.plugins.target-selector :as target-selector]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -376,7 +378,6 @@
            [ui/TableCell (str/capitalize (@tr [:updated]))]
            [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]])]]]))
 
-(def apps-picker-modal-id :modal/add-apps)
 
 (defn AppPickerCard
   [{:keys [id name description path subtype logo-url price published versions tags] :as app}]
@@ -453,7 +454,7 @@
 (defn AppsPickerModal
   [creating?]
   (let [tr       (subscribe [::i18n-subs/tr])
-        open?    (subscribe [::subs/modal-open? apps-picker-modal-id])
+        open?    (subscribe [::subs/modal-open? events/apps-picker-modal-id])
         close-fn #(dispatch [::events/set-opened-modal nil])
         tab-key  apps-store-spec/allapps-key]
     (dispatch [::events/fetch-app-picker-apps ::spec/pagination-apps-picker])
@@ -546,7 +547,7 @@
            [AppsPickerModal creating?]
            [:div {:style {:margin-top   "1rem"
                           :margin-bottm "1rem"}}
-            [AddButton apps-picker-modal-id]]]]
+            [AddButton events/apps-picker-modal-id]]]]
          [:div {:style {:margin-top   "1rem"
                         :margin-left  "auto"
                         :margin-right "auto"}}
@@ -645,16 +646,140 @@
               :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
           (@tr [:recompute-fleet])])])))
 
-(defn EdgeOverviewContent [edges-stats]
-  [:<>
-   [StatisticStatesEdgeView edges-stats]
-   [uix/Button {:class    "center"
-                :icon     icons/i-box
-                :content  "Show me"
-                :disabled (or (nil? (:total edges-stats))
-                              (= 0 (:total edges-stats)))
-                :on-click (create-nav-fn "edges" {:edges-state nil})}]
-   [FleetFilterMessage]])
+
+(defn- ResolvedUser
+  [user-id]
+  (fn []
+    (let [user (subscribe [::session-subs/resolve-user user-id])]
+      @user)))
+
+(defn EdgePickerContent
+  []
+  (let [edges             (subscribe [::subs/edge-picker-edges-resources])
+        edges-count       (subscribe [::subs/edge-picker-edges-count])
+        edges-stats       (subscribe [::subs/edge-picker-edges-summary-stats])
+        selected-state    (subscribe [::subs/state-selector])
+        additional-filter (subscribe [::subs/edge-picker-additional-filter])
+        filter-open?      (r/atom false)]
+    (fn []
+      (let [select-fn (fn [id] (dispatch [::table-plugin/select-id id [::spec/edge-picker-select] (map :id @edges)]))]
+        [:<>
+         [:div {:style {:display :flex}}
+          [:div
+           [full-text-search-plugin/FullTextSearch
+            {:db-path [::spec/edge-picker-full-text-search]
+             :change-event [::pagination-plugin/change-page [::spec/edge-picker-pagination] 1]}]
+           ^{:key @additional-filter}
+           [:div {:style {:margin-top "0.4rem"}}
+            [filter-comp/ButtonFilter
+             {:resource-name                    edges-spec/resource-name
+              :default-filter                   @additional-filter
+              :open?                            filter-open?
+              :on-done                          #(dispatch [::events/set-edge-picker-additional-filter %])
+              :show-clear-button-outside-modal? true
+              :persist? false}]]]
+          [:div {:class :nuvla-edges
+                 :style {:margin "0 auto 0 6rem"}}
+           [edges-views/StatisticStatesEdgeView
+            (assoc @edges-stats
+              :states (mapv (fn [state]
+                              (let [label (:label state)]
+                                (assoc state
+                                  :selected?
+                                  (or
+                                    (= label @selected-state)
+                                    (and
+                                      (= label "TOTAL")
+                                      (empty? @selected-state)))
+                                  :on-click
+                                  #(dispatch
+                                     [::events/set-edge-picker-selected-state label])))) edges-views/edges-states))
+            true true]]]
+         [Table {:row-click-handler #(select-fn (:id %))
+                 :sort-config       {:db-path     ::spec/edge-picker-ordering
+                                     :fetch-event [::events/get-edges-for-edge-picker-modal]}
+                 :columns           [{:field-key :name}
+                                     {:field-key :state}
+                                     {:field-key :created-by
+                                      :cell      (fn [data] [ResolvedUser (:cell-data data)])}]
+                 :rows              @edges
+                 :table-props       {:compact "very" :selectable true}
+                 :cell-props        {:header {:single-line true}}
+                 :row-props         {:role  "link"
+                                     :style {:cursor "pointer"}}
+                 :select-config     {:total-count-sub-key [::subs/edge-picker-edges-count]
+                                     :resources-sub-key   [::subs/edge-picker-edges-resources]
+                                     :select-db-path      [::spec/edge-picker-select]}}]
+         [pagination-plugin/Pagination
+          {:db-path                [::spec/edge-picker-pagination]
+           :change-event           [::events/get-picker-edges]
+           :total-items            @edges-count
+           :i-per-page-multipliers [1 2 4]}]]))))
+
+(defn EdgesPickerModal
+  []
+  (let [tr            (subscribe [::i18n-subs/tr])
+        open?         (subscribe [::subs/modal-open? events/edges-picker-modal-id])
+        close-fn      #(do (dispatch [::events/set-opened-modal nil]))
+        add-to-select  (fn []
+                         (dispatch [::events/get-selected-edge-ids]))]
+    (fn []
+      [ui/Modal {:size       :medium
+                 :open        @open?
+                 :close-icon true
+                 :on-close   close-fn}
+       [uix/ModalHeader {:header (@tr [:add-edges])}]
+       [ui/ModalContent
+        [EdgePickerContent]]
+       [ui/ModalActions
+        [uix/Button {:text     (@tr [:add-to-depl-group])
+                     :positive true
+                     :active   true
+                     :on-click add-to-select}]]])))
+
+(defn- UnstoredEdgeChanges
+  [fleet-changes]
+  (let [removed (:removed fleet-changes)
+        added   (:added fleet-changes)]
+    [:span
+     (str "You have unsaved fleet changes" ": "
+       (when removed (str (count removed) " removed"))
+       (when (and removed added) ", ")
+       (when added (str (count added) " added")))]))
+
+(defn EdgeOverviewContent
+  [edges-stats creating?]
+  (let [tr (subscribe [::i18n-subs/tr])
+        fleet-filter (subscribe [::subs/fleet-filter])
+        fleet-changes (subscribe [::subs/fleet-changes])]
+    [:<>
+     (when (pos? (:total edges-stats))
+       [:<>
+        [StatisticStatesEdgeView edges-stats]
+        (when @fleet-changes
+          [:div {:style {:margin "1.4rem auto"}}
+           [UnstoredEdgeChanges @fleet-changes]])
+        [uix/Button {:class    "center"
+                     :icon     icons/i-box
+                     :content  "Show me"
+                     :disabled (or (nil? (:total edges-stats))
+                                 (= 0 (:total edges-stats)))
+                     :on-click (create-nav-fn "edges" {:edges-state nil})}]])
+     [:div
+      {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
+      (when-not (or
+                  creating?
+                  @fleet-filter)
+        ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
+        ;; and retrieving deployment-set and deployment-set-edited
+        [:div
+         [AddButton events/edges-picker-modal-id]])
+      [:div {:style {:margin-top "1rem"}}
+       (if (pos? (:total edges-stats))
+         (@tr [:add-your-first-edge])
+         (@tr [:add-an-edge]))]
+      [EdgesPickerModal]
+      [FleetFilterMessage]]]))
 
 (defn TabOverview
   [uuid creating?]
@@ -681,9 +806,7 @@
             {:class :nuvla-edges
              :icon  icons/i-box
              :label (str (@tr [:nuvlaedge]) "s")}
-            (if (pos? (:total @edges-stats))
-              [EdgeOverviewContent @edges-stats]
-              [AddButton])]]
+            [EdgeOverviewContent @edges-stats creating?]]]
           [ui/GridColumn {:stretched true}
            [DeploymentsStatesCard]]]]))))
 
@@ -1072,62 +1195,122 @@
                             :completed (when subs @(subscribe [subs]))))
                         items)}]])))
 
+(defn- EdgeTabStatesFilterView
+  []
+  (let [current-route (subscribe [::route-subs/current-route])
+        edges-stats (subscribe [::subs/edges-summary-stats])]
+    (fn [selected-state]
+      [edges-views/StatisticStatesEdgeView
+       (assoc @edges-stats
+         :states (mapv (fn [state]
+                         (let [label (:label state)]
+                           (assoc state
+                             :selected?
+                             (or
+                               (= label selected-state)
+                               (and
+                                 (= label "TOTAL")
+                                 (empty? selected-state)))
+                             :on-click
+                             #(dispatch
+                                [::routing-events/navigate
+                                 (routes-utils/gen-href @current-route
+                                   {:partial-query-params
+                                    {events/edges-state-filter-key
+                                     (if (= "TOTAL" label)
+                                       nil
+                                       label)}}) nil nil])))) edges-views/edges-states))
+       true true])))
+
+(defn- EdgeTabStatesFilter
+  []
+  (let [selected-state (subscribe [::route-subs/query-param events/edges-state-filter-key])]
+    (fn []
+      (dispatch [::events/get-edges])
+      [EdgeTabStatesFilterView @selected-state])))
+
 (defn EdgesTabView
-  [selected-state]
-  (dispatch [::events/get-edge-documents])
-  (let [tr            (subscribe [::i18n-subs/tr])
-        edges         (subscribe [::subs/edges-documents-response])
-        columns       [{:field-key :online :header-content [icons/HeartbeatIcon]}
-                       {:field-key :state}
-                       {:field-key :name}
-                       {:field-key :description}
-                       {:field-key :created}
-                       {:field-key :created-by}
-                       {:field-key      :refresh-interval
-                        :header-content (some-> (@tr [:report-interval]) str/lower-case)}
-                       {:field-key :last-online :no-sort? true}
-                       {:field-key :version :no-sort? true}
-                       {:field-key :tags :no-sort? true}]
-        edges-stats   (subscribe [::subs/edges-summary-stats])
-        current-route (subscribe [::route-subs/current-route])]
-    [:div {:class :nuvla-edges}
-     [edges-views/StatisticStatesEdgeView
-      (assoc @edges-stats
-        :states (mapv (fn [state]
-                        (let [label (:label state)]
-                          (assoc state
-                            :selected?
-                            (or
-                              (= label selected-state)
-                              (and
-                                (= label "TOTAL")
-                                (empty? selected-state)))
-                            :on-click
-                            #(dispatch
-                               [::routing-events/navigate
-                                (routes-utils/gen-href @current-route
-                                                       {:partial-query-params
-                                                        {events/edges-state-filter-key
-                                                         (if (= "TOTAL" label)
-                                                           nil
-                                                           label)}})])))
-                        ) edges-views/edges-states))
-      true true]
-     [edges-views/NuvlaEdgeTableView
-      {:edges   (:resources @edges)
-       :columns columns}]
-     [pagination-plugin/Pagination
-      {:db-path                [::spec/pagination-edges]
-       :change-event           [::events/get-edge-documents]
-       :total-items            (-> @edges :count)
-       :i-per-page-multipliers [1 2 4]}]
-     [FleetFilterMessage]]))
+  []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        edges             (subscribe [::subs/edges-documents-response])
+        fleet-changes     (subscribe [::subs/fleet-changes])
+        only-changes?     (subscribe [::subs/show-only-changed-fleet?])
+        columns          (mapv (fn [col-config]
+                                 (assoc col-config :cell edges-views/NuvlaboxRow))
+                           [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
+                            {:field-key :state :cell-props {:collapsing true}}
+                            {:field-key :name}
+                            {:field-key :description}
+                            {:field-key :created}
+                            {:field-key :created-by}
+                            {:field-key      :refresh-interval
+                             :header-content (some-> (@tr [:report-interval]) str/lower-case)}
+                            {:field-key :last-online :no-sort? true}
+                            {:field-key :version :no-sort? true}
+                            {:field-key :tags :no-sort? true}])
+        filter-open?      (r/atom false)
+        additional-filter (subscribe [::subs/edges-additional-filter])]
+    (fn []
+      [:div {:style {:padding-top "10px"}
+             :class :nuvla-edges}
+       [ui/Grid {:stackable true
+                 :reversed "mobile"}
+        [ui/GridColumn {:width 4}
+         [:div
+          [full-text-search-plugin/FullTextSearch
+           {:db-path [::spec/edges-full-text-search]
+            :change-event [::pagination-plugin/change-page [::spec/edges-pagination] 1]}]
+          ^{:key @additional-filter}
+          [:div {:style {:margin-top "0.4rem"}}
+           [filter-comp/ButtonFilter
+            {:resource-name                    edges-spec/resource-name
+             :default-filter                   @additional-filter
+             :open?                            filter-open?
+             :on-done                          #(dispatch [::events/set-edges-additional-filter %])
+             :show-clear-button-outside-modal? true
+             :persist? false}]]]]
+        [ui/GridColumn {:width 7}
+         [:div {:class :nuvla-edges
+                :style {:margin "0 auto 0 6rem"}}
+          [EdgeTabStatesFilter]]]]
+       (when @fleet-changes
+         [:div {:style {:margin-top "1rem"
+                        :margin-bottom "1rem"}}
+          [:div [UnstoredEdgeChanges @fleet-changes]]
+          [:div [ui/Checkbox {:checked @only-changes?
+                              :basic true
+                              :label "Show only unsaved changes"
+                              :on-click #(dispatch [::events/show-fleet-changes-only @fleet-changes])}]]])
+       [edges-views/NuvlaEdgeTableView
+        {:edges   (mapv (fn [row]
+                          (if
+                            (some #{(:id row)} (:removed @fleet-changes))
+                            (assoc row :table-row-prop {:style {:text-decoration "line-through"
+                                                                :opacity 0.5}})
+                            row))
+                    (:resources @edges))
+         :columns columns
+         :sort-config {:db-path    ::spec/edges-ordering
+                       :fetch-event [::events/get-edges]}
+         :select-config {:bulk-actions [{:event (fn [select-data]
+                                                  (dispatch [::events/remove-edges select-data]))
+                                          :name "Remove edges"
+                                          :icon icons/BoxIcon}]
+                         :total-count-sub-key [::subs/edges-count]
+                         :resources-sub-key   [::subs/edges-documents-response]
+                         :select-db-path      [::spec/edges-select]}}]
+       [pagination-plugin/Pagination
+        {:db-path                [::spec/edges-pagination]
+         :change-event           [::events/get-edges]
+         :total-items            (-> @edges :count)
+         :i-per-page-multipliers [1 2 4]}]
+       [FleetFilterMessage]])))
 
 (defn EdgesTab
   []
-  (let [state (subscribe [::route-subs/query-param events/edges-state-filter-key])]
-    (fn []
-      [EdgesTabView @state])))
+  (dispatch [::events/init-edges-tab])
+  (fn []
+    [EdgesTabView]))
 
 (defn DeploymentsTab
   [uuid]

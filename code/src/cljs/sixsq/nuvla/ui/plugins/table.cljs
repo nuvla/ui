@@ -11,8 +11,7 @@
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (s/def ::pass-through-props (s/nilable map?))
 (s/def ::table-props ::pass-through-props)
@@ -102,9 +101,9 @@
 (s/def ::select-db-path (s/* keyword?))
 (s/def ::rights-needed keyword?)
 (s/def ::select-label-accessor (s/nilable fn?))
-(s/def ::select-config (s/nilable (s/keys :req-un [::bulk-actions ::select-db-path
+(s/def ::select-config (s/nilable (s/keys :req-un [::select-db-path
                                                    ::total-count-sub-key ::resources-sub-key]
-                                    :opt-un [::rights-needed ::select-label-accessor])))
+                                          :opt-un [::bulk-actions ::rights-needed ::select-label-accessor])))
 ;; Bulk selection db entries
 (s/def ::bulk-edit-success-msg (s/nilable string?))
 (s/def ::select-all? (s/nilable boolean?))
@@ -181,11 +180,11 @@
 
 (reg-event-db
   ::select-id
-  (fn [db [_ id db-path resources]]
+  (fn [db [_ id db-path resource-ids]]
     (let [selected-set (get-in-db db db-path ::selected-set #{})
           select-all?  (get-in-db db db-path ::select-all?)
           new-set      (cond select-all?
-                         (disj (set resources) id)
+                             (disj (set resource-ids) id)
 
                          (is-selected? selected-set id)
                          (disj selected-set id)
@@ -354,39 +353,39 @@
     [:div
      {:style  {:position :sticky :top "39px" :z-index 998}
       :class [(if selectable? :visible :invisible)]}
-     [:div {:style {:display :flex
-                    :border "1px solid rgb(230 230 230)"
-                    :border-radius "0.28rem"
-                    :background-color "rgb(249 250 251)"
-                    :justify-content :space-between
-                    :align-items :center
-                    :height "40px"
-                    :gap "1rem"}}
-      [:div
-       [ui/Popup {:trigger
-                  (r/as-element
-                    [:div
-                     [ui/Menu {:style {:border          :none
-                                       :box-shadow      :none
-                                       :background-color :transparent}
-                               :borderless (= 1 (count bulk-actions))
-                               :stackable  true}
-                      (for [[idx action] (map-indexed vector bulk-actions)
-                            :let [{:keys [name event icon]} action]]
-                        [ui/MenuItem
-                         {:disabled nothing-selected?
-                          :class :bulk-action-bar-item
-                          :on-click (fn []
-                                      (if (fn? event) (event payload)
-                                        (dispatch event)))
-                          :key idx}
-                         (when icon [icon])
-                         name])]])
-                  :basic    true
-                  :disabled (not= :none @selection-status)
-                  :content  (@tr [:select-at-least-one-item])}]]
-      [:div {:style {:padding-right "1rem"}}
-       @bulk-edit-success-message]]
+     (when (seq bulk-actions)
+       [:div {:style {:display :flex
+                      :border "1px solid rgb(230 230 230)"
+                      :border-radius "0.28rem"
+                      :background-color "rgb(249 250 251)"
+                      :justify-content :space-between
+                      :align-items :center
+                      :height "40px"
+                      :gap "1rem"}}
+        [:div
+         [ui/Popup {:trigger
+                    (r/as-element
+                      [:div
+                       [ui/Menu {:style {:border          :none
+                                         :box-shadow      :none
+                                         :background-color :transparent}
+                                 :stackable  true}
+                        (for [[idx action ] (map-indexed vector bulk-actions)
+                              :let [{:keys [name event icon]} action]]
+                          [ui/MenuItem
+                           {:disabled nothing-selected?
+                            :class :bulk-action-bar-item
+                            :on-click (fn []
+                                        (if (fn? event) (event payload)
+                                          (dispatch event)))
+                            :key idx}
+                           (when icon [icon])
+                           name])]])
+                    :basic    true
+                    :disabled (not= :none @selection-status)
+                    :content  (@tr [:select-at-least-one-item])}]]
+        [:div {:style {:padding-right "1rem"}}
+         @bulk-edit-success-message]])
      [:div
       {:style {:heigh "2rem"
                :padding-left "1rem"
@@ -575,14 +574,15 @@
         selectable?    (and
                          select-config
                          (s/valid? ::select-config select-config)
-                         (seq (:bulk-actions select-config))
                          (or (not rights-needed)
                            (some (partial general-utils/can-operation? rights-needed) rows)))
         selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))
         select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
         page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key]))
         get-row-props  (fn [row]
-                         (merge row-props {:on-click #(when row-click-handler (row-click-handler row))} (:table-row-prop row)))]
+                         (update (merge row-props {:on-click #(when row-click-handler (row-click-handler row))})
+                           :style
+                           merge (:style (:table-row-prop row))))]
     [:div
      (when selectable?
        [BulkActionBar {:selectable?         selectable?
@@ -660,7 +660,12 @@
                           [cell {:row-data  row
                                  :cell-data cell-data
                                  :field-key field-key}])
-                   :else (str cell-data))])]))]]]]]))
+                   :else (str (if (or
+                                    (not (coll? cell-data))
+                                    (seq cell-data))
+                                cell-data
+                                "")))])]))]]]]]))
+
 
 (defn ConfigureVisibleColumns
   [db-path available-fields]

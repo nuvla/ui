@@ -73,11 +73,11 @@
          ^{:key (str "stat-state-" (:label state))}
          [components/StatisticState
           (merge state
-                 {:value                    (states->counts (:key state))
-                  :stacked?                 true
-                  :clickable?               (or (:clickable? state) clickable?)
-                  :set-state-selector-event ::events/set-state-selector
-                  :state-selector-subs      ::subs/state-selector})])
+            {:value                    (states->counts (:key state))
+             :stacked?                 true
+             :clickable?               (or (:clickable? state) clickable?)
+             :set-state-selector-event ::events/set-state-selector
+             :state-selector-subs      ::subs/state-selector})])
        (when (and clickable? (not restricted-view?))
          [ui/Button
           {:icon     true
@@ -791,38 +791,22 @@
         :i-per-page-multipliers [1 2 4]}])))
 
 (defn NuvlaEdgeTableView
-  [{:keys [bulk-edit bulk-deploy columns edges]}]
-  (let [{bulk-edit-modal :modal
-         trigger         :trigger-config} bulk-edit
-        bulk-deploy-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
-        {bulk-deploy-modal   :modal
-         bulk-deploy-trigger :trigger-config} (when @bulk-deploy-enabled? bulk-deploy)]
-    [:<>
-     (when bulk-edit-modal
-       [bulk-edit-modal])
-     (when bulk-deploy-modal
-       [bulk-deploy-modal])
-     [TableColsEditable
-      {:cols-without-rmv-icon #{:state :online}
-       :sort-config       {:db-path     ::spec/ordering
-                           :fetch-event [::events/get-nuvlaboxes]}
-       :columns           columns
-       :default-columns #{:online :state :name :last-online :version :tags}
-       :rows              edges
-       :table-props       {:compact "very" :selectable true}
-       :cell-props        {:header {:single-line true}}
-       :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
-       :row-props         {:role  "link"
-                           :style {:cursor "pointer"}}
-       :select-config     {:bulk-actions (filterv
-                                           some?
-                                           [trigger
-                                            bulk-deploy-trigger])
-                           :total-count-sub-key [::subs/nuvlaboxes-count]
-                           :resources-sub-key [::subs/nuvlaboxes-resources]
-                           :select-db-path [::spec/select]
-                           :rights-needed :edit}}
-      ::table-cols-config]]))
+  [{:keys [columns edges select-config sort-config]}]
+  [TableColsEditable
+   {:cols-without-rmv-icon #{:state :online}
+    :sort-config       (or sort-config {:db-path     ::spec/ordering
+                                        :fetch-event [::events/get-nuvlaboxes]})
+    :columns           columns
+    :default-columns   #{:online :state :name :last-online :version :tags}
+    :rows              edges
+    :table-props       {:compact "very" :selectable true}
+    :cell-props        {:header {:single-line true}}
+    :row-click-handler (fn [{id :id}] (dispatch [::routing-events/navigate (utils/edges-details-url (general-utils/id->uuid id))]))
+    :row-props         {:role  "link"
+                        :style {:cursor "pointer"}}
+    :row-props-fn      {}
+    :select-config     select-config}
+   ::table-cols-config])
 
 
 (defn NuvlaboxTable
@@ -862,21 +846,33 @@
                              :no-edit-rights-sub-key ::subs/edges-without-edit-rights
                              :singular               (@tr [:edge])
                              :plural                 (@tr [:edges])
-                             :filter-fn              (partial utils/build-bulk-filter [::spec/select])})]
-    [NuvlaEdgeTableView {:bulk-edit   bulk-edit
-                         :bulk-deploy {:trigger-config {:icon (fn [] [icons/RocketIcon])
-                                                        :name "Bulk Deploy App"
-                                                        :event (fn []
-                                                                 (let [id (random-uuid)]
-                                                                   (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
-                                                                   (when @all-selected?
-                                                                     (dispatch [::events/set-fleet-filter ::depl-group-events/set-fleet-filter id]))
-                                                                   (dispatch [::routing-events/navigate
-                                                                              routes/deployment-sets-details
-                                                                              {:uuid :create}
-                                                                              {depl-group-subs/creation-temp-id-key id}])))}}
-                         :columns     columns
-                         :edges       selected-nbs}]))
+                             :filter-fn              (partial utils/build-bulk-filter [::spec/select])})
+        {bulk-edit-modal :modal
+         trigger         :trigger-config} bulk-edit
+        bulk-deploy-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
+        bulk-deploy-trigger (when @bulk-deploy-enabled?
+                              {:icon (fn [] [icons/RocketIcon])
+                               :name "Bulk Deploy App"
+                               :event (fn []
+                                        (let [id (random-uuid)]
+                                          (dispatch [::events/get-selected-edge-ids [::depl-group-events/set-edges]])
+                                          (when @all-selected?
+                                            (dispatch [::events/set-fleet-filter ::depl-group-events/set-fleet-filter id]))
+                                          (dispatch [::routing-events/navigate
+                                                     routes/deployment-sets-details
+                                                     {:uuid :create}
+                                                     {depl-group-subs/creation-temp-id-key id}])))})]
+    [:<>
+     (when bulk-edit-modal   [bulk-edit-modal])
+     [NuvlaEdgeTableView {:select-config {:bulk-actions (filterv
+                                                          some?
+                                                          [trigger
+                                                           bulk-deploy-trigger])
+                                          :total-count-sub-key [::subs/nuvlaboxes-count]
+                                          :resources-sub-key   [::subs/nuvlaboxes-resources]
+                                          :select-db-path      [::spec/select]
+                                          :rights-needed       :edit}
+                          :columns columns :edges selected-nbs}]]))
 
 
 (defn NuvlaboxMapPoint

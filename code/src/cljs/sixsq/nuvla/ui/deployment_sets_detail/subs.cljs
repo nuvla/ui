@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.subs
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
@@ -10,6 +11,15 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def creation-temp-id-key :temp-id)
+
+(defn get-target-fleet-ids
+  [depl-set]
+  (->> depl-set
+       :applications-sets
+       (mapcat :overwrites)
+       (mapcat (juxt :targets :fleet))
+       (remove nil?)
+       flatten))
 
 (reg-sub
   ::loading?
@@ -22,6 +32,24 @@
 (reg-sub
   ::deployment-set-edited
   :-> ::spec/deployment-set-edited)
+
+(reg-sub
+  ::fleet-changes
+  :<- [::deployment-set-stored]
+  :<- [::deployment-set-edited]
+  (fn [[stored-set changed-set]]
+    (let [stored-fleet  (set (get-target-fleet-ids stored-set))
+          changed-fleet (set (get-target-fleet-ids changed-set))
+          added-edges   (seq (set/difference changed-fleet stored-fleet))
+          removed-edges (seq (set/difference stored-fleet changed-fleet))]
+      (when (or added-edges removed-edges)
+        {:removed removed-edges
+         :added   added-edges}))))
+
+(reg-sub
+  ::show-only-changed-fleet?
+  (fn [db]
+    (boolean (db ::spec/changed-edges))))
 
 (reg-sub
   ::deployment-set-stored-and-edited
@@ -445,3 +473,41 @@
   (fn [{:keys [::spec/validate-form?] :as db}]
     (or (not validate-form?)
         (:valid? (deployment-set-validation db)))))
+
+(reg-sub
+  ::edge-picker-edges
+  :-> ::spec/edge-picker-edges)
+
+(reg-sub
+  ::edge-picker-edges-resources
+  :<- [::edge-picker-edges]
+  (fn [edges]
+    (:resources edges)))
+
+(reg-sub
+  ::edges-additional-filter
+  :-> ::spec/edges-additional-filter)
+
+(reg-sub
+  ::edge-picker-additional-filter
+  :-> ::spec/edge-picker-additional-filter)
+
+(reg-sub
+  ::edge-picker-edges-summary
+  :-> ::spec/edge-picker-edges-summary)
+
+(reg-sub
+  ::edge-picker-edges-count
+  :<- [::edge-picker-edges-summary]
+  (fn [summary]
+    (:count summary)))
+
+(reg-sub
+  ::edge-picker-edges-summary-stats
+  :<- [::edge-picker-edges-summary]
+  (fn [edges]
+    (edges-utils/summary-stats edges)))
+
+(reg-sub
+  ::state-selector
+  :-> ::spec/edge-picker-state-selector)

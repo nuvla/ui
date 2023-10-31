@@ -112,8 +112,8 @@
     "ONLINE" "online=true"
     "OFFLINE" "online=false"
     "UNKNOWN" "online=null"
+    "TOTAL" nil
     (str "state='" state "'")))
-
 
 
 (defn cpu-stats

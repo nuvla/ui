@@ -814,7 +814,7 @@
     (if filter-based-fleet
       (dispatch [::events/set-fleet-filter id])
       (if (seq selected-edges)
-        (dispatch [::events/get-selected-edge-ids ::depl-group-events/set-edges id])
+        (dispatch [::events/get-selected-edge-ids [::depl-group-events/set-edges]])
         (dispatch [::depl-group-events/set-edges {:resources []}])))
     (dispatch [::routing-events/navigate
                routes/deployment-sets-details

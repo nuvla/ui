@@ -51,7 +51,7 @@
   [apps-count edges-count action]
   (str "You're about to " action " " apps-count " app"
        (if (< 1 apps-count) "s " " ") "on "
-       edges-count " device"
+       edges-count " edge"
        (if (< 1 edges-count) "s. " ". ") "Proceed?"))
 
 (defn- ops-status-pending-str [tr-fn ops-status]

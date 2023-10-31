@@ -61,7 +61,7 @@
                                   name     (:name nuvlabox)
                                   online   (:online nuvlabox)
                                   updated  (:updated nuvlabox)]
-                              ^{:key (general-utils/id->uuid nb-id)}
+                              ^{:key (str cluster-id nb-id)}
                               [ui/ListItem
                                [ui/Image {:avatar true}
                                 [ui/Icon {:className (if (some #{nb-id} nuvlabox-managers)

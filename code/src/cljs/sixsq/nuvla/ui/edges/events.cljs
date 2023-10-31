@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edges.events
   (:require [clojure.edn :as edn]
+            [clojure.set :as set]
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -130,10 +131,10 @@
   (fn [{{:keys [::spec/select] :as db} :db} [_ storage-event id]]
     {::cimi-api-fx/search
      [:nuvlabox
-      {:filter (table-plugin/build-bulk-filter
-                 select
-                 (get-full-filter-string db))
-       :select "id"
+      {:filter      (table-plugin/build-bulk-filter
+                      select
+                      (get-full-filter-string db))
+       :select      "id"
        :aggregation spec/state-summary-agg-term}
       #(dispatch [storage-event % id])]}))
 
@@ -160,17 +161,17 @@
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
                    {:header  (cond-> (str "failure getting nuvlaedges")
-                               status (str " (" status ")"))
+                                     status (str " (" status ")"))
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                  ::main-spec/loading? false)
+                     ::main-spec/loading? false)
        :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
 
 
 (reg-event-fx
   ::get-nuvlaedges-status
-  (fn [_ [_ {nuvlaboxes    :resources}]]
+  (fn [_ [_ {nuvlaboxes :resources}]]
     (when (seq nuvlaboxes)
       {::cimi-api-fx/search
        [:nuvlabox-status
@@ -203,8 +204,8 @@
                             :last   10000
                             :select "id,name,online,location,inferred-location"
                             :filter (general-utils/join-and
-                                     "(location!=null or inferred-location!=null)"
-                                     (get-full-filter-string db))}
+                                      "(location!=null or inferred-location!=null)"
+                                      (get-full-filter-string db))}
                            #(dispatch [::set-nuvlabox-locations %])]}))
 
 
@@ -359,12 +360,12 @@
 
 
 (reg-event-fx
- ::create-nuvlabox
- (fn [_ [_ creation-data]]
-   {::cimi-api-fx/add [:nuvlabox creation-data
-                       (fn [res]
-                         (dispatch [::set-created-nuvlabox-id res])
-                         (dispatch [::get-nuvlaboxes]))]}))
+  ::create-nuvlabox
+  (fn [_ [_ creation-data]]
+    {::cimi-api-fx/add [:nuvlabox creation-data
+                        (fn [res]
+                          (dispatch [::set-created-nuvlabox-id res])
+                          (dispatch [::get-nuvlaboxes]))]}))
 
 
 (reg-event-db
@@ -449,13 +450,14 @@
      [:nuvlabox
       {:filter (apply general-utils/join-or
                       (map #(str "id='" % "'")
-                           (flatten
-                             (map
-                               (fn [c]
-                                 (concat
-                                   (:nuvlabox-managers c)
-                                   (get c :nuvlabox-workers [])))
-                               (:resources selected-clusters)))))
+                           (reduce
+                             (fn [set-ids c]
+                               (set/union
+                                 set-ids
+                                 (set (:nuvlabox-managers c))
+                                 (set (get c :nuvlabox-workers #{}))))
+                             #{}
+                             (:resources selected-clusters))))
        :last   10000}
       #(dispatch [::set-nuvlaboxes-in-clusters %])]}))
 

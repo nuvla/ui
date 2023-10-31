@@ -25,10 +25,10 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
-(defn id-selector-formatter [entry]
-  (let [v     (:id entry)
-        label (second (str/split v #"/"))]
-    [uix/Link (str "api/" v) label]))
+(defn id-selector-formatter
+  [{:keys [id] :as _entry}]
+  (when id
+    [uix/Link (str "api/" id) (general-utils/id->uuid id)]))
 
 (defn field-selector
   [field]
@@ -298,24 +298,24 @@
         [FilterField]]])))
 
 (defn FormatFieldItem [selections-atom item field->view]
-  (let [view (get field->view item)
-        tr (subscribe [::i18n-subs/tr])
+  (let [view         (get field->view item)
+        tr           (subscribe [::i18n-subs/tr])
         label-string (if (keyword? item) (or (@tr [item]) item) item)]
     [ui/ListItem
      [ui/ListContent
       [ui/ListHeader {:style {:display :flex}}
-       [ui/Checkbox {:checked         (contains? @selections-atom item)
-                     :label           (if view (r/as-element [:label view]) label-string)
-                     :on-change       (ui-callback/checked (fn [checked]
-                                                             (if checked
-                                                               (swap! selections-atom set/union #{item})
-                                                               (swap! selections-atom set/difference #{item}))))}]
+       [ui/Checkbox {:checked   (contains? @selections-atom item)
+                     :label     (if view (r/as-element [:label view]) label-string)
+                     :on-change (ui-callback/checked (fn [checked]
+                                                       (if checked
+                                                         (swap! selections-atom set/union #{item})
+                                                         (swap! selections-atom set/difference #{item}))))}]
        #_[:label view]]]]))
 
 (defn format-field-list [available-fields-atom selections-atom field->view]
   (let [items (sort available-fields-atom)]
     (vec (concat [ui/ListSA]
-           (map (fn [item] [FormatFieldItem selections-atom item field->view]) items )))))
+                 (map (fn [item] [FormatFieldItem selections-atom item field->view]) items)))))
 
 (defn SelectFieldsView
   [{:keys [show? selected-id-sub selections-atom
@@ -329,13 +329,13 @@
       :on-close  #(reset! show? false)
       :trigger   (r/as-element
                    (or trigger
-                     [uix/MenuItem
-                      {:name     (@tr [:columns])
-                       :icon     icons/i-columns
-                       :disabled (and selected-id-sub (nil? @selected-id-sub))
-                       :on-click (fn []
-                                   (reset! selections-atom (set @selected-fields-sub))
-                                   (reset! show? true))}]))}
+                       [uix/MenuItem
+                        {:name     (@tr [:columns])
+                         :icon     icons/i-columns
+                         :disabled (and selected-id-sub (nil? @selected-id-sub))
+                         :on-click (fn []
+                                     (reset! selections-atom (set @selected-fields-sub))
+                                     (reset! show? true))}]))}
      [uix/ModalHeader {:header (@tr [(or title-tr-key :fields)])}]
      [ui/ModalContent
       {:scrolling true}
@@ -364,11 +364,11 @@
         selections       (r/atom (set @selected-fields))
         show?            (r/atom false)]
     (fn []
-      [SelectFieldsView {:show? show?
-                         :selected-id-sub selected-id
-                         :selections-atom selections
+      [SelectFieldsView {:show?               show?
+                         :selected-id-sub     selected-id
+                         :selections-atom     selections
                          :selected-fields-sub selected-fields
-                         :available-fields @available-fields}])))
+                         :available-fields    @available-fields}])))
 
 (defn ResourceAddForm
   []

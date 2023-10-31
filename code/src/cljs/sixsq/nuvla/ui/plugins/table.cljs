@@ -506,7 +506,6 @@
                      (get (edn/read-string cols-config) db-path)
                      (get current-cols db-path)
                      defaults)]
-      (js/console.error defaults)
       {:db (assoc-in db [::default-cols db-path] defaults)
        :fx [[:dispatch [::store-cols cols db-path]]]})))
 

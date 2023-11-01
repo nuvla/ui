@@ -460,11 +460,10 @@
                                           (if (neg? po) 100 po)))]
                            (- (pos-fn k1) (pos-fn k2))))
                        (vec cols)))]
-      ()
       {:fx [[:dispatch [::store-cols new-cols db-path]]]
        :storage/set {:session? false
                      :name     local-storage-key
-                     :value    (merge (edn/read-string storage) {db-path cols})}})))
+                     :value    (merge (edn/read-string storage) {db-path new-cols})}})))
 
 (reg-event-db
   ::store-cols
@@ -717,13 +716,8 @@
   (let [db-path (or db-path ::table-cols-config)
         current-cols   (subscribe [::get-current-cols db-path])
         default-cols   (subscribe [::get-default-cols db-path])
-        add-col-fn     (fn [col-key position]
-                         (dispatch [::add-col {:col-key col-key
-                                               :position position
-                                               :db-path db-path}]))
         remove-col-fn (fn [col-key]
-                        (dispatch [::remove-col col-key db-path]))
-        reset-cols-fn #(dispatch [::reset-current-cols db-path])]
+                        (dispatch [::remove-col col-key db-path]))]
     (fn [{:keys [rows columns] :as props}]
       (let [available-cols (merge
                              (let [ks (set (mapcat keys rows))]
@@ -739,12 +733,7 @@
                                                   (no-rmv-column? cols-without-rmv-icon (:field-key col))))) columns)))]
         [:div
          [Table (assoc props
-                  :col-config {:default-cols   @default-cols
-                               :available-cols available-cols
-                               :current-cols   @current-cols
-                               :remove-col-fn  remove-col-fn
-                               :add-col-fn     add-col-fn
-                               :reset-cols-fn  reset-cols-fn
+                  :col-config {:remove-col-fn  remove-col-fn
                                :col-config-modal [ConfigureVisibleColumns db-path available-cols]}
                   :columns (->> (or @current-cols @default-cols)
                                 (mapv (fn [k] (available-cols k)))

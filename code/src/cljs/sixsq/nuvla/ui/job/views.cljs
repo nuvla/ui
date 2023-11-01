@@ -36,8 +36,11 @@
                  :cell      (fn [{{:keys [state]} :row-data
                                   :keys           [cell-data]}]
                               [:span {:style (cond-> {:white-space "pre"
+                                                      :max-width :unset
                                                       :overflow :scroll
                                                       :display :block}
+                                                      (= state "QUEUED")
+                                                      (assoc :display "none"))}
                                cell-data])}]
                :rows resources}]
        [pagination-plugin/Pagination

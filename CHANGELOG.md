@@ -4,6 +4,18 @@
 
 ## Released
 
+## [2.34.1] - 2023-11-01
+
+- Table component
+  - Fixes ordering on restoring defaults (#1432)
+  - Removes empty column header (#1430)
+- API page - row don't show api link when for nil value
+- Edge page - Optimize the query done to retrieve cluster nodes (#1431)
+- Edge picker and minimal changes indicator (#1423)
+- Deployment group detail page
+  - Cancel operation button (#1429)
+  - Lighter warn message on start/stop/update/cancel actions
+
 ## [2.34.0] - 2023-10-27
 
 - Table plugin - Issue 1014 configurable tables columns (#1410)

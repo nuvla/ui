@@ -139,15 +139,11 @@
        :aggregation spec/state-summary-agg-term}
       #(dispatch (conj event %))]}))
 
-(reg-event-fx
-  ::reset-fleet-filter
-  (fn [_ [_ id]]
-    (dispatch [::depl-group-events/reset-fleet-filter id])))
 
 (reg-event-fx
   ::set-fleet-filter
   (fn [{db :db} [_ id]]
-    (dispatch [::depl-group-events/set-fleet-filter (get-full-filter-string db) id])))
+    {:fx [[:dispatch [::depl-group-events/set-fleet-filter (get-full-filter-string db) id]]]}))
 
 (reg-event-fx
   ::set-additional-filter

@@ -555,8 +555,7 @@
                 ::spec/edges-additional-filter] :as db} :db} _]
     (let [callback   (fn [response]
                        (dispatch [::set-edges response]))
-          fleet      (get-target-fleet-ids deployment-set-edited)
-          ]
+          fleet      (get-target-fleet-ids deployment-set-edited)]
       (when (seq fleet) {::cimi-api-fx/search [:nuvlabox
                                                {:filter     (general-utils/join-and
                                                                (general-utils/ids->inclusion-filter-string (get-target-fleet-ids deployment-set-edited))
@@ -623,12 +622,9 @@
 
 (reg-event-fx
   ::set-fleet-filter
-  (fn [{db :db} [_ fleet-filter deployment-set-id]]
-    (let [path (subs/create-db-path [::spec/fleet-filter] (str deployment-set-id))]
+  (fn [{db :db} [_ fleet-filter temp-id]]
+    (let [path (subs/create-db-path [::spec/fleet-filter] (str temp-id))]
       {:db (assoc-in db path fleet-filter)})))
-
-
-
 
 
 (reg-event-fx

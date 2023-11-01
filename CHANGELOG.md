@@ -4,6 +4,10 @@
 
 ## Released
 
+## [2.34.2] - 2023-11-01
+
+- Hotfix/job table messages (#1434)
+
 ## [2.34.1] - 2023-11-01
 
 - Table component

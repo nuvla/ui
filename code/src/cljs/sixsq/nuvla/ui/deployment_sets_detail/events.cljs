@@ -314,7 +314,6 @@
                            :content success-msg
                            :type    :success}]))
              (dispatch [::set-deployment-set-edited %])
-             (dispatch [::set-apps-edited false])
              (dispatch [::set-deployment-set %])
              (dispatch [::main-events/changes-protection? false])
              (dispatch [::disable-form-validation])))]})))
@@ -494,8 +493,9 @@
 
 (reg-event-fx
   ::do-edit
-  (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited? ::spec/deployment-set-edited] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
-    (let [apps-path    (subs/create-apps-creation-db-path current-route)
+  (fn [{{:keys [current-route ::spec/edges ::spec/deployment-set-edited] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
+    (let [apps-edited? (subs/db->apps-added-or-removed? db)
+          apps-path    (subs/create-apps-creation-db-path current-route)
           apps         (get-in db apps-path)
           fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))
           body         (merge (when apps-edited?
@@ -504,15 +504,16 @@
                                    :modules    (new-modules deployment-set-edited apps)
                                    :overwrites (new-overwrites deployment-set-edited apps)}
                                   (when fleet-filter {:fleet-filter fleet-filter})))
-                              deployment-set)]
+                         deployment-set)]
       {:fx [[:dispatch [::persist! {:deployment-set body
                                     :success-msg    success-msg}]]]})))
 
 (reg-event-db
   ::init-app-row-data
-  (fn [{:keys [current-route ::spec/module-applications-sets ::spec/apps-edited?] :as db} [_ creating?]]
-    (when (and (not creating?) (not apps-edited?))
-      (let [apps-path (subs/create-apps-creation-db-path current-route)]
+  (fn [{:keys [current-route ::spec/module-applications-sets] :as db} [_ creating?]]
+    (let [apps-edited? (subs/db->apps-added-or-removed? db)
+          apps-path (subs/create-apps-creation-db-path current-route)]
+      (when (and (not creating?) (not apps-edited?))
         (update-in db apps-path (constantly (->> module-applications-sets
                                                  :content
                                                  :applications-sets
@@ -523,11 +524,6 @@
                                                             ) applications)))
                                                  (apply concat)
                                                  vec)))))))
-
-(reg-event-db
-  ::set-apps-edited
-  (fn [db [_ apps-edited?]]
-    (assoc db ::spec/apps-edited? apps-edited?)))
 
 (reg-event-db
   ::set
@@ -688,7 +684,6 @@
       {:db (update-in db db-path (fnil conj []) app-with-version-number)
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
-            [:dispatch [::set-apps-edited true]]
             [:dispatch [::main-events/changes-protection? true]]
             [:dispatch [::load-module-configuration 0 app-with-version-number]]]})))
 
@@ -762,7 +757,6 @@
                                    (vec (remove #(= (:id %) (:href app)) apps))))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
-            [:dispatch [::set-apps-edited true]]
             [:dispatch [::main-events/changes-protection? true]]]})))
 
 (reg-event-fx

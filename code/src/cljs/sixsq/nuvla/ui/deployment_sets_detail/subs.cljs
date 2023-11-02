@@ -124,23 +124,25 @@
                     ) applications)))
          (apply concat))))
 
+(defn db->apps-sets-indexed-modules
+  [db]
+  (->> (applications-sets db)
+       (map-indexed
+         (fn [i {:keys [applications]}]
+           (keep (fn [{:keys [id]}]
+                   (let [targets (get-db-targets-selected-ids db i)]
+                     (when-let [module (module-plugin/db-module db [::spec/apps-sets i] id)]
+                       {:i                      i
+                        :application            module
+                        :registries-credentials (module-plugin/db-module-registries-credentials
+                                                  db [::spec/apps-sets i] id)
+                        :targets                targets
+                        :targets-count          (count targets)}))) applications)))
+       (apply concat)))
+
 (reg-sub
   ::applications-sets-apps-targets
-  (fn [db]
-    (->> (applications-sets db)
-         (map-indexed
-           (fn [i {:keys [applications]}]
-             (keep (fn [{:keys [id]}]
-                    (let [targets (get-db-targets-selected-ids db i)]
-                      (when-let [module (module-plugin/db-module db [::spec/apps-sets i] id)]
-                        {:i                      i
-                         :application            module
-                         :registries-credentials (module-plugin/db-module-registries-credentials
-                                                   db [::spec/apps-sets i] id)
-                         :targets                targets
-                         :targets-count          (count targets)}))
-                    ) applications)))
-         (apply concat))))
+  :-> db->apps-sets-indexed-modules)
 
 
 (defn- get-app-version-no
@@ -286,9 +288,17 @@
                             :application app}))
       apps)))
 
+(defn apps-added-or-removed? [apps-creation apps]
+  (not=
+      (set (map :id apps-creation))
+      (set (map (comp :id :application) apps))))
+
 (reg-sub
   ::apps-edited?
-  :-> ::spec/apps-edited?)
+  :<- [::apps-creation]
+  :<- [::applications-sets-apps-targets]
+  (fn [[apps-creation apps] _]
+    (apps-added-or-removed? apps-creation apps)))
 
 (defn- add-app-status
   [apps-creation status]
@@ -427,12 +437,16 @@
       :path    [:apps]
       :message [:depl-group-apps-missing]}]))
 
+(defn db->apps-added-or-removed? [db]
+  (apps-added-or-removed? (apps-creation db) (db->apps-sets-indexed-modules db)))
+
 (defn env-vars-errors
-  [{:keys [::spec/apps-edited?] :as db}]
-  (let [apps (if apps-edited?
+  [db]
+  (let [apps-edited? (db->apps-added-or-removed? db)
+        apps (if apps-edited?
                (map (fn [{:keys [id] :as app}]
                       [0 {:id id :version (get-app-version-no app)}])
-                    (apps-creation db))
+                 (apps-creation db))
                (->> (applications-sets db)
                     (keep-indexed
                       (fn [i {:keys [applications]}]

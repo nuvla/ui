@@ -39,6 +39,8 @@
 
 (s/def ::opened-modal (s/nilable keyword?))
 
+(s/def ::initial-load? boolean?)
+
 (s/def ::edge-picker-edges any?)
 (s/def ::edge-picker-full-text-search (s/nilable string?))
 (s/def ::edge-picker-ordering (s/coll-of (s/cat :field keyword? :order #{"desc" "asc" :desc :asc})))
@@ -76,4 +78,5 @@
    ::pagination-apps-picker    (pagination-plugin/build-spec
                                  :default-items-per-page 16)
    ::edge-picker-pagination   pagination-default
-   ::opened-modal              nil})
+   ::opened-modal              nil
+   ::initial-load?            true})

@@ -114,7 +114,7 @@
                                                             (map (juxt :name :value))
                                                             (into {})))
                              :registries-credentials registries-credentials}
-                            [::init-app-row-data false]]])))
+                            [::update-app-row-data]]])))
        (concat fx)))
 
 (reg-event-fx
@@ -125,7 +125,7 @@
                         [::spec/apps-sets app-set-idx]
                         (str module-id "_" version)
                         {}
-                        [::init-app-row-data false]]]]})))
+                        [::update-app-row-data]]]]})))
 
 (defn- merge-vector-of-maps
   [scn prm]
@@ -509,21 +509,22 @@
                                     :success-msg    success-msg}]]]})))
 
 (reg-event-db
-  ::init-app-row-data
-  (fn [{:keys [current-route ::spec/module-applications-sets] :as db} [_ creating?]]
+  ::update-app-row-data
+  (fn [{:keys [current-route ::spec/initial-load? ::spec/module-applications-sets] :as db} _]
     (let [apps-edited? (subs/db->apps-added-or-removed? db)
           apps-path (subs/create-apps-creation-db-path current-route)]
-      (when (and (not creating?) (not apps-edited?))
-        (update-in db apps-path (constantly (->> module-applications-sets
-                                                 :content
-                                                 :applications-sets
-                                                 (map-indexed
-                                                   (fn [i {:keys [applications]}]
-                                                     (map (fn [{:keys [id]}]
-                                                            (module-plugin/db-module db [::spec/apps-sets i] id)
-                                                            ) applications)))
-                                                 (apply concat)
-                                                 vec)))))))
+      (when (or initial-load? (not apps-edited?))
+        (-> (assoc db ::spec/initial-load? false)
+            (update-in apps-path (constantly (->> module-applications-sets
+                                                     :content
+                                                     :applications-sets
+                                                     (map-indexed
+                                                       (fn [i {:keys [applications]}]
+                                                         (map (fn [{:keys [id]}]
+                                                                (module-plugin/db-module db [::spec/apps-sets i] id)
+                                                                )applications)))
+                                                     (apply concat)
+                                                     vec))))))))
 
 (reg-event-db
   ::set

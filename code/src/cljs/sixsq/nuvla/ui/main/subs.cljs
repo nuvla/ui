@@ -64,6 +64,11 @@
     (::spec/ignore-changes-modal db)))
 
 (reg-sub
+  ::revert-changes-modal
+  (fn [db]
+    (::spec/revert-changes-modal db)))
+
+(reg-sub
   ::next-refresh
   (fn [{:keys [::spec/actions-interval]} [_ action-id]]
     (get-in actions-interval [action-id :next-refresh])))

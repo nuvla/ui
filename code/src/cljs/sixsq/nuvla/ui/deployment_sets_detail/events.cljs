@@ -114,7 +114,7 @@
                                                             (map (juxt :name :value))
                                                             (into {})))
                              :registries-credentials registries-credentials}
-                            [::init-app-row-data false]]])))
+                            [::update-app-row-data]]])))
        (concat fx)))
 
 (reg-event-fx
@@ -125,7 +125,7 @@
                         [::spec/apps-sets app-set-idx]
                         (str module-id "_" version)
                         {}
-                        [::init-app-row-data false]]]]})))
+                        [::update-app-row-data]]]]})))
 
 (defn- merge-vector-of-maps
   [scn prm]
@@ -314,10 +314,14 @@
                            :content success-msg
                            :type    :success}]))
              (dispatch [::set-deployment-set-edited %])
-             (dispatch [::set-apps-edited false])
              (dispatch [::set-deployment-set %])
              (dispatch [::main-events/changes-protection? false])
              (dispatch [::disable-form-validation])))]})))
+
+(reg-event-fx
+  ::cancel-editing
+  (fn [_ [_]]
+    {:fx [[:dispatch [::init]]]}))
 
 (reg-event-fx
   ::recompute-fleet
@@ -489,8 +493,9 @@
 
 (reg-event-fx
   ::do-edit
-  (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited? ::spec/deployment-set-edited] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
-    (let [apps-path    (subs/create-apps-creation-db-path current-route)
+  (fn [{{:keys [current-route ::spec/edges ::spec/deployment-set-edited] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
+    (let [apps-edited? (subs/db->apps-added-or-removed? db)
+          apps-path    (subs/create-apps-creation-db-path current-route)
           apps         (get-in db apps-path)
           fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))
           body         (merge (when apps-edited?
@@ -499,30 +504,27 @@
                                    :modules    (new-modules deployment-set-edited apps)
                                    :overwrites (new-overwrites deployment-set-edited apps)}
                                   (when fleet-filter {:fleet-filter fleet-filter})))
-                              deployment-set)]
+                         deployment-set)]
       {:fx [[:dispatch [::persist! {:deployment-set body
                                     :success-msg    success-msg}]]]})))
 
 (reg-event-db
-  ::init-app-row-data
-  (fn [{:keys [current-route ::spec/module-applications-sets ::spec/apps-edited?] :as db} [_ creating?]]
-    (when (and (not creating?) (not apps-edited?))
-      (let [apps-path (subs/create-apps-creation-db-path current-route)]
-        (update-in db apps-path (constantly (->> module-applications-sets
-                                                 :content
-                                                 :applications-sets
-                                                 (map-indexed
-                                                   (fn [i {:keys [applications]}]
-                                                     (map (fn [{:keys [id]}]
-                                                            (module-plugin/db-module db [::spec/apps-sets i] id)
-                                                            ) applications)))
-                                                 (apply concat)
-                                                 vec)))))))
-
-(reg-event-db
-  ::set-apps-edited
-  (fn [db [_ apps-edited?]]
-    (assoc db ::spec/apps-edited? apps-edited?)))
+  ::update-app-row-data
+  (fn [{:keys [current-route ::spec/initial-load? ::spec/module-applications-sets] :as db} _]
+    (let [apps-edited? (subs/db->apps-added-or-removed? db)
+          apps-path (subs/create-apps-creation-db-path current-route)]
+      (when (or initial-load? (not apps-edited?))
+        (-> (assoc db ::spec/initial-load? false)
+            (update-in apps-path (constantly (->> module-applications-sets
+                                                     :content
+                                                     :applications-sets
+                                                     (map-indexed
+                                                       (fn [i {:keys [applications]}]
+                                                         (map (fn [{:keys [id]}]
+                                                                (module-plugin/db-module db [::spec/apps-sets i] id)
+                                                                )applications)))
+                                                     (apply concat)
+                                                     vec))))))))
 
 (reg-event-db
   ::set
@@ -550,8 +552,7 @@
                 ::spec/edges-additional-filter] :as db} :db} _]
     (let [callback   (fn [response]
                        (dispatch [::set-edges response]))
-          fleet      (get-target-fleet-ids deployment-set-edited)
-          ]
+          fleet      (get-target-fleet-ids deployment-set-edited)]
       (when (seq fleet) {::cimi-api-fx/search [:nuvlabox
                                                {:filter     (general-utils/join-and
                                                                (general-utils/ids->inclusion-filter-string (get-target-fleet-ids deployment-set-edited))
@@ -611,13 +612,16 @@
                       #(dispatch [::set-edges-documents %])])))))
 
 (reg-event-fx
-  ::set-fleet-filter
-  (fn [{db :db} [_ fleet-filter deployment-set-id]]
+  ::reset-fleet-filter
+  (fn [{db :db} [_ deployment-set-id]]
     (let [path (subs/create-db-path [::spec/fleet-filter] (str deployment-set-id))]
+      {:db (assoc-in db path nil)})))
+
+(reg-event-fx
+  ::set-fleet-filter
+  (fn [{db :db} [_ fleet-filter temp-id]]
+    (let [path (subs/create-db-path [::spec/fleet-filter] (str temp-id))]
       {:db (assoc-in db path fleet-filter)})))
-
-
-
 
 
 (reg-event-fx
@@ -681,7 +685,6 @@
       {:db (update-in db db-path (fnil conj []) app-with-version-number)
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
-            [:dispatch [::set-apps-edited true]]
             [:dispatch [::main-events/changes-protection? true]]
             [:dispatch [::load-module-configuration 0 app-with-version-number]]]})))
 
@@ -696,7 +699,7 @@
   (fn [_ [_ app]]
     (if (= (:subtype app)
            "applications_sets")
-      {::cimi-api-fx/get [(:id app) #(dispatch [::add-apps-set-apps %])]}
+      {:fx [[:dispatch [::fetch-apps-set-add-apps (:id app)]]]}
       (let [{:keys [path versions]} app
             version-id (version-id-to-add app)]
         {::apps-fx/get-module [path
@@ -704,6 +707,11 @@
                                #(dispatch [::do-add-app %])]
          :fx                  [[:dispatch [::fetch-app-picker-apps
                                            ::spec/pagination-apps-picker]]]}))))
+
+(reg-event-fx
+  ::fetch-apps-set-add-apps
+  (fn [_ [_ apps-set-module-id]]
+    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-set-apps %])]}))
 
 (reg-event-fx
   ::add-apps-set-apps
@@ -736,6 +744,13 @@
                   apps))})))
 
 (reg-event-fx
+  ::re-add-removed-app
+  (fn [{{:keys [current-route] :as db} :db} [_ app]]
+    (let [db-path (subs/create-apps-creation-db-path current-route)]
+      {:db (update-in db db-path (fnil conj [])
+             (module-plugin/db-module db [::spec/apps-sets (:idx app)] (:href app)))})))
+
+(reg-event-fx
   ::remove-app-from-creation-data
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
     (let [db-path (subs/create-apps-creation-db-path current-route)]
@@ -743,7 +758,6 @@
                                    (vec (remove #(= (:id %) (:href app)) apps))))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
-            [:dispatch [::set-apps-edited true]]
             [:dispatch [::main-events/changes-protection? true]]]})))
 
 (reg-event-fx

@@ -253,6 +253,12 @@
   [db-path db]
   (table-plugin/build-bulk-filter (get-in db db-path) (get-full-filter-string db)))
 
+(defn get-deploy-filter-string
+  [text-search additional-filter]
+  (general-utils/join-and
+    (some-> text-search general-utils/fulltext-query-string)
+    additional-filter))
+
 (defn- parse-version-number [v]
   (->> (re-seq #"\d+" (or v ""))
        (map js/Number)))

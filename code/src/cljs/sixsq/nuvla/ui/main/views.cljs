@@ -143,6 +143,26 @@
                    :on-click #(do (dispatch [::events/ignore-changes])
                                   (dispatch [::apps-events/form-valid]))}]]]))
 
+(defn revert-changes-modal
+  []
+  (let [tr                       (subscribe [::i18n-subs/tr])
+        navigation-info          (subscribe [::subs/revert-changes-modal])
+        do-not-revert-changes-fn #(dispatch [::events/close-revert-modal])]
+    [ui/Modal {:open        (some? @navigation-info)
+               :close-icon  true
+               :on-close    do-not-revert-changes-fn}
+
+     [uix/ModalHeader {:header (@tr [:revert-changes?])}]
+
+     [ui/ModalContent {:content (@tr [:revert-changes-content])}]
+
+     [ui/ModalActions
+      [uix/Button {:text     (@tr [:revert-changes]),
+                   :positive true
+                   :active   true
+                   :on-click #(do (dispatch [::events/revert-changes])
+                                  (dispatch [::apps-events/form-valid]))}]]]))
+
 (defn subscription-required-modal
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
@@ -292,5 +312,6 @@
                             :type    :error}])
             [contents]
             [ignore-changes-modal]
+            [revert-changes-modal]
             [subscription-required-modal]
             (when-not @iframe? [footer])]]])])))

@@ -748,6 +748,13 @@
                   apps))})))
 
 (reg-event-fx
+  ::re-add-removed-app
+  (fn [{{:keys [current-route] :as db} :db} [_ app]]
+    (let [db-path (subs/create-apps-creation-db-path current-route)]
+      {:db (update-in db db-path (fnil conj [])
+             (module-plugin/db-module db [::spec/apps-sets (:idx app)] (:href app)))})))
+
+(reg-event-fx
   ::remove-app-from-creation-data
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
     (let [db-path (subs/create-apps-creation-db-path current-route)]

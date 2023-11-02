@@ -662,7 +662,8 @@
                 ^{:key (str id "-" field-key)}
                 [ui/TableCell
                  (cond-> cell-props
-                   last? (assoc :colspan 2))
+                   (and last? (:col-config props))
+                   (assoc :colspan 2))
                  (cond
                    cell (if (string? cell) cell
                           [cell {:row-data  row

@@ -290,15 +290,28 @@
   ::apps-edited?
   :-> ::spec/apps-edited?)
 
+(defn- add-app-status
+  [apps-creation status]
+  (fn [app-row]
+    (assoc app-row
+      :edit-status
+      (when-not
+        (boolean
+          ((set (map :href apps-creation))
+           (:href app-row)))
+        status))))
+
 (reg-sub
   ::apps-row-data
   :<- [::apps-creation-row-data]
   :<- [::applications-overview-row-data]
-  :<- [::apps-edited?]
-  (fn [[apps-creation apps apps-edited?] [_ creating?]]
-    (if (or creating? apps-edited?)
-      apps-creation
-      apps)))
+  (fn [[apps-creation apps] _]
+    (let [stored-apps (mapv (add-app-status apps-creation :removed) apps)
+          added-apps  (filterv :edit-status
+                        (mapv (add-app-status apps :added) apps-creation))]
+      (concat
+        stored-apps
+        added-apps))))
 
 (reg-sub
   ::edges-in-deployment-group-response

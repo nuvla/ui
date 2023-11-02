@@ -497,82 +497,102 @@
         apps-validation-error? (subscribe [::subs/apps-validation-error?])
         k->tr-k                {:app :name}]
     (fn []
-      (let [no-apps? (empty? @apps-row)]
+      [:<>
+       (when (seq @apps-row)
+         [:div {:style {:height "100%"}}
+          [Table {:columns
+                  (into
+                    (vec
+                      (map-indexed
+                        (fn [i k]
+                          {:field-key      k
+                           :header-content (-> (or (@tr [(k->tr-k k)]) k)
+                                               name
+                                               str/capitalize)
+                           :cell           (case k
+                                             :app
+                                             (fn [{:keys [cell-data row-data]}]
+                                               [:<>
+                                                [ui/Popup
+                                                 {:content (r/as-element [:p "Configure app"])
+                                                  :trigger
+                                                  (r/as-element
+                                                    [:a
+                                                     {:style (when
+                                                               (= :removed (:edit-status row-data))
+                                                               {:opacity 0.5
+                                                                :text-decoration :line-through})
+                                                      :href     "#"
+                                                      :on-click #(dispatch [::events/navigate-internal
+                                                                            {:query-params
+                                                                             (merge
+                                                                               {(routes-utils/db-path->query-param-key [::apps-config])
+                                                                                (create-app-config-query-key i (:href row-data))}
+                                                                               {:deployment-sets-detail-tab :apps})}])
+                                                      :children [icons/StoreIcon]
+                                                      :target   :_self}
+                                                     cell-data
+                                                     [:span {:style {:margin-left "0.5rem"}}
+                                                      [icons/GearIcon]]])}]])
+                                             :version
+                                             (fn [{{:keys [label created]} :cell-data}]
+                                               [ui/Popup
+                                                {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
+                                                                              " "
+                                                                              (time/ago (time/parse-iso8601 created) @locale))])
+                                                 :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
+                                             nil)})
+                        (keys (dissoc (first @apps-row) :idx :href :edit-status))))
+                    (remove nil?
+                      [{:field-key      :details
+                        :header-content (general-utils/capitalize-words (@tr [:details]))
+                        :cell           (fn [{:keys [row-data]}]
+                                          [ui/Popup
+                                           {:content (r/as-element [:p "Open app details"])
+                                            :trigger (r/as-element [:span
+                                                                    [module-plugin/LinkToApp
+                                                                     {:db-path  [::spec/apps-sets (:idx row-data)]
+                                                                      :href     (:href row-data)
+                                                                      :children [icons/ArrowRightFromBracketIcon]
+                                                                      :target   :_self}]])}])}
+                       (when (some :edit-status @apps-row)
+                         {:field-key :unstored-status
+                          :header-cell-props {:style {:width "150px"}}
+                          :cell (fn [{{:keys [edit-status]} :row-data}]
+                                  (when edit-status (@tr [edit-status])))})
+                       {:field-key :remove
+                        :header-content ""
+                        :header-cell-props {:style {:width "30px"}}
+                        :cell      (fn [{:keys [row-data]}]
+                                     (let [status (:edit-status row-data)]
+                                       (if (= status :removed)
+                                         [icons/AddIconFull
+                                          {:style    {:cursor :pointer}
+                                           :color    "green"
+                                           :on-click #(dispatch [::events/re-add-removed-app row-data])}]
+                                         [icons/XMarkIcon
+                                          {:style    {:cursor :pointer}
+                                           :color    "red"
+                                           :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])))}]))
+                  :rows (mapv (fn [app]
+                                (assoc app :table-row-prop
+                                  nil #_{:style {:opacity (when (= (:edit-status app)
+                                                             :removed) 0.5)}}))
+                          @apps-row)}]])
+       [:div {:style {:display :flex :justify-content :center :align-items :center}}
         [:<>
-         (when-not no-apps?
-           [:div {:style {:height "100%"}}
-            [Table {:columns
-                    (into
-                      (vec
-                        (map-indexed
-                          (fn [i k]
-                            {:field-key      k
-                             :header-content (-> (or (@tr [(k->tr-k k)]) k)
-                                                 name
-                                                 str/capitalize)
-                             :cell           (case k
-                                               :app
-                                               (fn [{:keys [cell-data row-data]}]
-                                                 [:<>
-                                                  [ui/Popup
-                                                   {:content (r/as-element [:p "Configure app"])
-                                                    :trigger
-                                                    (r/as-element
-                                                      [:a
-                                                       {:href     "#"
-                                                        :on-click #(dispatch [::events/navigate-internal
-                                                                              {:query-params
-                                                                               (merge
-                                                                                 {(routes-utils/db-path->query-param-key [::apps-config])
-                                                                                  (create-app-config-query-key i (:href row-data))}
-                                                                                 {:deployment-sets-detail-tab :apps})}])
-                                                        :children [icons/StoreIcon]
-                                                        :target   :_self}
-                                                       cell-data
-                                                       [:span {:style {:margin-left "0.5rem"}}
-                                                        [icons/GearIcon]]])}]])
-                                               :version
-                                               (fn [{{:keys [label created]} :cell-data}]
-                                                 [ui/Popup
-                                                  {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
-                                                                                   " "
-                                                                                   (time/ago (time/parse-iso8601 created) @locale))])
-                                                   :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
-                                               nil)})
-                          (keys (dissoc (first @apps-row) :idx :href))))
-                      (remove nil?
-                              [{:field-key      :details
-                                :header-content (general-utils/capitalize-words (@tr [:details]))
-                                :cell           (fn [{:keys [row-data]}]
-                                                  [ui/Popup
-                                                   {:content (r/as-element [:p "Open app details"])
-                                                    :trigger (r/as-element [:span
-                                                                            [module-plugin/LinkToApp
-                                                                             {:db-path  [::spec/apps-sets (:idx row-data)]
-                                                                              :href     (:href row-data)
-                                                                              :children [icons/ArrowRightFromBracketIcon]
-                                                                              :target   :_self}]])}])}
-                               {:field-key :remove
-                                :cell      (fn [{:keys [row-data]}]
-                                             [icons/XMarkIcon
-                                              {:style    {:cursor :pointer}
-                                               :color    "red"
-                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
-                    :rows @apps-row}]])
-         [:div {:style {:display :flex :justify-content :center :align-items :center}}
-          [:<>
-           [AppsPickerModal creating?]
-           [:div {:style {:margin-top   "1rem"
-                          :margin-bottm "1rem"}}
-            [AddButton events/apps-picker-modal-id]]]]
+         [AppsPickerModal creating?]
          [:div {:style {:margin-top   "1rem"
-                        :margin-left  "auto"
-                        :margin-right "auto"}}
-          (if @apps-validation-error?
-            [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
-            (if no-apps?
-              (@tr [:add-your-first-app])
-              (@tr [:add-app])))]]))))
+                        :margin-bottm "1rem"}}
+          [AddButton events/apps-picker-modal-id]]]]
+       [:div {:style {:margin-top   "1rem"
+                      :margin-left  "auto"
+                      :margin-right "auto"}}
+        (if @apps-validation-error?
+          [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
+          (if (empty? @apps-row)
+            (@tr [:add-your-first-app])
+            (@tr [:add-app])))]])))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]

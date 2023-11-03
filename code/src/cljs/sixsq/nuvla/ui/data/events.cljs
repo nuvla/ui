@@ -137,12 +137,10 @@
                                       :dispatch-event ::data-sets-to-process}
                                      {:resource       :data-record
                                       :selected-data  selected-data-record-ids
-                                      :dispatch-event ::data-records-to-process})
-          filter-str             (apply general-utils/join-or
-                                        (map #(str "id='" % "'") selected-data))]
+                                      :dispatch-event ::data-records-to-process})]
       {:db                  (assoc db ::spec/application-select-visible? true
                                       ::spec/selected-application-id nil)
-       ::cimi-api-fx/search [resource {:filter filter-str
+       ::cimi-api-fx/search [resource {:filter (general-utils/filter-eq-ids selected-data)
                                        :last   10000}
                              #(dispatch [dispatch-event (:resources %)])]})))
 

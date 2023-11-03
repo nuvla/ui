@@ -133,8 +133,6 @@
 
 (defn MenuBar [uuid]
   (let [can-delete?    (subscribe [::subs/can-delete?])
-        can-terminate? (subscribe [::subs/can-terminate?])
-        can-stop?      (subscribe [::subs/can-stop?])
         can-start?     (subscribe [::subs/can-start?])
         infra-service  (subscribe [::subs/infrastructure-service])]
     [main-components/StickyBar

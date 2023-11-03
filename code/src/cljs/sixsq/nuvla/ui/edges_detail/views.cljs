@@ -574,7 +574,7 @@
                          (reset! loading? true)
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
-    (fn [resource _operation show? title icon button-text]
+    (fn [resource _operation show? title icon _button-text]
       (let [playbooks (:emergency-playbooks-ids @form-data)]
         [ui/Modal
          {:open       @show?

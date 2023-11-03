@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployments.events
-  (:require [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.spec :as spec]
             [sixsq.nuvla.ui.deployments.utils :as utils :refer [build-bulk-filter]]
@@ -25,7 +24,7 @@
   ::init
   (fn [{{:keys [current-route] :as db} :db} _]
     (let [state-filter (get-stored-db-value-from-query-param current-route [::spec/state-selector])
-          filter-query  (get-query-param current-route (keyword spec/resource-name))]
+          filter-query (get-query-param current-route (keyword spec/resource-name))]
       {:db (merge db spec/defaults
                   {::spec/state-selector    state-filter
                    ::spec/additional-filter filter-query})
@@ -53,20 +52,19 @@
   ::set-deployments
   (fn [{:keys [db]} [_ {:keys [resources] :as deployments}]]
     (let [deployments-resource-ids (map :id resources)
-          filter-deps-ids           (str/join " or " (map #(str "parent='" % "'")
-                                                          deployments-resource-ids))
-          query-params             {:filter (str "(" filter-deps-ids ") and value!=null")
+          filter-deps-ids          (general-utils/filter-eq-parent-vals deployments-resource-ids)
+          query-params             {:filter (general-utils/join-and filter-deps-ids "value!=null")
                                     :select "parent, id, deployment, name, value"
                                     :last   10000}
           callback                 (fn [response]
                                      (when-not (instance? js/Error response)
                                        (dispatch [::set-deployments-params-map response])))]
       (cond-> {:db (assoc db ::main-spec/loading? false
-                          ::spec/deployments deployments)
+                             ::spec/deployments deployments)
                :fx [[:dispatch [::get-edges-of-deployments resources]]]}
               (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search
-                                                   [:deployment-parameter
-                                                    query-params callback])))))
+                                                          [:deployment-parameter
+                                                           query-params callback])))))
 
 (reg-event-fx
   ::get-deployments
@@ -95,24 +93,19 @@
                              #(dispatch [::set-deployments %])]})))
 
 (reg-event-fx
- ::get-edges-of-deployments
- (fn [_ [_ resources]]
-   (let [filter-str (apply
-                     general-utils/join-or
-                     (map (fn [deployment]
-                            (str "id='" (:nuvlabox deployment) "'"))
-                          (filter :nuvlabox resources)))]
-     {::cimi-api-fx/search
-      [:nuvlabox
-       (->> {:filter filter-str})
-       #(dispatch [::set-deployment-edges %])]})))
+  ::get-edges-of-deployments
+  (fn [_ [_ resources]]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:filter (general-utils/filter-eq-ids (keep :nuvlabox resources))}
+      #(dispatch [::set-deployment-edges %])]}))
 
 (reg-event-db
- ::set-deployment-edges
- (fn [db [_ response]]
-   (let [edges (:resources response)]
-     (assoc db ::spec/deployment-edges (zipmap (map :id edges)
-                                               edges)))))
+  ::set-deployment-edges
+  (fn [db [_ response]]
+    (let [edges (:resources response)]
+      (assoc db ::spec/deployment-edges (zipmap (map :id edges)
+                                                edges)))))
 
 (reg-event-fx
   ::set-deployments-summary
@@ -124,8 +117,8 @@
   ::get-deployments-summary
   (fn [{{:keys [::spec/additional-filter] :as db} :db} _]
     {::cimi-api-fx/search [:deployment (utils/get-query-params-summary
-                                         {:full-text-search (full-text-search-plugin/filter-text
-                                                              db [::spec/deployments-search])
+                                         {:full-text-search  (full-text-search-plugin/filter-text
+                                                               db [::spec/deployments-search])
                                           :additional-filter additional-filter})
                            #(dispatch [::set-deployments-summary %])]}))
 
@@ -165,9 +158,9 @@
   (fn [{db :db} [_ state-selector]]
     (let [db-path ::spec/state-selector]
       {:db (assoc db db-path state-selector
-             ::spec/selected-set #{})
+                     ::spec/selected-set #{})
        :fx [[:dispatch [::route-events/store-in-query-param {:db-path [db-path]
-                                                             :value state-selector}]]
+                                                             :value   state-selector}]]
             [:dispatch
              [::pagination-plugin/change-page [::spec/pagination] 1]]]})))
 

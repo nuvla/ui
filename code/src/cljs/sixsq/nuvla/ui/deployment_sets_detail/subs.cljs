@@ -353,7 +353,7 @@
   ::edges-filter
   :<- [::edges-in-deployment-group-response]
   (fn [edges]
-    (general-utils/ids->inclusion-filter-string (->> edges :resources (map :id)))))
+    (general-utils/filter-eq-ids (->> edges :resources (mapv :id)))))
 
 (reg-sub
   ::fleet-filter

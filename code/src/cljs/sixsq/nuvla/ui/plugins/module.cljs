@@ -58,11 +58,6 @@
   [db-path href]
   (db-module-subpath db-path href ::resolved-registries-creds))
 
-(defn- db-module-registries-credentials-path
-  [db-path href]
-  (db-module-subpath db-path href ::registries-credentials))
-
-
 (defn db-module
   [db db-path href]
   (get-in db (db-module-path db-path href)))
@@ -154,8 +149,7 @@
      [:infrastructure-service
       {:filter  (general-utils/join-and
                   "subtype='registry'"
-                  (apply general-utils/join-or
-                         (map #(str "id='" % "'") private-registries))),
+                  (general-utils/filter-eq-ids private-registries))
        :select  "id, name, description"
        :orderby "name:asc,id:asc"
        :last    10000}
@@ -176,9 +170,7 @@
      [:credential
       {:filter  (general-utils/join-and
                   "subtype='infrastructure-service-registry'"
-                  (apply general-utils/join-or
-                         (map #(str "parent='" % "'")
-                              private-registries)))
+                  (general-utils/filter-eq-parent-vals private-registries))
        :select  "id, parent, name, description, last-check, status, subtype"
        :orderby "name:asc,id:asc"
        :last    10000}
@@ -230,7 +222,7 @@
   (fn [db [_ db-path href]]
     (db-module db db-path href)))
 
-(defn- db-selected-version
+(defn db-selected-version
   [db db-path href]
   (let [module            (db-module db db-path href)
         module-content-id (-> module :content :id)
@@ -276,7 +268,7 @@
 
 (defn- changed-env-vars
   [env-vars]
-  (keep (fn [{:keys [::new-value :value :name]}]
+  (keep (fn [{:keys [::new-value :name]}]
           (when (some? new-value)
             {:name  name
              :value new-value})

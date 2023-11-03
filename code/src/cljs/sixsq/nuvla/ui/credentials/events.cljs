@@ -185,8 +185,7 @@
   (fn [{:keys [db]} [_ subtypes additional-filter]]
     {:db                  (assoc db ::spec/infrastructure-services-available nil)
      ::cimi-api-fx/search [:infrastructure-service
-                           {:filter (cond-> (apply general-utils/join-or
-                                                   (map #(str "subtype='" % "'") subtypes))
+                           {:filter (cond-> (general-utils/filter-eq-subtypes subtypes)
                                             additional-filter (general-utils/join-and
                                                                 additional-filter))
                             :last   10000}

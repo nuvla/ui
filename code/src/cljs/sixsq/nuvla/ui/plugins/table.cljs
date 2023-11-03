@@ -139,9 +139,7 @@
   [{:keys [::select-all? ::selected-set]} filter-string]
   (if select-all?
     filter-string
-    (->> selected-set
-      (map #(str "id='" % "'"))
-      (apply general-utils/join-or))))
+    (general-utils/filter-eq-ids selected-set)))
 
 (defn- all-page-selected?
   [selected-set visible-deps-ids-set]

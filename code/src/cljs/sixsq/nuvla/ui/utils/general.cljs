@@ -234,23 +234,31 @@
        (map #(str "(" % ")"))
        (str/join (str " " op " "))))
 
-
 (defn join-or
   [& filters]
   (join-filters "or" filters))
-
 
 (defn join-and
   [& filters]
   (join-filters "and" filters))
 
-(defn ids->inclusion-filter-string
-  ([ids]
-  (apply join-or (map #(str "id='" % "'") ids))))
+(defn- filter-vals
+  [op attribute vals]
+  (str attribute op (vec vals)))
 
-(defn ids->exclude-filter-str
-  ([ids]
-  (apply join-and (map #(str "id!='" % "'") ids))))
+(defn filter-neq-vals
+  [attribute vals]
+  (filter-vals "!=" attribute vals))
+
+(defn filter-eq-vals
+  [attribute vals]
+  (filter-vals "=" attribute vals))
+
+(defn filter-eq-ids [vals] (filter-eq-vals "id" vals))
+(defn filter-eq-subtypes [vals] (filter-eq-vals "subtype" vals))
+(defn filter-eq-parent-vals [vals] (filter-eq-vals "parent" vals))
+(defn filter-eq-names [vals] (filter-eq-vals "name" vals))
+(defn filter-neq-ids [vals] (filter-neq-vals "id" vals))
 
 ;;
 ;; ACL utils

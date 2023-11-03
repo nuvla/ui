@@ -69,9 +69,7 @@
       (dispatch [::set-nuvlabox-associated-ssh-keys {}])
       {::cimi-api-fx/search
        [:credential
-        {:filter (->> ssh-keys-ids
-                      (map #(str "id='" % "'"))
-                      (apply general-utils/join-or))
+        {:filter (general-utils/filter-eq-ids ssh-keys-ids)
          :last   100}
         #(dispatch [::set-nuvlabox-associated-ssh-keys (:resources %)])]})))
 
@@ -95,9 +93,7 @@
     (if (seq vuln-ids)
       {::cimi-api-fx/search
        [:vulnerability
-        {:filter (->> vuln-ids
-                      (map #(str "name='" % "'"))
-                      (apply general-utils/join-or))
+        {:filter (general-utils/filter-eq-names vuln-ids)
          :last   110}
         #(dispatch [::set-matching-vulns-from-db (:resources %)])]}
       {:fx [[:dispatch [::set-matching-vulns-from-db {}]]]})))
@@ -273,11 +269,9 @@
   (fn [_ [_ statuses]]
     {::cimi-api-fx/search
      [:nuvlabox
-      {:filter (->> (map :parent statuses)
-                    (map #(str "id='" % "'"))
-                    (apply general-utils/join-or))
+      {:filter (general-utils/filter-eq-ids (mapv :parent statuses))
        :select "id, name, nuvlabox-status"
-       :last   100}
+       :last 100}
       #(dispatch [::set-nuvlabox-managers
                   (into {}
                         (for [status statuses]

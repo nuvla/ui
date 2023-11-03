@@ -195,7 +195,7 @@
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get collection-name))
-          filter-str    (apply general-utils/join-or (map #(str "id='" % "'") selected-rows))
+          filter-str    (general-utils/filter-eq-ids selected-rows)
           on-success    #(do (dispatch [::select-all-row false])
                              (dispatch [::get-results]))]
       {::cimi-api-fx/delete-bulk [resource-type on-success filter-str]})))

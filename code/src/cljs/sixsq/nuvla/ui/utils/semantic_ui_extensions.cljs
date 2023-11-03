@@ -377,7 +377,7 @@
             [icons/XMarkIcon {:style {:margin 0}}]]])))))
 
 (defn ModalDanger
-  [{:keys [_button-text _on-confirm danger-msg danger-msg-header _header _content _trigger _open _on-close _modal-action
+  [{:keys [_button-text _on-confirm danger-msg _danger-msg-header _header _content _trigger _open _on-close _modal-action
            control-confirmed? header-class with-confirm-step?]}]
   (let [confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
         clicked?   (r/atom false)]

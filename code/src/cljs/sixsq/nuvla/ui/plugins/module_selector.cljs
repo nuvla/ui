@@ -51,7 +51,7 @@
                                                                          (:user session)) "'")
                                         :app-store "published=true"
                                         nil)
-                                      (apply general-utils/join-or (map #(str "subtype='" % "'") subtypes))
+                                      (general-utils/filter-eq-subtypes subtypes)
                                       "subtype!='project'")})]
       {:db                  (cond-> db
                                     loading? (assoc-in
@@ -78,8 +78,7 @@
                                                                      set)))))]
         {:db                  (assoc-in db (conj db-path ::loading?) true)
          ::cimi-api-fx/search [:module {:select "id, name, description, parent-path, subtype"
-                                        :filter (apply general-utils/join-or
-                                                       (map #(str "id='" % "'") selected-ids))
+                                        :filter (general-utils/filter-eq-ids selected-ids)
                                         :last   10000}
                                #(dispatch [::helpers/set db-path
                                            ::selected (rebuild-selected %)

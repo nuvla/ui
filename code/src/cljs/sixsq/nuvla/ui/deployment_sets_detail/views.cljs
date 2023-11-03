@@ -782,7 +782,7 @@
       (when-not (or creating? @fleet-filter)
         ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
         ;; and retrieving deployment-set and deployment-set-edited
-        [:div
+        [:<>
          [AddButton events/edges-picker-modal-id]
          [:div {:style {:margin-top "1rem"}}
           (if (pos? (:total edges-stats))

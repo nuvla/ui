@@ -812,7 +812,8 @@
   [filter-based-fleet selected-edges]
   (let [id (random-uuid)]
     (if filter-based-fleet
-      (dispatch [::events/set-fleet-filter id])
+      (do (dispatch [::events/set-fleet-filter id])
+          (dispatch [::events/get-selected-edge-ids [::depl-group-events/set-edges]]))
       (if (seq selected-edges)
         (dispatch [::events/get-selected-edge-ids [::depl-group-events/set-edges]])
         (dispatch [::depl-group-events/set-edges {:resources []}])))

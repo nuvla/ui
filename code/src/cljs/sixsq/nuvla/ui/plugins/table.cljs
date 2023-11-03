@@ -83,19 +83,19 @@
 (defn SortIcon [direction]
   (let [direction->class {"asc"  " ascending"
                           "desc" " descending"}]
-      (when direction
-        [uix/LinkIcon {:name     (str "sort" (direction->class direction))}])))
+    (when direction
+      [uix/LinkIcon {:name (str "sort" (direction->class direction))}])))
 
 ;; Bulk selection, table plugin args
 (s/def ::name string?)
-(s/def ::component fn?)
+(s/def ::menuitem any?)
 (s/def ::event (s/or :k (s/* keyword?) :fn fn?))
 (s/def ::icon (s/nilable fn?))
 (s/def ::total-count-sub-key (s/* keyword?))
 (s/def ::resources-sub-key (s/* keyword?))
 
-(s/def ::bulk-action (s/keys :req-un [::name ::event]
-                       :opt-un [::component ::icon]))
+(s/def ::bulk-action (s/keys :req-un []
+                             :opt-un [::menuitem ::name ::event ::icon]))
 
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector?)))
 (s/def ::select-db-path (s/* keyword?))
@@ -118,8 +118,8 @@
 (reg-event-db
   ::reset-bulk-edit-selection
   (fn [db [_ db-path]]
-    (update-in db db-path merge {::select-all?           false
-                                 ::selected-set          #{}})))
+    (update-in db db-path merge {::select-all?  false
+                                 ::selected-set #{}})))
 
 (reg-event-db
   ::set-bulk-edit-success-message
@@ -168,12 +168,12 @@
           all-page-selected? (all-page-selected? selected-set visible-dep-ids)
           new-selected-set   (if all-page-selected?
                                (set/difference selected-set
-                                 visible-dep-ids)
+                                               visible-dep-ids)
                                (set/union visible-dep-ids
-                                 selected-set))]
+                                          selected-set))]
       {:db (-> db
-             (assoc-in (conj (or db-path []) ::selected-set) new-selected-set)
-             (assoc-in (conj (or db-path []) ::select-all?) false))})))
+               (assoc-in (conj (or db-path []) ::selected-set) new-selected-set)
+               (assoc-in (conj (or db-path []) ::select-all?) false))})))
 
 
 (reg-event-db
@@ -184,21 +184,21 @@
           new-set      (cond select-all?
                              (disj (set resource-ids) id)
 
-                         (is-selected? selected-set id)
-                         (disj selected-set id)
+                             (is-selected? selected-set id)
+                             (disj selected-set id)
 
-                         :else
-                         (conj selected-set id))]
+                             :else
+                             (conj selected-set id))]
       (-> db
-        (assoc-in (conj (or db-path []) ::selected-set) new-set)
-        (assoc-in (conj (or db-path []) ::select-all?) false)))))
+          (assoc-in (conj (or db-path []) ::selected-set) new-set)
+          (assoc-in (conj (or db-path []) ::select-all?) false)))))
 
 (reg-event-db
   ::select-all
   (fn [db [_ db-path status]]
     (-> db
-      (assoc-in (conj (or db-path []) ::select-all?) (not= status :all))
-      (assoc-in (conj (or db-path []) ::selected-set) #{}))))
+        (assoc-in (conj (or db-path []) ::select-all?) (not= status :all))
+        (assoc-in (conj (or db-path []) ::selected-set) #{}))))
 
 (reg-sub
   ::bulk-update-modal
@@ -280,7 +280,7 @@
     (subscribe resources-sub-key))
   (fn [resources [_ _ rights-needed]]
     (if-not rights-needed resources
-      (filter (partial general-utils/can-operation? rights-needed) resources))))
+                          (filter (partial general-utils/can-operation? rights-needed) resources))))
 
 (defn CellCheckbox
   [{:keys [id selected-all-sub selected-set-sub db-path
@@ -289,12 +289,12 @@
         select-fn (fn [] (dispatch [::select-id id db-path (map :id @resources)]))
         checked?  (or @selected-all-sub (is-selected? @selected-set-sub id))]
     [ui/TableCell {:aria-label (str "select row " idx)
-                   :on-click (fn [event]
-                               (select-fn)
-                               (.stopPropagation event))}
-     [ui/Checkbox {:id idx
+                   :on-click   (fn [event]
+                                 (select-fn)
+                                 (.stopPropagation event))}
+     [ui/Checkbox {:id         idx
                    :aria-label (str "select " edge-name)
-                   :checked checked?}]]))
+                   :checked    checked?}]]))
 
 
 (defn HeaderCellCeckbox
@@ -307,96 +307,97 @@
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub
            db-path bulk-actions resources-sub-key selectable? resource-type]}]
-  (let [tr                          (subscribe [::i18n-subs/tr])
-        rows                        @(subscribe resources-sub-key)
-        total-count                 (subscribe total-count-sub-key)
-        selection-status            (subscribe [::selection-status db-path resources-sub-key @total-count])
-        on-page-selected            (count @(subscribe [::on-page-selected-set db-path resources-sub-key]))
-        off-page-selected           (if @selected-all-sub
-                                      (- @total-count (count rows))
-                                      (count @(subscribe [::off-page-selected-set db-path resources-sub-key])))
-        off-page-selection?         (pos? off-page-selected)
-        off-page-selection-text     (when off-page-selection?
-                                      (str/join " " [off-page-selected
-                                                     (@tr [:on-other-pages])]))
-        selected-all-text           (when (= :all @selection-status)
-                                      (str/join " " [(str/capitalize (@tr [:all]))
-                                                     @total-count
-                                                     (@tr [(or resource-type :items)])
-                                                     (@tr [:are-selected])
-                                                     (when off-page-selection-text
-                                                       (str "(" off-page-selection-text ")"))]))
-        on-page-selection?          (pos? on-page-selected)
-        manual-selection-text       (str/join " " [(when (#{:all :page :page-plus} @selection-status)
-                                                     (str/capitalize (@tr [:all])))
-                                                   (when on-page-selection?
-                                                     (str on-page-selected
-                                                       " "
-                                                       (@tr [(or resource-type :items)])
-                                                       " "
-                                                       (@tr [:on-this-page])
-                                                       " "
-                                                       (@tr [:are-selected])))
-                                                   (when off-page-selection?
-                                                     (if on-page-selection?
-                                                       (str "(" off-page-selection-text ")")
-                                                       (str off-page-selected " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
-        button-text                 (if (= @selection-status :all)
-                                      "Clear selection"
-                                      (str "Select all " @total-count))
-        payload                     {:select-all   @selected-all-sub
-                                     :selected-set @selected-set-sub}
-        nothing-selected?           (= :none @selection-status)
-        bulk-edit-success-message   (subscribe [::bulk-edit-success-message-sub db-path])]
+  (let [tr                        (subscribe [::i18n-subs/tr])
+        rows                      @(subscribe resources-sub-key)
+        total-count               (subscribe total-count-sub-key)
+        selection-status          (subscribe [::selection-status db-path resources-sub-key @total-count])
+        on-page-selected          (count @(subscribe [::on-page-selected-set db-path resources-sub-key]))
+        off-page-selected         (if @selected-all-sub
+                                    (- @total-count (count rows))
+                                    (count @(subscribe [::off-page-selected-set db-path resources-sub-key])))
+        off-page-selection?       (pos? off-page-selected)
+        off-page-selection-text   (when off-page-selection?
+                                    (str/join " " [off-page-selected
+                                                   (@tr [:on-other-pages])]))
+        selected-all-text         (when (= :all @selection-status)
+                                    (str/join " " [(str/capitalize (@tr [:all]))
+                                                   @total-count
+                                                   (@tr [(or resource-type :items)])
+                                                   (@tr [:are-selected])
+                                                   (when off-page-selection-text
+                                                     (str "(" off-page-selection-text ")"))]))
+        on-page-selection?        (pos? on-page-selected)
+        manual-selection-text     (str/join " " [(when (#{:all :page :page-plus} @selection-status)
+                                                   (str/capitalize (@tr [:all])))
+                                                 (when on-page-selection?
+                                                   (str on-page-selected
+                                                        " "
+                                                        (@tr [(or resource-type :items)])
+                                                        " "
+                                                        (@tr [:on-this-page])
+                                                        " "
+                                                        (@tr [:are-selected])))
+                                                 (when off-page-selection?
+                                                   (if on-page-selection?
+                                                     (str "(" off-page-selection-text ")")
+                                                     (str off-page-selected " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
+        button-text               (if (= @selection-status :all)
+                                    "Clear selection"
+                                    (str "Select all " @total-count))
+        payload                   {:select-all   @selected-all-sub
+                                   :selected-set @selected-set-sub}
+        nothing-selected?         (= :none @selection-status)
+        bulk-edit-success-message (subscribe [::bulk-edit-success-message-sub db-path])]
     [:div
-     {:style  {:position :sticky :top "39px" :z-index 998}
+     {:style {:position :sticky :top "39px" :z-index 998}
       :class [(if selectable? :visible :invisible)]}
      (when (seq bulk-actions)
-       [:div {:style {:display :flex
-                      :border "1px solid rgb(230 230 230)"
-                      :border-radius "0.28rem"
+       [:div {:style {:display          :flex
+                      :border           "1px solid rgb(230 230 230)"
+                      :border-radius    "0.28rem"
                       :background-color "rgb(249 250 251)"
-                      :justify-content :space-between
-                      :align-items :center
-                      :height "40px"
-                      :gap "1rem"}}
+                      :justify-content  :space-between
+                      :align-items      :center
+                      :height           "40px"
+                      :gap              "1rem"}}
         [:div
-         [ui/Popup {:trigger
-                    (r/as-element
-                      [:div
-                       [ui/Menu {:style {:border          :none
-                                         :box-shadow      :none
-                                         :background-color :transparent}
-                                 :stackable  true}
-                        (for [[idx action ] (map-indexed vector bulk-actions)
-                              :let [{:keys [name event icon]} action]]
-                          [ui/MenuItem
-                           {:disabled nothing-selected?
-                            :class :bulk-action-bar-item
-                            :on-click (fn []
-                                        (if (fn? event) (event payload)
-                                          (dispatch event)))
-                            :key idx}
-                           (when icon [icon])
-                           name])]])
-                    :basic    true
-                    :disabled (not= :none @selection-status)
-                    :content  (@tr [:select-at-least-one-item])}]]
+         [ui/Menu {:style     {:border           :none
+                               :box-shadow       :none
+                               :background-color :transparent}
+                   :stackable true}
+          (for [[idx action] (map-indexed vector bulk-actions)
+                :let [{:keys [name event icon menuitem]} action]]
+            (or menuitem
+                [ui/Popup {:trigger
+                           (r/as-element
+                             [:div
+                              [ui/MenuItem
+                               {:disabled nothing-selected?
+                                :class    :bulk-action-bar-item
+                                :on-click (fn []
+                                            (if (fn? event) (event payload)
+                                                            (dispatch event)))
+                                :key      idx}
+                               (when icon [icon])
+                               name]])
+                           :basic    true
+                           :disabled (not= :none @selection-status)
+                           :content  (@tr [:select-at-least-one-item])}]))]]
         [:div {:style {:padding-right "1rem"}}
          @bulk-edit-success-message]])
      [:div
-      {:style {:heigh "2rem"
-               :padding-left "1rem"
-               :border "1px solid rgb(230 230 230)"
-               :border-radius "0.28rem"
+      {:style {:heigh            "2rem"
+               :padding-left     "1rem"
+               :border           "1px solid rgb(230 230 230)"
+               :border-radius    "0.28rem"
                :background-color "#f0eeef"}}
       [:div {:style {:display         :flex
                      :justify-content :center
                      :align-items     :center}}
        [:span (or selected-all-text manual-selection-text)]
-       [:button {:style {:width "120px" :text-align :center :border :none}
+       [:button {:style    {:width "120px" :text-align :center :border :none}
                  :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
-                 :class [:select-all]}
+                 :class    [:select-all]}
         button-text]]]]))
 
 
@@ -420,12 +421,12 @@
   (fn [{{:keys [::current-cols
                 ::default-cols]} :db} [_ {:keys [col-key position db-path]}]]
     (let [cols (get current-cols db-path
-                 (get default-cols db-path))]
+                    (get default-cols db-path))]
       (when-not (some #{col-key} cols)
         (let [new-cols (if position
                          (vec (concat (take position cols)
-                                [col-key]
-                                (drop position cols)))
+                                      [col-key]
+                                      (drop position cols)))
                          (into cols [col-key]))]
           {:fx [[:dispatch
                  [::set-current-cols
@@ -440,7 +441,7 @@
 (reg-event-fx
   ::set-current-cols
   [(inject-cofx :storage/get {:name local-storage-key})]
-  (fn [{storage :storage/get
+  (fn [{storage                  :storage/get
         {:keys [::default-cols]} :db} [_ cols db-path]]
     (let [defaults (get default-cols db-path)
           new-cols (cond
@@ -508,17 +509,17 @@
 
 (defn- HeaderCellContent
   [{:keys [db-path sort-key no-sort? header-content field-key fetch-event]}]
-  (let [tr               @(subscribe [::i18n-subs/tr])
-        sort-key         (or sort-key field-key)
-        direction        (when db-path @(subscribe [::sort-direction db-path  sort-key]))
-        sort-enabled?    (and
-                           db-path
-                           (or sort-key field-key)
-                           (not no-sort?))
-        sort-fn          #(dispatch [::sort {:field       sort-key
-                                             :direction   direction
-                                             :db-path     db-path
-                                             :fetch-event fetch-event}])]
+  (let [tr            @(subscribe [::i18n-subs/tr])
+        sort-key      (or sort-key field-key)
+        direction     (when db-path @(subscribe [::sort-direction db-path sort-key]))
+        sort-enabled? (and
+                        db-path
+                        (or sort-key field-key)
+                        (not no-sort?))
+        sort-fn       #(dispatch [::sort {:field       sort-key
+                                          :direction   direction
+                                          :db-path     db-path
+                                          :fetch-event fetch-event}])]
     [:span {:on-click (when sort-enabled? sort-fn)
             :style    (when sort-enabled?
                         {:cursor :pointer})}
@@ -577,14 +578,14 @@
                          select-config
                          (s/valid? ::select-config select-config)
                          (or (not rights-needed)
-                           (some (partial general-utils/can-operation? rights-needed) rows)))
+                             (some (partial general-utils/can-operation? rights-needed) rows)))
         selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))
         select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
         page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key]))
         get-row-props  (fn [row]
                          (update (merge row-props {:on-click #(when row-click-handler (row-click-handler row))})
-                           :style
-                           merge (:style (:table-row-prop row))))]
+                                 :style
+                                 merge (:style (:table-row-prop row))))]
     [:div
      (when selectable?
        [BulkActionBar {:selectable?         selectable?
@@ -598,7 +599,7 @@
                        :resources-sub-key   resources-sub-key}])
      [:div
       [:div {:style {:overflow :auto
-                     :padding 0
+                     :padding  0
                      :position :relative}
              :class :table-fixed-row-height}
        [ui/Table (merge {:stackable false} (:table-props props))
@@ -607,7 +608,7 @@
           (when selectable?
             [ui/TableHeaderCell
              {:style {:width "30px"}}
-             [HeaderCellCeckbox {:db-path select-db-path :resources-sub-key resources-sub-key
+             [HeaderCellCeckbox {:db-path            select-db-path :resources-sub-key resources-sub-key
                                  :page-selected?-sub page-selected? :rights-needed rights-needed}]])
           (for [col columns
                 :when col
@@ -620,17 +621,17 @@
               [:div {:style {:flex-grow 1}}
                [HeaderCellContent
                 (merge sort-config
-                  {:header-content header-content}
-                  (select-keys col [:sort-key :field-key :no-sort?]))]
+                       {:header-content header-content}
+                       (select-keys col [:sort-key :field-key :no-sort?]))]
                (when-let [remove-fn (-> props :col-config :remove-col-fn)]
                  (when (and (< 1 (count columns))
-                         (not (:no-remove-icon? col)))
+                            (not (:no-remove-icon? col)))
                    [:span {:style {:margin-left "0.8rem"}}
-                    [uix/LinkIcon {:color "red"
+                    [uix/LinkIcon {:color    "red"
                                    :disabled (< (count columns) 2)
-                                   :name "remove circle"
+                                   :name     "remove circle"
                                    :on-click #(remove-fn field-key)
-                                   :class :toggle-invisible-on-parent-hover}]]))] ]])
+                                   :class    :toggle-invisible-on-parent-hover}]]))]]])
           (when-let [col-cong-button (-> props :col-config :col-config-modal)]
             [ui/TableHeaderCell {:style {:width "30px"}} [:div col-cong-button]])]]
         [ui/TableBody (:body-props props)
@@ -640,28 +641,28 @@
              ^{:key (:id row)}
              [ui/TableRow (get-row-props row)
               (when selectable?
-                [CellCheckbox {:id id :selected-set-sub selected-set :db-path select-db-path
+                [CellCheckbox {:id               id :selected-set-sub selected-set :db-path select-db-path
                                :selected-all-sub select-all? :resources-sub-key resources-sub-key
-                               :rights-needed rights-needed
-                               :edge-name (or
-                                            (and select-label-accessor
-                                              (select-label-accessor row))
-                                            (:name row)
-                                            (:id row))
-                               :idx idx}])
+                               :rights-needed    rights-needed
+                               :edge-name        (or
+                                                   (and select-label-accessor
+                                                        (select-label-accessor row))
+                                                   (:name row)
+                                                   (:id row))
+                               :idx              idx}])
               (for [[idx {:keys [field-key accessor cell cell-props]}] (map-indexed vector columns)
                     :when (or field-key accessor)
                     :let [cell-data ((or accessor field-key) row)
-                          last? (= idx (dec (count columns)))]]
+                          last?     (= idx (dec (count columns)))]]
                 ^{:key (str id "-" field-key)}
                 [ui/TableCell
                  (cond-> cell-props
-                   last? (assoc :colspan 2))
+                         last? (assoc :colspan 2))
                  (cond
                    cell (if (string? cell) cell
-                          [cell {:row-data  row
-                                 :cell-data cell-data
-                                 :field-key field-key}])
+                                           [cell {:row-data  row
+                                                  :cell-data cell-data
+                                                  :field-key field-key}])
                    :else (str (if (or
                                     (not (coll? cell-data))
                                     (seq cell-data))
@@ -671,34 +672,34 @@
 
 (defn ConfigureVisibleColumns
   [db-path available-fields]
-  (let [default-cols  (subscribe [::get-default-cols db-path])
-        current-cols  (subscribe [::get-current-cols db-path])
-        selected-cols (r/atom (set @current-cols))
-        show?         (r/atom false)
+  (let [default-cols       (subscribe [::get-default-cols db-path])
+        current-cols       (subscribe [::get-current-cols db-path])
+        selected-cols      (r/atom (set @current-cols))
+        show?              (r/atom false)
         available-col-keys (set (keys available-fields))]
     (fn []
       [SelectFieldsView
-       {:field->view (into {}
-                       (map (fn [[k v]]
-                              [k (:header-content v)])
-                         available-fields))
-        :title-tr-key :columns
-        :show? show?
-        :selections-atom selected-cols
+       {:field->view         (into {}
+                                   (map (fn [[k v]]
+                                          [k (:header-content v)])
+                                        available-fields))
+        :title-tr-key        :columns
+        :show?               show?
+        :selections-atom     selected-cols
         :reset-to-default-fn #(reset! selected-cols (set @default-cols))
         :selected-fields-sub current-cols
-        :available-fields available-col-keys
-        :update-fn     #(dispatch [::set-current-cols % db-path])
-        :trigger       [uix/Button
-                        {:basic true
-                         :icon :options
-                         :style {:padding 0
-                                 :box-shadow :none
-                                 :position :relative
-                                 :z-index 1000}
-                         :on-click (fn []
-                                     (reset! selected-cols (set @current-cols))
-                                     (reset! show? true))}]}])))
+        :available-fields    available-col-keys
+        :update-fn           #(dispatch [::set-current-cols % db-path])
+        :trigger             [uix/Button
+                              {:basic    true
+                               :icon     :options
+                               :style    {:padding    0
+                                          :box-shadow :none
+                                          :position   :relative
+                                          :z-index    1000}
+                               :on-click (fn []
+                                           (reset! selected-cols (set @current-cols))
+                                           (reset! show? true))}]}])))
 
 (defn- no-rmv-column? [cols-without-rmv-icon k]
   (boolean
@@ -722,13 +723,13 @@
                                (zipmap
                                  ks
                                  (map (fn [k]
-                                        {:field-key k
+                                        {:field-key       k
                                          :no-remove-icon? (no-rmv-column? cols-without-rmv-icon k)})
-                                   ks)))
+                                      ks)))
                              (into {} (map (juxt :field-key
-                                             (fn [col]
-                                               (assoc col :no-remove-icon?
-                                                  (no-rmv-column? cols-without-rmv-icon (:field-key col))))) columns)))]
+                                                 (fn [col]
+                                                   (assoc col :no-remove-icon?
+                                                              (no-rmv-column? cols-without-rmv-icon (:field-key col))))) columns)))]
         [:div
          [Table (assoc props
                   :col-config {:remove-col-fn  remove-col-fn

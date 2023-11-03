@@ -51,7 +51,7 @@
   [apps-count edges-count action]
   (str "You're about to " action " " apps-count " app"
        (if (< 1 apps-count) "s " " ") "on "
-       edges-count " device"
+       edges-count " edge"
        (if (< 1 edges-count) "s. " ". ") "Proceed?"))
 
 (defn- ops-status-pending-str [tr-fn ops-status]
@@ -633,6 +633,15 @@
                     :content  "Show me"
                     :on-click (create-nav-fn "deployments" nil)}]])))
 
+(defn polish-fleet-filter
+  [tr fleet-filter]
+  (let [polished (-> fleet-filter
+                     (str/replace "(id!=null) and " "")
+                     (str/replace "(id!=null)" ""))]
+    (if (empty? polished)
+      (tr [:deploy-with-catch-all-edges-filter])
+      polished)))
+
 (defn FleetFilterMessage []
   (let [tr                   (subscribe [::i18n-subs/tr])
         fleet-filter         (subscribe [::subs/fleet-filter])
@@ -640,9 +649,13 @@
         can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" @deployment-set)
         unsaved-changes?     (subscribe [::subs/unsaved-changes?])]
     (when @fleet-filter
-      [:p (@tr [:recompute-fleet-info]) " "
+      [:p {:style {:align-self "center"}}
+       [ui/Popup {:trigger (r/as-element
+                             [:span (@tr [:recompute-fleet-info])])
+                  :content (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
+       " "
        (when (and can-recompute-fleet? (not @unsaved-changes?))
-         [:a {:href "#"
+         [:a {:href     "#"
               :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
           (@tr [:recompute-fleet])])])))
 
@@ -753,31 +766,28 @@
         fleet-filter (subscribe [::subs/fleet-filter])
         fleet-changes (subscribe [::subs/fleet-changes])]
     [:<>
-     (when (pos? (:total edges-stats))
-       [:<>
-        [StatisticStatesEdgeView edges-stats]
-        (when @fleet-changes
-          [:div {:style {:margin "1.4rem auto"}}
-           [UnstoredEdgeChanges @fleet-changes]])
-        [uix/Button {:class    "center"
-                     :icon     icons/i-box
-                     :content  "Show me"
-                     :disabled (or (nil? (:total edges-stats))
+     [:<>
+      [StatisticStatesEdgeView edges-stats]
+      (when @fleet-changes
+        [:div {:style {:margin "1.4rem auto"}}
+         [UnstoredEdgeChanges @fleet-changes]])
+      [uix/Button {:class    "center"
+                   :icon     icons/i-box
+                   :content  "Show me"
+                   :disabled (or (nil? (:total edges-stats))
                                  (= 0 (:total edges-stats)))
-                     :on-click (create-nav-fn "edges" {:edges-state nil})}]])
+                   :on-click (create-nav-fn "edges" {:edges-state nil})}]]
      [:div
       {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
-      (when-not (or
-                  creating?
-                  @fleet-filter)
+      (when-not (or creating? @fleet-filter)
         ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
         ;; and retrieving deployment-set and deployment-set-edited
-        [:div
-         [AddButton events/edges-picker-modal-id]])
-      [:div {:style {:margin-top "1rem"}}
-       (if (pos? (:total edges-stats))
-         (@tr [:add-your-first-edge])
-         (@tr [:add-an-edge]))]
+        [:<>
+         [AddButton events/edges-picker-modal-id]
+         [:div {:style {:margin-top "1rem"}}
+          (if (pos? (:total edges-stats))
+            (@tr [:add-edges])
+            (@tr [:add-your-first-edges]))]])
       [EdgesPickerModal]
       [FleetFilterMessage]]]))
 

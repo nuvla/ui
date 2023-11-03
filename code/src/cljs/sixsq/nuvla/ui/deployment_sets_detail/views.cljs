@@ -229,28 +229,64 @@
       :button-text        button-text
       :with-confirm-step? true}]))
 
+(def save-modal-id ::save-modal)
+
+(defn- UnstoredEdgeChanges
+  [fleet-changes]
+  (let [removed (:removed fleet-changes)
+        added   (:added fleet-changes)]
+    [:span
+     (str "You have unsaved fleet changes" ": "
+       (when removed (str (count removed) " removed"))
+       (when (and removed added) ", ")
+       (when added (str (count added) " added")))]))
+
+(defn- ChangedStuff
+  []
+  (let [fleet-changes (subscribe [::subs/fleet-changes])]
+    [:div
+     [:div [:h3 "Fleet changes"]
+      (if @fleet-changes
+        [UnstoredEdgeChanges @fleet-changes]
+        [:div "no changes in your fleet"])]]))
+
 (defn SaveButton
   [{:keys [creating?]}]
   (let [tr            (subscribe [::i18n-subs/tr])
         save-enabled? (subscribe [::subs/save-enabled? creating?])
-        validation    (subscribe [::subs/deployment-set-validation])]
+        validation    (subscribe [::subs/deployment-set-validation])
+        modal-open?   (subscribe [::subs/modal-open? save-modal-id])]
     (fn [{:keys [deployment-set]}]
-      [ui/Popup
-       {:trigger
-        (r/as-element
-          [:div
-           [uix/MenuItem
-            {:name     (@tr [:save])
-             :icon     icons/i-floppy
-             :disabled (not @save-enabled?)
-             :class    (when @save-enabled? "primary-menu-item")
-             :on-click (if creating?
-                         #(dispatch [::events/create])
-                         (if (:valid? @validation)
-                           #(dispatch [::events/do-edit {:deployment-set deployment-set
-                                                         :success-msg    (@tr [:updated-successfully])}])
-                           #(dispatch [::events/enable-form-validation])))}]])
-        :content (@tr [:depl-group-required-fields-before-save])}])))
+      (let [on-confirm    (if creating?
+                            #(dispatch [::events/create])
+                            (if (:valid? @validation)
+                              #(dispatch [::events/do-edit {:deployment-set deployment-set
+                                                            :success-msg    (@tr [:updated-successfully])}])
+                              #(dispatch [::events/enable-form-validation])))
+            menu-item     (r/as-element
+                            [:div
+                             [uix/MenuItem
+                              {:name     (@tr [:save])
+                               :icon     icons/i-floppy
+                               :disabled (not @save-enabled?)
+                               :class    (when @save-enabled? "primary-menu-item")
+                               :on-click (if creating?
+                                           on-confirm
+                                           #(dispatch [::events/set-opened-modal save-modal-id]))}]])]
+        (if creating? [ui/Popup
+                       {:trigger menu-item
+                        :content (@tr [:depl-group-required-fields-before-save])}]
+          [:<>
+           [uix/ModalDanger
+            {:on-confirm         on-confirm
+             :open               @modal-open?
+             :on-close           #(dispatch [::events/set-opened-modal nil])
+             :content            [ChangedStuff]
+             :header             [:h3 "Saving changes to deployment group"]
+              ;;  :danger-msg         "Are yu sure?"
+             :button-text        "sure sure?"
+             :with-confirm-step? true}]
+           menu-item])))))
 
 (defn CancelButton
   []
@@ -774,15 +810,7 @@
                      :active   true
                      :on-click add-to-select}]]])))
 
-(defn- UnstoredEdgeChanges
-  [fleet-changes]
-  (let [removed (:removed fleet-changes)
-        added   (:added fleet-changes)]
-    [:span
-     (str "You have unsaved fleet changes" ": "
-       (when removed (str (count removed) " removed"))
-       (when (and removed added) ", ")
-       (when added (str (count added) " added")))]))
+
 
 (defn EdgeOverviewContent
   [edges-stats creating?]

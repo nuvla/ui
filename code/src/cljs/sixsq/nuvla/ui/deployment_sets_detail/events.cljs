@@ -183,9 +183,8 @@
                                       (mapcat :applications)
                                       (map :id)
                                       distinct)
-          filter-str             (apply general-utils/join-or (map #(str "id='" % "'") apps-urls))
-          params                 {:filter filter-str
-                                  :last   1000}
+          params                 {:filter (general-utils/filter-eq-ids apps-urls)
+                                  :last   10000}
           callback               #(if (instance? js/Error %)
                                     (cimi-api-fx/default-error-message % "load applications sets failed")
                                     (dispatch [::load-apps-sets-response {:apps-sets-set    apps-sets
@@ -285,7 +284,7 @@
 (reg-event-fx
   ::edit
   (fn [{{:keys [::spec/deployment-set
-                ::spec/deployment-set-edited] :as db} :db} [_ key value]]
+                ::spec/deployment-set-edited]} :db} [_ key value]]
     (let [updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc key value))]
@@ -548,20 +547,19 @@
   (fn [{{:keys [::spec/edges-ordering
                 ::spec/deployment-set-edited
                 ::spec/edges-additional-filter] :as db} :db} _]
-    (let [callback   (fn [response]
-                       (dispatch [::set-edges response]))
-          fleet      (get-target-fleet-ids deployment-set-edited)
-          ]
+    (let [callback (fn [response]
+                     (dispatch [::set-edges response]))
+          fleet    (get-target-fleet-ids deployment-set-edited)]
       (when (seq fleet) {::cimi-api-fx/search [:nuvlabox
-                                               {:filter     (general-utils/join-and
-                                                               (general-utils/ids->inclusion-filter-string (get-target-fleet-ids deployment-set-edited))
-                                                              edges-additional-filter
-                                                              (full-text-search-plugin/filter-text
-                                                                db [::spec/edges-full-text-search]))
+                                               {:filter      (general-utils/join-and
+                                                               (general-utils/filter-eq-ids (get-target-fleet-ids deployment-set-edited))
+                                                               edges-additional-filter
+                                                               (full-text-search-plugin/filter-text
+                                                                 db [::spec/edges-full-text-search]))
                                                 :last        10000
                                                 :select      "id"
                                                 :aggregation edges-spec/state-summary-agg-term
-                                                :orderby (ordering->order-string edges-ordering)}
+                                                :orderby     (ordering->order-string edges-ordering)}
                                                callback]}))))
 
 (reg-event-fx
@@ -581,8 +579,8 @@
                 ::spec/changed-edges
                 ::spec/edges-additional-filter] :as db} :db} _]
     (let [edges        (get-in db
-                         (subs/current-route->edges-db-path
-                           current-route))
+                               (subs/current-route->edges-db-path
+                                 current-route))
           ordering     (or edges-ordering spec/default-ordering)
           state-filter (routing-utils/get-query-param current-route edges-state-filter-key)
           changed-ids  (remove nil? (flatten (vals changed-edges)))]
@@ -593,7 +591,7 @@
                       (->> {:orderby (ordering->order-string ordering)
                             :filter  (if (seq changed-ids)
                                        (general-utils/join-and
-                                         (general-utils/ids->inclusion-filter-string
+                                         (general-utils/filter-eq-ids
                                            changed-ids)
                                          edges-additional-filter
                                          (full-text-search-plugin/filter-text
@@ -602,8 +600,7 @@
                                            (edges-utils/state-filter state-filter)))
                                        (general-utils/join-and
                                          "id!=null"
-                                         (general-utils/ids->inclusion-filter-string (-> edges
-                                                                                         :resources))
+                                         (general-utils/filter-eq-ids (:resources edges))
                                          (when (seq state-filter)
                                            (edges-utils/state-filter state-filter))))}
                            (pagination-plugin/first-last-params
@@ -665,8 +662,8 @@
                         apps-store-spec/allapps-key
                         {:external-filter
                          (general-utils/join-and
-                           (general-utils/ids->exclude-filter-str
-                             (map :id current-selection))
+                           (general-utils/filter-neq-ids
+                             (mapv :id current-selection))
                            (when (seq current-selection)
                              "subtype!='applications_sets'"))
                          :order-by           "name:asc"
@@ -723,11 +720,10 @@
                        :content
                        :applications-sets
                        (mapcat :applications)
-                       (map :id))]
+                       (mapv :id))]
       {::cimi-api-fx/search
        [:module
-        {:filter (general-utils/ids->inclusion-filter-string
-                   app-ids)}
+        {:filter (general-utils/filter-eq-ids app-ids)}
         #(dispatch [::add-apps-to-selection (:resources %)])]})))
 
 (reg-event-fx
@@ -818,7 +814,7 @@
         (->> {:orderby (ordering->order-string ordering)
               :filter  (general-utils/join-and
                          (get-full-filter-string db)
-                         (general-utils/ids->exclude-filter-str (:resources edges)))}
+                         (general-utils/filter-neq-ids (:resources edges)))}
              (pagination-plugin/first-last-params
                db [::spec/edge-picker-pagination]))
         #(dispatch [::set-edge-picker-edges %])]})))
@@ -840,8 +836,8 @@
           db [::spec/edge-picker-full-text-search])
         edges-spec/state-summary-agg-term
         (general-utils/join-and edge-picker-additional-filter
-          (general-utils/ids->exclude-filter-str
-            (:resources edges))))
+                                (general-utils/filter-neq-ids
+                                  (:resources edges))))
       #(dispatch [::set-edge-picker-edges-summary %])]}))
 
 (reg-event-db
@@ -879,9 +875,9 @@
   (mapv
     (fn [app-set]
       (update app-set :overwrites
-        (partial mapv
-          (fn [app-set-overwrite]
-            (update app-set-overwrite :fleet update-fleet)))))
+              (partial mapv
+                       (fn [app-set-overwrite]
+                         (update app-set-overwrite :fleet update-fleet)))))
     apps-set))
 
 (reg-event-fx
@@ -902,8 +898,8 @@
     (let [remove-fn (fn [edges]
                       (remove (fn [edge]
                                 (or select-all
-                                  ((set selected-set) edge))) edges))
-          apps-set (get-in db [::spec/deployment-set-edited :applications-sets])]
+                                    ((set selected-set) edge))) edges))
+          apps-set  (get-in db [::spec/deployment-set-edited :applications-sets])]
       {:fx [[:dispatch [::edit :applications-sets
                         (update-fleets remove-fn apps-set)]]
             [:dispatch [::refresh]]]})))
@@ -923,5 +919,5 @@
   ::show-fleet-changes-only
   (fn [{{:keys [::spec/changed-edges] :as db} :db} [_ changed-fleet]]
     {:db (assoc db ::spec/changed-edges
-           (if changed-edges nil changed-fleet))
+                   (if changed-edges nil changed-fleet))
      :fx [[:dispatch [::get-edge-documents]]]}))

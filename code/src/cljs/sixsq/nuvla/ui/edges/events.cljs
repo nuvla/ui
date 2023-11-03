@@ -182,8 +182,7 @@
       {::cimi-api-fx/search
        [:nuvlabox-status
         {:select "id,parent,next-heartbeat,nuvlabox-engine-version,online,last-heartbeat"
-         :filter (apply general-utils/join-or
-                        (map #(str "parent='" (:id %) "'") nuvlaboxes))}
+         :filter (general-utils/filter-eq-parent-vals (mapv :id nuvlaboxes))}
         #(dispatch [::set-nuvlaedges-status %])]})))
 
 
@@ -329,8 +328,7 @@
   (fn [_ [_ ssh-keys-ids dispatch-vector]]
     {::cimi-api-fx/search
      [:credential
-      {:filter (cond-> (apply general-utils/join-or
-                              (map #(str "id='" % "'") ssh-keys-ids)))
+      {:filter (general-utils/filter-eq-ids ssh-keys-ids)
        :select "public-key"
        :last   10000}
       #(do
@@ -454,16 +452,15 @@
   (fn [_ [_ selected-clusters]]
     {::cimi-api-fx/search
      [:nuvlabox
-      {:filter (apply general-utils/join-or
-                      (map #(str "id='" % "'")
-                           (reduce
-                             (fn [set-ids c]
-                               (set/union
-                                 set-ids
-                                 (set (:nuvlabox-managers c))
-                                 (set (get c :nuvlabox-workers #{}))))
-                             #{}
-                             (:resources selected-clusters))))
+      {:filter (->> (:resources selected-clusters)
+                    (reduce
+                      (fn [set-ids c]
+                        (set/union
+                          set-ids
+                          (set (:nuvlabox-managers c))
+                          (set (get c :nuvlabox-workers #{}))))
+                      #{})
+                    general-utils/filter-eq-ids)
        :last   10000}
       #(dispatch [::set-nuvlaboxes-in-clusters %])]}))
 
@@ -490,14 +487,13 @@
 (reg-event-fx
   ::get-ssh-keys-available
   (fn [{:keys [db]} [_ subtypes additional-filter]]
-    {:db                  (assoc db ::spec/ssh-keys-available nil)
-     ::cimi-api-fx/search [:credential
-                           {:filter (cond-> (apply general-utils/join-or
-                                                   (map #(str "subtype='" % "'") subtypes))
-                                            additional-filter (general-utils/join-and
-                                                                additional-filter))
-                            :last   10000}
-                           #(dispatch [::set-ssh-keys-available %])]}))
+    {:db (assoc db ::spec/ssh-keys-available nil)
+     ::cimi-api-fx/search
+     [:credential
+      {:filter (cond-> (general-utils/filter-eq-subtypes subtypes)
+                       additional-filter (general-utils/join-and additional-filter))
+       :last   10000}
+      #(dispatch [::set-ssh-keys-available %])]}))
 
 
 (reg-event-fx

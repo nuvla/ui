@@ -62,9 +62,8 @@
       (when (seq monitored-ids)
         {::cimi-api-fx/search
          [:job {:last   10000
-                :filter (->> (get-in db (conj db-path ::monitored-ids))
-                             (map #(str "id='" % "'"))
-                             (apply general-utils/join-or))}
+                :filter (general-utils/filter-eq-ids
+                          (get-in db (conj db-path ::monitored-ids)))}
           #(dispatch [::set-jobs db-path (:resources %)])]}))))
 
 (reg-event-fx

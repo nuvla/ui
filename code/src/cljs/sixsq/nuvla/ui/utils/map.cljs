@@ -5,7 +5,6 @@
             [clojure.string :as str]
             [re-frame.core :refer [subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.subs :as main-subs]))
 
 (def Map (r/adapt-react-class leaflet/Map))

@@ -381,7 +381,7 @@
                     :clearable      true
                     :on-change      on-change
                     :on-add-item    (ui-callback/value
-                                      (fn [value] (swap! value-options #(conj @value-options value))))
+                                      (fn [value] (swap! value-options #(conj % value))))
                     :options        options}])))
 
 (def metric-name->default-condition

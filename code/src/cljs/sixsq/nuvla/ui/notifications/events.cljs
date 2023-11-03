@@ -280,11 +280,11 @@
 
 (reg-event-db
   ::reset-subscription-config-all
-  (fn [db [_]]
-    (assoc db ::spec/notification-subscription-config {})
-    (assoc db ::spec/components-number 0)
-    (assoc db ::spec/resource-tags-available [])
-    (assoc db ::spec/collection nil)))
+  (fn [db]
+    (assoc db ::spec/notification-subscription-config {}
+              ::spec/components-number 0
+              ::spec/resource-tags-available []
+              ::spec/collection nil)))
 
 
 (reg-event-fx

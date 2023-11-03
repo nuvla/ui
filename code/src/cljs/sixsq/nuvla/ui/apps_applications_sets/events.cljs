@@ -79,9 +79,8 @@
                           (mapcat :applications)
                           (map :id)
                           distinct)
-          filter-str (apply general-utils/join-or (map #(str "id='" % "'") apps-urls))
-          params     {:filter filter-str
-                      :last   1000}
+          params     {:filter (general-utils/filter-eq-ids apps-urls)
+                      :last   10000}
           callback   #(if (instance? js/Error %)
                         (cimi-api-fx/default-error-message % "load applications sets failed")
                         (dispatch [::reload-apps-sets-response module (count apps-urls) %]))]

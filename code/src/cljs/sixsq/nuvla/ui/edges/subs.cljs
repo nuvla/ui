@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.edges.subs
-  (:require [re-frame.core :refer [reg-sub subscribe]]
+  (:require [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.edges.spec :as spec]
             [sixsq.nuvla.ui.edges.utils :as utils]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]

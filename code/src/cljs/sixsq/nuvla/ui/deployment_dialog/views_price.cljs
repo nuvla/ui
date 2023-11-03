@@ -33,7 +33,6 @@
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         price-completed? (subscribe [::subs/price-completed?])
-        deployment       (subscribe [::subs/deployment])
         start?           (subscribe [::subs/deployment-start?])
         price            (subscribe [::subs/price])
         new-price        (subscribe [::subs/new-price])

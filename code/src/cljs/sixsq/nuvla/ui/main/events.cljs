@@ -65,13 +65,13 @@
 
 (reg-event-db
   ::close-sidebar
-  (fn [db _]
+  (fn [db]
     (assoc db ::spec/sidebar-open? false)))
 
 (reg-event-db
   ::toggle-sidebar
-  (fn [{:keys [::spec/sidebar-open?] :as db} _]
-    (update db ::spec/sidebar-open? not sidebar-open?)))
+  (fn [db]
+    (update db ::spec/sidebar-open? not)))
 
 (reg-event-fx
   ::visible

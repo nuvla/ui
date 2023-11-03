@@ -327,9 +327,8 @@
                                     :data-record-filter
                                     (utils-general/join-and
                                       (when selected-data-records?
-                                        (->> @selected-data-record-ids
-                                             (map #(str "id='" %1 "'"))
-                                             (str/join " or ")))
+                                        (utils-general/filter-eq-ids
+                                          @selected-data-record-ids))
                                       (when some-filter-str?
                                         @data-record-filter)
                                       (when some-map-selection?

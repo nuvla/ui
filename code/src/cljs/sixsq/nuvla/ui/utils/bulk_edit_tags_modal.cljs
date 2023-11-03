@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.events :as events]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
@@ -220,12 +221,11 @@
                            (fn []
                              (dispatch
                                [::events/store-filter-and-open-in-new-tab
-                                (str/join " or "
-                                  (map #(str "id='" % "'")
-                                    (->> @view-only-items :resources (map :id))))]))}
+                                (general-utils/filter-eq-ids
+                                  (->> @view-only-items :resources (mapv :id)))]))}
                        (@tr [(if (= not-editable-count 1) :open-it-in-new-tab :open-them-in-new-tab)])]]]
                [:div {:style {:color :red}} (@tr [:only-edges-without-edit-rights-sellected])]))]
-          [uix/ButtonAskingForConfirmation {:disabled? disabled? :db-path db-path
+          [uix/ButtonAskingForConfirmation {:disabled?    disabled? :db-path db-path
                                             :update-event update-event :total-count-sub-key total-count-sub-key
                                             :text action-text :color color :action-aria-label "edit tags"}]]]))))
 

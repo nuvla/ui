@@ -150,9 +150,8 @@
                    [:credential
                     {:filter  (general-utils/join-and
                                 "subtype='infrastructure-service-registry'"
-                                (apply general-utils/join-or
-                                       (map #(str "parent='" (:id %) "'")
-                                            infra-registries)))
+                                (general-utils/filter-eq-parent-vals
+                                  (mapv :id infra-registries)))
                      :select  "id, parent, name, description, last-check, status, subtype"
                      :orderby "name:asc,id:asc"}
                     #(dispatch [::set-infra-registries-creds registry-ids
@@ -169,8 +168,7 @@
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter  (general-utils/join-and
                                        "subtype='registry'"
-                                       (apply general-utils/join-or
-                                              (map #(str "id='" % "'") registry-ids))),
+                                       (general-utils/filter-eq-ids registry-ids))
                             :select  "id, name, description"
                             :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-registries registry-ids reg-creds-ids %])]}))
@@ -178,7 +176,6 @@
 (reg-event-db
   ::set-credential-registry
   (fn [{:keys [::spec/registries-creds
-               ::spec/infra-registries-creds
                ::spec/deployment] :as db} [_ infra-id cred-id]]
     (let [update-registries-creds (update registries-creds infra-id assoc :cred-id cred-id)]
       (assoc db ::spec/registries-creds update-registries-creds
@@ -429,13 +426,12 @@
   (fn [{:keys [db]} [_ data-clouds-response]]
     (let [buckets        (get-in data-clouds-response
                                  [:aggregations (keyword "terms:infrastructure-service") :buckets])
-          infra-services (map :key buckets)
-          filter         (apply general-utils/join-or (map #(str "id='" % "'") infra-services))]
+          infra-services (map :key buckets)]
 
       {:db       (cond-> (assoc db ::spec/data-clouds buckets)
                          (= 1 (count infra-services)) (set-data-infra-service-and-filter
                                                         (first infra-services)))
-       :dispatch [::get-cloud-infra-services filter]})))
+       :dispatch [::get-cloud-infra-services (general-utils/filter-eq-ids infra-services)]})))
 
 (reg-event-fx
   ::get-data-records
@@ -443,7 +439,7 @@
                 ::data-spec/content-type-filter
                 ::data-set-spec/selected-data-record-ids] :as db} :db} _]
     (let [filter (if (nil? content-type-filter)
-                   (apply general-utils/join-or (map #(str "id='" % "'") selected-data-record-ids))
+                   (general-utils/filter-eq-ids selected-data-record-ids)
                    (general-utils/join-and time-period-filter content-type-filter))]
       {:db db
        ::cimi-api-fx/search

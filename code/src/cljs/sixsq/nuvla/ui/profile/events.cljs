@@ -28,15 +28,13 @@
 
 (reg-event-db
   ::add-group-member
-  (fn [{:keys [::spec/group] :as db} [_ member]]
-    (let [users (:users group)]
-      (update-in db [::spec/group :users] #(conj users member)))))
+  (fn [db [_ member]]
+    (update-in db [::spec/group :users] #(conj % member))))
 
 (reg-event-db
   ::remove-group-member
-  (fn [{:keys [::spec/group] :as db} [_ member]]
-    (let [users (:users group)]
-      (update-in db [::spec/group :users] #(vec (disj (set users) member))))))
+  (fn [db [_ member]]
+    (update-in db [::spec/group :users] #(vec (disj (set %) member)))))
 
 (reg-event-db
   ::set-user

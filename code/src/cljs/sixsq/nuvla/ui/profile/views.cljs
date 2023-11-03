@@ -1296,7 +1296,8 @@
          [icons/CloseIcon {:link     true
                            :size     "small"
                            :color    "red"
-                           :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
+                           :on-click (fn []
+                                       (reset! members #(vec (disj (set @members) principal)))
                                        (dispatch [::main-events/changes-protection? true])
                                        (set-group-changed! id))}])]]]))
 

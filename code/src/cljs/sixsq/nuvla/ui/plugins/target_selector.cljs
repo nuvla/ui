@@ -48,8 +48,7 @@
                                                                      set)))))]
         {:db                  (assoc-in db (conj db-path ::loading?) true)
          ::cimi-api-fx/search [:credential {:select "id, name, description, parent, subtype"
-                                            :filter (apply general-utils/join-or
-                                                           (map #(str "id='" % "'") selected-ids))
+                                            :filter (general-utils/filter-eq-ids selected-ids)
                                             :last   10000}
                                #(dispatch [::helpers/set db-path
                                            ::selected (rebuild-selected %)
@@ -88,13 +87,10 @@
   ::set-infrastructures
   (fn [{db :db} [_ db-path {:keys [resources] :as response}]]
     (if (seq resources)
-      (let [filter-str (->> resources
-                            (map #(str "parent='" (:id %) "'"))
-                            (apply general-utils/join-or)
-                            (general-utils/join-and
-                              (general-utils/join-or
-                                "subtype='infrastructure-service-swarm'"
-                                "subtype='infrastructure-service-kubernetes'")))]
+      (let [filter-str (general-utils/join-and
+                         (general-utils/filter-eq-subtypes ["infrastructure-service-swarm"
+                                                            "infrastructure-service-kubernetes"])
+                         (general-utils/filter-eq-parent-vals (mapv :id resources)))]
         {:db (assoc-in db (conj db-path ::infrastructures) response)
          :fx [[:dispatch [::search-credentials db-path filter-str]]]})
       {:db (-> db
@@ -131,13 +127,10 @@
   ::set-edges
   (fn [{db :db} [_ db-path {:keys [resources] :as response}]]
     (if (seq resources)
-      (let [filter-str (->> resources
-                            (map #(str "parent='"
-                                       (:infrastructure-service-group %)
-                                       "'"))
-                            (apply general-utils/join-or)
-                            (general-utils/join-and
-                              (build-infra-filter-subtype db db-path)))]
+      (let [filter-str (general-utils/join-and
+                         (build-infra-filter-subtype db db-path)
+                         (general-utils/filter-eq-parent-vals
+                           (mapv :infrastructure-service-group resources)))]
         {:db (assoc-in db (conj db-path ::edges) response)
          :fx [[:dispatch [::search-infrastructures db-path filter-str]]]})
       {:db (-> db

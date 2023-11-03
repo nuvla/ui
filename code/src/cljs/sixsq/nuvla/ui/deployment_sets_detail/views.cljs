@@ -573,7 +573,7 @@
                                          [icons/XMarkIcon
                                           {:style    {:cursor :pointer}
                                            :color    "red"
-                                           :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])))}]))
+                                           :on-click #(dispatch [::events/remove-app-from-depl-group row-data])}])))}]))
                   :rows (mapv (fn [app]
                                 (assoc app :table-row-prop
                                   nil #_{:style {:opacity (when (= (:edit-status app)
@@ -1406,7 +1406,7 @@
                                      :render   #(r/as-element
                                                   [ConfigureApps
                                                    0
-                                                   @apps])}
+                                                   (remove (comp (partial = :removed) :edit-status) @apps)])}
                                     {:menuItem {:key      :edges
                                                 :content
                                                 (let [tab-title (str/capitalize (tr [:edges]))]

@@ -508,23 +508,26 @@
       {:fx [[:dispatch [::persist! {:deployment-set body
                                     :success-msg    success-msg}]]]})))
 
-(reg-event-db
+(reg-event-fx
   ::update-app-row-data
-  (fn [{:keys [current-route ::spec/initial-load? ::spec/module-applications-sets] :as db} _]
-    (let [apps-edited? (subs/db->apps-added-or-removed? db)
-          apps-path (subs/create-apps-creation-db-path current-route)]
-      (when (or initial-load? (not apps-edited?))
-        (-> (assoc db ::spec/initial-load? false)
-            (update-in apps-path (constantly (->> module-applications-sets
-                                                     :content
-                                                     :applications-sets
-                                                     (map-indexed
-                                                       (fn [i {:keys [applications]}]
-                                                         (map (fn [{:keys [id]}]
-                                                                (module-plugin/db-module db [::spec/apps-sets i] id)
-                                                                )applications)))
-                                                     (apply concat)
-                                                     vec))))))))
+  (fn [{db :db} _]
+    (let [apps-edited? (subs/db->apps-added-or-removed? db)]
+      (when-not apps-edited?
+        {:fx [[:dispatch [::sync-edited-apps]]]}))))
+
+(reg-event-db
+  ::sync-edited-apps
+  (fn [{:keys [current-route ::spec/module-applications-sets] :as db}]
+    (let [apps-path (subs/create-apps-creation-db-path current-route)]
+      (update-in db apps-path (constantly (->> module-applications-sets
+                                               :content
+                                               :applications-sets
+                                               (map-indexed
+                                                 (fn [i {:keys [applications]}]
+                                                   (map (fn [{:keys [id]}]
+                                                          (module-plugin/db-module db [::spec/apps-sets i] id)) applications)))
+                                               (apply concat)
+                                               vec))))))
 
 (reg-event-db
   ::set
@@ -696,17 +699,20 @@
 
 (reg-event-fx
   ::add-app-from-picker
-  (fn [_ [_ app]]
-    (if (= (:subtype app)
-           "applications_sets")
-      {:fx [[:dispatch [::fetch-apps-set-add-apps (:id app)]]]}
-      (let [{:keys [path versions]} app
-            version-id (version-id-to-add app)]
-        {::apps-fx/get-module [path
-                               (get-version-id (map-indexed vector versions) version-id)
-                               #(dispatch [::do-add-app %])]
-         :fx                  [[:dispatch [::fetch-app-picker-apps
-                                           ::spec/pagination-apps-picker]]]}))))
+  (fn [{db :db} [_ app]]
+    (let [new-db (assoc db ::spec/set-of-apps-edited? true)]
+      (if (= (:subtype app)
+             "applications_sets")
+        {:db new-db
+         :fx [[:dispatch [::fetch-apps-set-add-apps (:id app)]]]}
+        (let [{:keys [path versions]} app
+              version-id (version-id-to-add app)]
+          {:db new-db
+           ::apps-fx/get-module [path
+                                 (get-version-id (map-indexed vector versions) version-id)
+                                 #(dispatch [::do-add-app %])]
+           :fx                  [[:dispatch [::fetch-app-picker-apps
+                                             ::spec/pagination-apps-picker]]]})))))
 
 (reg-event-fx
   ::fetch-apps-set-add-apps
@@ -751,10 +757,10 @@
              (module-plugin/db-module db [::spec/apps-sets (:idx app)] (:href app)))})))
 
 (reg-event-fx
-  ::remove-app-from-creation-data
+  ::remove-app-from-depl-group
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
     (let [db-path (subs/create-apps-creation-db-path current-route)]
-      {:db (update-in db db-path (fn [apps]
+      {:db (update-in (assoc db ::spec/set-of-apps-edited? true) db-path (fn [apps]
                                    (vec (remove #(= (:id %) (:href app)) apps))))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]

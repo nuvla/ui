@@ -53,6 +53,10 @@
 
 (s/def ::edge-picker-select (s/nilable any?))
 
+(s/def ::edited-apps (s/nilable any?))
+
+(s/def ::set-of-apps-edited? boolean?)
+
 (def defaults
   {::module-applications-sets  nil
    ::apps-sets                 nil
@@ -79,4 +83,5 @@
                                  :default-items-per-page 16)
    ::edge-picker-pagination   pagination-default
    ::opened-modal              nil
-   ::initial-load?            true})
+   ::set-of-apps-edited?         false
+   ::edited-apps              nil})

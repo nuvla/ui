@@ -62,7 +62,7 @@
   ::deployment-set
   :<- [::deployment-set-stored-and-edited]
   (fn [[stored edited]]
-    (merge stored (select-keys edited [:name :description :applications-sets]))))
+    (merge stored (select-keys edited utils/editable-keys))))
 
 
 (reg-sub
@@ -267,7 +267,7 @@
 
 (defn create-apps-creation-db-path
   [current-route]
-  (create-db-path [::spec/apps-creation]
+  (create-db-path [::spec/edited-apps]
                   (get-temp-db-id current-route)))
 
 (defn apps-creation [{:keys [current-route] :as db}]
@@ -295,10 +295,11 @@
 
 (reg-sub
   ::apps-edited?
+  :<- [::set-of-apps-edited?]
   :<- [::apps-creation]
   :<- [::applications-sets-apps-targets]
-  (fn [[apps-creation apps] _]
-    (apps-added-or-removed? apps-creation apps)))
+  (fn [[set-of-apps-edited? apps-creation apps] _]
+    (and set-of-apps-edited? (apps-added-or-removed? apps-creation apps))))
 
 (defn- add-app-status
   [apps-creation status]
@@ -312,16 +313,24 @@
         status))))
 
 (reg-sub
+  ::set-of-apps-edited?
+  :-> ::spec/set-of-apps-edited?)
+
+(reg-sub
   ::apps-row-data
+  :<- [::set-of-apps-edited?]
   :<- [::apps-creation-row-data]
   :<- [::applications-overview-row-data]
-  (fn [[apps-creation apps] _]
-    (let [stored-apps (mapv (add-app-status apps-creation :removed) apps)
-          added-apps  (filterv :edit-status
-                        (mapv (add-app-status apps :added) apps-creation))]
-      (concat
-        stored-apps
-        added-apps))))
+  (fn [[set-of-apps-edited? apps-creation apps] _]
+    (if set-of-apps-edited?
+      (let [stored-apps (mapv (add-app-status apps-creation :removed) apps)
+            added-apps  (filterv :edit-status
+                          (mapv (add-app-status apps :added) apps-creation))]
+        (concat
+          stored-apps
+          added-apps))
+
+      apps)))
 
 (reg-sub
   ::edges-in-deployment-group-response
@@ -438,7 +447,8 @@
       :message [:depl-group-apps-missing]}]))
 
 (defn db->apps-added-or-removed? [db]
-  (apps-added-or-removed? (apps-creation db) (db->apps-sets-indexed-modules db)))
+  (and (::spec/set-of-apps-edited? db)
+    (apps-added-or-removed? (apps-creation db) (db->apps-sets-indexed-modules db))))
 
 (defn env-vars-errors
   [db]

@@ -16,6 +16,7 @@
 (s/def ::edges-pagination any?)
 
 (s/def ::fleet-filter string?)
+(s/def ::fleet-filter-edited string?)
 
 (s/def ::validate-form? boolean?)
 

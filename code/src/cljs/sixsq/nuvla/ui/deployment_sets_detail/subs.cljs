@@ -264,6 +264,11 @@
   (create-db-path [::spec/fleet-filter]
                   (get-temp-db-id current-route)))
 
+(defn current-route->fleet-filter-edited-db-path
+  [current-route]
+  (create-db-path [::spec/fleet-filter-edited]
+                  (get-temp-db-id current-route)))
+
 (defn create-apps-creation-db-path
   [current-route]
   (create-db-path [::spec/apps-creation]
@@ -300,6 +305,14 @@
     (if (or creating? apps-edited?)
       apps-creation
       apps)))
+
+(def fleet-filter-path [:applications-sets 0 :overwrites 0 :fleet-filter])
+
+(reg-sub
+  ::fleet-filter-edited?
+  (fn [{:keys [::spec/fleet-filter ::spec/fleet-filter-edited]}]
+    (and fleet-filter-edited
+        (not= fleet-filter fleet-filter-edited))))
 
 (reg-sub
   ::edges-in-deployment-group-response
@@ -359,15 +372,18 @@
 (reg-sub
   ::fleet-filter
   (fn [{:keys [current-route] :as db}]
-    (let [path (current-route->fleet-filter-db-path current-route)]
-      (get-in db path))))
+    (let [path (current-route->fleet-filter-db-path current-route)
+          path-edited (current-route->fleet-filter-edited-db-path current-route)]
+      (or (get-in db path-edited) (get-in db path)))))
 
 (reg-sub
   ::unsaved-changes?
   :<- [::deployment-set-stored-and-edited]
   :<- [::apps-edited?]
-  (fn [[[stored edited] apps-edited?]]
+  :<- [::fleet-filter-edited?]
+  (fn [[[stored edited] apps-edited? fleet-filter-edited?]]
     (or apps-edited?
+        fleet-filter-edited?
         (utils/unsaved-changes? stored edited))))
 
 (reg-sub

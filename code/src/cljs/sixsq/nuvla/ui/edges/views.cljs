@@ -877,7 +877,8 @@
         bulk-deploy-menuitem     (when @bulk-deploy-enabled?
                                    {:menuitem (let [message         (@tr [:deploy-with-static-edges])
                                                     deploy-menuitem [ui/MenuItem
-                                                                     {:class    :bulk-action-bar-item
+                                                                     {:disabled (empty? @selection)
+                                                                      :class    :bulk-action-bar-item
                                                                       :on-click #(bulk-deploy false @selection)
                                                                       :key      :bulk-deploy}
                                                                      [icons/RocketIcon]

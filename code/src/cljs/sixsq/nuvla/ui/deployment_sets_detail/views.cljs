@@ -46,7 +46,8 @@
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
             [sixsq.nuvla.ui.utils.values :as utils-values]
-            [sixsq.nuvla.ui.utils.view-components :as vc]))
+            [sixsq.nuvla.ui.utils.view-components :as vc]
+            [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]))
 
 (defn- create-wrng-msg
   [apps-count edges-count action]
@@ -243,12 +244,37 @@
 
 (defn- ChangedStuff
   []
-  (let [fleet-changes (subscribe [::subs/fleet-changes])]
-    [:div
-     [:div [:h3 "Fleet changes"]
-      (if @fleet-changes
-        [UnstoredEdgeChanges @fleet-changes]
-        [:div "no changes in your fleet"])]]))
+  (let [fleet-changes (subscribe [::subs/fleet-changes])
+        depl-group-selected-fields (subscribe [::subs/select-keys-stored-and-edited [:name :description]])]
+    (fn []
+      (let [{:keys [stored edited]} @depl-group-selected-fields
+            name-changed? (not= (:name stored) (:name edited))
+            desc-chagned? (not= (:description stored) (:description edited))]
+        [:div
+         (when (or name-changed? desc-chagned?)
+           [:div [:h3 "Name or description changes"]
+            [ui/Table
+             [ui/TableHeader
+              [ui/TableRow
+               [ui/TableCell "Field"]
+               [ui/TableCell "Saved value"]
+               [ui/TableCell "Changed to"]]
+              ]
+             [ui/TableBody
+              (when desc-chagned?
+                [ui/TableRow
+                 [ui/TableCell "Description"]
+                 [ui/TableCell (:description stored)]
+                 [ui/TableCell (:description edited)]])
+              (when name-changed?
+                [ui/TableRow
+                 [ui/TableCell "Name"]
+                 [ui/TableCell (:name stored)]
+                 [ui/TableCell (:name edited)]])]]])
+         [:div [:h3 "Fleet changes"]
+          (if @fleet-changes
+            [UnstoredEdgeChanges @fleet-changes]
+            [:div "no changes in your fleet"])]]))))
 
 (defn SaveButton
   [{:keys [creating?]}]

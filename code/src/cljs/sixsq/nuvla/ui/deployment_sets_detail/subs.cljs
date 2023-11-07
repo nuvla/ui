@@ -351,6 +351,7 @@
     (:count edges-response)))
 
 
+
 (reg-sub
   ::all-edges-ids
   :<- [::edges-in-deployment-group-response]
@@ -400,6 +401,13 @@
   (fn [[[stored edited] apps-edited?]]
     (or apps-edited?
         (utils/unsaved-changes? stored edited))))
+
+(reg-sub
+  ::select-keys-stored-and-edited
+  :<- [::deployment-set-stored-and-edited]
+  (fn [[stored edited] [_ selected-keys]]
+    {:stored (select-keys stored selected-keys)
+     :edited (select-keys edited selected-keys)}))
 
 (reg-sub
   ::save-enabled?

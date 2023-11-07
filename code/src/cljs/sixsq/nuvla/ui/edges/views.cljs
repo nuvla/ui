@@ -889,6 +889,7 @@
         dyn-bulk-deploy-menuitem (when @bulk-deploy-enabled?
                                    {:menuitem (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
                                                                                       (not @all-selected?)
+                                                                                      (not @search-filter)
                                                                                       (not state-filter?))
                                                     message                      (str (@tr [:deploy-with-edges-filter])
                                                                                       "\n"
@@ -898,6 +899,8 @@
                                                     wrong-filter-message         (cond
                                                                                    (or (seq @selection) @all-selected?)
                                                                                    (@tr [:deploy-with-edges-clear-selection])
+                                                                                   @search-filter
+                                                                                   (@tr [:deploy-with-edges-fulltext-filter-not-allowed])
                                                                                    state-filter?
                                                                                    (@tr [:deploy-with-edges-state-filter-not-allowed]))
                                                     deploy-menuitem              [ui/MenuItem

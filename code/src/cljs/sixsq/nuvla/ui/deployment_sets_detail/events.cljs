@@ -861,7 +861,8 @@
   ::set-edge-picker-additional-filter
   (fn [{db :db} [_ filter]]
     {:db (-> db
-             (assoc ::spec/edge-picker-additional-filter filter)
+             (assoc ::spec/edge-picker-additional-filter (when-not (= "(id!=null)" filter)
+                                                           filter))
              (assoc-in [::spec/edge-picker-pagination :active-page] 1))
      :fx [[:dispatch [::get-edges-for-edge-picker-modal]]
           [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/edge-picker-select]]]]}))
@@ -869,8 +870,7 @@
 (reg-event-fx
   ::init-edge-picker-with-dynamic-filter
   (fn [_ [_ fleet-filter]]
-    {:fx [[:dispatch [::set-edge-picker-fulltext-filter (utils/extract-fulltext-filter fleet-filter)]]
-          [:dispatch [::set-edge-picker-additional-filter (utils/extract-additional-filter fleet-filter)]]]}))
+    {:fx [[:dispatch [::set-edge-picker-additional-filter fleet-filter]]]}))
 
 (reg-event-fx
   ::set-edge-picker-selected-state
@@ -953,10 +953,17 @@
        :fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
             [:dispatch [::get-edges]]]})))
 
+(defn get-dynamic-fleet-filter-string
+  [{:keys [::spec/edge-picker-additional-filter] :as db}]
+  (if (seq edge-picker-additional-filter)
+    edge-picker-additional-filter
+    (general-utils/join-and
+      "id!=null")))
+
 (reg-event-fx
   ::update-fleet-filter
   (fn [{{:keys [::spec/deployment-set ::spec/deployment-set-edited current-route] :as db} :db} [_]]
-    (let [new-fleet-filter (get-full-filter-string db)
+    (let [new-fleet-filter (get-dynamic-fleet-filter-string db)
           updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc-in subs/fleet-filter-path new-fleet-filter))

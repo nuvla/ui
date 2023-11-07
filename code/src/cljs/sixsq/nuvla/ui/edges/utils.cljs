@@ -249,6 +249,14 @@
     (full-text-search-plugin/filter-text
       db [::spec/edges-search])))
 
+(defn get-dynamic-fleet-filter-string
+  [{:keys [::spec/additional-filter] :as db}]
+  (if (seq additional-filter)
+    (general-utils/join-and
+      additional-filter)
+    (general-utils/join-and
+      "id!=null")))
+
 (defn build-bulk-filter
   [db-path db]
   (table-plugin/build-bulk-filter (get-in db db-path) (get-full-filter-string db)))

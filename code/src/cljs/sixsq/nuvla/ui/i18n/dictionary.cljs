@@ -276,6 +276,7 @@
         :deploy-for                                    "deploy for "
         :deploy-with-edges-filter                      "Create deployment group with edges based on filter: "
         :deploy-with-catch-all-edges-filter            "(catch all edges)"
+        :deploy-with-edges-fulltext-filter-not-allowed "Cannot create deployment group with fulltext edge filters. Please select a different filter."
         :deploy-with-edges-state-filter-not-allowed    "Cannot create deployment group with state-based edge filters. Please select a different filter."
         :deploy-with-edges-clear-selection             "Clear selection to create a deployment group with edges based on a filter."
         :deploy-with-static-edges                      "Create deployment group targeting selected edges"

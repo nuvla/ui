@@ -95,11 +95,19 @@ NullValue           = WS 'null' WS
 
 (def transform-map
   {:And         (fn [& args]
-                  (vec (interpose {:el "logic" :value "and"} args)))
+                  (if (= (count args) 1)
+                    [(first args)]
+                    [(first args)
+                     {:el "logic" :value "and"}
+                     (second args)]))
    :Filter      (fn [& args]
                   (first args))
    :Or          (fn [& args]
-                  (vec (interpose {:el "logic" :value "or"} args)))
+                  (if (= (count args) 1)
+                    [(first args)]
+                    [(first args)
+                     {:el "logic" :value "or"}
+                     (second args)]))
    :Comp        (fn [a o v]
                   (if (string? a)
                     {:el        "attribute"

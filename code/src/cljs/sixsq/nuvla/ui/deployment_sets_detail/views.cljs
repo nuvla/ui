@@ -64,40 +64,38 @@
   [{:keys [name id description]}]
   (str (or name id) (when description " - ") description))
 
-(defn GuardedMenuItem
-  [{:keys [validation-sub]} & _children]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        validation (subscribe validation-sub)]
-    (fn [{:keys [enabled] :or {enabled true}} & children]
-      (let [{:keys [valid? errors]} @validation
-            enabled?  (and valid? enabled)
-            menu-item (into [ui/MenuItem
-                             {:as       :a
-                              :disabled (not enabled?)
-                              :class    (when enabled? "primary-menu-item")}]
-                            children)]
-        (if valid?
-          menu-item
-          [ui/Popup
-           {:trigger (r/as-element menu-item)
-            :content (str/join ". " (map (comp @tr :message) errors))}])))))
+(defn guarded-menu-item
+  [{:keys [validation enabled] :or {enabled true}} & children]
+  (let [{:keys [valid? errors]} validation
+        tr        (subscribe [::i18n-subs/tr])
+        enabled?  (and valid? enabled)
+        menu-item (into [ui/MenuItem
+                         {:as       :a
+                          :disabled (not enabled?)
+                          :class    (when enabled? "primary-menu-item")}]
+                        children)]
+    (if valid?
+      (r/as-element menu-item)
+      (r/as-element
+        [ui/Popup
+         {:trigger (r/as-element menu-item)
+          :content (str/join ". " (map (comp @tr :message) errors))}]))))
 
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        enabled? @(subscribe [::subs/operation-enabled? "start"])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        enabled?   @(subscribe [::subs/operation-enabled? "start"])
+        validation (subscribe [::subs/deployment-set-validation])]
     [uix/ModalDanger
      {:on-confirm         (fn [_]
                             (dispatch [::events/operation
                                        {:resource-id id
                                         :operation   "start"}]))
-      :trigger            (r/as-element
-                            [:div
-                             [GuardedMenuItem
-                              {:enabled        enabled?
-                               :validation-sub [::subs/deployment-set-validation]}
-                              [icons/PlayIcon]
-                              (str/capitalize (@tr [:start]))]])
+      :trigger            (guarded-menu-item
+                            {:enabled    enabled?
+                             :validation @validation}
+                            [icons/PlayIcon]
+                            (str/capitalize (@tr [:start])))
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:start-deployment-set])
       :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
@@ -130,20 +128,19 @@
 
 (defn UpdateButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        enabled? @(subscribe [::subs/operation-enabled? "update"])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        enabled?   @(subscribe [::subs/operation-enabled? "update"])
+        validation (subscribe [::subs/deployment-set-validation])]
     [uix/ModalDanger
      {:on-confirm         (fn [_]
                             (dispatch [::events/operation
                                        {:resource-id id
                                         :operation   "update"}]))
-      :trigger            (r/as-element
-                            [:div
-                             [GuardedMenuItem
-                              {:enabled        enabled?
-                               :validation-sub [::subs/deployment-set-validation]}
-                              [icons/RedoIcon]
-                              (str/capitalize (@tr [:update]))]])
+      :trigger            (guarded-menu-item
+                            {:enabled    enabled?
+                             :validation @validation}
+                            [icons/RedoIcon]
+                            (str/capitalize (@tr [:update])))
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:update-deployment-set])
       :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
@@ -680,7 +677,7 @@
          [:div {:style {:display :flex}}
           [:div
            [full-text-search-plugin/FullTextSearch
-            {:db-path [::spec/edge-picker-full-text-search]
+            {:db-path      [::spec/edge-picker-full-text-search]
              :change-event [::pagination-plugin/change-page [::spec/edge-picker-pagination] 1]}]
            ^{:key @additional-filter}
            [:div {:style {:margin-top "0.4rem"}}
@@ -690,7 +687,7 @@
               :open?                            filter-open?
               :on-done                          #(dispatch [::events/set-edge-picker-additional-filter %])
               :show-clear-button-outside-modal? true
-              :persist? false}]]]
+              :persist?                         false}]]]
           [:div {:class :nuvla-edges
                  :style {:margin "0 auto 0 6rem"}}
            [edges-views/StatisticStatesEdgeView
@@ -734,11 +731,11 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         open?         (subscribe [::subs/modal-open? events/edges-picker-modal-id])
         close-fn      #(do (dispatch [::events/set-opened-modal nil]))
-        add-to-select  (fn []
-                         (dispatch [::events/get-selected-edge-ids]))]
+        add-to-select (fn []
+                        (dispatch [::events/get-selected-edge-ids]))]
     (fn []
       [ui/Modal {:size       :medium
-                 :open        @open?
+                 :open       @open?
                  :close-icon true
                  :on-close   close-fn}
        [uix/ModalHeader {:header (@tr [:add-edges])}]
@@ -756,14 +753,14 @@
         added   (:added fleet-changes)]
     [:span
      (str "You have unsaved fleet changes" ": "
-       (when removed (str (count removed) " removed"))
-       (when (and removed added) ", ")
-       (when added (str (count added) " added")))]))
+          (when removed (str (count removed) " removed"))
+          (when (and removed added) ", ")
+          (when added (str (count added) " added")))]))
 
 (defn EdgeOverviewContent
   [edges-stats creating?]
-  (let [tr (subscribe [::i18n-subs/tr])
-        fleet-filter (subscribe [::subs/fleet-filter])
+  (let [tr            (subscribe [::i18n-subs/tr])
+        fleet-filter  (subscribe [::subs/fleet-filter])
         fleet-changes (subscribe [::subs/fleet-changes])]
     [:<>
      [:<>
@@ -1208,7 +1205,7 @@
 (defn- EdgeTabStatesFilterView
   []
   (let [current-route (subscribe [::route-subs/current-route])
-        edges-stats (subscribe [::subs/edges-summary-stats])]
+        edges-stats   (subscribe [::subs/edges-summary-stats])]
     (fn [selected-state]
       [edges-views/StatisticStatesEdgeView
        (assoc @edges-stats
@@ -1225,11 +1222,11 @@
                              #(dispatch
                                 [::routing-events/navigate
                                  (routes-utils/gen-href @current-route
-                                   {:partial-query-params
-                                    {events/edges-state-filter-key
-                                     (if (= "TOTAL" label)
-                                       nil
-                                       label)}}) nil nil])))) edges-views/edges-states))
+                                                        {:partial-query-params
+                                                         {events/edges-state-filter-key
+                                                          (if (= "TOTAL" label)
+                                                            nil
+                                                            label)}}) nil nil])))) edges-views/edges-states))
        true true])))
 
 (defn- EdgeTabStatesFilter
@@ -1245,30 +1242,30 @@
         edges             (subscribe [::subs/edges-documents-response])
         fleet-changes     (subscribe [::subs/fleet-changes])
         only-changes?     (subscribe [::subs/show-only-changed-fleet?])
-        columns          (mapv (fn [col-config]
-                                 (assoc col-config :cell edges-views/NuvlaboxRow))
-                           [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
-                            {:field-key :state :cell-props {:collapsing true}}
-                            {:field-key :name}
-                            {:field-key :description}
-                            {:field-key :created}
-                            {:field-key :created-by}
-                            {:field-key      :refresh-interval
-                             :header-content (some-> (@tr [:report-interval]) str/lower-case)}
-                            {:field-key :last-online :no-sort? true}
-                            {:field-key :version :no-sort? true}
-                            {:field-key :tags :no-sort? true}])
+        columns           (mapv (fn [col-config]
+                                  (assoc col-config :cell edges-views/NuvlaboxRow))
+                                [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
+                                 {:field-key :state :cell-props {:collapsing true}}
+                                 {:field-key :name}
+                                 {:field-key :description}
+                                 {:field-key :created}
+                                 {:field-key :created-by}
+                                 {:field-key      :refresh-interval
+                                  :header-content (some-> (@tr [:report-interval]) str/lower-case)}
+                                 {:field-key :last-online :no-sort? true}
+                                 {:field-key :version :no-sort? true}
+                                 {:field-key :tags :no-sort? true}])
         filter-open?      (r/atom false)
         additional-filter (subscribe [::subs/edges-additional-filter])]
     (fn []
       [:div {:style {:padding-top "10px"}
              :class :nuvla-edges}
        [ui/Grid {:stackable true
-                 :reversed "mobile"}
+                 :reversed  "mobile"}
         [ui/GridColumn {:width 4}
          [:div
           [full-text-search-plugin/FullTextSearch
-           {:db-path [::spec/edges-full-text-search]
+           {:db-path      [::spec/edges-full-text-search]
             :change-event [::pagination-plugin/change-page [::spec/edges-pagination] 1]}]
           ^{:key @additional-filter}
           [:div {:style {:margin-top "0.4rem"}}
@@ -1278,34 +1275,34 @@
              :open?                            filter-open?
              :on-done                          #(dispatch [::events/set-edges-additional-filter %])
              :show-clear-button-outside-modal? true
-             :persist? false}]]]]
+             :persist?                         false}]]]]
         [ui/GridColumn {:width 7}
          [:div {:class :nuvla-edges
                 :style {:margin "0 auto 0 6rem"}}
           [EdgeTabStatesFilter]]]]
        (when @fleet-changes
-         [:div {:style {:margin-top "1rem"
+         [:div {:style {:margin-top    "1rem"
                         :margin-bottom "1rem"}}
           [:div [UnstoredEdgeChanges @fleet-changes]]
-          [:div [ui/Checkbox {:checked @only-changes?
-                              :basic true
-                              :label "Show only unsaved changes"
+          [:div [ui/Checkbox {:checked  @only-changes?
+                              :basic    true
+                              :label    "Show only unsaved changes"
                               :on-click #(dispatch [::events/show-fleet-changes-only @fleet-changes])}]]])
        [edges-views/NuvlaEdgeTableView
-        {:edges   (mapv (fn [row]
-                          (if
-                            (some #{(:id row)} (:removed @fleet-changes))
-                            (assoc row :table-row-prop {:style {:text-decoration "line-through"
-                                                                :opacity 0.5}})
-                            row))
-                    (:resources @edges))
-         :columns columns
-         :sort-config {:db-path    ::spec/edges-ordering
-                       :fetch-event [::events/get-edges]}
-         :select-config {:bulk-actions [{:event (fn [select-data]
-                                                  (dispatch [::events/remove-edges select-data]))
-                                          :name "Remove edges"
-                                          :icon icons/BoxIcon}]
+        {:edges         (mapv (fn [row]
+                                (if
+                                  (some #{(:id row)} (:removed @fleet-changes))
+                                  (assoc row :table-row-prop {:style {:text-decoration "line-through"
+                                                                      :opacity         0.5}})
+                                  row))
+                              (:resources @edges))
+         :columns       columns
+         :sort-config   {:db-path     ::spec/edges-ordering
+                         :fetch-event [::events/get-edges]}
+         :select-config {:bulk-actions        [{:event (fn [select-data]
+                                                         (dispatch [::events/remove-edges select-data]))
+                                                :name  "Remove edges"
+                                                :icon  icons/BoxIcon}]
                          :total-count-sub-key [::subs/edges-count]
                          :resources-sub-key   [::subs/edges-documents-response]
                          :select-db-path      [::spec/edges-select]}}]

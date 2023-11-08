@@ -798,7 +798,7 @@
   (fn [{{:keys [::spec/deployment-set-edited] :as db} :db} [_ full-id]]
     (let [deployment-set-edited (assoc-in deployment-set-edited
                                           [:applications-sets 0 :version]
-                                          (second (str/split full-id #"_")))]
+                                          (some-> full-id (str/split #"_") second int))]
       {:db (assoc db ::spec/deployment-set-edited deployment-set-edited)
        :fx [[:dispatch [::get-application-sets
                         (-> deployment-set-edited :applications-sets first)]]]})))

@@ -90,14 +90,20 @@
 
 (reg-event-fx
   ::get-application-sets
-  (fn [_ [_ id]]
-    {::cimi-api-fx/get [id #(dispatch [::set-applications-sets %])]}))
+  (fn [_ [_ {:keys [id version]}]]
+    {::cimi-api-fx/get [(str id "_" version) #(dispatch [::set-applications-sets %])]}))
 
 
 (defn restore-applications
   [db [i]]
   (assoc-in db [::spec/apps-sets i ::spec/targets]
             (target-selector/build-spec)))
+
+(defn load-apps-set-configuration
+  [apps-set-id version]
+  [:dispatch [::module-plugin/load-module
+              [::spec/parent-apps-set]
+              (str apps-set-id "_" version)]])
 
 (defn load-module-configurations
   [db modules-by-id fx [id {:keys [applications]}]]
@@ -148,6 +154,7 @@
   ::load-apps-sets-response
   (fn [{:keys [db]} [_ {:keys [apps-sets-set total-apps-count apps apps-set-index->modul-id->app]}]]
     (let [modules-by-id     (->> apps (map (juxt :id identity)) (into {}))
+          enriched-apps-set (utils/enrich-app apps-sets-set)
           apps-sets         (->> apps-sets-set
                                  :content
                                  :applications-sets
@@ -161,7 +168,9 @@
           new-db            (reduce restore-applications
                                     db merged-configs)
           fx                (reduce (partial load-module-configurations db modules-by-id)
-                                    [] merged-configs)
+                                    [(load-apps-set-configuration (:id enriched-apps-set)
+                                                                  (:version enriched-apps-set))]
+                                    merged-configs)
           all-apps-visible? (= total-apps-count (count apps))]
       (if all-apps-visible?
         {:db new-db
@@ -208,7 +217,7 @@
   ::set-applications-sets
   (fn [{:keys [db]} [_ {:keys [subtype] :as apps-sets}]]
     (if (apps-utils/applications-sets? subtype)
-      {:db (assoc db ::spec/module-applications-sets apps-sets)
+      {:db (assoc db ::spec/module-applications-sets (utils/enrich-app apps-sets))
        :fx [[:dispatch [::load-apps-sets apps-sets]]]}
       {:dispatch [::messages-events/add
                   {:header  "Wrong module subtype"
@@ -228,7 +237,9 @@
                      ::spec/fleet-filter (-> deployment-set :applications-sets first :overwrites first :fleet-filter))
        :fx [fx
             [:dispatch [::get-edges]]
-            [:dispatch [::get-application-sets (-> deployment-set :applications-sets first :id)]]]})))
+            [:dispatch [::get-application-sets
+                        (or (-> deployment-set-edited :applications-sets first)
+                            (-> deployment-set :applications-sets first))]]]})))
 
 (reg-event-fx
   ::operation
@@ -689,18 +700,11 @@
                          :order-by           "name:asc"
                          :pagination-db-path [pagination-db-path]}]]]})))
 
-(defn enrich-app
-  [app]
-  (let [versions   (:versions app)
-        version-id (-> app :content :id)
-        version-no (get-version-id (map-indexed vector versions) version-id)]
-    (assoc app :version version-no)))
-
 (reg-event-fx
   ::do-add-app
   (fn [{{:keys [current-route] :as db} :db} [_ app]]
     (let [db-path                 (subs/create-apps-creation-db-path current-route)
-          app-with-version-number (enrich-app app)]
+          app-with-version-number (utils/enrich-app app)]
       {:db (update-in db db-path (fnil conj []) app-with-version-number)
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
@@ -740,7 +744,7 @@
                                 :applications-sets
                                 (mapcat :applications)
                                 (mapv :id))]
-      {:db (assoc db ::spec/module-applications-sets (enrich-app apps-set))
+      {:db (assoc db ::spec/module-applications-sets (utils/enrich-app apps-set))
        ::cimi-api-fx/search
        [:module
         {:filter (general-utils/filter-eq-ids app-ids)}
@@ -750,7 +754,7 @@
   ::add-apps-to-selection
   (fn [{db :db} [_ apps]]
     (let [db-path (subs/create-apps-creation-db-path (:current-route db))
-          apps    (mapv enrich-app apps)]
+          apps    (mapv utils/enrich-app apps)]
       {:fx (into
              [[:db (update-in db db-path (fnil into []) [])]
               [:dispatch [::fetch-app-picker-apps
@@ -788,6 +792,16 @@
                                            (concat (get-in deployment-set [:applications-sets 0 :overwrites])
                                                    (repeat nil))))}]]]]}))
 
+
+(reg-event-fx
+  ::change-apps-set-version
+  (fn [{{:keys [::spec/deployment-set-edited] :as db} :db} [_ full-id]]
+    (let [deployment-set-edited (assoc-in deployment-set-edited
+                                          [:applications-sets 0 :version]
+                                          (second (str/split full-id #"_")))]
+      {:db (assoc db ::spec/deployment-set-edited deployment-set-edited)
+       :fx [[:dispatch [::get-application-sets
+                        (-> deployment-set-edited :applications-sets first)]]]})))
 
 
 (reg-event-db

@@ -1,4 +1,5 @@
-(ns sixsq.nuvla.ui.deployment-sets-detail.utils)
+(ns sixsq.nuvla.ui.deployment-sets-detail.utils
+  (:require [sixsq.nuvla.ui.plugins.module :refer [get-version-id]]))
 
 (def state-new "NEW")
 (def state-starting "STARTING")
@@ -22,3 +23,10 @@
   (and (some? deployment-set-edited)
        (not= (select-keys deployment-set-edited editable-keys)
              (select-keys deployment-set editable-keys))))
+
+(defn enrich-app
+  [app]
+  (let [versions   (:versions app)
+        version-id (-> app :content :id)
+        version-no (get-version-id (map-indexed vector versions) version-id)]
+    (assoc app :version version-no)))

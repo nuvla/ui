@@ -277,6 +277,7 @@
               ". Proceed?")]
            ^{:key "stop"}
            [StopButton @deployment-set (warn-msg-fn "stop")]
+           ^{:key "cancel"}
            [CancelOperationButton @deployment-set]
            (when @fleet-filter
              ^{:key "recompute-fleet"}
@@ -522,7 +523,7 @@
                                                                                    (time/ago (time/parse-iso8601 created) @locale))])
                                                    :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
                                                nil)})
-                          (keys (dissoc (first @apps-row) :idx :href))))
+                          (keys (dissoc (first @apps-row) :id :idx :href))))
                       (remove nil?
                               [{:field-key      :details
                                 :header-content (general-utils/capitalize-words (@tr [:details]))
@@ -737,8 +738,7 @@
         add-to-select  (fn []
                          (dispatch [::events/get-selected-edge-ids]))]
     (fn []
-      [ui/Modal {:size       :medium
-                 :open        @open?
+      [ui/Modal {:open        @open?
                  :close-icon true
                  :on-close   close-fn}
        [uix/ModalHeader {:header (@tr [:add-edges])}]

@@ -65,12 +65,13 @@
   (str (or name id) (when description " - ") description))
 
 (defn guarded-menu-item
-  [{:keys [validation enabled] :or {enabled true}} & children]
+  [{:keys [validation enabled on-click] :or {enabled true}} & children]
   (let [{:keys [valid? errors]} validation
         tr        (subscribe [::i18n-subs/tr])
         enabled?  (and valid? enabled)
         menu-item (into [ui/MenuItem
                          {:as       :a
+                          :on-click on-click
                           :disabled (not enabled?)
                           :class    (when enabled? "primary-menu-item")}]
                         children)]
@@ -81,21 +82,33 @@
          {:trigger (r/as-element menu-item)
           :content (str/join ". " (map (comp @tr :message) errors))}]))))
 
+(def start-modal-id :modal/start-deployment-group)
+
 (defn StartButton
   [{:keys [id] :as deployment-set} warn-msg]
   (let [tr         (subscribe [::i18n-subs/tr])
         enabled?   @(subscribe [::subs/operation-enabled? "start"])
-        validation (subscribe [::subs/deployment-set-validation])]
+        validation (subscribe [::subs/deployment-set-validation])
+        open?      (subscribe [::subs/modal-open? start-modal-id])
+        close-fn   #(dispatch [::events/set-opened-modal nil])
+        on-success (fn [event]
+                     (dispatch [::bulk-progress-plugin/monitor
+                                [::spec/bulk-jobs] (:location event)])
+                     (dispatch [::events/set-opened-modal nil]))]
     [uix/ModalDanger
      {:on-confirm         (fn [_]
                             (dispatch [::events/operation
-                                       {:resource-id id
-                                        :operation   "start"}]))
+                                       {:resource-id   id
+                                        :operation     "start"
+                                        :on-success-fn on-success}]))
       :trigger            (guarded-menu-item
                             {:enabled    enabled?
+                             :on-click   (fn [] (dispatch [::events/set-opened-modal start-modal-id]))
                              :validation @validation}
                             [icons/PlayIcon]
                             (str/capitalize (@tr [:start])))
+      :open               @open?
+      :on-close           close-fn
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:start-deployment-set])
       :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
@@ -104,20 +117,32 @@
       :with-confirm-step? true}]
     ))
 
+(def stop-modal-id :modal/stop-deployment-group)
+
 (defn StopButton
   [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        enabled? (subscribe [::subs/operation-enabled? "stop"])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        enabled?   (subscribe [::subs/operation-enabled? "stop"])
+        open?      (subscribe [::subs/modal-open? stop-modal-id])
+        close-fn   #(dispatch [::events/set-opened-modal nil])
+        on-success (fn [event]
+                     (dispatch [::bulk-progress-plugin/monitor
+                                [::spec/bulk-jobs] (:location event)])
+                     (dispatch [::events/set-opened-modal nil]))]
     [uix/ModalDanger
      {:on-confirm         (fn [_]
                             (dispatch [::events/operation
-                                       {:resource-id id
-                                        :operation   "stop"}]))
+                                       {:resource-id   id
+                                        :operation     "stop"
+                                        :on-success-fn on-success}]))
       :trigger            (r/as-element
                             [ui/MenuItem
-                             {:disabled (not @enabled?)}
+                             {:disabled (not @enabled?)
+                              :on-click (fn [] (dispatch [::events/set-opened-modal stop-modal-id]))}
                              [icons/StopIcon]
                              (str/capitalize (@tr [:stop]))])
+      :open               @open?
+      :on-close           close-fn
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:stop-deployment-set])
       :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
@@ -125,22 +150,33 @@
       :button-text        (@tr [:stop])
       :with-confirm-step? true}]))
 
+(def update-modal-id :modal/update-deployment-group)
 
 (defn UpdateButton
   [{:keys [id] :as deployment-set} warn-msg]
   (let [tr         (subscribe [::i18n-subs/tr])
         enabled?   @(subscribe [::subs/operation-enabled? "update"])
-        validation (subscribe [::subs/deployment-set-validation])]
+        validation (subscribe [::subs/deployment-set-validation])
+        open?      (subscribe [::subs/modal-open? update-modal-id])
+        close-fn   #(dispatch [::events/set-opened-modal nil])
+        on-success (fn [event]
+                     (dispatch [::bulk-progress-plugin/monitor
+                                [::spec/bulk-jobs] (:location event)])
+                     (dispatch [::events/set-opened-modal nil]))]
     [uix/ModalDanger
      {:on-confirm         (fn [_]
                             (dispatch [::events/operation
-                                       {:resource-id id
-                                        :operation   "update"}]))
+                                       {:resource-id   id
+                                        :operation     "update"
+                                        :on-success-fn on-success}]))
       :trigger            (guarded-menu-item
                             {:enabled    enabled?
+                             :on-click   (fn [] (dispatch [::events/set-opened-modal update-modal-id]))
                              :validation @validation}
                             [icons/RedoIcon]
                             (str/capitalize (@tr [:update])))
+      :open               @open?
+      :on-close           close-fn
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:update-deployment-set])
       :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
@@ -149,20 +185,32 @@
       :modal-action       [:p warn-msg]
       :with-confirm-step? true}]))
 
+(def cancel-modal-id :modal/cancel-deployment-group)
+
 (defn CancelOperationButton
   [{:keys [id] :as deployment-set}]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        enabled? (subscribe [::subs/operation-enabled? "cancel"])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        enabled?   (subscribe [::subs/operation-enabled? "cancel"])
+        open?      (subscribe [::subs/modal-open? cancel-modal-id])
+        close-fn   #(dispatch [::events/set-opened-modal nil])
+        on-success (fn [event]
+                     (dispatch [::bulk-progress-plugin/monitor
+                                [::spec/bulk-jobs] (:location event)])
+                     (dispatch [::events/set-opened-modal nil]))]
     [uix/ModalDanger
      {:on-confirm         (fn [_]
                             (dispatch [::events/operation
-                                       {:resource-id id
-                                        :operation   "cancel"}]))
+                                       {:resource-id   id
+                                        :operation     "cancel"
+                                        :on-success-fn on-success}]))
       :trigger            (r/as-element
                             [ui/MenuItem
-                             {:disabled (not @enabled?)}
+                             {:disabled (not @enabled?)
+                              :on-click (fn [] (dispatch [::events/set-opened-modal cancel-modal-id]))}
                              [icons/BanIcon]
                              (str/capitalize (@tr [:cancel]))])
+      :open               @open?
+      :on-close           close-fn
       :content            [:h3 (depl-set->modal-content deployment-set)]
       :header             (@tr [:cancel-deployment-set-operation])
       :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])

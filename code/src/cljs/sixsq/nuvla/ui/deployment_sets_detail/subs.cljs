@@ -131,15 +131,15 @@
          (map-indexed
            (fn [i {:keys [applications]}]
              (keep (fn [{:keys [id]}]
-                    (let [targets (get-db-targets-selected-ids db i)]
-                      (when-let [module (module-plugin/db-module db [::spec/apps-sets i] id)]
-                        {:i                      i
-                         :application            module
-                         :registries-credentials (module-plugin/db-module-registries-credentials
-                                                   db [::spec/apps-sets i] id)
-                         :targets                targets
-                         :targets-count          (count targets)}))
-                    ) applications)))
+                     (let [targets (get-db-targets-selected-ids db i)]
+                       (when-let [module (module-plugin/db-module db [::spec/apps-sets i] id)]
+                         {:i                      i
+                          :application            module
+                          :registries-credentials (module-plugin/db-module-registries-credentials
+                                                    db [::spec/apps-sets i] id)
+                          :targets                targets
+                          :targets-count          (count targets)}))
+                     ) applications)))
          (apply concat))))
 
 
@@ -150,11 +150,12 @@
     (-> application :content :id)))
 
 (defn- app->app-row-data [{:keys [application i]}]
-  {:idx         i
-   :href        (:id application)
-   :app         (:name application)
-   :version     {:label   (str "v" (get-app-version-no application))
-                 :created (-> application :content :created)}})
+  {:id      (str i "_" (:id application))
+   :idx     i
+   :href    (:id application)
+   :app     (:name application)
+   :version {:label   (str "v" (get-app-version-no application))
+             :created (-> application :content :created)}})
 
 
 (reg-sub
@@ -457,8 +458,8 @@
   ::apps-config-validation-error?
   (fn [{:keys [::spec/validate-form?] :as db}]
     (and validate-form?
-        (some #{:apps-config}
-              (map (comp first :path) (:errors (deployment-set-validation db)))))))
+         (some #{:apps-config}
+               (map (comp first :path) (:errors (deployment-set-validation db)))))))
 
 (reg-sub
   ::app-config-validation-error?

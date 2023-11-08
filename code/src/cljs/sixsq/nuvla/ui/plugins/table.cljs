@@ -365,24 +365,26 @@
                                :box-shadow       :none
                                :background-color :transparent}
                    :stackable true}
-          (for [[idx action] (map-indexed vector bulk-actions)
-                :let [{:keys [name event icon menuitem]} action]]
-            (or menuitem
-                [ui/Popup {:trigger
-                           (r/as-element
-                             [:div
-                              [ui/MenuItem
-                               {:disabled nothing-selected?
-                                :class    :bulk-action-bar-item
-                                :on-click (fn []
-                                            (if (fn? event) (event payload)
-                                                            (dispatch event)))
-                                :key      idx}
-                               (when icon [icon])
-                               name]])
-                           :basic    true
-                           :disabled (not= :none @selection-status)
-                           :content  (@tr [:select-at-least-one-item])}]))]]
+          (doall
+            (for [[idx action] (map-indexed vector bulk-actions)
+                 :let [{:keys [name event icon menuitem]} action]]
+             (or menuitem
+                 ^{:key (or name (random-uuid))}
+                 [ui/Popup {:trigger
+                            (r/as-element
+                              [:div
+                               [ui/MenuItem
+                                {:disabled nothing-selected?
+                                 :class    :bulk-action-bar-item
+                                 :on-click (fn []
+                                             (if (fn? event) (event payload)
+                                                             (dispatch event)))
+                                 :key      idx}
+                                (when icon [icon])
+                                name]])
+                            :basic    true
+                            :disabled (not= :none @selection-status)
+                            :content  (@tr [:select-at-least-one-item])}])))]]
         [:div {:style {:padding-right "1rem"}}
          @bulk-edit-success-message]])
      [:div
@@ -657,7 +659,7 @@
                 ^{:key (str id "-" field-key)}
                 [ui/TableCell
                  (cond-> cell-props
-                         last? (assoc :colspan 2))
+                         last? (assoc :colSpan 2))
                  (cond
                    cell (if (string? cell) cell
                                            [cell {:row-data  row

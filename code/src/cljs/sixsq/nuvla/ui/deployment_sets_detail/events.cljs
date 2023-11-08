@@ -18,7 +18,6 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-            [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.module :as module-plugin :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
@@ -257,8 +256,7 @@
   (fn [_ [_ id fx]]
     {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
                         :on-error #(dispatch [::set-deployment-set nil])]
-     :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
-                        [:dispatch [::job-events/get-jobs id]]]}))
+     :fx               [[:dispatch [::job-events/get-jobs id]]]}))
 
 (def deployments-state-filter-key :depl-state)
 

@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
-            [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.step-group :as step-group-plugin]))
 
@@ -63,7 +62,6 @@
    ::validate-form?            false
    ::deployments-summary-all   nil
    ::deployment-set-not-found? false
-   ::events                    (events-plugin/build-spec)
    ::steps                     (step-group-plugin/build-spec
                                  :active-step :name)
    ::targets-selected          #{}

@@ -255,9 +255,10 @@
 
 (defn SaveButton
   [{:keys [creating?]}]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        save-enabled? (subscribe [::subs/save-enabled? creating?])
-        validation    (subscribe [::subs/deployment-set-validation])]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        save-enabled?              (subscribe [::subs/save-enabled? creating?])
+        validation                 (subscribe [::subs/deployment-set-validation])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     (fn [{:keys [deployment-set]}]
       [ui/Popup
        {:trigger
@@ -269,7 +270,7 @@
              :disabled (not @save-enabled?)
              :class    (when @save-enabled? "primary-menu-item")
              :on-click (if creating?
-                         #(dispatch [::events/create])
+                         #(dispatch [::events/create @is-controlled-by-apps-set?])
                          (if (:valid? @validation)
                            #(dispatch [::events/do-edit {:deployment-set deployment-set
                                                          :success-msg    (@tr [:updated-successfully])}])
@@ -520,6 +521,8 @@
   (let [tr                         (subscribe [::i18n-subs/tr])
         locale                     (subscribe [::i18n-subs/locale])
         apps-row                   (subscribe [::subs/apps-row-data])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
+        apps-set-name              (subscribe [::subs/apps-set-name])
         apps-validation-error?     (subscribe [::subs/apps-validation-error?])
         can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
@@ -530,6 +533,7 @@
         [:<>
          (when-not no-apps?
            [:div {:style {:height "100%"}}
+            (when @is-controlled-by-apps-set? [:h1 @apps-set-name])
             [Table {:columns
                     (into
                       (vec
@@ -581,31 +585,31 @@
                                                                               :href     (:href row-data)
                                                                               :children [icons/ArrowRightFromBracketIcon]
                                                                               :target   :_self}]])}])}
-                               (when @can-edit-data?
+                               (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
                                  {:field-key :remove
                                   :cell      (fn [{:keys [row-data]}]
                                                [RemoveButton {:enabled  @edit-op-allowed?
                                                               :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
                                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                     :rows @apps-row}]])
-         (when @can-edit-data?
-           [:div {:style {:display :flex :justify-content :center :align-items :center}}
-            [:<>
-             [AppsPickerModal creating?]
-             [:div {:style {:margin-top   "1rem"
-                            :margin-bottm "1rem"}}
-              [AddButton {:modal-id events/apps-picker-modal-id
-                          :enabled  @edit-op-allowed?
-                          :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]]]])
-         (when @can-edit-data?
-           [:div {:style {:margin-top   "1rem"
-                          :margin-left  "auto"
-                          :margin-right "auto"}}
-            (if @apps-validation-error?
-              [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
-              (if no-apps?
-                (@tr [:add-your-first-app])
-                (@tr [:add-app])))])]))))
+         (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
+           [:<>
+            [:div {:style {:display :flex :justify-content :center :align-items :center}}
+             [:<>
+              [AppsPickerModal creating?]
+              [:div {:style {:margin-top   "1rem"
+                             :margin-bottm "1rem"}}
+               [AddButton {:modal-id events/apps-picker-modal-id
+                           :enabled  @edit-op-allowed?
+                           :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]]]]
+            [:div {:style {:margin-top   "1rem"
+                           :margin-left  "auto"
+                           :margin-right "auto"}}
+             (if @apps-validation-error?
+               [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
+               (if no-apps?
+                 (@tr [:add-your-first-app])
+                 (@tr [:add-app])))]])]))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]

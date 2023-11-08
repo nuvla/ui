@@ -426,19 +426,35 @@
         #(dispatch [::routing-events/navigate routes/deployment-sets-details
                     {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
 
+
+(defn single-apps-creation-body
+  [{:keys [current-route ::spec/deployment-set-edited] :as db}]
+  (let [edges-path   (subs/current-route->edges-db-path current-route)
+        fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))
+        apps-path    (subs/create-apps-creation-db-path current-route)]
+    (merge {:fleet   (:resources (get-in db edges-path))
+            :modules (map
+                       (fn [app] (str (:id app) "_" (:version app)))
+                       (get-in db apps-path))}
+           (when fleet-filter {:fleet-filter fleet-filter})
+           deployment-set-edited)))
+
+(defn apps-set-creation-body
+  [{:keys [current-route ::spec/deployment-set-edited ::spec/module-applications-sets] :as db}]
+  (let [edges-path   (subs/current-route->edges-db-path current-route)
+        fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))]
+    (merge {:applications-sets [{:id         (:id module-applications-sets)
+                                 :version    (:version module-applications-sets)
+                                 :overwrites [(cond-> {:fleet (:resources (get-in db edges-path))}
+                                                      fleet-filter (assoc :fleet-filter fleet-filter))]}]}
+           deployment-set-edited)))
+
 (reg-event-fx
   ::create
-  (fn [{{:keys [current-route
-                ::spec/deployment-set-edited] :as db} :db}]
-    (let [edges-path   (subs/current-route->edges-db-path current-route)
-          fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))
-          apps-path    (subs/create-apps-creation-db-path current-route)
-          body         (merge {:fleet   (:resources (get-in db edges-path))
-                               :modules (map
-                                          (fn [app] (str (:id app) "_" (:version app)))
-                                          (get-in db apps-path))}
-                              (when fleet-filter {:fleet-filter fleet-filter})
-                              deployment-set-edited)]
+  (fn [{db :db} [_ is-controlled-by-apps-set?]]
+    (let [body (if is-controlled-by-apps-set?
+                 (apps-set-creation-body db)
+                 (single-apps-creation-body db))]
       {:fx [[:dispatch [::main-events/changes-protection? false]]
             [::cimi-api-fx/add
              [:deployment-set body
@@ -714,17 +730,18 @@
 (reg-event-fx
   ::fetch-apps-set-add-apps
   (fn [_ [_ apps-set-module-id]]
-    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-set-apps %])]}))
+    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-set-apps-and-set-apps-set %])]}))
 
 (reg-event-fx
-  ::add-apps-set-apps
-  (fn [_ [_ apps-sets]]
-    (let [app-ids (->> apps-sets
-                       :content
-                       :applications-sets
-                       (mapcat :applications)
-                       (mapv :id))]
-      {::cimi-api-fx/search
+  ::add-apps-set-apps-and-set-apps-set
+  (fn [{db :db} [_ apps-set]]
+    (let [app-ids          (->> apps-set
+                                :content
+                                :applications-sets
+                                (mapcat :applications)
+                                (mapv :id))]
+      {:db (assoc db ::spec/module-applications-sets (enrich-app apps-set))
+       ::cimi-api-fx/search
        [:module
         {:filter (general-utils/filter-eq-ids app-ids)}
         #(dispatch [::add-apps-to-selection (:resources %)])]})))

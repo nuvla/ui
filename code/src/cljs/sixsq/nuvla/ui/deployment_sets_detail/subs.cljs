@@ -4,6 +4,7 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.acl.utils :as acl-utils]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
+            [sixsq.nuvla.ui.apps-store.spec :refer [virtual-apps-set-parent-path]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
@@ -124,11 +125,24 @@
 
 (defn applications-sets
   [db]
-  (get-in db [::spec/module-applications-sets :content :applications-sets]))
+  (get-in db [::spec/module-applications-sets :content :applications-sets]))=
+
+(reg-sub
+  ::apps-set
+  :-> ::spec/module-applications-sets)
 
 (reg-sub
   ::applications-sets
-  :-> applications-sets)
+  :<- [::apps-set]
+  (fn [apps-set]
+    (get-in apps-set [:content :applications-sets])))
+
+(reg-sub
+  ::is-controlled-by-apps-set?
+  :<- [::apps-set]
+  (fn [apps-set]
+    (and apps-set
+         (not= virtual-apps-set-parent-path (:parent-path apps-set)))))
 
 (reg-sub
   ::applications
@@ -308,6 +322,12 @@
         (app->app-row-data {:i           0
                             :application app}))
       apps)))
+
+(reg-sub
+  ::apps-set-name
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:name apps-set)))
 
 (reg-sub
   ::apps-edited?

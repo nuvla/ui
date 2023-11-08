@@ -47,7 +47,7 @@
          [:module
           (->> {:orderby (or order-by "created:desc")
                 :filter  (general-utils/join-and
-                           "parent-path!='apps-sets'"
+                           (str "parent-path!='" spec/virtual-apps-set-parent-path "'")
                            external-filter
                            subtypes-apps-or-filter
                            (case active-tab

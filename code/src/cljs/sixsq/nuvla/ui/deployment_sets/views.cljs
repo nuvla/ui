@@ -92,14 +92,6 @@
            :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector
            :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector)])]]))
 
-(defn new-deployment-set
-  []
-  (let [id (random-uuid)]
-    (dispatch [::routing-events/navigate
-               routes/deployment-sets-details
-               {:uuid :create}
-               {::subs/creation-temp-id-key id}])))
-
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])
         tr       (subscribe [::i18n-subs/tr])]
@@ -110,7 +102,7 @@
         #_[uix/MenuItem
          {:name     (@tr [:add])
           :icon     icons/i-plus-large
-          :on-click new-deployment-set}]
+          :on-click #(dispatch [::events/new-deployment-set])}]
         [ui/MenuItem {:icon     icons/i-grid-layout
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]

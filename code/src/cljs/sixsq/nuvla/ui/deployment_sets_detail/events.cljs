@@ -73,8 +73,10 @@
 
 (reg-event-fx
   ::init-create
-  (fn [{db :db}]
-    {:db (merge db spec/defaults)
+  (fn [{{:keys [current-route] :as db} :db}]
+    {:db (-> db
+             (merge spec/defaults)
+             (assoc (subs/create-apps-creation-db-path current-route) nil))
      :fx [[:dispatch [::clear-deployments]]
           [:dispatch [::main-events/action-interval-delete
                       {:id refresh-action-depl-set-id}]]]}))

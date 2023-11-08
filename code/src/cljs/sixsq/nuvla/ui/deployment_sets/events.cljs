@@ -1,12 +1,16 @@
 (ns sixsq.nuvla.ui.deployment-sets.events
   (:require [re-frame.core :refer [dispatch reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.deployment-sets-detail.events :as deployment-sets-detail-events]
             [sixsq.nuvla.ui.deployment-sets.spec :as spec]
+            [sixsq.nuvla.ui.deployment-sets.subs :as subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -91,3 +95,12 @@
   (fn [{db :db} [_ state-selector]]
     {:db (assoc db ::spec/state-selector state-selector)
      :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]]}))
+
+(reg-event-fx
+  ::new-deployment-set
+  (fn [{db :db} [_]]
+    (let [id (random-uuid)]
+      {:fx [[:dispatch [::routing-events/navigate
+                        routes/deployment-sets-details
+                        {:uuid :create}
+                        {::subs/creation-temp-id-key id}]]]})))

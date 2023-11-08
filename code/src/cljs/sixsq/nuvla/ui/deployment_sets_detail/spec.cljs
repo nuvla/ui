@@ -78,4 +78,7 @@
                                  :default-items-per-page 16)
    ::edge-picker-pagination   pagination-default
    ::opened-modal              nil
-   ::apps-edited?              false})
+   ::apps-edited?              false
+   ::fleet-filter              nil
+   ::fleet-filter-edited       nil})
+

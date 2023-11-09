@@ -888,7 +888,6 @@
                                                            :trigger (r/as-element [:div deploy-menuitem])}])})
         dyn-bulk-deploy-menuitem (when @bulk-deploy-enabled?
                                    {:menuitem (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
-                                                                                      (not @all-selected?)
                                                                                       (not @search-filter)
                                                                                       (not state-filter?))
                                                     message                      (str (@tr [:deploy-with-edges-filter])

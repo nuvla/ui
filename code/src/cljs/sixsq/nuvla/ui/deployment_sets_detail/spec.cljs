@@ -16,6 +16,7 @@
 (s/def ::edges-pagination any?)
 
 (s/def ::fleet-filter string?)
+(s/def ::fleet-filter-edited string?)
 
 (s/def ::validate-form? boolean?)
 
@@ -77,4 +78,7 @@
                                  :default-items-per-page 16)
    ::edge-picker-pagination   pagination-default
    ::opened-modal              nil
-   ::apps-edited?              false})
+   ::apps-edited?              false
+   ::fleet-filter              nil
+   ::fleet-filter-edited       nil})
+

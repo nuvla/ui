@@ -92,24 +92,17 @@
            :set-state-selector-event :sixsq.nuvla.ui.deployment-sets.events/set-state-selector
            :state-selector-subs :sixsq.nuvla.ui.deployment-sets.subs/state-selector)])]]))
 
-(defn new-deployment-set
-  []
-  (let [id (random-uuid)]
-    (dispatch [::routing-events/navigate
-               routes/deployment-sets-details
-               {:uuid :create}
-               {::subs/creation-temp-id-key id}])))
-
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])
         tr       (subscribe [::i18n-subs/tr])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true :stackable true}
-        [uix/MenuItem
+        ;; TODO: bring back add menu item once edge picker works in creation phase
+        #_[uix/MenuItem
          {:name     (@tr [:add])
           :icon     icons/i-plus-large
-          :on-click new-deployment-set}]
+          :on-click #(dispatch [::events/new-deployment-set])}]
         [ui/MenuItem {:icon     icons/i-grid-layout
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
@@ -202,7 +195,7 @@
                              :primary  true
                              :size     :big
                              :icon     icons/i-plus-large
-                             :on-click new-deployment-set}]])
+                             :on-click #(dispatch [::events/new-deployment-set])}]])
                :content (@tr [:add-your-first-deployment-group])}]))
 
 (defn Main
@@ -221,14 +214,20 @@
                             :margin-bottom 0}}
        [ControlBar]
        [StatisticStates true]]
-      (if (empty? @deployment-sets)
+      ;; TODO: bring back add menu item once edge picker works in creation phase
+      #_(if (empty? @deployment-sets)
         [ui/Grid {:centered true}
          [AddFirstButton]]
         [:<>
          (case @view-type
            :cards [DeploymentSetCards]
            :table [DeploymentSetTable])
-         [Pagination]])]]))
+         [Pagination]])
+      [:<>
+       (case @view-type
+         :cards [DeploymentSetCards]
+         :table [DeploymentSetTable])
+       [Pagination]]]]))
 
 
 (defn deployment-sets-view

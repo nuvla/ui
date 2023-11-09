@@ -449,6 +449,15 @@
                :icon     icons/i-plus-large
                :style    {:align-self "center"}}])
 
+(defn EditEdgeFilterButton
+  [id]
+  (let [fleet-filter (subscribe [::subs/fleet-filter])]
+    [uix/Button {:on-click (fn []
+                             (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
+                             (dispatch [::events/set-opened-modal id]))
+                 :icon     icons/i-pencil
+                 :style    {:align-self "center"}}]))
+
 (defn AppsPicker
   [tab-key pagination-db-path]
   (let [modules (subscribe [::apps-store-subs/modules])]
@@ -659,22 +668,31 @@
       (tr [:deploy-with-catch-all-edges-filter])
       polished)))
 
-(defn FleetFilterMessage []
+(defn FleetFilterPanel [{:keys [show-edit-filter-button?]}]
   (let [tr                   (subscribe [::i18n-subs/tr])
         fleet-filter         (subscribe [::subs/fleet-filter])
+        fleet-filter-edited? (subscribe [::subs/fleet-filter-edited?])
         deployment-set       (subscribe [::subs/deployment-set])
         can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" @deployment-set)
         unsaved-changes?     (subscribe [::subs/unsaved-changes?])]
     (when @fleet-filter
-      [:p {:style {:align-self "center"}}
-       [ui/Popup {:trigger (r/as-element
-                             [:span (@tr [:recompute-fleet-info])])
-                  :content (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
-       " "
-       (when (and can-recompute-fleet? (not @unsaved-changes?))
-         [:a {:href     "#"
-              :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
-          (@tr [:recompute-fleet])])])))
+      [ui/Grid {:columns 1}
+       [ui/GridColumn {:stretched true}
+        [:div {:style {:align-self :center}}
+         [ui/Popup {:trigger (r/as-element
+                               [:span (@tr [:recompute-fleet-info])])
+                    :content (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
+         " "
+         (when show-edit-filter-button?
+           [EditEdgeFilterButton events/edges-picker-modal-id])]
+        (when (and can-recompute-fleet? (not @unsaved-changes?))
+          [:a {:href     "#"
+               :style    {:align-self :center}
+               :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
+           (@tr [:recompute-fleet])])
+        (when @fleet-filter-edited?
+          [:p {:style {:align-self :center}}
+           (@tr [:fleet-filter-edited])])]])))
 
 
 (defn- ResolvedUser
@@ -690,15 +708,17 @@
         edges-stats       (subscribe [::subs/edge-picker-edges-summary-stats])
         selected-state    (subscribe [::subs/state-selector])
         additional-filter (subscribe [::subs/edge-picker-additional-filter])
-        filter-open?      (r/atom false)]
+        filter-open?      (r/atom false)
+        fleet-filter      (subscribe [::subs/fleet-filter])]
     (fn []
       (let [select-fn (fn [id] (dispatch [::table-plugin/select-id id [::spec/edge-picker-select] (map :id @edges)]))]
         [:<>
          [:div {:style {:display :flex}}
           [:div
-           [full-text-search-plugin/FullTextSearch
-            {:db-path      [::spec/edge-picker-full-text-search]
-             :change-event [::pagination-plugin/change-page [::spec/edge-picker-pagination] 1]}]
+           (when-not @fleet-filter
+             [full-text-search-plugin/FullTextSearch
+              {:db-path      [::spec/edge-picker-full-text-search]
+               :change-event [::pagination-plugin/change-page [::spec/edge-picker-pagination] 1]}])
            ^{:key @additional-filter}
            [:div {:style {:margin-top "0.4rem"}}
             [filter-comp/ButtonFilter
@@ -708,38 +728,41 @@
               :on-done                          #(dispatch [::events/set-edge-picker-additional-filter %])
               :show-clear-button-outside-modal? true
               :persist?                         false}]]]
-          [:div {:class :nuvla-edges
-                 :style {:margin "0 auto 0 6rem"}}
-           [edges-views/StatisticStatesEdgeView
-            (assoc @edges-stats
-              :states (mapv (fn [state]
-                              (let [label (:label state)]
-                                (assoc state
-                                  :selected?
-                                  (or
-                                    (= label @selected-state)
-                                    (and
-                                      (= label "TOTAL")
-                                      (empty? @selected-state)))
-                                  :on-click
-                                  #(dispatch
-                                     [::events/set-edge-picker-selected-state label])))) edges-views/edges-states))
-            true true]]]
-         [Table {:row-click-handler #(select-fn (:id %))
-                 :sort-config       {:db-path     ::spec/edge-picker-ordering
-                                     :fetch-event [::events/get-edges-for-edge-picker-modal]}
-                 :columns           [{:field-key :name}
-                                     {:field-key :state}
-                                     {:field-key :created-by
-                                      :cell      (fn [data] [ResolvedUser (:cell-data data)])}]
-                 :rows              @edges
-                 :table-props       {:compact "very" :selectable true}
-                 :cell-props        {:header {:single-line true}}
-                 :row-props         {:role  "link"
-                                     :style {:cursor "pointer"}}
-                 :select-config     {:total-count-sub-key [::subs/edge-picker-edges-count]
-                                     :resources-sub-key   [::subs/edge-picker-edges-resources]
-                                     :select-db-path      [::spec/edge-picker-select]}}]
+          (when-not @fleet-filter
+            [:div {:class :nuvla-edges
+                   :style {:margin "0 auto 0 6rem"}}
+             [edges-views/StatisticStatesEdgeView
+              (assoc @edges-stats
+                :states (mapv (fn [state]
+                                (let [label (:label state)]
+                                  (assoc state
+                                    :selected?
+                                    (or
+                                      (= label @selected-state)
+                                      (and
+                                        (= label "TOTAL")
+                                        (empty? @selected-state)))
+                                    :on-click
+                                    #(dispatch
+                                       [::events/set-edge-picker-selected-state label])))) edges-views/edges-states))
+              true true]])]
+         [Table (cond->
+                  {:row-click-handler #(select-fn (:id %))
+                   :sort-config       {:db-path     ::spec/edge-picker-ordering
+                                       :fetch-event [::events/get-edges-for-edge-picker-modal]}
+                   :columns           [{:field-key :name}
+                                       {:field-key :state}
+                                       {:field-key :created-by
+                                        :cell      (fn [data] [ResolvedUser (:cell-data data)])}]
+                   :rows              @edges
+                   :table-props       {:compact "very" :selectable true}
+                   :cell-props        {:header {:single-line true}}
+                   :row-props         {:role  "link"
+                                       :style {:cursor "pointer"}}}
+                  (not @fleet-filter)
+                  (assoc :select-config {:total-count-sub-key [::subs/edge-picker-edges-count]
+                                         :resources-sub-key   [::subs/edge-picker-edges-resources]
+                                         :select-db-path      [::spec/edge-picker-select]}))]
          [pagination-plugin/Pagination
           {:db-path                [::spec/edge-picker-pagination]
            :change-event           [::events/get-picker-edges]
@@ -751,19 +774,29 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         open?         (subscribe [::subs/modal-open? events/edges-picker-modal-id])
         add-to-select (fn []
-                        (dispatch [::events/get-selected-edge-ids]))]
+                        (dispatch [::events/get-selected-edge-ids]))
+        update-filter (fn []
+                        (dispatch [::events/update-fleet-filter])
+                        (dispatch [::events/set-opened-modal nil]))
+        fleet-filter  (subscribe [::subs/fleet-filter])]
     (fn []
-      [ui/Modal {:open       @open?
+      [ui/Modal {:size       :medium
+                 :open       @open?
                  :close-icon true
                  :on-close   close-modal}
-       [uix/ModalHeader {:header (@tr [:add-edges])}]
+       [uix/ModalHeader {:header (if @fleet-filter (@tr [:edit-fleet-filter]) (@tr [:add-edges]))}]
        [ui/ModalContent
         [EdgePickerContent]]
        [ui/ModalActions
-        [uix/Button {:text     (@tr [:add-to-depl-group])
-                     :positive true
-                     :active   true
-                     :on-click add-to-select}]]])))
+        (if @fleet-filter
+          [uix/Button {:text     (@tr [:set-new-dynamic-edge-filter])
+                       :positive true
+                       :active   true
+                       :on-click update-filter}]
+          [uix/Button {:text     (@tr [:add-to-depl-group])
+                       :positive true
+                       :active   true
+                       :on-click add-to-select}])]])))
 
 (defn- UnstoredEdgeChanges
   [fleet-changes]
@@ -804,7 +837,7 @@
             (@tr [:add-edges])
             (@tr [:add-your-first-edges]))]])
       [EdgesPickerModal]
-      [FleetFilterMessage]]]))
+      [FleetFilterPanel {:show-edit-filter-button? true}]]]))
 
 (defn TabOverview
   [uuid creating?]
@@ -1258,6 +1291,7 @@
   []
   (let [tr                (subscribe [::i18n-subs/tr])
         edges             (subscribe [::subs/edges-documents-response])
+        fleet-filter      (subscribe [::subs/fleet-filter])
         fleet-changes     (subscribe [::subs/fleet-changes])
         only-changes?     (subscribe [::subs/show-only-changed-fleet?])
         columns           (mapv (fn [col-config]
@@ -1281,19 +1315,20 @@
        [ui/Grid {:stackable true
                  :reversed  "mobile"}
         [ui/GridColumn {:width 4}
-         [:div
-          [full-text-search-plugin/FullTextSearch
-           {:db-path      [::spec/edges-full-text-search]
-            :change-event [::pagination-plugin/change-page [::spec/edges-pagination] 1]}]
-          ^{:key @additional-filter}
-          [:div {:style {:margin-top "0.4rem"}}
-           [filter-comp/ButtonFilter
-            {:resource-name                    edges-spec/resource-name
-             :default-filter                   @additional-filter
-             :open?                            filter-open?
-             :on-done                          #(dispatch [::events/set-edges-additional-filter %])
-             :show-clear-button-outside-modal? true
-             :persist?                         false}]]]]
+         (when-not @fleet-filter
+           [:div
+            [full-text-search-plugin/FullTextSearch
+             {:db-path      [::spec/edges-full-text-search]
+              :change-event [::pagination-plugin/change-page [::spec/edges-pagination] 1]}]
+            ^{:key @additional-filter}
+            [:div {:style {:margin-top "0.4rem"}}
+             [filter-comp/ButtonFilter
+              {:resource-name                    edges-spec/resource-name
+               :default-filter                   @additional-filter
+               :open?                            filter-open?
+               :on-done                          #(dispatch [::events/set-edges-additional-filter %])
+               :show-clear-button-outside-modal? true
+               :persist?                         false}]]])]
         [ui/GridColumn {:width 7}
          [:div {:class :nuvla-edges
                 :style {:margin "0 auto 0 6rem"}}
@@ -1307,29 +1342,31 @@
                               :label    "Show only unsaved changes"
                               :on-click #(dispatch [::events/show-fleet-changes-only @fleet-changes])}]]])
        [edges-views/NuvlaEdgeTableView
-        {:edges         (mapv (fn [row]
-                                (if
-                                  (some #{(:id row)} (:removed @fleet-changes))
-                                  (assoc row :table-row-prop {:style {:text-decoration "line-through"
-                                                                      :opacity         0.5}})
-                                  row))
-                              (:resources @edges))
-         :columns       columns
-         :sort-config   {:db-path     ::spec/edges-ordering
-                         :fetch-event [::events/get-edges]}
-         :select-config {:bulk-actions        [{:event (fn [select-data]
-                                                         (dispatch [::events/remove-edges select-data]))
-                                                :name  "Remove edges"
-                                                :icon  icons/BoxIcon}]
-                         :total-count-sub-key [::subs/edges-count]
-                         :resources-sub-key   [::subs/edges-documents-response]
-                         :select-db-path      [::spec/edges-select]}}]
+        (cond->
+          {:edges         (mapv (fn [row]
+                                  (if
+                                    (some #{(:id row)} (:removed @fleet-changes))
+                                    (assoc row :table-row-prop {:style {:text-decoration "line-through"
+                                                                        :opacity         0.5}})
+                                    row))
+                                (:resources @edges))
+           :columns       columns
+           :sort-config   {:db-path     ::spec/edges-ordering
+                           :fetch-event [::events/get-edges]}}
+          (not @fleet-filter)
+          (assoc :select-config {:bulk-actions        [{:event (fn [select-data]
+                                                                 (dispatch [::events/remove-edges select-data]))
+                                                        :name  "Remove edges"
+                                                        :icon  icons/BoxIcon}]
+                                 :total-count-sub-key [::subs/edges-count]
+                                 :resources-sub-key   [::subs/edges-documents-response]
+                                 :select-db-path      [::spec/edges-select]}))]
        [pagination-plugin/Pagination
         {:db-path                [::spec/edges-pagination]
          :change-event           [::events/get-edges]
          :total-items            (-> @edges :count)
          :i-per-page-multipliers [1 2 4]}]
-       [FleetFilterMessage]])))
+       [FleetFilterPanel {:show-edit-filter-button? false}]])))
 
 (defn EdgesTab
   []

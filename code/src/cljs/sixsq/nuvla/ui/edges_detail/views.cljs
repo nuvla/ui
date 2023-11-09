@@ -2013,7 +2013,7 @@
                                                       :attached "top right"}
                                             (:count deployments)]])
                    :key     :deployments
-                   :icon    #(r/as-element [icons/RocketIcon])}
+                   :icon    icons/i-rocket}
         :render   #(r/as-element
                      [ui/TabPane
                       [deployments-views/DeploymentTable

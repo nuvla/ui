@@ -780,8 +780,7 @@
                         (dispatch [::events/set-opened-modal nil]))
         fleet-filter  (subscribe [::subs/fleet-filter])]
     (fn []
-      [ui/Modal {:size       :medium
-                 :open       @open?
+      [ui/Modal {:open       @open?
                  :close-icon true
                  :on-close   close-modal}
        [uix/ModalHeader {:header (if @fleet-filter (@tr [:edit-fleet-filter]) (@tr [:add-edges]))}]

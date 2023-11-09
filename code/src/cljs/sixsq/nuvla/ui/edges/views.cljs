@@ -883,6 +883,7 @@
                                                                       :key      :bulk-deploy}
                                                                      [icons/RocketIcon]
                                                                      (@tr [:edges-bulk-deploy-app])]]
+                                                ^{:key "bulk-deploy-menuitem"}
                                                 [ui/Popup {:basic   true
                                                            :content message
                                                            :trigger (r/as-element [:div deploy-menuitem])}])})
@@ -909,6 +910,7 @@
                                                                                    :key      :dynamic-bulk-deploy}
                                                                                   [icons/RocketIcon]
                                                                                   (@tr [:dynamic-bulk-deploy])]]
+                                                ^{:key "dyn-bulk-deploy-menuitem"}
                                                 [ui/Popup {:basic   true
                                                            :content (if dynamic-bulk-deploy-enabled?
                                                                       message

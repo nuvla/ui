@@ -186,6 +186,13 @@
                            :content (str "Loaded " (count apps) " out of " total-apps-count ".")
                            :type    :error}]]]}))))
 
+(defn apps-set->app-ids [apps-sets]
+  (->> apps-sets
+       :content
+       :applications-sets
+       (mapcat :applications)
+       (mapv :id)))
+
 (defn overwrite-apps-versions
   [apps-set apps-set-from-depl-set]
   (update-in apps-set-from-depl-set [:overwrites 0]
@@ -206,12 +213,7 @@
                                                        (partial overwrite-apps-versions apps-sets)
                                                        identity)))
                                       (into {}))
-          apps-urls              (->> apps-sets
-                                      :content
-                                      :applications-sets
-                                      (mapcat :applications)
-                                      (map :id)
-                                      distinct)
+          apps-urls              (distinct (apps-set->app-ids apps-sets))
           params                 {:filter (general-utils/filter-eq-ids apps-urls)
                                   :last   10000}
           callback               #(if (instance? js/Error %)
@@ -686,8 +688,14 @@
   ::set-opened-modal
   (fn [{db :db} [_ id]]
     {:db (assoc db ::spec/opened-modal id)
-     :fx (if (= id edges-picker-modal-id)
+     :fx (condp = id
+           edges-picker-modal-id
            [[:dispatch [::get-edges-for-edge-picker-modal]]]
+
+           apps-picker-modal-id
+           [[:dispatch [::fetch-app-picker-apps ::spec/pagination-apps-picker]]
+            [:dispatch [::reset-edge-picker]]]
+
            [[:dispatch [::reset-edge-picker]]])}))
 
 (reg-event-db
@@ -716,9 +724,10 @@
                            (general-utils/filter-neq-ids
                              (mapv :id current-selection))
                            (when (or (false? is-controlled-by-apps-set?) (seq current-selection))
-                             "subtype!='applications_sets'"))
+                             (str "subtype!='" apps-utils/subtype-applications-sets "'")))
                          :order-by           "name:asc"
-                         :pagination-db-path [pagination-db-path]}]]]})))
+                         :pagination-db-path [pagination-db-path]
+                         :additional-cb-fn #(dispatch [::get-apps-for-sets %])}]]]})))
 
 (reg-event-fx
   ::do-add-app
@@ -741,7 +750,8 @@
 (reg-event-fx
   ::add-app-from-picker
   (fn [_ [_ app]]
-    (if (= (:subtype app) "applications_sets")
+    (if (= (:subtype app)
+           apps-utils/subtype-applications-sets)
       {:fx [[:dispatch [::fetch-apps-set-add-apps (:id app)]]]}
       (let [{:keys [path versions]} app
             version-id (version-id-to-add app)]
@@ -759,11 +769,7 @@
 (reg-event-fx
   ::add-apps-set-apps-and-set-apps-set
   (fn [{db :db} [_ apps-set]]
-    (let [app-ids (->> apps-set
-                       :content
-                       :applications-sets
-                       (mapcat :applications)
-                       (mapv :id))]
+    (let [app-ids (apps-set->app-ids apps-set)]
       {:db (assoc db ::spec/module-applications-sets (utils/enrich-app apps-set))
        ::cimi-api-fx/search
        [:module
@@ -1041,3 +1047,39 @@
                           deployment-set updated-deployment-set)]]
             [:dispatch [::get-edges]]]})))
 
+(reg-event-fx
+  ::get-apps-for-sets
+  (fn [_ [_ {:keys [resources]}]]
+    (let [apps-sets (filterv (fn [module]
+                               (= apps-utils/subtype-applications-sets
+                                  (:subtype module)))
+                      resources)]
+      (when (seq apps-sets)
+        {:fx (mapv (fn [apps-set]
+                      [:dispatch [::fetch-set-then-apps (:id apps-set)]])
+                apps-sets)}))))
+
+(reg-event-fx
+  ::fetch-set-then-apps
+  (fn [_ [_ apps-set-module-id]]
+    {::cimi-api-fx/get [apps-set-module-id #(dispatch [::add-apps-picker-apps-set-apps %])]}))
+
+(reg-event-fx
+  ::add-apps-picker-apps-set-apps
+  (fn [{db :db} [_ apps-sets]]
+    (let [app-ids (apps-set->app-ids apps-sets)]
+      {:db (update db ::spec/apps-by-id assoc (:id apps-sets) apps-sets)
+       ::cimi-api-fx/search
+       [:module
+        {:filter (general-utils/filter-eq-ids app-ids)}
+        #(dispatch [::add-apps-to-db (:resources %)])]})))
+
+(reg-event-db
+  ::add-apps-to-db
+  (fn [{:keys [::spec/apps-by-id] :as db} [_ apps]]
+    (let [update-entries-fn (fn [apps-by-id app]
+                              (assoc apps-by-id (:id app) app))]
+      (assoc db ::spec/apps-by-id (reduce
+                                    update-entries-fn
+                                    apps-by-id
+                                    apps)))))

@@ -118,8 +118,7 @@
       :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         warn-msg
       :button-text        (@tr [:start])
-      :with-confirm-step? true}]
-    ))
+      :with-confirm-step? true}]))
 
 (def stop-modal-id :modal/stop-deployment-group)
 
@@ -394,6 +393,38 @@
            [ui/TableCell (str/capitalize (@tr [:updated]))]
            [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]])]]]))
 
+(defn AppsInAppsSetsCard
+  [ids]
+  (let [apps (subscribe [::subs/select-apps-by-id ids])]
+    [:div
+     [:div "This is a set containing these apps:"]
+     [:ul
+      (doall
+        (for [id ids
+              :let [app (get @apps id)]]
+          ^{:key id}
+          [:li
+           (:name app)]))]]))
+
+(defn AppsPickerAppsSetsCard
+  [{:keys [subtype name id desc-summary published target
+           show-published-tick? detail-href on-click button-ops]}]
+  (let [apps-set (subscribe [::subs/app-by-id id])]
+    (fn []
+      [uix/Card
+       {:header        [:<>
+                        [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
+                        (or name id)]
+        :description   (into
+                         [:div
+                          [AppsInAppsSetsCard (events/apps-set->app-ids @apps-set)]
+                          desc-summary])
+        :corner-button (when (and published show-published-tick?)
+                         [ui/Label {:corner true} [icons/Icon {:name apps-utils/publish-icon}]])
+        :href          detail-href
+        :on-click      on-click
+        :button        [uix/Button button-ops]
+        :target        target}])))
 
 (defn AppPickerCard
   [{:keys [id name description path subtype logo-url price published versions tags] :as app}]
@@ -403,11 +434,12 @@
         detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
         follow-trial?  (get price :follow-customer-trial false)
         button-icon    (if (and price (not follow-trial?)) :cart icons/i-rocket)
+
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :deploy-for)])
-                            (format-money (/ (:cent-amount-daily price) 100)) "/"
-                            (@tr [:day]))
+                         (format-money (/ (:cent-amount-daily price) 100)) "/"
+                         (@tr [:day]))
         button-content "Add to selection"
         button-ops     {:fluid   true
                         :color   "blue"
@@ -415,31 +447,36 @@
                         :content button-content}
         desc-summary   (-> description
                            utils-values/markdown->summary
-                           (general-utils/truncate 60))]
-    [apps-store-views/ModuleCardView
-     {:logo-url     logo-url
-      :subtype      subtype
-      :name         name
-      :id           id
-      :desc-summary [:<>
-                     [:p desc-summary]
-                     [:div
-                      [:p (str "Project: " (-> (or (:path app) "")
-                                               (str/split "/")
-                                               first))]
-                      [:p "Vendor: " [AuthorVendorForModule app :span]]
-                      [:p (str "Price: " deploy-price)]]]
-      :tags         tags
-      :published    published
-      :detail-href  detail-href
-      :button-ops   button-ops
-      :target       :_blank
-      :on-click     (fn [event]
-                      (dispatch [::events/add-app-from-picker app])
-                      (close-modal)
-                      (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
-                      (.preventDefault event)
-                      (.stopPropagation event))}]))
+                           (general-utils/truncate 60))
+        is-apps-set?   (= subtype
+                          apps-utils/subtype-applications-sets)
+        props          {:logo-url     logo-url
+                        :subtype      subtype
+                        :name         name
+                        :id           id
+                        :desc-summary [:<>
+                                       [:p desc-summary]
+                                       [:div
+                                        [:p (str "Project: " (-> (or (:path app) "")
+                                                                 (str/split "/")
+                                                                 first))]
+                                        [:p "Vendor: " [AuthorVendorForModule app :span]]
+                                        (when-not is-apps-set? [:p (str "Price: " deploy-price)])]]
+                        :tags         tags
+                        :published    published
+                        :detail-href  detail-href
+                        :button-ops   button-ops
+                        :on-click     (fn [event]
+                                        (dispatch [::events/add-app-from-picker app])
+                                        (close-modal)
+                                        (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
+                                        (.preventDefault event)
+                                        (.stopPropagation event))}]
+    (if is-apps-set?
+      [AppsPickerAppsSetsCard
+       props]
+      [apps-store-views/ModuleCardView
+       props])))
 
 (defn AddButton
   [{:keys [modal-id enabled tooltip] :or {enabled true}}]
@@ -502,10 +539,9 @@
 
 (defn AppsPickerModal
   [creating?]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        open?   (subscribe [::subs/modal-open? events/apps-picker-modal-id])
-        tab-key apps-store-spec/allapps-key]
-    (dispatch [::events/fetch-app-picker-apps ::spec/pagination-apps-picker])
+  (let [tr       (subscribe [::i18n-subs/tr])
+        open?    (subscribe [::subs/modal-open? events/apps-picker-modal-id])
+        tab-key  apps-store-spec/allapps-key]
     (fn []
       [ui/Modal {:size       :fullscreen
                  :open       @open?

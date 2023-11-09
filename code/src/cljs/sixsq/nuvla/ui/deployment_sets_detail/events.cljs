@@ -232,8 +232,11 @@
   ::operation
   (fn [_ [_ {:keys [resource-id operation data on-success-fn on-error-fn]
              :or   {data          {}
-                    on-success-fn #(dispatch [::bulk-progress-plugin/monitor
-                                              [::spec/bulk-jobs] (:location %)])
+                    on-success-fn (fn [{:keys [location] :as _response}]
+                                     (when location
+                                       (dispatch [::bulk-progress-plugin/monitor
+                                                  [::spec/bulk-jobs] location]))
+                                     (dispatch [::set-opened-modal nil]))
                     on-error-fn   #()}}]]
     (let [on-success #(do
                         (refresh)
@@ -695,8 +698,7 @@
 (reg-event-fx
   ::add-app-from-picker
   (fn [_ [_ app]]
-    (if (= (:subtype app)
-           "applications_sets")
+    (if (= (:subtype app) "applications_sets")
       {:fx [[:dispatch [::fetch-apps-set-add-apps (:id app)]]]}
       (let [{:keys [path versions]} app
             version-id (version-id-to-add app)]

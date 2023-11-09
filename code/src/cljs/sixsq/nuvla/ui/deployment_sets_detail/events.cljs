@@ -102,7 +102,7 @@
 (defn load-apps-set-configuration
   [apps-set-id version]
   [:dispatch [::module-plugin/load-module
-              [::spec/parent-apps-set]
+              [::spec/apps-sets 0 :apps-set]
               (str apps-set-id "_" version)]])
 
 (defn load-module-configurations

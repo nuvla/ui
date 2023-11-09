@@ -1085,7 +1085,7 @@
                :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?) @is-controlled-by-apps-set?)
                :change-event [::events/edit-config]}]]
        (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
-     :label (@tr [:select-version])]))
+     :label (if @is-controlled-by-apps-set? (str/capitalize (@tr [:version])) (@tr [:select-version]))]))
 
 (defn EnvVariablesApp
   [i module-id creating?]
@@ -1142,15 +1142,19 @@
 
 (defn ConfigureAppsSet
   [configure-apps]
-  (let [is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
         apps-set                   (subscribe [::subs/apps-set])]
     [:div
      (when @is-controlled-by-apps-set?
-       [:div (:name @apps-set)
-        [module-plugin/ModuleVersions
-         {:db-path      [::spec/parent-apps-set]
-          :href         (:id @apps-set)
-          :change-event [::events/change-apps-set-version]}]])
+       [:div {:style {:margin-bottom "5px"}}
+        [:h2 (:name @apps-set)]
+        [uix/Accordion
+         [module-plugin/ModuleVersions
+          {:db-path      [::spec/apps-sets 0 :apps-set]
+           :href         (:id @apps-set)
+           :change-event [::events/change-apps-set-version]}]
+         :label (@tr [:select-version])]])
      configure-apps]))
 
 (defn BoldLabel

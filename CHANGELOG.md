@@ -4,6 +4,21 @@
 
 ## Released
 
+## [2.35.0] - 2023-11-09
+
+- Global - Use values new type of query in UI
+- Edges
+  - Add button Deploy App with Dynamic Edges
+  - Fix console errors and warnings
+- Deployment group detail
+  - Adapt edge picker functionality to support dynamic edge filters
+  - ModalDanger for start stop cancel should clause when
+    action call is successful
+  - When there are no deployment groups yet, we show a plus button in the middle
+    of the page
+  - Remove events plugin not used and making queries
+  - Fix a bunch of console errors and warnings
+
 ## [2.34.2] - 2023-11-01
 
 - Hotfix/job table messages (#1434)

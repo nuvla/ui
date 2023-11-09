@@ -267,6 +267,7 @@
         :delete-resource-msg                           "delete resource %1?"
         :delete-resources                              "delete resources"
         :delta-min                                     "delta [min]"
+        :dep-group-edit-not-allowed                    "Editing not allowed because an action is in progress. Please wait until the action is completed or cancel the action first."
         :depl-group-add-one-edge-to-enable-tab         "Add at least one edge to enable this tab."
         :depl-group-apps-missing                       "Select at least one application"
         :depl-group-mandatory-app-env-var-missing      "All required environment variables for all apps need to be provided"

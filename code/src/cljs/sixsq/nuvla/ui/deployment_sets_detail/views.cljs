@@ -42,6 +42,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.tooltip :refer [with-tooltip]]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
             [sixsq.nuvla.ui.utils.values :as utils-values]
@@ -444,19 +445,38 @@
                       (.stopPropagation event))}]))
 
 (defn AddButton
-  [id]
-  [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
-               :icon     icons/i-plus-large
-               :style    {:align-self "center"}}])
+  [{:keys [modal-id enabled tooltip] :or {enabled true}}]
+  (with-tooltip
+    [:div [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal modal-id]))
+                       :disabled (not enabled)
+                       :icon     icons/i-plus-large
+                       :style    {:align-self "center"}}]]
+    tooltip))
+
+(defn RemoveButton
+  [{:keys [enabled tooltip on-click] :or {enabled true}}]
+  (with-tooltip
+    [:span [icons/XMarkIcon
+            {:style    {:cursor (if enabled :pointer :default)}
+             :disabled (not enabled)
+             :color    "red"
+             :on-click on-click}]]
+    tooltip))
 
 (defn EditEdgeFilterButton
   [id]
-  (let [fleet-filter (subscribe [::subs/fleet-filter])]
-    [uix/Button {:on-click (fn []
-                             (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
-                             (dispatch [::events/set-opened-modal id]))
-                 :icon     icons/i-pencil
-                 :style    {:align-self "center"}}]))
+  (let [tr           (subscribe [::i18n-subs/tr])
+        can-edit?    (subscribe [::subs/can-edit?])
+        fleet-filter (subscribe [::subs/fleet-filter])]
+    (with-tooltip
+      [:span [uix/Button
+              {:disabled (not @can-edit?)
+               :on-click (fn []
+                           (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
+                           (dispatch [::events/set-opened-modal id]))
+               :icon     icons/i-pencil
+               :style    {:align-self "center"}}]]
+      (when-not @can-edit? (@tr [:dep-group-edit-not-allowed])))))
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -504,6 +524,7 @@
         locale                 (subscribe [::i18n-subs/locale])
         apps-row               (subscribe [::subs/apps-row-data])
         apps-validation-error? (subscribe [::subs/apps-validation-error?])
+        can-edit?              (subscribe [::subs/can-edit?])
         k->tr-k                {:app :name}]
     (fn []
       (let [no-apps? (empty? @apps-row)]
@@ -565,15 +586,22 @@
                                 :cell      (fn [{:keys [row-data]}]
                                              [icons/XMarkIcon
                                               {:style    {:cursor :pointer}
+                                               :disabled (not @can-edit?)
+                                               :title    (when-not @can-edit? (@tr [:dep-group-edit-not-allowed]))
                                                :color    "red"
-                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
+                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}]
+                                             [RemoveButton {:enabled @can-edit?
+                                                            :tooltip (when-not @can-edit? (@tr [:dep-group-edit-not-allowed]))
+                                                            :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
                     :rows @apps-row}]])
          [:div {:style {:display :flex :justify-content :center :align-items :center}}
           [:<>
            [AppsPickerModal creating?]
            [:div {:style {:margin-top   "1rem"
                           :margin-bottm "1rem"}}
-            [AddButton events/apps-picker-modal-id]]]]
+            [AddButton {:modal-id events/apps-picker-modal-id
+                        :enabled  @can-edit?
+                        :tooltip  (when-not @can-edit? (@tr [:dep-group-edit-not-allowed]))}]]]]
          [:div {:style {:margin-top   "1rem"
                         :margin-left  "auto"
                         :margin-right "auto"}}
@@ -810,6 +838,7 @@
 (defn EdgeOverviewContent
   [edges-stats creating?]
   (let [tr            (subscribe [::i18n-subs/tr])
+        can-edit?     (subscribe [::subs/can-edit?])
         fleet-filter  (subscribe [::subs/fleet-filter])
         fleet-changes (subscribe [::subs/fleet-changes])]
     [:<>
@@ -830,7 +859,9 @@
         ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
         ;; and retrieving deployment-set and deployment-set-edited
         [:<>
-         [AddButton events/edges-picker-modal-id]
+         [AddButton {:modal-id events/edges-picker-modal-id
+                     :enabled  @can-edit?
+                     :tooltip  (when-not @can-edit? (@tr [:dep-group-edit-not-allowed]))}]
          [:div {:style {:margin-top "1rem"}}
           (if (pos? (:total edges-stats))
             (@tr [:add-edges])
@@ -1027,22 +1058,30 @@
 
 (defn ModuleVersionsApp
   [i module-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        can-edit? (subscribe [::subs/can-edit?])]
     [uix/Accordion
-     [module-plugin/ModuleVersions
-      {:db-path      [::spec/apps-sets i]
-       :href         module-id
-       :change-event [::events/edit-config]}]
+     (with-tooltip
+       [:div [module-plugin/ModuleVersions
+              {:db-path      [::spec/apps-sets i]
+               :href         module-id
+               :read-only?   (not @can-edit?)
+               :change-event [::events/edit-config]}]]
+       (when-not @can-edit? (@tr [:dep-group-edit-not-allowed])))
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
   [i module-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        can-edit? (subscribe [::subs/can-edit?])]
     [uix/Accordion
-     [module-plugin/EnvVariables
-      {:db-path      [::spec/apps-sets i]
-       :href         module-id
-       :change-event [::events/edit-config]}]
+     (with-tooltip
+       [:div [module-plugin/EnvVariables
+              {:db-path      [::spec/apps-sets i]
+               :href         module-id
+               :read-only?   (not @can-edit?)
+               :change-event [::events/edit-config]}]]
+       (when-not @can-edit? (@tr [:dep-group-edit-not-allowed])))
      :label (@tr [:env-variables])]))
 
 
@@ -1289,6 +1328,7 @@
 (defn EdgesTabView
   []
   (let [tr                (subscribe [::i18n-subs/tr])
+        can-edit?         (subscribe [::subs/can-edit?])
         edges             (subscribe [::subs/edges-documents-response])
         fleet-filter      (subscribe [::subs/fleet-filter])
         fleet-changes     (subscribe [::subs/fleet-changes])
@@ -1353,10 +1393,11 @@
            :sort-config   {:db-path     ::spec/edges-ordering
                            :fetch-event [::events/get-edges]}}
           (not @fleet-filter)
-          (assoc :select-config {:bulk-actions        [{:event (fn [select-data]
-                                                                 (dispatch [::events/remove-edges select-data]))
-                                                        :name  "Remove edges"
-                                                        :icon  icons/BoxIcon}]
+          (assoc :select-config {:disabled-tooltip    (when-not @can-edit? (@tr [:dep-group-edit-not-allowed]))
+                                 :bulk-actions        [{:event    (fn [select-data]
+                                                                    (dispatch [::events/remove-edges select-data]))
+                                                        :name     "Remove edges"
+                                                        :icon     icons/BoxIcon}]
                                  :total-count-sub-key [::subs/edges-count]
                                  :resources-sub-key   [::subs/edges-documents-response]
                                  :select-db-path      [::spec/edges-select]}))]

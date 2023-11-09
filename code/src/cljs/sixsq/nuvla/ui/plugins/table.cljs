@@ -305,7 +305,7 @@
                   :on-click   #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
 
 (defn BulkActionBar
-  [{:keys [selected-set-sub total-count-sub-key selected-all-sub
+  [{:keys [selected-set-sub total-count-sub-key selected-all-sub disabled-tooltip
            db-path bulk-actions resources-sub-key selectable? resource-type]}]
   (let [tr                        (subscribe [::i18n-subs/tr])
         rows                      @(subscribe resources-sub-key)
@@ -374,7 +374,7 @@
                             (r/as-element
                               [:div
                                [ui/MenuItem
-                                {:disabled nothing-selected?
+                                {:disabled (or nothing-selected? disabled-tooltip)
                                  :class    :bulk-action-bar-item
                                  :on-click (fn []
                                              (if (fn? event) (event payload)
@@ -383,8 +383,8 @@
                                 (when icon [icon])
                                 name]])
                             :basic    true
-                            :disabled (not= :none @selection-status)
-                            :content  (@tr [:select-at-least-one-item])}])))]]
+                            :disabled (and (not disabled-tooltip) (not= :none @selection-status))
+                            :content  (or disabled-tooltip (@tr [:select-at-least-one-item]))}])))]]
         [:div {:style {:padding-right "1rem"}}
          @bulk-edit-success-message]])
      [:div
@@ -573,7 +573,7 @@
            row-click-handler row-props
            sort-config select-config]
     :as   props}]
-  (let [{:keys [bulk-actions select-db-path total-count-sub-key
+  (let [{:keys [bulk-actions select-db-path total-count-sub-key disabled-tooltip
                 resources-sub-key rights-needed select-label-accessor]} select-config
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
         selectable?    (and
@@ -598,7 +598,8 @@
                        :rows                rows
                        :db-path             select-db-path
                        :bulk-actions        bulk-actions
-                       :resources-sub-key   resources-sub-key}])
+                       :resources-sub-key   resources-sub-key
+                       :disabled-tooltip    disabled-tooltip}])
      [:div
       [:div {:style {:overflow :auto
                      :padding  0

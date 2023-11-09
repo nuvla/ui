@@ -528,3 +528,19 @@
 (reg-sub
   ::state-selector
   :-> ::spec/edge-picker-state-selector)
+
+(reg-sub
+  ::all-apps-by-id
+  :-> ::spec/apps-by-id)
+
+(reg-sub
+  ::select-apps-by-id
+  :<- [::all-apps-by-id]
+  (fn [apps-by-id [_ ids]]
+    (select-keys apps-by-id ids)))
+
+(reg-sub
+  ::app-by-id
+  :<- [::all-apps-by-id]
+  (fn [apps-by-id [_ id]]
+    (get apps-by-id id)))

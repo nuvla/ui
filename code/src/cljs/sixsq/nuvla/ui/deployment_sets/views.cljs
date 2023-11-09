@@ -195,7 +195,7 @@
                              :primary  true
                              :size     :big
                              :icon     icons/i-plus-large
-                             :on-click new-deployment-set}]])
+                             :on-click #(dispatch [::events/new-deployment-set])}]])
                :content (@tr [:add-your-first-deployment-group])}]))
 
 (defn Main

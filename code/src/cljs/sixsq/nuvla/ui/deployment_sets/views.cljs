@@ -192,10 +192,24 @@
     {:db-path      [::spec/search]
      :change-event [::pagination-plugin/change-page [::spec/pagination] 1]}]])
 
+(defn AddFirstButton
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Popup {:trigger (r/as-element
+                          [:div
+                           [uix/Button
+                            {:name     ""
+                             :primary  true
+                             :size     :big
+                             :icon     icons/i-plus-large
+                             :on-click new-deployment-set}]])
+               :content (@tr [:add-your-first-deployment-group])}]))
+
 (defn Main
   []
   (dispatch [::events/refresh])
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        deployment-sets (subscribe [::subs/deployment-sets])]
     [components/LoadingPage {}
      [:<>
       [uix/PageHeader "bullseye"
@@ -207,10 +221,14 @@
                             :margin-bottom 0}}
        [ControlBar]
        [StatisticStates true]]
-      (case @view-type
-        :cards [DeploymentSetCards]
-        :table [DeploymentSetTable])
-      [Pagination]]]))
+      (if (empty? @deployment-sets)
+        [ui/Grid {:centered true}
+         [AddFirstButton]]
+        [:<>
+         (case @view-type
+           :cards [DeploymentSetCards]
+           :table [DeploymentSetTable])
+         [Pagination]])]]))
 
 
 (defn deployment-sets-view

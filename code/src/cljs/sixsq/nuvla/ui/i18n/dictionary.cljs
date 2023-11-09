@@ -34,6 +34,7 @@
         :add-to-depl-group                             "Add to deployment group"
         :add-edges                                     "Add NuvlaEdges"
         :add-app                                       "Add app"
+        :add-your-first-deployment-group               "Add your first deployment group"
         :add-your-first-edges                          "Add your first NuvlaEdges"
         :add-by-user-group-id                          "Add by user/group ID: "
         :add-column-to-right                           "Add 1 column to right"

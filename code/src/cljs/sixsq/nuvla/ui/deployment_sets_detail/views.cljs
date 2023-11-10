@@ -64,8 +64,8 @@
 
 (defn edit-not-allowed-msg
   [TR can-edit-data? edit-op-allowed? edit-not-allowed-in-state?]
-  (when-not edit-op-allowed?
-    (TR (if (and can-edit-data? edit-not-allowed-in-state?)
+  (when (and can-edit-data? (not edit-op-allowed?))
+    (TR (if edit-not-allowed-in-state?
           [:dep-group-edit-not-allowed-in-state]
           [:dep-group-edit-not-allowed]))))
 
@@ -1082,8 +1082,7 @@
                :href         module-id
                :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
                :change-event [::events/edit-config]}]]
-       (when @can-edit-data?
-         (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)))
+       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
@@ -1099,8 +1098,7 @@
                :href         module-id
                :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
                :change-event [::events/edit-config]}]]
-       (when @can-edit-data?
-         (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)))
+       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
      :label (@tr [:env-variables])]))
 
 

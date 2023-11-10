@@ -4,6 +4,12 @@
 
 ## Released
 
+## [2.35.1] - 2023-11-10
+
+- Profile - Invitation to group not working regression (#1445)
+- All edit actions should be disabled when edit operation is not allowed on
+  deployment group (#1442)
+
 ## [2.35.0] - 2023-11-09
 
 - Global - Use values new type of query in UI

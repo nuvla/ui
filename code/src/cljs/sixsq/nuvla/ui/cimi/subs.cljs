@@ -37,9 +37,19 @@
                            "")]
       (str "sort" direction))))
 
+(defn transform-agg
+  [[agg-key {:keys [value buckets] :as _agg-val}]]
+  (let [agg-key-name (name agg-key)
+        [kind attr] (str/split agg-key-name #":")
+        label (str kind " " attr)]
+    (case kind
+      "terms" (map #(list (str label " " (:key %)) (:doc_count %)) buckets)
+      [[label value]])))
+
 (reg-sub
-  ::aggregations
-  :-> ::spec/aggregations)
+  ::aggregations-keys-values
+  (fn [{:keys [::spec/aggregations]}]
+    (mapcat transform-agg aggregations)))
 
 (reg-sub
   ::collection

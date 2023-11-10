@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
+            [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.views :as dv]
             [sixsq.nuvla.ui.edges.spec :as edges-spec]
@@ -42,6 +43,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.tooltip :refer [with-tooltip]]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
             [sixsq.nuvla.ui.utils.values :as utils-values]
@@ -59,6 +61,13 @@
             (map (fn [[k v]]
                    (str (count v) " " (tr-fn [k])))
                  (dissoc ops-status :status))))
+
+(defn edit-not-allowed-msg
+  [TR can-edit-data? edit-op-allowed? edit-not-allowed-in-state?]
+  (when (and can-edit-data? (not edit-op-allowed?))
+    (TR (if edit-not-allowed-in-state?
+          [:dep-group-edit-not-allowed-in-state]
+          [:dep-group-edit-not-allowed]))))
 
 (defn- depl-set->modal-content
   [{:keys [name id description]}]
@@ -323,11 +332,12 @@
 
 (defn EditableCell
   [attribute creating?]
-  (let [deployment-set (subscribe [::subs/deployment-set])
-        can-edit?      (subscribe [::subs/can-edit?])
-        on-change-fn   #(dispatch [::events/edit attribute %])]
+  (let [deployment-set   (subscribe [::subs/deployment-set])
+        can-edit-data?   (subscribe [::subs/can-edit-data?])
+        edit-op-allowed? (subscribe [::subs/edit-op-allowed?])
+        on-change-fn     #(dispatch [::events/edit attribute %])]
     [ui/TableCell
-     (if (or creating? @can-edit?)
+     (if (and @can-edit-data? (or creating? @edit-op-allowed?))
        [components/EditableInput
         {:resource     @deployment-set
          :attribute    attribute
@@ -444,19 +454,40 @@
                       (.stopPropagation event))}]))
 
 (defn AddButton
-  [id]
-  [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal id]))
-               :icon     icons/i-plus-large
-               :style    {:align-self "center"}}])
+  [{:keys [modal-id enabled tooltip] :or {enabled true}}]
+  (with-tooltip
+    [:div [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal modal-id]))
+                       :disabled (not enabled)
+                       :icon     icons/i-plus-large
+                       :style    {:align-self "center"}}]]
+    tooltip))
+
+(defn RemoveButton
+  [{:keys [enabled tooltip on-click] :or {enabled true}}]
+  (with-tooltip
+    [:span [icons/XMarkIcon
+            {:style    {:cursor (if enabled :pointer :default)}
+             :disabled (not enabled)
+             :color    "red"
+             :on-click on-click}]]
+    tooltip))
 
 (defn EditEdgeFilterButton
   [id]
-  (let [fleet-filter (subscribe [::subs/fleet-filter])]
-    [uix/Button {:on-click (fn []
-                             (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
-                             (dispatch [::events/set-opened-modal id]))
-                 :icon     icons/i-pencil
-                 :style    {:align-self "center"}}]))
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
+        fleet-filter               (subscribe [::subs/fleet-filter])]
+    (with-tooltip
+      [:span [uix/Button
+              {:disabled (not @edit-op-allowed?)
+               :on-click (fn []
+                           (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
+                           (dispatch [::events/set-opened-modal id]))
+               :icon     icons/i-pencil
+               :style    {:align-self "center"}}]]
+      (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))))
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -500,11 +531,14 @@
 
 (defn- AppsOverviewTable
   [creating?]
-  (let [tr                     (subscribe [::i18n-subs/tr])
-        locale                 (subscribe [::i18n-subs/locale])
-        apps-row               (subscribe [::subs/apps-row-data])
-        apps-validation-error? (subscribe [::subs/apps-validation-error?])
-        k->tr-k                {:app :name}]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        locale                     (subscribe [::i18n-subs/locale])
+        apps-row                   (subscribe [::subs/apps-row-data])
+        apps-validation-error?     (subscribe [::subs/apps-validation-error?])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
+        k->tr-k                    {:app :name}]
     (fn []
       (let [no-apps? (empty? @apps-row)]
         [:<>
@@ -561,27 +595,31 @@
                                                                               :href     (:href row-data)
                                                                               :children [icons/ArrowRightFromBracketIcon]
                                                                               :target   :_self}]])}])}
-                               {:field-key :remove
-                                :cell      (fn [{:keys [row-data]}]
-                                             [icons/XMarkIcon
-                                              {:style    {:cursor :pointer}
-                                               :color    "red"
-                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
+                               (when @can-edit-data?
+                                 {:field-key :remove
+                                  :cell      (fn [{:keys [row-data]}]
+                                               [RemoveButton {:enabled  @edit-op-allowed?
+                                                              :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
+                                                              :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                     :rows @apps-row}]])
-         [:div {:style {:display :flex :justify-content :center :align-items :center}}
-          [:<>
-           [AppsPickerModal creating?]
+         (when @can-edit-data?
+           [:div {:style {:display :flex :justify-content :center :align-items :center}}
+            [:<>
+             [AppsPickerModal creating?]
+             [:div {:style {:margin-top   "1rem"
+                            :margin-bottm "1rem"}}
+              [AddButton {:modal-id events/apps-picker-modal-id
+                          :enabled  @edit-op-allowed?
+                          :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]]]])
+         (when @can-edit-data?
            [:div {:style {:margin-top   "1rem"
-                          :margin-bottm "1rem"}}
-            [AddButton events/apps-picker-modal-id]]]]
-         [:div {:style {:margin-top   "1rem"
-                        :margin-left  "auto"
-                        :margin-right "auto"}}
-          (if @apps-validation-error?
-            [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
-            (if no-apps?
-              (@tr [:add-your-first-app])
-              (@tr [:add-app])))]]))))
+                          :margin-left  "auto"
+                          :margin-right "auto"}}
+            (if @apps-validation-error?
+              [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
+              (if no-apps?
+                (@tr [:add-your-first-app])
+                (@tr [:add-app])))])]))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
@@ -670,6 +708,7 @@
 
 (defn FleetFilterPanel [{:keys [show-edit-filter-button?]}]
   (let [tr                   (subscribe [::i18n-subs/tr])
+        can-edit-data?       (subscribe [::subs/can-edit-data?])
         fleet-filter         (subscribe [::subs/fleet-filter])
         fleet-filter-edited? (subscribe [::subs/fleet-filter-edited?])
         deployment-set       (subscribe [::subs/deployment-set])
@@ -683,7 +722,7 @@
                                [:span (@tr [:recompute-fleet-info])])
                     :content (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
          " "
-         (when show-edit-filter-button?
+         (when (and @can-edit-data? show-edit-filter-button?)
            [EditEdgeFilterButton events/edges-picker-modal-id])]
         (when (and can-recompute-fleet? (not @unsaved-changes?))
           [:a {:href     "#"
@@ -809,9 +848,12 @@
 
 (defn EdgeOverviewContent
   [edges-stats creating?]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        fleet-filter  (subscribe [::subs/fleet-filter])
-        fleet-changes (subscribe [::subs/fleet-changes])]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
+        fleet-filter               (subscribe [::subs/fleet-filter])
+        fleet-changes              (subscribe [::subs/fleet-changes])]
     [:<>
      [:<>
       [StatisticStatesEdgeView edges-stats]
@@ -826,11 +868,13 @@
                    :on-click (create-nav-fn "edges" {:edges-state nil})}]]
      [:div
       {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
-      (when-not (or creating? @fleet-filter)
+      (when (and @can-edit-data? (not creating?) (not @fleet-filter))
         ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
         ;; and retrieving deployment-set and deployment-set-edited
         [:<>
-         [AddButton events/edges-picker-modal-id]
+         [AddButton {:modal-id events/edges-picker-modal-id
+                     :enabled  @edit-op-allowed?
+                     :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]
          [:div {:style {:margin-top "1rem"}}
           (if (pos? (:total edges-stats))
             (@tr [:add-edges])
@@ -1027,22 +1071,34 @@
 
 (defn ModuleVersionsApp
   [i module-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
-     [module-plugin/ModuleVersions
-      {:db-path      [::spec/apps-sets i]
-       :href         module-id
-       :change-event [::events/edit-config]}]
+     (with-tooltip
+       [:div [module-plugin/ModuleVersions
+              {:db-path      [::spec/apps-sets i]
+               :href         module-id
+               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
+               :change-event [::events/edit-config]}]]
+       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
   [i module-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
-     [module-plugin/EnvVariables
-      {:db-path      [::spec/apps-sets i]
-       :href         module-id
-       :change-event [::events/edit-config]}]
+     (with-tooltip
+       [:div [module-plugin/EnvVariables
+              {:db-path      [::spec/apps-sets i]
+               :href         module-id
+               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
+               :change-event [::events/edit-config]}]]
+       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
      :label (@tr [:env-variables])]))
 
 
@@ -1288,26 +1344,29 @@
 
 (defn EdgesTabView
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        edges             (subscribe [::subs/edges-documents-response])
-        fleet-filter      (subscribe [::subs/fleet-filter])
-        fleet-changes     (subscribe [::subs/fleet-changes])
-        only-changes?     (subscribe [::subs/show-only-changed-fleet?])
-        columns           (mapv (fn [col-config]
-                                  (assoc col-config :cell edges-views/NuvlaboxRow))
-                                [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
-                                 {:field-key :state :cell-props {:collapsing true}}
-                                 {:field-key :name}
-                                 {:field-key :description}
-                                 {:field-key :created}
-                                 {:field-key :created-by}
-                                 {:field-key      :refresh-interval
-                                  :header-content (some-> (@tr [:report-interval]) str/lower-case)}
-                                 {:field-key :last-online :no-sort? true}
-                                 {:field-key :version :no-sort? true}
-                                 {:field-key :tags :no-sort? true}])
-        filter-open?      (r/atom false)
-        additional-filter (subscribe [::subs/edges-additional-filter])]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
+        edges                      (subscribe [::subs/edges-documents-response])
+        fleet-filter               (subscribe [::subs/fleet-filter])
+        fleet-changes              (subscribe [::subs/fleet-changes])
+        only-changes?              (subscribe [::subs/show-only-changed-fleet?])
+        columns                    (mapv (fn [col-config]
+                                           (assoc col-config :cell edges-views/NuvlaboxRow))
+                                         [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
+                                          {:field-key :state :cell-props {:collapsing true}}
+                                          {:field-key :name}
+                                          {:field-key :description}
+                                          {:field-key :created}
+                                          {:field-key :created-by}
+                                          {:field-key      :refresh-interval
+                                           :header-content (some-> (@tr [:report-interval]) str/lower-case)}
+                                          {:field-key :last-online :no-sort? true}
+                                          {:field-key :version :no-sort? true}
+                                          {:field-key :tags :no-sort? true}])
+        filter-open?               (r/atom false)
+        additional-filter          (subscribe [::subs/edges-additional-filter])]
     (fn []
       [:div {:style {:padding-top "10px"}
              :class :nuvla-edges}
@@ -1342,18 +1401,19 @@
                               :on-click #(dispatch [::events/show-fleet-changes-only @fleet-changes])}]]])
        [edges-views/NuvlaEdgeTableView
         (cond->
-          {:edges         (mapv (fn [row]
-                                  (if
-                                    (some #{(:id row)} (:removed @fleet-changes))
-                                    (assoc row :table-row-prop {:style {:text-decoration "line-through"
-                                                                        :opacity         0.5}})
-                                    row))
-                                (:resources @edges))
-           :columns       columns
-           :sort-config   {:db-path     ::spec/edges-ordering
-                           :fetch-event [::events/get-edges]}}
-          (not @fleet-filter)
-          (assoc :select-config {:bulk-actions        [{:event (fn [select-data]
+          {:edges       (mapv (fn [row]
+                                (if
+                                  (some #{(:id row)} (:removed @fleet-changes))
+                                  (assoc row :table-row-prop {:style {:text-decoration "line-through"
+                                                                      :opacity         0.5}})
+                                  row))
+                              (:resources @edges))
+           :columns     columns
+           :sort-config {:db-path     ::spec/edges-ordering
+                         :fetch-event [::events/get-edges]}}
+          (and @can-edit-data? (not @fleet-filter))
+          (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
+                                 :bulk-actions        [{:event (fn [select-data]
                                                                  (dispatch [::events/remove-edges select-data]))
                                                         :name  "Remove edges"
                                                         :icon  icons/BoxIcon}]

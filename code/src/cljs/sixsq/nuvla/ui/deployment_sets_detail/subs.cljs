@@ -2,12 +2,14 @@
   (:require [clojure.set :as set]
             [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.acl.utils :as acl-utils]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def creation-temp-id-key :temp-id)
@@ -78,10 +80,23 @@
     (count apps)))
 
 (reg-sub
-  ::can-edit?
+  ::can-edit-data?
+  :<- [::deployment-set]
+  :<- [::session-subs/active-claim]
+  (fn [[deployment-set active-claim]]
+    (acl-utils/can-edit-data? deployment-set active-claim)))
+
+(reg-sub
+  ::edit-op-allowed?
   :<- [::deployment-set]
   (fn [deployment-set]
     (general-utils/can-edit? deployment-set)))
+
+(reg-sub
+  ::edit-not-allowed-in-state?
+  :<- [::deployment-set]
+  (fn [deployment-set]
+    (utils/action-in-progress? deployment-set)))
 
 (reg-sub
   ::deployment-set-not-found?

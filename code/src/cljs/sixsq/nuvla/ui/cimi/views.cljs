@@ -36,11 +36,6 @@
     (fn [m]
       (str (get-in m ks)))))
 
-(defn remove-column-fn
-  [label]
-  (fn []
-    (dispatch [::events/remove-field label])))
-
 (defn table-header-cell
   [label]
   (let [sort-icon      (subscribe [::subs/orderby-label-icon label])
@@ -50,7 +45,7 @@
                          "sort" (str label ":asc"))]
     [ui/TableHeaderCell
      [uix/LinkIcon {:name     "remove circle"
-                    :on-click (remove-column-fn label)}]
+                    :on-click #(dispatch [::events/remove-field label])}]
      " " label " "
      [uix/LinkIcon {:name     @sort-icon
                     :on-click #(do (dispatch [::events/set-query-param :orderby next-direction])
@@ -115,58 +110,39 @@
         (results-table-body row-fn entries)]])))
 
 (defn Statistic
-  [[value label :as data]]
+  [[label value :as data]]
   (when data
     ^{:key label}
     [ui/Statistic {:size "tiny"}
      [ui/StatisticValue (or value 0)]
      [ui/StatisticLabel label]]))
 
+(defn ResultsStatistic []
+  (let [tr         @(subscribe [::i18n-subs/tr])
+        collection @(subscribe [::subs/collection])]
+    (when collection
+      (let [total (:count collection)
+            n     (count (get collection :resources []))]
+        [ui/Statistic
+         [ui/StatisticValue (str n " / " total)]
+         [ui/StatisticLabel (tr [:results])]]))))
 
-(defn ResultsStatistic
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        resources (subscribe [::subs/collection])]
-    (fn []
-      (let [resources @resources]
-        (when resources
-          (let [total (:count resources)
-                n     (count (get resources :resources []))]
-            [ui/Statistic
-             [ui/StatisticValue (str n " / " total)]
-             [ui/StatisticLabel (@tr [:results])]]))))))
+(defn AggregationsTable []
+  (let [aggregations @(subscribe [::subs/aggregations-keys-values])]
+    [ui/StatisticGroup {:size "tiny"}
+     [ResultsStatistic]
+     (for [agg aggregations]
+       ^{:key (first agg)} [Statistic agg])]))
 
-
-(def tuple-fn (juxt (comp :value second)
-                    (comp name first)))
-
-(defn AggregationsTable
-  []
-  (let [aggregations (subscribe [::subs/aggregations])]
-    (fn []
-      (let [stats (->> @aggregations
-                       (remove (fn [[k _]] (str/starts-with? (str k) ":terms")))
-                       (map tuple-fn)
-                       (sort second)
-                       (map Statistic)
-                       vec)]
-        [ui/Segment style/basic
-         (vec (concat [ui/StatisticGroup {:size "tiny"}] [[ResultsStatistic]] stats))]))))
-
-
-(defn ResultsDisplay
-  []
-  (let [collection      (subscribe [::subs/collection])
-        selected-fields (subscribe [::subs/selected-fields])]
-    (fn []
-      (let [results @collection]
-        (if (instance? js/Error results)
-          [ui/Segment style/basic
-           [:pre (with-out-str (pprint (ex-data results)))]]
-          (let [entries (get results :resources [])]
-            [ui/Segment style/basic
-             [AggregationsTable]
-             [results-table @selected-fields entries]]))))))
+(defn ResultsDisplay []
+  (let [collection      @(subscribe [::subs/collection])
+        selected-fields @(subscribe [::subs/selected-fields])]
+    [ui/Segment style/basic
+     (if (instance? js/Error collection)
+       [:pre (with-out-str (pprint (ex-data collection)))]
+       [:<>
+        [AggregationsTable]
+        [results-table selected-fields (get collection :resources [])]])]))
 
 
 (defn CollectionSelector

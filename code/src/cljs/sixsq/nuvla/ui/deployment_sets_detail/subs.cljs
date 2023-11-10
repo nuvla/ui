@@ -83,14 +83,16 @@
   ::can-edit-data?
   :<- [::deployment-set]
   :<- [::session-subs/active-claim]
-  (fn [[deployment-set active-claim]]
-    (acl-utils/can-edit-data? deployment-set active-claim)))
+  (fn [[deployment-set active-claim] [_ creating?]]
+    (or creating?
+        (acl-utils/can-edit-data? deployment-set active-claim))))
 
 (reg-sub
   ::edit-op-allowed?
   :<- [::deployment-set]
-  (fn [deployment-set]
-    (general-utils/can-edit? deployment-set)))
+  (fn [deployment-set [_ creating?]]
+    (or creating?
+        (general-utils/can-edit? deployment-set))))
 
 (reg-sub
   ::edit-not-allowed-in-state?

@@ -333,8 +333,8 @@
 (defn EditableCell
   [attribute creating?]
   (let [deployment-set   (subscribe [::subs/deployment-set])
-        can-edit-data?   (subscribe [::subs/can-edit-data?])
-        edit-op-allowed? (subscribe [::subs/edit-op-allowed?])
+        can-edit-data?   (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed? (subscribe [::subs/edit-op-allowed? creating?])
         on-change-fn     #(dispatch [::events/edit attribute %])]
     [ui/TableCell
      (if (and @can-edit-data? (or creating? @edit-op-allowed?))
@@ -473,9 +473,9 @@
     tooltip))
 
 (defn EditEdgeFilterButton
-  [id]
+  [id creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         fleet-filter               (subscribe [::subs/fleet-filter])]
@@ -535,8 +535,8 @@
         locale                     (subscribe [::i18n-subs/locale])
         apps-row                   (subscribe [::subs/apps-row-data])
         apps-validation-error?     (subscribe [::subs/apps-validation-error?])
-        can-edit-data?             (subscribe [::subs/can-edit-data?])
-        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         k->tr-k                    {:app :name}]
     (fn []
@@ -706,9 +706,9 @@
       (tr [:deploy-with-catch-all-edges-filter])
       polished)))
 
-(defn FleetFilterPanel [{:keys [show-edit-filter-button?]}]
+(defn FleetFilterPanel [{:keys [show-edit-filter-button? creating?]}]
   (let [tr                   (subscribe [::i18n-subs/tr])
-        can-edit-data?       (subscribe [::subs/can-edit-data?])
+        can-edit-data?       (subscribe [::subs/can-edit-data? creating?])
         fleet-filter         (subscribe [::subs/fleet-filter])
         fleet-filter-edited? (subscribe [::subs/fleet-filter-edited?])
         deployment-set       (subscribe [::subs/deployment-set])
@@ -723,7 +723,7 @@
                     :content (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
          " "
          (when (and @can-edit-data? show-edit-filter-button?)
-           [EditEdgeFilterButton events/edges-picker-modal-id])]
+           [EditEdgeFilterButton events/edges-picker-modal-id creating?])]
         (when (and can-recompute-fleet? (not @unsaved-changes?))
           [:a {:href     "#"
                :style    {:align-self :center}
@@ -849,8 +849,8 @@
 (defn EdgeOverviewContent
   [edges-stats creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit-data?             (subscribe [::subs/can-edit-data?])
-        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         fleet-filter               (subscribe [::subs/fleet-filter])
         fleet-changes              (subscribe [::subs/fleet-changes])]
@@ -880,7 +880,7 @@
             (@tr [:add-edges])
             (@tr [:add-your-first-edges]))]])
       [EdgesPickerModal]
-      [FleetFilterPanel {:show-edit-filter-button? true}]]]))
+      [FleetFilterPanel {:show-edit-filter-button? true :creating? creating?}]]]))
 
 (defn TabOverview
   [uuid creating?]
@@ -1070,9 +1070,9 @@
                       :summary-page summary-page}])]]]))
 
 (defn ModuleVersionsApp
-  [i module-id]
+  [i module-id creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
@@ -1086,10 +1086,10 @@
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
-  [i module-id]
+  [i module-id creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit-data?             (subscribe [::subs/can-edit-data?])
-        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
      (with-tooltip
@@ -1112,7 +1112,7 @@
 
 
 (defn ConfigureApps
-  [i applications]
+  [i applications creating?]
   ^{:key (str "set-" i)}
   [tab/Tab
    {:db-path                 [::apps-config]
@@ -1134,8 +1134,8 @@
                                                                                     [ui/Icon {:class icons/i-link}]
                                                                                     "Go to app"]}]])
                                                            :content "Open application in a new window"}]
-                                                [ModuleVersionsApp i id]
-                                                [EnvVariablesApp i id]])})
+                                                [ModuleVersionsApp i id creating?]
+                                                [EnvVariablesApp i id creating?]])})
                                applications)}])
 
 (defn BoldLabel
@@ -1249,7 +1249,7 @@
                               [ui/Header {:as :h5 :attached "top"}
                                "Configure"]
                               [ui/Segment {:attached true}
-                               [ConfigureApps i applications]]])}
+                               [ConfigureApps i applications true]]])}
                ) @(subscribe [::subs/applications-sets]))}])
 
 (defn Summary
@@ -1343,10 +1343,10 @@
       [EdgeTabStatesFilterView @selected-state])))
 
 (defn EdgesTabView
-  []
+  [creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit-data?             (subscribe [::subs/can-edit-data?])
-        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         edges                      (subscribe [::subs/edges-documents-response])
         fleet-filter               (subscribe [::subs/fleet-filter])
@@ -1425,13 +1425,13 @@
          :change-event           [::events/get-edges]
          :total-items            (-> @edges :count)
          :i-per-page-multipliers [1 2 4]}]
-       [FleetFilterPanel {:show-edit-filter-button? false}]])))
+       [FleetFilterPanel {:show-edit-filter-button? false :creating? creating?}]])))
 
 (defn EdgesTab
-  []
+  [creating?]
   (dispatch [::events/init-edges-tab])
   (fn []
-    [EdgesTabView]))
+    [EdgesTabView creating?]))
 
 (defn DeploymentsTab
   [uuid]
@@ -1488,9 +1488,7 @@
                                                 :icon     icons/i-gear
                                                 :disabled (empty? @apps-sets)}
                                      :render   #(r/as-element
-                                                  [ConfigureApps
-                                                   0
-                                                   @apps])}
+                                                  [ConfigureApps 0 @apps creating?])}
                                     {:menuItem {:key      :edges
                                                 :content
                                                 (let [tab-title (str/capitalize (tr [:edges]))]
@@ -1502,7 +1500,7 @@
                                                 :icon     icons/i-box
                                                 :disabled (empty? @edges)}
                                      :render   #(r/as-element
-                                                  [EdgesTab])}
+                                                  [EdgesTab creating?])}
                                     {:menuItem {:key      :deployments
                                                 :content
                                                 (let [tab-title (str/capitalize (str/capitalize (tr [:deployments])))]

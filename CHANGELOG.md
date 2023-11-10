@@ -4,6 +4,10 @@
 
 ## Released
 
+## [2.35.3] - 2023-11-10
+
+Deployment group detail - Fix permissions check on dep group creation (#1446)
+
 ## [2.35.2] - 2023-11-10
 
 - Profile - Groupe remove member bugfix

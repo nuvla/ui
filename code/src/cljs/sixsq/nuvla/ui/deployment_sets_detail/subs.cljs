@@ -125,7 +125,7 @@
 
 (defn applications-sets
   [db]
-  (get-in db [::spec/module-applications-sets :content :applications-sets]))=
+  (get-in db [::spec/module-applications-sets :content :applications-sets]))
 
 (reg-sub
   ::apps-set
@@ -324,10 +324,28 @@
       apps)))
 
 (reg-sub
+  ::apps-set-id
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:id apps-set)))
+
+(reg-sub
   ::apps-set-name
   :<- [::apps-set]
   (fn [apps-set]
     (:name apps-set)))
+
+(reg-sub
+  ::apps-set-version
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:version apps-set)))
+
+(reg-sub
+  ::apps-set-created
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:created apps-set)))
 
 (reg-sub
   ::apps-edited?

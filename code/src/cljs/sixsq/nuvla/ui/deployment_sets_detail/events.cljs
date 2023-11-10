@@ -237,19 +237,20 @@
                      ::spec/fleet-filter (-> deployment-set :applications-sets first :overwrites first :fleet-filter))
        :fx [fx
             [:dispatch [::get-edges]]
-            [:dispatch [::get-application-sets
-                        (or (-> deployment-set-edited :applications-sets first)
-                            (-> deployment-set :applications-sets first))]]]})))
+            (when-let [apps-set (if (-> deployment-set-edited :applications-sets)
+                                  (-> deployment-set-edited :applications-sets first)
+                                  (-> deployment-set :applications-sets first))]
+              [:dispatch [::get-application-sets apps-set]])]})))
 
 (reg-event-fx
   ::operation
   (fn [_ [_ {:keys [resource-id operation data on-success-fn on-error-fn]
              :or   {data          {}
                     on-success-fn (fn [{:keys [location] :as _response}]
-                                     (when location
-                                       (dispatch [::bulk-progress-plugin/monitor
-                                                  [::spec/bulk-jobs] location]))
-                                     (dispatch [::set-opened-modal nil]))
+                                    (when location
+                                      (dispatch [::bulk-progress-plugin/monitor
+                                                 [::spec/bulk-jobs] location]))
+                                    (dispatch [::set-opened-modal nil]))
                     on-error-fn   #()}}]]
     (let [on-success #(do
                         (refresh)
@@ -273,7 +274,6 @@
     {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::job-events/get-jobs id]]]}))
-
 (def deployments-state-filter-key :depl-state)
 
 (reg-event-fx
@@ -580,9 +580,9 @@
   (fn [{{:keys [::spec/edges-ordering
                 ::spec/deployment-set-edited
                 ::spec/edges-additional-filter] :as db} :db} _]
-    (let [callback (fn [response]
-                     (dispatch [::set-edges response]))
-          fleet    (get-target-fleet-ids deployment-set-edited)
+    (let [callback     (fn [response]
+                         (dispatch [::set-edges response]))
+          fleet        (get-target-fleet-ids deployment-set-edited)
           fleet-filter (get-in deployment-set-edited subs/fleet-filter-path)]
       (when (or (seq fleet) fleet-filter)
         {::cimi-api-fx/search [:nuvlabox
@@ -739,11 +739,11 @@
 (reg-event-fx
   ::add-apps-set-apps-and-set-apps-set
   (fn [{db :db} [_ apps-set]]
-    (let [app-ids          (->> apps-set
-                                :content
-                                :applications-sets
-                                (mapcat :applications)
-                                (mapv :id))]
+    (let [app-ids (->> apps-set
+                       :content
+                       :applications-sets
+                       (mapcat :applications)
+                       (mapv :id))]
       {:db (assoc db ::spec/module-applications-sets (utils/enrich-app apps-set))
        ::cimi-api-fx/search
        [:module
@@ -765,6 +765,19 @@
                                              (get-version-id (map-indexed vector versions) version-id)
                                              #(dispatch [::do-add-app %])]]))
                   apps))})))
+
+(reg-event-fx
+  ::remove-apps-set
+  (fn [{{:keys [current-route] :as db} :db} [_]]
+    (let [apps-db-path (subs/create-apps-creation-db-path current-route)]
+      {:db (-> db
+               (assoc ::spec/module-applications-sets nil)
+               (assoc-in apps-db-path [])
+               (update ::spec/deployment-set-edited assoc :applications-sets []))
+       :fx [[:dispatch [::fetch-app-picker-apps
+                        ::spec/pagination-apps-picker]]
+            [:dispatch [::set-apps-edited true]]
+            [:dispatch [::main-events/changes-protection? true]]]})))
 
 (reg-event-fx
   ::remove-app-from-creation-data
@@ -864,7 +877,7 @@
 
 (reg-event-fx
   ::get-edge-picker-edges-summary
-  (fn [{{:keys                    [::spec/edge-picker-additional-filter
+  (fn [{{:keys [::spec/edge-picker-additional-filter
                 ::spec/edges] :as db} :db}]
     {::cimi-api-fx/search
      [:nuvlabox
@@ -979,7 +992,7 @@
   ::set-fleet-filter
   (fn [{{:keys [::spec/deployment-set ::spec/deployment-set-edited] :as db} :db}
        [_ fleet-filter deployment-set-id]]
-    (let [path (subs/create-db-path [::spec/fleet-filter-edited] (str deployment-set-id))
+    (let [path                   (subs/create-db-path [::spec/fleet-filter-edited] (str deployment-set-id))
           updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc-in subs/fleet-filter-path fleet-filter))]
@@ -997,11 +1010,11 @@
 (reg-event-fx
   ::update-fleet-filter
   (fn [{{:keys [::spec/deployment-set ::spec/deployment-set-edited current-route] :as db} :db} [_]]
-    (let [new-fleet-filter (get-dynamic-fleet-filter-string db)
+    (let [new-fleet-filter       (get-dynamic-fleet-filter-string db)
           updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc-in subs/fleet-filter-path new-fleet-filter))
-          path (subs/current-route->fleet-filter-edited-db-path current-route)]
+          path                   (subs/current-route->fleet-filter-edited-db-path current-route)]
       {:db (assoc-in db path new-fleet-filter)
        :fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
             [:dispatch [::main-events/changes-protection?

@@ -520,13 +520,64 @@
 (defn- create-app-config-query-key [i id]
   (keyword (str "configure-set-" i "-app-" id)))
 
+(defn ModuleVersion
+  [label created]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale (subscribe [::i18n-subs/locale])]
+    [ui/Popup
+     {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
+                                      " "
+                                      (time/ago (time/parse-iso8601 created) @locale))])
+      :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}]))
+
+(defn LinkToModuleDetails
+  [db-path href]
+  [ui/Popup
+   {:content (r/as-element [:p "Open app details"])
+    :trigger (r/as-element [:span
+                            [module-plugin/LinkToApp
+                             {:db-path  db-path
+                              :href     href
+                              :children [icons/ArrowRightFromBracketIcon]
+                              :target   :_self}]])}])
+
+(defn AppsSetHeader
+  []
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        apps-set-id                (subscribe [::subs/apps-set-id])
+        apps-set-name              (subscribe [::subs/apps-set-name])
+        apps-set-version           (subscribe [::subs/apps-set-version])
+        apps-set-created           (subscribe [::subs/apps-set-created])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
+    [:div {:style {:display :flex :font-size :large :justify-content :space-between}}
+     [:a
+      {:href     "#"
+       :on-click #(dispatch [::events/navigate-internal
+                             {:query-params {:deployment-sets-detail-tab :apps}}])
+       :children [icons/StoreIcon]
+       :target   :_self}
+      [:div {:style {:display :flex :align-items :center}}
+       [:p {:style {:margin 0}} @apps-set-name]
+       [:span {:style {:margin-left "0.5rem"}}
+        [icons/GearIcon]]]]
+     [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
+     [LinkToModuleDetails [::spec/apps-sets 0 :apps-set] @apps-set-id]
+     (when can-edit-data?
+       [RemoveButton {:enabled  @edit-op-allowed?
+                      :tooltip  (edit-not-allowed-msg
+                                  {:TR                         @tr
+                                   :can-edit-data?             @can-edit-data?
+                                   :edit-op-allowed?           @edit-op-allowed?
+                                   :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
+                      :on-click #(dispatch [::events/remove-apps-set])}])]))
+
 (defn- AppsOverviewTable
   [creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        locale                     (subscribe [::i18n-subs/locale])
         apps-row                   (subscribe [::subs/apps-row-data])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
-        apps-set-name              (subscribe [::subs/apps-set-name])
         apps-validation-error?     (subscribe [::subs/apps-validation-error?])
         can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
@@ -538,16 +589,7 @@
          (when-not no-apps?
            [:div {:style {:height "100%"}}
             (when @is-controlled-by-apps-set?
-              [:a
-               {:href     "#"
-                :on-click #(dispatch [::events/navigate-internal
-                                      {:query-params {:deployment-sets-detail-tab :apps}}])
-                :children [icons/StoreIcon]
-                :target   :_self}
-               [:div {:style {:display :flex :align-items :center}}
-                [:h2 {:style {:margin 0}} @apps-set-name]
-                [:span {:style {:margin-left "0.5rem"}}
-                 [icons/GearIcon]]]])
+              [AppsSetHeader])
             [:div {:style {:margin-top "8px"}}
              [Table {:columns
                      (into
@@ -581,25 +623,14 @@
                                                          [icons/GearIcon]]])}]])
                                                 :version
                                                 (fn [{{:keys [label created]} :cell-data}]
-                                                  [ui/Popup
-                                                   {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
-                                                                                    " "
-                                                                                    (time/ago (time/parse-iso8601 created) @locale))])
-                                                    :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
+                                                  [ModuleVersion label created])
                                                 nil)})
                            (keys (dissoc (first @apps-row) :id :idx :href))))
                        (remove nil?
                                [{:field-key      :details
                                  :header-content (general-utils/capitalize-words (@tr [:details]))
                                  :cell           (fn [{:keys [row-data]}]
-                                                   [ui/Popup
-                                                    {:content (r/as-element [:p "Open app details"])
-                                                     :trigger (r/as-element [:span
-                                                                             [module-plugin/LinkToApp
-                                                                              {:db-path  [::spec/apps-sets (:idx row-data)]
-                                                                               :href     (:href row-data)
-                                                                               :children [icons/ArrowRightFromBracketIcon]
-                                                                               :target   :_self}]])}])}
+                                                   [LinkToModuleDetails [::spec/apps-sets (:idx row-data)] (:href row-data)])}
                                 (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
                                   {:field-key :remove
                                    :cell      (fn [{:keys [row-data]}]

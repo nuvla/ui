@@ -173,3 +173,65 @@
     "infrastructure-service" icons/i-cloud
     "deployment" icons/i-rocket
     icons/i-question-circle-outline))
+
+;; The following code is cherry-picked from server-side `sixsq.nuvla.auth.acl-resource`.
+;; Cherry-pick only what is needed, and keep it aligned if there are changes server-side.
+;; Only the `has-rights?` fn is slightly adapted to get the claims from a parameter instead
+;; of deriving them from the request.
+
+(defn unqualify
+  [kw]
+  (-> kw name keyword))
+
+(defn- add-rights-entry
+  [m kw]
+  (-> m
+      (assoc kw kw)
+      (assoc (unqualify kw) kw)))
+
+;; provides mappings between the namespaced keywords and themselves,
+;; as well as the un-namespaced keywords and the namespaced ones.
+(def rights-keywords
+  (reduce add-rights-entry {} all-defined-rights))
+
+(defn is-owner?
+  [{:keys [claims] :as _authn-info}
+   {:keys [owners] :as _acl}]
+  (some (set claims) owners))
+
+(defn is-admin?
+  [{:keys [claims] :as _authn-info}]
+  (contains? (set claims) "group/nuvla-admin"))
+
+(defn extract-right
+  "Given the identity map, this extracts the associated right.
+  If the right does not apply, then nil is returned."
+  [{:keys [claims]} [right principals]]
+  (let [principals-with-admin (conj principals "group/nuvla-admin")]
+    (when claims
+      (when (some claims principals-with-admin)
+        (get rights-keywords right)))))
+
+(defn extract-rights
+  "Returns a set containing all of the applicable rights from an ACL
+   for the given identity map."
+  [authn-info acl]
+  (if (or (is-owner? authn-info acl)
+          (is-admin? authn-info))
+    (set all-defined-rights)
+    (->> (dissoc acl :owners)
+         (map (partial extract-right authn-info))
+         (remove nil?)
+         (set))))
+
+(defn has-rights?
+  "Based on the rights derived from the authentication information and the
+   acl, this function returns true if the given `right` is allowed."
+  [required-rights {:keys [acl] :as _resource} active-claim]
+  (let [authn-info {:claims #{active-claim}}]
+    (boolean
+      (seq (set/intersection
+             required-rights
+             (extract-rights authn-info acl))))))
+
+(def can-edit-data? (partial has-rights? #{:edit-data}))

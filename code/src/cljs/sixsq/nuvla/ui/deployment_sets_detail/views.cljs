@@ -63,9 +63,9 @@
                  (dissoc ops-status :status))))
 
 (defn edit-not-allowed-msg
-  [TR can-edit? edit-not-allowed-in-state?]
-  (when-not can-edit?
-    (TR (if edit-not-allowed-in-state?
+  [TR can-edit-data? edit-op-allowed? edit-not-allowed-in-state?]
+  (when-not edit-op-allowed?
+    (TR (if (and can-edit-data? edit-not-allowed-in-state?)
           [:dep-group-edit-not-allowed-in-state]
           [:dep-group-edit-not-allowed]))))
 
@@ -332,11 +332,11 @@
 
 (defn EditableCell
   [attribute creating?]
-  (let [deployment-set (subscribe [::subs/deployment-set])
-        can-edit?      (subscribe [::subs/can-edit?])
-        on-change-fn   #(dispatch [::events/edit attribute %])]
+  (let [deployment-set   (subscribe [::subs/deployment-set])
+        edit-op-allowed? (subscribe [::subs/edit-op-allowed?])
+        on-change-fn     #(dispatch [::events/edit attribute %])]
     [ui/TableCell
-     (if (or creating? @can-edit?)
+     (if (or creating? @edit-op-allowed?)
        [components/EditableInput
         {:resource     @deployment-set
          :attribute    attribute
@@ -474,18 +474,19 @@
 (defn EditEdgeFilterButton
   [id]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit?                  (subscribe [::subs/can-edit?])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         fleet-filter               (subscribe [::subs/fleet-filter])]
     (with-tooltip
       [:span [uix/Button
-              {:disabled (not @can-edit?)
+              {:disabled (not @edit-op-allowed?)
                :on-click (fn []
                            (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
                            (dispatch [::events/set-opened-modal id]))
                :icon     icons/i-pencil
                :style    {:align-self "center"}}]]
-      (edit-not-allowed-msg @tr @can-edit? @edit-not-allowed-in-state?))))
+      (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))))
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -533,7 +534,8 @@
         locale                     (subscribe [::i18n-subs/locale])
         apps-row                   (subscribe [::subs/apps-row-data])
         apps-validation-error?     (subscribe [::subs/apps-validation-error?])
-        can-edit?                  (subscribe [::subs/can-edit?])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         k->tr-k                    {:app :name}]
     (fn []
@@ -596,12 +598,12 @@
                                 :cell      (fn [{:keys [row-data]}]
                                              [icons/XMarkIcon
                                               {:style    {:cursor :pointer}
-                                               :disabled (not @can-edit?)
-                                               :title    (edit-not-allowed-msg @tr @can-edit? @edit-not-allowed-in-state?)
+                                               :disabled (not @edit-op-allowed?)
+                                               :title    (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
                                                :color    "red"
                                                :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}]
-                                             [RemoveButton {:enabled  @can-edit?
-                                                            :tooltip  (edit-not-allowed-msg @tr @can-edit? @edit-not-allowed-in-state?)
+                                             [RemoveButton {:enabled  @edit-op-allowed?
+                                                            :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
                                                             :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
                     :rows @apps-row}]])
          [:div {:style {:display :flex :justify-content :center :align-items :center}}
@@ -610,8 +612,8 @@
            [:div {:style {:margin-top   "1rem"
                           :margin-bottm "1rem"}}
             [AddButton {:modal-id events/apps-picker-modal-id
-                        :enabled  @can-edit?
-                        :tooltip  (edit-not-allowed-msg @tr @can-edit? @edit-not-allowed-in-state?)}]]]]
+                        :enabled  @edit-op-allowed?
+                        :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]]]]
          [:div {:style {:margin-top   "1rem"
                         :margin-left  "auto"
                         :margin-right "auto"}}
@@ -848,7 +850,8 @@
 (defn EdgeOverviewContent
   [edges-stats creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit?                  (subscribe [::subs/can-edit?])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         fleet-filter               (subscribe [::subs/fleet-filter])
         fleet-changes              (subscribe [::subs/fleet-changes])]
@@ -871,8 +874,8 @@
         ;; and retrieving deployment-set and deployment-set-edited
         [:<>
          [AddButton {:modal-id events/edges-picker-modal-id
-                     :enabled  @can-edit?
-                     :tooltip  (edit-not-allowed-msg @tr @can-edit? @edit-not-allowed-in-state?)}]
+                     :enabled  @edit-op-allowed?
+                     :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]
          [:div {:style {:margin-top "1rem"}}
           (if (pos? (:total edges-stats))
             (@tr [:add-edges])
@@ -1070,31 +1073,33 @@
 (defn ModuleVersionsApp
   [i module-id]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit?                  (subscribe [::subs/can-edit?])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
      (with-tooltip
        [:div [module-plugin/ModuleVersions
               {:db-path      [::spec/apps-sets i]
                :href         module-id
-               :read-only?   (not @can-edit?)
+               :read-only?   (not @edit-op-allowed?)
                :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg @tr @can-edit? @edit-not-allowed-in-state?))
+       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
   [i module-id]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit?                  (subscribe [::subs/can-edit?])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
      (with-tooltip
        [:div [module-plugin/EnvVariables
               {:db-path      [::spec/apps-sets i]
                :href         module-id
-               :read-only?   (not @can-edit?)
+               :read-only?   (not @edit-op-allowed?)
                :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg @tr @can-edit? @edit-not-allowed-in-state?))
+       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
      :label (@tr [:env-variables])]))
 
 
@@ -1341,7 +1346,8 @@
 (defn EdgesTabView
   []
   (let [tr                         (subscribe [::i18n-subs/tr])
-        can-edit?                  (subscribe [::subs/can-edit?])
+        can-edit-data?             (subscribe [::subs/can-edit-data?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         edges                      (subscribe [::subs/edges-documents-response])
         fleet-filter               (subscribe [::subs/fleet-filter])
@@ -1407,7 +1413,7 @@
            :sort-config {:db-path     ::spec/edges-ordering
                          :fetch-event [::events/get-edges]}}
           (not @fleet-filter)
-          (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg @tr @can-edit? @edit-not-allowed-in-state?)
+          (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
                                  :bulk-actions        [{:event (fn [select-data]
                                                                  (dispatch [::events/remove-edges select-data]))
                                                         :name  "Remove edges"

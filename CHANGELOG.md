@@ -4,6 +4,10 @@
 
 ## Released
 
+## [2.35.2] - 2023-11-10
+
+- Profile - Groupe remove member bugfix
+
 ## [2.35.1] - 2023-11-10
 
 - Profile - Invitation to group not working regression (#1445)

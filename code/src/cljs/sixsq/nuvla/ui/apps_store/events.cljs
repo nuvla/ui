@@ -42,8 +42,7 @@
         {:keys [order-by
                 pagination-db-path
                 external-filter
-                additional-cb-fn
-                replacing-cb-fn]
+                additional-cb-fn]
          :or   {additional-cb-fn #()}}]]
     (-> {:db (assoc db ::apps-spec/module nil)
          ::cimi-api-fx/search
@@ -62,12 +61,10 @@
                            (full-text-search-plugin/filter-text
                              db [::spec/modules-search]))}
                (pagination-plugin/first-last-params db (or pagination-db-path
-                                                           [(spec/page-keys->pagination-db-path active-tab)])))
-          (if replacing-cb-fn
-            #(replacing-cb-fn %)
-            #(do
-               (dispatch [::set-modules %])
-               (additional-cb-fn %)))]})))
+                                                         [(spec/page-keys->pagination-db-path active-tab)])))
+          #(do
+             (dispatch [::set-modules %])
+             (additional-cb-fn %))]})))
 
 (reg-event-fx
   ::get-modules-summary

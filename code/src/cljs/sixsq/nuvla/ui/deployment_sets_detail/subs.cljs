@@ -585,7 +585,7 @@
 
 (reg-sub
   ::all-apps-by-id
-  :-> ::spec/apps-by-id)
+  :-> ::spec/listed-apps-by-id)
 
 (reg-sub
   ::select-apps-by-id

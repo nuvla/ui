@@ -1055,9 +1055,11 @@
                                   (:subtype module)))
                       resources)]
       (when (seq apps-sets)
-        {:fx (mapv (fn [apps-set]
-                      [:dispatch [::fetch-set-then-apps (:id apps-set)]])
-                apps-sets)}))))
+        {:fx (into
+               [[:dispatch [::add-apps-to-db resources]]]
+               (mapv (fn [apps-set]
+                       [:dispatch [::fetch-set-then-apps (:id apps-set)]])
+                 apps-sets))}))))
 
 (reg-event-fx
   ::fetch-set-then-apps
@@ -1066,9 +1068,9 @@
 
 (reg-event-fx
   ::add-apps-picker-apps-set-apps
-  (fn [{db :db} [_ apps-sets]]
-    (let [app-ids (apps-set->app-ids apps-sets)]
-      {:db (update db ::spec/apps-by-id assoc (:id apps-sets) apps-sets)
+  (fn [{{:keys [::spec/listed-apps-by-id] :as db} :db} [_ apps-set]]
+    (let [app-ids (remove (set (keys listed-apps-by-id)) (apps-set->app-ids apps-set))]
+      {:db (assoc-in db [::spec/listed-apps-by-id (:id apps-set)] apps-set)
        ::cimi-api-fx/search
        [:module
         {:filter (general-utils/filter-eq-ids app-ids)}
@@ -1076,10 +1078,10 @@
 
 (reg-event-db
   ::add-apps-to-db
-  (fn [{:keys [::spec/apps-by-id] :as db} [_ apps]]
+  (fn [{:keys [::spec/listed-apps-by-id] :as db} [_ apps]]
     (let [update-entries-fn (fn [apps-by-id app]
                               (assoc apps-by-id (:id app) app))]
-      (assoc db ::spec/apps-by-id (reduce
+      (assoc db ::spec/listed-apps-by-id (reduce
                                     update-entries-fn
-                                    apps-by-id
+                                    listed-apps-by-id
                                     apps)))))

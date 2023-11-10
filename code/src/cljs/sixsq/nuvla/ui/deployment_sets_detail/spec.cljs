@@ -40,6 +40,7 @@
 (s/def ::opened-modal (s/nilable keyword?))
 
 (s/def ::apps-edited? boolean?)
+(s/def ::listed-apps-by-id any?)
 
 (s/def ::edge-picker-edges any?)
 (s/def ::edge-picker-full-text-search (s/nilable string?))

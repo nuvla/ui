@@ -333,10 +333,11 @@
 (defn EditableCell
   [attribute creating?]
   (let [deployment-set   (subscribe [::subs/deployment-set])
+        can-edit-data?   (subscribe [::subs/can-edit-data?])
         edit-op-allowed? (subscribe [::subs/edit-op-allowed?])
         on-change-fn     #(dispatch [::events/edit attribute %])]
     [ui/TableCell
-     (if (or creating? @edit-op-allowed?)
+     (if (and @can-edit-data? (or creating? @edit-op-allowed?))
        [components/EditableInput
         {:resource     @deployment-set
          :attribute    attribute
@@ -594,34 +595,31 @@
                                                                               :href     (:href row-data)
                                                                               :children [icons/ArrowRightFromBracketIcon]
                                                                               :target   :_self}]])}])}
-                               {:field-key :remove
-                                :cell      (fn [{:keys [row-data]}]
-                                             [icons/XMarkIcon
-                                              {:style    {:cursor :pointer}
-                                               :disabled (not @edit-op-allowed?)
-                                               :title    (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
-                                               :color    "red"
-                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}]
-                                             [RemoveButton {:enabled  @edit-op-allowed?
-                                                            :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
-                                                            :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])}]))
+                               (when @can-edit-data?
+                                 {:field-key :remove
+                                  :cell      (fn [{:keys [row-data]}]
+                                               [RemoveButton {:enabled  @edit-op-allowed?
+                                                              :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
+                                                              :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                     :rows @apps-row}]])
-         [:div {:style {:display :flex :justify-content :center :align-items :center}}
-          [:<>
-           [AppsPickerModal creating?]
+         (when @can-edit-data?
+           [:div {:style {:display :flex :justify-content :center :align-items :center}}
+            [:<>
+             [AppsPickerModal creating?]
+             [:div {:style {:margin-top   "1rem"
+                            :margin-bottm "1rem"}}
+              [AddButton {:modal-id events/apps-picker-modal-id
+                          :enabled  @edit-op-allowed?
+                          :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]]]])
+         (when @can-edit-data?
            [:div {:style {:margin-top   "1rem"
-                          :margin-bottm "1rem"}}
-            [AddButton {:modal-id events/apps-picker-modal-id
-                        :enabled  @edit-op-allowed?
-                        :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]]]]
-         [:div {:style {:margin-top   "1rem"
-                        :margin-left  "auto"
-                        :margin-right "auto"}}
-          (if @apps-validation-error?
-            [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
-            (if no-apps?
-              (@tr [:add-your-first-app])
-              (@tr [:add-app])))]]))))
+                          :margin-left  "auto"
+                          :margin-right "auto"}}
+            (if @apps-validation-error?
+              [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
+              (if no-apps?
+                (@tr [:add-your-first-app])
+                (@tr [:add-app])))])]))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
@@ -710,6 +708,7 @@
 
 (defn FleetFilterPanel [{:keys [show-edit-filter-button?]}]
   (let [tr                   (subscribe [::i18n-subs/tr])
+        can-edit-data?       (subscribe [::subs/can-edit-data?])
         fleet-filter         (subscribe [::subs/fleet-filter])
         fleet-filter-edited? (subscribe [::subs/fleet-filter-edited?])
         deployment-set       (subscribe [::subs/deployment-set])
@@ -723,7 +722,7 @@
                                [:span (@tr [:recompute-fleet-info])])
                     :content (str (str/capitalize (@tr [:filter])) ": " (polish-fleet-filter @tr @fleet-filter))}]
          " "
-         (when show-edit-filter-button?
+         (when (and @can-edit-data? show-edit-filter-button?)
            [EditEdgeFilterButton events/edges-picker-modal-id])]
         (when (and can-recompute-fleet? (not @unsaved-changes?))
           [:a {:href     "#"
@@ -869,7 +868,7 @@
                    :on-click (create-nav-fn "edges" {:edges-state nil})}]]
      [:div
       {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
-      (when-not (or creating? @fleet-filter)
+      (when (and @can-edit-data? (not creating?) (not @fleet-filter))
         ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
         ;; and retrieving deployment-set and deployment-set-edited
         [:<>
@@ -1081,9 +1080,10 @@
        [:div [module-plugin/ModuleVersions
               {:db-path      [::spec/apps-sets i]
                :href         module-id
-               :read-only?   (not @edit-op-allowed?)
+               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
                :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
+       (when @can-edit-data?
+         (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)))
      :label (@tr [:select-version])]))
 
 (defn EnvVariablesApp
@@ -1097,9 +1097,10 @@
        [:div [module-plugin/EnvVariables
               {:db-path      [::spec/apps-sets i]
                :href         module-id
-               :read-only?   (not @edit-op-allowed?)
+               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
                :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
+       (when @can-edit-data?
+         (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)))
      :label (@tr [:env-variables])]))
 
 
@@ -1412,7 +1413,7 @@
            :columns     columns
            :sort-config {:db-path     ::spec/edges-ordering
                          :fetch-event [::events/get-edges]}}
-          (not @fleet-filter)
+          (and @can-edit-data? (not @fleet-filter))
           (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
                                  :bulk-actions        [{:event (fn [select-data]
                                                                  (dispatch [::events/remove-edges select-data]))

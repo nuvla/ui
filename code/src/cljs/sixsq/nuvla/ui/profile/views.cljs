@@ -1297,7 +1297,7 @@
                            :size     "small"
                            :color    "red"
                            :on-click (fn []
-                                       (reset! members #(vec (disj (set @members) principal)))
+                                       (reset! members (-> @members set (disj principal) vec))
                                        (dispatch [::main-events/changes-protection? true])
                                        (set-group-changed! id))}])]]]))
 

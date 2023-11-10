@@ -1140,7 +1140,7 @@
                                                 [EnvVariablesApp i id creating?]])})
                                applications)}])
 
-(defn ConfigureAppsSet
+(defn ConfigureAppsSetWrapper
   [configure-apps]
   (let [tr                         (subscribe [::i18n-subs/tr])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
@@ -1156,6 +1156,14 @@
            :change-event [::events/change-apps-set-version]}]
          :label (@tr [:select-version])]])
      configure-apps]))
+
+(defn ConfigureAppsSet
+  []
+  (let [apps (subscribe [::subs/apps-row-data])]
+    [ConfigureAppsSetWrapper
+     [ConfigureApps
+      0
+      @apps]]))
 
 (defn BoldLabel
   [txt]
@@ -1479,7 +1487,6 @@
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set (subscribe [::subs/deployment-set])
         apps-sets      (subscribe [::subs/applications-sets])
-        apps           (subscribe [::subs/apps-row-data])
         edges          (subscribe [::subs/all-edges-ids])
         depl-all       (subscribe [::deployments-subs/deployments-summary-all])]
     (fn []
@@ -1506,9 +1513,7 @@
                                                          tab-title]))))
                                                 :icon     icons/i-gear
                                                 :disabled (empty? @apps-sets)}
-                                     :render   #(r/as-element
-                                                  [ConfigureAppsSet
-                                                   [ConfigureApps 0 @apps creating?]])}
+                                     :render   #(r/as-element [ConfigureAppsSet])}
                                     {:menuItem {:key      :edges
                                                 :content
                                                 (let [tab-title (str/capitalize (tr [:edges]))]

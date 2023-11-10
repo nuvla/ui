@@ -84,6 +84,12 @@
     (general-utils/can-edit? deployment-set)))
 
 (reg-sub
+  ::edit-not-allowed-in-state?
+  :<- [::deployment-set]
+  (fn [deployment-set]
+    (utils/action-in-progress? deployment-set)))
+
+(reg-sub
   ::deployment-set-not-found?
   :-> ::spec/deployment-set-not-found?)
 

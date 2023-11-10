@@ -62,11 +62,12 @@
                  (dissoc ops-status :status))))
 
 (defn edit-not-allowed-msg
-  [TR can-edit-data? edit-op-allowed? edit-not-allowed-in-state?]
-  (when (and can-edit-data? (not edit-op-allowed?))
-    (TR (if edit-not-allowed-in-state?
-          [:dep-group-edit-not-allowed-in-state]
-          [:dep-group-edit-not-allowed]))))
+  [{:keys [TR can-edit-data? edit-op-allowed? edit-not-allowed-in-state? is-controlled-by-apps-set?]}]
+  (when (and can-edit-data? (or (not edit-op-allowed?) is-controlled-by-apps-set?))
+    (TR (cond
+          is-controlled-by-apps-set? [:dep-group-app-version-changes-not-allowed]
+          edit-not-allowed-in-state? [:dep-group-edit-not-allowed-in-state]
+          :else [:dep-group-edit-not-allowed]))))
 
 (defn- depl-set->modal-content
   [{:keys [name id description]}]
@@ -474,7 +475,10 @@
                            (dispatch [::events/set-opened-modal id]))
                :icon     icons/i-pencil
                :style    {:align-self "center"}}]]
-      (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))))
+      (edit-not-allowed-msg {:TR                         @tr
+                             :can-edit-data?             @can-edit-data?
+                             :edit-op-allowed?           @edit-op-allowed?
+                             :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))))
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -600,7 +604,11 @@
                                   {:field-key :remove
                                    :cell      (fn [{:keys [row-data]}]
                                                 [RemoveButton {:enabled  @edit-op-allowed?
-                                                               :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
+                                                               :tooltip  (edit-not-allowed-msg
+                                                                           {:TR                         @tr
+                                                                            :can-edit-data?             @can-edit-data?
+                                                                            :edit-op-allowed?           @edit-op-allowed?
+                                                                            :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
                                                                :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                      :rows @apps-row}]]])
          (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
@@ -612,7 +620,11 @@
                              :margin-bottm "1rem"}}
                [AddButton {:modal-id events/apps-picker-modal-id
                            :enabled  @edit-op-allowed?
-                           :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]]]]
+                           :tooltip  (edit-not-allowed-msg
+                                       {:TR                         @tr
+                                        :can-edit-data?             @can-edit-data?
+                                        :edit-op-allowed?           @edit-op-allowed?
+                                        :edit-not-allowed-in-state? @edit-not-allowed-in-state?})}]]]]
             [:div {:style {:margin-top   "1rem"
                            :margin-left  "auto"
                            :margin-right "auto"}}
@@ -875,7 +887,11 @@
         [:<>
          [AddButton {:modal-id events/edges-picker-modal-id
                      :enabled  @edit-op-allowed?
-                     :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]
+                     :tooltip  (edit-not-allowed-msg
+                                 {:TR                         @tr
+                                  :can-edit-data?             @can-edit-data?
+                                  :edit-op-allowed?           @edit-op-allowed?
+                                  :edit-not-allowed-in-state? @edit-not-allowed-in-state?})}]
          [:div {:style {:margin-top "1rem"}}
           (if (pos? (:total edges-stats))
             (@tr [:add-edges])
@@ -1084,7 +1100,11 @@
                :href         module-id
                :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?) @is-controlled-by-apps-set?)
                :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
+       (edit-not-allowed-msg {:TR                         @tr
+                              :can-edit-data?             @can-edit-data?
+                              :edit-op-allowed?           @edit-op-allowed?
+                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?
+                              :is-controlled-by-apps-set? @is-controlled-by-apps-set?}))
      :label (if @is-controlled-by-apps-set? (str/capitalize (@tr [:version])) (@tr [:select-version]))]))
 
 (defn EnvVariablesApp
@@ -1100,7 +1120,10 @@
                :href         module-id
                :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
                :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
+       (edit-not-allowed-msg {:TR                         @tr
+                              :can-edit-data?             @can-edit-data?
+                              :edit-op-allowed?           @edit-op-allowed?
+                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
      :label (@tr [:env-variables])]))
 
 
@@ -1439,7 +1462,11 @@
            :sort-config {:db-path     ::spec/edges-ordering
                          :fetch-event [::events/get-edges]}}
           (and @can-edit-data? (not @fleet-filter))
-          (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
+          (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg
+                                                        {:TR                         @tr
+                                                         :can-edit-data?             @can-edit-data?
+                                                         :edit-op-allowed?           @edit-op-allowed?
+                                                         :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
                                  :bulk-actions        [{:event (fn [select-data]
                                                                  (dispatch [::events/remove-edges select-data]))
                                                         :name  "Remove edges"

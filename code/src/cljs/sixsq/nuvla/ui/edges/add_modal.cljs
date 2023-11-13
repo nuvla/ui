@@ -99,7 +99,7 @@
                                                              (keep (set (keys nb-asset->k8s-setting))
                                                                    nuvlabox-peripherals)))))
                                        " --set kubernetesNode=<TARGET_KUBERNETES_NODE_NAME> ")
-                                  (str "docker-compose -p nuvlaedge -f "
+                                  (str "docker compose -p nuvlaedge -f "
                                        (str/join " -f " (map :name download-files)) " up -d"))
             clone-command       (when k8s-install?
                                   "helm repo add nuvlaedge https://nuvlaedge.github.io/deployment")]

@@ -228,7 +228,7 @@
       (let [tr                  (subscribe [::i18n-subs/tr])
             nuvlabox-name-or-id (str "NuvlaEdge " (or (:name creation-data)
                                                       (general-utils/id->short-uuid nuvlabox-id)))
-            execute-command     (str "docker-compose -p nuvlaedge -f "
+            execute-command     (str "docker compose -p nuvlaedge -f "
                                      (str/join " -f " (map :name download-files)) " up -d")]
         [:<>
          [uix/ModalHeader {:header (str nuvlabox-name-or-id " created") :icon "box"}]

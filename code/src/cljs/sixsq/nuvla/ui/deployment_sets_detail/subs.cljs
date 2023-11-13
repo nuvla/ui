@@ -141,8 +141,7 @@
   ::is-controlled-by-apps-set?
   :<- [::apps-set]
   (fn [apps-set]
-    (and apps-set
-         (not= virtual-apps-set-parent-path (:parent-path apps-set)))))
+    (utils/is-controlled-by-apps-set apps-set)))
 
 (reg-sub
   ::applications

@@ -106,22 +106,27 @@
               (str apps-set-id "_" version)]])
 
 (defn load-module-configurations
-  [db modules-by-id fx [id {:keys [applications]}]]
+  [db modules-by-id is-controlled-by-apps-set? fx [id {:keys [applications]}]]
   (->> applications
        (map (fn [{module-id :id :keys [version
                                        environmental-variables
                                        registries-credentials]}]
-              (when (and (get modules-by-id module-id)
-                         (nil? (module-plugin/db-module db [::spec/apps-sets id] module-id)))
-                [:dispatch [::module-plugin/load-module
-                            [::spec/apps-sets id]
-                            (str module-id "_" version)
-                            {:env                    (when (seq environmental-variables)
-                                                       (->> environmental-variables
-                                                            (map (juxt :name :value))
-                                                            (into {})))
-                             :registries-credentials registries-credentials}
-                            [::init-app-row-data false]]])))
+              (let [loaded-module (module-plugin/db-module db [::spec/apps-sets id] module-id)
+                    loaded-version-no (when loaded-module (get-version-id (map-indexed vector (:versions loaded-module))
+                                                                          (-> loaded-module :content :id)))]
+                (when (and (get modules-by-id module-id)
+                           (if is-controlled-by-apps-set?
+                             (not= loaded-version-no version)
+                             (nil? loaded-module)))
+                  [:dispatch [::module-plugin/load-module
+                              [::spec/apps-sets id]
+                              (str module-id "_" version)
+                              {:env                    (when (seq environmental-variables)
+                                                         (->> environmental-variables
+                                                              (map (juxt :name :value))
+                                                              (into {})))
+                               :registries-credentials registries-credentials}
+                              [::init-app-row-data false]]]))))
        (concat fx)))
 
 (reg-event-fx
@@ -152,7 +157,7 @@
 
 (reg-event-fx
   ::load-apps-sets-response
-  (fn [{:keys [db]} [_ {:keys [apps-sets-set total-apps-count apps apps-set-index->modul-id->app]}]]
+  (fn [{{:keys [::spec/module-applications-sets] :as db} :db} [_ {:keys [apps-sets-set total-apps-count apps apps-set-index->modul-id->app]}]]
     (let [modules-by-id     (->> apps (map (juxt :id identity)) (into {}))
           enriched-apps-set (utils/enrich-app apps-sets-set)
           apps-sets         (->> apps-sets-set
@@ -167,7 +172,8 @@
                                   apps-sets)
           new-db            (reduce restore-applications
                                     db merged-configs)
-          fx                (reduce (partial load-module-configurations db modules-by-id)
+          fx                (reduce (partial load-module-configurations db modules-by-id
+                                             (utils/is-controlled-by-apps-set module-applications-sets))
                                     [(load-apps-set-configuration (:id enriched-apps-set)
                                                                   (:version enriched-apps-set))]
                                     merged-configs)
@@ -180,12 +186,25 @@
                            :content (str "Loaded " (count apps) " out of " total-apps-count ".")
                            :type    :error}]]]}))))
 
+(defn overwrite-apps-versions
+  [apps-set apps-set-from-depl-set]
+  (update-in apps-set-from-depl-set [:overwrites 0]
+             (fn [{:keys [applications] :as overwrites}]
+               (assoc overwrites :applications
+                                 (mapv (fn [{:keys [id] :as app-overrides}]
+                                         (assoc app-overrides
+                                           :version
+                                           (utils/app-version-from-apps-set apps-set id)))
+                                       applications)))))
+
 (reg-event-fx
   ::load-apps-sets
-  (fn [{{:keys [::spec/deployment-set]} :db} [_ apps-sets]]
+  (fn [{{:keys [::spec/deployment-set ::spec/module-applications-sets]} :db} [_ apps-sets]]
     (let [app-sets-by-app-set-id (->> deployment-set
                                       :applications-sets
-                                      (map (juxt :id identity))
+                                      (map (juxt :id (if (utils/is-controlled-by-apps-set module-applications-sets)
+                                                       (partial overwrite-apps-versions apps-sets)
+                                                       identity)))
                                       (into {}))
           apps-urls              (->> apps-sets
                                       :content
@@ -748,22 +767,21 @@
        ::cimi-api-fx/search
        [:module
         {:filter (general-utils/filter-eq-ids app-ids)}
-        #(dispatch [::add-apps-to-selection (:resources %)])]})))
+        #(dispatch [::add-apps-to-selection apps-set (:resources %)])]})))
 
 (reg-event-fx
   ::add-apps-to-selection
-  (fn [{db :db} [_ apps]]
+  (fn [{db :db} [_ apps-set apps]]
     (let [db-path (subs/create-apps-creation-db-path (:current-route db))
           apps    (mapv utils/enrich-app apps)]
       {:fx (into
              [[:db (update-in db db-path (fnil into []) [])]
               [:dispatch [::fetch-app-picker-apps
                           ::spec/pagination-apps-picker]]]
-             (map (fn [{:keys [path versions] :as app}]
-                    (let [version-id (version-id-to-add app)]
-                      [::apps-fx/get-module [path
-                                             (get-version-id (map-indexed vector versions) version-id)
-                                             #(dispatch [::do-add-app %])]]))
+             (map (fn [{:keys [id path] :as _app}]
+                    [::apps-fx/get-module [path
+                                           (utils/app-version-from-apps-set id apps-set)
+                                           #(dispatch [::do-add-app %])]])
                   apps))})))
 
 (reg-event-fx

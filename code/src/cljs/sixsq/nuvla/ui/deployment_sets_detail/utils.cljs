@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.utils
-  (:require [sixsq.nuvla.ui.plugins.module :refer [get-version-id]]))
+  (:require [sixsq.nuvla.ui.apps-store.spec :as spec]
+            [sixsq.nuvla.ui.plugins.module :refer [get-version-id]]))
 
 (def state-new "NEW")
 (def state-starting "STARTING")
@@ -30,3 +31,19 @@
         version-id (-> app :content :id)
         version-no (get-version-id (map-indexed vector versions) version-id)]
     (assoc app :version version-no)))
+
+(defn app-version-from-apps-set
+  [apps-set app-id]
+  (->> (get-in apps-set
+               [:content
+                :applications-sets
+                0
+                :applications])
+       (filter #(= app-id (:id %)))
+       first
+       :version))
+
+(defn is-controlled-by-apps-set
+  [apps-set]
+  (and apps-set
+       (not= spec/virtual-apps-set-parent-path (:parent-path apps-set))))

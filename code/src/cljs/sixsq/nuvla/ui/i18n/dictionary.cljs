@@ -398,6 +398,8 @@
         :getting-started-docs                          "Getting started"
         :global-parameters                             "global parameters"
         :go-live                                       "Go live"
+        :go-to-app                                     "Go to app"
+        :go-to-app-set                                 "Go to app set"
         :go-to-profile                                 "go to the profile"
         :grant-nuvla-access                            "grant Nuvla access"
         :group                                         "group"

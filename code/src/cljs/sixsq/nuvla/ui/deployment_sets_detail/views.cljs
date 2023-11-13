@@ -533,7 +533,7 @@
 (defn LinkToModuleDetails
   [db-path href]
   [ui/Popup
-   {:content (r/as-element [:p "Open app details"])
+   {:content (r/as-element [:p "Open module details"])
     :trigger (r/as-element [:span
                             [module-plugin/LinkToApp
                              {:db-path  db-path
@@ -564,7 +564,7 @@
         [icons/GearIcon]]]]
      [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
      [LinkToModuleDetails [::spec/apps-sets 0 :apps-set] @apps-set-id]
-     (when can-edit-data?
+     (when @can-edit-data?
        [RemoveButton {:enabled  @edit-op-allowed?
                       :tooltip  (edit-not-allowed-msg
                                   {:TR                         @tr
@@ -1166,6 +1166,15 @@
       [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
        (or (:name @app) (:id @app))])))
 
+(defn LinkToModule
+  [db-path module-id dictionary-key]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [module-plugin/LinkToApp
+     {:db-path  db-path
+      :href     module-id
+      :children [:<>
+                 [ui/Icon {:class icons/i-link}]
+                 (@tr dictionary-key)]}]))
 
 (defn ConfigureApps
   [i applications creating?]
@@ -1182,42 +1191,47 @@
                                   :render   #(r/as-element
                                                [ui/TabPane
                                                 [ui/Popup {:trigger (r/as-element
-                                                                      [:span
-                                                                       [module-plugin/LinkToApp
-                                                                        {:db-path  [::spec/apps-sets i]
-                                                                         :href     id
-                                                                         :children [:<>
-                                                                                    [ui/Icon {:class icons/i-link}]
-                                                                                    "Go to app"]}]])
+                                                                      [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
                                                            :content "Open application in a new window"}]
                                                 [ModuleVersionsApp i id creating?]
                                                 [EnvVariablesApp i id creating?]])})
                                applications)}])
 
 (defn ConfigureAppsSetWrapper
-  [configure-apps]
+  [configure-apps creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
         apps-set                   (subscribe [::subs/apps-set])]
     [:div
      (when @is-controlled-by-apps-set?
        [:div {:style {:margin-bottom "5px"}}
         [:h2 (:name @apps-set)]
+        [ui/Popup {:trigger (r/as-element
+                              [LinkToModule [::spec/apps-sets 0 :apps-set] (:id @apps-set) [:go-to-app-set]])
+                   :content "Open application in a new window"}]
         [uix/Accordion
-         [module-plugin/ModuleVersions
-          {:db-path      [::spec/apps-sets 0 :apps-set]
-           :href         (:id @apps-set)
-           :change-event [::events/change-apps-set-version]}]
+         (with-tooltip
+           [:div [module-plugin/ModuleVersions
+                  {:db-path      [::spec/apps-sets 0 :apps-set]
+                   :href         (:id @apps-set)
+                   :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
+                   :change-event [::events/change-apps-set-version]}]]
+           (edit-not-allowed-msg {:TR                         @tr
+                                  :can-edit-data?             @can-edit-data?
+                                  :edit-op-allowed?           @edit-op-allowed?
+                                  :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
          :label (@tr [:select-version])]])
      configure-apps]))
 
 (defn ConfigureAppsSet
-  []
+  [creating?]
   (let [apps (subscribe [::subs/apps-row-data])]
     [ConfigureAppsSetWrapper
-     [ConfigureApps
-      0
-      @apps]]))
+     [ConfigureApps 0 @apps creating?]
+     creating?]))
 
 (defn BoldLabel
   [txt]
@@ -1571,7 +1585,7 @@
                                                          tab-title]))))
                                                 :icon     icons/i-gear
                                                 :disabled (empty? @apps-sets)}
-                                     :render   #(r/as-element [ConfigureAppsSet])}
+                                     :render   #(r/as-element [ConfigureAppsSet creating?])}
                                     {:menuItem {:key      :edges
                                                 :content
                                                 (let [tab-title (str/capitalize (tr [:edges]))]

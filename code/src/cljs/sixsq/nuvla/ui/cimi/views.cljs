@@ -299,19 +299,20 @@
            update-fn trigger title-tr-key
            reset-to-default-fn field->view]}]
   (let [tr (subscribe [::i18n-subs/tr])]
+    (js/console.error :available-fields available-fields)
     [ui/Modal
      {:closeIcon true
       :open      @show?
       :on-close  #(reset! show? false)
       :trigger   (r/as-element
                    (or trigger
-                       [uix/MenuItem
-                        {:name     (@tr [:columns])
-                         :icon     icons/i-columns
-                         :disabled (and selected-id-sub (nil? @selected-id-sub))
-                         :on-click (fn []
-                                     (reset! selections-atom (set @selected-fields-sub))
-                                     (reset! show? true))}]))}
+                     [uix/MenuItem
+                      {:name     (@tr [:columns])
+                       :icon     icons/i-columns
+                       :disabled (and selected-id-sub (nil? @selected-id-sub))
+                       :on-click (fn []
+                                   (reset! selections-atom (set @selected-fields-sub))
+                                   (reset! show? true))}]))}
      [uix/ModalHeader {:header (@tr [(or title-tr-key :fields)])}]
      [ui/ModalContent
       {:scrolling true}

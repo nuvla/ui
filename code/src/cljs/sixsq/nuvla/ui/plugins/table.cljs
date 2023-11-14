@@ -684,13 +684,13 @@
         current-cols       (subscribe [::get-current-cols db-path])
         selected-cols      (r/atom (set @current-cols))
         show?              (r/atom false)
-        available-col-keys (set (keys available-fields))]
+        available-col-keys (disj (set (keys available-fields)) :module)]
     (fn []
       [SelectFieldsView
        {:field->view         (into {}
-                                   (map (fn [[k v]]
-                                          [k (:header-content v)])
-                                        available-fields))
+                               (map (fn [[k v]]
+                                      [k (:header-content v)])
+                                 available-fields))
         :title-tr-key        :columns
         :show?               show?
         :selections-atom     selected-cols

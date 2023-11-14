@@ -367,6 +367,7 @@
                 (map (juxt :name :value))
                 (into {}))]
     (->> (merge m1 m2)
+         (remove (fn [[_ v]] (str/blank? v)))
          (mapv (fn [[k v]] {:name k :value v})))))
 
 (defn application-overwrites

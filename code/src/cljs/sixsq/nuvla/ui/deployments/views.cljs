@@ -190,7 +190,8 @@
                                                {:version-id (utils/get-version-number
                                                               (:versions module)
                                                               (:content module))
-                                                :path (:path module)}
+                                                :path (:path module)
+                                                :target "_self"}
                                                [:div
                                                 {:class "app-icon-name"
                                                  :style {:display     :flex

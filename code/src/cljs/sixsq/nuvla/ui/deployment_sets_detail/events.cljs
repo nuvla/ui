@@ -707,14 +707,15 @@
 (reg-event-fx
   ::fetch-app-picker-apps
   (fn [{{:keys [current-route] :as db} :db} [_ pagination-db-path]]
-    (let [current-selection (get-in db (subs/create-apps-creation-db-path current-route))]
+    (let [current-selection (get-in db (subs/create-apps-creation-db-path current-route))
+          is-controlled-by-apps-set? (utils/is-controlled-by-apps-set (::spec/module-applications-sets db))]
       {:fx [[:dispatch [::apps-store-events/get-modules
                         apps-store-spec/allapps-key
                         {:external-filter
                          (general-utils/join-and
                            (general-utils/filter-neq-ids
                              (mapv :id current-selection))
-                           (when (seq current-selection)
+                           (when (or (false? is-controlled-by-apps-set?) (seq current-selection))
                              "subtype!='applications_sets'"))
                          :order-by           "name:asc"
                          :pagination-db-path [pagination-db-path]}]]]})))

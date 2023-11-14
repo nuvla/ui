@@ -31,7 +31,8 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.view-components :as vc :refer [TitledCard]]))
+            [sixsq.nuvla.ui.utils.view-components :as vc :refer [TitledCard]]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 
@@ -185,13 +186,19 @@
         field-key->table-cell {:id [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                                     (general-utils/id->short-uuid id)]
                                :module.name (when-not no-module-name
-                                              [:div {:class "app-icon-name"
-                                                     :style {:display     :flex
-                                                             :align-items :center}}
-                                               [:img {:src   (or (:thumb-nail module) (:logo-url module))
-                                                      :style {:width  "42px"
-                                                              :height "30px"}}]
-                                               [:div (:name module)]])
+                                              [module-plugin/LinkToAppView
+                                               {:version-id (utils/get-version-number
+                                                              (:versions module)
+                                                              (:content module))
+                                                :path (:path module)}
+                                               [:div
+                                                {:class "app-icon-name"
+                                                 :style {:display     :flex
+                                                         :align-items :center}}
+                                                [:img {:src   (or (:thumb-nail module) (:logo-url module))
+                                                       :style {:width  "42px"
+                                                               :height "30px"}}]
+                                                [:div (:name module)]]])
                                :version (utils/deployment-version deployment)
                                :status state
                                :url (when url
@@ -244,20 +251,22 @@
                                (remove nil?
                                  (mapv (fn [col]
                                          (when col (assoc col :cell table-cell)))
-                                   [{:field-key :id}
-                                    (when-not no-module-name
+                                   [(when-not no-module-name
                                       {:field-key      :module.name
                                        :cell-props {:style {:overflow      "hidden",
                                                             :text-overflow "ellipsis",
                                                             :max-width     "20ch"}}
-                                       :header-content (@tr [:module])})
+                                       :header-content (@tr [:module])
+                                       :stop-event-propagation? true})
                                     {:field-key :version :no-sort? true}
                                     {:field-key :status
                                      :sort-key  :state}
                                     {:field-key :url
+                                     :stop-event-propagation? true
                                      :no-sort?  true}
                                     (when show-depl-set-column?
                                       {:field-key :deployment-set
+                                       :stop-event-propagation? true
                                        :sort-key  :deployment-set-name})
                                     {:field-key :created}
                                     {:field-key :updated}
@@ -267,13 +276,20 @@
                                      :cell-props {:style {:overflow      "hidden",
                                                           :text-overflow "ellipsis",
                                                           :max-width     "20ch"}}
-                                     :sort-key  :nuvlabox-name}
+                                     :sort-key  :nuvlabox-name
+                                     :stop-event-propagation? true}
                                     (when selectable? {:field-key :actions
-                                                       :no-sort?  true})]))
+                                                       :no-sort?  true
+                                                       :stop-event-propagation? true})]))
                                :rows          deployments-list
+                               :row-props     {:role  "link"
+                                               :style {:cursor "pointer"}}
+                               :row-click-handler (fn [{id :id}]
+                                                    (dispatch [::routing-events/navigate
+                                                               (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})]))
                                :sort-config   {:db-path     ::spec/ordering
                                                :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                               :table-props   (merge style/single-line {:stackable true})
+                               :table-props   (merge style/single-line {:stackable true :selectable true})
                                :select-config (when selectable?
                                                 {:bulk-actions        [{:event [::events/bulk-update-params]
                                                                         :name  (str/capitalize (@tr [:update]))}
@@ -286,6 +302,7 @@
                                                  :total-count-sub-key [::subs/deployments-count]
                                                  :resources-sub-key   deployments-resources-subs-key
                                                  :rights-needed       :edit})}
+
             ::table-cols-config]])))))
 
 (defn DeploymentCard

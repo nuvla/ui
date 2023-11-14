@@ -174,10 +174,13 @@
                       :else nil)]
          label)])))
 
+(defn get-version-number
+  [versions content]
+  (some-> versions
+    apps-utils/map-versions-index
+    (apps-utils/find-current-version (:id content))))
 
 (defn deployment-version
   [{{:keys [versions content]} :module :as _deployment}]
-  (when-let [version (some-> versions
-                       apps-utils/map-versions-index
-                       (apps-utils/find-current-version (:id content)))]
+  (when-let [version (get-version-number versions content)]
     (str "v" version)))

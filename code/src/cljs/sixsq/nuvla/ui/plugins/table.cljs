@@ -653,19 +653,24 @@
                                                    (:name row)
                                                    (:id row))
                                :idx              idx}])
-              (for [[idx {:keys [field-key accessor cell cell-props]}] (map-indexed vector columns)
+              (for [[idx {:keys [field-key stop-event-propagation? accessor cell cell-props]}] (map-indexed vector columns)
                     :when (or field-key accessor)
                     :let [cell-data ((or accessor field-key) row)
                           last?     (= idx (dec (count columns)))]]
                 ^{:key (str id "-" field-key)}
                 [ui/TableCell
                  (cond-> cell-props
-                         last? (assoc :colSpan 2))
+                   last? (assoc :colSpan 2)
+                   (and
+                     stop-event-propagation?
+                     (not (:on-click cell-props)))
+                   (assoc :on-click (fn [event]
+                                      (.stopPropagation event))))
                  (cond
                    cell (if (string? cell) cell
-                                           [cell {:row-data  row
-                                                  :cell-data cell-data
-                                                  :field-key field-key}])
+                          [cell {:row-data  row
+                                 :cell-data cell-data
+                                 :field-key field-key}])
                    :else (str (if (or
                                     (not (coll? cell-data))
                                     (seq cell-data))

@@ -526,19 +526,19 @@
     (fn []
       ^{:key tab-key}
       [ui/TabPane
-       [ui/Menu {:secondary true}
-        [ui/MenuMenu {:position "left"}
-         [full-text-search-plugin/FullTextSearch
-          {:db-path      [::apps-store-spec/modules-search]
-           :change-event [::pagination-plugin/change-page [pagination-db-path] 1]}]]]
-       [apps-store-views/ModulesCardsGroupView
-        (for [{:keys [id] :as module} (get @modules :resources [])]
-          ^{:key id}
-          [AppPickerCard module])]
-       [pagination-plugin/Pagination
-        {:db-path      [pagination-db-path]
-         :total-items  (:count @modules)
-         :change-event [::events/fetch-app-picker-apps pagination-db-path]}]])))
+       [:div {:style {:display :flex}}
+        [full-text-search-plugin/FullTextSearch
+         {:db-path      [::apps-store-spec/modules-search]
+          :change-event [::pagination-plugin/change-page [pagination-db-path] 1]}]]
+       [:div {:style {:margin-top "1rem"}}
+        [apps-store-views/ModulesCardsGroupView
+         (for [{:keys [id] :as module} (get @modules :resources [])]
+           ^{:key id}
+           [AppPickerCard module])]
+        [pagination-plugin/Pagination
+         {:db-path      [pagination-db-path]
+          :total-items  (:count @modules)
+          :change-event [::events/fetch-app-picker-apps pagination-db-path]}]]])))
 
 (defn AppsPickerModal
   [creating?]
@@ -581,26 +581,34 @@
                               :target   :_self}]])}])
 
 (defn AppsSetHeader
-  []
+  [creating?]
   (let [apps-set-id                (subscribe [::subs/apps-set-id])
         apps-set-name              (subscribe [::subs/apps-set-name])
         apps-set-version           (subscribe [::subs/apps-set-version])
-        apps-set-created           (subscribe [::subs/apps-set-created]) ]
+        apps-set-created           (subscribe [::subs/apps-set-created])
+        name-component             [:p {:style {:margin 0}} @apps-set-name]]
     [:div
      [:div {:style {:display :flex :font-size :large :justify-content :space-between}}
-      [:a
-       {:href     "#"
-        :on-click #(dispatch [::events/navigate-internal
-                              {:query-params {:deployment-sets-detail-tab :apps}}])
-        :children [icons/StoreIcon]
-        :target   :_self}
-       [:div {:style {:display :flex :align-items :center}}
-        [:p {:style {:margin 0}} @apps-set-name]
-        [:span {:style {:margin-left "0.5rem"}}
-         [icons/GearIcon]]]]
+      (if creating?
+        name-component
+        [:a
+         {:href     "#"
+          :on-click #(dispatch [::events/navigate-internal
+                                {:query-params {:deployment-sets-detail-tab :apps}}])
+          :children [icons/StoreIcon]
+
+          :target   :_self}
+         [:div {:style {:display :flex :align-items :center}}
+          name-component
+          [:span {:style {:margin-left "0.5rem"}}
+           [icons/GearIcon]]]])
       [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
-      [LinkToModuleDetails [::spec/apps-sets 0 :apps-set] @apps-set-id]]
-     [:div "includes following apps:"]]))
+      [LinkToModuleDetails [::spec/apps-sets 0 :apps-set] @apps-set-id]
+      (when creating?
+       [RemoveButton {:enabled  true
+                      :on-click #(dispatch [::events/remove-apps-set])}])]
+
+     [:div "Applications Set includes following apps:"]]))
 
 (defn- AppsOverviewTable
   [creating?]
@@ -618,7 +626,7 @@
          (when-not no-apps?
            [:div {:style {:height "100%"}}
             (when @is-controlled-by-apps-set?
-              [AppsSetHeader])
+              [AppsSetHeader creating?])
             [:div {:style {:margin-top "8px"}}
              [Table {:columns
                      (into
@@ -637,19 +645,21 @@
                                                     {:content (r/as-element [:p "Configure app"])
                                                      :trigger
                                                      (r/as-element
-                                                       [:a
-                                                        {:href     "#"
-                                                         :on-click #(dispatch [::events/navigate-internal
-                                                                               {:query-params
-                                                                                (merge
-                                                                                  {(routes-utils/db-path->query-param-key [::apps-config])
-                                                                                   (create-app-config-query-key i (:href row-data))}
-                                                                                  {:deployment-sets-detail-tab :apps})}])
-                                                         :children [icons/StoreIcon]
-                                                         :target   :_self}
-                                                        cell-data
-                                                        [:span {:style {:margin-left "0.5rem"}}
-                                                         [icons/GearIcon]]])}]])
+                                                       (if creating?
+                                                         [:span cell-data]
+                                                         [:a
+                                                          {:href     "#"
+                                                           :on-click #(dispatch [::events/navigate-internal
+                                                                                 {:query-params
+                                                                                  (merge
+                                                                                    {(routes-utils/db-path->query-param-key [::apps-config])
+                                                                                     (create-app-config-query-key i (:href row-data))}
+                                                                                    {:deployment-sets-detail-tab :apps})}])
+                                                           :children [icons/StoreIcon]
+                                                           :target   :_self}
+                                                          cell-data
+                                                          [:span {:style {:margin-left "0.5rem"}}
+                                                           [icons/GearIcon]]]))}]])
                                                 :version
                                                 (fn [{{:keys [label created]} :cell-data}]
                                                   [ModuleVersion label created])

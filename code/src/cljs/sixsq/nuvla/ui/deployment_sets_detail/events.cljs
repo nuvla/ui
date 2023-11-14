@@ -479,7 +479,7 @@
                                  :version    (:version module-applications-sets)
                                  :overwrites [(cond-> {:fleet (:resources (get-in db edges-path))}
                                                       fleet-filter (assoc :fleet-filter fleet-filter))]}]}
-           deployment-set-edited)))
+           (dissoc deployment-set-edited :applications-sets))))
 
 (reg-event-fx
   ::create
@@ -801,7 +801,6 @@
                (update ::spec/deployment-set-edited assoc :applications-sets []))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
-            [:dispatch [::set-apps-edited true]]
             [:dispatch [::main-events/changes-protection? true]]]})))
 
 (reg-event-fx

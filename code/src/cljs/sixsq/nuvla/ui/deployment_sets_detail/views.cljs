@@ -397,7 +397,10 @@
   [ids]
   (let [apps (subscribe [::subs/select-apps-by-id ids])]
     [:div
-     [:div "This is a set containing these apps:"]
+     [:div
+      "This is an "
+      [:span {:style {:font-weight :bold}} "Application Set"]
+      " containing these apps:"]
      [:ul
       (doall
         (for [id ids

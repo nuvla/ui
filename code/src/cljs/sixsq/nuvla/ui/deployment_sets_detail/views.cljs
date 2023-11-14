@@ -543,35 +543,25 @@
 
 (defn AppsSetHeader
   []
-  (let [tr                         (subscribe [::i18n-subs/tr])
-        apps-set-id                (subscribe [::subs/apps-set-id])
+  (let [apps-set-id                (subscribe [::subs/apps-set-id])
         apps-set-name              (subscribe [::subs/apps-set-name])
         apps-set-version           (subscribe [::subs/apps-set-version])
-        apps-set-created           (subscribe [::subs/apps-set-created])
-        can-edit-data?             (subscribe [::subs/can-edit-data?])
-        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
-        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
-    [:div {:style {:display :flex :font-size :large :justify-content :space-between}}
-     [:a
-      {:href     "#"
-       :on-click #(dispatch [::events/navigate-internal
-                             {:query-params {:deployment-sets-detail-tab :apps}}])
-       :children [icons/StoreIcon]
-       :target   :_self}
-      [:div {:style {:display :flex :align-items :center}}
-       [:p {:style {:margin 0}} @apps-set-name]
-       [:span {:style {:margin-left "0.5rem"}}
-        [icons/GearIcon]]]]
-     [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
-     [LinkToModuleDetails [::spec/apps-sets 0 :apps-set] @apps-set-id]
-     (when @can-edit-data?
-       [RemoveButton {:enabled  @edit-op-allowed?
-                      :tooltip  (edit-not-allowed-msg
-                                  {:TR                         @tr
-                                   :can-edit-data?             @can-edit-data?
-                                   :edit-op-allowed?           @edit-op-allowed?
-                                   :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
-                      :on-click #(dispatch [::events/remove-apps-set])}])]))
+        apps-set-created           (subscribe [::subs/apps-set-created]) ]
+    [:div
+     [:div {:style {:display :flex :font-size :large :justify-content :space-between}}
+      [:a
+       {:href     "#"
+        :on-click #(dispatch [::events/navigate-internal
+                              {:query-params {:deployment-sets-detail-tab :apps}}])
+        :children [icons/StoreIcon]
+        :target   :_self}
+       [:div {:style {:display :flex :align-items :center}}
+        [:p {:style {:margin 0}} @apps-set-name]
+        [:span {:style {:margin-left "0.5rem"}}
+         [icons/GearIcon]]]]
+      [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
+      [LinkToModuleDetails [::spec/apps-sets 0 :apps-set] @apps-set-id]]
+     [:div "includes following apps:"]]))
 
 (defn- AppsOverviewTable
   [creating?]

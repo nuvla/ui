@@ -621,15 +621,17 @@
                                  :header-content (general-utils/capitalize-words (@tr [:details]))
                                  :cell           (fn [{:keys [row-data]}]
                                                    [LinkToModuleDetails [::spec/apps-sets (:idx row-data)] (:href row-data)])}
-                                (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
+                                (when @can-edit-data?
                                   {:field-key :remove
                                    :cell      (fn [{:keys [row-data]}]
-                                                [RemoveButton {:enabled  @edit-op-allowed?
-                                                               :tooltip  (edit-not-allowed-msg
-                                                                           {:TR                         @tr
-                                                                            :can-edit-data?             @can-edit-data?
-                                                                            :edit-op-allowed?           @edit-op-allowed?
-                                                                            :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
+                                                [RemoveButton {:enabled  (and (not @is-controlled-by-apps-set?) @edit-op-allowed?)
+                                                               :tooltip  (if @is-controlled-by-apps-set?
+                                                                           "To remove single applications from your deployment group, you have to remove it from the controlling application set."
+                                                                           (edit-not-allowed-msg
+                                                                             {:TR                         @tr
+                                                                              :can-edit-data?             @can-edit-data?
+                                                                              :edit-op-allowed?           @edit-op-allowed?
+                                                                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
                                                                :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                      :rows @apps-row}]]])
          (when (and @can-edit-data? (not @is-controlled-by-apps-set?))

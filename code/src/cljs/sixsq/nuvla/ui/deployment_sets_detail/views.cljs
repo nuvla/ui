@@ -1576,7 +1576,7 @@
                                                          {:style {:color (if error? utils-forms/dark-red "black")}}
                                                          tab-title]))))
                                                 :icon     icons/i-gear
-                                                :disabled (empty? @apps-sets)}
+                                                :disabled (or creating? (empty? @apps-sets))}
                                      :render   #(r/as-element [ConfigureAppsSet creating?])}
                                     {:menuItem {:key      :edges
                                                 :content

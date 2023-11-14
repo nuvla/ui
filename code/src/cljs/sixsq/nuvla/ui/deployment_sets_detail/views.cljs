@@ -975,7 +975,8 @@
   [uuid creating?]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats    (subscribe [::subs/edges-summary-stats])]
+        edges-stats    (subscribe [::subs/edges-summary-stats])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])]
         [ui/TabPane
@@ -988,9 +989,8 @@
            [vc/TitledCard
             {:class :nuvla-apps
              :icon  icons/i-layer-group
-             :label (str/capitalize (@tr [:apps]))}
+             :label (if @is-controlled-by-apps-set? "Application Set" (str/capitalize  (@tr [:apps])))}
             [AppsOverviewTable creating?]]]
-
           [ui/GridColumn {:stretched true}
            [vc/TitledCard
             {:class :nuvla-edges

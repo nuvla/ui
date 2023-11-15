@@ -42,7 +42,6 @@ test('testing logger component', async ({ page }, { config }) => {
 
   await page.getByRole('link', { name: 'deployments' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployments');
-  await page.waitForTimeout(200);
   await page.getByRole('link', { name: '19b97ba0' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18');
   await page.getByRole('link', { name: 'Logs' }).click();

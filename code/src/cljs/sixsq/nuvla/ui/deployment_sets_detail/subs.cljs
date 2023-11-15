@@ -629,3 +629,21 @@
   :<- [::prices-accepted?]
   (fn [[licences-accepted? prices-accepted?]]
     (and licences-accepted? prices-accepted?)))
+
+(reg-sub
+  ::license-by-module-id
+  :<- [::applications-sets-apps-targets]
+  (fn [sets-apps-targets]
+    (->> sets-apps-targets
+         (filter license-set-apps-targets)
+         (map (juxt (comp :id :application) (comp :license :application)))
+         (into {}))))
+
+(reg-sub
+  ::pricing-by-module-id
+  :<- [::deployment-set-apps-targets-total-price]
+  (fn [apps-targets-total-price]
+    (->> apps-targets-total-price
+         (map (juxt (comp :id :application) (comp :price :application)))
+         (into {}))))
+

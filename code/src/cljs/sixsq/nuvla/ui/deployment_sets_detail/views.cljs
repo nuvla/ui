@@ -558,8 +558,8 @@
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :deploy-for)])
-                         (format-money (/ (:cent-amount-daily price) 100)) "/"
-                         (@tr [:day]))
+                            (format-money (/ (:cent-amount-daily price) 100)) "/"
+                            (@tr [:day]))
         button-content "Add to selection"
         button-ops     {:fluid   true
                         :color   "blue"
@@ -659,9 +659,9 @@
 
 (defn AppsPickerModal
   [creating?]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        open?    (subscribe [::subs/modal-open? events/apps-picker-modal-id])
-        tab-key  apps-store-spec/allapps-key]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        open?   (subscribe [::subs/modal-open? events/apps-picker-modal-id])
+        tab-key apps-store-spec/allapps-key]
     (fn []
       [ui/Modal {:size       :fullscreen
                  :open       @open?
@@ -694,11 +694,11 @@
 
 (defn AppsSetHeader
   [creating?]
-  (let [apps-set-id                (subscribe [::subs/apps-set-id])
-        apps-set-name              (subscribe [::subs/apps-set-name])
-        apps-set-version           (subscribe [::subs/apps-set-version])
-        apps-set-created           (subscribe [::subs/apps-set-created])
-        name-component             [:p {:style {:margin 0}} @apps-set-name]]
+  (let [apps-set-id      (subscribe [::subs/apps-set-id])
+        apps-set-name    (subscribe [::subs/apps-set-name])
+        apps-set-version (subscribe [::subs/apps-set-version])
+        apps-set-created (subscribe [::subs/apps-set-created])
+        name-component   [:p {:style {:margin 0}} @apps-set-name]]
     [:div
      [:div {:style {:display :flex :font-size :large :justify-content :space-between}}
       (if creating?
@@ -721,8 +721,8 @@
                              :children [icons/ArrowRightFromBracketIcon]
                              :target   :_self}]]
       (when creating?
-       [RemoveButton {:enabled  true
-                      :on-click #(dispatch [::events/remove-apps-set])}])]
+        [RemoveButton {:enabled  true
+                       :on-click #(dispatch [::events/remove-apps-set])}])]
 
      [:div "Applications Set includes following apps:"]]))
 
@@ -1097,8 +1097,8 @@
 (defn TabOverview
   [uuid creating?]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
-  (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats    (subscribe [::subs/edges-summary-stats])
+  (let [deployment-set             (subscribe [::subs/deployment-set])
+        edges-stats                (subscribe [::subs/edges-summary-stats])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])]
@@ -1112,7 +1112,7 @@
            [vc/TitledCard
             {:class :nuvla-apps
              :icon  icons/i-layer-group
-             :label (if @is-controlled-by-apps-set? "Application Set" (str/capitalize  (@tr [:apps])))}
+             :label (if @is-controlled-by-apps-set? "Application Set" (str/capitalize (@tr [:apps])))}
             [AppsOverviewTable creating?]]]
           [ui/GridColumn {:stretched true}
            [vc/TitledCard
@@ -1340,26 +1340,76 @@
                  [ui/Icon {:class icons/i-link}]
                  (@tr dictionary-key)]}]))
 
+(defn AppLicense
+  [license]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/Accordion
+     [ui/Table {:compact true, :definition true}
+      [ui/TableBody
+       [uix/TableRowField (@tr [:name])
+        :key "license-name"
+        :editable? false
+        :default-value (:name license)]
+       [uix/TableRowField (@tr [:description])
+        :key "license-description"
+        :editable? false
+        :default-value (:description license)]
+       [uix/TableRowField (@tr [:url])
+        :key "license-url"
+        :editable? false
+        :default-value [:a {:href   (:url license)
+                            :target :_blank}
+                        (:url license)]]]]
+     :label (@tr [:eula])]))
+
+(defn AppPricing
+  [pricing]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        edges-count (subscribe [::subs/edges-count])]
+    [uix/Accordion
+     [ui/Table {:compact true, :definition true}
+      [ui/TableBody
+       [uix/TableRowField (@tr [:daily-unit-price])
+        :key "daily-unit-price"
+        :editable? false
+        :default-value (general-utils/format-money (/ (:cent-amount-daily pricing) 100))]
+       [uix/TableRowField (@tr [:quantity])
+        :key "quantity"
+        :editable? false
+        :default-value @edges-count]
+       [uix/TableRowField (@tr [:daily-price])
+        :key "license-url"
+        :editable? false
+        :default-value (general-utils/format-money
+                         (/ (* (:cent-amount-daily pricing) @edges-count) 100))]]]
+     :label (str/capitalize (@tr [:pricing]))]))
+
 (defn ConfigureApps
   [i applications creating?]
-  ^{:key (str "set-" i)}
-  [tab/Tab
-   {:db-path                 [::apps-config]
-    :ignore-chng-protection? true
-    :panes                   (map
-                               (fn [{id :href}]
-                                 {:menuItem {:content (r/as-element
-                                                        [AppName {:idx i :id id}])
-                                             :icon    "cubes"
-                                             :key     (create-app-config-query-key i id)}
-                                  :render   #(r/as-element
-                                               [ui/TabPane
-                                                [ui/Popup {:trigger (r/as-element
-                                                                      [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
-                                                           :content "Open application in a new window"}]
-                                                [ModuleVersionsApp i id creating?]
-                                                [EnvVariablesApp i id creating?]])})
-                               applications)}])
+  (let [licenses-by-module-id (subscribe [::subs/license-by-module-id])
+        pricing-by-module-id  (subscribe [::subs/pricing-by-module-id])]
+    ^{:key (str "set-" i)}
+    [tab/Tab
+     {:db-path                 [::apps-config]
+      :ignore-chng-protection? true
+      :panes                   (map
+                                 (fn [{id :href}]
+                                   {:menuItem {:content (r/as-element
+                                                          [AppName {:idx i :id id}])
+                                               :icon    "cubes"
+                                               :key     (create-app-config-query-key i id)}
+                                    :render   #(r/as-element
+                                                 [ui/TabPane
+                                                  [ui/Popup {:trigger (r/as-element
+                                                                        [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
+                                                             :content "Open application in a new window"}]
+                                                  [ModuleVersionsApp i id creating?]
+                                                  [EnvVariablesApp i id creating?]
+                                                  (when-let [license (get @licenses-by-module-id id)]
+                                                    [AppLicense license])
+                                                  (when-let [pricing (get @pricing-by-module-id id)]
+                                                    [AppPricing pricing])])})
+                                 applications)}]))
 
 (defn ConfigureAppsSetWrapper
   [configure-apps creating?]

@@ -299,7 +299,6 @@
            update-fn trigger title-tr-key
            reset-to-default-fn field->view]}]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (js/console.error :available-fields available-fields)
     [ui/Modal
      {:closeIcon true
       :open      @show?

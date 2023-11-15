@@ -378,14 +378,14 @@
 
 (defn ModalDanger
   [{:keys [_button-text _on-confirm danger-msg _danger-msg-header _header _content _trigger _open _on-close _modal-action
-           control-confirmed? header-class with-confirm-step?]}]
+           control-confirmed? header-class with-confirm-step? _all-confirmed?]}]
   (let [confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
         clicked?   (r/atom false)]
-    (fn [{:keys [button-text on-confirm danger-msg danger-msg-header header content trigger open on-close modal-action]}]
+    (fn [{:keys [button-text on-confirm danger-msg danger-msg-header header content trigger open on-close modal-action all-confirmed?]}]
       (let [button (fn [added-text]
                      [Button {:text     (str added-text button-text)
                               :negative true
-                              :disabled (or (not @confirmed?) @clicked?)
+                              :disabled (or (false? all-confirmed?) (not @confirmed?) @clicked?)
                               :loading  @clicked?
                               :active   true
                               :on-click #(do (reset! clicked? true)
@@ -425,7 +425,7 @@
           (if with-confirm-step?
             [ButtonAskingForConfirmation {:button-fn         button :text button-text
                                           :action-aria-label button-text
-                                          :disabled?         (or (not @confirmed?) @clicked?)}]
+                                          :disabled?         (or (false? all-confirmed?) (not @confirmed?) @clicked?)}]
             [button])]]))))
 
 

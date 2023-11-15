@@ -278,19 +278,20 @@
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
 (defn MenuBar
-  []
+  [_creating?]
   (let [deployment-set (subscribe [::subs/deployment-set])
         loading?       (subscribe [::subs/loading?])
         apps-count     (subscribe [::subs/apps-count])
         edges-count    (subscribe [::subs/edges-count])
         fleet-filter   (subscribe [::subs/fleet-filter])
         tr             (subscribe [::i18n-subs/tr])]
-    (fn []
+    (fn [creating?]
       (let [warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
         [components/StickyBar
          [components/ResponsiveMenuBar
           [^{:key "save"}
-           [SaveButton {:deployment-set @deployment-set}]
+           [SaveButton {:creating? creating?
+                        :deployment-set @deployment-set}]
            ^{:key "start"}
            [StartButton @deployment-set (warn-msg-fn "start")]
            ^{:key "update"}
@@ -315,20 +316,6 @@
             :loading?   @loading?
             :on-refresh #(events/refresh)}]
           {:max-items-to-show 4}]]))))
-
-
-(defn MenuBarCreate
-  []
-  (let [deployment-set (subscribe [::subs/deployment-set])]
-    (fn []
-      (let [MenuItems (cimi-detail-views/format-operations
-                        @deployment-set
-                        #{"start" "stop" "delete"})]
-        [components/StickyBar
-         [components/ResponsiveMenuBar
-          (conj MenuItems
-                ^{:key "delete"}
-                [SaveButton {:creating? true}])]]))))
 
 (defn EditableCell
   [attribute creating?]
@@ -1537,7 +1524,7 @@
                                                                 :operational-status
                                                                 :status))]
            [utils-validation/validation-error-message ::subs/form-valid?]
-           [MenuBar uuid]
+           [MenuBar false]
            [bulk-progress-plugin/MonitoredJobs
             {:db-path [::spec/bulk-jobs]}]
            [components/ErrorJobsMessage
@@ -1560,7 +1547,7 @@
         :no-deployment-set-message-content]
        [ui/Container {:fluid true}
         [uix/PageHeader "bullseye" (or @depl-set-name @name (@tr [:set-a-name]))]
-        [MenuBarCreate]
+        [MenuBar true]
         [TabsDeploymentSet {:creating? true}]]])))
 
 

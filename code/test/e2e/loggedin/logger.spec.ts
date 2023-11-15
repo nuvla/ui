@@ -40,8 +40,6 @@ test('testing logger component', async ({ page }, { config }) => {
   await page.routeFromHAR('./test/e2e/loggedin/logger_test.har', { url: '**/api/**' });
   await page.goto(baseURL + '/ui/welcome');
 
-  await page.pause();
-
   await page.getByRole('link', { name: 'deployments' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployments');
   await page

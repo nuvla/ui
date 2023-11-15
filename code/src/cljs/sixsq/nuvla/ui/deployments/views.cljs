@@ -16,7 +16,7 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.plugins.module :refer [get-version-id]]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin :refer [get-version-id]]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
@@ -31,8 +31,7 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.view-components :as vc :refer [TitledCard]]
-            [sixsq.nuvla.ui.plugins.module :as module-plugin]))
+            [sixsq.nuvla.ui.utils.view-components :as vc :refer [TitledCard]]))
 
 (def deployments-resources-subs-key [::subs/deployments-resources])
 

@@ -95,30 +95,135 @@
 
 (defn close-modal [] (dispatch [::events/set-opened-modal nil]))
 
+(defn BoldLabel
+  [txt]
+  [:label [:b txt]])
+
+(defn EULA
+  []
+  (let [tr       @(subscribe [::i18n-subs/tr])
+        licenses @(subscribe [::subs/deployment-set-licenses])
+        checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
+    [ui/Segment {:attached true}
+     (if (seq licenses)
+       [:<>
+        [ui/ListSA {:divided true}
+         (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
+           ^{:key (str "accept-eula-" license)}
+           [ui/ListItem
+            [ui/ListIcon {:name "book"}]
+            [ui/ListContent
+             [ui/ListHeader {:as     :a
+                             :target "_blank"
+                             :href   url
+                             } name]
+             (when description
+               [ui/ListDescription description])
+             [ui/ListList
+              (for [{i            :i
+                     {:keys [id]} :application} sets-apps-targets]
+                ^{:key (str "license-" i "-" id)}
+                [module-plugin/ModuleNameIcon
+                 {:db-path [::spec/apps-sets i]
+                  :href    id}])]]])]
+        [ui/Form
+         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
+                           :required  true
+                           :checked   checked?
+                           :on-change (ui-callback/checked
+                                        #(dispatch [::events/set
+                                                    ::spec/licenses-accepted? %]))}]]]
+       [ui/Message (tr [:eula-not-defined])])]))
+
+(defn Prices
+  []
+  (let [tr                       @(subscribe [::i18n-subs/tr])
+        apps-targets-total-price @(subscribe [::subs/deployment-set-apps-targets-total-price])
+        checked?                 @(subscribe [::subs/get ::spec/prices-accepted?])
+        dep-set-total-price      @(subscribe [::subs/deployment-set-total-price])]
+    [ui/Segment {:attached true}
+     (if (seq apps-targets-total-price)
+       [:<>
+        [ui/Table
+         [ui/TableHeader
+          [ui/TableRow
+           [ui/TableHeaderCell (str/capitalize (tr [:application]))]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-unit-price])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:quantity])]
+           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-price])]]]
+         [ui/TableBody
+          (for [{:keys [i targets-count total-price application]} apps-targets-total-price]
+            ^{:key (str "price-" i "-" (:id application))}
+            [ui/TableRow
+             [ui/TableCell [utils-values/AsLink (:path application)
+                            :label (or (:name application)
+                                       (:id application)) :page "apps"]]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money
+                                                   (/ (get-in application [:price :cent-amount-daily]) 100))]
+             [ui/TableCell {:text-align "right"} targets-count]
+             [ui/TableCell {:text-align "right"} (general-utils/format-money (/ total-price 100))]])
+          [ui/TableRow {:active true}
+           [ui/TableCell [:b (str/capitalize (tr [:total]))]]
+           [ui/TableCell]
+           [ui/TableCell]
+           [ui/TableCell {:text-align "right"}
+            [:b (str (tr [:total-price]) ": " (general-utils/format-money (/ dep-set-total-price 100)) "/" (tr [:day]))]]]]]
+        [ui/Form {:size "big"}
+         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-prices])])
+                           :required  true
+                           :checked   checked?
+                           :on-change (ui-callback/checked
+                                        #(dispatch [::events/set
+                                                    ::spec/prices-accepted? %]))}]]]
+       [ui/Message (tr [:free-app])])]))
+
+(defn EulaPrices
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:div
+     [ui/Header {:as :h5 :attached "top"}
+      (@tr [:eula-full])]
+     [EULA]
+     [ui/Header {:as :h5 :attached "top"}
+      (str/capitalize (@tr [:total-price]))]
+     [Prices]]))
+
 (defn StartButton
-  [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        enabled?   @(subscribe [::subs/operation-enabled? "start"])
-        validation (subscribe [::subs/deployment-set-validation])
-        open?      (subscribe [::subs/modal-open? start-modal-id])]
-    [uix/ModalDanger
-     {:on-confirm         #(dispatch [::events/operation
-                                      {:resource-id id
-                                       :operation   "start"}])
-      :trigger            (guarded-menu-item
-                            {:enabled    enabled?
-                             :on-click   (fn [] (dispatch [::events/set-opened-modal start-modal-id]))
-                             :validation @validation}
-                            [icons/PlayIcon]
-                            (str/capitalize (@tr [:start])))
-      :open               @open?
-      :on-close           close-modal
-      :content            [:h3 (depl-set->modal-content deployment-set)]
-      :header             (@tr [:start-deployment-set])
-      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
-      :danger-msg         warn-msg
-      :button-text        (@tr [:start])
-      :with-confirm-step? true}]))
+  [_deployment-set _warn-msg]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        enabled?              (subscribe [::subs/operation-enabled? "start"])
+        validation            (subscribe [::subs/deployment-set-validation])
+        open?                 (subscribe [::subs/modal-open? start-modal-id])
+        eula-prices-accepted? (subscribe [::subs/eula-prices-accepted?])
+        confirmed?            (r/atom false)]
+    (fn [{:keys [id] :as deployment-set} warn-msg]
+      [uix/ModalDanger
+       {:on-confirm         #(dispatch [::events/operation
+                                        {:resource-id id
+                                         :operation   "start"}])
+        :trigger            (guarded-menu-item
+                              {:enabled    @enabled?
+                               :on-click   (fn [] (dispatch [::events/set-opened-modal start-modal-id]))
+                               :validation @validation}
+                              [icons/PlayIcon]
+                              (str/capitalize (@tr [:start])))
+        :open               @open?
+        :on-close           close-modal
+        :content            [:div
+                             [:h3 (depl-set->modal-content deployment-set)]
+                             [EulaPrices]
+                             [ui/Message {:error true}
+                              [ui/MessageHeader {:style {:margin-bottom 10}}
+                               (@tr [:are-you-sure-you-want-to-continue?])]
+                              [ui/MessageContent [ui/Checkbox {:label     warn-msg
+                                                               :checked   @confirmed?
+                                                               :fitted    true
+                                                               :on-change #(swap! confirmed? not)}]]]]
+        :control-confirmed? confirmed?
+        :all-confirmed?     (and @eula-prices-accepted? @confirmed?)
+        :header             (@tr [:start-deployment-set])
+        :button-text        (@tr [:start])
+        :with-confirm-step? true}])))
 
 (def stop-modal-id :modal/stop-deployment-group)
 
@@ -149,30 +254,42 @@
 (def update-modal-id :modal/update-deployment-group)
 
 (defn UpdateButton
-  [{:keys [id] :as deployment-set} warn-msg]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        enabled?   @(subscribe [::subs/operation-enabled? "update"])
-        validation (subscribe [::subs/deployment-set-validation])
-        open?      (subscribe [::subs/modal-open? update-modal-id])]
-    [uix/ModalDanger
-     {:on-confirm         #(dispatch [::events/operation
-                                      {:resource-id id
-                                       :operation   "update"}])
-      :trigger            (guarded-menu-item
-                            {:enabled    enabled?
-                             :on-click   #(dispatch [::events/set-opened-modal update-modal-id])
-                             :validation @validation}
-                            [icons/RedoIcon]
-                            (str/capitalize (@tr [:update])))
-      :open               @open?
-      :on-close           close-modal
-      :content            [:h3 (depl-set->modal-content deployment-set)]
-      :header             (@tr [:update-deployment-set])
-      :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
-      :danger-msg         warn-msg
-      :button-text        (@tr [:update])
-      :modal-action       [:p warn-msg]
-      :with-confirm-step? true}]))
+  [_deployment-set _warn-msg]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        enabled?              (subscribe [::subs/operation-enabled? "update"])
+        validation            (subscribe [::subs/deployment-set-validation])
+        open?                 (subscribe [::subs/modal-open? update-modal-id])
+        eula-prices-accepted? (subscribe [::subs/eula-prices-accepted?])
+        confirmed?            (r/atom false)]
+    (fn [{:keys [id] :as deployment-set} warn-msg]
+      [uix/ModalDanger
+       {:on-confirm         #(dispatch [::events/operation
+                                        {:resource-id id
+                                         :operation   "update"}])
+        :trigger            (guarded-menu-item
+                              {:enabled    @enabled?
+                               :on-click   #(dispatch [::events/set-opened-modal update-modal-id])
+                               :validation @validation}
+                              [icons/RedoIcon]
+                              (str/capitalize (@tr [:update])))
+        :open               @open?
+        :on-close           close-modal
+        :content            [:div
+                             [:h3 (depl-set->modal-content deployment-set)]
+                             [EulaPrices]
+                             [ui/Message {:error true}
+                              [ui/MessageHeader {:style {:margin-bottom 10}}
+                               (@tr [:are-you-sure-you-want-to-continue?])]
+                              [ui/MessageContent [ui/Checkbox {:label     warn-msg
+                                                               :checked   @confirmed?
+                                                               :fitted    true
+                                                               :on-change #(swap! confirmed? not)}]]]]
+        :control-confirmed? confirmed?
+        :all-confirmed?     (and @eula-prices-accepted? @confirmed?)
+        :header             (@tr [:update-deployment-set])
+        :button-text        (@tr [:update])
+        :modal-action       [:p warn-msg]
+        :with-confirm-step? true}])))
 
 (def cancel-modal-id :modal/cancel-deployment-group)
 
@@ -290,7 +407,7 @@
         [components/StickyBar
          [components/ResponsiveMenuBar
           [^{:key "save"}
-           [SaveButton {:creating? creating?
+           [SaveButton {:creating?      creating?
                         :deployment-set @deployment-set}]
            ^{:key "start"}
            [StartButton @deployment-set (warn-msg-fn "start")]
@@ -1279,99 +1396,6 @@
     [ConfigureAppsSetWrapper
      [ConfigureApps 0 @apps creating?]
      creating?]))
-
-(defn BoldLabel
-  [txt]
-  [:label [:b txt]])
-
-(defn EULA
-  []
-  (let [tr       @(subscribe [::i18n-subs/tr])
-        licenses @(subscribe [::subs/deployment-set-licenses])
-        checked? @(subscribe [::subs/get ::spec/licenses-accepted?])]
-    [ui/Segment {:attached true}
-     (if (seq licenses)
-       [:<>
-        [ui/ListSA {:divided true}
-         (for [[{:keys [name description url] :as license} sets-apps-targets] licenses]
-           ^{:key (str "accept-eula-" license)}
-           [ui/ListItem
-            [ui/ListIcon {:name "book"}]
-            [ui/ListContent
-             [ui/ListHeader {:as     :a
-                             :target "_blank"
-                             :href   url
-                             } name]
-             (when description
-               [ui/ListDescription description])
-             [ui/ListList
-              (for [{i            :i
-                     {:keys [id]} :application} sets-apps-targets]
-                ^{:key (str "license-" i "-" id)}
-                [module-plugin/ModuleNameIcon
-                 {:db-path [::spec/apps-sets i]
-                  :href    id}])]]])]
-        [ui/Form
-         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-eulas])])
-                           :required  true
-                           :checked   checked?
-                           :on-change (ui-callback/checked
-                                        #(dispatch [::events/set
-                                                    ::spec/licenses-accepted? %]))}]]]
-       [ui/Message (tr [:eula-not-defined])])]))
-
-(defn Prices
-  []
-  (let [tr                       @(subscribe [::i18n-subs/tr])
-        apps-targets-total-price @(subscribe [::subs/deployment-set-apps-targets-total-price])
-        checked?                 @(subscribe [::subs/get ::spec/prices-accepted?])
-        dep-set-total-price      @(subscribe [::subs/deployment-set-total-price])]
-    [ui/Segment {:attached true}
-     (if (seq apps-targets-total-price)
-       [:<>
-        [ui/Table
-         [ui/TableHeader
-          [ui/TableRow
-           [ui/TableHeaderCell (str/capitalize (tr [:application]))]
-           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-unit-price])]
-           [ui/TableHeaderCell {:text-align "right"} (tr [:quantity])]
-           [ui/TableHeaderCell {:text-align "right"} (tr [:daily-price])]]]
-         [ui/TableBody
-          (for [{:keys [i targets-count total-price application]} apps-targets-total-price]
-            ^{:key (str "price-" i "-" (:id application))}
-            [ui/TableRow
-             [ui/TableCell [utils-values/AsLink (:path application)
-                            :label (or (:name application)
-                                       (:id application)) :page "apps"]]
-             [ui/TableCell {:text-align "right"} (general-utils/format-money
-                                                   (/ (get-in application [:price :cent-amount-daily]) 100))]
-             [ui/TableCell {:text-align "right"} targets-count]
-             [ui/TableCell {:text-align "right"} (general-utils/format-money (/ total-price 100))]])
-          [ui/TableRow {:active true}
-           [ui/TableCell [:b (str/capitalize (tr [:total]))]]
-           [ui/TableCell]
-           [ui/TableCell]
-           [ui/TableCell {:text-align "right"}
-            [:b (str (tr [:total-price]) ": " (general-utils/format-money (/ dep-set-total-price 100)) "/" (tr [:day]))]]]]]
-        [ui/Form {:size "big"}
-         [ui/FormCheckbox {:label     (r/as-element [BoldLabel (tr [:accept-prices])])
-                           :required  true
-                           :checked   checked?
-                           :on-change (ui-callback/checked
-                                        #(dispatch [::events/set
-                                                    ::spec/prices-accepted? %]))}]]]
-       [ui/Message (tr [:free-app])])]))
-
-(defn EulaPrices
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [:div
-     [ui/Header {:as :h5 :attached "top"}
-      (@tr [:eula-full])]
-     [EULA]
-     [ui/Header {:as :h5 :attached "top"}
-      (str/capitalize (@tr [:total-price]))]
-     [Prices]]))
 
 (defn SelectTargetsConfigureSets
   []

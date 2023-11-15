@@ -608,3 +608,24 @@
   :<- [::all-apps-by-id]
   (fn [apps-by-id [_ id]]
     (get apps-by-id id)))
+
+(reg-sub
+  ::licenses-accepted?
+  :<- [::deployment-set-licenses]
+  :<- [::get ::spec/licenses-accepted?]
+  (fn [[licenses licenses-accepted?]]
+    (or (empty? licenses) licenses-accepted?)))
+
+(reg-sub
+  ::prices-accepted?
+  :<- [::deployment-set-apps-targets-total-price]
+  :<- [::get ::spec/prices-accepted?]
+  (fn [[apps-targets-total-price prices-accepted?]]
+    (or (empty? apps-targets-total-price) prices-accepted?)))
+
+(reg-sub
+  ::eula-prices-accepted?
+  :<- [::licenses-accepted?]
+  :<- [::prices-accepted?]
+  (fn [[licences-accepted? prices-accepted?]]
+    (and licences-accepted? prices-accepted?)))

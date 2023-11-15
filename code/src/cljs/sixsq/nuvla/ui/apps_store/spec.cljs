@@ -4,6 +4,8 @@
             [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
+(def virtual-apps-set-parent-path "apps-sets")
+
 (s/def ::modules any?)
 (s/def ::tab any?)
 (s/def ::pagination-appstore any?)

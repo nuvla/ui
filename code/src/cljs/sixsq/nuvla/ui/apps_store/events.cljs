@@ -41,13 +41,15 @@
        [_ active-tab
         {:keys [order-by
                 pagination-db-path
-                external-filter]}]]
+                external-filter
+                additional-cb-fn]
+         :or   {additional-cb-fn #()}}]]
     (-> {:db (assoc db ::apps-spec/module nil)
          ::cimi-api-fx/search
          [:module
           (->> {:orderby (or order-by "created:desc")
                 :filter  (general-utils/join-and
-                           "parent-path!='apps-sets'"
+                           (str "parent-path!='" spec/virtual-apps-set-parent-path "'")
                            external-filter
                            subtypes-apps-or-filter
                            (case active-tab
@@ -59,8 +61,10 @@
                            (full-text-search-plugin/filter-text
                              db [::spec/modules-search]))}
                (pagination-plugin/first-last-params db (or pagination-db-path
-                                                           [(spec/page-keys->pagination-db-path active-tab)])))
-          #(dispatch [::set-modules %])]})))
+                                                         [(spec/page-keys->pagination-db-path active-tab)])))
+          #(do
+             (dispatch [::set-modules %])
+             (additional-cb-fn %))]})))
 
 (reg-event-fx
   ::get-modules-summary

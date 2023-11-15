@@ -40,6 +40,7 @@
 (s/def ::opened-modal (s/nilable keyword?))
 
 (s/def ::apps-edited? boolean?)
+(s/def ::listed-apps-by-id any?)
 
 (s/def ::edge-picker-edges any?)
 (s/def ::edge-picker-full-text-search (s/nilable string?))
@@ -76,7 +77,7 @@
    ::edges-pagination          pagination-default
    ::pagination-apps-picker    (pagination-plugin/build-spec
                                  :default-items-per-page 16)
-   ::edge-picker-pagination   pagination-default
+   ::edge-picker-pagination    pagination-default
    ::opened-modal              nil
    ::apps-edited?              false
    ::fleet-filter              nil

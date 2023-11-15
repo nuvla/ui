@@ -7,12 +7,12 @@
             [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :refer [AuthorVendorForModule]]
-            [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
             [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+            [sixsq.nuvla.ui.deployments.utils :as deployment-utils]
             [sixsq.nuvla.ui.deployments.views :as dv]
             [sixsq.nuvla.ui.edges.spec :as edges-spec]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
@@ -62,11 +62,12 @@
                  (dissoc ops-status :status))))
 
 (defn edit-not-allowed-msg
-  [TR can-edit-data? edit-op-allowed? edit-not-allowed-in-state?]
-  (when (and can-edit-data? (not edit-op-allowed?))
-    (TR (if edit-not-allowed-in-state?
-          [:dep-group-edit-not-allowed-in-state]
-          [:dep-group-edit-not-allowed]))))
+  [{:keys [TR can-edit-data? edit-op-allowed? edit-not-allowed-in-state? is-controlled-by-apps-set?]}]
+  (when (and can-edit-data? (or (not edit-op-allowed?) is-controlled-by-apps-set?))
+    (TR (cond
+          is-controlled-by-apps-set? [:dep-group-app-version-changes-not-allowed]
+          edit-not-allowed-in-state? [:dep-group-edit-not-allowed-in-state]
+          :else [:dep-group-edit-not-allowed]))))
 
 (defn- depl-set->modal-content
   [{:keys [name id description]}]
@@ -117,8 +118,7 @@
       :danger-msg-header  (@tr [:are-you-sure-you-want-to-continue?])
       :danger-msg         warn-msg
       :button-text        (@tr [:start])
-      :with-confirm-step? true}]
-    ))
+      :with-confirm-step? true}]))
 
 (def stop-modal-id :modal/stop-deployment-group)
 
@@ -255,9 +255,10 @@
 
 (defn SaveButton
   [{:keys [creating?]}]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        save-enabled? (subscribe [::subs/save-enabled? creating?])
-        validation    (subscribe [::subs/deployment-set-validation])]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        save-enabled?              (subscribe [::subs/save-enabled? creating?])
+        validation                 (subscribe [::subs/deployment-set-validation])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     (fn [{:keys [deployment-set]}]
       [ui/Popup
        {:trigger
@@ -269,7 +270,7 @@
              :disabled (not @save-enabled?)
              :class    (when @save-enabled? "primary-menu-item")
              :on-click (if creating?
-                         #(dispatch [::events/create])
+                         #(dispatch [::events/create @is-controlled-by-apps-set?])
                          (if (:valid? @validation)
                            #(dispatch [::events/do-edit {:deployment-set deployment-set
                                                          :success-msg    (@tr [:updated-successfully])}])
@@ -392,6 +393,41 @@
            [ui/TableCell (str/capitalize (@tr [:updated]))]
            [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]])]]]))
 
+(defn AppsInAppsSetsCard
+  [ids]
+  (let [apps (subscribe [::subs/select-apps-by-id ids])]
+    [:div
+     [:div
+      "This is an "
+      [:span {:style {:font-weight :bold}} "Application Set"]
+      " containing these apps:"]
+     [:ul
+      (doall
+        (for [id ids
+              :let [app (get @apps id)]]
+          ^{:key id}
+          [:li
+           (:name app)]))]]))
+
+(defn AppsPickerAppsSetsCard
+  [{:keys [subtype name id desc-summary published target
+           show-published-tick? detail-href on-click button-ops]}]
+  (let [apps-set (subscribe [::subs/app-by-id id])]
+    (fn []
+      [uix/Card
+       {:header        [:<>
+                        [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
+                        (or name id)]
+        :description   (into
+                         [:div
+                          [AppsInAppsSetsCard (events/apps-set->app-ids @apps-set)]
+                          desc-summary])
+        :corner-button (when (and published show-published-tick?)
+                         [ui/Label {:corner true} [icons/Icon {:name apps-utils/publish-icon}]])
+        :href          detail-href
+        :on-click      on-click
+        :button        [uix/Button button-ops]
+        :target        target}])))
 
 (defn AppPickerCard
   [{:keys [id name description path subtype logo-url price published versions tags] :as app}]
@@ -401,11 +437,12 @@
         detail-href    (pathify [(name->href routes/apps) path (when (true? published) (str "?version=" module-index))])
         follow-trial?  (get price :follow-customer-trial false)
         button-icon    (if (and price (not follow-trial?)) :cart icons/i-rocket)
+
         deploy-price   (str (@tr [(if follow-trial?
                                     :free-trial-and-then
                                     :deploy-for)])
-                            (format-money (/ (:cent-amount-daily price) 100)) "/"
-                            (@tr [:day]))
+                         (format-money (/ (:cent-amount-daily price) 100)) "/"
+                         (@tr [:day]))
         button-content "Add to selection"
         button-ops     {:fluid   true
                         :color   "blue"
@@ -413,31 +450,36 @@
                         :content button-content}
         desc-summary   (-> description
                            utils-values/markdown->summary
-                           (general-utils/truncate 60))]
-    [apps-store-views/ModuleCardView
-     {:logo-url     logo-url
-      :subtype      subtype
-      :name         name
-      :id           id
-      :desc-summary [:<>
-                     [:p desc-summary]
-                     [:div
-                      [:p (str "Project: " (-> (or (:path app) "")
-                                               (str/split "/")
-                                               first))]
-                      [:p "Vendor: " [AuthorVendorForModule app :span]]
-                      [:p (str "Price: " deploy-price)]]]
-      :tags         tags
-      :published    published
-      :detail-href  detail-href
-      :button-ops   button-ops
-      :target       :_blank
-      :on-click     (fn [event]
-                      (dispatch [::events/add-app-from-picker app])
-                      (close-modal)
-                      (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
-                      (.preventDefault event)
-                      (.stopPropagation event))}]))
+                           (general-utils/truncate 60))
+        is-apps-set?   (= subtype
+                          apps-utils/subtype-applications-sets)
+        props          {:logo-url     logo-url
+                        :subtype      subtype
+                        :name         name
+                        :id           id
+                        :desc-summary [:<>
+                                       [:p desc-summary]
+                                       [:div
+                                        [:p (str "Project: " (-> (or (:path app) "")
+                                                                 (str/split "/")
+                                                                 first))]
+                                        [:p "Vendor: " [AuthorVendorForModule app :span]]
+                                        (when-not is-apps-set? [:p (str "Price: " deploy-price)])]]
+                        :tags         tags
+                        :published    published
+                        :detail-href  detail-href
+                        :button-ops   button-ops
+                        :on-click     (fn [event]
+                                        (dispatch [::events/add-app-from-picker app])
+                                        (close-modal)
+                                        (dispatch [::full-text-search-plugin/search [::apps-store-spec/modules-search]])
+                                        (.preventDefault event)
+                                        (.stopPropagation event))}]
+    (if is-apps-set?
+      [AppsPickerAppsSetsCard
+       props]
+      [apps-store-views/ModuleCardView
+       props])))
 
 (defn AddButton
   [{:keys [modal-id enabled tooltip] :or {enabled true}}]
@@ -473,7 +515,10 @@
                            (dispatch [::events/set-opened-modal id]))
                :icon     icons/i-pencil
                :style    {:align-self "center"}}]]
-      (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))))
+      (edit-not-allowed-msg {:TR                         @tr
+                             :can-edit-data?             @can-edit-data?
+                             :edit-op-allowed?           @edit-op-allowed?
+                             :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))))
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -481,26 +526,25 @@
     (fn []
       ^{:key tab-key}
       [ui/TabPane
-       [ui/Menu {:secondary true}
-        [ui/MenuMenu {:position "left"}
-         [full-text-search-plugin/FullTextSearch
-          {:db-path      [::apps-store-spec/modules-search]
-           :change-event [::pagination-plugin/change-page [pagination-db-path] 1]}]]]
-       [apps-store-views/ModulesCardsGroupView
-        (for [{:keys [id] :as module} (get @modules :resources [])]
-          ^{:key id}
-          [AppPickerCard module])]
-       [pagination-plugin/Pagination
-        {:db-path      [pagination-db-path]
-         :total-items  (:count @modules)
-         :change-event [::events/fetch-app-picker-apps pagination-db-path]}]])))
+       [:div {:style {:display :flex}}
+        [full-text-search-plugin/FullTextSearch
+         {:db-path      [::apps-store-spec/modules-search]
+          :change-event [::pagination-plugin/change-page [pagination-db-path] 1]}]]
+       [:div {:style {:margin-top "1rem"}}
+        [apps-store-views/ModulesCardsGroupView
+         (for [{:keys [id] :as module} (get @modules :resources [])]
+           ^{:key id}
+           [AppPickerCard module])]
+        [pagination-plugin/Pagination
+         {:db-path      [pagination-db-path]
+          :total-items  (:count @modules)
+          :change-event [::events/fetch-app-picker-apps pagination-db-path]}]]])))
 
 (defn AppsPickerModal
   [creating?]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        open?   (subscribe [::subs/modal-open? events/apps-picker-modal-id])
-        tab-key apps-store-spec/allapps-key]
-    (dispatch [::events/fetch-app-picker-apps ::spec/pagination-apps-picker])
+  (let [tr       (subscribe [::i18n-subs/tr])
+        open?    (subscribe [::subs/modal-open? events/apps-picker-modal-id])
+        tab-key  apps-store-spec/allapps-key]
     (fn []
       [ui/Modal {:size       :fullscreen
                  :open       @open?
@@ -515,11 +559,61 @@
 (defn- create-app-config-query-key [i id]
   (keyword (str "configure-set-" i "-app-" id)))
 
+(defn ModuleVersion
+  [label created]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale (subscribe [::i18n-subs/locale])]
+    [ui/Popup
+     {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
+                                      " "
+                                      (time/ago (time/parse-iso8601 created) @locale))])
+      :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}]))
+
+(defn LinkToModuleDetails
+  [trigger]
+  [ui/Popup
+   {:content (r/as-element [:p "Open module details"])
+    :trigger (r/as-element [:span trigger])}])
+
+(defn AppsSetHeader
+  [creating?]
+  (let [apps-set-id                (subscribe [::subs/apps-set-id])
+        apps-set-name              (subscribe [::subs/apps-set-name])
+        apps-set-version           (subscribe [::subs/apps-set-version])
+        apps-set-created           (subscribe [::subs/apps-set-created])
+        name-component             [:p {:style {:margin 0}} @apps-set-name]]
+    [:div
+     [:div {:style {:display :flex :font-size :large :justify-content :space-between}}
+      (if creating?
+        name-component
+        [:a
+         {:href     "#"
+          :on-click #(dispatch [::events/navigate-internal
+                                {:query-params {:deployment-sets-detail-tab :apps}}])
+          :children [icons/StoreIcon]
+
+          :target   :_self}
+         [:div {:style {:display :flex :align-items :center}}
+          name-component
+          [:span {:style {:margin-left "0.5rem"}}
+           [icons/GearIcon]]]])
+      [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
+      [LinkToModuleDetails [module-plugin/LinkToApp
+                            {:db-path  [::spec/apps-sets 0 :apps-set]
+                             :href     @apps-set-id
+                             :children [icons/ArrowRightFromBracketIcon]
+                             :target   :_self}]]
+      (when creating?
+       [RemoveButton {:enabled  true
+                      :on-click #(dispatch [::events/remove-apps-set])}])]
+
+     [:div "Applications Set includes following apps:"]]))
+
 (defn- AppsOverviewTable
   [creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
-        locale                     (subscribe [::i18n-subs/locale])
         apps-row                   (subscribe [::subs/apps-row-data])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
         apps-validation-error?     (subscribe [::subs/apps-validation-error?])
         can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
@@ -530,82 +624,93 @@
         [:<>
          (when-not no-apps?
            [:div {:style {:height "100%"}}
-            [Table {:columns
-                    (into
-                      (vec
-                        (map-indexed
-                          (fn [i k]
-                            {:field-key      k
-                             :header-content (-> (or (@tr [(k->tr-k k)]) k)
-                                                 name
-                                                 str/capitalize)
-                             :cell           (case k
-                                               :app
-                                               (fn [{:keys [cell-data row-data]}]
-                                                 [:<>
-                                                  [ui/Popup
-                                                   {:content (r/as-element [:p "Configure app"])
-                                                    :trigger
-                                                    (r/as-element
-                                                      [:a
-                                                       {:href     "#"
-                                                        :on-click #(dispatch [::events/navigate-internal
-                                                                              {:query-params
-                                                                               (merge
-                                                                                 {(routes-utils/db-path->query-param-key [::apps-config])
-                                                                                  (create-app-config-query-key i (:href row-data))}
-                                                                                 {:deployment-sets-detail-tab :apps})}])
-                                                        :children [icons/StoreIcon]
-                                                        :target   :_self}
-                                                       cell-data
-                                                       [:span {:style {:margin-left "0.5rem"}}
-                                                        [icons/GearIcon]]])}]])
-                                               :version
-                                               (fn [{{:keys [label created]} :cell-data}]
-                                                 [ui/Popup
-                                                  {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
-                                                                                   " "
-                                                                                   (time/ago (time/parse-iso8601 created) @locale))])
-                                                   :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}])
-                                               nil)})
-                          (keys (dissoc (first @apps-row) :id :idx :href))))
-                      (remove nil?
-                              [{:field-key      :details
-                                :header-content (general-utils/capitalize-words (@tr [:details]))
-                                :cell           (fn [{:keys [row-data]}]
-                                                  [ui/Popup
-                                                   {:content (r/as-element [:p "Open app details"])
-                                                    :trigger (r/as-element [:span
-                                                                            [module-plugin/LinkToApp
-                                                                             {:db-path  [::spec/apps-sets (:idx row-data)]
-                                                                              :href     (:href row-data)
-                                                                              :children [icons/ArrowRightFromBracketIcon]
-                                                                              :target   :_self}]])}])}
-                               (when @can-edit-data?
-                                 {:field-key :remove
-                                  :cell      (fn [{:keys [row-data]}]
-                                               [RemoveButton {:enabled  @edit-op-allowed?
-                                                              :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
-                                                              :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
-                    :rows @apps-row}]])
-         (when @can-edit-data?
-           [:div {:style {:display :flex :justify-content :center :align-items :center}}
-            [:<>
-             [AppsPickerModal creating?]
-             [:div {:style {:margin-top   "1rem"
-                            :margin-bottm "1rem"}}
-              [AddButton {:modal-id events/apps-picker-modal-id
-                          :enabled  @edit-op-allowed?
-                          :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]]]])
-         (when @can-edit-data?
-           [:div {:style {:margin-top   "1rem"
-                          :margin-left  "auto"
-                          :margin-right "auto"}}
-            (if @apps-validation-error?
-              [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
-              (if no-apps?
-                (@tr [:add-your-first-app])
-                (@tr [:add-app])))])]))))
+            (when @is-controlled-by-apps-set?
+              [AppsSetHeader creating?])
+            [:div {:style {:margin-top "8px"}}
+             [Table {:columns
+                     (into
+                       (vec
+                         (map-indexed
+                           (fn [i k]
+                             {:field-key      k
+                              :header-content (-> (or (@tr [(k->tr-k k)]) k)
+                                                  name
+                                                  str/capitalize)
+                              :cell           (case k
+                                                :app
+                                                (fn [{:keys [cell-data row-data]}]
+                                                  [:<>
+                                                   [ui/Popup
+                                                    {:content (r/as-element [:p "Configure app"])
+                                                     :trigger
+                                                     (r/as-element
+                                                       (if creating?
+                                                         [:span cell-data]
+                                                         [:a
+                                                          {:href     "#"
+                                                           :on-click #(dispatch [::events/navigate-internal
+                                                                                 {:query-params
+                                                                                  (merge
+                                                                                    {(routes-utils/db-path->query-param-key [::apps-config])
+                                                                                     (create-app-config-query-key i (:href row-data))}
+                                                                                    {:deployment-sets-detail-tab :apps})}])
+                                                           :children [icons/StoreIcon]
+                                                           :target   :_self}
+                                                          cell-data
+                                                          [:span {:style {:margin-left "0.5rem"}}
+                                                           [icons/GearIcon]]]))}]])
+                                                :version
+                                                (fn [{{:keys [label created]} :cell-data}]
+                                                  [ModuleVersion label created])
+                                                nil)})
+                           (keys (dissoc (first @apps-row) :id :idx :href :module))))
+                       (remove nil?
+                               [{:field-key      :details
+                                 :header-content (general-utils/capitalize-words (@tr [:details]))
+                                 :cell           (fn [{:keys [row-data]}]
+                                                   [LinkToModuleDetails
+                                                    [module-plugin/LinkToAppView
+                                                     {:version-id (deployment-utils/get-version-number
+                                                                    (:versions (:module row-data))
+                                                                    (:content (:module row-data)))
+                                                      :path       (:path (:module row-data))
+                                                      :target     "_self"}
+                                                     [icons/ArrowRightFromBracketIcon]]])}
+                                (when @can-edit-data?
+                                  {:field-key :remove
+                                   :cell      (fn [{:keys [row-data]}]
+                                                [RemoveButton {:enabled  (and (not @is-controlled-by-apps-set?) @edit-op-allowed?)
+                                                               :tooltip  (if @is-controlled-by-apps-set?
+                                                                           "To remove single applications from your deployment group, you have to remove it from the controlling application set."
+                                                                           (edit-not-allowed-msg
+                                                                             {:TR                         @tr
+                                                                              :can-edit-data?             @can-edit-data?
+                                                                              :edit-op-allowed?           @edit-op-allowed?
+                                                                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
+                                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
+                     :rows @apps-row}]]])
+         (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
+           [:<>
+            [:div {:style {:display :flex :justify-content :center :align-items :center}}
+             [:<>
+              [AppsPickerModal creating?]
+              [:div {:style {:margin-top   "1rem"
+                             :margin-bottm "1rem"}}
+               [AddButton {:modal-id events/apps-picker-modal-id
+                           :enabled  @edit-op-allowed?
+                           :tooltip  (edit-not-allowed-msg
+                                       {:TR                         @tr
+                                        :can-edit-data?             @can-edit-data?
+                                        :edit-op-allowed?           @edit-op-allowed?
+                                        :edit-not-allowed-in-state? @edit-not-allowed-in-state?})}]]]]
+            [:div {:style {:margin-top   "1rem"
+                           :margin-left  "auto"
+                           :margin-right "auto"}}
+             (if @apps-validation-error?
+               [:span {:style {:color :red}} (@tr [:select-at-least-one-app])]
+               (if no-apps?
+                 (@tr [:add-your-first-app])
+                 (@tr [:add-app])))]])]))))
 
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
@@ -860,7 +965,11 @@
         [:<>
          [AddButton {:modal-id events/edges-picker-modal-id
                      :enabled  @edit-op-allowed?
-                     :tooltip  (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)}]
+                     :tooltip  (edit-not-allowed-msg
+                                 {:TR                         @tr
+                                  :can-edit-data?             @can-edit-data?
+                                  :edit-op-allowed?           @edit-op-allowed?
+                                  :edit-not-allowed-in-state? @edit-not-allowed-in-state?})}]
          [:div {:style {:margin-top "1rem"}}
           (if (pos? (:total edges-stats))
             (@tr [:add-edges])
@@ -872,7 +981,8 @@
   [uuid creating?]
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set (subscribe [::subs/deployment-set])
-        edges-stats    (subscribe [::subs/edges-summary-stats])]
+        edges-stats    (subscribe [::subs/edges-summary-stats])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])]
         [ui/TabPane
@@ -885,9 +995,8 @@
            [vc/TitledCard
             {:class :nuvla-apps
              :icon  icons/i-layer-group
-             :label (str/capitalize (@tr [:apps]))}
+             :label (if @is-controlled-by-apps-set? "Application Set" (str/capitalize  (@tr [:apps])))}
             [AppsOverviewTable creating?]]]
-
           [ui/GridColumn {:stretched true}
            [vc/TitledCard
             {:class :nuvla-edges
@@ -1060,16 +1169,21 @@
   (let [tr                         (subscribe [::i18n-subs/tr])
         can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
-        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     [uix/Accordion
      (with-tooltip
        [:div [module-plugin/ModuleVersions
               {:db-path      [::spec/apps-sets i]
                :href         module-id
-               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
+               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?) @is-controlled-by-apps-set?)
                :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
-     :label (@tr [:select-version])]))
+       (edit-not-allowed-msg {:TR                         @tr
+                              :can-edit-data?             @can-edit-data?
+                              :edit-op-allowed?           @edit-op-allowed?
+                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?
+                              :is-controlled-by-apps-set? @is-controlled-by-apps-set?}))
+     :label (if @is-controlled-by-apps-set? (str/capitalize (@tr [:version])) (@tr [:select-version]))]))
 
 (defn EnvVariablesApp
   [i module-id creating?]
@@ -1084,7 +1198,10 @@
                :href         module-id
                :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
                :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?))
+       (edit-not-allowed-msg {:TR                         @tr
+                              :can-edit-data?             @can-edit-data?
+                              :edit-op-allowed?           @edit-op-allowed?
+                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
      :label (@tr [:env-variables])]))
 
 
@@ -1096,6 +1213,15 @@
       [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
        (or (:name @app) (:id @app))])))
 
+(defn LinkToModule
+  [db-path module-id dictionary-key]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [module-plugin/LinkToApp
+     {:db-path  db-path
+      :href     module-id
+      :children [:<>
+                 [ui/Icon {:class icons/i-link}]
+                 (@tr dictionary-key)]}]))
 
 (defn ConfigureApps
   [i applications creating?]
@@ -1112,17 +1238,47 @@
                                   :render   #(r/as-element
                                                [ui/TabPane
                                                 [ui/Popup {:trigger (r/as-element
-                                                                      [:span
-                                                                       [module-plugin/LinkToApp
-                                                                        {:db-path  [::spec/apps-sets i]
-                                                                         :href     id
-                                                                         :children [:<>
-                                                                                    [ui/Icon {:class icons/i-link}]
-                                                                                    "Go to app"]}]])
+                                                                      [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
                                                            :content "Open application in a new window"}]
                                                 [ModuleVersionsApp i id creating?]
                                                 [EnvVariablesApp i id creating?]])})
                                applications)}])
+
+(defn ConfigureAppsSetWrapper
+  [configure-apps creating?]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
+        apps-set                   (subscribe [::subs/apps-set])]
+    [:div
+     (when @is-controlled-by-apps-set?
+       [:div {:style {:margin-bottom "5px"}}
+        [:h2 (:name @apps-set)]
+        [ui/Popup {:trigger (r/as-element
+                              [LinkToModule [::spec/apps-sets 0 :apps-set] (:id @apps-set) [:go-to-app-set]])
+                   :content "Open application in a new window"}]
+        [uix/Accordion
+         (with-tooltip
+           [:div [module-plugin/ModuleVersions
+                  {:db-path      [::spec/apps-sets 0 :apps-set]
+                   :href         (:id @apps-set)
+                   :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
+                   :change-event [::events/change-apps-set-version]}]]
+           (edit-not-allowed-msg {:TR                         @tr
+                                  :can-edit-data?             @can-edit-data?
+                                  :edit-op-allowed?           @edit-op-allowed?
+                                  :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
+         :label (@tr [:select-version])]])
+     configure-apps]))
+
+(defn ConfigureAppsSet
+  [creating?]
+  (let [apps (subscribe [::subs/apps-row-data])]
+    [ConfigureAppsSetWrapper
+     [ConfigureApps 0 @apps creating?]
+     creating?]))
 
 (defn BoldLabel
   [txt]
@@ -1398,7 +1554,11 @@
            :sort-config {:db-path     ::spec/edges-ordering
                          :fetch-event [::events/get-edges]}}
           (and @can-edit-data? (not @fleet-filter))
-          (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg @tr @can-edit-data? @edit-op-allowed? @edit-not-allowed-in-state?)
+          (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg
+                                                        {:TR                         @tr
+                                                         :can-edit-data?             @can-edit-data?
+                                                         :edit-op-allowed?           @edit-op-allowed?
+                                                         :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
                                  :bulk-actions        [{:event (fn [select-data]
                                                                  (dispatch [::events/remove-edges select-data]))
                                                         :name  "Remove edges"
@@ -1446,7 +1606,6 @@
   (let [tr             @(subscribe [::i18n-subs/tr])
         deployment-set (subscribe [::subs/deployment-set])
         apps-sets      (subscribe [::subs/applications-sets])
-        apps           (subscribe [::subs/apps-row-data])
         edges          (subscribe [::subs/all-edges-ids])
         depl-all       (subscribe [::deployments-subs/deployments-summary-all])]
     (fn []
@@ -1472,9 +1631,8 @@
                                                          {:style {:color (if error? utils-forms/dark-red "black")}}
                                                          tab-title]))))
                                                 :icon     icons/i-gear
-                                                :disabled (empty? @apps-sets)}
-                                     :render   #(r/as-element
-                                                  [ConfigureApps 0 @apps creating?])}
+                                                :disabled (or creating? (empty? @apps-sets))}
+                                     :render   #(r/as-element [ConfigureAppsSet creating?])}
                                     {:menuItem {:key      :edges
                                                 :content
                                                 (let [tab-title (str/capitalize (tr [:edges]))]

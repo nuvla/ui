@@ -4,6 +4,7 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.acl.utils :as acl-utils]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
+            [sixsq.nuvla.ui.apps-store.spec :refer [virtual-apps-set-parent-path]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
@@ -127,8 +128,20 @@
   (get-in db [::spec/module-applications-sets :content :applications-sets]))
 
 (reg-sub
+  ::apps-set
+  :-> ::spec/module-applications-sets)
+
+(reg-sub
   ::applications-sets
-  :-> applications-sets)
+  :<- [::apps-set]
+  (fn [apps-set]
+    (get-in apps-set [:content :applications-sets])))
+
+(reg-sub
+  ::is-controlled-by-apps-set?
+  :<- [::apps-set]
+  (fn [apps-set]
+    (utils/is-controlled-by-apps-set apps-set)))
 
 (reg-sub
   ::applications
@@ -172,7 +185,8 @@
    :href    (:id application)
    :app     (:name application)
    :version {:label   (str "v" (get-app-version-no application))
-             :created (-> application :content :created)}})
+             :created (-> application :content :created)}
+   :module  application})
 
 
 (reg-sub
@@ -302,12 +316,45 @@
 (reg-sub
   ::apps-creation-row-data
   :<- [::apps-creation]
-  (fn [apps]
-    (map
-      (fn [app]
-        (app->app-row-data {:i           0
-                            :application app}))
-      apps)))
+  :<- [::apps-set]
+  (fn [[apps apps-set]]
+    (let [module-id->version (->> apps-set
+                                  :content
+                                  :applications-sets
+                                  first
+                                  :applications
+                                  (map (juxt :id (comp int :version)))
+                                  (into {}))]
+      (map
+        (fn [app]
+          (app->app-row-data {:i           0
+                              :application (assoc-in app [:content :id] (:href (some->> (module-id->version (:id app))
+                                                                                        (nth (:versions app)))))}))
+        apps))))
+
+(reg-sub
+  ::apps-set-id
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:id apps-set)))
+
+(reg-sub
+  ::apps-set-name
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:name apps-set)))
+
+(reg-sub
+  ::apps-set-version
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:version apps-set)))
+
+(reg-sub
+  ::apps-set-created
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:created apps-set)))
 
 (reg-sub
   ::apps-edited?
@@ -545,3 +592,19 @@
 (reg-sub
   ::state-selector
   :-> ::spec/edge-picker-state-selector)
+
+(reg-sub
+  ::all-apps-by-id
+  :-> ::spec/listed-apps-by-id)
+
+(reg-sub
+  ::select-apps-by-id
+  :<- [::all-apps-by-id]
+  (fn [apps-by-id [_ ids]]
+    (select-keys apps-by-id ids)))
+
+(reg-sub
+  ::app-by-id
+  :<- [::all-apps-by-id]
+  (fn [apps-by-id [_ id]]
+    (get apps-by-id id)))

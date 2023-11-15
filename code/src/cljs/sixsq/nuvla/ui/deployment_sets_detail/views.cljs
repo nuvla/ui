@@ -7,12 +7,12 @@
             [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.apps.views-detail :refer [AuthorVendorForModule]]
-            [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
             [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+            [sixsq.nuvla.ui.deployments.utils :as deployment-utils]
             [sixsq.nuvla.ui.deployments.views :as dv]
             [sixsq.nuvla.ui.edges.spec :as edges-spec]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
@@ -570,15 +570,10 @@
       :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}]))
 
 (defn LinkToModuleDetails
-  [db-path href]
+  [trigger]
   [ui/Popup
    {:content (r/as-element [:p "Open module details"])
-    :trigger (r/as-element [:span
-                            [module-plugin/LinkToApp
-                             {:db-path  db-path
-                              :href     href
-                              :children [icons/ArrowRightFromBracketIcon]
-                              :target   :_self}]])}])
+    :trigger (r/as-element [:span trigger])}])
 
 (defn AppsSetHeader
   [creating?]
@@ -603,7 +598,11 @@
           [:span {:style {:margin-left "0.5rem"}}
            [icons/GearIcon]]]])
       [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
-      [LinkToModuleDetails [::spec/apps-sets 0 :apps-set] @apps-set-id]
+      [LinkToModuleDetails [module-plugin/LinkToApp
+                            {:db-path  [::spec/apps-sets 0 :apps-set]
+                             :href     @apps-set-id
+                             :children [icons/ArrowRightFromBracketIcon]
+                             :target   :_self}]]
       (when creating?
        [RemoveButton {:enabled  true
                       :on-click #(dispatch [::events/remove-apps-set])}])]
@@ -664,12 +663,19 @@
                                                 (fn [{{:keys [label created]} :cell-data}]
                                                   [ModuleVersion label created])
                                                 nil)})
-                           (keys (dissoc (first @apps-row) :id :idx :href))))
+                           (keys (dissoc (first @apps-row) :id :idx :href :module))))
                        (remove nil?
                                [{:field-key      :details
                                  :header-content (general-utils/capitalize-words (@tr [:details]))
                                  :cell           (fn [{:keys [row-data]}]
-                                                   [LinkToModuleDetails [::spec/apps-sets (:idx row-data)] (:href row-data)])}
+                                                   [LinkToModuleDetails
+                                                    [module-plugin/LinkToAppView
+                                                     {:version-id (deployment-utils/get-version-number
+                                                                    (:versions (:module row-data))
+                                                                    (:content (:module row-data)))
+                                                      :path       (:path (:module row-data))
+                                                      :target     "_self"}
+                                                     [icons/ArrowRightFromBracketIcon]]])}
                                 (when @can-edit-data?
                                   {:field-key :remove
                                    :cell      (fn [{:keys [row-data]}]

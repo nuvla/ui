@@ -185,7 +185,8 @@
    :href    (:id application)
    :app     (:name application)
    :version {:label   (str "v" (get-app-version-no application))
-             :created (-> application :content :created)}})
+             :created (-> application :content :created)}
+   :module  application})
 
 
 (reg-sub
@@ -315,12 +316,21 @@
 (reg-sub
   ::apps-creation-row-data
   :<- [::apps-creation]
-  (fn [apps]
-    (map
-      (fn [app]
-        (app->app-row-data {:i           0
-                            :application app}))
-      apps)))
+  :<- [::apps-set]
+  (fn [[apps apps-set]]
+    (let [module-id->version (->> apps-set
+                                  :content
+                                  :applications-sets
+                                  first
+                                  :applications
+                                  (map (juxt :id (comp int :version)))
+                                  (into {}))]
+      (map
+        (fn [app]
+          (app->app-row-data {:i           0
+                              :application (assoc-in app [:content :id] (:href (some->> (module-id->version (:id app))
+                                                                                        (nth (:versions app)))))}))
+        apps))))
 
 (reg-sub
   ::apps-set-id

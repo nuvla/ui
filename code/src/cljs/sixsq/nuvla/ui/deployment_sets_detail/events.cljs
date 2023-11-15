@@ -975,8 +975,7 @@
   (fn [{db :db} [_ response]]
     (let [edge-ids (map :id (:resources response))
           apps-set (get-in db [::spec/deployment-set-edited :applications-sets])]
-      {:fx [[:dispatch [::set-opened-modal nil]]
-            [:dispatch [::edit :applications-sets
+      {:fx [[:dispatch [::edit :applications-sets
                         (update-fleets
                           (fn [fleet] (into (or fleet []) edge-ids))
                           apps-set)]]
@@ -996,14 +995,16 @@
 
 (reg-event-fx
   ::get-selected-edge-ids
-  (fn [{{:keys [:sixsq.nuvla.ui.deployment-sets-detail.spec/edge-picker-select] :as db} :db} _]
+  (fn [{{:keys [:sixsq.nuvla.ui.deployment-sets-detail.spec/edge-picker-select] :as db} :db} [_ creating?]]
     {::cimi-api-fx/search
      [:nuvlabox
       {:filter (table-plugin/build-bulk-filter
                  edge-picker-select
                  (get-full-filter-string db))
        :select "id"}
-      #(dispatch [::add-edges %])]}))
+      #(do
+         (dispatch [::set-opened-modal nil])
+         (dispatch [(if creating? ::set-edges ::add-edges) %]))]}))
 
 (reg-event-fx
   ::show-fleet-changes-only

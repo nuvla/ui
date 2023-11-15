@@ -369,17 +369,18 @@
                                          (:resources %)))]}))
 
 (defn EnvCredential
-  [env-name _value _on-change]
+  [env-name _value _error? _on-change]
   (let [tr      (subscribe [::i18n-subs/tr])
         options (r/atom [])
         subtype (get cred-env-var-map env-name)]
     (dispatch [::get-credentials-opts subtype #(reset! options %)])
-    (fn [_env-name value on-change]
+    (fn [_env-name value error? on-change]
       [ui/Dropdown
        {:clearable   true
         :selection   true
         :fluid       true
         :value       value
+        :error       error?
         :placeholder (@tr [:select-credential])
         :on-change   (ui-callback/value on-change)
         :options     @options}])))
@@ -391,7 +392,7 @@
         value             (or updated-env-value env-value "")
         on-change         #(dispatch [::update-env db-path href i %])]
     (if (is-cred-env-var? env-name)
-      [EnvCredential env-name value on-change]
+      [EnvCredential env-name value error? on-change]
       [ui/FormInput
        {:type          "text"
         :name          env-name

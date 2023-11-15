@@ -45,7 +45,7 @@
      [uix/FieldLabel {:name env-name
                       :help-popup [uix/HelpPopup env-description]} ]
      (if (module-plugin/is-cred-env-var? env-name)
-       [module-plugin/EnvCredential env-name env-value on-change]
+       [module-plugin/EnvCredential env-name env-value false on-change]
        [ui/Input
         {:type          "text"
          :name          env-name

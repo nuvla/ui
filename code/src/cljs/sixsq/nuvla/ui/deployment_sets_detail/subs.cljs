@@ -303,9 +303,9 @@
   ::apps-creation-row-data
   :<- [::apps-creation]
   (fn [apps]
-    (map-indexed
-      (fn [idx app]
-        (app->app-row-data {:i           idx
+    (map
+      (fn [app]
+        (app->app-row-data {:i           0
                             :application app}))
       apps)))
 

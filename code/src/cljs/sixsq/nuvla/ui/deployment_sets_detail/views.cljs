@@ -12,7 +12,6 @@
             [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
-            [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.views :as dv]
             [sixsq.nuvla.ui.edges.spec :as edges-spec]

@@ -477,15 +477,20 @@
          [DropdownContainerRegistry opts i private-registry])]
       [ui/Message "No container registries defined"])))
 
+(defn LinkToAppView
+  [{:keys [path version-id target]} children]
+  [:a {:href   (str-pathify (name->href routes/apps)
+                 (str path "?version=" version-id))
+       :target (or target "_blank")}
+   children])
+
 (defn LinkToApp
   [{:keys [db-path href children target]
     :as   _opts}]
   (let [{:keys [path content]} @(subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         version-id       (get-version-id @versions-indexed (:id content))]
-    [:a {:href   (str-pathify (name->href routes/apps)
-                              (str path "?version=" version-id))
-         :target (or target "_blank")}
+    [LinkToAppView {:path path :version-id version-id :target target}
      children]))
 
 (defn ModuleNameIcon

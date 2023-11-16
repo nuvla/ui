@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.about.spec :as about-spec]
             [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.apps-store.spec :as apps-store-spec]
             [sixsq.nuvla.ui.apps.effects :as apps-fx]
@@ -27,7 +28,8 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.about.utils :as about-utils]))
 
 (def refresh-action-depl-set-id :deployment-set)
 (def refresh-action-deployments-id :deployment-set-get-deployments)
@@ -716,14 +718,15 @@
   ::fetch-app-picker-apps
   (fn [{{:keys [current-route] :as db} :db} [_ pagination-db-path]]
     (let [current-selection (get-in db (subs/create-apps-creation-db-path current-route))
-          is-controlled-by-apps-set? (utils/is-controlled-by-apps-set (::spec/module-applications-sets db))]
+          is-controlled-by-apps-set? (utils/is-controlled-by-apps-set (::spec/module-applications-sets db))
+           apps-sets-enabled?        (about-utils/feature-flag-enabled? (::about-spec/enabled-feature-flags db) about-utils/feature-applications-sets-key)]
       {:fx [[:dispatch [::apps-store-events/get-modules
                         apps-store-spec/allapps-key
                         {:external-filter
                          (general-utils/join-and
                            (general-utils/filter-neq-ids
                              (mapv :id current-selection))
-                           (when (or (false? is-controlled-by-apps-set?) (seq current-selection))
+                           (when (or (not apps-sets-enabled?) (false? is-controlled-by-apps-set?) (seq current-selection))
                              (str "subtype!='" apps-utils/subtype-applications-sets "'")))
                          :order-by           "name:asc"
                          :pagination-db-path [pagination-db-path]

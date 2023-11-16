@@ -215,6 +215,33 @@
           [ui/TableCell @(subscribe [::subs/apps-set-subtype id])]]]]
        [ConfigureSetApplications id]])))
 
+(defn SingleAppsSetPanel
+  [id]
+  (dispatch [::events/update-apps-set-name id "Main"])
+  (fn [id]
+    [:div
+     [:p (str "Application set is a named group of apps intended to be deployed on a fleet. "
+              "The fleet is defined at deployment time. ")]
+     [:p "To add apps to your application set, click the plus button below."]
+     [ui/Table {:compact    true
+                :definition true}
+      [ui/TableBody
+       [ui/TableRow
+        [ui/TableCell {:collapsing true} "subtype"]
+        ^{:key (str/join "-" ["set" id "subtype"])}
+        [ui/TableCell @(subscribe [::subs/apps-set-subtype id])]]]]
+     [ConfigureSetApplications id]]))
+
+(defn SingleAppsSetSection
+  []
+  (let [rerender-atom (r/atom 0)
+        apps-sets     (subscribe [::subs/apps-sets])]
+    (fn []
+      [:<>
+       (let [[id] (first @apps-sets)]
+         ^{:key (str "apps-sets-rerender-" @rerender-atom)}
+         [SingleAppsSetPanel id])])))
+
 (defn AppsSetsSection
   []
   (let [rerender-atom (r/atom 0)
@@ -352,7 +379,8 @@
   []
   [:div {:class :uix-apps-details-details}
    [:h4 {:class :tab-app-detail} "Applications"]
-   [AppsSetsSection]])
+   #_[AppsSetsSection]
+   [SingleAppsSetSection]])
 
 
 (defn TabMenuDetails

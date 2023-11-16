@@ -55,7 +55,7 @@
             (->> {:orderby (or order-by "created:desc")
                   :filter  (general-utils/join-and
                              (str "parent-path!='" spec/virtual-apps-set-parent-path "'")
-                             (when (and (not= :myapps active-tab) (not apps-sets-enabled?))
+                             (when-not apps-sets-enabled?
                                (str "subtype!='" apps-utils/subtype-applications-sets "'"))
                              external-filter
                              subtypes-apps-or-filter

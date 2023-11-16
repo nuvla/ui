@@ -98,8 +98,7 @@
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true :stackable true}
-        ;; TODO: bring back add menu item once edge picker works in creation phase
-        #_[uix/MenuItem
+        [uix/MenuItem
          {:name     (@tr [:add])
           :icon     icons/i-plus-large
           :on-click #(dispatch [::events/new-deployment-set])}]
@@ -214,20 +213,14 @@
                             :margin-bottom 0}}
        [ControlBar]
        [StatisticStates true]]
-      ;; TODO: bring back add menu item once edge picker works in creation phase
-      #_(if (empty? @deployment-sets)
+      (if (empty? @deployment-sets)
         [ui/Grid {:centered true}
          [AddFirstButton]]
         [:<>
          (case @view-type
            :cards [DeploymentSetCards]
            :table [DeploymentSetTable])
-         [Pagination]])
-      [:<>
-       (case @view-type
-         :cards [DeploymentSetCards]
-         :table [DeploymentSetTable])
-       [Pagination]]]]))
+         [Pagination]])]]))
 
 
 (defn deployment-sets-view

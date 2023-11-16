@@ -879,10 +879,10 @@
 (reg-event-fx
   ::get-picker-edges
   (fn [{{:keys [current-route
-                ::spec/edge-picker-ordering
-                ::spec/edges] :as db} :db} _]
+                ::spec/edge-picker-ordering] :as db} :db} _]
     (let [ordering     (or edge-picker-ordering spec/default-ordering)
-          fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))]
+          fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))
+          edges        (get-in db (subs/current-route->edges-db-path current-route))]
       {::cimi-api-fx/search
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)

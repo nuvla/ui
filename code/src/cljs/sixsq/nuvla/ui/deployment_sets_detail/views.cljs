@@ -1017,11 +1017,11 @@
            :i-per-page-multipliers [1 2 4]}]]))))
 
 (defn EdgesPickerModal
-  []
+  [creating?]
   (let [tr            (subscribe [::i18n-subs/tr])
         open?         (subscribe [::subs/modal-open? events/edges-picker-modal-id])
         add-to-select (fn []
-                        (dispatch [::events/get-selected-edge-ids]))
+                        (dispatch [::events/get-selected-edge-ids creating?]))
         update-filter (fn []
                         (dispatch [::events/update-fleet-filter])
                         (dispatch [::events/set-opened-modal nil]))
@@ -1076,7 +1076,7 @@
                    :on-click (create-nav-fn "edges" {:edges-state nil})}]]
      [:div
       {:style {:display :flex :justify-content :center :align-items :center :flex-direction :column}}
-      (when (and @can-edit-data? (not creating?) (not @fleet-filter))
+      (when (and @can-edit-data? (not @fleet-filter))
         ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
         ;; and retrieving deployment-set and deployment-set-edited
         [:<>
@@ -1091,7 +1091,7 @@
           (if (pos? (:total edges-stats))
             (@tr [:add-edges])
             (@tr [:add-your-first-edges]))]])
-      [EdgesPickerModal]
+      [EdgesPickerModal creating?]
       [FleetFilterPanel {:show-edit-filter-button? true :creating? creating?}]]]))
 
 (defn TabOverview

@@ -139,6 +139,7 @@
   []
   (let [tr                       @(subscribe [::i18n-subs/tr])
         apps-targets-total-price @(subscribe [::subs/deployment-set-apps-targets-total-price])
+        edges-count              @(subscribe [::subs/edges-count])
         checked?                 @(subscribe [::subs/get ::spec/prices-accepted?])
         dep-set-total-price      @(subscribe [::subs/deployment-set-total-price])]
     [ui/Segment {:attached true}
@@ -152,7 +153,7 @@
            [ui/TableHeaderCell {:text-align "right"} (tr [:quantity])]
            [ui/TableHeaderCell {:text-align "right"} (tr [:daily-price])]]]
          [ui/TableBody
-          (for [{:keys [i targets-count total-price application]} apps-targets-total-price]
+          (for [{:keys [i total-price application]} apps-targets-total-price]
             ^{:key (str "price-" i "-" (:id application))}
             [ui/TableRow
              [ui/TableCell [utils-values/AsLink (:path application)
@@ -160,7 +161,7 @@
                                        (:id application)) :page "apps"]]
              [ui/TableCell {:text-align "right"} (general-utils/format-money
                                                    (/ (get-in application [:price :cent-amount-daily]) 100))]
-             [ui/TableCell {:text-align "right"} targets-count]
+             [ui/TableCell {:text-align "right"} edges-count]
              [ui/TableCell {:text-align "right"} (general-utils/format-money (/ total-price 100))]])
           [ui/TableRow {:active true}
            [ui/TableCell [:b (str/capitalize (tr [:total]))]]

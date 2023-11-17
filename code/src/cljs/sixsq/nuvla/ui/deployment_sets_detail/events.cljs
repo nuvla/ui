@@ -857,10 +857,11 @@
 (reg-event-fx
   ::navigate-internal
   (fn [{:keys [db]} [_ route-data]]
-    {:db (assoc db ::main-spec/changes-protection? false)
-     :fx [[:dispatch (into [::routing-events/navigate-partial
-                            (assoc route-data
-                              :change-event [::main-events/changes-protection? true])])]]}))
+    (let [changes-protection? (::main-spec/changes-protection? db)]
+      {:db (assoc db ::main-spec/changes-protection? false)
+       :fx [[:dispatch [::routing-events/navigate-partial
+                        (assoc route-data
+                          :change-event [::main-events/changes-protection? changes-protection?])]]]})))
 
 (defn get-full-filter-string
   [{:keys [::spec/edge-picker-state-selector

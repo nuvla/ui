@@ -1543,8 +1543,8 @@
                                  (empty? selected-state)))
                              :on-click
                              #(dispatch
-                                [::routing-events/navigate
-                                 (routes-utils/gen-href @current-route
+                                [::events/navigate-internal
+                                 (routes-utils/new-route-data @current-route
                                                         {:partial-query-params
                                                          {events/edges-state-filter-key
                                                           (if (= "TOTAL" label)

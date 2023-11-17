@@ -627,7 +627,7 @@
         fleet-filter               (subscribe [::subs/fleet-filter])]
     (with-tooltip
       [:span [uix/Button
-              {:disabled (not @edit-op-allowed?)
+              {:disabled (and (not creating?) (not @edit-op-allowed?))
                :on-click (fn []
                            (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
                            (dispatch [::events/set-opened-modal id]))

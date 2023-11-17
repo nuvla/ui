@@ -895,6 +895,12 @@ body .divider-red {
   margin-right: 0;
 }
 
+.ui-apps-picker-card-header {
+  background-color: #2185d0 !important;
+  border-radius: 0.28571429rem 0.28571429rem 0 0;
+  color: #ffffff;
+}
+
 .ui-card-header {
   background-color: var(--accent-color) !important;
   border-radius: 0.28571429rem 0.28571429rem 0 0;

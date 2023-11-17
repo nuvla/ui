@@ -215,13 +215,14 @@
 (reg-sub
   ::deployment-set-apps-targets-total-price
   :<- [::applications-sets-apps-targets]
-  (fn [apps-targets]
+  :<- [::edges-count]
+  (fn [[apps-targets edges-count]]
     (->> apps-targets
          (filter price-set-apps-targets)
          (map #(assoc %
                  :total-price
                  (* (get-in % [:application :price :cent-amount-daily])
-                    (:targets-count %)))))))
+                    edges-count))))))
 
 (reg-sub
   ::deployment-set-total-price

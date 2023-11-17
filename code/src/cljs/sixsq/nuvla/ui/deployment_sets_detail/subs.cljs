@@ -328,9 +328,12 @@
                                   (into {}))]
       (map
         (fn [app]
-          (app->app-row-data {:i           0
-                              :application (assoc-in app [:content :id] (:href (some->> (module-id->version (:id app))
-                                                                                        (nth (:versions app)))))}))
+          (let [version-href (:href (some->> (module-id->version (:id app))
+                                      (nth (:versions app))))]
+            (app->app-row-data {:i           0
+                                :application (if version-href
+                                               (assoc-in app [:content :id] version-href)
+                                               app)})))
         apps))))
 
 (reg-sub
@@ -647,4 +650,3 @@
     (->> apps-targets-total-price
          (map (juxt (comp :id :application) (comp :price :application)))
          (into {}))))
-

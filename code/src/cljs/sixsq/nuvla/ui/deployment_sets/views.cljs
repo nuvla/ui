@@ -213,7 +213,7 @@
                             :margin-bottom 0}}
        [ControlBar]
        [StatisticStates true]]
-      (if (empty? @deployment-sets)
+      (if (zero? (:count @deployment-sets))
         [ui/Grid {:centered true}
          [AddFirstButton]]
         [:<>

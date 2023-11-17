@@ -522,8 +522,9 @@
    who would have to click back 2 times to get to previous page.
    "
   [{:keys [header description meta image on-click href target button tags content
-           corner-button state left-state loading? on-select selected? extra]}]
+           corner-button state left-state loading? on-select selected? extra class]}]
   [ui/Card (-> {:href   href
+                :className class
                 :target target}
                (merge (when on-click {:on-click (fn [event]
                                                   (on-click event)

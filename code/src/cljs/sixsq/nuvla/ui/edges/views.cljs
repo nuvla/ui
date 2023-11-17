@@ -808,15 +808,19 @@
     :select-config         select-config}
    ::table-cols-config])
 
-(defn bulk-deploy
-  [filter-based-fleet selected-edges]
+(defn bulk-deploy-dynamic
+  []
   (let [id (random-uuid)]
-    (if filter-based-fleet
-      (do (dispatch [::events/set-fleet-filter id])
-          (dispatch [::events/get-selected-edge-ids [::depl-group-events/set-edges]]))
-      (if (seq selected-edges)
-        (dispatch [::events/get-selected-edge-ids [::depl-group-events/set-edges]])
-        (dispatch [::depl-group-events/set-edges {:resources []}])))
+    (dispatch [::events/bulk-deploy-dynamic id])
+    (dispatch [::routing-events/navigate
+               routes/deployment-sets-details
+               {:uuid :create}
+               {depl-group-subs/creation-temp-id-key id}])))
+
+(defn bulk-deploy-static
+  []
+  (let [id (random-uuid)]
+    (dispatch [::events/bulk-deploy-static])
     (dispatch [::routing-events/navigate
                routes/deployment-sets-details
                {:uuid :create}
@@ -878,7 +882,7 @@
                                    {:menuitem (let [message         (@tr [:deploy-with-static-edges])
                                                     deploy-menuitem [ui/MenuItem
                                                                      {:class    :bulk-action-bar-item
-                                                                      :on-click #(bulk-deploy false @selection)
+                                                                      :on-click  bulk-deploy-static
                                                                       :key      :bulk-deploy}
                                                                      [icons/RocketIcon]
                                                                      (@tr [:edges-bulk-deploy-app])]]
@@ -905,7 +909,7 @@
                                                     deploy-menuitem              [ui/MenuItem
                                                                                   {:disabled (not dynamic-bulk-deploy-enabled?)
                                                                                    :class    :bulk-action-bar-item
-                                                                                   :on-click #(bulk-deploy true nil)
+                                                                                   :on-click bulk-deploy-dynamic
                                                                                    :key      :dynamic-bulk-deploy}
                                                                                   [icons/RocketIcon]
                                                                                   (@tr [:dynamic-bulk-deploy])]]

@@ -128,26 +128,31 @@
       {:db (assoc db ::spec/edges-without-edit-rights nuvlaboxes)})))
 
 (reg-event-fx
+  ::bulk-deploy-dynamic
+  (fn [{db :db} [_ id]]
+    (let [filter-string (get-dynamic-fleet-filter-string db)]
+      {:fx [[:dispatch [::depl-group-events/set-fleet-filter
+                        filter-string id]]
+            [:dispatch [::get-selected-edge-ids [::depl-group-events/set-edges] filter-string]]]})))
+
+(reg-event-fx
+  ::bulk-deploy-static
+  (fn [{{:keys [::spec/select] :as db} :db} _]
+    (let [filter-string (table-plugin/build-bulk-filter
+                          select
+                          (get-full-filter-string db))]
+      {:fx [[:dispatch [::get-selected-edge-ids [::depl-group-events/set-edges] filter-string]]]})))
+
+(reg-event-fx
   ::get-selected-edge-ids
-  (fn [{{:keys [::spec/select] :as db} :db} [_ event]]
+  (fn [_ [_ event filter-string]]
     {::cimi-api-fx/search
      [:nuvlabox
-      {:filter      (table-plugin/build-bulk-filter
-                      select
-                      (get-full-filter-string db))
+      {:filter      filter-string
        :select      "id"
        :aggregation spec/state-summary-agg-term}
       #(dispatch (conj event %))]}))
 
-(reg-event-fx
-  ::reset-fleet-filter
-  (fn [_ [_ id]]
-    (dispatch [::depl-group-events/reset-fleet-filter id])))
-
-(reg-event-fx
-  ::set-fleet-filter
-  (fn [{db :db} [_ id]]
-    (dispatch [::depl-group-events/set-fleet-filter (get-dynamic-fleet-filter-string db) id])))
 
 (reg-event-fx
   ::set-additional-filter

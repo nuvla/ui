@@ -533,13 +533,15 @@
   (let [apps-set (subscribe [::subs/app-by-id id])]
     (fn []
       [uix/Card
-       {:header        [:<>
-                        [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
-                        (or name id)]
-        :description   (into
-                         [:div
-                          [AppsInAppsSetsCard (events/apps-set->app-ids @apps-set)]
-                          desc-summary])
+       {:header        [:div.nuvla-apps [:h3 {:style {:background-color "#2185d0"}
+                                   :class [:ui-header :ui-apps-picker-card-header]}
+                              [icons/Icon {:name (apps-utils/subtype-icon subtype)}] "Application Set"]]
+        :description   [:<>
+                        [:h4 [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
+                         (or name id)]
+                        [:div
+                         [AppsInAppsSetsCard (events/apps-set->app-ids @apps-set)]
+                         desc-summary]]
         :corner-button (when (and published show-published-tick?)
                          [ui/Label {:corner true} [icons/Icon {:name apps-utils/publish-icon}]])
         :href          detail-href
@@ -627,7 +629,7 @@
         fleet-filter               (subscribe [::subs/fleet-filter])]
     (with-tooltip
       [:span [uix/Button
-              {:disabled (not @edit-op-allowed?)
+              {:disabled (and (not creating?) (not @edit-op-allowed?))
                :on-click (fn []
                            (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
                            (dispatch [::events/set-opened-modal id]))
@@ -1543,8 +1545,8 @@
                                  (empty? selected-state)))
                              :on-click
                              #(dispatch
-                                [::routing-events/navigate
-                                 (routes-utils/gen-href @current-route
+                                [::events/navigate-internal
+                                 (routes-utils/new-route-data @current-route
                                                         {:partial-query-params
                                                          {events/edges-state-filter-key
                                                           (if (= "TOTAL" label)

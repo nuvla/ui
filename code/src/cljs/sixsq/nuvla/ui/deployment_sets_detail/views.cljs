@@ -534,8 +534,8 @@
     (fn []
       [uix/Card
        {:header        [:div.nuvla-apps [:h3 {:style {:background-color "#2185d0"}
-                                   :class [:ui-header :ui-apps-picker-card-header]}
-                              [icons/Icon {:name (apps-utils/subtype-icon subtype)}] "Application Set"]]
+                                              :class [:ui-header :ui-apps-picker-card-header]}
+                                         [icons/Icon {:name (apps-utils/subtype-icon subtype)}] "Application Set"]]
         :description   [:<>
                         [:h4 [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
                          (or name id)]
@@ -1392,27 +1392,30 @@
   (let [licenses-by-module-id (subscribe [::subs/license-by-module-id])
         pricing-by-module-id  (subscribe [::subs/pricing-by-module-id])]
     ^{:key (str "set-" i)}
-    [tab/Tab
-     {:db-path                 [::apps-config]
-      :ignore-chng-protection? true
-      :panes                   (map
-                                 (fn [{id :href}]
-                                   {:menuItem {:content (r/as-element
-                                                          [AppName {:idx i :id id}])
-                                               :icon    "cubes"
-                                               :key     (create-app-config-query-key i id)}
-                                    :render   #(r/as-element
-                                                 [ui/TabPane
-                                                  [ui/Popup {:trigger (r/as-element
-                                                                        [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
-                                                             :content "Open application in a new window"}]
-                                                  [ModuleVersionsApp i id creating?]
-                                                  [EnvVariablesApp i id creating?]
-                                                  (when-let [license (get @licenses-by-module-id id)]
-                                                    [AppLicense license])
-                                                  (when-let [pricing (get @pricing-by-module-id id)]
-                                                    [AppPricing pricing])])})
-                                 applications)}]))
+    [ui/Segment
+     [tab/Tab
+      {:db-path                 [::apps-config]
+       :ignore-chng-protection? true
+       :attached                true
+       :tabular                 true
+       :panes                   (map
+                                  (fn [{id :href}]
+                                    {:menuItem {:content (r/as-element
+                                                           [AppName {:idx i :id id}])
+                                                :icon    "cubes"
+                                                :key     (create-app-config-query-key i id)}
+                                     :render   #(r/as-element
+                                                  [ui/TabPane {:attached true}
+                                                   [ui/Popup {:trigger (r/as-element
+                                                                         [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
+                                                              :content "Open application in a new window"}]
+                                                   [ModuleVersionsApp i id creating?]
+                                                   [EnvVariablesApp i id creating?]
+                                                   (when-let [license (get @licenses-by-module-id id)]
+                                                     [AppLicense license])
+                                                   (when-let [pricing (get @pricing-by-module-id id)]
+                                                     [AppPricing pricing])])})
+                                  applications)}]]))
 
 (defn ConfigureAppsSetWrapper
   [configure-apps creating?]
@@ -1440,7 +1443,8 @@
                                   :can-edit-data?             @can-edit-data?
                                   :edit-op-allowed?           @edit-op-allowed?
                                   :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
-         :label (@tr [:select-version])]])
+         :label (@tr [:select-app-set-version])]
+        [:h4 {:class :tab-app-detail} "Applications"]])
      configure-apps]))
 
 (defn ConfigureAppsSet
@@ -1547,11 +1551,11 @@
                              #(dispatch
                                 [::events/navigate-internal
                                  (routes-utils/new-route-data @current-route
-                                                        {:partial-query-params
-                                                         {events/edges-state-filter-key
-                                                          (if (= "TOTAL" label)
-                                                            nil
-                                                            label)}}) nil nil])))) edges-views/edges-states))
+                                                              {:partial-query-params
+                                                               {events/edges-state-filter-key
+                                                                (if (= "TOTAL" label)
+                                                                  nil
+                                                                  label)}}) nil nil])))) edges-views/edges-states))
        true true])))
 
 (defn- EdgeTabStatesFilter

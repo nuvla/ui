@@ -1084,7 +1084,8 @@ body .divider-red {
 
 .nuvla-apps .ui.secondary.segment h4.tab-app-detail,
 .nuvla-apps .uix-apps-details-details h4.tab-app-detail,
-.nuvla-apps .uix-apps-details-share h4.tab-app-share {
+.nuvla-apps .uix-apps-details-share h4.tab-app-share,
+.nuvla-deployment-sets h4.tab-app-detail {
   color: rgba(0, 0, 0, 0.87) !important;
   font-weight: 400;
   font-size: 1rem;

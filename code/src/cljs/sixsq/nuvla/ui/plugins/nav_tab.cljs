@@ -73,7 +73,7 @@
                            :ignore-chng-protection? ignore-chng-protection?})]]]})))
 
 (defn Tab
-  [{:keys [db-path panes change-event ignore-chng-protection? reset-query-params?] :as _opts}]
+  [{:keys [db-path attached tabular panes change-event ignore-chng-protection? reset-query-params?] :as _opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [default-tab     (subscribe [::helpers/retrieve db-path ::default-tab])
         route           (subscribe [::route-subs/current-route])
@@ -114,7 +114,9 @@
                      :reset-query-params?)
              (assoc :panes clean-panes
                     :active-index (get key->index (keyword @cur-view) 0))
-             (assoc-in [:menu :class] :uix-tab-nav))]))))
+             (assoc-in [:menu :class] :uix-tab-nav)
+             (assoc-in [:menu :tabular] tabular)
+             (assoc-in [:menu :attached] attached))]))))
 
 (s/fdef Tab
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]

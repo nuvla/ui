@@ -22,12 +22,18 @@
   [route]
   (get-in route [:data :name]))
 
+(defn ns-name->ui-key
+  [ns-name]
+  (or ({"deployment-sets" "deployment-groups"
+        "deployment-sets-detail" "deployment-groups-detail"} ns-name)
+      ns-name))
+
 (defn db-path->query-param-key
   [db-path]
   (let [qualified-key (first db-path)
         ns-path       (str/split (namespace qualified-key) #"\.")
-        last-two-ns   (drop (- (count ns-path) 2) ns-path)
-        k-prefix      (str/replace (str/join last-two-ns) "spec" "")
+        [parent-ns child-ns] (drop (- (count ns-path) 2) ns-path)
+        k-prefix      (str/replace (str/join "-" [(ns-name->ui-key parent-ns) child-ns]) "-spec" "")
         k-suffix      (-> db-path last name)]
     (keyword (str k-prefix "-" k-suffix))))
 

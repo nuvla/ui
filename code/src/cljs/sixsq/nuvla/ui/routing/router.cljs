@@ -161,16 +161,16 @@
     ["data/*uuid"
      {:name ::routes/data-details
       :view #'data-set-views/DataSet}]
-    ["deployment-sets"
+    ["deployment-groups"
      {:name      ::routes/deployment-sets
       :view      #'deployment-sets-view
-      :link-text "deployment-sets"}
+      :link-text "deployment-groups"}
      [""]
      ["/" ::routes/deployment-sets-slashed]]
-    ["deployment-sets/:uuid"
+    ["deployment-groups/:uuid"
      {:name      ::routes/deployment-sets-details
       :view      #'deployment-sets-view
-      :link-text "deployment-sets"}]
+      :link-text "deployment-groups"}]
     ["deployment-set/:uuid"
      {:name      ::routes/deployment-set-details
       :view      #'deployment-sets-view

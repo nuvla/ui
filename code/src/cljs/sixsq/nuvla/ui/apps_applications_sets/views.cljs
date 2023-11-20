@@ -141,7 +141,7 @@
   [on-delete]
   [DeleteModal
    {:header     "Delete application"
-    :content    "Delete application from deployment set"
+    :content    "Delete application from deployment group"
     :on-confirm on-delete}])
 
 (defn DeleteAppSet

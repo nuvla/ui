@@ -7,7 +7,7 @@
 (def feature-internal-ui-demo-page "internal")
 
 (def feature-flags [{:k     feature-deployment-set-key
-                     :label "Page deployment set visible in left menu."}
+                     :label "Page deployment groups visible in left menu."}
                     {:k     feature-applications-sets-key
                      :label "Applications sets support"}
                     {:k     feature-edge-on-k8s

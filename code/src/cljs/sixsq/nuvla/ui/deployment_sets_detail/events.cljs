@@ -385,7 +385,7 @@
                       (when-not (= "SUCCESS" (:state %))
                         (cimi-api-fx/default-error-message
                           %
-                          "Failed to delete deployment set")) ())}]))]
+                          "Failed to delete deployment group")) ())}]))]
       (cond
         deletable?
         {::cimi-api-fx/delete [id cb]}

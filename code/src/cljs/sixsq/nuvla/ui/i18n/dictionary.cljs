@@ -291,6 +291,7 @@
         :deployment-delete-msg                         "Permanently deletes the deployment and all its related sub-resources. e.g. Deployment api-key, deployment-parameters, deployment logs session."
         :deployment-detach-msg                         "Detach from the deployment group. After detaching the deployment, you will be sure that actions performed on the deployment group will no longer impact it."
         :deployment-group                              "Deployment group"
+        :deployment-groups                             "Deployment groups"
         :deployment-run-private-ip                     "This deployment runs on a NuvlaEdge/Cloud with a Private/VPN IP"
         :deployment-set                                "Deployment group"
         :deployment-sets                               "Deployment groups"

@@ -184,7 +184,7 @@
         {:db new-db
          :fx fx}
         {:fx [[:dispatch [::messages-events/add
-                          {:header  "Unable to load selected applications sets"
+                          {:header  "Unable to load selected applications bouquets"
                            :content (str "Loaded " (count apps) " out of " total-apps-count ".")
                            :type    :error}]]]}))))
 
@@ -219,7 +219,7 @@
           params                 {:filter (general-utils/filter-eq-ids apps-urls)
                                   :last   10000}
           callback               #(if (instance? js/Error %)
-                                    (cimi-api-fx/default-error-message % "load applications sets failed")
+                                    (cimi-api-fx/default-error-message % "load applications bouquets failed")
                                     (dispatch [::load-apps-sets-response {:apps-sets-set    apps-sets
                                                                           :total-apps-count (count apps-urls)
                                                                           :apps             (:resources %)

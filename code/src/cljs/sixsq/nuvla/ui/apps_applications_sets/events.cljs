@@ -82,7 +82,7 @@
           params     {:filter (general-utils/filter-eq-ids apps-urls)
                       :last   10000}
           callback   #(if (instance? js/Error %)
-                        (cimi-api-fx/default-error-message % "load applications sets failed")
+                        (cimi-api-fx/default-error-message % "load applications bouquets failed")
                         (dispatch [::reload-apps-sets-response module (count apps-urls) %]))]
       (when (seq apps-urls)
         {::cimi-api-fx/search [:module params callback]}))))

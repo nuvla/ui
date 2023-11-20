@@ -9,7 +9,7 @@
 (def feature-flags [{:k     feature-deployment-set-key
                      :label "Page deployment groups visible in left menu."}
                     {:k     feature-applications-sets-key
-                     :label "Applications sets support"}
+                     :label "Applications bouquets support"}
                     {:k     feature-edge-on-k8s
                      :label "k8s installation method available in Add Edge modal."}
                     {:k     feature-internal-ui-demo-page

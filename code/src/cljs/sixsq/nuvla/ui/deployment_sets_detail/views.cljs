@@ -517,7 +517,7 @@
     [:div
      [:div
       "This is an "
-      [:span {:style {:font-weight :bold}} "Application Set"]
+      [:span {:style {:font-weight :bold}} "Application Bouquet"]
       " containing these apps:"]
      [:ul
       (doall
@@ -535,7 +535,7 @@
       [uix/Card
        {:header        [:div.nuvla-apps [:h3 {:style {:background-color "#2185d0"}
                                               :class [:ui-header :ui-apps-picker-card-header]}
-                                         [icons/Icon {:name (apps-utils/subtype-icon subtype)}] "Application Set"]]
+                              [icons/Icon {:name (apps-utils/subtype-icon subtype)}] "Application Bouquet"]]
         :description   [:<>
                         [:h4 [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
                          (or name id)]
@@ -727,7 +727,7 @@
         [RemoveButton {:enabled  true
                        :on-click #(dispatch [::events/remove-apps-set])}])]
 
-     [:div "Applications Set includes following apps:"]]))
+     [:div "Applications Bouquet includes following apps:"]]))
 
 (defn- AppsOverviewTable
   [creating?]
@@ -801,7 +801,7 @@
                                    :cell      (fn [{:keys [row-data]}]
                                                 [RemoveButton {:enabled  (and (not @is-controlled-by-apps-set?) @edit-op-allowed?)
                                                                :tooltip  (if @is-controlled-by-apps-set?
-                                                                           "To remove single applications from your deployment group, you have to remove it from the controlling application set."
+                                                                           "To remove single applications from your deployment group, you have to remove it from the controlling application bouquet."
                                                                            (edit-not-allowed-msg
                                                                              {:TR                         @tr
                                                                               :can-edit-data?             @can-edit-data?
@@ -1115,7 +1115,7 @@
            [vc/TitledCard
             {:class :nuvla-apps
              :icon  icons/i-layer-group
-             :label (if @is-controlled-by-apps-set? "Application Set" (str/capitalize (@tr [:apps])))}
+             :label (if @is-controlled-by-apps-set? "Application Bouquet" (str/capitalize (@tr [:apps])))}
             [AppsOverviewTable creating?]]]
           [ui/GridColumn {:stretched true}
            [vc/TitledCard

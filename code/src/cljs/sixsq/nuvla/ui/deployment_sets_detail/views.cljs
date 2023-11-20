@@ -709,7 +709,7 @@
         [:a
          {:href     "#"
           :on-click #(dispatch [::events/navigate-internal
-                                {:query-params {:deployment-sets-detail-tab :apps}}])
+                                {:query-params {:deployment-groups-detail-tab :apps}}])
           :children [icons/StoreIcon]
 
           :target   :_self}
@@ -773,7 +773,7 @@
                                                                                   (merge
                                                                                     {(routes-utils/db-path->query-param-key [::apps-config])
                                                                                      (create-app-config-query-key i (:href row-data))}
-                                                                                    {:deployment-sets-detail-tab :apps})}])
+                                                                                    {:deployment-groups-detail-tab :apps})}])
                                                            :children [icons/StoreIcon]
                                                            :target   :_self}
                                                           cell-data
@@ -1493,7 +1493,7 @@
         items [{:key         :name
                 :icon        icons/i-bullseye
                 :content     [NameDescriptionStep]
-                :title       "New deployment set"
+                :title       "New deployment group"
                 :description "Give it a name"
                 :subs        ::subs/step-name-complete?}
                {:key         :select-targets-and-configure-sets

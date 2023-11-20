@@ -147,8 +147,8 @@
 (defn DeleteAppSet
   [on-delete]
   [DeleteModal
-   {:header     "Delete applications set"
-    :content    "Delete applications set and configuration related to it?"
+   {:header     "Delete applications bouquet"
+    :content    "Delete applications bouquet and configuration related to it?"
     :on-confirm on-delete}])
 
 (defn ConfigureSetApplications
@@ -195,9 +195,9 @@
                          (dispatch [::apps-events/validate-form]))]
     (fn [{:keys [id apps-set-name apps-set-description]}]
       [ui/TabPane
-       [:p (str "Application set is a named group of apps intended to be deployed on a target set. "
-                "Target set are defined at deployment time. ")]
-       [:p "To add apps to your application set, click the plus button below."]
+       [:p (str "Application bouquet is a named group of apps intended to be deployed on a target fleet. "
+                "Target fleets are defined at deployment time. ")]
+       [:p "To add apps to your application bouquet, click the plus button below."]
        [ui/Table {:compact    true
                   :definition true}
         [ui/TableBody
@@ -220,9 +220,9 @@
   (dispatch [::events/update-apps-set-name id "Main"])
   (fn [id]
     [:div
-     [:p (str "Application set is a named group of apps intended to be deployed on a fleet. "
+     [:p (str "Application bouquet is a named group of apps intended to be deployed on a fleet. "
               "The fleet is defined at deployment time. ")]
-     [:p "To add apps to your application set, click the plus button below."]
+     [:p "To add apps to your application bouquet, click the plus button below."]
      [ui/Table {:compact    true
                 :definition true}
       [ui/TableBody

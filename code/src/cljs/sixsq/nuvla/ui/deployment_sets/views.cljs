@@ -204,8 +204,6 @@
         deployment-sets (subscribe [::subs/deployment-sets])]
     [components/LoadingPage {}
      [:<>
-      [uix/PageHeader "bullseye"
-       (@tr [:deployment-sets])]
       [MenuBar]
       [ui/Grid {:stackable true
                 :reversed  "mobile"

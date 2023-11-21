@@ -149,21 +149,12 @@
 
 (defn MenuBar
   []
-  (let [view (subscribe [::subs/view])]
-    (fn []
-      [:<>
-       [components/StickyBar
-        [ui/Menu {:borderless true, :stackable true}
-         [ui/MenuItem {:icon     icons/i-grid-layout
-                       :active   (= @view "cards")
-                       :on-click #(dispatch [::events/set-view "cards"])}]
-         [ui/MenuItem {:icon     "table"
-                       :active   (= @view "table")
-                       :on-click #(dispatch [::events/set-view "table"])}]
-
-         [components/RefreshMenu
-          {:action-id  events/refresh-action-deployments-id
-           :on-refresh refresh}]]]])))
+  (fn []
+    [components/StickyBar
+     [ui/Menu {:borderless true, :stackable true}
+      [components/RefreshMenu
+       {:action-id  events/refresh-action-deployments-id
+        :on-refresh refresh}]]]))
 
 (defn- DeplSetLink
   [depl-set-id depl-set-name]
@@ -472,25 +463,18 @@
            [pagination]
            [Pagination (:pagination-db-path options)])]))))
 
-(defn DeploymentsMainContent
+(defn DeploymentsView
   []
-  (dispatch [::events/init])
   (fn []
-    [components/LoadingPage {}
-     [:<>
-      [MenuBar]
-      [ui/Grid {:stackable true
-                :reversed  "mobile"
-                :style     {:margin-top    0
-                            :margin-bottom 0}}
-       [ControlBar]
-       [StatisticStates true ::subs/deployments-summary]]
-      [bulk-progress-plugin/MonitoredJobs
-       {:db-path [::spec/bulk-jobs]}]
-      [DeploymentsDisplay]
-      [Pagination]]]))
-
-
-(defn deployments-view
-  []
-  [ui/Segment style/basic [DeploymentsMainContent]])
+    [:<>
+     [MenuBar]
+     [ui/Grid {:stackable true
+               :reversed  "mobile"
+               :style     {:margin-top    0
+                           :margin-bottom 0}}
+      [ControlBar]
+      [StatisticStates true ::subs/deployments-summary]]
+     [bulk-progress-plugin/MonitoredJobs
+      {:db-path [::spec/bulk-jobs]}]
+     [DeploymentsDisplay]
+     [Pagination]]))

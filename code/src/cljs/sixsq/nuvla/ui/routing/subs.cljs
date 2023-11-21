@@ -33,6 +33,11 @@
   :-> :current-route)
 
 (reg-sub
+  ::route-name
+  :<- [::current-route]
+  :-> (comp :name :data))
+
+(reg-sub
   ::query-param
   :<- [::current-route]
   (fn [current-route [_ query-param-key]]

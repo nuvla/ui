@@ -2,7 +2,9 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
+            [sixsq.nuvla.ui.deployment-sets.events :as deployment-sets-events]
             [sixsq.nuvla.ui.deployments.events :as events]
+            [sixsq.nuvla.ui.deployment-sets-detail.events :as dsd-events]
             [sixsq.nuvla.ui.deployments.views :refer [DeploymentsView MenuBar]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
@@ -49,21 +51,27 @@
                          :icon [icons/BullseyeIcon]}]]))
 
 (defn DeploymentsMainContent
-  [route-name]
-  (when (= route-name routes/deployments) (dispatch [::events/init]))
-  (fn []
-     [:<>
-      [DeploymentsTabs]
-      [components/LoadingPage {}
-       (case route-name
-         ::routes/deployments
-         [DeploymentsView]
+  []
+  (let [route-name    (subscribe [::routing-subs/route-name])]
+    (fn []
+      (case @route-name
+        ::routes/deployments (dispatch [::events/init])
 
-         ::routes/deployment-sets
-         [deployment-sets-view])]]))
+        ::routes/deployment-sets (dispatch [::deployment-sets-events/refresh])
 
+        ::routes/deployment-sets-details (dispatch [::dsd-events/init]))
+      [:<>
+       (when-not (= routes/deployment-sets-details
+                    @route-name)
+         [DeploymentsTabs])
+       [components/LoadingPage {}
+        (case @route-name
+          ::routes/deployments
+          [DeploymentsView]
 
+          (::routes/deployment-sets ::routes/deployment-sets-details)
+          [deployment-sets-view])]])))
 
 (defn deployments-view
-  [{data :data}]
-  [ui/Segment style/basic [DeploymentsMainContent (:name data)]])
+  [route]
+  [ui/Segment style/basic [DeploymentsMainContent (:data route)]])

@@ -149,12 +149,21 @@
 
 (defn MenuBar
   []
-  (fn []
-    [components/StickyBar
-     [ui/Menu {:borderless true, :stackable true}
-      [components/RefreshMenu
-       {:action-id  events/refresh-action-deployments-id
-        :on-refresh refresh}]]]))
+  (let [view (subscribe [::subs/view])]
+    (fn []
+      [:<>
+       [components/StickyBar
+        [ui/Menu {:borderless true, :stackable true}
+         [ui/MenuItem {:icon     icons/i-grid-layout
+                       :active   (= @view "cards")
+                       :on-click #(dispatch [::events/set-view "cards"])}]
+         [ui/MenuItem {:icon     "table"
+                       :active   (= @view "table")
+                       :on-click #(dispatch [::events/set-view "table"])}]
+
+         [components/RefreshMenu
+          {:action-id  events/refresh-action-deployments-id
+           :on-refresh refresh}]]]])))
 
 (defn- DeplSetLink
   [depl-set-id depl-set-name]

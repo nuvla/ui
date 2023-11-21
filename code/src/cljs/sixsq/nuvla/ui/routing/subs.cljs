@@ -20,13 +20,12 @@
 
 (reg-sub
   ::nav-url-active?
-  :<- [::nav-path-first]
-  (fn [nav-path-first [_ url]]
-    (-> (str/replace-first url (str config/base-path "/") "")
-        (str/split "/")
-        first
-        (= nav-path-first)
-        boolean)))
+  :<- [::route-name]
+  (fn [route-name [_ route-names]]
+    (boolean
+      (if (set? route-names)
+        (route-names route-name)
+        (= route-name route-names)))))
 
 (reg-sub
   ::current-route
@@ -36,6 +35,12 @@
   ::route-name
   :<- [::current-route]
   :-> (comp :name :data))
+
+(reg-sub
+  ::path-params
+  :<- [::current-route]
+  :-> :path-params)
+
 
 (reg-sub
   ::query-param

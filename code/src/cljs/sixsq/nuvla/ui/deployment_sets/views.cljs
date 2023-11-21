@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.subs :as routing-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -199,34 +200,29 @@
 
 (defn Main
   []
-  (dispatch [::events/refresh])
-  (let [tr (subscribe [::i18n-subs/tr])
-        deployment-sets (subscribe [::subs/deployment-sets])]
-    [components/LoadingPage {}
-     [:<>
-      [MenuBar]
-      [ui/Grid {:stackable true
-                :reversed  "mobile"
-                :style     {:margin-top    0
-                            :margin-bottom 0}}
-       [ControlBar]
-       [StatisticStates true]]
-      (if (zero? (:count @deployment-sets))
-        [ui/Grid {:centered true}
-         [AddFirstButton]]
-        [:<>
-         (case @view-type
-           :cards [DeploymentSetCards]
-           :table [DeploymentSetTable])
-         [Pagination]])]]))
+  (let [deployment-sets (subscribe [::subs/deployment-sets])]
+    [:<>
+     [MenuBar]
+     [ui/Grid {:stackable true
+               :reversed  "mobile"
+               :style     {:margin-top    0
+                           :margin-bottom 0}}
+      [ControlBar]
+      [StatisticStates true]]
+     (if (zero? (:count @deployment-sets))
+       [ui/Grid {:centered true}
+        [AddFirstButton]]
+       [:<>
+        (case @view-type
+          :cards [DeploymentSetCards]
+          :table [DeploymentSetTable])
+        [Pagination]])]))
 
 
 (defn deployment-sets-view
-  [{path :path}]
-  (let [[_ path1] path
-        n        (count path)
-        children (case n
-                   2 [detail/Details path1]
-                   [Main])]
-    [:<>
-     [ui/Segment style/basic children]]))
+  []
+  (let [path-params (subscribe [::routing-subs/path-params])]
+    [ui/Segment style/basic
+     (if-let [uuid (:uuid @path-params)]
+       [detail/Details uuid]
+       [Main])]))

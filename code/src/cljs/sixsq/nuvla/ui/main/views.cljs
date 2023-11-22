@@ -40,7 +40,7 @@
         [icons/Icon {:name  icon-class
                      :style {:padding-right "10px"
                              :font-weight   (when-not
-                                              (= "Deployments" text)
+                                              (= icon-class "fal fa-rocket-launch")
                                               400)}}])
       page-title]]))
 

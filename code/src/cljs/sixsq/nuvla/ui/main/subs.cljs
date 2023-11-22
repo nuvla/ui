@@ -88,7 +88,10 @@
   ::page-info
   :<- [::pages]
   (fn [pages [_ url]]
-    (get pages url)))
+    (get pages (if (#{"deployment-groups" "deployment-sets"}
+                    url)
+                 "deployments"
+                 url))))
 
 (reg-sub
   ::config-map

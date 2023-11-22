@@ -88,7 +88,7 @@
   ::page-info
   :<- [::pages]
   (fn [pages [_ url]]
-    (get pages (if (#{"deployment-groups" "deployment-sets"}
+    (get pages (if (#{"deployment-groups" "deployment-set"}
                     url)
                  "deployments"
                  url))))

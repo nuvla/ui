@@ -272,7 +272,7 @@
           [intercom/widget]
           [sidebar/Menu]
           [:div {:class (str "nuvla-" (case (first @resource-path)
-                                        ("deployment-sets" "deployment-groups")
+                                        ("deployment-set" "deployment-groups")
                                         "deployments"
 
                                         (first @resource-path)))

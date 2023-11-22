@@ -168,12 +168,18 @@
       :link-text "deployment-groups"}
      [""]
      ["/" ::routes/deployment-sets-slashed]]
-    ["deployment-groups/:uuid"
-     {:name      ::routes/deployment-sets-details
+    ["deployment-set"
+     {:name      ::routes/deployment-set
       :view      #'deployment-sets-view
+      :link-text "deployment-groups"}
+     [""]
+     ["/" ::routes/deployment-set-slashed]]
+    ["deployment-groups/:uuid"
+     {:name      ::routes/deployment-groups-details
+      :view      #'deployment-sets-details-view
       :link-text "deployment-groups"}]
     ["deployment-set/:uuid"
-     {:name      ::routes/deployment-set-details
+     {:name      ::routes/deployment-sets-details
       :view      #'deployment-sets-details-view
       :link-text "deployment-sets"}]
     ["documentation"

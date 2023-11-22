@@ -9,6 +9,8 @@
             [sixsq.nuvla.ui.cimi.views :refer [SelectFieldsView]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
@@ -159,6 +161,13 @@
   ([db db-path k default]
    (get-in db (conj (or db-path []) k) default)))
 
+(reg-event-fx
+  ::init-pre-selection
+  (fn [{{:keys [current-route]} :db} [_ select-all-query-param selection-db-path]]
+    (let [query-key (or select-all-query-param :select)]
+      (when (= "all" (get-query-param current-route query-key))
+        {:fx [[:dispatch [::select-all selection-db-path]]
+              [:dispatch [::routing-events/remove-query-param query-key]]]}))))
 
 (reg-event-fx
   ::select-all-in-page
@@ -195,9 +204,9 @@
 
 (reg-event-db
   ::select-all
-  (fn [db [_ db-path status]]
+  (fn [db [_ db-path current-status]]
     (-> db
-        (assoc-in (conj (or db-path []) ::select-all?) (not= status :all))
+        (assoc-in (conj (or db-path []) ::select-all?) (not= current-status :all))
         (assoc-in (conj (or db-path []) ::selected-set) #{}))))
 
 (reg-sub
@@ -568,13 +577,16 @@
      - `:bulk-actions`, a vector of at least one ::bulk-action. A ::bulk-action must be an
                         entire component to render or an event and name.
     Enabled sort for all columns, column wise disabling via `:no-sort?` key in column definition.
+
+    Everything in the table can be pre-selected via `select=all` query parameter.
+    Query param name can be overridden via `select-all-query-param` option in `select-config`.
 "
   [{:keys [cell-props columns rows
            row-click-handler row-props
            sort-config select-config]
     :as   props}]
   (let [{:keys [bulk-actions select-db-path total-count-sub-key disabled-tooltip
-                resources-sub-key rights-needed select-label-accessor]} select-config
+                resources-sub-key rights-needed select-label-accessor select-all-query-param]} select-config
         columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
         selectable?    (and
                          select-config
@@ -588,6 +600,7 @@
                          (update (merge row-props {:on-click #(when row-click-handler (row-click-handler row))})
                                  :style
                                  merge (:style (:table-row-prop row))))]
+    (dispatch [::init-pre-selection select-all-query-param select-db-path])
     [:div
      (when selectable?
        [BulkActionBar {:selectable?         selectable?

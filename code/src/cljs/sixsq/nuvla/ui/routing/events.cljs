@@ -134,3 +134,9 @@
       {:db (assoc db after-nav-cb-key after-nav-cb)
        :fx [[:dispatch
              [::change-query-param (merge route-instructions new-partial-route-data)]]]})))
+
+(reg-event-fx
+  ::remove-query-param
+  (fn [_ [_ query-key]]
+    {:fx [[:dispatch
+           [::store-in-query-param {:query-key query-key}]]]}))

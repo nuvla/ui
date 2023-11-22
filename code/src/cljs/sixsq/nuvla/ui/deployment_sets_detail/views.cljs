@@ -42,7 +42,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.tooltip :refer [with-tooltip]]
+            [sixsq.nuvla.ui.utils.tooltip :as tt]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
             [sixsq.nuvla.ui.utils.values :as utils-values]
@@ -603,16 +603,15 @@
 
 (defn AddButton
   [{:keys [modal-id enabled tooltip] :or {enabled true}}]
-  (with-tooltip
-    [:div [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal modal-id]))
-                       :disabled (not enabled)
-                       :icon     icons/i-plus-large
-                       :style    {:align-self "center"}}]]
+  (tt/with-tooltip [:div [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal modal-id]))
+                                      :disabled (not enabled)
+                                      :icon     icons/i-plus-large
+                                      :style    {:align-self "center"}}]]
     tooltip))
 
 (defn RemoveButton
   [{:keys [enabled tooltip on-click] :or {enabled true}}]
-  (with-tooltip
+  (tt/with-tooltip
     [:span [icons/XMarkIcon
             {:style    {:cursor (if enabled :pointer :default)}
              :disabled (not enabled)
@@ -627,7 +626,7 @@
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         fleet-filter               (subscribe [::subs/fleet-filter])]
-    (with-tooltip
+    (tt/with-tooltip
       [:span [uix/Button
               {:disabled (and (not creating?) (not @edit-op-allowed?))
                :on-click (fn []
@@ -1292,7 +1291,7 @@
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     [uix/Accordion
-     (with-tooltip
+     (tt/with-tooltip
        [:div [module-plugin/ModuleVersions
               {:db-path      [::spec/apps-sets i]
                :href         module-id
@@ -1312,7 +1311,7 @@
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
-     (with-tooltip
+     (tt/with-tooltip
        [:div [module-plugin/EnvVariables
               {:db-path      [::spec/apps-sets i]
                :href         module-id
@@ -1425,7 +1424,7 @@
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
         apps-set                   (subscribe [::subs/apps-set])]
-    [:div
+    [:div.nuvla-apps
      (when @is-controlled-by-apps-set?
        [:div {:style {:margin-bottom "5px"}}
         [:h2 (:name @apps-set)]
@@ -1433,7 +1432,7 @@
                               [LinkToModule [::spec/apps-sets 0 :apps-set] (:id @apps-set) [:go-to-app-set]])
                    :content "Open application in a new window"}]
         [uix/Accordion
-         (with-tooltip
+         (tt/with-tooltip
            [:div [module-plugin/ModuleVersions
                   {:db-path      [::spec/apps-sets 0 :apps-set]
                    :href         (:id @apps-set)
@@ -1746,7 +1745,7 @@
 
 (defn- DeploymentSetView
   [uuid]
-  (dispatch [::events/init uuid])
+  (dispatch [::events/init])
   (let [depl-set (subscribe [::subs/deployment-set])]
     (fn []
       (let [{:keys [id name]} @depl-set]

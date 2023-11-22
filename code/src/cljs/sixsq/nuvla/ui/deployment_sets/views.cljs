@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.subs :as routing-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -117,7 +118,7 @@
   [{:keys [id name description created state tags] :as _deployment-set}]
   (let [locale @(subscribe [::i18n-subs/locale])
         uuid   (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::routing-events/navigate routes/deployment-sets-details {:uuid uuid}])
+    [ui/TableRow {:on-click #(dispatch [::routing-events/navigate routes/deployment-groups-details {:uuid uuid}])
                   :style    {:cursor "pointer"}}
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
@@ -155,7 +156,7 @@
   [{:keys [id created name state description tags] :as _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
-        href   (name->href routes/deployment-sets-details {:uuid (general-utils/id->uuid id)})]
+        href   (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid id)})]
     ^{:key id}
     [uix/Card
      {:href        href
@@ -199,36 +200,29 @@
 
 (defn Main
   []
-  (dispatch [::events/refresh])
-  (let [tr (subscribe [::i18n-subs/tr])
-        deployment-sets (subscribe [::subs/deployment-sets])]
-    [components/LoadingPage {}
-     [:<>
-      [uix/PageHeader "bullseye"
-       (@tr [:deployment-sets])]
-      [MenuBar]
-      [ui/Grid {:stackable true
-                :reversed  "mobile"
-                :style     {:margin-top    0
-                            :margin-bottom 0}}
-       [ControlBar]
-       [StatisticStates true]]
-      (if (zero? (:count @deployment-sets))
-        [ui/Grid {:centered true}
-         [AddFirstButton]]
-        [:<>
-         (case @view-type
-           :cards [DeploymentSetCards]
-           :table [DeploymentSetTable])
-         [Pagination]])]]))
-
-
-(defn deployment-sets-view
-  [{path :path}]
-  (let [[_ path1] path
-        n        (count path)
-        children (case n
-                   2 [detail/Details path1]
-                   [Main])]
+  (let [deployment-sets (subscribe [::subs/deployment-sets])]
     [:<>
-     [ui/Segment style/basic children]]))
+     [MenuBar]
+     [ui/Grid {:stackable true
+               :reversed  "mobile"
+               :style     {:margin-top    0
+                           :margin-bottom 0}}
+      [ControlBar]
+      [StatisticStates true]]
+     (if (zero? (:count @deployment-sets))
+       [ui/Grid {:centered true}
+        [AddFirstButton]]
+       [:<>
+        (case @view-type
+          :cards [DeploymentSetCards]
+          :table [DeploymentSetTable])
+        [Pagination]])]))
+
+
+(defn deployment-sets-views
+  []
+  (let [path-params (subscribe [::routing-subs/path-params])]
+    [ui/Segment style/basic
+     (if-let [uuid (:uuid @path-params)]
+       [detail/Details uuid]
+       [Main])]))

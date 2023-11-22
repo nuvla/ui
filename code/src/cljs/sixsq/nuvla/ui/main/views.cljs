@@ -40,7 +40,7 @@
         [icons/Icon {:name  icon-class
                      :style {:padding-right "10px"
                              :font-weight   (when-not
-                                              (= "Deployments" text)
+                                              (= icon-class "fal fa-rocket-launch")
                                               400)}}])
       page-title]]))
 
@@ -271,7 +271,11 @@
          [:<>
           [intercom/widget]
           [sidebar/Menu]
-          [:div {:class (str "nuvla-" (first @resource-path))
+          [:div {:class (str "nuvla-" (case (first @resource-path)
+                                        ("deployment-set" "deployment-groups")
+                                        "deployments"
+
+                                        (first @resource-path)))
                  :style {:transition  "0.5s"
                          :margin-left (if (and (not @is-small-device?) @show?)
                                         sidebar/sidebar-width "0")}}

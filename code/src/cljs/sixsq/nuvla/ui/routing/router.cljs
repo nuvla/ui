@@ -14,9 +14,10 @@
             [sixsq.nuvla.ui.dashboard.views :refer [dashboard-view]]
             [sixsq.nuvla.ui.data-set.views :as data-set-views]
             [sixsq.nuvla.ui.data.views :refer [data-view]]
-            [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
             [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
-            [sixsq.nuvla.ui.deployments.views :refer [deployments-view]]
+            [sixsq.nuvla.ui.deployments.routes :refer [deployments-view
+                                                       deployment-sets-view
+                                                       deployment-sets-details-view]]
             [sixsq.nuvla.ui.docs.views :refer [documentation]]
             [sixsq.nuvla.ui.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
@@ -167,13 +168,19 @@
       :link-text "deployment-groups"}
      [""]
      ["/" ::routes/deployment-sets-slashed]]
-    ["deployment-groups/:uuid"
-     {:name      ::routes/deployment-sets-details
+    ["deployment-set"
+     {:name      ::routes/deployment-set
       :view      #'deployment-sets-view
+      :link-text "deployment-groups"}
+     [""]
+     ["/" ::routes/deployment-set-slashed]]
+    ["deployment-groups/:uuid"
+     {:name      ::routes/deployment-groups-details
+      :view      #'deployment-sets-details-view
       :link-text "deployment-groups"}]
     ["deployment-set/:uuid"
-     {:name      ::routes/deployment-set-details
-      :view      #'deployment-sets-view
+     {:name      ::routes/deployment-sets-details
+      :view      #'deployment-sets-details-view
       :link-text "deployment-sets"}]
     ["documentation"
      {:name      ::routes/documentation

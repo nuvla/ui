@@ -168,7 +168,7 @@
 (defn- DeplSetLink
   [depl-set-id depl-set-name]
   (when depl-set-id
-    [:a {:href depl-set-id}
+    [:a {:href (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid depl-set-id)})}
      [ui/Icon {:name "bullseye"}]
      depl-set-name]))
 
@@ -472,25 +472,18 @@
            [pagination]
            [Pagination (:pagination-db-path options)])]))))
 
-(defn DeploymentsMainContent
+(defn DeploymentsView
   []
-  (dispatch [::events/init])
   (fn []
-    [components/LoadingPage {}
-     [:<>
-      [MenuBar]
-      [ui/Grid {:stackable true
-                :reversed  "mobile"
-                :style     {:margin-top    0
-                            :margin-bottom 0}}
-       [ControlBar]
-       [StatisticStates true ::subs/deployments-summary]]
-      [bulk-progress-plugin/MonitoredJobs
-       {:db-path [::spec/bulk-jobs]}]
-      [DeploymentsDisplay]
-      [Pagination]]]))
-
-
-(defn deployments-view
-  []
-  [ui/Segment style/basic [DeploymentsMainContent]])
+    [:<>
+     [MenuBar]
+     [ui/Grid {:stackable true
+               :reversed  "mobile"
+               :style     {:margin-top    0
+                           :margin-bottom 0}}
+      [ControlBar]
+      [StatisticStates true ::subs/deployments-summary]]
+     [bulk-progress-plugin/MonitoredJobs
+      {:db-path [::spec/bulk-jobs]}]
+     [DeploymentsDisplay]
+     [Pagination]]))

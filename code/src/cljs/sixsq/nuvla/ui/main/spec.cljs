@@ -78,18 +78,14 @@
                                                           :protected? true
                                                           :order      20}
                                        "deployments"     {:key        routes/deployments
+                                                          :route-names #{routes/deployments
+                                                                         routes/deployment-sets-details
+                                                                         routes/deployment-sets}
                                                           :label-kw   :deployments
                                                           :name       "deployments"
                                                           :icon       icons/i-rocket
                                                           :protected? true
                                                           :order      30}
-                                       "deployment-sets" {:key             routes/deployment-sets
-                                                          :label-kw        :deployment-sets
-                                                          :name            "deployments-sets"
-                                                          :icon            icons/i-bullseye
-                                                          :protected?      true
-                                                          :feature-flag-kw about-utils/feature-deployment-set-key
-                                                          :order           31}
                                        "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"

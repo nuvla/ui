@@ -792,7 +792,7 @@
         :select-all                                    "Select all"
         :select-all-page                               "Select all in this page"
         :select-application                            "select application"
-        :select-app-set-version                        "Select Application Set version"
+        :select-app-set-version                        "Select Application Bouquet version"
         :select-at-least-one-app                       "Please select at least one app"
         :select-at-least-one-item                      "Select at least one item to enable bulk actions"
         :select-components                             "Select components"

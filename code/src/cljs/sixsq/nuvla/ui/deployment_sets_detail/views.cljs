@@ -1424,7 +1424,7 @@
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
         apps-set                   (subscribe [::subs/apps-set])]
-    [:div
+    [:div.nuvla-apps
      (when @is-controlled-by-apps-set?
        [:div {:style {:margin-bottom "5px"}}
         [:h2 (:name @apps-set)]

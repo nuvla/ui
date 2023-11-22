@@ -168,7 +168,7 @@
 (defn- DeplSetLink
   [depl-set-id depl-set-name]
   (when depl-set-id
-    [:a {:href depl-set-id}
+    [:a {:href (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid depl-set-id)})}
      [ui/Icon {:name "bullseye"}]
      depl-set-name]))
 

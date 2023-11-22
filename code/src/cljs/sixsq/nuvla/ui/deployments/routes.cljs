@@ -1,11 +1,11 @@
 (ns sixsq.nuvla.ui.deployments.routes
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-view]]
+            [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-views]]
             [sixsq.nuvla.ui.deployment-sets.events :as deployment-sets-events]
             [sixsq.nuvla.ui.deployments.events :as events]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as dsd-events]
-            [sixsq.nuvla.ui.deployments.views :refer [DeploymentsView MenuBar]]
+            [sixsq.nuvla.ui.deployments.views :refer [DeploymentsView]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.routing.subs :as routing-subs]
@@ -13,7 +13,6 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.style :as style]
-            [reagent.core :as r]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
@@ -70,8 +69,18 @@
           [DeploymentsView]
 
           (::routes/deployment-sets ::routes/deployment-sets-details)
-          [deployment-sets-view])]])))
+          [deployment-sets-views])]])))
 
 (defn deployments-view
-  [route]
-  [ui/Segment style/basic [DeploymentsMainContent (:data route)]])
+  []
+  [ui/Segment style/basic [DeploymentsMainContent]])
+
+(defn deployment-sets-view
+  []
+  [ui/Segment style/basic
+   [DeploymentsMainContent]])
+
+(defn deployment-sets-details-view
+  []
+  [ui/Segment style/basic
+   [DeploymentsMainContent]])

@@ -219,7 +219,7 @@
         [Pagination]])]))
 
 
-(defn deployment-sets-view
+(defn deployment-sets-views
   []
   (let [path-params (subscribe [::routing-subs/path-params])]
     [ui/Segment style/basic

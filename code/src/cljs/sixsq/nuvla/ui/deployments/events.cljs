@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployments.events
-  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+  (:require [cljs.spec.alpha :as s]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.spec :as spec]
             [sixsq.nuvla.ui.deployments.utils :as utils :refer [build-bulk-filter]]
@@ -24,11 +25,14 @@
   ::init
   (fn [{{:keys [current-route] :as db} :db} _]
     (let [state-filter (get-stored-db-value-from-query-param current-route [::spec/state-selector])
-          filter-query (get-query-param current-route (keyword spec/resource-name))]
+          filter-query (get-query-param current-route (keyword spec/resource-name))
+          view-param   (get-query-param current-route :view)]
       {:db (merge db spec/defaults
                   {::spec/state-selector    state-filter
                    ::spec/additional-filter filter-query})
-       :fx [[:dispatch [::refresh]]]})))
+       :fx [[:dispatch [::refresh]]
+            (when (s/valid? ::spec/view view-param)
+              [:dispatch [::set-view view-param]])]})))
 
 (reg-event-fx
   ::refresh

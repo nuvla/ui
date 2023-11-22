@@ -271,7 +271,11 @@
          [:<>
           [intercom/widget]
           [sidebar/Menu]
-          [:div {:class (str "nuvla-" (first @resource-path))
+          [:div {:class (str "nuvla-" (case (first @resource-path)
+                                        ("deployment-sets" "deployment-groups")
+                                        "deployments"
+
+                                        (first @resource-path)))
                  :style {:transition  "0.5s"
                          :margin-left (if (and (not @is-small-device?) @show?)
                                         sidebar/sidebar-width "0")}}

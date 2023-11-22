@@ -901,25 +901,29 @@ body .divider-red {
   color: #ffffff;
 }
 
+.nuvla-apps > .ui-header.ui-card-header,
 .ui-card-header {
   background-color: var(--accent-color) !important;
   border-radius: 0.28571429rem 0.28571429rem 0 0;
   color: #ffffff;
 }
 
+.nuvla-deployments .nuvla-edges .ui-header,
+.nuvla-deployments .nuvla-edges .button,
 .nuvla-edges .ui-header,
 .nuvla-edges .button,
+.nuvla-deployments .nuvla-apps .button,
 .nuvla-apps .button {
   background-color: var(--accent-color) !important;
   color: #ffffff !important;
 }
 
-.nuvla-edges .button:hover {
+.nuvla-deployments .nuvla-edges .button:hover {
   background-color: rgba(22, 173, 146, 0.9) !important;
   color: #ffffff;
 }
 
-.nuvla-deployments .ui-header,
+.nuvla-deployments > .ui-header.ui-card-header,
 .nuvla-deployments .button {
   background-color: rgba(148, 130, 255, 1) !important;
   color: #ffffff;

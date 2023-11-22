@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.deployments.routes
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.about.subs :as about-subs]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as dsd-events]
             [sixsq.nuvla.ui.deployment-sets.events :as deployment-sets-events]
             [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-views]]
@@ -18,19 +20,19 @@
             [sixsq.nuvla.ui.utils.style :as style]))
 
 (defn DeploymentTabItem
-  [{:keys [active? href label icon] }]
-  [:a {:href href
+  [{:keys [active? href label icon]}]
+  [:a {:href   href
        :active active?
-       :style (cond->
-                {:align-self :flex-end
-                 :margin "0 0 -2px"
-                 :padding ".85714286em 1.14285714em"
-                 :border-bottom-width "2px"
-                 :transition "color .1s ease"
-                 :color      "rgba(0,0,0,.87)"}
-                active?
-                (merge {:border-bottom "2px solid #c10e12"
-                        :font-weight   600}))}
+       :style  (cond->
+                 {:align-self          :flex-end
+                  :margin              "0 0 -2px"
+                  :padding             ".85714286em 1.14285714em"
+                  :border-bottom-width "2px"
+                  :transition          "color .1s ease"
+                  :color               "rgba(0,0,0,.87)"}
+                 active?
+                 (merge {:border-bottom "2px solid #c10e12"
+                         :font-weight   600}))}
    icon
    label])
 
@@ -40,21 +42,22 @@
         route-name (subscribe [::routing-subs/route-name])]
     [:div {:style {:border-bottom "2px solid rgba(34,36,38,.15)"
                    :min-height    "2.85714286em"
-                   :display :flex}}
-     [DeploymentTabItem {:label (str/capitalize (@tr [:deployments]))
-                         :href  (routing-utils/name->href routes/deployments)
+                   :display       :flex}}
+     [DeploymentTabItem {:label   (str/capitalize (@tr [:deployments]))
+                         :href    (routing-utils/name->href routes/deployments)
                          :active? (= @route-name routes/deployments)
-                         :icon [icons/RocketIcon]}]
-     [DeploymentTabItem {:label (general-utils/capitalize-words (@tr [:deployment-groups]))
-                         :href  (routing-utils/name->href routes/deployment-sets)
+                         :icon    [icons/RocketIcon]}]
+     [DeploymentTabItem {:label   (general-utils/capitalize-words (@tr [:deployment-groups]))
+                         :href    (routing-utils/name->href routes/deployment-sets)
                          :active? (boolean (#{routes/deployment-set
                                               routes/deployment-sets}
-                                             @route-name))
-                         :icon [icons/BullseyeIcon]}]]))
+                                            @route-name))
+                         :icon    [icons/BullseyeIcon]}]]))
 
 (defn DeploymentsMainContent
   []
-  (let [route-name    (subscribe [::routing-subs/route-name])]
+  (let [route-name          (subscribe [::routing-subs/route-name])
+        depl-group-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])]
     (fn []
       (case @route-name
         ::routes/deployments (dispatch [::events/init])
@@ -66,9 +69,10 @@
 
         nil)
       [:<>
-       (when-not (#{routes/deployment-groups-details
-                    routes/deployment-sets-details}
-                    @route-name)
+       (when (and @depl-group-enabled?
+                  (not (#{routes/deployment-groups-details
+                          routes/deployment-sets-details}
+                        @route-name)))
          [DeploymentsTabs])
        [components/LoadingPage {}
         (case @route-name
@@ -76,9 +80,9 @@
           [DeploymentsView]
 
           (::routes/deployment-set
-           ::routes/deployment-sets
-           ::routes/deployment-groups-details
-           ::routes/deployment-sets-details)
+            ::routes/deployment-sets
+            ::routes/deployment-groups-details
+            ::routes/deployment-sets-details)
           [deployment-sets-views]
 
           [UnknownResource])]])))

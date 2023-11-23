@@ -726,7 +726,7 @@
         [RemoveButton {:enabled  true
                        :on-click #(dispatch [::events/remove-apps-set])}])]
 
-     [:div "Applications Bouquet includes following apps:"]]))
+     [:div "Application Bouquet includes following apps:"]]))
 
 (defn- AppsOverviewTable
   [creating?]

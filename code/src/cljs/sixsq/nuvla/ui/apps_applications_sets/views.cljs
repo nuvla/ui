@@ -147,8 +147,8 @@
 (defn DeleteAppSet
   [on-delete]
   [DeleteModal
-   {:header     "Delete applications bouquet"
-    :content    "Delete applications bouquet and configuration related to it?"
+   {:header     "Delete application bouquet"
+    :content    "Delete application bouquet and configuration related to it?"
     :on-confirm on-delete}])
 
 (defn ConfigureSetApplications

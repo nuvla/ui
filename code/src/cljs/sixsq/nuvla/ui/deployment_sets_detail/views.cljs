@@ -535,7 +535,7 @@
       [uix/Card
        {:header        [:div.nuvla-apps [:h3 {:style {:background-color "#2185d0"}
                                               :class [:ui-header :ui-apps-picker-card-header]}
-                              [icons/Icon {:name (apps-utils/subtype-icon subtype)}] "Application Bouquet"]]
+                                         [icons/Icon {:name (apps-utils/subtype-icon subtype)}] "Application Bouquet"]]
         :description   [:<>
                         [:h4 [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
                          (or name id)]
@@ -607,7 +607,7 @@
                                       :disabled (not enabled)
                                       :icon     icons/i-plus-large
                                       :style    {:align-self "center"}}]]
-    tooltip))
+                   tooltip))
 
 (defn RemoveButton
   [{:keys [enabled tooltip on-click] :or {enabled true}}]
@@ -1386,6 +1386,14 @@
                          (/ (* (:cent-amount-daily pricing) @edges-count) 100))]]]
      :label (str/capitalize (@tr [:pricing]))]))
 
+(defn ConfigureAppTabHeader
+  [i id]
+  (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] id])]
+    [:<>
+     [AppName {:idx i :id id}]
+     (when @is-behind-latest-published-version?
+       [icons/TriangleExclamationIcon {:style {:margin-left "5px"}}])]))
+
 (defn ConfigureApps
   [i applications creating?]
   (let [licenses-by-module-id (subscribe [::subs/license-by-module-id])
@@ -1400,7 +1408,7 @@
        :panes                   (map
                                   (fn [{id :href}]
                                     {:menuItem {:content (r/as-element
-                                                           [AppName {:idx i :id id}])
+                                                           [ConfigureAppTabHeader i id])
                                                 :icon    "cubes"
                                                 :key     (create-app-config-query-key i id)}
                                      :render   #(r/as-element
@@ -1416,6 +1424,13 @@
                                                      [AppPricing pricing])])})
                                   applications)}]]))
 
+(defn ConfigureAppsSetHeader
+  [db-path id apps-set-name]
+  (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? db-path id])]
+    [:h2 apps-set-name
+     (when @is-behind-latest-published-version?
+       [icons/TriangleExclamationIcon {:style {:margin-left "5px"}}])]))
+
 (defn ConfigureAppsSetWrapper
   [configure-apps creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
@@ -1423,13 +1438,14 @@
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
+        db-path                    [::spec/apps-sets 0 :apps-set]
         apps-set                   (subscribe [::subs/apps-set])]
     [:div.nuvla-apps
      (when @is-controlled-by-apps-set?
        [:div {:style {:margin-bottom "5px"}}
-        [:h2 (:name @apps-set)]
+        [ConfigureAppsSetHeader db-path (:id @apps-set) (:name @apps-set)]
         [ui/Popup {:trigger (r/as-element
-                              [LinkToModule [::spec/apps-sets 0 :apps-set] (:id @apps-set) [:go-to-app-set]])
+                              [LinkToModule db-path (:id @apps-set) [:go-to-app-set]])
                    :content "Open application in a new window"}]
         [uix/Accordion
          (tt/with-tooltip

@@ -686,7 +686,34 @@
      {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
                                       " "
                                       (time/ago (time/parse-iso8601 created) @locale))])
-      :trigger (r/as-element [:p label " " [icons/InfoIconFull]])}]))
+      :trigger (r/as-element [:span label " " [icons/InfoIconFull]])}]))
+
+(defn LinkToAppConfig
+  [creating? i cell-data row-data]
+  (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] (:href row-data)])]
+    (if creating?
+      (tt/with-tooltip [:span cell-data] "Configure App")
+      [:span
+       (tt/with-tooltip
+         [:a
+          {:href     "#"
+           :on-click #(dispatch [::events/navigate-internal
+                                 {:query-params
+                                  (merge
+                                    {(routes-utils/db-path->query-param-key [::apps-config])
+                                     (create-app-config-query-key i (:href row-data))}
+                                    {:deployment-groups-detail-tab :apps})}])
+           :children [icons/StoreIcon]
+           :target   :_self}
+          cell-data
+          [:span {:style {:margin-left "0.5rem"}}
+           [icons/GearIcon]]]
+         "Configure App")
+       (when @is-behind-latest-published-version?
+         (tt/with-tooltip
+           [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                                  :color :orange}]]
+           "Version behind latest published version"))])))
 
 (defn LinkToModuleDetails
   [trigger]
@@ -694,28 +721,39 @@
    {:content (r/as-element [:p "Open module details"])
     :trigger (r/as-element [:span trigger])}])
 
+(defn LinkToAppSetConfig
+  [creating? app-set-id name-component]
+  (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets 0 :apps-set] app-set-id])]
+    (if creating?
+      name-component
+      [:div {:style {:display :flex :align-items :center}}
+       [:a
+        {:href     "#"
+         :on-click #(dispatch [::events/navigate-internal
+                               {:query-params {:deployment-groups-detail-tab :apps}}])
+         :children [icons/StoreIcon]
+
+         :target   :_self}
+        [:div {:style {:display :flex :align-items :center}}
+         name-component
+         [:span {:style {:margin-left "0.5rem"}}
+          [icons/GearIcon]]]]
+       (when @is-behind-latest-published-version?
+         (tt/with-tooltip
+           [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                                  :color :orange}]]
+           "Version behind latest published version"))])))
+
 (defn AppsSetHeader
-  [creating?]
+  [creating? no-apps?]
   (let [apps-set-id      (subscribe [::subs/apps-set-id])
         apps-set-name    (subscribe [::subs/apps-set-name])
         apps-set-version (subscribe [::subs/apps-set-version])
         apps-set-created (subscribe [::subs/apps-set-created])
         name-component   [:p {:style {:margin 0}} @apps-set-name]]
     [:div
-     [:div {:style {:display :flex :font-size :large :justify-content :space-between}}
-      (if creating?
-        name-component
-        [:a
-         {:href     "#"
-          :on-click #(dispatch [::events/navigate-internal
-                                {:query-params {:deployment-groups-detail-tab :apps}}])
-          :children [icons/StoreIcon]
-
-          :target   :_self}
-         [:div {:style {:display :flex :align-items :center}}
-          name-component
-          [:span {:style {:margin-left "0.5rem"}}
-           [icons/GearIcon]]]])
+     [:div {:style {:display :flex :align-items :center :font-size :large :justify-content :space-between}}
+      [LinkToAppSetConfig creating? @apps-set-id name-component]
       [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
       [LinkToModuleDetails [module-plugin/LinkToApp
                             {:db-path  [::spec/apps-sets 0 :apps-set]
@@ -726,7 +764,10 @@
         [RemoveButton {:enabled  true
                        :on-click #(dispatch [::events/remove-apps-set])}])]
 
-     [:div "Application Bouquet includes following apps:"]]))
+     [:div {:style {:margin-top "10px"}}
+      (if-not no-apps?
+        "Application Bouquet includes following apps:"
+        "Application Bouquet does not include any apps.")]]))
 
 (defn- AppsOverviewTable
   [creating?]
@@ -741,10 +782,10 @@
     (fn []
       (let [no-apps? (empty? @apps-row)]
         [:<>
-         (when-not no-apps?
-           [:div {:style {:height "100%"}}
-            (when @is-controlled-by-apps-set?
-              [AppsSetHeader creating?])
+         [:div {:style {:height "100%"}}
+          (when @is-controlled-by-apps-set?
+            [AppsSetHeader creating? no-apps?])
+          (when-not no-apps?
             [:div {:style {:margin-top "8px"}}
              [Table {:columns
                      (into
@@ -758,26 +799,7 @@
                               :cell           (case k
                                                 :app
                                                 (fn [{:keys [cell-data row-data]}]
-                                                  [:<>
-                                                   [ui/Popup
-                                                    {:content (r/as-element [:p "Configure app"])
-                                                     :trigger
-                                                     (r/as-element
-                                                       (if creating?
-                                                         [:span cell-data]
-                                                         [:a
-                                                          {:href     "#"
-                                                           :on-click #(dispatch [::events/navigate-internal
-                                                                                 {:query-params
-                                                                                  (merge
-                                                                                    {(routes-utils/db-path->query-param-key [::apps-config])
-                                                                                     (create-app-config-query-key i (:href row-data))}
-                                                                                    {:deployment-groups-detail-tab :apps})}])
-                                                           :children [icons/StoreIcon]
-                                                           :target   :_self}
-                                                          cell-data
-                                                          [:span {:style {:margin-left "0.5rem"}}
-                                                           [icons/GearIcon]]]))}]])
+                                                  [LinkToAppConfig creating? i cell-data row-data])
                                                 :version
                                                 (fn [{{:keys [label created]} :cell-data}]
                                                   [ModuleVersion label created])
@@ -807,7 +829,7 @@
                                                                               :edit-op-allowed?           @edit-op-allowed?
                                                                               :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
                                                                :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
-                     :rows @apps-row}]]])
+                     :rows @apps-row}]])]
          (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
            [:<>
             [:div {:style {:display :flex :justify-content :center :align-items :center}}
@@ -1386,13 +1408,21 @@
                          (/ (* (:cent-amount-daily pricing) @edges-count) 100))]]]
      :label (str/capitalize (@tr [:pricing]))]))
 
+(defn WarningVersionBehind
+  [content-i18n-key]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Message {:warning true}
+     [ui/MessageHeader (@tr [:warning])]
+     [ui/MessageContent (@tr content-i18n-key)]]))
+
 (defn ConfigureAppTabHeader
   [i id]
   (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] id])]
     [:<>
      [AppName {:idx i :id id}]
      (when @is-behind-latest-published-version?
-       [icons/TriangleExclamationIcon {:style {:margin-left "5px"}}])]))
+       [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                       :color :orange}])]))
 
 (defn ConfigureApps
   [i applications creating?]
@@ -1407,29 +1437,38 @@
        :tabular                 true
        :panes                   (map
                                   (fn [{id :href}]
-                                    {:menuItem {:content (r/as-element
-                                                           [ConfigureAppTabHeader i id])
-                                                :icon    "cubes"
-                                                :key     (create-app-config-query-key i id)}
-                                     :render   #(r/as-element
-                                                  [ui/TabPane {:attached true}
-                                                   [ui/Popup {:trigger (r/as-element
-                                                                         [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
-                                                              :content "Open application in a new window"}]
-                                                   [ModuleVersionsApp i id creating?]
-                                                   [EnvVariablesApp i id creating?]
-                                                   (when-let [license (get @licenses-by-module-id id)]
-                                                     [AppLicense license])
-                                                   (when-let [pricing (get @pricing-by-module-id id)]
-                                                     [AppPricing pricing])])})
+                                    (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] id])]
+                                      {:menuItem {:content (r/as-element
+                                                             [ConfigureAppTabHeader i id])
+                                                  :icon    "cubes"
+                                                  :key     (create-app-config-query-key i id)}
+                                       :render   #(r/as-element
+                                                    [ui/TabPane {:attached true}
+                                                     (when @is-behind-latest-published-version?
+                                                       [WarningVersionBehind [:warning-not-latest-app-version]])
+                                                     [ui/Popup {:trigger (r/as-element
+                                                                           [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
+                                                                :content "Open application in a new window"}]
+                                                     [ModuleVersionsApp i id creating?]
+                                                     [EnvVariablesApp i id creating?]
+                                                     (when-let [license (get @licenses-by-module-id id)]
+                                                       [AppLicense license])
+                                                     (when-let [pricing (get @pricing-by-module-id id)]
+                                                       [AppPricing pricing])])}))
                                   applications)}]]))
 
 (defn ConfigureAppsSetHeader
   [db-path id apps-set-name]
   (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? db-path id])]
-    [:h2 apps-set-name
+    [:<>
+     [:h2 apps-set-name
+      (when @is-behind-latest-published-version?
+        (tt/with-tooltip
+          [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                                 :color :orange}]]
+          "Version behind latest published version"))]
      (when @is-behind-latest-published-version?
-       [icons/TriangleExclamationIcon {:style {:margin-left "5px"}}])]))
+       [WarningVersionBehind [:warning-not-latest-app-set-version]])]))
 
 (defn ConfigureAppsSetWrapper
   [configure-apps creating?]

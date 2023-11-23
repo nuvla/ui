@@ -233,8 +233,9 @@
                                                                                                      (map :id apps)
                                                                                                      apps)]))
                                                                                (into {}))}]))]
-      (when (seq apps-urls)
-        {::cimi-api-fx/search [:module params callback]}))))
+      (if (seq apps-urls)
+        {::cimi-api-fx/search [:module params callback]}
+        (callback {:resources []})))))
 
 (reg-event-fx
   ::set-applications-sets

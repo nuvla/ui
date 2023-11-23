@@ -980,6 +980,8 @@
         :warning-app-selected-not-compatible-targets   "You selected an app without selecting at least one compatible target!"
         :warning-draft-version-1                       "This is a draft version. Click or tap "
         :warning-draft-version-2                       " to load the latest published version."
+        :warning-not-latest-app-set-version            "This is not the latest published app bouquet version."
+        :warning-not-latest-app-version                "This is not the latest published app version."
         :warning-not-latest-version-1                  "This is not the latest version. Click or tap "
         :warning-not-latest-version-2                  " to load the latest."
         :warning-secret-displayed-once                 "This secret will be dislayed only once. Please store it in a safe place."

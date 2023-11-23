@@ -250,6 +250,41 @@
             (when change-event
               [:dispatch (conj change-event new-version-href)])]})))
 
+(defn latest-published-version
+  [db db-path href]
+  (let [module                  (db-module db db-path href)
+        versions-indexed        (module-versions-indexed module)
+        new-version-module-href (get-in db (db-new-version-module-href-path db-path href))]
+    (->> module
+         :versions
+         (filter :published)
+         reverse
+         (map :href)
+         first)))
+
+(defn latest-published-version-id
+  [db db-path href]
+  (let [module            (db-module db db-path href)
+        module-content-id (latest-published-version db db-path href)
+        versions-indexed  (module-versions-indexed module)]
+    (get-version-id versions-indexed module-content-id)))
+
+(reg-sub
+  ::latest-published-version
+  (fn [db [_ db-path href]]
+    (latest-published-version db db-path href)))
+
+(defn is-behind-latest-published-version?
+  [db db-path href]
+  (let [version-id                  (db-selected-version db db-path href)
+        latest-published-version-id (latest-published-version-id db db-path href)]
+    (some->> latest-published-version-id (< version-id))))
+
+(reg-sub
+  ::is-behind-latest-published-version?
+  (fn [db [_ db-path href]]
+    (is-behind-latest-published-version? db db-path href)))
+
 (defn db-new-version
   [db db-path href]
   (let [module                  (db-module db db-path href)
@@ -480,7 +515,7 @@
 (defn LinkToAppView
   [{:keys [path version-id target]} children]
   [:a {:href   (str-pathify (name->href routes/apps)
-                 (str path "?version=" version-id))
+                            (str path "?version=" version-id))
        :target (or target "_blank")}
    children])
 

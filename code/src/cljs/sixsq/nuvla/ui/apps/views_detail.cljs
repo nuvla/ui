@@ -360,11 +360,11 @@
                          :style   {:width "50px"}}]]]]
            (when @(subscribe [::about-subs/feature-flag-enabled? about-utils/feature-applications-sets-key])
              [ui/Card
-              {:href     (when parent (pathify [base-path (str "New Applications Bouquets?subtype=" utils/subtype-applications-sets)]))
+              {:href     (when parent (pathify [base-path (str "New Application Bouquet?subtype=" utils/subtype-applications-sets)]))
                :on-click (when parent
                            #(dispatch [::events/close-add-modal]))}
               [ui/CardContent {:text-align :center}
-               [ui/Header "Applications bouquets"]
+               [ui/Header "Application Bouquet"]
                [icons/AppSetsIcon {:size  :massive
                                    :color (when-not parent :grey)}]]])]]]))))
 
@@ -527,7 +527,7 @@
         (condp = @module-subtype
           utils/subtype-application "Docker"
           utils/subtype-application-k8s "Kubernetes"
-          utils/subtype-applications-sets "Applications bouquets")]])))
+          utils/subtype-applications-sets "Application bouquets")]])))
 
 
 (defn Details

@@ -46,7 +46,7 @@ For more information on how to format your app description using Markdown syntax
 "
   )
 
-(def apps-sets-description-template "# Applications Bouquet Description Placeholder
+(def apps-sets-description-template "# Application Bouquet Description Placeholder
 
 This is a generic placeholder that you should replace with your own app description.
 Be sure to provide a clear and concise overview of your app, its features, and its benefits.

@@ -4,7 +4,6 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.acl.utils :as acl-utils]
             [sixsq.nuvla.ui.apps.spec :refer [nonblank-string]]
-            [sixsq.nuvla.ui.apps-store.spec :refer [virtual-apps-set-parent-path]]
             [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]

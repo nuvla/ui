@@ -61,7 +61,7 @@
 
 (defn HighlightableMenuItem
   "Provides a menu item that reads from query params if it should be highlighted"
-  [{:keys [query-key query-param-value] :or {query-key :highlight} :as opts} & children]
+  [{:keys [query-key query-param-value] :or {query-key :highlight-menu-item} :as opts} & children]
   (let [highlighted? (subscribe [::routing-subs/has-query-param-value? query-key
                                  (some-> query-param-value name)])]
     (into [ui/MenuItem

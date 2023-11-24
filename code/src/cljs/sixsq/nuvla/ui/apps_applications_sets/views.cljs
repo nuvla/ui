@@ -28,6 +28,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.tooltip :as tt]
     [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn SelectSubtype
@@ -141,7 +142,7 @@
   [on-delete]
   [DeleteModal
    {:header     "Delete application"
-    :content    "Delete application from deployment group"
+    :content    "Remove application ?"
     :on-confirm on-delete}])
 
 (defn DeleteAppSet
@@ -150,6 +151,22 @@
    {:header     "Delete application bouquet"
     :content    "Delete application bouquet and configuration related to it?"
     :on-confirm on-delete}])
+
+(defn ApplicationTabHeader
+  [{:keys [id module-id name subtype editable? on-delete]}]
+  (let [tr                                  (subscribe [::i18n-subs/tr])
+        is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets id] module-id])]
+    [:<>
+     [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
+     (or name id)
+     (when @is-behind-latest-published-version?
+       (tt/with-tooltip
+         [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                                :color :orange}]]
+         (@tr [:warning-not-latest-app-version])))
+     ff/nbsp
+     (when @editable?
+       [DeleteApp on-delete])]))
 
 (defn ConfigureSetApplications
   [id]
@@ -169,12 +186,13 @@
                             (fn [{:keys [name subtype] module-id :id}]
                               {:menuItem
                                {:content (r/as-element
-                                           [:<>
-                                            [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
-                                            (or name id)
-                                            ff/nbsp
-                                            (when @editable?
-                                              [DeleteApp (partial on-delete id module-id)])])
+                                           [ApplicationTabHeader
+                                            {:id        id
+                                             :module-id module-id
+                                             :name      name
+                                             :subtype   subtype
+                                             :editable? editable?
+                                             :on-delete (partial on-delete id module-id)}])
                                 :key     (str id "-" module-id)}
                                :render #(r/as-element
                                           [ConfigureApplication id module-id])})
@@ -369,18 +387,35 @@
 
 (defn TabMenuApplications
   []
-  (let [error? (subscribe [::subs/apps-error?])]
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        error?             (subscribe [::subs/apps-error?])
+        has-outdated-apps? (subscribe [::subs/has-outdated-apps?])]
     [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [:<>
       [icons/ListIcon]
-      "Applications"]]))
+      "Applications"
+      (when @has-outdated-apps?
+        (tt/with-tooltip
+          [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                                 :color :orange}]]
+          (@tr [:warning-has-outdated-apps])))]]))
+
+(defn WarningVersionBehind
+  [content-i18n-key]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Message {:warning true}
+     [ui/MessageHeader (@tr [:warning])]
+     [ui/MessageContent (@tr content-i18n-key)]]))
 
 (defn ApplicationsPane
   []
-  [:div {:class :uix-apps-details-details}
-   [:h4 {:class :tab-app-detail} "Applications"]
-   #_[AppsSetsSection]
-   [SingleAppsSetSection]])
+  (let [has-outdated-apps? (subscribe [::subs/has-outdated-apps?])]
+    [:div {:class :uix-apps-details-details}
+     [:h4 {:class :tab-app-detail} "Applications"]
+     [:<>
+      (when @has-outdated-apps?
+        [WarningVersionBehind [:warning-has-outdated-apps]])
+      [SingleAppsSetSection]]]))
 
 
 (defn TabMenuDetails

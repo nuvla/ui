@@ -292,10 +292,13 @@
                                :table-props   (merge style/single-line {:stackable true :selectable true})
                                :select-config (when selectable?
                                                 {:bulk-actions        [{:event [::events/bulk-update-params]
+                                                                        :key   :update
                                                                         :name  (str/capitalize (@tr [:update]))}
                                                                        {:event [::events/open-modal-bulk-stop]
+                                                                        :key   :stop
                                                                         :name  (str/capitalize (@tr [:stop]))}
                                                                        {:event [::events/open-modal-bulk-delete]
+                                                                        :key   :delete
                                                                         :name  (str/capitalize (@tr [:delete]))}
                                                                        trigger]
                                                  :select-db-path      [::spec/select]

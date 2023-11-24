@@ -880,10 +880,9 @@
         bulk-deploy-enabled?     (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
         bulk-deploy-menuitem     (when @bulk-deploy-enabled?
                                    {:menuitem (let [message         (@tr [:deploy-with-static-edges])
-                                                    deploy-menuitem [ui/MenuItem
-                                                                     {:class    :bulk-action-bar-item
-                                                                      :on-click  bulk-deploy-static
-                                                                      :key      :bulk-deploy}
+                                                    deploy-menuitem [uix/HighlightableMenuItem
+                                                                     {:on-click          bulk-deploy-static
+                                                                      :query-param-value :bulk-deploy}
                                                                      [icons/RocketIcon]
                                                                      (@tr [:edges-bulk-deploy-app])]]
                                                 ^{:key "bulk-deploy-menuitem"}
@@ -906,11 +905,10 @@
                                                                                    (@tr [:deploy-with-edges-fulltext-filter-not-allowed])
                                                                                    state-filter?
                                                                                    (@tr [:deploy-with-edges-state-filter-not-allowed]))
-                                                    deploy-menuitem              [ui/MenuItem
-                                                                                  {:disabled (not dynamic-bulk-deploy-enabled?)
-                                                                                   :class    :bulk-action-bar-item
-                                                                                   :on-click bulk-deploy-dynamic
-                                                                                   :key      :dynamic-bulk-deploy}
+                                                    deploy-menuitem              [uix/HighlightableMenuItem
+                                                                                  {:disabled          (not dynamic-bulk-deploy-enabled?)
+                                                                                   :on-click          bulk-deploy-dynamic
+                                                                                   :query-param-value :dynamic-bulk-deploy}
                                                                                   [icons/RocketIcon]
                                                                                   (@tr [:dynamic-bulk-deploy])]]
                                                 ^{:key "dyn-bulk-deploy-menuitem"}

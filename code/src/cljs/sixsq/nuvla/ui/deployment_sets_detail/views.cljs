@@ -1696,6 +1696,7 @@
                                                          :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
                                  :bulk-actions        [{:event (fn [select-data]
                                                                  (dispatch [::events/remove-edges select-data]))
+                                                        :key   :remove-edges
                                                         :name  "Remove edges"
                                                         :icon  icons/BoxIcon}]
                                  :total-count-sub-key [::subs/edges-count]

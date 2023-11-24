@@ -252,9 +252,7 @@
 
 (defn latest-published-version
   [db db-path href]
-  (let [module                  (db-module db db-path href)
-        versions-indexed        (module-versions-indexed module)
-        new-version-module-href (get-in db (db-new-version-module-href-path db-path href))]
+  (let [module (db-module db db-path href)]
     (->> module
          :versions
          (filter :published)
@@ -264,10 +262,10 @@
 
 (defn latest-published-version-id
   [db db-path href]
-  (let [module            (db-module db db-path href)
-        module-content-id (latest-published-version db db-path href)
-        versions-indexed  (module-versions-indexed module)]
-    (get-version-id versions-indexed module-content-id)))
+  (let [module           (db-module db db-path href)
+        version-id       (latest-published-version db db-path href)
+        versions-indexed (module-versions-indexed module)]
+    (get-version-id versions-indexed version-id)))
 
 (reg-sub
   ::latest-published-version

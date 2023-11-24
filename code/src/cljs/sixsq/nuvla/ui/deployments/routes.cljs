@@ -22,7 +22,6 @@
 (defn DeploymentTabItem
   [{:keys [active? href label icon]}]
   [:a {:href   href
-       :active active?
        :style  (cond->
                  {:align-self          :flex-end
                   :margin              "0 0 -2px"

@@ -409,6 +409,36 @@
   [envsubst s]
   (str/replace s (->> envsubst keys (map regex-escape) (str/join "|") re-pattern) envsubst))
 
+(defn normalize-classes
+  "Normalize the input value representing css class(es) to a vector of strings.
+   Accepted inputs:
+   - single class string: \"cls1\"
+   - multi class string: \"cls1 cls2\"
+   - string collection: [\"cls1\" \"cls2\"]
+   - single class keyword: :cls1
+   - keyword collection: [:cls1 :cls2]
+   - string&keyword collection [\"cls1 cls3\" :cls2]
+   "
+  [classes]
+  (cond
+    (nil? classes)
+    []
+
+    (string? classes)
+    (str/split classes #" ")
+
+    (keyword? classes)
+    [(name classes)]
+
+    (coll? classes)
+    (mapv name classes)))
+
+(defn add-classes
+  "Add the given class or classes to the opts map."
+  [{:keys [class] :as opts} classes]
+  (assoc opts :class (into (normalize-classes class)
+                           (normalize-classes classes))))
+
 (defn- read-fav-language!
   "Reads js/window.navigator.languages and returns first element or 'en-US'."
   []

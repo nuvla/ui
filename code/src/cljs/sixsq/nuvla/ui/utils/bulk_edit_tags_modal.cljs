@@ -232,7 +232,8 @@
 (defn create-bulk-edit-modal
   [{:keys [db-path on-open-modal-event resource-key] :as opts}]
   {:trigger-config {:icon (fn [] [icons/TagIcon])
-                   :name "Edit Tags"
+                    :key  :edit-tags
+                    :name "Edit Tags"
                    :event (fn []
                             (dispatch
                               [::open-modal

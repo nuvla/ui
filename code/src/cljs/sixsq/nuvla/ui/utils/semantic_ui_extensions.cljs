@@ -10,6 +10,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.routing.subs :as routing-subs]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -56,6 +57,18 @@
        [icons/Icon (cond-> {:name icon}
                            (boolean? loading?) (assoc :loading loading?))])
      (when (string? name) (str/capitalize name))]))
+
+
+(defn HighlightableMenuItem
+  "Provides a menu item that reads from query params if it should be highlighted"
+  [{:keys [query-key query-param-value] :or {query-key :highlight} :as opts} & children]
+  (let [highlighted? (subscribe [::routing-subs/has-query-param-value? query-key
+                                 (some-> query-param-value name)])]
+    (into [ui/MenuItem
+           (cond-> (dissoc opts :query-key :query-param-value)
+                   @highlighted?
+                   (utils-general/add-classes :primary-menu-item))]
+          children)))
 
 
 (defn MenuItemForSearch

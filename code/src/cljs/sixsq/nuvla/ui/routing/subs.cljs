@@ -47,3 +47,12 @@
   :<- [::current-route]
   (fn [current-route [_ query-param-key]]
     (get-query-param current-route query-param-key)))
+
+(reg-sub
+  ::has-query-param-value?
+  :<- [::current-route]
+  (fn [current-route [_ query-param-key query-param-value]]
+    (let [vals (some-> (get-query-param current-route query-param-key)
+                       (str/split #",")
+                       (->> (map str/lower-case)))]
+      (boolean ((set vals) query-param-value)))))

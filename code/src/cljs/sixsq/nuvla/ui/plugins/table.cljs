@@ -89,6 +89,7 @@
       [uix/LinkIcon {:name (str "sort" (direction->class direction))}])))
 
 ;; Bulk selection, table plugin args
+(s/def ::key keyword?)
 (s/def ::name string?)
 (s/def ::menuitem any?)
 (s/def ::event (s/or :k (s/* keyword?) :fn fn?))
@@ -96,8 +97,8 @@
 (s/def ::total-count-sub-key (s/* keyword?))
 (s/def ::resources-sub-key (s/* keyword?))
 
-(s/def ::bulk-action (s/keys :req-un []
-                             :opt-un [::menuitem ::name ::event ::icon]))
+(s/def ::bulk-action (s/and (s/keys :opt-un [::name ::event ::icon])
+                            (fn [m] (or (:key m) (:menuitem m)))))
 
 (s/def ::bulk-actions (s/nilable (s/coll-of ::bulk-action :kind vector?)))
 (s/def ::select-db-path (s/* keyword?))
@@ -376,15 +377,15 @@
                    :stackable true}
           (doall
             (for [[idx action] (map-indexed vector bulk-actions)
-                 :let [{:keys [name event icon menuitem]} action]]
+                 :let [{:keys [key name event icon menuitem]} action]]
              (or menuitem
-                 ^{:key (or name (random-uuid))}
+                 ^{:key key}
                  [ui/Popup {:trigger
                             (r/as-element
                               [:div
-                               [ui/MenuItem
+                               [uix/HighlightableMenuItem
                                 {:disabled (or nothing-selected? disabled-tooltip)
-                                 :class    :bulk-action-bar-item
+                                 :query-param-value key
                                  :on-click (fn []
                                              (if (fn? event) (event payload)
                                                              (dispatch event)))

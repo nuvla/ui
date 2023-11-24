@@ -65,7 +65,9 @@
   (let [highlighted? (subscribe [::routing-subs/has-query-param-value? query-key
                                  (some-> query-param-value name)])]
     (into [ui/MenuItem
-           (cond-> (dissoc opts :query-key :query-param-value)
+           (cond-> (-> opts
+                       (dissoc :query-key :query-param-value)
+                       (assoc :data-highlight-key query-param-value))
                    @highlighted?
                    (utils-general/add-classes :primary-menu-item))]
           children)))

@@ -48,18 +48,42 @@
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
-(defn- create-wrng-msg
-  [apps-count edges-count action]
-  (str "You're about to " action " " apps-count " app"
-       (if (< 1 apps-count) "s " " ") "on "
-       edges-count " edge"
-       (if (< 1 edges-count) "s. " ". ") "Proceed?"))
+(defn- ops-status-start-str
+  [tr-fn {:keys [deployments-to-add] :as _ops-status}
+   apps-count edges-count]
+  (tr-fn [:depl-group-start-warning-msg]
+         [(count deployments-to-add)
+          (str apps-count " app" (when (> apps-count 1) "s"))
+          (str edges-count "edge" (when (> edges-count 1) "s"))]))
 
-(defn- ops-status-pending-str [tr-fn ops-status]
+(defn- ops-status-pending-str [tr-fn {:keys [deployments-to-add
+                                             deployments-to-update
+                                             deployments-to-remove] :as _ops-status}]
   (str/join ", "
-            (map (fn [[k v]]
-                   (str (count v) " " (tr-fn [k])))
-                 (dissoc ops-status :status))))
+            (remove nil?
+                    [(some-> deployments-to-add count
+                             (str " " (tr-fn [:deployments-to-add])))
+                     (some-> deployments-to-update count
+                             (str " " (tr-fn [:deployments-to-update])))
+                     (some-> deployments-to-remove count
+                             (str " " (tr-fn [:deployments-to-remove])))])))
+
+(defn- create-stop-wrng-msg
+  [tr-fn {:keys [aggregations] :as _deployments-stats}]
+  (let [count-by-state (->> aggregations :terms:state :buckets
+                            (group-by :key)
+                            (reduce-kv (fn [m k v] (assoc m k (:doc_count (first v)))) {}))]
+    (tr-fn [:depl-group-stop-warning-msg] [(+ (or (count-by-state deployment-utils/STARTING) 0)
+                                              (or (count-by-state deployment-utils/STARTED) 0))])))
+
+(defn- ops-status-delete-str [tr-fn {:keys [deployments-to-add deployments-to-remove] :as _ops-status}
+                              apps-count edges-count]
+  (let [n-deployments-to-delete (-> (* apps-count edges-count)
+                                    (- deployments-to-add)
+                                    (+ deployments-to-remove))]
+    (if (pos? n-deployments-to-delete)
+      (tr-fn [:depl-group-delete-warning-msg] n-deployments-to-delete)
+      (tr-fn [:dep-group-delete-no-current-deployments]))))
 
 (defn edit-not-allowed-msg
   [{:keys [TR can-edit-data? edit-op-allowed? edit-not-allowed-in-state? is-controlled-by-apps-set?]}]
@@ -397,38 +421,37 @@
 
 (defn MenuBar
   [_creating?]
-  (let [deployment-set (subscribe [::subs/deployment-set])
-        loading?       (subscribe [::subs/loading?])
-        apps-count     (subscribe [::subs/apps-count])
-        edges-count    (subscribe [::subs/edges-count])
-        fleet-filter   (subscribe [::subs/fleet-filter])
-        tr             (subscribe [::i18n-subs/tr])]
+  (let [deployment-set    (subscribe [::subs/deployment-set])
+        loading?          (subscribe [::subs/loading?])
+        apps-count        (subscribe [::subs/apps-count])
+        edges-count       (subscribe [::subs/edges-count])
+        fleet-filter      (subscribe [::subs/fleet-filter])
+        deployments-stats (subscribe [::deployments-subs/deployments-summary-all])
+        tr                (subscribe [::i18n-subs/tr])]
     (fn [creating?]
-      (let [warn-msg-fn (partial create-wrng-msg @apps-count @edges-count)]
+      (let [op-status (:operational-status @deployment-set)]
         [components/StickyBar
          [components/ResponsiveMenuBar
           [^{:key "save"}
            [SaveButton {:creating?      creating?
                         :deployment-set @deployment-set}]
            ^{:key "start"}
-           [StartButton @deployment-set (warn-msg-fn "start")]
+           [StartButton @deployment-set (ops-status-start-str @tr op-status @apps-count @edges-count)]
            ^{:key "update"}
            [UpdateButton @deployment-set
             (str
               "You're about to start these updates: "
-              (ops-status-pending-str
-                @tr
-                (:operational-status @deployment-set))
+              (ops-status-pending-str @tr op-status)
               ". Proceed?")]
            ^{:key "stop"}
-           [StopButton @deployment-set (warn-msg-fn "stop")]
+           [StopButton @deployment-set (create-stop-wrng-msg @tr @deployments-stats)]
            ^{:key "cancel"}
            [CancelOperationButton @deployment-set]
            (when @fleet-filter
              ^{:key "recompute-fleet"}
              [RecomputeFleetButton @deployment-set])
            ^{:key "delete"}
-           [DeleteButton @deployment-set (warn-msg-fn "delete")]]
+           [DeleteButton @deployment-set (ops-status-delete-str @tr op-status @apps-count @edges-count)]]
           [components/RefreshMenu
            {:action-id  events/refresh-action-depl-set-id
             :loading?   @loading?

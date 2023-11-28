@@ -19,6 +19,7 @@ async function login(baseURL, config) {
   await page.goto(baseURL);
   // hide re-frame-10x or local tests fail
   await page.evaluate(`window.localStorage.setItem('day8.re-frame-10x.show-panel', '"false"')`);
+  await page.evaluate(`window.localStorage.setItem('nuvla.ui.feature-flags', JSON.stringify(["deployment-set","applications-sets"]))`);
   await page.goto(baseURL);
   await page.getByText('login').click();
 

@@ -1723,7 +1723,7 @@
                                                         :name  "Remove edges"
                                                         :icon  icons/BoxIcon}]
                                  :total-count-sub-key [::subs/edges-count]
-                                 :resources-sub-key   [::subs/edges-documents-response]
+                                 :resources-sub-key   [::subs/edges-documents]
                                  :select-db-path      [::spec/edges-select]}))]
        [pagination-plugin/Pagination
         {:db-path                [::spec/edges-pagination]

@@ -41,6 +41,11 @@
   :<- [::current-route]
   :-> :path-params)
 
+(reg-sub
+  ::path-param
+  :<- [::path-params]
+  (fn [path-params [_ path-param-key]]
+    (get path-params path-param-key)))
 
 (reg-sub
   ::query-param

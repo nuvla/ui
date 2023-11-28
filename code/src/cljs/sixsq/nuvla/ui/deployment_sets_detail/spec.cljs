@@ -39,6 +39,7 @@
 
 (s/def ::opened-modal (s/nilable keyword?))
 
+(s/def ::apps-creation any?)
 (s/def ::apps-edited? boolean?)
 (s/def ::listed-apps-by-id any?)
 
@@ -79,6 +80,7 @@
                                  :default-items-per-page 16)
    ::edge-picker-pagination    pagination-default
    ::opened-modal              nil
+   ::apps-creation             nil
    ::apps-edited?              false
    ::fleet-filter              nil
    ::fleet-filter-edited       nil})

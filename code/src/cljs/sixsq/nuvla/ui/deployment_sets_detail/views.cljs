@@ -879,7 +879,7 @@
 
 (defn StatisticStatesEdgeView [{:keys [total online offline unknown]}]
   (let [current-route     @(subscribe [::route-subs/current-route])
-        to-edges-tab      {:deployment-sets-detail-tab :edges}
+        to-edges-tab      {:deployment-groups-detail-tab :edges}
         create-target-url (fn [status-filter]
                             {:resource (routes-utils/gen-href
                                          current-route

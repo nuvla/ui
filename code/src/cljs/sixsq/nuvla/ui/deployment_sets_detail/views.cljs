@@ -54,7 +54,7 @@
   (tr-fn [:depl-group-start-warning-msg]
          [(count deployments-to-add)
           (str apps-count " app" (when (> apps-count 1) "s"))
-          (str edges-count "edge" (when (> edges-count 1) "s"))]))
+          (str edges-count " edge" (when (> edges-count 1) "s"))]))
 
 (defn- ops-status-pending-str [tr-fn {:keys [deployments-to-add
                                              deployments-to-update
@@ -82,7 +82,7 @@
                                     (- deployments-to-add)
                                     (+ deployments-to-remove))]
     (if (pos? n-deployments-to-delete)
-      (tr-fn [:depl-group-delete-warning-msg] n-deployments-to-delete)
+      (tr-fn [:depl-group-delete-warning-msg] [n-deployments-to-delete])
       (tr-fn [:dep-group-delete-no-current-deployments]))))
 
 (defn edit-not-allowed-msg

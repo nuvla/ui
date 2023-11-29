@@ -178,19 +178,19 @@
         field-key->table-cell {:id [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
                                     (general-utils/id->short-uuid id)]
                                :module.name (when-not no-module-name
-                                              [module-plugin/LinkToAppView
-                                               {:version-id (utils/get-version-number
-                                                              (:versions module)
-                                                              (:content module))
-                                                :path (:path module)
-                                                :target "_self"}
-                                               [:div
-                                                {:class "app-icon-name"
-                                                 :style {:display     :flex
-                                                         :align-items :center}}
-                                                [:img {:src   (or (:thumb-nail module) (:logo-url module))
-                                                       :style {:width  "42px"
-                                                               :height "30px"}}]
+                                              [:div
+                                               {:class "app-icon-name"
+                                                :style {:display     :flex
+                                                        :align-items :center}}
+                                               [:img {:src   (or (:thumb-nail module) (:logo-url module))
+                                                      :style {:width  "42px"
+                                                              :height "30px"}}]
+                                               [module-plugin/LinkToAppView
+                                                {:version-id (utils/get-version-number
+                                                               (:versions module)
+                                                               (:content module))
+                                                 :path (:path module)
+                                                 :target "_self"}
                                                 [:div (:name module)]]])
                                :version (utils/deployment-version deployment)
                                :status state

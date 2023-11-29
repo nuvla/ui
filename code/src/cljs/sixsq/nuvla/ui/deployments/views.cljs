@@ -165,13 +165,6 @@
           {:action-id  events/refresh-action-deployments-id
            :on-refresh refresh}]]]])))
 
-(defn- DeplSetLink
-  [depl-set-id depl-set-name]
-  (when depl-set-id
-    [:a {:href (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid depl-set-id)})}
-     [ui/Icon {:name "bullseye"}]
-     depl-set-name]))
-
 (defn DeploymentTableCell
   [{{:keys [id state module tags created-by] :as deployment} :row-data
     field-key :field-key}
@@ -206,7 +199,9 @@
                                        [ui/Icon {:name "external"}]
                                        primary-url-name])
                                :deployment-set  (when (:show-depl-set-column? options)
-                                                  [DeplSetLink (deployment :deployment-set) (deployment :deployment-set-name)])
+                                                  [deployments-detail-views/DeplSetLink
+                                                   (deployment :deployment-set)
+                                                   (deployment :deployment-set-name)])
                                :created (-> deployment :created time/parse-iso8601 time/ago)
                                :updated (-> deployment :updated time/parse-iso8601 time/ago)
                                :created-by @creator

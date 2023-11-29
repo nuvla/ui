@@ -92,8 +92,8 @@
 
 (reg-event-fx
   ::get-application-sets
-  (fn [_ [_ {:keys [id version]}]]
-    {::cimi-api-fx/get [(str id "_" version) #(dispatch [::set-applications-sets %])]}))
+  (fn [{{:keys [::spec/deployment-set]} :db} [_ {:keys [id version]}]]
+    {::cimi-api-fx/get [(str id "_" version) #(dispatch [::set-applications-sets % deployment-set])]}))
 
 
 (defn restore-applications
@@ -208,8 +208,8 @@
 
 (reg-event-fx
   ::load-apps-sets
-  (fn [{{:keys [::spec/deployment-set ::spec/module-applications-sets]} :db} [_ apps-sets]]
-    (let [app-sets-by-app-set-id (->> deployment-set
+  (fn [{{:keys [::spec/module-applications-sets]} :db} [_ apps-sets depl-set]]
+    (let [app-sets-by-app-set-id (->> depl-set
                                       :applications-sets
                                       (map (juxt :id (if (utils/is-controlled-by-apps-set module-applications-sets)
                                                        (partial overwrite-apps-versions apps-sets)
@@ -239,10 +239,10 @@
 
 (reg-event-fx
   ::set-applications-sets
-  (fn [{:keys [db]} [_ {:keys [subtype] :as apps-sets}]]
+  (fn [{:keys [db]} [_ {:keys [subtype] :as apps-sets} depl-set]]
     (if (apps-utils/applications-sets? subtype)
       {:db (assoc db ::spec/module-applications-sets (utils/enrich-app apps-sets))
-       :fx [[:dispatch [::load-apps-sets apps-sets]]]}
+       :fx [[:dispatch [::load-apps-sets apps-sets depl-set]]]}
       {:dispatch [::messages-events/add
                   {:header  "Wrong module subtype"
                    :content (str "Selected module subtype:" subtype)

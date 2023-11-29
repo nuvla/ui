@@ -16,6 +16,8 @@
 (def ^:const STARTING "STARTING")
 (def ^:const STOPPED "STOPPED")
 (def ^:const ERROR "ERROR")
+(def ^:const PENDING "PENDING")
+(def ^:const UPDATING "UPDATING")
 
 (defn state->icon
   [state]

@@ -74,7 +74,10 @@
                             (group-by :key)
                             (reduce-kv (fn [m k v] (assoc m k (:doc_count (first v)))) {}))]
     (tr-fn [:depl-group-stop-warning-msg] [(+ (or (count-by-state deployment-utils/STARTING) 0)
-                                              (or (count-by-state deployment-utils/STARTED) 0))])))
+                                              (or (count-by-state deployment-utils/STARTED) 0)
+                                              (or (count-by-state deployment-utils/ERROR) 0)
+                                              (or (count-by-state deployment-utils/UPDATING) 0)
+                                              (or (count-by-state deployment-utils/PENDING) 0))])))
 
 (defn- ops-status-delete-str [tr-fn {:keys [deployments-to-add deployments-to-remove] :as _ops-status}
                               apps-count edges-count]

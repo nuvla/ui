@@ -80,6 +80,7 @@
                                        "deployments"     {:key        routes/deployments
                                                           :route-names #{routes/deployments
                                                                          routes/deployment-sets-details
+                                                                         routes/deployment-groups-details
                                                                          routes/deployment-sets}
                                                           :label-kw   :deployments
                                                           :name       "deployments"

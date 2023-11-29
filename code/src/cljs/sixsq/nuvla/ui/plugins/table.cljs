@@ -673,13 +673,18 @@
                           last?     (= idx (dec (count columns)))]]
                 ^{:key (str id "-" field-key)}
                 [ui/TableCell
-                 (cond-> cell-props
-                   last? (assoc :colSpan 2)
+                 (cond->
+                   cell-props
+
+                   last?
+                   (assoc :colSpan 2)
+
                    (and
                      stop-event-propagation?
                      (not (:on-click cell-props)))
-                   (assoc :on-click (fn [event]
-                                      (.stopPropagation event))))
+                   (-> (assoc :on-click (fn [event] (.stopPropagation event)))
+                       (update :style merge {:cursor :auto})))
+
                  (cond
                    cell (if (string? cell) cell
                           [cell {:row-data  row

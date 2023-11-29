@@ -1824,30 +1824,28 @@
 
 (defn- DeploymentSetView
   [uuid]
-  (dispatch [::events/init])
   (let [depl-set (subscribe [::subs/deployment-set])]
     (fn []
       (let [{:keys [id name]} @depl-set]
-        [components/LoadingPage {:dimmable? true}
-         [:<>
-          [components/NotFoundPortal
-           ::subs/deployment-set-not-found?
-           :no-deployment-set-message-header
-           :no-deployment-set-message-content]
-          [ui/Container {:fluid true}
-           [uix/PageHeader "bullseye" (or name id) :color (ops-status->color
-                                                            (-> @depl-set
-                                                                :operational-status
-                                                                :status))]
-           [utils-validation/validation-error-message ::subs/form-valid?]
-           [MenuBar false]
-           [bulk-progress-plugin/MonitoredJobs
-            {:db-path [::spec/bulk-jobs]}]
-           [components/ErrorJobsMessage
-            ::job-subs/jobs nil nil
-            #(dispatch [::tab/change-tab {:db-path [::spec/tab]
-                                          :tab-key :jobs}])]
-           [TabsDeploymentSet {:uuid uuid}]]]]))))
+        [:<>
+         [components/NotFoundPortal
+          ::subs/deployment-set-not-found?
+          :no-deployment-set-message-header
+          :no-deployment-set-message-content]
+         [ui/Container {:fluid true}
+          [uix/PageHeader "bullseye" (or name id) :color (ops-status->color
+                                                           (-> @depl-set
+                                                               :operational-status
+                                                               :status))]
+          [utils-validation/validation-error-message ::subs/form-valid?]
+          [MenuBar false]
+          [bulk-progress-plugin/MonitoredJobs
+           {:db-path [::spec/bulk-jobs]}]
+          [components/ErrorJobsMessage
+           ::job-subs/jobs nil nil
+           #(dispatch [::tab/change-tab {:db-path [::spec/tab]
+                                         :tab-key :jobs}])]
+          [TabsDeploymentSet {:uuid uuid}]]]))))
 
 (defn DeploymentSetCreate
   []

@@ -21,11 +21,15 @@
 (reg-sub
   ::nav-url-active?
   :<- [::route-name]
-  (fn [route-name [_ route-names]]
+  :<- [::nav-path-first]
+  (fn [[route-name nav-path-first] [_ route-names url]]
     (boolean
-      (if (set? route-names)
-        (route-names route-name)
-        (= route-name route-names)))))
+      (or (route-names route-name) (= route-name route-names)
+        (-> (str/replace-first url (str config/base-path "/") "")
+            (str/split "/")
+            first
+            (= nav-path-first)
+            boolean)))))
 
 (reg-sub
   ::current-route

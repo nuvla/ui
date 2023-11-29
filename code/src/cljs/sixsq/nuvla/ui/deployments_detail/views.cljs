@@ -250,7 +250,7 @@
                  label? [ui/Label {:corner   true
                                    :size     "small"
                                    :on-click on-click}
-                         [ui/Icon {:class  icon-name
+                         [ui/Icon {:class icon-name
                                    :style {:cursor "pointer"}
                                    :color "red"}]]
                  menu-item? [ui/MenuItem
@@ -258,7 +258,7 @@
                               :disabled disabled?}
                              [ui/Icon {:class icon-name}]
                              button-text]
-                 :else [ui/Icon {:class     icon-name
+                 :else [ui/Icon {:class    icon-name
                                  :style    {:cursor "pointer"}
                                  :color    "red"
                                  :on-click on-click}])]
@@ -280,19 +280,19 @@
         icon-name icons/i-stop]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module]} deployment
-            text1             (str (or name id) (when description " - ") description)
-            text2             (str (@tr [:created-from-module]) (or (:name module) (:id module)))
-            button            (action-button
-                                {:label?      label?
-                                 :menu-item?  menu-item?
-                                 :on-click    (fn [event]
-                                                (reset! open? true)
-                                                (.stopPropagation event)
-                                                (.preventDefault event))
-                                 :disabled?   (not (general-utils/can-operation? "stop" deployment))
-                                 :icon-name   icon-name
-                                 :button-text (@tr [:shutdown])
-                                 :popup-text  (@tr [:deployment-shutdown-msg])})]
+            text1  (str (or name id) (when description " - ") description)
+            text2  (str (@tr [:created-from-module]) (or (:name module) (:id module)))
+            button (action-button
+                     {:label?      label?
+                      :menu-item?  menu-item?
+                      :on-click    (fn [event]
+                                     (reset! open? true)
+                                     (.stopPropagation event)
+                                     (.preventDefault event))
+                      :disabled?   (not (general-utils/can-operation? "stop" deployment))
+                      :icon-name   icon-name
+                      :button-text (@tr [:shutdown])
+                      :popup-text  (@tr [:deployment-shutdown-msg])})]
         ^{:key (random-uuid)}
         [uix/ModalDanger
          {:on-close           (fn [event]
@@ -334,19 +334,19 @@
         ^{:key (random-uuid)}
         [uix/ModalDanger
          {:with-confirm-step? true
-          :on-close    (fn [event]
-                         (reset! open? false)
-                         (.stopPropagation event)
-                         (.preventDefault event))
-          :on-confirm  #(dispatch [::events/delete id])
-          :open        @open?
-          :trigger     (r/as-element button)
-          :content     [:<> [:h3 text-1] [:p text-2]]
-          :header [:span [icons/RocketIcon]
-                   (@tr [:delete-deployment])]
-          :danger-msg  (@tr [:deployment-delete-msg])
-          :button-text (str (str/capitalize (@tr [:delete])) " " (str/capitalize (@tr [:deployment])))
-          :header-class [:nuvla-deployments :delete-modal-header]}]))))
+          :on-close           (fn [event]
+                                (reset! open? false)
+                                (.stopPropagation event)
+                                (.preventDefault event))
+          :on-confirm         #(dispatch [::events/delete id])
+          :open               @open?
+          :trigger            (r/as-element button)
+          :content            [:<> [:h3 text-1] [:p text-2]]
+          :header             [:span [icons/RocketIcon]
+                               (@tr [:delete-deployment])]
+          :danger-msg         (@tr [:deployment-delete-msg])
+          :button-text        (str (str/capitalize (@tr [:delete])) " " (str/capitalize (@tr [:deployment])))
+          :header-class       [:nuvla-deployments :delete-modal-header]}]))))
 
 
 (defn CloneButton
@@ -494,7 +494,7 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:id]))]
         [ui/TableCell [values/AsLink id :label (general-utils/id->uuid
-                                                  (or id ""))]]]]]]))
+                                                 (or id ""))]]]]]]))
 
 
 (defn DeploymentCard
@@ -574,6 +574,13 @@
                    :target   "_blank"
                    :rel      "noreferrer"}])]))
 
+(defn- DeplSetLink
+  [depl-set-id depl-set-name]
+  (when depl-set-id
+    [:a {:href (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid depl-set-id)})}
+     [ui/Icon {:name "bullseye"}]
+     depl-set-name]))
+
 
 (defn TabOverviewSummary
   []
@@ -637,12 +644,7 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:deployment-set]))]
            [ui/TableCell
-            [:<>
-             [icons/BullseyeIcon]
-             [values/AsLink (general-utils/id->uuid deployment-set) :label
-              (or deployment-set-name
-                  (general-utils/id->uuid deployment-set))
-              :page "deployment-sets"]]]])]]]
+            [DeplSetLink deployment-set deployment-set-name]]])]]]
      (when-not (deployments-utils/stopped? state)
        [ui/Segment {:attached  false
                     :secondary true}

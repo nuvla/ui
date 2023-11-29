@@ -20,7 +20,7 @@
         iframe?      (subscribe [::subs/iframe?])
         is-user?     (subscribe [::session-subs/is-user?])
         url          (name->href key)
-        active?      (subscribe [::route-subs/nav-url-active? (or route-names key)])
+        active?      (subscribe [::route-subs/nav-url-active? (or route-names key) url])
         auth-needed? (and protected? (not @is-user?))
         auth-url     (name->href routes/sign-in)
         href         (if auth-needed? auth-url url)

@@ -995,7 +995,8 @@
                                 (or select-all
                                     ((set selected-set) edge))) edges))
           apps-set  (get-in db [::spec/deployment-set-edited :applications-sets])]
-      {:fx [[:dispatch [::edit :applications-sets
+      {:fx [[:dispatch [::table-plugin/deselect-all [::spec/edges-select]]]
+            [:dispatch [::edit :applications-sets
                         (update-fleets remove-fn apps-set)]]
             [:dispatch [::refresh]]]})))
 

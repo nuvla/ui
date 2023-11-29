@@ -80,8 +80,8 @@
                                  :default-items-per-page 16)
    ::edge-picker-pagination    pagination-default
    ::opened-modal              nil
+   ::edges-select              nil
    ::apps-creation             nil
    ::apps-edited?              false
    ::fleet-filter              nil
    ::fleet-filter-edited       nil})
-

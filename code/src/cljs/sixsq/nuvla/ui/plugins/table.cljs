@@ -185,6 +185,12 @@
                (assoc-in (conj (or db-path []) ::selected-set) new-selected-set)
                (assoc-in (conj (or db-path []) ::select-all?) false))})))
 
+(reg-event-db
+  ::deselect-all
+  (fn [db [_ db-path]]
+    (-> db
+        (assoc-in (conj (or db-path []) ::selected-set) #{})
+        (assoc-in (conj (or db-path []) ::select-all?) false))))
 
 (reg-event-db
   ::select-id

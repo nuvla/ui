@@ -918,6 +918,11 @@ body .divider-red {
   color: #ffffff !important;
 }
 
+.table .button.table-select-fields-button {
+  background-color: unset !important;
+  color: unset !important;
+}
+
 .nuvla-deployments .nuvla-edges .button:hover {
   background-color: rgba(22, 173, 146, 0.9) !important;
   color: #ffffff;

@@ -581,10 +581,16 @@
   :-> ::spec/edge-picker-edges-summary)
 
 (reg-sub
-  ::edge-picker-edges-count
+  ::edge-picker-total-edges-count
   :<- [::edge-picker-edges-summary]
   (fn [summary]
     (:count summary)))
+
+(reg-sub
+  ::edge-picker-filtered-edges-count
+  :<- [::edge-picker-edges]
+  (fn [edges]
+    (:count edges)))
 
 (reg-sub
   ::edge-picker-edges-summary-stats

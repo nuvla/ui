@@ -384,24 +384,24 @@
                    :stackable true}
           (doall
             (for [[idx action] (map-indexed vector bulk-actions)
-                 :let [{:keys [key name event icon menuitem]} action]]
-             (or menuitem
-                 ^{:key key}
-                 [ui/Popup {:trigger
-                            (r/as-element
-                              [:div
-                               [uix/HighlightableMenuItem
-                                {:disabled (or nothing-selected? disabled-tooltip)
-                                 :query-param-value key
-                                 :on-click (fn []
-                                             (if (fn? event) (event payload)
-                                                             (dispatch event)))
-                                 :key      idx}
-                                (when icon [icon])
-                                name]])
-                            :basic    true
-                            :disabled (and (not disabled-tooltip) (not= :none @selection-status))
-                            :content  (or disabled-tooltip (@tr [:select-at-least-one-item]))}])))]]
+                  :let [{:keys [key name event icon menuitem]} action]]
+              (or menuitem
+                  ^{:key key}
+                  [ui/Popup {:trigger
+                             (r/as-element
+                               [:div
+                                [uix/HighlightableMenuItem
+                                 {:disabled          (or nothing-selected? disabled-tooltip)
+                                  :query-param-value key
+                                  :on-click          (fn []
+                                                       (if (fn? event) (event payload)
+                                                                       (dispatch event)))
+                                  :key               idx}
+                                 (when icon [icon])
+                                 name]])
+                             :basic    true
+                             :disabled (and (not disabled-tooltip) (not= :none @selection-status))
+                             :content  (or disabled-tooltip (@tr [:select-at-least-one-item]))}])))]]
         [:div {:style {:padding-right "1rem"}}
          @bulk-edit-success-message]])
      [:div
@@ -478,7 +478,7 @@
                                           (if (neg? po) 100 po)))]
                            (- (pos-fn k1) (pos-fn k2))))
                        (vec cols)))]
-      {:fx [[:dispatch [::store-cols new-cols db-path]]]
+      {:fx          [[:dispatch [::store-cols new-cols db-path]]]
        :storage/set {:session? false
                      :name     local-storage-key
                      :value    (merge (edn/read-string storage) {db-path new-cols})}})))
@@ -694,9 +694,9 @@
 
                  (cond
                    cell (if (string? cell) cell
-                          [cell {:row-data  row
-                                 :cell-data cell-data
-                                 :field-key field-key}])
+                                           [cell {:row-data  row
+                                                  :cell-data cell-data
+                                                  :field-key field-key}])
                    :else (str (if (or
                                     (not (coll? cell-data))
                                     (seq cell-data))
@@ -714,9 +714,9 @@
     (fn []
       [SelectFieldsView
        {:field->view         (into {}
-                               (map (fn [[k v]]
-                                      [k (:header-content v)])
-                                 available-fields))
+                                   (map (fn [[k v]]
+                                          [k (:header-content v)])
+                                        available-fields))
         :title-tr-key        :columns
         :show?               show?
         :selections-atom     selected-cols
@@ -727,10 +727,11 @@
         :trigger             [uix/Button
                               {:basic    true
                                :icon     :options
-                               :style    {:padding    0
-                                          :box-shadow :none
-                                          :position   :relative
-                                          :z-index    1000}
+                               :class    :table-select-fields-button
+                               :style    {:padding          0
+                                          :box-shadow       :none
+                                          :position         :relative
+                                          :z-index          1000}
                                :on-click (fn []
                                            (reset! selected-cols (set @current-cols))
                                            (reset! show? true))}]}])))
@@ -746,9 +747,9 @@
                (filterv (comp default-columns :field-key) columns)
                columns)
              db-path])
-  (let [db-path (or db-path ::table-cols-config)
-        current-cols   (subscribe [::get-current-cols db-path])
-        default-cols   (subscribe [::get-default-cols db-path])
+  (let [db-path       (or db-path ::table-cols-config)
+        current-cols  (subscribe [::get-current-cols db-path])
+        default-cols  (subscribe [::get-default-cols db-path])
         remove-col-fn (fn [col-key]
                         (dispatch [::remove-col col-key db-path]))]
     (fn [{:keys [rows columns] :as props}]
@@ -766,7 +767,7 @@
                                                               (no-rmv-column? cols-without-rmv-icon (:field-key col))))) columns)))]
         [:div
          [Table (assoc props
-                  :col-config {:remove-col-fn  remove-col-fn
+                  :col-config {:remove-col-fn    remove-col-fn
                                :col-config-modal [ConfigureVisibleColumns db-path available-cols]}
                   :columns (->> (or @current-cols @default-cols)
                                 (mapv (fn [k] (available-cols k)))

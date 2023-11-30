@@ -1,8 +1,6 @@
 (ns sixsq.nuvla.ui.deployments.routes
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.about.subs :as about-subs]
-            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as dsd-events]
             [sixsq.nuvla.ui.deployment-sets.events :as deployment-sets-events]
             [sixsq.nuvla.ui.deployment-sets.views :refer [deployment-sets-views]]
@@ -56,8 +54,7 @@
 (defn DeploymentsMainContent
   []
   (let [route-name          (subscribe [::routing-subs/route-name])
-        uuid                (subscribe [::routing-subs/path-param :uuid])
-        depl-group-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])]
+        uuid                (subscribe [::routing-subs/path-param :uuid])]
     (fn []
       (case @route-name
         ::routes/deployments (dispatch [::events/init])
@@ -71,10 +68,9 @@
 
         nil)
       [:<>
-       (when (and @depl-group-enabled?
-                  (not (#{routes/deployment-groups-details
-                          routes/deployment-sets-details}
-                        @route-name)))
+       (when-not (#{routes/deployment-groups-details
+                    routes/deployment-sets-details}
+                  @route-name)
          [DeploymentsTabs])
        [components/LoadingPage {}
         (case @route-name

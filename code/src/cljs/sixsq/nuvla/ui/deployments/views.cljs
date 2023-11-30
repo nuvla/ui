@@ -2,8 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.about.subs :as about-subs]
-            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
             [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
             [sixsq.nuvla.ui.deployments.events :as events]
@@ -220,8 +218,7 @@
 (defn VerticalDataTable
   [_deployments-list {:keys [hide-depl-group-column?] :as _options}]
   (let [tr (subscribe [::i18n-subs/tr])
-        ff (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
-        show-depl-set-column? (and @ff (not hide-depl-group-column?))]
+        show-depl-set-column? (not hide-depl-group-column?)]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements empty-msg]
@@ -259,10 +256,9 @@
                                     {:field-key :url
                                      :stop-event-propagation? true
                                      :no-sort?  true}
-                                    (when show-depl-set-column?
-                                      {:field-key :deployment-set
-                                       :stop-event-propagation? true
-                                       :sort-key  :deployment-set-name})
+                                    {:field-key :deployment-set
+                                     :stop-event-propagation? true
+                                     :sort-key  :deployment-set-name}
                                     {:field-key :created}
                                     {:field-key :updated}
                                     {:field-key :created-by}

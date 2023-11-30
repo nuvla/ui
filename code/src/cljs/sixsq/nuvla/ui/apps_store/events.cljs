@@ -1,7 +1,5 @@
 (ns sixsq.nuvla.ui.apps-store.events
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-            [sixsq.nuvla.ui.about.spec :as about-spec]
-            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.apps-store.spec :as spec]
             [sixsq.nuvla.ui.apps.events :as apps-events]
             [sixsq.nuvla.ui.apps.spec :as apps-spec]
@@ -46,32 +44,27 @@
                 external-filter
                 additional-cb-fn]
          :or   {additional-cb-fn #()}}]]
-    (let [apps-sets-enabled? (about-utils/feature-flag-enabled?
-                               (::about-spec/enabled-feature-flags db)
-                               about-utils/feature-applications-sets-key)]
-      (-> {:db (assoc db ::apps-spec/module nil)
-           ::cimi-api-fx/search
-           [:module
-            (->> {:orderby (or order-by "created:desc")
-                  :filter  (general-utils/join-and
-                             (str "parent-path!='" spec/virtual-apps-set-parent-path "'")
-                             (when-not apps-sets-enabled?
-                               (str "subtype!='" apps-utils/subtype-applications-sets "'"))
-                             external-filter
-                             subtypes-apps-or-filter
-                             (case active-tab
-                               :appstore (general-utils/published-query-string)
-                               :myapps (general-utils/owner-like-query-string
-                                         (or (:active-claim session)
+    (-> {:db (assoc db ::apps-spec/module nil)
+         ::cimi-api-fx/search
+         [:module
+          (->> {:orderby (or order-by "created:desc")
+                :filter  (general-utils/join-and
+                           (str "parent-path!='" spec/virtual-apps-set-parent-path "'")
+                           external-filter
+                           subtypes-apps-or-filter
+                           (case active-tab
+                             :appstore (general-utils/published-query-string)
+                             :myapps (general-utils/owner-like-query-string
+                                       (or (:active-claim session)
                                            (:user session)))
-                               nil)
-                             (full-text-search-plugin/filter-text
-                               db [::spec/modules-search]))}
-                 (pagination-plugin/first-last-params db (or pagination-db-path
+                             nil)
+                           (full-text-search-plugin/filter-text
+                             db [::spec/modules-search]))}
+               (pagination-plugin/first-last-params db (or pagination-db-path
                                                            [(spec/page-keys->pagination-db-path active-tab)])))
-            #(do
-               (dispatch [::set-modules %])
-               (additional-cb-fn %))]}))))
+          #(do
+             (dispatch [::set-modules %])
+             (additional-cb-fn %))]})))
 
 (reg-event-fx
   ::get-modules-summary

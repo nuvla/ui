@@ -1,16 +1,10 @@
 (ns sixsq.nuvla.ui.about.utils
   (:require [clojure.set :as set]))
 
-(def feature-deployment-set-key "deployment-set")
-(def feature-applications-sets-key "applications-sets")
 (def feature-edge-on-k8s "edge-on-k8s")
 (def feature-internal-ui-demo-page "internal")
 
-(def feature-flags [{:k     feature-deployment-set-key
-                     :label "Page deployment groups visible in left menu."}
-                    {:k     feature-applications-sets-key
-                     :label "Application bouquets support"}
-                    {:k     feature-edge-on-k8s
+(def feature-flags [{:k     feature-edge-on-k8s
                      :label "k8s installation method available in Add Edge modal."}
                     {:k     feature-internal-ui-demo-page
                      :label "show internal ui demo/docu page."}])

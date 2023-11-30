@@ -608,7 +608,7 @@
                          (dispatch [::set-edges response]))
           fleet        (get-target-fleet-ids deployment-set-edited)
           fleet-filter (get-in deployment-set-edited subs/fleet-filter-path)]
-      (when (or (seq fleet) fleet-filter)
+      (if (or (seq fleet) fleet-filter)
         {::cimi-api-fx/search [:nuvlabox
                                {:filter      (or fleet-filter
                                                  (general-utils/join-and
@@ -620,7 +620,8 @@
                                 :select      "id"
                                 :aggregation edges-spec/state-summary-agg-term
                                 :orderby     (ordering->order-string edges-ordering)}
-                               callback]}))))
+                               callback]}
+        {:fx [[:dispatch [::set-edges {:resources []}]]]}))))
 
 (reg-event-fx
   ::set-edges
@@ -994,7 +995,8 @@
                                 (or select-all
                                     ((set selected-set) edge))) edges))
           apps-set  (get-in db [::spec/deployment-set-edited :applications-sets])]
-      {:fx [[:dispatch [::edit :applications-sets
+      {:fx [[:dispatch [::table-plugin/deselect-all [::spec/edges-select]]]
+            [:dispatch [::edit :applications-sets
                         (update-fleets remove-fn apps-set)]]
             [:dispatch [::refresh]]]})))
 

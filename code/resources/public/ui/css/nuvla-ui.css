@@ -920,12 +920,22 @@ body .divider-red {
 
 .table .button.table-select-fields-button {
   background-color: unset !important;
-  color: unset !important;
+  color: rgba(0,0,0,.6) !important;
+}
+
+.table .button.table-select-fields-button:hover {
+  background-color: unset !important;
+  color: rgba(0,0,0,.8) !important;
 }
 
 .nuvla-deployments .nuvla-edges .button:hover {
   background-color: rgba(22, 173, 146, 0.9) !important;
   color: #ffffff;
+}
+
+.nuvla-deployments .nuvla-edges .table .button:hover {
+  background-color: unset !important;
+  color: unset !important;
 }
 
 .nuvla-deployments > .ui-header.ui-card-header,

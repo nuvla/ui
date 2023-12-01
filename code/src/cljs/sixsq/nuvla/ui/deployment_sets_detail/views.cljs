@@ -900,7 +900,7 @@
                                  :label      "TOTAL"
                                  :color      "black"
                                  :on-click   #(dispatch [::routing-events/navigate
-                                                         (:resource (create-target-url nil))])}]
+                                                         (:resource (create-target-url ""))])}]
      [dashboard-views/Statistic {:value          online
                                  :icon           icons/i-power
                                  :label          edges-utils/status-online

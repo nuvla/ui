@@ -42,10 +42,8 @@ test('testing logger component', async ({ page }, { config }) => {
 
   await page.getByRole('link', { name: 'deployments' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployments');
-  await page
-    .getByRole('link', { name: /Simple App/ })
-    .first()
-    .click();
+  await page.getByRole('link', { name: 'select row 0 Simple App v2' })
+    .first().locator('td').nth(2).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18');
   await page.getByRole('link', { name: 'Logs' }).click();
   await expect(page).toHaveURL(

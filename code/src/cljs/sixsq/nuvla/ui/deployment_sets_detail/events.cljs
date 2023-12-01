@@ -66,7 +66,7 @@
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
           [:dispatch [::refresh]]
           [:dispatch [::main-events/changes-protection? false]]
-          [:dispatch [::disable-form-validation]]]}))
+          [:dispatch [::enable-form-validation]]]}))
 
 (reg-event-fx
   ::clear-deployments

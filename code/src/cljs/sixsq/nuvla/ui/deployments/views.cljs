@@ -53,7 +53,7 @@
         [:div {:style {:margin-top "10px"}}
          [filter-comp/ButtonFilter
           {:resource-name                    spec/resource-name
-           :default-filter                    @additional-filter
+           :default-filter                   @additional-filter
            :open?                            filter-open?
            :on-done                          #(dispatch [::events/set-additional-filter %])
            :show-clear-button-outside-modal? true}]]]])))
@@ -165,59 +165,58 @@
 
 (defn DeploymentTableCell
   [{{:keys [id state module tags created-by] :as deployment} :row-data
-    field-key :field-key}
-    {:keys [no-module-name show-options?] :as options}]
+    field-key                                                :field-key}
+   {:keys [no-module-name show-options?] :as options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
         creator               (subscribe [::session-subs/resolve-user created-by])
         edge-id               (:nuvlabox deployment)
         edge-status           (subscribe [::subs/deployment-edges-stati edge-id])
-        field-key->table-cell {:id [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
-                                    (general-utils/id->short-uuid id)]
-                               :module.name (when-not no-module-name
-                                              [:div
-                                               {:class "app-icon-name"
-                                                :style {:display     :flex
-                                                        :align-items :center}}
-                                               [:img {:src   (or (:thumb-nail module) (:logo-url module))
-                                                      :style {:width  "42px"
-                                                              :height "30px"}}]
-                                               [module-plugin/LinkToAppView
-                                                {:version-id (utils/get-version-number
-                                                               (:versions module)
-                                                               (:content module))
-                                                 :path (:path module)
-                                                 :target "_self"}
-                                                [:div (:name module)]]])
-                               :version (utils/deployment-version deployment)
-                               :status state
-                               :url (when url
-                                      [:a {:href url, :target "_blank", :rel "noreferrer"}
-                                       [ui/Icon {:name "external"}]
-                                       primary-url-name])
-                               :deployment-set  (when (:show-depl-set-column? options)
-                                                  [deployments-detail-views/DeplSetLink
-                                                   (deployment :deployment-set)
-                                                   (deployment :deployment-set-name)])
-                               :created (-> deployment :created time/parse-iso8601 time/ago)
-                               :updated (-> deployment :updated time/parse-iso8601 time/ago)
-                               :created-by @creator
-                               :tags [uix/Tags tags]
+        field-key->table-cell {:id             [:a {:href (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})}
+                                                (general-utils/id->short-uuid id)]
+                               :module.name    (when-not no-module-name
+                                                 [:div
+                                                  {:class "app-icon-name"
+                                                   :style {:display     :flex
+                                                           :align-items :center}}
+                                                  [:img {:src   (or (:thumb-nail module) (:logo-url module))
+                                                         :style {:width  "42px"
+                                                                 :height "30px"}}]
+                                                  [module-plugin/LinkToAppView
+                                                   {:version-id (utils/get-version-number
+                                                                  (:versions module)
+                                                                  (:content module))
+                                                    :path       (:path module)
+                                                    :target     "_self"}
+                                                   [:div (:name module)]]])
+                               :version        (utils/deployment-version deployment)
+                               :status         state
+                               :url            (when url
+                                                 [:a {:href url, :target "_blank", :rel "noreferrer"}
+                                                  [ui/Icon {:name "external"}]
+                                                  primary-url-name])
+                               :deployment-set [deployments-detail-views/DeplSetLink
+                                                (deployment :deployment-set)
+                                                (deployment :deployment-set-name)]
+                               :created        (-> deployment :created time/parse-iso8601 time/ago)
+                               :updated        (-> deployment :updated time/parse-iso8601 time/ago)
+                               :created-by     @creator
+                               :tags           [uix/Tags tags]
                                :infrastructure [utils/CloudNuvlaEdgeLink deployment
                                                 :color (when edge-id (vc/status->color @edge-status))]
-                               :actions (when show-options?
-                                          (cond
-                                            (general-utils/can-operation? "stop" deployment)
-                                            [deployments-detail-views/ShutdownButton deployment]
-                                            (general-utils/can-delete? deployment)
-                                            [deployments-detail-views/DeleteButton deployment]))}]
+                               :actions        (when show-options?
+                                                 (cond
+                                                   (general-utils/can-operation? "stop" deployment)
+                                                   [deployments-detail-views/ShutdownButton deployment]
+                                                   (general-utils/can-delete? deployment)
+                                                   [deployments-detail-views/DeleteButton deployment]))}]
     (field-key->table-cell field-key)))
 
 
 (defn VerticalDataTable
   [_deployments-list {:keys [hide-depl-group-column?] :as _options}]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr                    (subscribe [::i18n-subs/tr])
         show-depl-set-column? (not hide-depl-group-column?)]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
@@ -234,70 +233,74 @@
                                             :singular               (@tr [:deployment])
                                             :plural                 (@tr [:deployments])
                                             :filter-fn              build-bulk-filter})
-              table-cell (fn [props] [DeploymentTableCell props (assoc options
-                                                                  :show-options? selectable?
-                                                                  :show-depl-set-column? show-depl-set-column?)])]
+              table-cell  (fn [props] [DeploymentTableCell props (assoc options
+                                                                   :show-options? selectable?
+                                                                   :show-depl-set-column? show-depl-set-column?)])]
           [:<>
            [BulkEditTagsModal]
-           [TableColsEditable {:columns
-                               (remove nil?
-                                 (mapv (fn [col]
-                                         (when col (assoc col :cell table-cell)))
-                                   [(when-not no-module-name
-                                      {:field-key      :module.name
-                                       :cell-props {:style {:overflow      "hidden",
-                                                            :text-overflow "ellipsis",
-                                                            :max-width     "20ch"}}
-                                       :header-content (@tr [:module])
-                                       :stop-event-propagation? true})
-                                    {:field-key :version :no-sort? true}
-                                    {:field-key :status
-                                     :sort-key  :state}
-                                    {:field-key :url
-                                     :stop-event-propagation? true
-                                     :no-sort?  true}
-                                    {:field-key :deployment-set
-                                     :stop-event-propagation? true
-                                     :sort-key  :deployment-set-name}
-                                    {:field-key :created}
-                                    {:field-key :updated}
-                                    {:field-key :created-by}
-                                    {:field-key :tags}
-                                    {:field-key :infrastructure
-                                     :cell-props {:style {:overflow      "hidden",
-                                                          :text-overflow "ellipsis",
-                                                          :max-width     "20ch"}}
-                                     :sort-key  :nuvlabox-name
-                                     :stop-event-propagation? true}
-                                    (when selectable? {:field-key :actions
-                                                       :no-sort?  true
-                                                       :stop-event-propagation? true})]))
-                               :rows          deployments-list
-                               :row-props     {:role  "link"
-                                               :style {:cursor "pointer"}}
-                               :row-click-handler (fn [{id :id}]
-                                                    (dispatch [::routing-events/navigate
-                                                               (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})]))
-                               :sort-config   {:db-path     ::spec/ordering
-                                               :fetch-event (or (:fetch-event options) [::events/get-deployments])}
-                               :table-props   (merge style/single-line {:stackable true :selectable true})
-                               :select-config (when selectable?
-                                                {:bulk-actions        [{:event [::events/bulk-update-params]
-                                                                        :key   :update
-                                                                        :name  (str/capitalize (@tr [:update]))}
-                                                                       {:event [::events/open-modal-bulk-stop]
-                                                                        :key   :stop
-                                                                        :name  (str/capitalize (@tr [:stop]))}
-                                                                       {:event [::events/open-modal-bulk-delete]
-                                                                        :key   :delete
-                                                                        :name  (str/capitalize (@tr [:delete]))}
-                                                                       trigger]
-                                                 :select-db-path      [::spec/select]
-                                                 :total-count-sub-key [::subs/deployments-count]
-                                                 :resources-sub-key   deployments-resources-subs-key
-                                                 :rights-needed       :edit})}
-
-            ::table-cols-config]])))))
+           [TableColsEditable
+            (cond->
+              {:columns
+               (remove nil?
+                       (mapv (fn [col]
+                               (when col (assoc col :cell table-cell)))
+                             [(when-not no-module-name
+                                {:field-key               :module.name
+                                 :cell-props              {:style {:overflow      "hidden",
+                                                                   :text-overflow "ellipsis",
+                                                                   :max-width     "20ch"}}
+                                 :header-content          (@tr [:module])
+                                 :stop-event-propagation? true})
+                              {:field-key :version :no-sort? true}
+                              {:field-key :status
+                               :sort-key  :state}
+                              {:field-key               :url
+                               :stop-event-propagation? true
+                               :no-sort?                true}
+                              {:field-key               :deployment-set
+                               :stop-event-propagation? true
+                               :sort-key                :deployment-set-name}
+                              {:field-key :created}
+                              {:field-key :updated}
+                              {:field-key :created-by}
+                              {:field-key :tags}
+                              {:field-key               :infrastructure
+                               :cell-props              {:style {:overflow      "hidden",
+                                                                 :text-overflow "ellipsis",
+                                                                 :max-width     "20ch"}}
+                               :sort-key                :nuvlabox-name
+                               :stop-event-propagation? true}
+                              (when selectable? {:field-key               :actions
+                                                 :no-sort?                true
+                                                 :stop-event-propagation? true})]))
+               :rows              deployments-list
+               :row-props         {:role  "link"
+                                   :style {:cursor "pointer"}}
+               :row-click-handler (fn [{id :id}]
+                                    (dispatch [::routing-events/navigate
+                                               (name->href routes/deployment-details {:uuid (general-utils/id->uuid id)})]))
+               :sort-config       {:db-path     ::spec/ordering
+                                   :fetch-event (or (:fetch-event options) [::events/get-deployments])}
+               :table-props       (merge style/single-line {:stackable true :selectable true})
+               :select-config     (when selectable?
+                                    {:bulk-actions        [{:event [::events/bulk-update-params]
+                                                            :key   :update
+                                                            :name  (str/capitalize (@tr [:update]))}
+                                                           {:event [::events/open-modal-bulk-stop]
+                                                            :key   :stop
+                                                            :name  (str/capitalize (@tr [:stop]))}
+                                                           {:event [::events/open-modal-bulk-delete]
+                                                            :key   :delete
+                                                            :name  (str/capitalize (@tr [:delete]))}
+                                                           trigger]
+                                     :select-db-path      [::spec/select]
+                                     :total-count-sub-key [::subs/deployments-count]
+                                     :resources-sub-key   deployments-resources-subs-key
+                                     :rights-needed       :edit})}
+              (not show-depl-set-column?) (assoc :default-columns #{:module.name :version :status :url :created :updated :created-by :tags :infrastructure}))
+            (if show-depl-set-column?
+              ::table-cols-config
+              ::table-cols-config-dep-set)]])))))
 
 (defn DeploymentCard
   [{:keys [id state module tags created-by] :as deployment}]
@@ -371,10 +374,10 @@
 
 (defn state-aggs->state->count
   [summary]
-  (let [terms         (general-utils/aggregate-to-map
-                        (get-in summary [:aggregations :terms:state :buckets]))
-        created  (:CREATED terms 0)
-        pending  (:PENDING terms 0)]
+  (let [terms   (general-utils/aggregate-to-map
+                  (get-in summary [:aggregations :terms:state :buckets]))
+        created (:CREATED terms 0)
+        pending (:PENDING terms 0)]
     {:total    (:count summary)
      :started  (:STARTED terms 0)
      :created  created
@@ -384,9 +387,9 @@
      :starting (+ (:STARTING terms 0) created pending)}))
 
 (def default-states
-  [{:key            :total
-    :icons          [icons/i-rocket]
-    :label          "TOTAL"}
+  [{:key   :total
+    :icons [icons/i-rocket]
+    :label "TOTAL"}
    {:key            :started,
     :icons          [(utils/state->icon utils/STARTED)],
     :label          utils/STARTED,
@@ -409,7 +412,7 @@
   (let [summary (subscribe [summary-subs])]
     (fn [clickable? _summary-subs states-override]
       (let [states->counts (state-aggs->state->count @summary)
-            states (or states-override default-states)]
+            states         (or states-override default-states)]
         [ui/GridColumn {:width 8}
          (into [ui/StatisticGroup {:size  "tiny"
                                    :style {:justify-content "center"}}
@@ -417,11 +420,11 @@
                   ^{:key (:key state)}
                   [components/StatisticState
                    (merge state
-                     {:value                    (states->counts (:key state))
-                      :stacked?                 true
-                      :clickable?               (or (:clickable? state) clickable?)
-                      :set-state-selector-event ::events/set-state-selector
-                      :state-selector-subs      ::subs/state-selector})])])]))))
+                          {:value                    (states->counts (:key state))
+                           :stacked?                 true
+                           :clickable?               (or (:clickable? state) clickable?)
+                           :set-state-selector-event ::events/set-state-selector
+                           :state-selector-subs      ::subs/state-selector})])])]))))
 
 (defn TitledCardDeployments
   [& children]
@@ -435,15 +438,15 @@
   [{:keys [sub-key show-me-event on-click]}]
   (let [tr @(subscribe [::i18n-subs/tr])]
     [TitledCardDeployments
-    ^{:key "deployment-overview-stats"}
-    [StatisticStates false sub-key]
-    ^{:key "deployment-overview-button"}
-    [uix/Button {:class    "center"
-                 :color    "blue"
-                 :icon     icons/i-rocket
-                 :content  (tr [:show-me])
-                 :on-click (or on-click
-                               #(when show-me-event (dispatch show-me-event)))}]]))
+     ^{:key "deployment-overview-stats"}
+     [StatisticStates false sub-key]
+     ^{:key "deployment-overview-button"}
+     [uix/Button {:class    "center"
+                  :color    "blue"
+                  :icon     icons/i-rocket
+                  :content  (tr [:show-me])
+                  :on-click (or on-click
+                                #(when show-me-event (dispatch show-me-event)))}]]))
 
 (defn Pagination
   [db-path-arg]

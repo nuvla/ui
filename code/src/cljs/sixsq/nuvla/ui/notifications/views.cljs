@@ -310,7 +310,7 @@
                              ]
    "infrastructure-service" [{:key "status" :text "status" :value utils/status}]
    "data-record"            [{:key "content-type" :text "content-type" :value utils/content-type}]
-   "application"            [{:key "app-bouquet" :text "Published for App Bouquet" :value utils/app-publish-app-bq}
+   "application"            [{:key "apps-bouquet" :text "Published for App Bouquet" :value utils/app-publish-app-bq}
                              {:key "deployment" :text "Published for Deployments" :value utils/app-publish-deployment}]})
 
 
@@ -337,9 +337,13 @@
   [path]
   ((get-in criteria-condition-type path) criteria-conditions))
 
+(defn module-publish-criteria?
+  [criteria]
+  (and (:value criteria) (str/starts-with? (:value criteria) utils/event-module-publish)))
+
 (defn get-metric-value
   [criteria collection]
-  (if (and (= "application" collection) (and (:value criteria) (str/starts-with? (:value criteria) "module.publish")))
+  (if (and (= "application" collection) (module-publish-criteria? criteria))
     (get utils/resource-kind->app-publish (last (str/split (:value criteria) #"\.")))
     (:metric criteria)))
 
@@ -551,13 +555,22 @@
                                      (@tr (if (= reset-in-days 1) [:day] [:days])) ")"))]
     (str interface-text " " interval-text)))
 
+(defn event-module-publish-info-text
+  [criteria tr]
+  (case (:value criteria)
+    utils/event-module-publish-app-bouquet (@tr [:subs-notif-app-publish-app-bouquet])
+    utils/event-module-publish-deployment  (@tr [:subs-notif-app-publish-deployment])
+    ""))
+
 (defn- get-info-text [criteria tr]
   (let [metric-name (:metric criteria)]
-    (case metric-name
-      utils/disk (when (str/blank? (:dev-name criteria)) (@tr [:subs-notif-disk-info]))
-      utils/network-tx (get-network-info-text criteria tr)
-      utils/network-rx (get-network-info-text criteria tr)
-      "")))
+    (if (module-publish-criteria? criteria)
+      (event-module-publish-info-text criteria tr)
+      (case metric-name
+        utils/disk (when (str/blank? (:dev-name criteria)) (@tr [:subs-notif-disk-info]))
+        utils/network-tx (get-network-info-text criteria tr)
+        utils/network-rx (get-network-info-text criteria tr)
+        ""))))
 
 
 (defn- NetworkUnit [criteria]
@@ -1061,12 +1074,14 @@
 
 
 (defn criteria-popup
-  [subs-conf]
+  [subs-conf tr]
   (let [{:keys [metric condition kind value]} (:criteria subs-conf)]
     (r/as-element
-      [:span (str metric " ")
-       [:span {:style {:font-weight "bold"}} condition]
-       (when-not (= "boolean" kind) (str " " value))])))
+      (if (module-publish-criteria? (:criteria subs-conf))
+        (event-module-publish-info-text (:criteria subs-conf) tr)
+        [:span (str metric " ")
+         [:span {:style {:font-weight "bold"}} condition]
+         (when-not (= "boolean" kind) (str " " value))]))))
 
 
 (defn beautify-name
@@ -1112,7 +1127,7 @@
                        [ui/TableCell {:floated :left
                                       :width   2}
                         [:span (:name subs-conf)]]
-                       [ui/TableCell {:width 2} (criteria-popup subs-conf)]
+                       [ui/TableCell {:width 2} (criteria-popup subs-conf tr)]
                        [ui/TableCell {:floated :left
                                       :width   2}
                         [:span

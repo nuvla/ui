@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.notifications.utils
-  (:require [sixsq.nuvla.ui.notifications.spec :as spec]))
+  (:require [clojure.string :as str]
+            [sixsq.nuvla.ui.notifications.spec :as spec]))
 
 (def ^:const cpu-load "load")
 (def ^:const ram "ram")
@@ -11,6 +12,10 @@
 (def ^:const content-type "content-type")
 (def ^:const app-publish-app-bq "app-publish-app-bq")
 (def ^:const app-publish-deployment "app-publish-deployment")
+
+(def ^:const event-module-publish "module.publish")
+(def ^:const event-module-publish-app-bouquet (str/join "." [event-module-publish "apps-bouquet"]))
+(def ^:const event-module-publish-deployment (str/join "." [event-module-publish "deployment"]))
 
 (defn app-publish-metric?
   [metric]
@@ -24,12 +29,13 @@
   {"apps-bouquet" app-publish-app-bq
    "deployment" app-publish-deployment})
 
+
 (defn app-publish->criteria
   [criteria-metric]
   {:metric "name"
    :kind "string"
    :condition "is"
-   :value (str "module.publish." (get app-publish->resource-kind criteria-metric))})
+   :value (str event-module-publish "." (get app-publish->resource-kind criteria-metric))})
 
 (defn app-publish->name
   [target]

@@ -99,12 +99,13 @@
 
 
 (defn SubsNotifMethodDropdown
-  [current-value notif-methods save? collection subs-conf-id]
+  [current-value notif-methods save? collection subs-conf-id disabled]
   (let [tr             (subscribe [::i18n-subs/tr])
         validate-form? (subscribe [::subs/validate-form?])]
     ^{:key current-value}
     [ui/FormDropdown
      {:selection     true
+      :disabled      disabled
       :multiple      true
       :placeholder   (@tr [:notification-methods])
       :fluid         false
@@ -308,7 +309,9 @@
                              {:key "network tx" :text "Network Tx GiB" :value utils/network-tx}
                              ]
    "infrastructure-service" [{:key "status" :text "status" :value utils/status}]
-   "data-record"            [{:key "content-type" :text "content-type" :value utils/content-type}]})
+   "data-record"            [{:key "content-type" :text "content-type" :value utils/content-type}]
+   "application"            [{:key "app-bouquet" :text "Published for App Bouquet" :value utils/app-publish-app-bq}
+                             {:key "deployment" :text "Published for Deployments" :value utils/app-publish-deployment}]})
 
 
 (def criteria-conditions
@@ -326,8 +329,19 @@
                              :network-tx :numeric
                              :state      :boolean}
    "infrastructure-service" {:status :set}
-   "data-record"            {:content-type :string}})
+   "data-record"            {:content-type :string}
+   "application"            {:app-publish-app-bq :string
+                             :app-publish-deployment :string}})
 
+(defn criteria-condition
+  [path]
+  ((get-in criteria-condition-type path) criteria-conditions))
+
+(defn get-metric-value
+  [criteria collection]
+  (if (and (= "application" collection) (and (:value criteria) (str/starts-with? (:value criteria) "module.publish")))
+    (get utils/resource-kind->app-publish (last (str/split (:value criteria) #"\.")))
+    (:metric criteria)))
 
 (def criteria-condition-options
   {"nuvlabox"               {:load       (map (fn [x] {:key x :value x :text x}) [">" "<"])
@@ -335,19 +349,17 @@
                              :disk       (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :network-rx (map (fn [x] {:key x :value x :text x}) [">"])
                              :network-tx (map (fn [x] {:key x :value x :text x}) [">"])
-                             :state      ((get-in criteria-condition-type ["nuvlabox" :state])
-                                          criteria-conditions)}
-   "infrastructure-service" {:status ((get-in criteria-condition-type ["infrastructure-service" :status])
-                                      criteria-conditions)}
-   "data-record"            {:content-type ((get-in criteria-condition-type ["data-record" :content-type])
-                                            criteria-conditions)}})
+                             :state      (criteria-condition ["nuvlabox" :state])}
+   "infrastructure-service" {:status (criteria-condition ["infrastructure-service" :status])}
+   "data-record"            {:content-type (criteria-condition ["data-record" :content-type])}})
 
 
 (def component-options
   [{:key "nuvlabox", :text "NuvlaEdge Telemetry", :value "nuvlabox"}
    ;; FIXME: Enable creation of IS notification configurations when IS starts producing metrics.
    #_{:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}
-   {:key "data-record", :text "Data Record", :value "data-record"}])
+   {:key "data-record", :text "Data Record", :value "data-record"}
+   {:key "application", :text "Application", :value "application"}])
 
 
 (defn resource-tag-options
@@ -577,7 +589,8 @@
             {:keys [name description criteria method-ids]} @subscription-config
             {:keys [_metric _kind condition value]} criteria]
 
-        (when (seq @component-option) (dispatch [::cimi-events/get-resource-metadata @component-option]))
+        (when (and (seq @component-option) (not= "application" @component-option))
+          (dispatch [::cimi-events/get-resource-metadata @component-option]))
         (dispatch [::events/update-notification-subscription-config :enabled true])
         (dispatch [::events/update-notification-subscription-config :category "notification"])
         [ui/Modal {:open       @visible?
@@ -616,8 +629,9 @@
                             :on-change (ui-callback/value
                                          #(do
                                             (reset! component-option %)
-                                            (dispatch [::events/fetch-components-number %])
-                                            (dispatch [::events/fetch-tags-available %])
+                                            (when (not (= % "application"))
+                                              (dispatch [::events/fetch-components-number %])
+                                              (dispatch [::events/fetch-tags-available %]))
                                             (on-change :collection %)))
                             :options   component-options}]]]
             [ui/TableRow
@@ -625,7 +639,7 @@
                             :style      {:padding-bottom 8}} "Tag"]
              [ui/TableCell
               [ui/Dropdown {:selection true
-                            :disabled  (= "data-record" @component-option)
+                            :disabled  (contains? #{"data-record" "application"} @component-option)
                             :name      "tag"
                             :clearable true
                             :on-change (ui-callback/value
@@ -665,49 +679,55 @@
                               :font-size   "0.9rem"}}
                 (get-info-text criteria tr)]]]]
 
-            (case criteria-metric
-              :string [:<>
-                       [ConditionRow @metric-name condition @collection on-change @validate-form?]
-                       [ui/TableRow
-                        [ui/TableCell {:collapsing true
-                                       :style      {:padding-bottom 8}} "Value"]
-                        [ui/TableCell
-                         (when (and (seq @component-option) (seq @metric-name))
-                           [ResourceDropdown
-                            @component-option
-                            @metric-name
-                            value
-                            value-options
-                            @validate-form?
-                            (ui-callback/value #(on-change :criteria {:value %}))])]]]
-              :set [:<>
-                    [ConditionRow @metric-name condition @collection on-change @validate-form?]
-                    [ui/TableRow
-                     [ui/TableCell {:collapsing true
-                                    :style      {:padding-bottom 8}} "Value"]
-                     [ui/TableCell
-                      [ui/Input
-                       {:type      "text"
-                        :name      "Value"
-                        :error     (and @validate-form? (not (seq value)))
-                        :read-only false
-                        :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]]
-              :numeric [:<>
-                        [ConditionRow @metric-name condition @collection on-change @validate-form?]
-                        [ui/TableRow
-                         [ui/TableCell {:collapsing true
-                                        :style      {:padding-bottom 8}} "Value"]
-                         [ui/TableCell
-                          [ui/Input
-                           {:type        "text"
-                            :name        "Value"
-                            :error       (and @validate-form? (js/isNaN (js/parseInt value)))
-                            :placeholder (@tr [:number])
-                            :read-only   false
-                            :on-change   (ui-callback/value #(on-change :criteria {:value %}))}]
-                          [NetworkUnit criteria]]]]
-              :boolean nil
-              nil)
+            (if (utils/app-publish-metric? (:metric criteria))
+              (do
+                (on-change :resource-kind "application")
+                (on-change :criteria (utils/app-publish->criteria (:metric criteria)))
+                (on-change :name (utils/app-publish->name (:metric criteria)))
+                (on-change :description (utils/app-publish->name (:metric criteria))))
+              (case criteria-metric
+                :string [:<>
+                         [ConditionRow @metric-name condition @collection on-change @validate-form?]
+                         [ui/TableRow
+                          [ui/TableCell {:collapsing true
+                                         :style      {:padding-bottom 8}} "Value"]
+                          [ui/TableCell
+                           (when (and (seq @component-option) (seq @metric-name))
+                             [ResourceDropdown
+                              @component-option
+                              @metric-name
+                              value
+                              value-options
+                              @validate-form?
+                              (ui-callback/value #(on-change :criteria {:value %}))])]]]
+                :set [:<>
+                      [ConditionRow @metric-name condition @collection on-change @validate-form?]
+                      [ui/TableRow
+                       [ui/TableCell {:collapsing true
+                                      :style      {:padding-bottom 8}} "Value"]
+                       [ui/TableCell
+                        [ui/Input
+                         {:type      "text"
+                          :name      "Value"
+                          :error     (and @validate-form? (not (seq value)))
+                          :read-only false
+                          :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]]
+                :numeric [:<>
+                          [ConditionRow @metric-name condition @collection on-change @validate-form?]
+                          [ui/TableRow
+                           [ui/TableCell {:collapsing true
+                                          :style      {:padding-bottom 8}} "Value"]
+                           [ui/TableCell
+                            [ui/Input
+                             {:type        "text"
+                              :name        "Value"
+                              :error       (and @validate-form? (js/isNaN (js/parseInt value)))
+                              :placeholder (@tr [:number])
+                              :read-only   false
+                              :on-change   (ui-callback/value #(on-change :criteria {:value %}))}]
+                            [NetworkUnit criteria]]]]
+                :boolean nil
+                nil))
 
             [ui/TableRow
              [ResetIntervalOptions]]
@@ -719,7 +739,7 @@
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form
            [ui/FormGroup
-            [SubsNotifMethodDropdown method-ids notif-methods false]
+            [SubsNotifMethodDropdown method-ids notif-methods false false]
             [SubsNotifMethodCreateButton]]]]
 
          [ui/ModalActions
@@ -806,7 +826,7 @@
                              :gap         "0.3rem"}}
                [ui/Dropdown {:selection true
                              :disabled  true
-                             :value     (:metric criteria)
+                             :value     (get-metric-value criteria collection)
                              :options   (get criteria-metric-options collection)
                              :on-change (ui-callback/value
                                           #(on-change
@@ -816,7 +836,7 @@
                               :font-size   "0.9rem"}}
                 (get-info-text criteria tr)]]]]
 
-            (if-not (and (= collection "nuvlabox") (= (:metric criteria) "state"))
+            (if-not (utils/metric-condition-exclude collection (:metric criteria))
               [ui/TableRow
                [ui/TableCell {:collapsing true
                               :style      {:padding-bottom 8}} "Condition"]
@@ -829,9 +849,10 @@
                                            ((keyword @criteria-metric) (get criteria-condition-options collection)))
                               :on-change (ui-callback/value
                                            #(on-change :criteria {:condition %}))}]]]
-              (on-change :criteria {:condition "no"}))
+              (on-change :criteria {:condition (utils/metric-condition-exclude-defaults collection (:metric criteria))}))
 
-            (when-not (= :boolean (get-in criteria-condition-type [collection (keyword @criteria-metric)]))
+            (when-not (or (= :boolean (get-in criteria-condition-type [collection (keyword @criteria-metric)]))
+                          (utils/metric-condition-exclude collection (:metric criteria)))
               [ui/TableRow
                [ui/TableCell {:collapsing true
                               :style      {:padding-bottom 8}} "Value"]
@@ -850,7 +871,7 @@
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form
            [ui/FormGroup
-            [SubsNotifMethodDropdown method-ids notif-methods false]
+            [SubsNotifMethodDropdown method-ids notif-methods false false]
             [SubsNotifMethodCreateButton]]]]
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
@@ -1112,7 +1133,7 @@
                        [ui/TableCell {:floated :left
                                       :width   4}
                         [SubsNotifMethodDropdown
-                         (:method-ids subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
+                         (:method-ids subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf) true]]
                        [ui/TableCell {:floated :right
                                       :width   1
                                       :align   :right}

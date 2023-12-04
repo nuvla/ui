@@ -877,46 +877,43 @@
                                     :filter-fn              (partial utils/build-bulk-filter [::spec/select])})
         {bulk-edit-modal :modal
          trigger         :trigger-config} bulk-edit
-        bulk-deploy-enabled?     (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-deployment-set-key])
-        bulk-deploy-menuitem     (when @bulk-deploy-enabled?
-                                   {:menuitem (let [message         (@tr [:deploy-with-static-edges])
-                                                    deploy-menuitem [uix/HighlightableMenuItem
-                                                                     {:on-click          bulk-deploy-static
-                                                                      :query-param-value :bulk-deploy}
-                                                                     [icons/RocketIcon]
-                                                                     (@tr [:edges-bulk-deploy-app])]]
-                                                ^{:key "bulk-deploy-menuitem"}
-                                                [ui/Popup {:basic   true
-                                                           :content message
-                                                           :trigger (r/as-element [:div deploy-menuitem])}])})
-        dyn-bulk-deploy-menuitem (when @bulk-deploy-enabled?
-                                   {:menuitem (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
-                                                                                      (not @search-filter)
-                                                                                      (not state-filter?))
-                                                    message                      (str (@tr [:deploy-with-edges-filter])
-                                                                                      "\n"
-                                                                                      (if (or @search-filter @additional-filter)
-                                                                                        (utils/get-deploy-filter-string @search-filter @additional-filter)
-                                                                                        (@tr [:deploy-with-catch-all-edges-filter])))
-                                                    wrong-filter-message         (cond
-                                                                                   (or (seq @selection) @all-selected?)
-                                                                                   (@tr [:deploy-with-edges-clear-selection])
-                                                                                   @search-filter
-                                                                                   (@tr [:deploy-with-edges-fulltext-filter-not-allowed])
-                                                                                   state-filter?
-                                                                                   (@tr [:deploy-with-edges-state-filter-not-allowed]))
-                                                    deploy-menuitem              [uix/HighlightableMenuItem
-                                                                                  {:disabled          (not dynamic-bulk-deploy-enabled?)
-                                                                                   :on-click          bulk-deploy-dynamic
-                                                                                   :query-param-value :dynamic-bulk-deploy}
-                                                                                  [icons/RocketIcon]
-                                                                                  (@tr [:dynamic-bulk-deploy])]]
-                                                ^{:key "dyn-bulk-deploy-menuitem"}
-                                                [ui/Popup {:basic   true
-                                                           :content (if dynamic-bulk-deploy-enabled?
-                                                                      message
-                                                                      wrong-filter-message)
-                                                           :trigger (r/as-element [:div deploy-menuitem])}])})]
+        bulk-deploy-menuitem     {:menuitem (let [message         (@tr [:deploy-with-static-edges])
+                                                  deploy-menuitem [uix/HighlightableMenuItem
+                                                                   {:on-click          bulk-deploy-static
+                                                                    :query-param-value :bulk-deploy}
+                                                                   [icons/RocketIcon]
+                                                                   (@tr [:edges-bulk-deploy-app])]]
+                                              ^{:key "bulk-deploy-menuitem"}
+                                              [ui/Popup {:basic   true
+                                                         :content message
+                                                         :trigger (r/as-element [:div deploy-menuitem])}])}
+        dyn-bulk-deploy-menuitem {:menuitem (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
+                                                                                    (not @search-filter)
+                                                                                    (not state-filter?))
+                                                  message                      (str (@tr [:deploy-with-edges-filter])
+                                                                                    "\n"
+                                                                                    (if (or @search-filter @additional-filter)
+                                                                                      (utils/get-deploy-filter-string @search-filter @additional-filter)
+                                                                                      (@tr [:deploy-with-catch-all-edges-filter])))
+                                                  wrong-filter-message         (cond
+                                                                                 (or (seq @selection) @all-selected?)
+                                                                                 (@tr [:deploy-with-edges-clear-selection])
+                                                                                 @search-filter
+                                                                                 (@tr [:deploy-with-edges-fulltext-filter-not-allowed])
+                                                                                 state-filter?
+                                                                                 (@tr [:deploy-with-edges-state-filter-not-allowed]))
+                                                  deploy-menuitem              [uix/HighlightableMenuItem
+                                                                                {:disabled          (not dynamic-bulk-deploy-enabled?)
+                                                                                 :on-click          bulk-deploy-dynamic
+                                                                                 :query-param-value :dynamic-bulk-deploy}
+                                                                                [icons/RocketIcon]
+                                                                                (@tr [:dynamic-bulk-deploy])]]
+                                              ^{:key "dyn-bulk-deploy-menuitem"}
+                                              [ui/Popup {:basic   true
+                                                         :content (if dynamic-bulk-deploy-enabled?
+                                                                    message
+                                                                    wrong-filter-message)
+                                                         :trigger (r/as-element [:div deploy-menuitem])}])}]
     [:<>
      (when bulk-edit-modal [bulk-edit-modal])
      [NuvlaEdgeTableView {:select-config {:bulk-actions        (filterv

@@ -3,8 +3,6 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.about.subs :as about-subs]
-            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.acl.utils :as acl-utils]
             [sixsq.nuvla.ui.acl.views :as acl-views]
             [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
@@ -358,15 +356,14 @@
               [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
                          :floated "right"
                          :style   {:width "50px"}}]]]]
-           (when @(subscribe [::about-subs/feature-flag-enabled? about-utils/feature-applications-sets-key])
-             [ui/Card
-              {:href     (when parent (pathify [base-path (str "New Application Bouquet?subtype=" utils/subtype-applications-sets)]))
-               :on-click (when parent
-                           #(dispatch [::events/close-add-modal]))}
-              [ui/CardContent {:text-align :center}
-               [ui/Header "Application Bouquet"]
-               [icons/AppSetsIcon {:size  :massive
-                                   :color (when-not parent :grey)}]]])]]]))))
+           [ui/Card
+            {:href     (when parent (pathify [base-path (str "New Application Bouquet?subtype=" utils/subtype-applications-sets)]))
+             :on-click (when parent
+                         #(dispatch [::events/close-add-modal]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Application Bouquet"]
+             [icons/AppSetsIcon {:size  :massive
+                                 :color (when-not parent :grey)}]]]]]]))))
 
 
 (defn paste-modal

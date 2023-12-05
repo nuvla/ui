@@ -616,6 +616,7 @@
   [add-event]
   [icons/AddIconFull {:link     true
                       :color    "green"
+                      :class    "app-details-add-config-param-icon"
                       :on-click #(do (dispatch [::main-events/changes-protection? true])
                                      (dispatch [add-event {}])
                                      (dispatch [::events/validate-form]))}])

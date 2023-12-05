@@ -51,9 +51,9 @@
   ::notification-subscription-configs-grouped
   :<- [::notification-subscription-configs]
   (fn [notification-subscription-configs]
-    (->> (sort-by #(or (resource-kind->sort-order (:resource-kind %)) 99)
-                 notification-subscription-configs)
-        (group-by :resource-kind))))
+    (group-by :resource-kind
+              (sort-by #(or (resource-kind->sort-order (:resource-kind %)) 99)
+                       notification-subscription-configs))))
 
 (reg-sub
   ::notification-subscription-config

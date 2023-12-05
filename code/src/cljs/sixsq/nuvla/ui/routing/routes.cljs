@@ -20,8 +20,6 @@
 (def clouds ::clouds)
 (def clouds-slashed ::clouds-slashed)
 (def clouds-details ::clouds-details)
-(def deployment ::deployment)
-(def deployment-slashed ::deployment-slashed)
 (def deployment-details ::deployment-details)
 (def deployments ::deployments)
 (def deployments-slashed ::deployments-slashed)

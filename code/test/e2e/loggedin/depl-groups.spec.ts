@@ -11,8 +11,6 @@ test('test', async ({ page }, { config }) => {
   await page.getByRole('link', { name: 'Deployment Groups' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployment-groups');
 
-  await page.pause();
-
   await page.getByText('Add').first().click();
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-set/create`));
 
@@ -40,39 +38,33 @@ test('test', async ({ page }, { config }) => {
   let depSetUrlRegExp = new RegExp(`${baseURL}/ui/deployment-set/([0-9a-f-]*)\?.*`);
   await expect(page).toHaveURL(depSetUrlRegExp);
   let depGroupUuid = page.url().match(depSetUrlRegExp)[1];
-  await expect(page.url().match(depSetUrlRegExp)).toBe('hi!');
-  await expect(depGroupUuid).toBe('hi!');
-  await page.pause();
 
   await page.getByText('Pending: 1 deployments to add').click();
 
+  await page.pause();
+
   await page.getByRole('link', { name: 'BlackBox' }).click();
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-set/`));
-  // baseURL + '/ui/deployment-set/b86c4679-f41f-42ca-b7b6-7fb8801b07e9?deployment-groups-detail-views-apps-config=configure-set-0-app-module/5aa83244-5e03-4d30-adc5-6b9cf5db1e5c&deployment-groups-detail-tab=apps');
 
   await page.getByRole('link', { name: 'BlackBox' }).click();
 
   await page.getByRole('link', { name: 'Overview' }).click();
-  // await expect(page).toHaveURL(baseURL + '/ui/deployment-set/b86c4679-f41f-42ca-b7b6-7fb8801b07e9?deployment-groups-detail-views-apps-config=configure-set-0-app-module/5aa83244-5e03-4d30-adc5-6b9cf5db1e5c&deployment-groups-detail-tab=overview');
 
-  await page.locator('.value').first().click();
-  // await expect(page).toHaveURL(baseURL + '/ui/deployment-set/b86c4679-f41f-42ca-b7b6-7fb8801b07e9?deployment-groups-detail-views-apps-config=configure-set-0-app-module/5aa83244-5e03-4d30-adc5-6b9cf5db1e5c&deployment-groups-detail-tab=overview&deployment-sets-detail-tab=edges');
+  await page.locator('div').filter({ hasText: /^1TOTAL$/ }).getByRole('button').click();
 
-  await page.locator('main:has-text("Oops can\'t find deployment groupDeployment group does not exist or you do not ha")').getByRole('link', { name: 'Edges' }).click();
-  // await expect(page).toHaveURL(baseURL + '/ui/deployment-set/b86c4679-f41f-42ca-b7b6-7fb8801b07e9?deployment-groups-detail-views-apps-config=configure-set-0-app-module/5aa83244-5e03-4d30-adc5-6b9cf5db1e5c&deployment-groups-detail-tab=edges&deployment-sets-detail-tab=edges');
+  await page.getByRole('link', { name: 'Edges' }).first().click();
 
   await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete 2.y.z' }).click();
-  // await expect(page).toHaveURL(baseURL + '/ui/edges/15339469-0b4c-4c45-a0b7-65c494e99a3b');
-
-  // await page.goto(baseURL + '/ui/deployment-set/b86c4679-f41f-42ca-b7b6-7fb8801b07e9?deployment-groups-detail-views-apps-config=configure-set-0-app-module/5aa83244-5e03-4d30-adc5-6b9cf5db1e5c&deployment-groups-detail-tab=edges&deployment-sets-detail-tab=edges');
 
   await page.getByRole('link', { name: 'Deployments' }).click();
-  await expect(page).toHaveURL(baseURL + '/ui/deployment-set/b86c4679-f41f-42ca-b7b6-7fb8801b07e9?deployment-groups-detail-views-apps-config=configure-set-0-app-module/5aa83244-5e03-4d30-adc5-6b9cf5db1e5c&deployment-groups-detail-tab=deployments&deployment-sets-detail-tab=edges');
+  await expect(page).toHaveURL(baseURL + '/ui/deployments');
 
-  await page.getByText('There are currently no deployments running for this app.').click();
+  await page.getByRole('link', { name: 'Deployment Groups' }).click();
+  await expect(page).toHaveURL(baseURL + '/ui/deployment-groups');
 
-  await page.getByRole('link', { name: 'Overview' }).click();
-  await expect(page).toHaveURL(baseURL + '/ui/deployment-set/b86c4679-f41f-42ca-b7b6-7fb8801b07e9?deployment-groups-detail-views-apps-config=configure-set-0-app-module/5aa83244-5e03-4d30-adc5-6b9cf5db1e5c&deployment-groups-detail-tab=overview&deployment-sets-detail-tab=edges');
+  await page.getByRole('link', { name: 'Depl Group Test 01' }).first().click();
+
+  await expect(page).toHaveURL(baseURL + '/ui/deployment-groups/' + depGroupUuid);
 
   await page.locator('div[role="listbox"]:has-text("CancelDelete")').click();
 

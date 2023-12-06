@@ -1174,3 +1174,10 @@ i.link.icon.app-details-add-config-param-icon:hover {
   opacity: 1 !important;
 }
 
+/** Jobs table **/
+
+.job-message-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}

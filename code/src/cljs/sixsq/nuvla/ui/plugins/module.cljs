@@ -513,10 +513,12 @@
 
 (defn LinkToAppView
   [{:keys [path version-id target]} children]
-  [:a {:href   (str-pathify (name->href routes/apps)
-                            (str path "?version=" version-id))
-       :target (or target "_blank")}
-   children])
+  (let [href (str-pathify (name->href routes/apps)
+                          (str path "?version=" version-id))]
+    [:a {:href     href
+         :target   (or target "_blank")
+         :on-click (partial uix/link-on-click href)}
+     children]))
 
 (defn LinkToApp
   [{:keys [db-path href children target]

@@ -17,36 +17,52 @@
 
 (defn JobsTable
   [_jobs]
-  (fn [{:keys [resources count]}]
-    (if (empty? resources)
-      [uix/WarningMsgNoElements]
-      [ui/TabPane
-       [Table {:columns
-               [{:field-key :jobs
-                 :accessor  :id
-                 :cell      (fn [{id :cell-data}] [values/AsLink id :label (general-utils/id->short-uuid id)])}
-                {:field-key :action}
-                {:field-key :timestamp
-                 :accessor  :time-of-status-change}
-                {:field-key :state}
-                {:field-key :progress}
-                {:field-key :return-code}
-                {:field-key :message
-                 :accessor  :status-message
-                 :cell      (fn [{{:keys [state]} :row-data
-                                  :keys           [cell-data]}]
-                              [:span {:style (cond-> {:white-space "pre"
-                                                      :max-width :unset
-                                                      :overflow :scroll
-                                                      :display :block}
-                                                      (= state "QUEUED")
-                                                      (assoc :display "none"))}
-                               cell-data])}]
-               :rows resources}]
-       [pagination-plugin/Pagination
-        {:db-path      [::spec/pagination]
-         :change-event [::events/get-jobs]
-         :total-items  count}]])))
+  (fn [{:keys [resources] :as jobs-data}]
+    (let [{jobs-count :count} jobs-data]
+      (if (empty? resources)
+        [uix/WarningMsgNoElements]
+        [ui/TabPane
+         [Table {:columns
+                 [{:field-key :jobs
+                   :accessor  :id
+                   :cell      (fn [{id :cell-data}] [values/AsLink id :label (general-utils/id->short-uuid id)])}
+                  {:field-key :action}
+                  {:field-key :timestamp
+                   :accessor  :time-of-status-change}
+                  {:field-key :state}
+                  {:field-key :progress}
+                  {:field-key :return-code}
+                  {:field-key :message
+                   :accessor  :status-message
+                   :cell      (fn [{{:keys [state]} :row-data
+                                    :keys           [cell-data]}]
+                                #_:clj-kondo/ignore
+                                (r/with-let [long-cell-data-visible? (r/atom false)]
+                                  [:span {:style (cond-> {:white-space "pre"
+                                                          :max-width   :unset
+                                                          :overflow    :auto
+                                                          :display     :block}
+                                                         (= state "QUEUED")
+                                                         (assoc :display "none"))}
+                                   (if (> (count cell-data) 200)
+                                     (if @long-cell-data-visible?
+                                       [:div {:style {:display "flex"
+                                                      :flex-direction "column"
+                                                      :align-items "flex-start"}}
+                                        cell-data
+                                        [ui/Button {:on-click #(reset! long-cell-data-visible? false)} "Show less"]]
+                                       [:div {:style {:display "flex"
+                                                      :flex-direction "column"
+                                                      :align-items "flex-start"}}
+                                        (general-utils/truncate cell-data 200)
+                                        [ui/Button {:style {:margin-x 5}
+                                                    :on-click #(reset! long-cell-data-visible? true)} "Show more"]])
+                                     cell-data)]))}]
+                 :rows resources}]
+         [pagination-plugin/Pagination
+          {:db-path      [::spec/pagination]
+           :change-event [::events/get-jobs]
+           :total-items  jobs-count}]]))))
 
 (defn jobs-section
   []

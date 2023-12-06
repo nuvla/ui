@@ -426,6 +426,7 @@
         on-change         #(dispatch [::update-env db-path href i %])]
     (if (is-cred-env-var? env-name)
       [EnvCredential env-name value error? on-change]
+      ^{:key (str href "-" i)}
       [ui/FormInput
        {:type          "text"
         :name          env-name

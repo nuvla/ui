@@ -599,20 +599,24 @@
 
 (reg-event-fx
   ::get-edges
-  (fn [{{:keys [::spec/edges-ordering
+  (fn [{{:keys [current-route
+                ::spec/edges-ordering
                 ::spec/deployment-set-edited
-                ::spec/edges-additional-filter] :as db} :db} _]
+                ::spec/edges-additional-filter] :as db} :db} [_ creating?]]
     (let [callback     (fn [response]
                          (dispatch [::set-edges response]))
-          fleet        (get-target-fleet-ids deployment-set-edited)
-          fleet-filter (get-in deployment-set-edited subs/fleet-filter-path)]
-      (if (or (seq fleet) fleet-filter)
+          fleet-filter (get-in deployment-set-edited subs/fleet-filter-path)
+          edge-ids     (if creating?
+                         (let [path (subs/current-route->edges-db-path current-route)]
+                           (:resources (get-in db path)))
+                         (get-target-fleet-ids deployment-set-edited))]
+      (if (or (seq edge-ids) fleet-filter)
         {::cimi-api-fx/search [:nuvlabox
                                {:filter      (or fleet-filter
                                                  (general-utils/join-and
-                                                   (general-utils/filter-eq-ids (get-target-fleet-ids deployment-set-edited))
-                                                   edges-additional-filter
-                                                   (full-text-search-plugin/filter-text
+                                                   (general-utils/filter-eq-ids edge-ids)
+                                                   nil      #_edges-additional-filter
+                                                   nil #_(full-text-search-plugin/filter-text
                                                      db [::spec/edges-full-text-search])))
                                 :last        10000
                                 :select      "id"
@@ -660,6 +664,8 @@
                                        (general-utils/join-and
                                          "id!=null"
                                          (general-utils/filter-eq-ids (:resources edges))
+                                         (full-text-search-plugin/filter-text
+                                           db [::spec/edges-full-text-search])
                                          (when (seq state-filter)
                                            (edges-utils/state-filter state-filter))))}
                            (pagination-plugin/first-last-params

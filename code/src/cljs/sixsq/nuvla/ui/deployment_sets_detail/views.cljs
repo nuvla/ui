@@ -1639,10 +1639,10 @@
        true true])))
 
 (defn- EdgeTabStatesFilter
-  []
+  [_creating?]
   (let [selected-state (subscribe [::route-subs/query-param events/edges-state-filter-key])]
-    (fn []
-      (dispatch [::events/get-edges])
+    (fn [creating?]
+      (dispatch [::events/get-edges creating?])
       [EdgeTabStatesFilterView @selected-state])))
 
 (defn EdgesTabView
@@ -1693,7 +1693,7 @@
         [ui/GridColumn {:width 7}
          [:div {:class :nuvla-edges
                 :style {:margin "0 auto 0 6rem"}}
-          [EdgeTabStatesFilter]]]]
+          [EdgeTabStatesFilter creating?]]]]
        (when @fleet-changes
          [:div {:style {:margin-top    "1rem"
                         :margin-bottom "1rem"}}
@@ -1713,7 +1713,7 @@
                               (:resources @edges))
            :columns     columns
            :sort-config {:db-path     ::spec/edges-ordering
-                         :fetch-event [::events/get-edges]}}
+                         :fetch-event [::events/get-edges creating?]}}
           (and @can-edit-data? (not @fleet-filter))
           (assoc :select-config {:disabled-tooltip    (edit-not-allowed-msg
                                                         {:TR                         @tr
@@ -1730,7 +1730,7 @@
                                  :select-db-path      [::spec/edges-select]}))]
        [pagination-plugin/Pagination
         {:db-path                [::spec/edges-pagination]
-         :change-event           [::events/get-edges]
+         :change-event           [::events/get-edges creating?]
          :total-items            (-> @edges :count)
          :i-per-page-multipliers [1 2 4]}]
        [FleetFilterPanel {:show-edit-filter-button? false :creating? creating?}]])))

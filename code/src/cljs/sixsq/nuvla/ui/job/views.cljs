@@ -51,10 +51,12 @@
                                        (if @long-message-visible?
                                          [:div {:class "job-message-cell"}
                                           [:code cell-data]
-                                          [ui/Button {:on-click #(reset! long-message-visible? false)} (@tr [:show-less])]]
+                                          [ui/Label {:as :a
+                                                     :on-click #(reset! long-message-visible? false)} (@tr [:show-less])]]
                                          [:div {:class "job-message-cell"}
                                           [:code (general-utils/truncate cell-data 200)]
-                                          [ui/Button {:on-click #(reset! long-message-visible? true)} (@tr [:show-more])]]))])))}]
+                                          [ui/Label {:as :a
+                                                     :on-click #(reset! long-message-visible? true)} (@tr [:show-more])]]))])))}]
                  :rows resources}]
          [pagination-plugin/Pagination
           {:db-path      [::spec/pagination]

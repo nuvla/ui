@@ -46,16 +46,16 @@
                                                          (assoc :display "none"))}
                                    (if (> (count cell-data) 200)
                                      (if @long-cell-data-visible?
-                                       [:div {:style {:display "flex"
+                                       [:div {:style {:display        "flex"
                                                       :flex-direction "column"
-                                                      :align-items "flex-start"}}
-                                        cell-data
+                                                      :align-items    "flex-start"}}
+                                        [:code cell-data]
                                         [ui/Button {:on-click #(reset! long-cell-data-visible? false)} "Show less"]]
-                                       [:div {:style {:display "flex"
+                                       [:div {:style {:display        "flex"
                                                       :flex-direction "column"
-                                                      :align-items "flex-start"}}
-                                        (general-utils/truncate cell-data 200)
-                                        [ui/Button {:style {:margin-x 5}
+                                                      :align-items    "flex-start"}}
+                                        [:code (general-utils/truncate cell-data 200)]
+                                        [ui/Button {:style    {:margin-x 5}
                                                     :on-click #(reset! long-cell-data-visible? true)} "Show more"]])
                                      cell-data)]))}]
                  :rows resources}]

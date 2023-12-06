@@ -6,7 +6,7 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]
             [sixsq.nuvla.ui.edges.spec :as spec]
-            [sixsq.nuvla.ui.edges.utils :as utils :refer [get-full-filter-string get-dynamic-fleet-filter-string]]
+            [sixsq.nuvla.ui.edges.utils :as utils :refer [get-dynamic-fleet-filter-string get-full-filter-string]]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]

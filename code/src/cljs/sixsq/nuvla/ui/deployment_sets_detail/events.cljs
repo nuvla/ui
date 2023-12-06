@@ -601,25 +601,26 @@
   ::get-edges
   (fn [{{:keys [::spec/edges-ordering
                 ::spec/deployment-set-edited
-                ::spec/edges-additional-filter] :as db} :db} _]
+                ::spec/edges-additional-filter] :as db} :db} [_ creating?]]
     (let [callback     (fn [response]
                          (dispatch [::set-edges response]))
           fleet        (get-target-fleet-ids deployment-set-edited)
           fleet-filter (get-in deployment-set-edited subs/fleet-filter-path)]
-      (if (or (seq fleet) fleet-filter)
-        {::cimi-api-fx/search [:nuvlabox
-                               {:filter      (or fleet-filter
-                                                 (general-utils/join-and
-                                                   (general-utils/filter-eq-ids (get-target-fleet-ids deployment-set-edited))
-                                                   edges-additional-filter
-                                                   (full-text-search-plugin/filter-text
-                                                     db [::spec/edges-full-text-search])))
-                                :last        10000
-                                :select      "id"
-                                :aggregation edges-spec/state-summary-agg-term
-                                :orderby     (ordering->order-string edges-ordering)}
-                               callback]}
-        {:fx [[:dispatch [::set-edges {:resources []}]]]}))))
+      (when-not creating?
+        (if (or (seq fleet) fleet-filter)
+          {::cimi-api-fx/search [:nuvlabox
+                                 {:filter      (or fleet-filter
+                                                   (general-utils/join-and
+                                                     (general-utils/filter-eq-ids (get-target-fleet-ids deployment-set-edited))
+                                                     edges-additional-filter
+                                                     (full-text-search-plugin/filter-text
+                                                       db [::spec/edges-full-text-search])))
+                                  :last        10000
+                                  :select      "id"
+                                  :aggregation edges-spec/state-summary-agg-term
+                                  :orderby     (ordering->order-string edges-ordering)}
+                                 callback]}
+          {:fx [[:dispatch [::set-edges {:resources []}]]]})))))
 
 (reg-event-fx
   ::set-edges

@@ -36,28 +36,29 @@
                    :accessor  :status-message
                    :cell      (fn [{{:keys [state]} :row-data
                                     :keys           [cell-data]}]
-                                #_:clj-kondo/ignore
-                                (r/with-let [long-cell-data-visible? (r/atom false)]
-                                  [:span {:style (cond-> {:white-space "pre"
-                                                          :max-width   :unset
-                                                          :overflow    :auto
-                                                          :display     :block}
-                                                         (= state "QUEUED")
-                                                         (assoc :display "none"))}
-                                   (if (> (count cell-data) 200)
-                                     (if @long-cell-data-visible?
-                                       [:div {:style {:display        "flex"
-                                                      :flex-direction "column"
-                                                      :align-items    "flex-start"}}
-                                        [:code cell-data]
-                                        [ui/Button {:on-click #(reset! long-cell-data-visible? false)} "Show less"]]
-                                       [:div {:style {:display        "flex"
-                                                      :flex-direction "column"
-                                                      :align-items    "flex-start"}}
-                                        [:code (general-utils/truncate cell-data 200)]
-                                        [ui/Button {:style    {:margin-x 5}
-                                                    :on-click #(reset! long-cell-data-visible? true)} "Show more"]])
-                                     cell-data)]))}]
+                                (let [long-message? (> (count cell-data) 200)]
+                                  #_:clj-kondo/ignore
+                                  (r/with-let [long-message-visible? (r/atom false)]
+                                    [:span {:style (cond-> {:white-space "pre"
+                                                            :max-width   :unset
+                                                            :overflow    :auto
+                                                            :display     :block}
+                                                           (= state "QUEUED")
+                                                           (assoc :display "none"))}
+                                     (if-not long-message?
+                                       cell-data
+                                       (if @long-message-visible?
+                                         [:div {:style {:display        "flex"
+                                                        :flex-direction "column"
+                                                        :align-items    "flex-start"}}
+                                          [:code cell-data]
+                                          [ui/Button {:on-click #(reset! long-message-visible? false)} "Show less"]]
+                                         [:div {:style {:display        "flex"
+                                                        :flex-direction "column"
+                                                        :align-items    "flex-start"}}
+                                          [:code (general-utils/truncate cell-data 200)]
+                                          [ui/Button {:style    {:margin-x 5}
+                                                      :on-click #(reset! long-message-visible? true)} "Show more"]]))])))}]
                  :rows resources}]
          [pagination-plugin/Pagination
           {:db-path      [::spec/pagination]

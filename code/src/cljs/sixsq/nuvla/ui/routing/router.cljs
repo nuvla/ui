@@ -15,9 +15,9 @@
             [sixsq.nuvla.ui.data-set.views :as data-set-views]
             [sixsq.nuvla.ui.data.views :refer [data-view]]
             [sixsq.nuvla.ui.deployments-detail.views :refer [DeploymentDetails]]
-            [sixsq.nuvla.ui.deployments.routes :refer [deployments-view
+            [sixsq.nuvla.ui.deployments.routes :refer [deployment-sets-details-view
                                                        deployment-sets-view
-                                                       deployment-sets-details-view]]
+                                                       deployments-view]]
             [sixsq.nuvla.ui.docs.views :refer [documentation]]
             [sixsq.nuvla.ui.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]

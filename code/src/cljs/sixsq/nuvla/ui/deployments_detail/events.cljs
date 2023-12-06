@@ -101,7 +101,7 @@
                                           :content message
                                           :type    :success}])
                               (dispatch [::deployments-events/get-deployments])
-                              (dispatch [::routing-events/navigate routes/deployment]))]}))
+                              (dispatch [::routing-events/navigate routes/deployments]))]}))
 
 (reg-event-fx
   ::edit

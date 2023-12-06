@@ -1165,3 +1165,12 @@ i.link.icons {
   max-width: 300px;
   margin: 0 2px 0 0 !important;
 }
+
+i.link.icon.app-details-add-config-param-icon {
+  opacity: 0.8 !important;
+}
+
+i.link.icon.app-details-add-config-param-icon:hover {
+  opacity: 1 !important;
+}
+

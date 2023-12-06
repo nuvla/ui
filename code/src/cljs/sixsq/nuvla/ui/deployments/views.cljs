@@ -188,7 +188,7 @@
                                                                   (:versions module)
                                                                   (:content module))
                                                     :path       (:path module)
-                                                    :target     "_blank"}
+                                                    :target     "_self"}
                                                    [:div (:name module)]]])
                                :version        (utils/deployment-version deployment)
                                :status         state

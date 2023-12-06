@@ -345,6 +345,13 @@
   [{:keys [name on-click color class]}]
   [:a {:class class} [icons/Icon {:name name, :link true, :on-click on-click :color color}]])
 
+(defn link-on-click
+  [href event]
+  (when-not (.-metaKey event)              ;;cmd key not pressed
+    (dispatch [:sixsq.nuvla.ui.routing.events/navigate href])
+    (.preventDefault event)
+    (.stopPropagation event)))
+
 
 (defn Link
   "Renders a link that will navigate to the given href when clicked. The href
@@ -355,11 +362,7 @@
                   :text-overflow "ellipsis",
                   :max-width     "20ch"}
        :target   "_blank"
-       :on-click (fn [event]
-                   (when-not (.-metaKey event)              ;;cmd key not pressed
-                     (dispatch [:sixsq.nuvla.ui.routing.events/navigate href])
-                     (.preventDefault event)
-                     (.stopPropagation event)))}
+       :on-click (partial link-on-click href)}
    (or label href)])
 
 (defn ButtonAskingForConfirmation

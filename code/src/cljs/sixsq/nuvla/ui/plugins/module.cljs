@@ -426,6 +426,7 @@
         on-change         #(dispatch [::update-env db-path href i %])]
     (if (is-cred-env-var? env-name)
       [EnvCredential env-name value error? on-change]
+      ^{:key (str href "-" i)}
       [ui/FormInput
        {:type          "text"
         :name          env-name
@@ -439,29 +440,34 @@
   [db-path href read-only? error?
    i {env-name        :name
       env-description :description
-      env-required    :required :as env-variable}]
+      env-required    :required :as env-variable}
+   show-required?]
   [ui/FormField
    [uix/FieldLabel {:name       env-name
-                    :required?  env-required
+                    :required?  (if show-required? env-required false)
                     :help-popup [uix/HelpPopup env-description]}]
    [EnvVarInput db-path href read-only? error? i env-variable]])
 
 (defn EnvVariables
-  [{:keys [db-path href change-event read-only?]
-    :or   {read-only? false}
+  [{:keys [db-path href change-event read-only? highlight-errors?
+           show-required?]
+    :or   {read-only?     false
+           show-required? true}
     :as   _opts}]
   (dispatch [::helpers/set db-path change-event-env-variables change-event])
   (let [tr            @(subscribe [::i18n-subs/tr])
         module        @(subscribe [::module db-path href])
         env-variables (module-env-vars module)
-        vars-in-error @(subscribe [::module-env-vars-in-error db-path href])]
+        vars-in-error (if highlight-errors?
+                        @(subscribe [::module-env-vars-in-error db-path href])
+                        #{})]
     (if (seq env-variables)
       [ui/Form
        (map-indexed
          (fn [i env-variable]
            (let [var-in-error (boolean (vars-in-error (:name env-variable)))]
              ^{:key (str (:name env-variable) "_" i)}
-             [AsFormInput db-path href read-only? var-in-error i env-variable]))
+             [AsFormInput db-path href read-only? var-in-error i env-variable show-required?]))
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 
@@ -512,10 +518,12 @@
 
 (defn LinkToAppView
   [{:keys [path version-id target]} children]
-  [:a {:href   (str-pathify (name->href routes/apps)
-                            (str path "?version=" version-id))
-       :target (or target "_blank")}
-   children])
+  (let [href (str-pathify (name->href routes/apps)
+                          (str path "?version=" version-id))]
+    [:a {:href     href
+         :target   (or target "_blank")
+         :on-click (partial uix/link-on-click href)}
+     children]))
 
 (defn LinkToApp
   [{:keys [db-path href children target]

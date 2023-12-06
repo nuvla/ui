@@ -577,9 +577,12 @@
 (defn- DeplSetLink
   [depl-set-id depl-set-name]
   (when depl-set-id
-    [:a {:href (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid depl-set-id)})}
-     [ui/Icon {:name "bullseye"}]
-     depl-set-name]))
+    (let [href (name->href routes/deployment-groups-details
+                           {:uuid (general-utils/id->uuid depl-set-id)})]
+      [:a {:href     href
+          :on-click (partial uix/link-on-click href)}
+      [ui/Icon {:name "bullseye"}]
+      depl-set-name])))
 
 
 (defn TabOverviewSummary

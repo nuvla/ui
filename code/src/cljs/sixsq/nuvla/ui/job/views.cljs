@@ -57,8 +57,7 @@
                                                         :flex-direction "column"
                                                         :align-items    "flex-start"}}
                                           [:code (general-utils/truncate cell-data 200)]
-                                          [ui/Button {:style    {:margin-x 5}
-                                                      :on-click #(reset! long-message-visible? true)} "Show more"]]))])))}]
+                                          [ui/Button {:on-click #(reset! long-message-visible? true)} "Show more"]]))])))}]
                  :rows resources}]
          [pagination-plugin/Pagination
           {:db-path      [::spec/pagination]

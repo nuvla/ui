@@ -7,7 +7,9 @@
 (s/def ::deployment-set (s/nilable any?))
 (s/def ::deployment-set-edited (s/nilable any?))
 
+;; ::edges db path will contain the ids of the edges which are part of the deployment set
 (s/def ::edges (s/coll-of map? :kind vector?))
+;; ::edges-documents db path will contain the edges documents to show, after filtering and pagination
 (s/def ::edges-documents (s/coll-of map? :kind vector?))
 (s/def ::edges-full-text-search (s/nilable string?))
 (s/def ::edges-ordering (s/coll-of (s/cat :field keyword? :order #{"desc" "asc" :desc :asc})))

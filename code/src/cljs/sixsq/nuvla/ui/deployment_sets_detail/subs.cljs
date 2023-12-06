@@ -286,6 +286,10 @@
 
 
 (defn current-route->edges-db-path
+  "Db path that will contain the ids of the selected edges, before any filtering and pagination.
+   During creation the path will be of the form [::spec/edges <temp-id>],
+   while during editing it will be just [::spec/edges].
+   Note that filtered and paginated documents are stored under ::spec/edges-documents instead."
   [current-route]
   (create-db-path [::spec/edges]
                   (get-temp-db-id current-route)))

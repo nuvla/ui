@@ -112,10 +112,12 @@
       :default-open true]
      [uix/Accordion
       [module-plugin/EnvVariables
-       {:db-path      db-path
-        :href         module-id
-        :change-event [::main-events/changes-protection? true]
-        :read-only?   (not @editable?)}]
+       {:db-path           db-path
+        :href              module-id
+        :change-event      [::main-events/changes-protection? true]
+        :read-only?        (not @editable?)
+        :highlight-errors? false
+        :show-required?    false}]
       :label (@tr [:env-variables])
       :default-open true]
      [uix/Accordion

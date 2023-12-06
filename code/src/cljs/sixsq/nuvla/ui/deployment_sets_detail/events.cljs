@@ -601,8 +601,7 @@
   ::get-edges
   (fn [{{:keys [current-route
                 ::spec/edges-ordering
-                ::spec/deployment-set-edited
-                ::spec/edges-additional-filter] :as db} :db} [_ creating?]]
+                ::spec/deployment-set-edited] :as db} :db} [_ creating?]]
     (let [callback     (fn [response]
                          (dispatch [::set-edges response]))
           fleet-filter (get-in deployment-set-edited subs/fleet-filter-path)
@@ -615,9 +614,8 @@
                                {:filter      (or fleet-filter
                                                  (general-utils/join-and
                                                    (general-utils/filter-eq-ids edge-ids)
-                                                   nil      #_edges-additional-filter
-                                                   nil #_(full-text-search-plugin/filter-text
-                                                     db [::spec/edges-full-text-search])))
+                                                   nil
+                                                   nil))
                                 :last        10000
                                 :select      "id"
                                 :aggregation edges-spec/state-summary-agg-term
@@ -981,27 +979,39 @@
 
 (reg-event-fx
   ::add-edges
-  (fn [{db :db} [_ response]]
-    (let [edge-ids (map :id (:resources response))
-          apps-set (get-in db [::spec/deployment-set-edited :applications-sets])]
-      {:fx [[:dispatch [::edit :applications-sets
-                        (update-fleets
-                          (fn [fleet] (into (or fleet []) edge-ids))
-                          apps-set)]]
-            [:dispatch [::refresh]]]})))
+  (fn [{{:keys [current-route] :as db} :db} [_ creating? response]]
+    (let [edge-ids (map :id (:resources response))]
+      (if creating?
+        (let [edges-path    (subs/current-route->edges-db-path current-route)
+              updated-edges (into (or (:resources (get-in db edges-path)) [])
+                                  edge-ids)]
+          {:db (assoc-in db edges-path {:resources updated-edges})
+           :fx [[:dispatch [::get-edges updated-edges creating?]]]})
+        (let [apps-set (get-in db [::spec/deployment-set-edited :applications-sets])]
+          {:fx [[:dispatch [::edit :applications-sets
+                            (update-fleets
+                              (fn [fleet] (into (or fleet []) edge-ids))
+                              apps-set)]]
+                [:dispatch [::refresh]]]})))))
 
 (reg-event-fx
   ::remove-edges
-  (fn [{db :db} [_ {:keys [select-all selected-set]}]]
+  (fn [{{:keys [current-route] :as db} :db} [_ creating? {:keys [select-all selected-set]}]]
     (let [remove-fn (fn [edges]
                       (remove (fn [edge]
                                 (or select-all
-                                    ((set selected-set) edge))) edges))
-          apps-set  (get-in db [::spec/deployment-set-edited :applications-sets])]
-      {:fx [[:dispatch [::table-plugin/deselect-all [::spec/edges-select]]]
-            [:dispatch [::edit :applications-sets
-                        (update-fleets remove-fn apps-set)]]
-            [:dispatch [::refresh]]]})))
+                                    ((set selected-set) edge))) edges))]
+      (if creating?
+        (let [edges-path    (subs/current-route->edges-db-path current-route)
+              updated-edges (remove-fn (:resources (get-in db edges-path)))]
+          {:db (assoc-in db edges-path {:resources updated-edges})
+           :fx [[:dispatch [::get-edges updated-edges creating?]]
+                [:dispatch [::table-plugin/deselect-all [::spec/edges-select]]]]})
+        (let [apps-set (get-in db [::spec/deployment-set-edited :applications-sets])]
+          {:fx [[:dispatch [::table-plugin/deselect-all [::spec/edges-select]]]
+                [:dispatch [::edit :applications-sets
+                            (update-fleets remove-fn apps-set)]]
+                [:dispatch [::refresh]]]})))))
 
 (reg-event-fx
   ::get-selected-edge-ids
@@ -1014,7 +1024,7 @@
        :select "id"}
       #(do
          (dispatch [::set-opened-modal nil])
-         (dispatch [(if creating? ::set-edges ::add-edges) %]))]}))
+         (dispatch [::add-edges creating? %]))]}))
 
 (reg-event-fx
   ::show-fleet-changes-only

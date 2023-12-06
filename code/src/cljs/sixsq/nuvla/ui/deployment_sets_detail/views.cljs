@@ -1721,7 +1721,7 @@
                                                          :edit-op-allowed?           @edit-op-allowed?
                                                          :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
                                  :bulk-actions        [{:event (fn [select-data]
-                                                                 (dispatch [::events/remove-edges select-data]))
+                                                                 (dispatch [::events/remove-edges creating? select-data]))
                                                         :key   :remove-edges
                                                         :name  "Remove edges"
                                                         :icon  icons/BoxIcon}]

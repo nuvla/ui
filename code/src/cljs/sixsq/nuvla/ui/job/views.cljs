@@ -18,7 +18,8 @@
 (defn JobsTable
   [_jobs]
   (fn [{:keys [resources] :as jobs-data}]
-    (let [{jobs-count :count} jobs-data]
+    (let [{jobs-count :count} jobs-data
+          tr   (subscribe [::i18n-subs/tr])]
       (if (empty? resources)
         [uix/WarningMsgNoElements]
         [ui/TabPane
@@ -48,16 +49,12 @@
                                      (if-not long-message?
                                        cell-data
                                        (if @long-message-visible?
-                                         [:div {:style {:display        "flex"
-                                                        :flex-direction "column"
-                                                        :align-items    "flex-start"}}
+                                         [:div {:class "job-message-cell"}
                                           [:code cell-data]
-                                          [ui/Button {:on-click #(reset! long-message-visible? false)} "Show less"]]
-                                         [:div {:style {:display        "flex"
-                                                        :flex-direction "column"
-                                                        :align-items    "flex-start"}}
+                                          [ui/Button {:on-click #(reset! long-message-visible? false)} (@tr [:show-less])]]
+                                         [:div {:class "job-message-cell"}
                                           [:code (general-utils/truncate cell-data 200)]
-                                          [ui/Button {:on-click #(reset! long-message-visible? true)} "Show more"]]))])))}]
+                                          [ui/Button {:on-click #(reset! long-message-visible? true)} (@tr [:show-more])]]))])))}]
                  :rows resources}]
          [pagination-plugin/Pagination
           {:db-path      [::spec/pagination]

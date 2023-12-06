@@ -258,6 +258,7 @@
                                :stop-event-propagation? true
                                :no-sort?                true}
                               {:field-key               :deployment-set
+                               :header-content          (str/lower-case (@tr [:deployment-group]))
                                :stop-event-propagation? true
                                :sort-key                :deployment-set-name}
                               {:field-key :created}

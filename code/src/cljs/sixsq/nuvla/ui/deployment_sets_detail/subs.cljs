@@ -354,6 +354,12 @@
     (:version apps-set)))
 
 (reg-sub
+  ::apps-set-path
+  :<- [::apps-set]
+  (fn [apps-set]
+    (:path apps-set)))
+
+(reg-sub
   ::apps-set-created
   :<- [::apps-set]
   (fn [apps-set]

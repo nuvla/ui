@@ -359,8 +359,8 @@
                                                      (str "(" off-page-selection-text ")")
                                                      (str off-page-selected " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
         button-text               (if (= @selection-status :all)
-                                    "Clear selection"
-                                    (str "Select all " @total-count))
+                                    (@tr [:clear-selection])
+                                    (str (@tr [:select-all]) " " @total-count))
         payload                   {:select-all   @selected-all-sub
                                    :selected-set @selected-set-sub}
         nothing-selected?         (= :none @selection-status)

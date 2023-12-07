@@ -30,6 +30,7 @@
 
 (s/def ::resource-tag utils-spec/nonblank-string)
 (s/def ::resource-filter string?)
+(s/def ::resource-kind string?)
 (s/def ::resource-tags-available any?)
 
 (s/def ::kind utils-spec/nonblank-string)
@@ -79,7 +80,8 @@
                    ::collection
                    ::method-ids
                    ::criteria]
-          :opt-un [::resource-filter]))
+          :opt-un [::resource-filter
+                   ::resource-kind]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
 (s/def ::add-subscription-modal-visible? boolean?)
 (s/def ::add-subscription-config-modal-visible? boolean?)

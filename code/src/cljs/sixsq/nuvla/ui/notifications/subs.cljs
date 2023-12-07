@@ -43,16 +43,17 @@
   (fn [db]
     (::spec/notification-subscription-configs db)))
 
-(def res-kind->sort-order {"nuvlabox" 1
-                           "data-record" 2})
+(def resource-kind->sort-order {"nuvlabox"    1
+                                "application" 2
+                                "data-record" 3})
 
 (reg-sub
   ::notification-subscription-configs-grouped
   :<- [::notification-subscription-configs]
   (fn [notification-subscription-configs]
-    (->> (sort-by #(or (res-kind->sort-order (:resource-kind %)) 99)
-                 notification-subscription-configs)
-        (group-by :resource-kind))))
+    (group-by :resource-kind
+              (sort-by #(or (resource-kind->sort-order (:resource-kind %)) 99)
+                       notification-subscription-configs))))
 
 (reg-sub
   ::notification-subscription-config

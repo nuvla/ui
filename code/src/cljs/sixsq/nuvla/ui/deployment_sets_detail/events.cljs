@@ -774,13 +774,18 @@
 
 (reg-event-fx
   ::add-apps-set-apps-and-set-apps-set
-  (fn [{db :db} [_ apps-set]]
+  (fn [_ [_ apps-set]]
     (let [app-ids (apps-set->app-ids apps-set)]
-      {:db (assoc db ::spec/module-applications-sets (utils/enrich-app apps-set))
-       ::cimi-api-fx/search
+      {::cimi-api-fx/search
        [:module
         {:filter (general-utils/filter-eq-ids app-ids)}
-        #(dispatch [::add-apps-to-selection apps-set (:resources %)])]})))
+        #(dispatch [::add-apps-and-apps-set-to-selection apps-set (:resources %)])]})))
+
+(reg-event-fx
+  ::add-apps-and-apps-set-to-selection
+  (fn [{db :db} [_ apps-set apps]]
+    {:db (assoc db ::spec/module-applications-sets (utils/enrich-app apps-set))
+     :fx [[:dispatch [::add-apps-to-selection apps-set apps]]]}))
 
 (reg-event-fx
   ::add-apps-to-selection

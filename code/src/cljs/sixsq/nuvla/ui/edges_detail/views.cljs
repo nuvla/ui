@@ -1115,6 +1115,7 @@
 (defn HostInfo
   [_nb-status _ssh-creds]
   (let [tr       (subscribe [::i18n-subs/tr])
+        locale    (subscribe [::i18n-subs/locale])
         show-ips (r/atom false)]
     (fn [{:keys [hostname ip docker-server-version network
                  operating-system architecture last-boot docker-plugins]
@@ -1187,7 +1188,7 @@
           (when last-boot
             [ui/TableRow
              [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-             [ui/TableCell (time/time->format last-boot)]])
+             [ui/TableCell (time/parse-ago last-boot @locale)]])
           (let [interfaces   (:interfaces network)
                 n-interfaces (count interfaces)
                 n-ips        (reduce + (map (comp count :ips) interfaces))]

@@ -17,6 +17,7 @@ code/resources/public/ui/version
 code/node_modules
 
 code/.shadow-cljs
+code/.clj-kondo/.cache
 
 *.bck
 

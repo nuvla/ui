@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.routing.subs :as routing-subs]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -250,7 +251,7 @@
   [icon title & {:keys [inline color]}]
   [:h2 (when inline {:style {:display    :inline
                              :word-break :break-all}})
-   [icons/Icon {:name icon
+   [icons/Icon {:name  icon
                 :color color}] " " title])
 
 
@@ -339,6 +340,19 @@
                        :help-popup help-popup}]]
          ^{:key (or key name)}
          [TableRowCell options]]))))
+
+(defn TruncateContent
+  [{:keys [content length] :as _options
+    :or   {content "" length 200}}]
+  (r/with-let [show-more?    (r/atom true)
+               on-click      #(swap! show-more? not)
+               get-content   #(if @show-more? (general-utils/truncate content length) content)
+               get-btn-label #(if @show-more? :show-more :show-less)]
+    [:div
+     [:p (get-content)]
+     (when (> (count content) length)
+       [ui/Label {:as :a :on-click on-click}
+        [TR (get-btn-label)]])]))
 
 
 (defn LinkIcon
@@ -541,9 +555,9 @@
    "
   [{:keys [header description meta image on-click href target button tags content
            corner-button state left-state loading? on-select selected? extra class]}]
-  [ui/Card (-> {:href   href
+  [ui/Card (-> {:href      href
                 :className class
-                :target target}
+                :target    target}
                (merge (when on-click {:on-click (fn [event]
                                                   (on-click event)
                                                   (.preventDefault event))})))

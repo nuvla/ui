@@ -49,7 +49,7 @@
   ::open-modal
   (fn [{db :db} [_ {:keys [resource-key modal-id db-path on-open-modal-event]}]]
     (let [fx (when (and (tags-modal-ids-set modal-id)
-                     (not (tags-modal-ids-set (get-in db [::edit-mode db-path]))))
+                        (not (tags-modal-ids-set (get-in db [::edit-mode db-path]))))
                [[:dispatch [on-open-modal-event]]
                 [:dispatch [::fetch-tags resource-key]]])]
       {:db (assoc-in db [::edit-mode db-path] modal-id)
@@ -60,13 +60,13 @@
   (fn [_ [_ resource-key]]
     {::cimi-api-fx/search
      [resource-key
-      {:first        0
+      {:first       0
        :last        0
        :aggregation "terms:tags"}
       (fn [response]
         (dispatch [::set-tags
                    (->> response :aggregations :terms:tags :buckets
-                     (map :key))
+                        (map :key))
                    resource-key]))]}))
 
 (reg-event-db
@@ -85,13 +85,13 @@
 
 (defn- TagsEditModeRadio
   [edit-mode opened-modal change-mode]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        active?          (= opened-modal edit-mode)
-        font-weight      (if active? 700 400)
-        setting-tags?    (= modal-tags-set-id edit-mode)]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        active?       (= opened-modal edit-mode)
+        font-weight   (if active? 700 400)
+        setting-tags? (= modal-tags-set-id edit-mode)]
     [ui/Radio {:style     {:font-weight font-weight}
                :label     (str (translate-from-qkey @tr edit-mode)
-                            (when setting-tags? (str " (" (@tr [:tags-overwrite]) "!)")))
+                               (when setting-tags? (str " (" (@tr [:tags-overwrite]) "!)")))
                :checked   active?
                :on-change #(change-mode edit-mode)}]))
 
@@ -109,8 +109,8 @@
 (reg-event-fx
   ::update-tags
   (fn [{{:keys [::i18n-spec/tr] :as db} :db} [_ {:keys [resource-key updated-tags call-back-fn refetch-event
-                           text operation filter-fn
-                           db-path singular plural]}]]
+                                                        text operation filter-fn
+                                                        db-path singular plural]}]]
     {::cimi-api-fx/operation-bulk [resource-key
                                    (fn [result]
                                      (let [updated     (-> result :updated)
@@ -151,36 +151,36 @@
                               modal-tags-set-id     "set-tags"
                               modal-tags-remove-id  "remove-tags"}]
     (fn []
-      (let [action-text  (translate-from-qkey @tr @edit-mode)
-            color        (edit-mode->color @edit-mode)
-            close-fn     (fn []
-                           (dispatch [::open-modal {:db-path db-path}])
-                           (reset! form-tags []))
-            change-mode  (fn [modal-id]
-                           (when (= modal-tags-remove-all modal-id)
-                             (reset! form-tags []))
-                           (dispatch [::open-modal {:db-path  db-path
-                                                    :modal-id modal-id}]))
+      (let [action-text        (translate-from-qkey @tr @edit-mode)
+            color              (edit-mode->color @edit-mode)
+            close-fn           (fn []
+                                 (dispatch [::open-modal {:db-path db-path}])
+                                 (reset! form-tags []))
+            change-mode        (fn [modal-id]
+                                 (when (= modal-tags-remove-all modal-id)
+                                   (reset! form-tags []))
+                                 (dispatch [::open-modal {:db-path  db-path
+                                                          :modal-id modal-id}]))
             not-editable-count (when view-only-avlbl? (:count @view-only-items))
-            updated-tags (if (= modal-tags-remove-all @edit-mode)
-                           []
-                           @form-tags)
-            update-event [::update-tags {:resource-key resource-key
-                                         :refetch-event refetch-event
-                                         :updated-tags updated-tags
-                                         :operation    (edit-mode->operation @edit-mode)
-                                         :call-back-fn close-fn
-                                         :text         action-text
-                                         :filter-fn     filter-fn
-                                         :db-path      db-path
-                                         :plural       plural
-                                         :singular     singular}]
-            disabled? (or
-                        (zero? @selected-count)
-                        (and
-                          (not= modal-tags-remove-all @edit-mode)
-                          (zero? (count @form-tags)))
-                        (= @selected-count not-editable-count))]
+            updated-tags       (if (= modal-tags-remove-all @edit-mode)
+                                 []
+                                 @form-tags)
+            update-event       [::update-tags {:resource-key  resource-key
+                                               :refetch-event refetch-event
+                                               :updated-tags  updated-tags
+                                               :operation     (edit-mode->operation @edit-mode)
+                                               :call-back-fn  close-fn
+                                               :text          action-text
+                                               :filter-fn     filter-fn
+                                               :db-path       db-path
+                                               :plural        plural
+                                               :singular      singular}]
+            disabled?          (or
+                                 (zero? @selected-count)
+                                 (and
+                                   (not= modal-tags-remove-all @edit-mode)
+                                   (zero? (count @form-tags)))
+                                 (= @selected-count not-editable-count))]
         [ui/Modal {:open       @open?
                    :close-icon true
                    :on-close   close-fn}
@@ -205,17 +205,17 @@
           [:div
            {:style {:line-height "1.2rem"}}
            [:div (str (str/capitalize (@tr [:tags-bulk-you-have-selected]))
-                   " "
-                   @selected-count
-                   " "
-                   (@tr [(if (= @selected-count 1) singular plural)])
-                   ". ")]
+                      " "
+                      @selected-count
+                      " "
+                      (@tr [(if (= @selected-count 1) singular plural)])
+                      ". ")]
            (when (<= 1 not-editable-count)
              (if (< not-editable-count @selected-count)
                [:<>
                 [:div
                  (str not-editable-count " " (@tr [(if (= not-editable-count 1) singular plural)]) " " (@tr [:tags-not-updated-no-rights]))]
-                [:div [:a {:style {:cursor :pointer}
+                [:div [:a {:style  {:cursor :pointer}
                            :target :_blank
                            :on-click
                            (fn []
@@ -227,21 +227,22 @@
                [:div {:style {:color :red}} (@tr [:only-edges-without-edit-rights-sellected])]))]
           [uix/ButtonAskingForConfirmation {:disabled?    disabled? :db-path db-path
                                             :update-event update-event :total-count-sub-key total-count-sub-key
-                                            :text action-text :color color :action-aria-label "edit tags"}]]]))))
+                                            :text         action-text :color color :action-aria-label "edit tags"}]]]))))
 
 (defn create-bulk-edit-modal
   [{:keys [db-path on-open-modal-event resource-key] :as opts}]
-  {:trigger-config {:icon (fn [] [icons/TagIcon])
-                    :key  :edit-tags
-                    :name "Edit Tags"
-                   :event (fn []
-                            (dispatch
-                              [::open-modal
-                               {:modal-id            modal-tags-add-id
-                                :db-path             db-path
-                                :on-open-modal-event on-open-modal-event
-                                :resource-key        resource-key}]))}
-   :modal         (fn [] [BulkEditTagsModal opts])})
+  (let [tr (subscribe [::i18n-subs/tr])]
+    {:trigger-config {:icon  (fn [] [icons/TagIcon])
+                      :key   :edit-tags
+                      :name  (@tr [:edit-tags])
+                      :event (fn []
+                               (dispatch
+                                 [::open-modal
+                                  {:modal-id            modal-tags-add-id
+                                   :db-path             db-path
+                                   :on-open-modal-event on-open-modal-event
+                                   :resource-key        resource-key}]))}
+     :modal          (fn [] [BulkEditTagsModal opts])}))
 
 (s/def ::bulk-edit-modal-interface
   (s/cat :opts (s/keys
@@ -256,7 +257,7 @@
                           ::plural])))
 
 (s/fdef BulkEditTagsModal :args
-  ::bulk-edit-modal-interface)
+        ::bulk-edit-modal-interface)
 
 (s/fdef create-bulk-edit-modal :args
-  ::bulk-edit-modal-interface)
+        ::bulk-edit-modal-interface)

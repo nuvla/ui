@@ -100,8 +100,8 @@
                               :href     module-id
                               :children [:<>
                                          [ui/Icon {:class icons/i-link}]
-                                         "Go to app"]}]])
-                :content "Open application in a new window"}]
+                                         (@tr [:go-to-app])]}]])
+                :content (@tr [:open-app-in-new-window])}]
      [uix/Accordion
       [module-plugin/ModuleVersions
        {:db-path      db-path
@@ -238,19 +238,19 @@
 (defn SingleAppsSetPanel
   [id]
   (dispatch [::events/update-apps-set-name id "Main"])
-  (fn [id]
-    [:div
-     [:p (str "Application bouquet is a named group of apps intended to be deployed on a fleet. "
-              "The fleet is defined at deployment time. ")]
-     [:p "To add apps to your application bouquet, click the plus button below."]
-     [ui/Table {:compact    true
-                :definition true}
-      [ui/TableBody
-       [ui/TableRow
-        [ui/TableCell {:collapsing true} "subtype"]
-        ^{:key (str/join "-" ["set" id "subtype"])}
-        [ui/TableCell @(subscribe [::subs/apps-set-subtype id])]]]]
-     [ConfigureSetApplications id]]))
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [id]
+      [:div
+       [:p (@tr [:application-bouquet-is-named-group])]
+       [:p (@tr [:add-apps-to-app-bouquet])]
+       [ui/Table {:compact    true
+                  :definition true}
+        [ui/TableBody
+         [ui/TableRow
+          [ui/TableCell {:collapsing true} "subtype"]
+          ^{:key (str/join "-" ["set" id "subtype"])}
+          [ui/TableCell @(subscribe [::subs/apps-set-subtype id])]]]]
+       [ConfigureSetApplications id]])))
 
 (defn SingleAppsSetSection
   []

@@ -44,7 +44,7 @@
                          :href    (routing-utils/name->href routes/deployments)
                          :active? (= @route-name routes/deployments)
                          :icon    [icons/RocketIcon]}]
-     [DeploymentTabItem {:label   (general-utils/capitalize-words (@tr [:deployment-groups]))
+     [DeploymentTabItem {:label   (str/capitalize (@tr [:deployment-groups]))
                          :href    (routing-utils/name->href routes/deployment-sets)
                          :active? (boolean (#{routes/deployment-set
                                               routes/deployment-sets}

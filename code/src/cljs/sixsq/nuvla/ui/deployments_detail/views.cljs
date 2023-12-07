@@ -645,7 +645,7 @@
          [ui/TableCell @version " " (up-to-date? @version @versions)]]
         (when deployment-set
           [ui/TableRow
-           [ui/TableCell (str/capitalize (@tr [:deployment-set]))]
+           [ui/TableCell (str/capitalize (@tr [:deployment-group]))]
            [ui/TableCell
             [DeplSetLink deployment-set deployment-set-name]]])]]]
      (when-not (deployments-utils/stopped? state)

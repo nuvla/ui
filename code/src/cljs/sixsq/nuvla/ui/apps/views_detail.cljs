@@ -361,7 +361,7 @@
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Application Bouquet"]
+             [ui/Header (@tr [:application-bouquet])]
              [icons/AppSetsIcon {:size  :massive
                                  :color (when-not parent :grey)}]]]]]]))))
 

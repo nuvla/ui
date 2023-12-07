@@ -505,7 +505,8 @@
 (defn RegistriesCredentials
   [{:keys [db-path href change-event]
     :as   opts}]
-  (let [module             @(subscribe [::module db-path href])
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        module             @(subscribe [::module db-path href])
         private-registries (module-private-registries module)
         loading?           @(subscribe [::registries-loading? db-path href])]
     (dispatch [::helpers/set db-path change-event-registries-credentials change-event])
@@ -514,7 +515,7 @@
        (for [[i private-registry] (map-indexed vector private-registries)]
          ^{:key (str href "-" private-registry)}
          [DropdownContainerRegistry opts i private-registry])]
-      [ui/Message "No container registries defined"])))
+      [ui/Message (@tr [:no-container-regs-defined])])))
 
 (defn LinkToAppView
   [{:keys [path version-id target]} children]

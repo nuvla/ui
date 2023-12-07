@@ -32,8 +32,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.routing.utils :as routes-utils :refer [name->href
-                                                                   pathify]]
+            [sixsq.nuvla.ui.routing.utils :as routes-utils :refer [name->href pathify]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [format-money]]
@@ -378,8 +377,8 @@
         (if forceable?
           {:header      (@tr [:force-delete-deployment-set])
            :button-text (str/capitalize (@tr [:force-delete]))
-           :danger-msg  (str "Warning! Doing a force delete will leave orphaned containers! "
-                             warn-msg)}
+           :danger-msg  (str (@tr [:warn-force-delete-orphan-containers])
+                             " " warn-msg)}
           {:header      (@tr [:delete-deployment-set])
            :button-text (str/capitalize (@tr [:delete]))
            :danger-msg  warn-msg})]
@@ -443,9 +442,9 @@
            ^{:key "update"}
            [UpdateButton @deployment-set
             (str
-              "You're about to start these updates: "
-              (ops-status-pending-str @tr op-status)
-              ". Proceed?")]
+              (@tr [:about-starting-these-updates]) ": "
+              (ops-status-pending-str @tr op-status) ". "
+              (@tr [:proceed?]))]
            ^{:key "stop"}
            [StopButton @deployment-set (create-stop-wrng-msg @tr @deployments-stats)]
            ^{:key "cancel"}
@@ -483,14 +482,13 @@
   [ops-status]
   (let [tr     (subscribe [::i18n-subs/tr])
         status (:status ops-status)]
-    (if (= status
-           "OK")
+    (if (= status "OK")
       [:div
        [ui/Icon {:name :circle :color (ops-status->color status)}]
-       "Everything is up-to-date"]
+       (@tr [:everything-is-up-to-date])]
       [:div
        [ui/Icon {:name :circle :color (ops-status->color status)}]
-       (str "Pending: "
+       (str (@tr [:divergence]) ": "
             (ops-status-pending-str @tr ops-status))])))
 
 (defn TabOverviewDeploymentSet
@@ -500,7 +498,9 @@
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 (str (when creating? "Creating a new ") "Deployment group")]
+     [:h4 (if creating?
+            (str (@tr [:creating-new]) (str/lower-case (@tr [:deployment-group])))
+            (@tr [:deployment-group]))]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -539,11 +539,12 @@
 
 (defn AppsInAppsSetsCard
   [ids]
-  (let [apps (subscribe [::subs/select-apps-by-id ids])]
+  (let [tr   (subscribe [::i18n-subs/tr])
+        apps (subscribe [::subs/select-apps-by-id ids])]
     [:div
      [:div
       "This is an "
-      [:span {:style {:font-weight :bold}} "Application Bouquet"]
+      [:span {:style {:font-weight :bold}} (@tr [:application-bouquet])]
       " containing these apps:"]
      [:ul
       (doall
@@ -556,12 +557,14 @@
 (defn AppsPickerAppsSetsCard
   [{:keys [subtype name id desc-summary published target
            show-published-tick? detail-href on-click button-ops]}]
-  (let [apps-set (subscribe [::subs/app-by-id id])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        apps-set (subscribe [::subs/app-by-id id])]
     (fn []
       [uix/Card
        {:header        [:div.nuvla-apps [:h3 {:style {:background-color "#2185d0"}
                                               :class [:ui-header :ui-apps-picker-card-header]}
-                                         [icons/Icon {:name (apps-utils/subtype-icon subtype)}] "Application Bouquet"]]
+                                         [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
+                                         (@tr [:application-bouquet])]]
         :description   [:<>
                         [:h4 [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
                          (or name id)]
@@ -589,7 +592,7 @@
                                     :deploy-for)])
                             (format-money (/ (:cent-amount-daily price) 100)) "/"
                             (@tr [:day]))
-        button-content "Add to selection"
+        button-content (@tr [:add-to-selection])
         button-ops     {:fluid   true
                         :color   "blue"
                         :icon    button-icon
@@ -716,7 +719,8 @@
 
 (defn LinkToAppConfig
   [creating? i cell-data row-data]
-  (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] (:href row-data)])]
+  (let [tr                                  (subscribe [::i18n-subs/tr])
+        is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] (:href row-data)])]
     (if creating?
       (tt/with-tooltip [:span cell-data] "Configure App")
       [:span
@@ -739,17 +743,19 @@
          (tt/with-tooltip
            [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
                                                   :color :orange}]]
-           "Version behind latest published version"))])))
+           (@tr [:version-behind-published])))])))
 
 (defn LinkToModuleDetails
   [trigger]
-  [ui/Popup
-   {:content (r/as-element [:p "Open module details"])
-    :trigger (r/as-element [:span trigger])}])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Popup
+     {:content (r/as-element [:p (@tr [:go-to-app])])
+      :trigger (r/as-element [:span trigger])}]))
 
 (defn LinkToAppSetConfig
   [creating? app-set-id name-component]
-  (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets 0 :apps-set] app-set-id])]
+  (let [tr                                  (subscribe [::i18n-subs/tr])
+        is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets 0 :apps-set] app-set-id])]
     (if creating?
       name-component
       [:div {:style {:display :flex :align-items :center}}
@@ -768,32 +774,33 @@
          (tt/with-tooltip
            [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
                                                   :color :orange}]]
-           "Version behind latest published version"))])))
+           (@tr [:version-behind-published])))])))
 
 (defn AppsSetHeader
   [creating? no-apps?]
-  (let [apps-set-id      (subscribe [::subs/apps-set-id])
+  (let [tr               (subscribe [::i18n-subs/tr])
+        apps-set-id      (subscribe [::subs/apps-set-id])
         apps-set-name    (subscribe [::subs/apps-set-name])
         apps-set-version (subscribe [::subs/apps-set-version])
         apps-set-created (subscribe [::subs/apps-set-created])
+        apps-set-path    (subscribe [::subs/apps-set-path])
         name-component   [:p {:style {:margin 0}} @apps-set-name]]
     [:div
      [:div {:style {:display :flex :align-items :center :font-size :large :justify-content :space-between}}
       [LinkToAppSetConfig creating? @apps-set-id name-component]
       [ModuleVersion (str "v" @apps-set-version) @apps-set-created]
-      [LinkToModuleDetails [module-plugin/LinkToApp
-                            {:db-path  [::spec/apps-sets 0 :apps-set]
-                             :href     @apps-set-id
-                             :children [icons/ArrowRightFromBracketIcon]
-                             :target   :_self}]]
+      [LinkToModuleDetails
+       [module-plugin/LinkToAppView {:path       @apps-set-path
+                                     :version-id @apps-set-version}
+        [icons/ArrowRightFromBracketIcon]]]
       (when creating?
         [RemoveButton {:enabled  true
                        :on-click #(dispatch [::events/remove-apps-set])}])]
 
      [:div {:style {:margin-top "10px"}}
       (if-not no-apps?
-        "Application Bouquet includes following apps:"
-        "Application Bouquet does not include any apps.")]]))
+        (@tr [:app-bouquet-includes-apps])
+        (@tr [:app-bouquet-has-no-apps]))]]))
 
 (defn- AppsOverviewTable
   [creating?]
@@ -833,28 +840,28 @@
                            (keys (dissoc (first @apps-row) :id :idx :href :module))))
                        (remove nil?
                                [{:field-key      :details
-                                 :header-content (general-utils/capitalize-words (@tr [:details]))
+                                 :header-content (str/capitalize (@tr [:details]))
                                  :cell           (fn [{:keys [row-data]}]
                                                    [LinkToModuleDetails
                                                     [module-plugin/LinkToAppView
                                                      {:version-id (deployment-utils/get-version-number
                                                                     (:versions (:module row-data))
                                                                     (:content (:module row-data)))
-                                                      :path       (:path (:module row-data))
-                                                      :target     "_self"}
+                                                      :path       (:path (:module row-data))}
                                                      [icons/ArrowRightFromBracketIcon]]])}
                                 (when @can-edit-data?
-                                  {:field-key :remove
-                                   :cell      (fn [{:keys [row-data]}]
-                                                [RemoveButton {:enabled  (and (not @is-controlled-by-apps-set?) @edit-op-allowed?)
-                                                               :tooltip  (if @is-controlled-by-apps-set?
-                                                                           "To remove single applications from your deployment group, you have to remove it from the controlling application bouquet."
-                                                                           (edit-not-allowed-msg
-                                                                             {:TR                         @tr
-                                                                              :can-edit-data?             @can-edit-data?
-                                                                              :edit-op-allowed?           @edit-op-allowed?
-                                                                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
-                                                               :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
+                                  {:field-key      :remove
+                                   :header-content (str/capitalize (@tr [:remove]))
+                                   :cell           (fn [{:keys [row-data]}]
+                                                     [RemoveButton {:enabled  (and (not @is-controlled-by-apps-set?) @edit-op-allowed?)
+                                                                    :tooltip  (if @is-controlled-by-apps-set?
+                                                                                (@tr [:remove-app-from-app-bouquet])
+                                                                                (edit-not-allowed-msg
+                                                                                  {:TR                         @tr
+                                                                                   :can-edit-data?             @can-edit-data?
+                                                                                   :edit-op-allowed?           @edit-op-allowed?
+                                                                                   :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
+                                                                    :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                      :rows @apps-row}]])]
          (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
            [:<>
@@ -942,7 +949,8 @@
 
 (defn- DeploymentsStatesCard
   [state-filter]
-  (let [deployments (subscribe [::deployments-subs/deployments])]
+  (let [deployments (subscribe [::deployments-subs/deployments])
+        tr          (subscribe [::i18n-subs/tr])]
     (fn []
       [dv/TitledCardDeployments
        [DeploymentStatesFilter state-filter]
@@ -952,7 +960,7 @@
                     :disabled (or
                                 (nil? (:count @deployments))
                                 (= 0 (:count @deployments)))
-                    :content  "Show me"
+                    :content  (@tr [:show-me])
                     :on-click (create-nav-fn "deployments" nil)}]])))
 
 (defn polish-fleet-filter
@@ -1120,7 +1128,7 @@
          [UnstoredEdgeChanges @fleet-changes]])
       [uix/Button {:class    "center"
                    :icon     icons/i-box
-                   :content  "Show me"
+                   :content  (@tr [:show-me])
                    :disabled (or (nil? (:total edges-stats))
                                  (= 0 (:total edges-stats)))
                    :on-click (create-nav-fn "edges" {:edges-state nil})}]]
@@ -1162,7 +1170,9 @@
            [vc/TitledCard
             {:class :nuvla-apps
              :icon  icons/i-layer-group
-             :label (if @is-controlled-by-apps-set? "Application Bouquet" (str/capitalize (@tr [:apps])))}
+             :label (if @is-controlled-by-apps-set?
+                      (@tr [:application-bouquet])
+                      (str/capitalize (@tr [:apps])))}
             [AppsOverviewTable creating?]]]
           [ui/GridColumn {:stretched true}
            [vc/TitledCard
@@ -1452,7 +1462,8 @@
 
 (defn ConfigureApps
   [i applications creating?]
-  (let [licenses-by-module-id (subscribe [::subs/license-by-module-id])
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        licenses-by-module-id (subscribe [::subs/license-by-module-id])
         pricing-by-module-id  (subscribe [::subs/pricing-by-module-id])]
     ^{:key (str "set-" i)}
     [ui/Segment
@@ -1474,7 +1485,7 @@
                                                        [WarningVersionBehind [:warning-not-latest-app-version]])
                                                      [ui/Popup {:trigger (r/as-element
                                                                            [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
-                                                                :content "Open application in a new window"}]
+                                                                :content (@tr [:open-app-in-new-window])}]
                                                      [ModuleVersionsApp i id creating?]
                                                      [EnvVariablesApp i id creating?]
                                                      (when-let [license (get @licenses-by-module-id id)]
@@ -1485,14 +1496,15 @@
 
 (defn ConfigureAppsSetHeader
   [db-path id apps-set-name]
-  (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? db-path id])]
+  (let [tr                                  (subscribe [::i18n-subs/tr])
+        is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? db-path id])]
     [:<>
      [:h2 apps-set-name
       (when @is-behind-latest-published-version?
         (tt/with-tooltip
           [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
                                                  :color :orange}]]
-          "Version behind latest published version"))]
+          (@tr [:version-behind-published])))]
      (when @is-behind-latest-published-version?
        [WarningVersionBehind [:warning-not-latest-app-set-version]])]))
 
@@ -1511,7 +1523,7 @@
         [ConfigureAppsSetHeader db-path (:id @apps-set) (:name @apps-set)]
         [ui/Popup {:trigger (r/as-element
                               [LinkToModule db-path (:id @apps-set) [:go-to-app-set]])
-                   :content "Open application in a new window"}]
+                   :content (@tr [:open-app-in-new-window])}]
         [uix/Accordion
          (tt/with-tooltip
            [:div [module-plugin/ModuleVersions

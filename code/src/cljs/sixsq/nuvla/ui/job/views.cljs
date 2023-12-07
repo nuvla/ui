@@ -14,14 +14,27 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.values :as values]))
 
+
 (def message-max-length 200)
 
+(defn JobsMessageCell [{{:keys [state]} :row-data
+                         :keys          [cell-data]}]
+  (let [long-message? (> (count cell-data) message-max-length)]
+    [:span {:style (cond-> {:white-space "pre"
+                            :max-width   :unset
+                            :overflow    :auto
+                            :display     :block}
+                           (= state "QUEUED")
+                           (assoc :display "none"))}
+     (if-not long-message?
+       cell-data
+       [uix/TableCellLongContent {:long-content [:code cell-data]
+                                  :short-content [:code (general-utils/truncate cell-data message-max-length)]}])]))
 
 (defn JobsTable
   [_jobs]
   (fn [{:keys [resources] :as jobs-data}]
-    (let [{jobs-count :count} jobs-data
-          tr   (subscribe [::i18n-subs/tr])]
+    (let [{jobs-count :count} jobs-data]
       (if (empty? resources)
         [uix/WarningMsgNoElements]
         [ui/TabPane
@@ -37,28 +50,7 @@
                   {:field-key :return-code}
                   {:field-key :message
                    :accessor  :status-message
-                   :cell      (fn [{{:keys [state]} :row-data
-                                    :keys           [cell-data]}]
-                                (let [long-message? (> (count cell-data) message-max-length)]
-                                  #_:clj-kondo/ignore
-                                  (r/with-let [long-message-visible? (r/atom false)]
-                                    [:span {:style (cond-> {:white-space "pre"
-                                                            :max-width   :unset
-                                                            :overflow    :auto
-                                                            :display     :block}
-                                                           (= state "QUEUED")
-                                                           (assoc :display "none"))}
-                                     (if-not long-message?
-                                       cell-data
-                                       (if @long-message-visible?
-                                         [:div {:class "job-message-cell"}
-                                          [:code cell-data]
-                                          [ui/Label {:as :a
-                                                     :on-click #(reset! long-message-visible? false)} (@tr [:show-less])]]
-                                         [:div {:class "job-message-cell"}
-                                          [:code (general-utils/truncate cell-data message-max-length)]
-                                          [ui/Label {:as :a
-                                                     :on-click #(reset! long-message-visible? true)} (@tr [:show-more])]]))])))}]
+                   :cell      (fn [cell-data] [JobsMessageCell cell-data])}]
                  :rows resources}]
          [pagination-plugin/Pagination
           {:db-path      [::spec/pagination]

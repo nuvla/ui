@@ -340,6 +340,22 @@
          ^{:key (or key name)}
          [TableRowCell options]]))))
 
+(defn TableCellLongContent
+  [{:keys [long-content short-content] :as _options}]
+  (let [tr   (subscribe [::i18n-subs/tr])]
+    (r/with-let [long-content-visible? (r/atom false)]
+      (if @long-content-visible?
+        [:div {:class "table-cell-long-content"}
+         long-content
+         [ui/Label {:as       :a
+                    :on-click #(reset! long-content-visible? false)}
+          (@tr [:show-less])]]
+        [:div {:class "table-cell-long-content"}
+         short-content
+         [ui/Label {:as       :a
+                    :on-click #(reset! long-content-visible? true)}
+          (@tr [:show-more])]]))))
+
 
 (defn LinkIcon
   [{:keys [name on-click color class]}]

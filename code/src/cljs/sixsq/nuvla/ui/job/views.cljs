@@ -14,6 +14,8 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.values :as values]))
 
+(def message-max-length 200)
+
 
 (defn JobsTable
   [_jobs]
@@ -37,7 +39,7 @@
                    :accessor  :status-message
                    :cell      (fn [{{:keys [state]} :row-data
                                     :keys           [cell-data]}]
-                                (let [long-message? (> (count cell-data) 200)]
+                                (let [long-message? (> (count cell-data) message-max-length)]
                                   #_:clj-kondo/ignore
                                   (r/with-let [long-message-visible? (r/atom false)]
                                     [:span {:style (cond-> {:white-space "pre"
@@ -54,7 +56,7 @@
                                           [ui/Label {:as :a
                                                      :on-click #(reset! long-message-visible? false)} (@tr [:show-less])]]
                                          [:div {:class "job-message-cell"}
-                                          [:code (general-utils/truncate cell-data 200)]
+                                          [:code (general-utils/truncate cell-data message-max-length)]
                                           [ui/Label {:as :a
                                                      :on-click #(reset! long-message-visible? true)} (@tr [:show-more])]]))])))}]
                  :rows resources}]

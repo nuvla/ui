@@ -421,7 +421,7 @@
 (defn applications-sets->overwrites
   [db i {:keys [applications] :as _applications-sets} current-overwrites]
   (let [targets                 (subs/get-db-targets-selected-ids db i)
-        fleet                   (get-target-fleet-ids (get db ::spec/deployment-set))
+        fleet                   (get-target-fleet-ids (get db ::spec/deployment-set-edited))
         fleet-filter            (or (get db ::spec/fleet-filter-edited)
                                     (get db ::spec/fleet-filter))
         applications-overwrites (map (fn [[app current-app-overwrites]]
@@ -823,7 +823,7 @@
 (reg-event-fx
   ::edit-config
   (fn [{{:keys [::spec/module-applications-sets
-                ::spec/deployment-set] :as db} :db}]
+                ::spec/deployment-set-edited] :as db} :db}]
     {:fx [[:dispatch [::edit :applications-sets
                       [{:id         (:id module-applications-sets)
                         :version    (apps-utils/module-version module-applications-sets)
@@ -832,7 +832,7 @@
                                         (applications-sets->overwrites db i app-set current-overwrites))
                                       (map vector
                                            (-> module-applications-sets :content :applications-sets)
-                                           (concat (get-in deployment-set [:applications-sets 0 :overwrites])
+                                           (concat (get-in deployment-set-edited [:applications-sets 0 :overwrites])
                                                    (repeat nil))))}]]]]}))
 
 

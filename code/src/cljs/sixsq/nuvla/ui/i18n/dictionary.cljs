@@ -1613,7 +1613,7 @@
         :pricing                                       "tarification"
         :principals-icon                               "Icône représentant les responsables"
         :private-key                                   "clé privée"
-        :private-registries                            "Ccontainer registries privés"
+        :private-registries                            "Container registries privés"
         :private-registries-help                       "Quand votre application utilise des images provenant de container registries privés, vous devez les définir dans cette section."
         :private-registries-not-used                   "Aucun container registry privé utilisé"
         :process                                       "traiter"
@@ -1882,3 +1882,17 @@
         :working-directory                             "Dossier de travail"
         :yes                                           "oui"
         }})
+
+(comment
+  ;; list entries not translated to french
+  (let [{:keys [en fr]} dictionary
+        fr-key-set (set (keys fr))]
+    (->> en
+         (remove (comp fr-key-set first))
+         (into {})))
+  ;; list french entries not present in the english dictionary
+  (let [{:keys [en fr]} dictionary
+        en-key-set (set (keys en))]
+    (->> fr
+         (remove (comp en-key-set first))
+         (into {}))))

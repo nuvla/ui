@@ -1166,12 +1166,6 @@ i.link.icons {
   margin: 0 2px 0 0 !important;
 }
 
-.table-cell-long-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
 i.link.icon.app-details-add-config-param-icon {
   opacity: 0.8 !important;
 }

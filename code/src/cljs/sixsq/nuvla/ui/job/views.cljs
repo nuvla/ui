@@ -18,18 +18,14 @@
 (def message-max-length 200)
 
 (defn JobsMessageCell [{{:keys [state]} :row-data
-                         :keys          [cell-data]}]
-  (let [long-message? (> (count cell-data) message-max-length)]
-    [:span {:style (cond-> {:white-space "pre"
-                            :max-width   :unset
-                            :overflow    :auto
-                            :display     :block}
-                           (= state "QUEUED")
-                           (assoc :display "none"))}
-     (if-not long-message?
-       cell-data
-       [uix/TableCellLongContent {:long-content [:code cell-data]
-                                  :short-content [:code (general-utils/truncate cell-data message-max-length)]}])]))
+                        :keys           [cell-data]}]
+  [:span {:style (cond-> {:white-space "pre"
+                          :max-width   :unset
+                          :overflow    :auto
+                          :display     :block}
+                         (= state "QUEUED")
+                         (assoc :display "none"))}
+   [uix/TruncateContent {:content cell-data :length 300}]])
 
 (defn JobsTable
   [_jobs]

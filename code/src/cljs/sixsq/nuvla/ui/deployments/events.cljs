@@ -52,6 +52,7 @@
     (assoc db ::spec/deployments-params-map
               (group-by :parent deployment-params))))
 
+
 (reg-event-fx
   ::set-deployments
   (fn [{:keys [db]} [_ {:keys [resources] :as deployments}]]
@@ -69,6 +70,11 @@
               (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search
                                                           [:deployment-parameter
                                                            query-params callback])))))
+
+(reg-event-fx
+  ::reset-deployments
+  (fn []
+    {:fx [[:dispatch [::set-deployments {:resources []}]]]}))
 
 (reg-event-fx
   ::get-deployments

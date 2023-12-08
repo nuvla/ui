@@ -1065,7 +1065,7 @@
                    :row-props         {:role  "link"
                                        :style {:cursor "pointer"}}}
                   (not @fleet-filter)
-                  (assoc :select-config {:total-count-sub-key [::subs/edge-picker-total-edges-count]
+                  (assoc :select-config {:total-count-sub-key [::subs/edge-picker-filtered-edges-count]
                                          :resources-sub-key   [::subs/edge-picker-edges-resources]
                                          :select-db-path      [::spec/edge-picker-select]}))]
          [pagination-plugin/Pagination

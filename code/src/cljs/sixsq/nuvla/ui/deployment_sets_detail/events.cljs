@@ -301,7 +301,7 @@
 (reg-event-fx
   ::get-deployments-for-deployment-sets
   (fn [{{:keys [current-route]} :db} [_ uuid]]
-    (when uuid
+    (if uuid
       (let [query-filter      (routing-utils/get-query-param current-route deployments-state-filter-key)
             filter-constraint (str "deployment-set='" (uuid->depl-set-id uuid) "'")]
         {:fx [[:dispatch [::deployments-events/get-deployments
@@ -310,7 +310,9 @@
                                                     (deployments-utils/state-filter query-filter))
                            :external-filter-only? true
                            :pagination-db-path    ::spec/pagination-deployments}]]
-              [:dispatch [::deployments-events/get-deployments-summary-all filter-constraint]]]}))))
+              [:dispatch [::deployments-events/get-deployments-summary-all filter-constraint]]]})
+      {:fx [[:dispatch [::deployments-events/reset-deployments]]
+            [:dispatch [::deployments-events/reset-deployments-summary-all]]]})))
 
 (reg-event-db
   ::set-deployment-set-edited

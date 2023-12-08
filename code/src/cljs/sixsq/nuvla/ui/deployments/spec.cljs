@@ -34,7 +34,7 @@
 (def default-ordering [[:created :desc]])
 
 (def defaults {::deployments-search      (full-text-search-plugin/build-spec)
-               ::additional-filter        nil
+               ::additional-filter       nil
                ::deployments             nil
                ::deployment-edges        nil
                ::deployments-summary     nil

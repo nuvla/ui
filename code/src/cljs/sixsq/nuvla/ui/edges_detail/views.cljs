@@ -1115,7 +1115,7 @@
 (defn HostInfo
   [_nb-status _ssh-creds]
   (let [tr       (subscribe [::i18n-subs/tr])
-        locale    (subscribe [::i18n-subs/locale])
+        locale   (subscribe [::i18n-subs/locale])
         show-ips (r/atom false)]
     (fn [{:keys [hostname ip docker-server-version network
                  operating-system architecture last-boot docker-plugins]

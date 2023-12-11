@@ -98,7 +98,6 @@
 (reg-event-fx
   ::set-changes-protection
   (fn [{{:keys [::spec/reset-changes-event]} :db} [_ protect?]]
-    (prn :set-changes-protection protect? reset-changes-event)
     {:fx [[:dispatch [::main-events/changes-protection? protect? reset-changes-event]]]}))
 
 (reg-event-fx

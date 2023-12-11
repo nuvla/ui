@@ -104,8 +104,10 @@
 
 (defn- overwrite-env
   [environment-variables env]
-  (mapv (fn [{env-name :name env-value :value :as environment-variable}]
-          (assoc environment-variable :value (get env env-name env-value)))
+  (mapv (fn [{env-name :name :as environment-variable}]
+          (if-let [env-value (get env env-name)]
+            (assoc environment-variable ::new-value env-value)
+            environment-variable))
         environment-variables))
 
 (defn- set-db-loading-registries
@@ -309,7 +311,9 @@
 
 (defn db-changed-env-vars
   [db db-path href]
-  (changed-env-vars (db-module-env-vars db db-path href)))
+  (remove
+    (comp str/blank? :value)
+    (changed-env-vars (db-module-env-vars db db-path href))))
 
 (reg-sub
   ::module-versions-indexed

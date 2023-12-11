@@ -41,9 +41,7 @@
 (defn app-selected->application
   [db id {app-id :id :as _app-selected}]
   (let [db-path    [::spec/apps-sets id]
-        env-vars   (remove
-                     (comp str/blank? :value)
-                     (module-plugin/db-changed-env-vars db db-path app-id))
+        env-vars   (module-plugin/db-changed-env-vars db db-path app-id)
         regs-creds (module-plugin/db-module-registries-credentials
                      db db-path app-id)]
     (cond-> {:id      app-id

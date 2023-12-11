@@ -393,25 +393,11 @@
         forceable?
         {::cimi-api-fx/operation [id "force-delete" cb]}))))
 
-(defn merge-env-vars
-  [env-vars1 env-vars2]
-  (let [m1 (->> env-vars1
-                (map (juxt :name :value))
-                (into {}))
-        m2 (->> env-vars2
-                (map (juxt :name :value))
-                (into {}))]
-    (->> (merge m1 m2)
-         (remove (fn [[_ v]] (str/blank? v)))
-         (mapv (fn [[k v]] {:name k :value v})))))
-
 (defn application-overwrites
   [db i {:keys [id version] :as _application} current-overwrites]
   (let [db-path         [::spec/apps-sets i]
         version-changed (module-plugin/db-new-version db db-path id)
-        env-changed     (merge-env-vars
-                          (:environmental-variables current-overwrites)
-                          (module-plugin/db-changed-env-vars db db-path id))
+        env-changed     (module-plugin/db-changed-env-vars db db-path id)
         regs-creds      (module-plugin/db-module-registries-credentials
                           db db-path id)]
     (cond-> {:id      id

@@ -24,6 +24,10 @@
 (s/def ::ignore-changes-modal (s/nilable any?))
 (s/def ::after-clear-event (s/nilable any?))
 
+;; reset-changes-event should be set when changes protection is set to true
+;; reset-changes-event will be dispatched after the user confirms to ignore changes
+(s/def ::reset-changes-event (s/nilable any?))
+
 (s/def ::do-not-ignore-changes-modal (s/nilable any?))
 
 (s/def ::ui-version map?)

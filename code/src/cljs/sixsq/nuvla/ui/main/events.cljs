@@ -146,13 +146,15 @@
 
 (reg-event-fx
   ::changes-protection?
-  (fn [{db :db} [_ protect?]]
+  (fn [{db :db} [_ protect? reset-changes-event]]
     (let [protected? (get db ::spec/changes-protection?)
           changed?   (not= protect? protected?)]
-      (when changed?
-        {:db (assoc db ::spec/changes-protection? protect?)
-         :fx [[::fx/on-unload-protection protect?]
-              [:dispatch (if protect? [::disable-browser-back] [::enable-browser-back])]]}))))
+      (cond->
+        {:db (assoc db ::spec/changes-protection? protect?
+                       ::spec/reset-changes-event reset-changes-event)}
+        changed?
+        (assoc :fx [[::fx/on-unload-protection protect?]
+                    [:dispatch (if protect? [::disable-browser-back] [::enable-browser-back])]])))))
 
 
 (reg-event-fx
@@ -185,11 +187,13 @@
 
 (reg-event-fx
   ::ignore-changes
-  (fn [{{:keys [::spec/ignore-changes-modal] :as db} :db} _]
+  (fn [{{:keys [::spec/ignore-changes-modal ::spec/reset-changes-event] :as db} :db} _]
     (let [db-chng-unprtd (assoc db
-                           ::spec/changes-protection? false)
+                           ::spec/changes-protection? false
+                           ::spec/reset-changes-event nil)
           clear-fx       [[:dispatch [::close-ignore-modal]]
-                          [:dispatch [::clear-changes-protections]]]]
+                          [:dispatch [::clear-changes-protections]]
+                          (when reset-changes-event [:dispatch reset-changes-event])]]
       (cond
         (map? ignore-changes-modal)
         {:db (merge (:db ignore-changes-modal)

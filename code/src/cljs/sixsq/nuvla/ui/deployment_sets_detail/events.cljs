@@ -57,14 +57,21 @@
   (dispatch [::refresh]))
 
 (reg-event-fx
-  ::init
+  ::reset
   (fn [{:keys [db]}]
-    {:db (merge db spec/defaults)
+    {:db (-> db
+             (merge db spec/defaults)
+             (assoc ::spec/reset-changes-event [::reset]))
      :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
           [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
           [:dispatch [::refresh]]
-          [:dispatch [::main-events/changes-protection? false]]
           [:dispatch [::enable-form-validation]]]}))
+
+(reg-event-fx
+  ::init
+  (fn []
+    {:fx [[:dispatch [::reset]]
+          [:dispatch [::set-changes-protection false]]]}))
 
 (reg-event-fx
   ::clear-deployments
@@ -72,14 +79,26 @@
     {:fx [[:dispatch [::deployments-events/reset-deployments-summary-all]]]}))
 
 (reg-event-fx
-  ::init-create
+  ::reset-create
   (fn [{{:keys [current-route] :as db} :db}]
     {:db (-> db
              (merge spec/defaults)
-             (assoc (subs/create-apps-creation-db-path current-route) nil))
+             (assoc (subs/create-apps-creation-db-path current-route) nil
+                    ::spec/reset-changes-event [::reset-create]))
      :fx [[:dispatch [::clear-deployments]]
           [:dispatch [::main-events/action-interval-delete
                       {:id refresh-action-depl-set-id}]]]}))
+
+(reg-event-fx
+  ::init-create
+  (fn []
+    {:fx [[:dispatch [::reset-create]]
+          [:dispatch [::set-changes-protection false]]]}))
+
+(reg-event-fx
+  ::set-changes-protection
+  (fn [{{:keys [::spec/reset-changes-event]} :db} [_ protect?]]
+    {:fx [[:dispatch [::main-events/changes-protection? protect? reset-changes-event]]]}))
 
 (reg-event-fx
   ::new
@@ -327,7 +346,7 @@
                                      (merge deployment-set-edited)
                                      (assoc key value))]
       {:fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
-            [:dispatch [::main-events/changes-protection?
+            [:dispatch [::set-changes-protection
                         (utils/unsaved-changes?
                           deployment-set updated-deployment-set)]]]})))
 
@@ -354,7 +373,7 @@
              (dispatch [::set-apps-edited false])
              (dispatch [::set-fleet-filter-edited false])
              (dispatch [::set-deployment-set %])
-             (dispatch [::main-events/changes-protection? false])
+             (dispatch [::set-changes-protection false])
              (dispatch [::disable-form-validation])))]})))
 
 (reg-event-fx
@@ -476,13 +495,13 @@
     (let [body (if is-controlled-by-apps-set?
                  (apps-set-creation-body db)
                  (single-apps-creation-body db))]
-      {:fx [[:dispatch [::main-events/changes-protection? false]]
+      {:fx [[:dispatch [::set-changes-protection false]]
             [::cimi-api-fx/add
              [:deployment-set body
               #(do
                  (dispatch [::routing-events/navigate routes/deployment-sets-details
                             {:uuid (general-utils/id->uuid (:resource-id %))}]))
-              :on-error #(dispatch [::main-events/changes-protection? true])]]]})))
+              :on-error #(dispatch [::set-changes-protection true])]]]})))
 
 (defn overwritten-app-version
   [deployment-set app]
@@ -732,7 +751,7 @@
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
             [:dispatch [::set-apps-edited true]]
-            [:dispatch [::main-events/changes-protection? true]]
+            [:dispatch [::set-changes-protection true]]
             [:dispatch [::load-module-configuration 0 app-with-version-number]]]})))
 
 (defn version-id-to-add
@@ -800,7 +819,7 @@
                (update ::spec/deployment-set-edited assoc :applications-sets []))
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
-            [:dispatch [::main-events/changes-protection? true]]]})))
+            [:dispatch [::set-changes-protection true]]]})))
 
 (reg-event-fx
   ::remove-app-from-creation-data
@@ -811,7 +830,7 @@
        :fx [[:dispatch [::fetch-app-picker-apps
                         ::spec/pagination-apps-picker]]
             [:dispatch [::set-apps-edited true]]
-            [:dispatch [::main-events/changes-protection? true]]]})))
+            [:dispatch [::set-changes-protection true]]]})))
 
 (reg-event-fx
   ::edit-config
@@ -857,7 +876,7 @@
       {:db (assoc db ::main-spec/changes-protection? false)
        :fx [[:dispatch [::routing-events/navigate-partial
                         (assoc route-data
-                          :change-event [::main-events/changes-protection? changes-protection?])]]]})))
+                          :change-event [::set-changes-protection changes-protection?])]]]})))
 
 (defn get-full-filter-string
   [{:keys [::spec/edge-picker-state-selector
@@ -1055,7 +1074,7 @@
           path                   (subs/current-route->fleet-filter-edited-db-path current-route)]
       {:db (assoc-in db path new-fleet-filter)
        :fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
-            [:dispatch [::main-events/changes-protection?
+            [:dispatch [::set-changes-protection
                         (utils/unsaved-changes?
                           deployment-set updated-deployment-set)]]
             [:dispatch [::get-edges]]]})))

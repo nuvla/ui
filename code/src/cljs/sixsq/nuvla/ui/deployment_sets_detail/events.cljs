@@ -84,7 +84,7 @@
     {:db (-> db
              (merge spec/defaults)
              (assoc (subs/create-apps-creation-db-path current-route) nil
-                    ::spec/reset-changes-event ::reset-create))
+                    ::spec/reset-changes-event [::reset-create]))
      :fx [[:dispatch [::clear-deployments]]
           [:dispatch [::main-events/action-interval-delete
                       {:id refresh-action-depl-set-id}]]]}))

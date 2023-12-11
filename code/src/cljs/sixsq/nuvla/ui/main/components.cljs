@@ -101,24 +101,28 @@
 (defn ErrorJobsMessage
   [_job-subs _set-active-tab-event _job-tab _on-click]
   (let [tr                (subscribe [::i18n-subs/tr])
-        errors-dissmissed (r/atom #{})]
+        error-dismissed   (r/atom false)]
     (fn [job-subs set-active-tab-event job-tab on-click]
-      (let [fn-filter   (fn [coll _action jobs]
-                          (let [{:keys [id state] :as last-job} (first jobs)]
-                            (if (and (= state "FAILED") (not (@errors-dissmissed id)))
-                              (conj coll last-job)
-                              coll)))
-            failed-jobs (->> @(subscribe [job-subs])
-                             :resources
-                             (group-by :action)
-                             (reduce-kv fn-filter [])
-                             (sort-by :updated >))]
+      (let [all-jobs                       (->> @(subscribe [job-subs])
+                                                :resources)
+            most-recent-failed-job         (->> all-jobs
+                                                (filter #(= "FAILED" (:state %)))
+                                                (sort-by :updated >)
+                                                (first))
+            successful-jobs-after-failure? (filter #(and (> (:updated %)
+                                                            (:updated most-recent-failed-job))
+                                                         (= (:state %)
+                                                            "SUCCESS")
+                                                         (not= (:action %)
+                                                               "dct_check")) all-jobs)]
         [:<>
-         (doall
-           (for [{:keys [id action status-message]} failed-jobs]
+         (when (and most-recent-failed-job
+                    (empty? successful-jobs-after-failure?)
+                    (not @error-dismissed))
+           (let [{:keys [id action status-message]} most-recent-failed-job]
              ^{:key id}
              [ui/Message {:error      true
-                          :on-dismiss #(swap! errors-dissmissed conj id)}
+                          :on-dismiss #(reset! error-dismissed true)}
               [ui/MessageHeader
                {:style    {:cursor "pointer"}
                 :on-click (or on-click

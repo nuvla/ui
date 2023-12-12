@@ -101,7 +101,7 @@
 (defn ErrorJobsMessage
   [_job-subs _set-active-tab-event _job-tab _on-click]
   (let [tr                (subscribe [::i18n-subs/tr])
-        error-dismissed   (r/atom false)]
+        most-recent-job-dismissed   (r/atom nil)]
     (fn [job-subs set-active-tab-event job-tab on-click]
       (let [all-jobs                       (->> @(subscribe [job-subs])
                                                 :resources)
@@ -120,11 +120,11 @@
         [:<>
          (when (and most-recent-failed-job
                     (empty? successful-jobs-after-failure?)
-                    (not @error-dismissed))
+                    (not= (:id most-recent-failed-job) @most-recent-job-dismissed)) ;; it is a newer failed job that we haven't dismissed yet
            (let [{:keys [id action status-message]} most-recent-failed-job]
              ^{:key id}
              [ui/Message {:error      true
-                          :on-dismiss #(reset! error-dismissed true)}
+                          :on-dismiss #(reset! most-recent-job-dismissed id)}
               [ui/MessageHeader
                {:style    {:cursor "pointer"}
                 :on-click (or on-click

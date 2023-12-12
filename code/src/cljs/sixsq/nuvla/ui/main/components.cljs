@@ -100,7 +100,7 @@
 
 (defn ErrorJobsMessage
   [_job-subs _set-active-tab-event _job-tab _on-click]
-  (let [tr                (subscribe [::i18n-subs/tr])
+  (let [tr                          (subscribe [::i18n-subs/tr])
         most-recent-job-dismissed   (r/atom nil)]
     (fn [job-subs set-active-tab-event job-tab on-click]
       (let [all-jobs                       (->> @(subscribe [job-subs])

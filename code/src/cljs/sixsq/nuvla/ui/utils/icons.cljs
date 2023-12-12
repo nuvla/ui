@@ -659,3 +659,13 @@
 (def i-lock "fal fa-lock")
 
 (def i-sync "fal fa-sync")
+
+(def i-edit "fal fa-edit")
+(defn EditIcon
+  [opts]
+  [I opts i-edit])
+
+(def i-undo "fal fa-undo")
+(defn UndoIcon
+  [opts]
+  [I opts i-undo])

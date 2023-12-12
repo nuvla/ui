@@ -6,12 +6,14 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.tooltip :as tt]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -89,6 +91,10 @@
 (defn- update-env-value-by-index
   [env-vars index value]
   (assoc-in env-vars [index ::new-value] value))
+
+(defn- reset-env-value-by-index
+  [env-vars index]
+  (update env-vars index dissoc ::new-value))
 
 (defn- update-registry-credential-by-index
   [registries-credentials index value]
@@ -199,6 +205,15 @@
        :fx [(when change-event [:dispatch change-event])]})))
 
 (reg-event-fx
+  ::reset-env-value
+  (fn [{db :db} [_ db-path href index]]
+    (let [change-event          (get-in db (conj db-path change-event-env-variables))
+          update-env-vars       #(reset-env-value-by-index % index)
+          update-module-env-var #(update-module-env-vars % update-env-vars)]
+      {:db (update-db-module db db-path href update-module-env-var)
+       :fx [(when change-event [:dispatch change-event])]})))
+
+(reg-event-fx
   ::update-registry-credential
   (fn [{db :db} [_ db-path href index new-value]]
     (let [change-event           (get-in db (conj db-path change-event-registries-credentials))
@@ -223,6 +238,11 @@
   ::module
   (fn [db [_ db-path href]]
     (db-module db db-path href)))
+
+(reg-sub
+  ::module-overwrite
+  (fn [db [_ db-path href]]
+    (get-in db (db-module-overwrite-path db-path href))))
 
 (defn db-selected-version
   [db db-path href]
@@ -311,9 +331,7 @@
 
 (defn db-changed-env-vars
   [db db-path href]
-  (remove
-    (comp str/blank? :value)
-    (changed-env-vars (db-module-env-vars db db-path href))))
+  (changed-env-vars (db-module-env-vars db db-path href)))
 
 (reg-sub
   ::module-versions-indexed
@@ -434,27 +452,42 @@
       [ui/FormInput
        {:type          "text"
         :name          env-name
-        :default-value value
+        :value         value
         :read-only     read-only?
         :error         error?
         :fluid         true
         :on-change     (ui-callback/input-callback on-change)}])))
 
 (defn AsFormInput
-  [db-path href read-only? error?
+  [db-path href read-only? error? overridden?
    i {env-name        :name
       env-description :description
       env-required    :required :as env-variable}
    show-required?]
-  [ui/FormField
-   [uix/FieldLabel {:name       env-name
-                    :required?  (if show-required? env-required false)
-                    :help-popup [uix/HelpPopup env-description]}]
-   [EnvVarInput db-path href read-only? error? i env-variable]])
+  (let [tr              (subscribe [::i18n-subs/tr])
+        reset-env-value (fn [event]
+                          (dispatch [::reset-env-value db-path href i])
+                          (.preventDefault event)
+                          (.stopPropagation event))]
+    [ui/FormField
+     [uix/FieldLabel {:name       env-name
+                      :required?  (if show-required? env-required false)
+                      :help-popup [uix/HelpPopup env-description]}
+      (when overridden?
+        [:div {:style {:float :right}}
+         (tt/with-tooltip
+           [:span [icons/EditIcon]]
+           (@tr [:overridden-value]))
+         (when-not read-only?
+           (tt/with-tooltip
+             [:a {:href     "#"
+                  :on-click reset-env-value}
+              [icons/UndoIcon]]
+             (@tr [:overridden-value-revert-to-default])))])]
+     [EnvVarInput db-path href read-only? error? i env-variable]]))
 
 (defn EnvVariables
-  [{:keys [db-path href change-event read-only? highlight-errors?
-           show-required?]
+  [{:keys [db-path href change-event read-only? highlight-errors? show-required?]
     :or   {read-only?     false
            show-required? true}
     :as   _opts}]
@@ -471,7 +504,9 @@
          (fn [i env-variable]
            (let [var-in-error (boolean (vars-in-error (:name env-variable)))]
              ^{:key (str (:name env-variable) "_" i)}
-             [AsFormInput db-path href read-only? var-in-error i env-variable show-required?]))
+             [AsFormInput db-path href read-only? var-in-error
+              (::new-value env-variable)
+              i env-variable show-required?]))
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 

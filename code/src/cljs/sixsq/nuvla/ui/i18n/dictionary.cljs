@@ -718,6 +718,8 @@
         :origin                                        "origin"
         :out-of                                        " out of "
         :overall-summary                               "Overall summary"
+        :overridden-value                              "This value is overridden."
+        :overridden-value-revert-to-default            "Click to revert to the default value."
         :overview                                      "overview"
         :owner                                         "owner"
         :owner-owners                                  "owner(s)"

@@ -310,16 +310,17 @@
 
 
 (defn FieldLabel
-  [{:keys [name required? help-popup]}]
-  [:label name
-   (when required?
-     [:sup
-      [icons/AsteriskIcon
-       {:color "red"
-        :size  "tiny"
-        :style {:margin 0}}]])
-   (when help-popup
-     help-popup)])
+  [{:keys [name required? help-popup]} & children]
+  (into [:label name
+         (when required?
+           [:sup
+            [icons/AsteriskIcon
+             {:color "red"
+              :size  "tiny"
+              :style {:margin 0}}]])
+         (when help-popup
+           help-popup)]
+        children))
 
 (defn TableRowField
   [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation

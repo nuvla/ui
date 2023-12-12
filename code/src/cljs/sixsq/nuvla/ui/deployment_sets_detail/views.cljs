@@ -1371,10 +1371,11 @@
     [uix/Accordion
      (tt/with-tooltip
        [:div [module-plugin/EnvVariables
-              {:db-path      [::spec/apps-sets i]
-               :href         module-id
-               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
-               :change-event [::events/edit-config]}]]
+              {:db-path           [::spec/apps-sets i]
+               :href              module-id
+               :read-only?        (or (not @can-edit-data?) (not @edit-op-allowed?))
+               :highlight-errors? true
+               :change-event      [::events/edit-config]}]]
        (edit-not-allowed-msg {:TR                         @tr
                               :can-edit-data?             @can-edit-data?
                               :edit-op-allowed?           @edit-op-allowed?

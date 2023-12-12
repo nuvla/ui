@@ -332,7 +332,7 @@
       (map
         (fn [app]
           (let [version-href (:href (some->> (module-id->version (:id app))
-                                      (nth (:versions app))))]
+                                             (nth (:versions app))))]
             (app->app-row-data {:i           0
                                 :application (if version-href
                                                (assoc-in app [:content :id] version-href)
@@ -389,7 +389,7 @@
   ::fleet-filter-edited?
   (fn [{:keys [::spec/fleet-filter ::spec/fleet-filter-edited]}]
     (and fleet-filter-edited
-        (not= fleet-filter fleet-filter-edited))))
+         (not= fleet-filter fleet-filter-edited))))
 
 (reg-sub
   ::edges-in-deployment-group-response
@@ -449,7 +449,7 @@
 (reg-sub
   ::fleet-filter
   (fn [{:keys [current-route] :as db}]
-    (let [path (current-route->fleet-filter-db-path current-route)
+    (let [path        (current-route->fleet-filter-db-path current-route)
           path-edited (current-route->fleet-filter-edited-db-path current-route)]
       (or (get-in db path-edited) (get-in db path)))))
 
@@ -567,6 +567,16 @@
   (fn [{:keys [::spec/validate-form?] :as db}]
     (or (not validate-form?)
         (:valid? (deployment-set-validation db)))))
+
+(reg-sub
+  ::not-ready-or-valid?
+  :<- [::form-valid?]
+  :<- [::apps-creation]
+  :<- [::deployment-set]
+  (fn [[form-valid? apps-creation deployment-set]]
+    (or (nil? deployment-set)
+        (nil? apps-creation)
+        form-valid?)))
 
 (reg-sub
   ::edge-picker-edges

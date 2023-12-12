@@ -111,7 +111,7 @@
                                   (range (count clean-panes)))]
         [ui/Tab
          (-> (dissoc opts :db-path :change-event :ignore-chng-protection?
-                     :reset-query-params?)
+                     :reset-query-params? :attached :tabular)
              (assoc :panes clean-panes
                     :active-index (get key->index (keyword @cur-view) 0))
              (assoc-in [:menu :class] :uix-tab-nav)

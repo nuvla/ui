@@ -52,8 +52,8 @@
    apps-count edges-count]
   (tr-fn [:depl-group-start-warning-msg]
          [(count deployments-to-add)
-          (str apps-count " app" (when (> apps-count 1) "s"))
-          (str edges-count " edge" (when (> edges-count 1) "s"))]))
+          (str apps-count " " (str/lower-case (tr-fn (if (> apps-count 1) [:apps] [:app]))))
+          (str edges-count " " (str/lower-case (tr-fn (if (> edges-count 1) [:edges] [:edge]))))]))
 
 (defn- ops-status-pending-str [tr-fn {:keys [deployments-to-add
                                              deployments-to-update
@@ -543,9 +543,9 @@
         apps (subscribe [::subs/select-apps-by-id ids])]
     [:div
      [:div
-      "This is an "
+      (@tr [:application-bouquet-this-is-an]) " "
       [:span {:style {:font-weight :bold}} (@tr [:application-bouquet])]
-      " containing these apps:"]
+      " " (@tr [:application-bouquet-containing-these-apps]) ":"]
      [:ul
       (doall
         (for [id ids
@@ -609,11 +609,12 @@
                         :desc-summary [:<>
                                        [:p desc-summary]
                                        [:div
-                                        [:p (str "Project: " (-> (or (:path app) "")
-                                                                 (str/split "/")
-                                                                 first))]
-                                        [:p "Vendor: " [AuthorVendorForModule app :span]]
-                                        (when-not is-apps-set? [:p (str "Price: " deploy-price)])]]
+                                        [:p (str (str/capitalize (@tr [:project])) ": "
+                                                 (-> (or (:path app) "")
+                                                     (str/split "/")
+                                                     first))]
+                                        [:p (str (str/capitalize (@tr [:vendor])) ": ") [AuthorVendorForModule app :span]]
+                                        (when-not is-apps-set? [:p (str (str/capitalize (@tr [:price])) ": " deploy-price)])]]
                         :tags         tags
                         :published    published
                         :detail-href  detail-href
@@ -722,7 +723,7 @@
   (let [tr                                  (subscribe [::i18n-subs/tr])
         is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] (:href row-data)])]
     (if creating?
-      (tt/with-tooltip [:span cell-data] "Configure App")
+      (tt/with-tooltip [:span cell-data] (@tr [:configure-app]))
       [:span
        (tt/with-tooltip
          [:a
@@ -738,7 +739,7 @@
           cell-data
           [:span {:style {:margin-left "0.5rem"}}
            [icons/GearIcon]]]
-         "Configure App")
+         (@tr [:configure-app]))
        (when @is-behind-latest-published-version?
          (tt/with-tooltip
            [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
@@ -1104,13 +1105,14 @@
 
 (defn- UnstoredEdgeChanges
   [fleet-changes]
-  (let [removed (:removed fleet-changes)
+  (let [tr      (subscribe [::i18n-subs/tr])
+        removed (:removed fleet-changes)
         added   (:added fleet-changes)]
     [:span
-     (str "You have unsaved fleet changes" ": "
-          (when removed (str (count removed) " removed"))
+     (str (@tr [:unsaved-fleet-changes]) ": "
+          (when removed (str (count removed) (str " " (@tr [:removed]))))
           (when (and removed added) ", ")
-          (when added (str (count added) " added")))]))
+          (when added (str (count added) (str " " (@tr [:added])))))]))
 
 (defn EdgeOverviewContent
   [edges-stats creating?]
@@ -1461,39 +1463,43 @@
        [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
                                        :color :orange}])]))
 
+(defn ConfigureApp
+  [i {id :href :as _application} creating?]
+  (let [tr                                  (subscribe [::i18n-subs/tr])
+        licenses-by-module-id               (subscribe [::subs/license-by-module-id])
+        pricing-by-module-id                (subscribe [::subs/pricing-by-module-id])
+        is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] id])]
+    [ui/TabPane {:attached true}
+     (when @is-behind-latest-published-version?
+       [WarningVersionBehind [:warning-not-latest-app-version]])
+     [ui/Popup {:trigger (r/as-element
+                           [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
+                :content (@tr [:open-app-in-new-window])}]
+     [ModuleVersionsApp i id creating?]
+     [EnvVariablesApp i id creating?]
+     (when-let [license (get @licenses-by-module-id id)]
+       [AppLicense license])
+     (when-let [pricing (get @pricing-by-module-id id)]
+       [AppPricing pricing])]))
+
 (defn ConfigureApps
   [i applications creating?]
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        licenses-by-module-id (subscribe [::subs/license-by-module-id])
-        pricing-by-module-id  (subscribe [::subs/pricing-by-module-id])]
-    ^{:key (str "set-" i)}
-    [ui/Segment
-     [tab/Tab
-      {:db-path                 [::apps-config]
-       :ignore-chng-protection? true
-       :attached                true
-       :tabular                 true
-       :panes                   (map
-                                  (fn [{id :href}]
-                                    (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] id])]
-                                      {:menuItem {:content (r/as-element
-                                                             [ConfigureAppTabHeader i id])
-                                                  :icon    "cubes"
-                                                  :key     (create-app-config-query-key i id)}
-                                       :render   #(r/as-element
-                                                    [ui/TabPane {:attached true}
-                                                     (when @is-behind-latest-published-version?
-                                                       [WarningVersionBehind [:warning-not-latest-app-version]])
-                                                     [ui/Popup {:trigger (r/as-element
-                                                                           [LinkToModule [::spec/apps-sets i] id [:go-to-app]])
-                                                                :content (@tr [:open-app-in-new-window])}]
-                                                     [ModuleVersionsApp i id creating?]
-                                                     [EnvVariablesApp i id creating?]
-                                                     (when-let [license (get @licenses-by-module-id id)]
-                                                       [AppLicense license])
-                                                     (when-let [pricing (get @pricing-by-module-id id)]
-                                                       [AppPricing pricing])])}))
-                                  applications)}]]))
+  ^{:key (str "set-" i)}
+  [ui/Segment
+   [tab/Tab
+    {:db-path                 [::apps-config]
+     :ignore-chng-protection? true
+     :attached                true
+     :tabular                 true
+     :panes                   (map
+                                (fn [{id :href :as application}]
+                                  {:menuItem {:content (r/as-element
+                                                         [ConfigureAppTabHeader i id])
+                                              :icon    "cubes"
+                                              :key     (create-app-config-query-key i id)}
+                                   :render   #(r/as-element
+                                                [ConfigureApp i application creating?])})
+                                applications)}]])
 
 (defn ConfigureAppsSetHeader
   [db-path id apps-set-name]
@@ -1537,7 +1543,7 @@
                                   :edit-op-allowed?           @edit-op-allowed?
                                   :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
          :label (@tr [:select-app-set-version])]
-        [:h4 {:class :tab-app-detail} "Applications"]])
+        [:h4 {:class :tab-app-detail} (@tr [:applications])]])
      configure-apps]))
 
 (defn ConfigureAppsSet
@@ -1713,7 +1719,7 @@
           [:div [UnstoredEdgeChanges @fleet-changes]]
           [:div [ui/Checkbox {:checked  @only-changes?
                               :basic    true
-                              :label    "Show only unsaved changes"
+                              :label    (@tr [:show-only-unsaved-changes])
                               :on-click #(dispatch [::events/show-fleet-changes-only @fleet-changes])}]]])
        [edges-views/NuvlaEdgeTableView
         (cond->
@@ -1736,7 +1742,9 @@
                                  :bulk-actions        [{:event (fn [select-data]
                                                                  (dispatch [::events/remove-edges creating? select-data]))
                                                         :key   :remove-edges
-                                                        :name  "Remove edges"
+                                                        :name  (str (str/capitalize (@tr [:remove]))
+                                                                    " "
+                                                                    (str/lower-case (@tr [:edges])))
                                                         :icon  icons/BoxIcon}]
                                  :total-count-sub-key [::subs/edges-count]
                                  :resources-sub-key   [::subs/edges-documents]
@@ -1853,7 +1861,7 @@
                                                            (-> @depl-set
                                                                :operational-status
                                                                :status))]
-          [utils-validation/validation-error-message ::subs/form-valid?]
+          [utils-validation/validation-error-message ::subs/not-ready-or-valid?]
           [MenuBar false]
           [bulk-progress-plugin/MonitoredJobs
            {:db-path [::spec/bulk-jobs]}]

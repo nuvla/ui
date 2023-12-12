@@ -99,19 +99,19 @@
         is-new?     (subscribe [::subs/is-new?])
         is-project? (subscribe [::subs/is-project?])
         {:keys [id name description]} module
-        content (str (or name id) (when description " - ") (utils-values/markdown->summary description))
-        tr-key (if @is-project? [:delete-project] [:delete-module])]
+        content     (str (or name id) (when description " - ") (utils-values/markdown->summary description))
+        tr-key      (if @is-project? [:delete-project] [:delete-module])]
     [uix/ModalDanger
      {:with-confirm-step? true
-      :on-confirm  (fn [] (dispatch [::events/delete-module id]))
-      :trigger     (r/as-element [ui/MenuItem {:disabled (or @is-new? (seq (:children module)))}
-                                  [icons/TrashIcon]
-                                  (str/capitalize (@tr [:delete]))])
-      :content     [:h3 content]
-      :header      [:span [icons/LayerGroupIcon] (@tr tr-key)]
-      :danger-msg  (@tr [:module-delete-warning])
-      :button-text (@tr tr-key)
-      :header-class [:nuvla-apps :delete-modal-header]}]))
+      :on-confirm         (fn [] (dispatch [::events/delete-module id]))
+      :trigger            (r/as-element [ui/MenuItem {:disabled (or @is-new? (seq (:children module)))}
+                                         [icons/TrashIcon]
+                                         (str/capitalize (@tr [:delete]))])
+      :content            [:h3 content]
+      :header             [:span [icons/LayerGroupIcon] (@tr tr-key)]
+      :danger-msg         (@tr [:module-delete-warning])
+      :button-text        (@tr tr-key)
+      :header-class       [:nuvla-apps :delete-modal-header]}]))
 
 
 (defn PublishButton
@@ -512,8 +512,8 @@
 
 (defn SubtypeRow
   []
-  (let [is-new?   (subscribe [::subs/is-new?])
-        editable? (subscribe [::subs/editable?])
+  (let [is-new?        (subscribe [::subs/is-new?])
+        editable?      (subscribe [::subs/editable?])
         module-subtype (subscribe [::subs/module-subtype])]
     (when-not @is-new?
       [ui/TableRow
@@ -614,12 +614,13 @@
 
 (defn plus
   [add-event]
-  [icons/AddIconFull {:link     true
-                      :color    "green"
-                      :class    "app-details-add-config-param-icon"
-                      :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                     (dispatch [add-event {}])
-                                     (dispatch [::events/validate-form]))}])
+  [icons/Icon {:name     icons/i-plus-full
+               :link     true
+               :color    "green"
+               :class    "app-details-add-config-param-icon"
+               :on-click #(do (dispatch [::main-events/changes-protection? true])
+                              (dispatch [add-event {}])
+                              (dispatch [::events/validate-form]))}])
 
 
 (defn SingleEnvVariable

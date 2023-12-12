@@ -109,12 +109,14 @@
                                                 (filter #(= "FAILED" (:state %)))
                                                 (sort-by :updated >)
                                                 (first))
-            successful-jobs-after-failure? (filter #(and (> (:updated %)
-                                                            (:updated most-recent-failed-job))
-                                                         (= (:state %)
-                                                            "SUCCESS")
-                                                         (not= (:action %)
-                                                               "dct_check")) all-jobs)]
+            deployment-action?             (fn [a] (contains? #{"start_deployment" "stop_deployment" "update_deployment"} a))
+            successful-jobs-after-failure? (filter (fn [{:keys [updated state action] :as _job}]
+                                                     (and (> updated
+                                                             (:updated most-recent-failed-job))
+                                                          (= state
+                                                             "SUCCESS")
+                                                          (deployment-action? action)))
+                                                   all-jobs)]
         [:<>
          (when (and most-recent-failed-job
                     (empty? successful-jobs-after-failure?)

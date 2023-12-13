@@ -463,6 +463,7 @@
           n            (count missing-edges)
           fleet-filter (subscribe [::subs/fleet-filter])]
       [:div.missing-edges-panel
+       [icons/TriangleExclamationIcon {:color :orange}]
        (str
          n " " (@tr (if (> n 1) [:edges] [:edge]))
          " " (@tr (if (> n 1) [:are-missing] [:is-missing])) ". ")
@@ -1039,7 +1040,7 @@
          " "
          (when (and @can-edit-data? show-edit-filter-button?)
            [EditEdgeFilterButton events/edges-picker-modal-id creating?])]
-        [RecomputeFleetLink deployment-set]
+        [RecomputeFleetLink @deployment-set]
         (when @fleet-filter-edited?
           [:p {:style {:align-self :center}}
            (@tr [:fleet-filter-edited])])]])))

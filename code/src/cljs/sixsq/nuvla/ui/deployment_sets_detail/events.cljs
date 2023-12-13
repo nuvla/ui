@@ -45,7 +45,7 @@
              [::main-events/action-interval-start
               {:id        refresh-action-depl-set-id
                :frequency 10000
-               :event     [::refresh-operational-status-and-get-deployment-set
+               :event     [::get-deployment-set
                            (uuid->depl-set-id uuid)]}]]
             [:dispatch
              [::main-events/action-interval-start
@@ -58,6 +58,7 @@
   (dispatch [::refresh]))
 
 (reg-event-fx
+  ;; called when editing page is entered the first time, and when changes are ignored
   ::reset
   (fn [{:keys [db]}]
     {:db (-> db
@@ -69,9 +70,10 @@
           [:dispatch [::enable-form-validation]]]}))
 
 (reg-event-fx
+  ;; called when editing page is entered
   ::init
   (fn []
-    {:fx [[:dispatch [::reset]]
+    {:fx [[:dispatch [::refresh-operational-status-and-reset]]
           [:dispatch [::set-changes-protection false]]]}))
 
 (reg-event-fx
@@ -318,14 +320,16 @@
      :fx               [[:dispatch [::job-events/get-jobs id]]]}))
 
 (reg-event-fx
-  ::refresh-operational-status-and-get-deployment-set
-  (fn [_ [_ id]]
-    {::cimi-api-fx/operation
-     [id "operational-status"
-      #(dispatch [::get-deployment-set id])
-      :on-error #(cimi-api-fx/default-error-message
-                   %
-                   "Failed to fetch operational status")]}))
+  ::refresh-operational-status-and-reset
+  (fn [{{:keys [current-route]} :db} [_]]
+    (let [uuid (-> current-route :path-params :uuid)
+          id   (uuid->depl-set-id uuid)]
+      {::cimi-api-fx/operation
+       [id "operational-status"
+        #(dispatch [::reset id])
+        :on-error #(cimi-api-fx/default-error-message
+                     %
+                     "Failed to fetch operational status")]})))
 
 (def deployments-state-filter-key :depl-state)
 
@@ -654,11 +658,10 @@
                          (get-target-fleet-ids deployment-set-edited))]
       (if (or (seq edge-ids) fleet-filter)
         {::cimi-api-fx/search [:nuvlabox
-                               {:filter      (or fleet-filter
-                                                 (general-utils/join-and
-                                                   (general-utils/filter-eq-ids edge-ids)
-                                                   nil
-                                                   nil))
+                               {:filter      (general-utils/join-and
+                                               (general-utils/filter-eq-ids edge-ids)
+                                               nil
+                                               nil)
                                 :last        10000
                                 :select      "id"
                                 :aggregation edges-spec/state-summary-agg-term

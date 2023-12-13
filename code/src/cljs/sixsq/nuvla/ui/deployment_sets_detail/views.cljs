@@ -367,6 +367,17 @@
       :danger-msg  (@tr [:recompute-fleet-warning])
       :button-text (@tr [:recompute-fleet])}]))
 
+(defn RecomputeFleetLink
+  [deployment-set]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" deployment-set)
+        unsaved-changes?     (subscribe [::subs/unsaved-changes?])]
+    (when (and can-recompute-fleet? (not @unsaved-changes?))
+      [:a {:href     "#"
+           :style    {:align-self :center}
+           :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
+       (@tr [:recompute-fleet])])))
+
 (defn DeleteButton
   [deployment-set warn-msg]
   (let [tr         (subscribe [::i18n-subs/tr])
@@ -421,9 +432,49 @@
                            #(dispatch [::events/enable-form-validation])))}]])
         :content (@tr [:depl-group-required-fields-before-save])}])))
 
+(def missing-edges-modal-id :modal/missing-edges)
+
+(defn RemoveMissingEdgesLink
+  []
+  (let [tr               (subscribe [::i18n-subs/tr])
+        creating?        false
+        can-edit-data?   (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed? (subscribe [::subs/edit-op-allowed? creating?])
+        unsaved-changes? (subscribe [::subs/unsaved-changes?])
+        open?            (subscribe [::subs/modal-open? missing-edges-modal-id])
+        confirm-fn       #(dispatch [::events/remove-missing-edges (@tr [:updated-successfully]) close-modal])]
+    (when (and @can-edit-data? @edit-op-allowed? (not @unsaved-changes?))
+      [uix/ModalDanger
+       {:on-confirm  confirm-fn
+        :trigger     (r/as-element [:a {:href     "#"
+                                        :style    {:align-self :center}
+                                        :on-click (fn [] (dispatch [::events/set-opened-modal missing-edges-modal-id]))}
+                                    (@tr [:remove-missing-edges])])
+        :open        @open?
+        :on-close    close-modal
+        :header      (@tr [:remove-missing-edges])
+        :danger-msg  (@tr [:remove-missing-edges-warning])
+        :button-text (@tr [:remove-missing-edges])}])))
+
+(defn MissingEdgesPanel
+  [deployment-set missing-edges]
+  (when (seq missing-edges)
+    (let [tr           (subscribe [::i18n-subs/tr])
+          n            (count missing-edges)
+          fleet-filter (subscribe [::subs/fleet-filter])]
+      [:div.missing-edges-panel
+       [icons/TriangleExclamationIcon {:color :orange}]
+       (str
+         n " " (@tr (if (> n 1) [:edges] [:edge]))
+         " " (@tr (if (> n 1) [:are-missing] [:is-missing])) ". ")
+       (if @fleet-filter
+         [RecomputeFleetLink deployment-set]
+         [RemoveMissingEdgesLink])])))
+
 (defn MenuBar
   [_creating?]
   (let [deployment-set    (subscribe [::subs/deployment-set])
+        op-status         (subscribe [::subs/operational-status])
         loading?          (subscribe [::subs/loading?])
         apps-count        (subscribe [::subs/apps-count])
         edges-count       (subscribe [::subs/edges-count])
@@ -431,34 +482,33 @@
         deployments-stats (subscribe [::deployments-subs/deployments-summary-all])
         tr                (subscribe [::i18n-subs/tr])]
     (fn [creating?]
-      (let [op-status (:operational-status @deployment-set)]
-        [components/StickyBar
-         [components/ResponsiveMenuBar
-          [^{:key "save"}
-           [SaveButton {:creating?      creating?
-                        :deployment-set @deployment-set}]
-           ^{:key "start"}
-           [StartButton @deployment-set (ops-status-start-str @tr op-status @apps-count @edges-count)]
-           ^{:key "update"}
-           [UpdateButton @deployment-set
-            (str
-              (@tr [:about-starting-these-updates]) ": "
-              (ops-status-pending-str @tr op-status) ". "
-              (@tr [:proceed?]))]
-           ^{:key "stop"}
-           [StopButton @deployment-set (create-stop-wrng-msg @tr @deployments-stats)]
-           ^{:key "cancel"}
-           [CancelOperationButton @deployment-set]
-           (when @fleet-filter
-             ^{:key "recompute-fleet"}
-             [RecomputeFleetButton @deployment-set])
-           ^{:key "delete"}
-           [DeleteButton @deployment-set (ops-status-delete-str @tr op-status @apps-count @edges-count)]]
-          [components/RefreshMenu
-           {:action-id  events/refresh-action-depl-set-id
-            :loading?   @loading?
-            :on-refresh #(events/refresh)}]
-          {:max-items-to-show 4}]]))))
+      [components/StickyBar
+       [components/ResponsiveMenuBar
+        [^{:key "save"}
+         [SaveButton {:creating?      creating?
+                      :deployment-set @deployment-set}]
+         ^{:key "start"}
+         [StartButton @deployment-set (ops-status-start-str @tr @op-status @apps-count @edges-count)]
+         ^{:key "update"}
+         [UpdateButton @deployment-set
+          (str
+            (@tr [:about-starting-these-updates]) ": "
+            (ops-status-pending-str @tr @op-status) ". "
+            (@tr [:proceed?]))]
+         ^{:key "stop"}
+         [StopButton @deployment-set (create-stop-wrng-msg @tr @deployments-stats)]
+         ^{:key "cancel"}
+         [CancelOperationButton @deployment-set]
+         (when @fleet-filter
+           ^{:key "recompute-fleet"}
+           [RecomputeFleetButton @deployment-set])
+         ^{:key "delete"}
+         [DeleteButton @deployment-set (ops-status-delete-str @tr @op-status @apps-count @edges-count)]]
+        [components/RefreshMenu
+         {:action-id  events/refresh-action-depl-set-id
+          :loading?   @loading?
+          :on-refresh #(events/refresh)}]
+        {:max-items-to-show 4}]])))
 
 (defn EditableCell
   [attribute creating?]
@@ -479,20 +529,21 @@
    "NOK" "red"})
 
 (defn OperationalStatusSummary
-  [ops-status]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        status (:status ops-status)]
+  [deployment-set {:keys [status missing-edges] :as ops-status}]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (if (= status "OK")
       [:div
        [ui/Icon {:name :circle :color (ops-status->color status)}]
-       (@tr [:everything-is-up-to-date])]
+       (@tr [:everything-is-up-to-date])
+       [MissingEdgesPanel deployment-set missing-edges]]
       [:div
        [ui/Icon {:name :circle :color (ops-status->color status)}]
        (str (@tr [:divergence]) ": "
-            (ops-status-pending-str @tr ops-status))])))
+            (ops-status-pending-str @tr ops-status))
+       [MissingEdgesPanel deployment-set missing-edges]])))
 
 (defn TabOverviewDeploymentSet
-  [{:keys [id created updated created-by state operational-status]} creating?]
+  [{:keys [id created updated created-by state operational-status] :as deployment-set} creating?]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
@@ -511,7 +562,7 @@
            [ui/TableCell state]]
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:operational-status]))]
-           [ui/TableCell [OperationalStatusSummary operational-status]]]
+           [ui/TableCell [OperationalStatusSummary deployment-set operational-status]]]
           [ui/TableRow
            [ui/TableCell "Id"]
            (when id
@@ -978,9 +1029,7 @@
         can-edit-data?       (subscribe [::subs/can-edit-data? creating?])
         fleet-filter         (subscribe [::subs/fleet-filter])
         fleet-filter-edited? (subscribe [::subs/fleet-filter-edited?])
-        deployment-set       (subscribe [::subs/deployment-set])
-        can-recompute-fleet? (general-utils/can-operation? "recompute-fleet" @deployment-set)
-        unsaved-changes?     (subscribe [::subs/unsaved-changes?])]
+        deployment-set       (subscribe [::subs/deployment-set])]
     (when @fleet-filter
       [ui/Grid {:columns 1}
        [ui/GridColumn {:stretched true}
@@ -991,11 +1040,7 @@
          " "
          (when (and @can-edit-data? show-edit-filter-button?)
            [EditEdgeFilterButton events/edges-picker-modal-id creating?])]
-        (when (and can-recompute-fleet? (not @unsaved-changes?))
-          [:a {:href     "#"
-               :style    {:align-self :center}
-               :on-click (fn [] (dispatch [::events/set-opened-modal recompute-fleet-modal-id]))}
-           (@tr [:recompute-fleet])])
+        [RecomputeFleetLink @deployment-set]
         (when @fleet-filter-edited?
           [:p {:style {:align-self :center}}
            (@tr [:fleet-filter-edited])])]])))
@@ -1117,6 +1162,8 @@
 (defn EdgeOverviewContent
   [edges-stats creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
+        deployment-set             (subscribe [::subs/deployment-set])
+        missing-edges              (subscribe [::subs/missing-edges])
         can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
@@ -1152,7 +1199,8 @@
             (@tr [:add-edges])
             (@tr [:add-your-first-edges]))]])
       [EdgesPickerModal creating?]
-      [FleetFilterPanel {:show-edit-filter-button? true :creating? creating?}]]]))
+      [FleetFilterPanel {:show-edit-filter-button? true :creating? creating?}]
+      [MissingEdgesPanel @deployment-set @missing-edges]]]))
 
 (defn TabOverview
   [uuid creating?]

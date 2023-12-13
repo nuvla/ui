@@ -45,7 +45,8 @@
              [::main-events/action-interval-start
               {:id        refresh-action-depl-set-id
                :frequency 10000
-               :event     [::get-deployment-set (uuid->depl-set-id uuid)]}]]
+               :event     [::get-deployment-set
+                           (uuid->depl-set-id uuid)]}]]
             [:dispatch
              [::main-events/action-interval-start
               {:id        refresh-action-deployments-id
@@ -57,6 +58,7 @@
   (dispatch [::refresh]))
 
 (reg-event-fx
+  ;; called when editing page is entered the first time, and when changes are ignored
   ::reset
   (fn [{:keys [db]}]
     {:db (-> db
@@ -68,9 +70,10 @@
           [:dispatch [::enable-form-validation]]]}))
 
 (reg-event-fx
+  ;; called when editing page is entered
   ::init
   (fn []
-    {:fx [[:dispatch [::reset]]
+    {:fx [[:dispatch [::refresh-operational-status-and-reset]]
           [:dispatch [::set-changes-protection false]]]}))
 
 (reg-event-fx
@@ -130,7 +133,7 @@
        (map (fn [{module-id :id :keys [version
                                        environmental-variables
                                        registries-credentials]}]
-              (let [loaded-module (module-plugin/db-module db [::spec/apps-sets id] module-id)
+              (let [loaded-module     (module-plugin/db-module db [::spec/apps-sets id] module-id)
                     loaded-version-no (when loaded-module (get-version-id (map-indexed vector (:versions loaded-module))
                                                                           (-> loaded-module :content :id)))]
                 (when (and (get modules-by-id module-id)
@@ -315,6 +318,19 @@
     {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::job-events/get-jobs id]]]}))
+
+(reg-event-fx
+  ::refresh-operational-status-and-reset
+  (fn [{{:keys [current-route]} :db} [_]]
+    (let [uuid (-> current-route :path-params :uuid)
+          id   (uuid->depl-set-id uuid)]
+      {::cimi-api-fx/operation
+       [id "operational-status"
+        #(dispatch [::reset id])
+        :on-error #(cimi-api-fx/default-error-message
+                     %
+                     "Failed to fetch operational status")]})))
+
 (def deployments-state-filter-key :depl-state)
 
 (reg-event-fx
@@ -352,7 +368,7 @@
 
 (reg-event-fx
   ::persist!
-  (fn [_ [_ {:keys [deployment-set success-msg]}]]
+  (fn [_ [_ {:keys [deployment-set success-msg on-success]}]]
     (let [resource-id (:id deployment-set)]
       {::cimi-api-fx/edit
        [resource-id deployment-set
@@ -374,7 +390,8 @@
              (dispatch [::set-fleet-filter-edited false])
              (dispatch [::set-deployment-set %])
              (dispatch [::set-changes-protection false])
-             (dispatch [::disable-form-validation])))]})))
+             (dispatch [::disable-form-validation])
+             (when on-success (on-success))))]})))
 
 (reg-event-fx
   ::recompute-fleet
@@ -389,6 +406,29 @@
         :on-error #(cimi-api-fx/default-error-message
                      %
                      "Failed to recompute fleet")]})))
+
+(defn- update-fleets [update-fleet apps-set]
+  (mapv
+    (fn [app-set]
+      (update app-set :overwrites
+              (partial mapv
+                       (fn [app-set-overwrite]
+                         (update app-set-overwrite :fleet update-fleet)))))
+    apps-set))
+
+(reg-event-fx
+  ::remove-missing-edges
+  (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ success-msg on-success]]
+    (let [missing-edges (-> deployment-set :operational-status :missing-edges)]
+      (when (seq missing-edges)
+        (let [missing-edge?          (set missing-edges)
+              remove-fn              (fn [edges] (remove missing-edge? edges))
+              apps-set               (get-in db [::spec/deployment-set-edited :applications-sets])
+              updated-deployment-set (assoc deployment-set :applications-sets
+                                                           (update-fleets remove-fn apps-set))]
+          {:fx [[:dispatch [::persist! {:deployment-set updated-deployment-set
+                                        :success-msg    success-msg
+                                        :on-success     on-success}]]]})))))
 
 (reg-event-fx
   ::delete
@@ -618,11 +658,7 @@
                          (get-target-fleet-ids deployment-set-edited))]
       (if (or (seq edge-ids) fleet-filter)
         {::cimi-api-fx/search [:nuvlabox
-                               {:filter      (or fleet-filter
-                                                 (general-utils/join-and
-                                                   (general-utils/filter-eq-ids edge-ids)
-                                                   nil
-                                                   nil))
+                               {:filter      (general-utils/filter-eq-ids edge-ids)
                                 :last        10000
                                 :select      "id"
                                 :aggregation edges-spec/state-summary-agg-term
@@ -728,7 +764,7 @@
 (reg-event-fx
   ::fetch-app-picker-apps
   (fn [{{:keys [current-route] :as db} :db} [_ pagination-db-path]]
-    (let [current-selection (get-in db (subs/create-apps-creation-db-path current-route))
+    (let [current-selection          (get-in db (subs/create-apps-creation-db-path current-route))
           is-controlled-by-apps-set? (utils/is-controlled-by-apps-set (::spec/module-applications-sets db))]
       {:fx [[:dispatch [::apps-store-events/get-modules
                         apps-store-spec/allapps-key
@@ -740,7 +776,7 @@
                              (str "subtype!='" apps-utils/subtype-applications-sets "'")))
                          :order-by           "name:asc"
                          :pagination-db-path [pagination-db-path]
-                         :additional-cb-fn #(dispatch [::get-apps-for-sets %])}]]]})))
+                         :additional-cb-fn   #(dispatch [::get-apps-for-sets %])}]]]})))
 
 (reg-event-fx
   ::do-add-app
@@ -980,15 +1016,6 @@
         ::spec/edge-picker-ordering spec/default-ordering
         ::spec/edge-picker-pagination spec/pagination-default))))
 
-(defn- update-fleets [update-fleet apps-set]
-  (mapv
-    (fn [app-set]
-      (update app-set :overwrites
-              (partial mapv
-                       (fn [app-set-overwrite]
-                         (update app-set-overwrite :fleet update-fleet)))))
-    apps-set))
-
 (reg-event-fx
   ::add-edges
   (fn [{{:keys [current-route] :as db} :db} [_ creating? response]]
@@ -1085,13 +1112,13 @@
     (let [apps-sets (filterv (fn [module]
                                (= apps-utils/subtype-applications-sets
                                   (:subtype module)))
-                      resources)]
+                             resources)]
       (when (seq apps-sets)
         {:fx (into
                [[:dispatch [::add-apps-to-db resources]]]
                (mapv (fn [apps-set]
                        [:dispatch [::fetch-set-then-apps (:id apps-set)]])
-                 apps-sets))}))))
+                     apps-sets))}))))
 
 (reg-event-fx
   ::fetch-set-then-apps
@@ -1114,6 +1141,6 @@
     (let [update-entries-fn (fn [apps-by-id app]
                               (assoc apps-by-id (:id app) app))]
       (assoc db ::spec/listed-apps-by-id (reduce
-                                    update-entries-fn
-                                    listed-apps-by-id
-                                    apps)))))
+                                           update-entries-fn
+                                           listed-apps-by-id
+                                           apps)))))

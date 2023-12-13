@@ -100,25 +100,31 @@
 
 (defn ErrorJobsMessage
   [_job-subs _set-active-tab-event _job-tab _on-click]
-  (let [tr                (subscribe [::i18n-subs/tr])
-        errors-dissmissed (r/atom #{})]
+  (let [tr                          (subscribe [::i18n-subs/tr])
+        most-recent-job-dismissed   (r/atom nil)]
     (fn [job-subs set-active-tab-event job-tab on-click]
-      (let [fn-filter   (fn [coll _action jobs]
-                          (let [{:keys [id state] :as last-job} (first jobs)]
-                            (if (and (= state "FAILED") (not (@errors-dissmissed id)))
-                              (conj coll last-job)
-                              coll)))
-            failed-jobs (->> @(subscribe [job-subs])
-                             :resources
-                             (group-by :action)
-                             (reduce-kv fn-filter [])
-                             (sort-by :updated >))]
+      (let [all-jobs                       (->> @(subscribe [job-subs])
+                                                :resources)
+            most-recent-failed-job         (->> all-jobs
+                                                (filter #(= "FAILED" (:state %)))
+                                                (sort-by :updated >)
+                                                (first))
+            deployment-action?             (fn [a] (contains? #{"start_deployment" "stop_deployment" "update_deployment"} a))
+            successful-jobs-after-failure? (filter (fn [{:keys [updated state action] :as _job}]
+                                                     (and (> updated
+                                                             (:updated most-recent-failed-job))
+                                                          (= state
+                                                             "SUCCESS")
+                                                          (deployment-action? action)))
+                                                   all-jobs)]
         [:<>
-         (doall
-           (for [{:keys [id action status-message]} failed-jobs]
+         (when (and most-recent-failed-job
+                    (empty? successful-jobs-after-failure?)
+                    (not= (:id most-recent-failed-job) @most-recent-job-dismissed)) ;; it is a newer failed job that we haven't dismissed yet
+           (let [{:keys [id action status-message]} most-recent-failed-job]
              ^{:key id}
              [ui/Message {:error      true
-                          :on-dismiss #(swap! errors-dissmissed conj id)}
+                          :on-dismiss #(reset! most-recent-job-dismissed id)}
               [ui/MessageHeader
                {:style    {:cursor "pointer"}
                 :on-click (or on-click

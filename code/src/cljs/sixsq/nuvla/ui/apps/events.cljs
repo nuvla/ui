@@ -25,6 +25,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [db-path->query-param-key name->href
                                                   str-pathify]]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -640,13 +641,15 @@
 
 (reg-event-fx
   ::paste-module
-  (fn [{{:keys [::spec/copy-module ::spec/module]} :db} [_ new-module-name]]
+  (fn [{{:keys [::spec/copy-module ::spec/module ::session-spec/session]} :db} [_ new-module-name]]
     (let [paste-parent-path (:path module)
+          user              (:user session)
           paste-module      (-> copy-module
+                                (dissoc :acl)
+                                (assoc-in [:acl :owners] [user])
                                 (assoc :name new-module-name)
                                 (assoc :parent-path paste-parent-path)
                                 (assoc :path (utils/contruct-path paste-parent-path new-module-name)))]
-
       {::cimi-api-fx/add [:module paste-module
                           #(dispatch [::main-events/reset-changes-protection
                                       [::routing-events/navigate

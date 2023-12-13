@@ -113,32 +113,40 @@
       :button-text        (@tr tr-key)
       :header-class       [:nuvla-apps :delete-modal-header]}]))
 
-
 (defn PublishButton
-  [module]
+  []
   (let [tr      (subscribe [::i18n-subs/tr])
         is-new? (subscribe [::subs/is-new?])
-        {:keys [id]} module]
+        page-changed? (subscribe [::main-subs/changes-protection?])]
+    [ui/MenuItem {:disabled (or @is-new? @page-changed?)}
+     [icons/CircleCheck]
+     (str/capitalize (@tr [:publish]))]))
+
+(defn PublishModalFromButton
+  [{:keys [id]}]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish id])
-      :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [icons/CircleCheck]
-                                  (str/capitalize (@tr [:publish]))])
+      :trigger     (r/as-element (PublishButton))
       :content     [:p (@tr [:publish-confirmation-message])]
       :header      (@tr [:publish-module])
       :icon        utils/publish-icon
       :button-text (@tr [:publish])}]))
 
+(defn UnPublishButton []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/MenuItem
+     [icons/UnpublishIcon]
+     (str/capitalize (@tr [:un-publish]))]))
 
-(defn UnPublishButton
+
+(defn UnPublishModalFromButton
   [module]
   (let [tr (subscribe [::i18n-subs/tr])
         {:keys [id]} module]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/un-publish id])
-      :trigger     (r/as-element [ui/MenuItem
-                                  [icons/UnpublishIcon]
-                                  (str/capitalize (@tr [:un-publish]))])
+      :trigger     (r/as-element (UnPublishButton))
       :content     [:p (@tr [:un-publish-confirmation-message])]
       :header      (@tr [:un-publish-module])
       :icon        utils/un-publish-icon
@@ -175,7 +183,8 @@
         deploy-disabled? (subscribe [::subs/deploy-disabled?])
         can-publish?     (subscribe [::subs/can-publish?])
         can-unpublish?   (subscribe [::subs/can-unpublish?])
-        save-disabled?   (subscribe [::subs/save-btn-disabled?])]
+        save-disabled?   (subscribe [::subs/save-btn-disabled?])
+        page-changed?    (subscribe [::main-subs/changes-protection?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true}
@@ -225,10 +234,15 @@
           [DeleteButton @module])
 
         (when @can-unpublish?
-          [UnPublishButton @module])
+          [UnPublishModalFromButton @module])
 
         (when @can-publish?
-          [PublishButton @module])]])))
+          (if @page-changed?
+            [ui/Popup
+             {:trigger (r/as-element (PublishButton))
+              :basic   true
+              :content "Save or discard your changes in order to publish a new version"}]
+            [PublishModalFromButton @module]))]])))
 
 
 (defn save-modal

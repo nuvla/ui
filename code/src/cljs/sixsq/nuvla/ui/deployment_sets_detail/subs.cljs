@@ -72,6 +72,15 @@
   :<- [::deployment-set]
   :-> :name)
 
+(reg-sub
+  ::operational-status
+  :<- [::deployment-set]
+  :-> :operational-status)
+
+(reg-sub
+  ::missing-edges
+  :<- [::operational-status]
+  :-> :missing-edges)
 
 (reg-sub
   ::apps-count

@@ -658,10 +658,7 @@
                          (get-target-fleet-ids deployment-set-edited))]
       (if (or (seq edge-ids) fleet-filter)
         {::cimi-api-fx/search [:nuvlabox
-                               {:filter      (general-utils/join-and
-                                               (general-utils/filter-eq-ids edge-ids)
-                                               nil
-                                               nil)
+                               {:filter      (general-utils/filter-eq-ids edge-ids)
                                 :last        10000
                                 :select      "id"
                                 :aggregation edges-spec/state-summary-agg-term

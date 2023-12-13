@@ -643,6 +643,7 @@
   (fn [{{:keys [::spec/copy-module ::spec/module]} :db} [_ new-module-name]]
     (let [paste-parent-path (:path module)
           paste-module      (-> copy-module
+                                (dissoc :acl)
                                 (assoc :name new-module-name)
                                 (assoc :parent-path paste-parent-path)
                                 (assoc :path (utils/contruct-path paste-parent-path new-module-name)))]

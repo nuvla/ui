@@ -51,7 +51,7 @@ test('test', async ({ page }, { config }) => {
 
   await page.getByRole('link', { name: 'Overview' }).click();
 
-  await page.locator('.nuvla-edges div').getByRole('button').first().click();
+  await page.locator('.nuvla-edges div').first().getByRole('button').first().click();
 
   await page.getByRole('link', { name: 'Edges' }).first().click();
 
@@ -63,7 +63,8 @@ test('test', async ({ page }, { config }) => {
   await page.getByRole('link', { name: 'Deployment Groups' }).click();
   await expect(page).toHaveURL(baseURL + '/ui/deployment-groups');
 
-  await page.getByRole('link', { name: testDeplGroupName }).first().click();
+  //await page.getByRole('link', { name: testDeplGroupName }).first().click();
+  await page.locator('a.ui.card[href="/ui/deployment-groups/' + depGroupUuid + '"]').click();
 
   await expect(page).toHaveURL(baseURL + '/ui/deployment-groups/' + depGroupUuid);
 

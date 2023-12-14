@@ -42,7 +42,7 @@ test('test', async ({ page }, { config }) => {
     .replaceAll('/', '\\/').replaceAll('.', '\\.') + '(\\?.+)?');
   await page.waitForURL(depSetUrlRegExp);
   const depGroupUuid = page.url().match(depSetUrlRegExp)[1];
-  await page.getByText('Pending: 1 deployments to add').click();
+  await page.getByText('Divergence: 1 deployments to add').click();
 
   await page.getByRole('link', { name: 'BlackBox' }).click();
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-set/`));

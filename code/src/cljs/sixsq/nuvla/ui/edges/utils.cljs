@@ -250,7 +250,7 @@
       db [::spec/edges-search])))
 
 (defn get-dynamic-fleet-filter-string
-  [{:keys [::spec/additional-filter] :as db}]
+  [{:keys [::spec/additional-filter] :as _db}]
   (if (seq additional-filter)
     (general-utils/join-and
       additional-filter)

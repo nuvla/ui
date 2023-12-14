@@ -60,6 +60,6 @@
                         :db-path ::table-cols-config}])
 
   ;; setting default column
-  (dispatch [::set-current-cols default-columns ::table-cols-config])
+  ;(dispatch [::set-current-cols default-columns ::table-cols-config])
 
   (dispatch [::reset-current-cols :sixsq.nuvla.ui.edges.views/table-cols-config]))

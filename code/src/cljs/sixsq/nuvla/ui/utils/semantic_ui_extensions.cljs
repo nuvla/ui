@@ -13,7 +13,6 @@
             [sixsq.nuvla.ui.routing.subs :as routing-subs]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]
@@ -70,7 +69,7 @@
                        (dissoc :query-key :query-param-value)
                        (assoc :data-highlight-key query-param-value))
                    @highlighted?
-                   (utils-general/add-classes :primary-menu-item))]
+                   (general-utils/add-classes :primary-menu-item))]
           children)))
 
 
@@ -119,7 +118,7 @@
   [ui/ModalHeader
    (when icon
      [icons/Icon {:name icon}])
-   (utils-general/capitalize-first-letter header)])
+   (general-utils/capitalize-first-letter header)])
 
 
 (defn Message
@@ -540,7 +539,7 @@
      ^{:key (random-uuid)}
      [ui/Popup
       {:trigger        (r/as-element [ui/Label [icons/Icon {:name "tag"}]
-                                      (utils-general/truncate tag 20)])
+                                      (general-utils/truncate tag 20)])
        :content        tag
        :position       "bottom center"
        :on             "hover"

@@ -166,7 +166,7 @@
 (defn DeploymentTableCell
   [{{:keys [id state module tags created-by] :as deployment} :row-data
     field-key                                                :field-key}
-   {:keys [no-module-name show-options?] :as options}]
+   {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url                   @(subscribe [::subs/deployment-url id primary-url-pattern])

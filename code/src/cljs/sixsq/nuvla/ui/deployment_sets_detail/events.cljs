@@ -1085,7 +1085,7 @@
             [:dispatch [::get-edges]]]})))
 
 (defn get-dynamic-fleet-filter-string
-  [{:keys [::spec/edge-picker-additional-filter] :as db}]
+  [{:keys [::spec/edge-picker-additional-filter] :as _db}]
   (if (seq edge-picker-additional-filter)
     edge-picker-additional-filter
     (general-utils/join-and

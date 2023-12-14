@@ -574,7 +574,7 @@
                    :target   "_blank"
                    :rel      "noreferrer"}])]))
 
-(defn- DeplSetLink
+(defn DeplSetLink
   [depl-set-id depl-set-name]
   (when depl-set-id
     (let [href (name->href routes/deployment-groups-details

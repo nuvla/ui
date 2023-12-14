@@ -511,8 +511,8 @@
 (reg-event-fx
   ::init-table-col-config
   [(inject-cofx :storage/get {:name local-storage-key})]
-  (fn [{{:keys [::current-cols] :as db} :db
-        cols-config                     :storage/get} [_ cols db-path]]
+  (fn [{db          :db
+        cols-config :storage/get} [_ cols db-path]]
     (let [defaults (distinct
                      (or
                        (some->>
@@ -727,10 +727,10 @@
                               {:basic    true
                                :icon     :options
                                :class    :table-select-fields-button
-                               :style    {:padding          0
-                                          :box-shadow       :none
-                                          :position         :relative
-                                          :z-index          1000}
+                               :style    {:padding    0
+                                          :box-shadow :none
+                                          :position   :relative
+                                          :z-index    1000}
                                :on-click (fn []
                                            (reset! selected-cols (set @current-cols))
                                            (reset! show? true))}]}])))

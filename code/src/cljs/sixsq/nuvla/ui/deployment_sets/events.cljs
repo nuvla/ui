@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-sets.events
   (:require [re-frame.core :refer [dispatch reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.deployment-sets-detail.events :as deployment-sets-detail-events]
             [sixsq.nuvla.ui.deployment-sets.spec :as spec]
             [sixsq.nuvla.ui.deployment-sets.subs :as subs]
             [sixsq.nuvla.ui.main.events :as main-events]
@@ -98,7 +97,7 @@
 
 (reg-event-fx
   ::new-deployment-set
-  (fn [{db :db} [_]]
+  (fn [_ _]
     (let [id (random-uuid)]
       {:fx [[:dispatch [::routing-events/navigate
                         routes/deployment-sets-details

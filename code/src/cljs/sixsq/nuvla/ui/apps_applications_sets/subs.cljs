@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.apps-applications-sets.subs
   (:require
-    [re-frame.core :refer [reg-sub subscribe]]
+    [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.apps-applications-sets.spec :as spec]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.plugins.module :as module-plugin]))
@@ -40,7 +40,7 @@
   :<- [::db]
   :<- [::apps-subs/module]
   :<- [::apps-selected 0]
-  (fn [[db apps-set apps] [_]]
+  (fn [[db apps-set _apps] [_]]
     (let [apps-in-apps-set (get-in apps-set [:content :applications-sets 0 :applications])
           db-path [::spec/apps-sets 0]]
       (some (fn [{:keys [id version]}]

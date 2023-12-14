@@ -12,7 +12,6 @@
             [sixsq.nuvla.ui.routing.subs :as routing-subs]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.style :as style]))

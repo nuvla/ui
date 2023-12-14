@@ -37,7 +37,7 @@
        (map (juxt :name identity))
        (into (sorted-map))))
 
-
+#_:clj-kondo/ignore
 (defparser cimi-parser
            "
 Filter              = Or

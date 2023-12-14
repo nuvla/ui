@@ -113,6 +113,7 @@
       :button-text        (@tr tr-key)
       :header-class       [:nuvla-apps :delete-modal-header]}]))
 
+
 (defn PublishButton
   [module]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -127,6 +128,7 @@
       :header      (@tr [:publish-module])
       :icon        utils/publish-icon
       :button-text (@tr [:publish])}]))
+
 
 (defn UnPublishButton
   [module]

@@ -114,39 +114,28 @@
       :header-class       [:nuvla-apps :delete-modal-header]}]))
 
 (defn PublishButton
-  []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        is-new? (subscribe [::subs/is-new?])
-        page-changed? (subscribe [::main-subs/changes-protection?])]
-    [ui/MenuItem {:disabled (or @is-new? @page-changed?)}
-     [icons/CircleCheck]
-     (str/capitalize (@tr [:publish]))]))
-
-(defn PublishModalFromButton
   [{:keys [id]}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        is-new? (subscribe [::subs/is-new?])]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish id])
-      :trigger     (r/as-element (PublishButton))
+      :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
+                                  [icons/CircleCheck]
+                                  (str/capitalize (@tr [:publish]))])
       :content     [:p (@tr [:publish-confirmation-message])]
       :header      (@tr [:publish-module])
       :icon        utils/publish-icon
       :button-text (@tr [:publish])}]))
 
-(defn UnPublishButton []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/MenuItem
-     [icons/UnpublishIcon]
-     (str/capitalize (@tr [:un-publish]))]))
-
-
-(defn UnPublishModalFromButton
+(defn UnPublishButton
   [module]
   (let [tr (subscribe [::i18n-subs/tr])
         {:keys [id]} module]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/un-publish id])
-      :trigger     (r/as-element (UnPublishButton))
+      :trigger     (r/as-element [ui/MenuItem
+                                  [icons/UnpublishIcon]
+                                  (str/capitalize (@tr [:un-publish]))])
       :content     [:p (@tr [:un-publish-confirmation-message])]
       :header      (@tr [:un-publish-module])
       :icon        utils/un-publish-icon
@@ -234,15 +223,17 @@
           [DeleteButton @module])
 
         (when @can-unpublish?
-          [UnPublishModalFromButton @module])
+          [UnPublishButton @module])
 
         (when @can-publish?
           (if @page-changed?
             [ui/Popup
-             {:trigger (r/as-element (PublishButton))
+             {:trigger (r/as-element [ui/MenuItem {:disabled true}
+                                      [icons/CircleCheck]
+                                      (str/capitalize (@tr [:publish]))])
               :basic   true
-              :content "Save or discard your changes in order to publish a new version"}]
-            [PublishModalFromButton @module]))]])))
+              :content (@tr [:save-or-discard-to-publish])}]
+            [PublishButton @module]))]])))
 
 
 (defn save-modal

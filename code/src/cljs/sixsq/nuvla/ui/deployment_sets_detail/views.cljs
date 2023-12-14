@@ -687,6 +687,7 @@
   (tt/with-tooltip [:div [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal modal-id]))
                                       :disabled (not enabled)
                                       :icon     icons/i-plus-large
+                                      :class    "add-button"
                                       :style    {:align-self "center"}}]]
                    tooltip))
 

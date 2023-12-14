@@ -51,7 +51,7 @@ test('test', async ({ page }, { config }) => {
 
   await page.getByRole('link', { name: 'Overview' }).click();
 
-  await page.locator('.nuvla-edges div').filter({ hasText: /TOTAL$/ }).getByRole('button').click();
+  await page.locator('.nuvla-edges div').getByRole('button').first().click();
 
   await page.getByRole('link', { name: 'Edges' }).first().click();
 

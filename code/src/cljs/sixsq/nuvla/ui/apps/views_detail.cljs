@@ -115,7 +115,7 @@
 
 (defn PublishButton
   [{:keys [id]}]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr      (subscribe [::i18n-subs/tr])
         is-new? (subscribe [::subs/is-new?])]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish id])

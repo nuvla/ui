@@ -114,9 +114,10 @@
       :header-class       [:nuvla-apps :delete-modal-header]}]))
 
 (defn PublishButton
-  [{:keys [id]}]
+  [module]
   (let [tr      (subscribe [::i18n-subs/tr])
-        is-new? (subscribe [::subs/is-new?])]
+        is-new? (subscribe [::subs/is-new?])
+        {:keys [id]} module]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish id])
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}

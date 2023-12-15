@@ -826,9 +826,9 @@
   (fn [{db :db} [_ apps-set apps]]
     (let [db-path (subs/create-apps-creation-db-path (:current-route db))
           apps    (mapv utils/enrich-app apps)]
-      {:fx (into
-             [[:db (update-in db db-path (fnil into []) [])]
-              [:dispatch [::fetch-app-picker-apps
+      {:db (update-in db db-path (fnil into []) [])
+       :fx (into
+             [[:dispatch [::fetch-app-picker-apps
                           ::spec/pagination-apps-picker]]]
              (map (fn [{:keys [id path] :as _app}]
                     [::apps-fx/get-module [path

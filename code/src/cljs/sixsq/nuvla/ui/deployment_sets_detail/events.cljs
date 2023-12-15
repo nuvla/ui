@@ -879,9 +879,14 @@
 (reg-event-fx
   ::change-apps-set-version
   (fn [{{:keys [::spec/deployment-set-edited] :as db} :db} [_ full-id]]
-    (let [deployment-set-edited (assoc-in deployment-set-edited
-                                          [:applications-sets 0 :version]
-                                          (some-> full-id (str/split #"_") second int))]
+    (let [app-set               (get-in deployment-set-edited [:applications-sets 0])
+          app-set-fleet         (get-in app-set [:overwrites 0 :fleet])
+          deployment-set-edited (assoc-in deployment-set-edited
+                                          [:applications-sets 0]
+                                          (-> app-set
+                                              (assoc :version (some-> full-id (str/split #"_") second int))
+                                              ;; leave only the fleet in the overwrites
+                                              (assoc :overwrites [{:fleet app-set-fleet}])))]
       {:db (assoc db ::spec/deployment-set-edited deployment-set-edited)
        :fx [[:dispatch [::get-application-sets
                         (-> deployment-set-edited :applications-sets first)]]]})))

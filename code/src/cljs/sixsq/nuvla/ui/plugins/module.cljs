@@ -36,13 +36,21 @@
   [db-path href k]
   (conj (base-path db-path href) k))
 
+(defn- versioned-path
+  [db-path href]
+  (conj db-path ::modules href))
+
+(defn- db-module-versioned-subpath
+  [db-path href k]
+  (conj (versioned-path db-path href) k))
+
 (defn- db-module-path
   [db-path href]
   (db-module-subpath db-path href ::module))
 
 (defn- db-module-overwrite-path
   [db-path href]
-  (db-module-subpath db-path href ::overwrite))
+  (db-module-versioned-subpath db-path href ::overwrite))
 
 (defn- db-new-version-module-href-path
   [db-path href]
@@ -266,9 +274,10 @@
   ::change-version
   (fn [{db :db} [_ db-path href version-module-href]]
     (let [new-version-href (db-version-href db db-path href version-module-href)
-          change-event     (get-in db (conj db-path change-event-module-version))]
+          change-event     (get-in db (conj db-path change-event-module-version))
+          overwrites       (get-in db (db-module-overwrite-path db-path new-version-href))]
       {:db (assoc-in db (db-new-version-module-href-path db-path href) version-module-href)
-       :fx [[:dispatch [::load-module db-path new-version-href]]
+       :fx [[:dispatch [::load-module db-path new-version-href overwrites]]
             (when change-event
               [:dispatch (conj change-event new-version-href)])]})))
 

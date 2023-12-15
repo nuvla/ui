@@ -554,15 +554,6 @@
 
 (defn overwritten-app-env-vars
   [deployment-set app]
-  (tap> [:overwritten-app-env-vars
-         app
-         deployment-set
-         (->> (get-in deployment-set [:applications-sets 0 :overwrites])
-              first
-              :applications
-              (filter #(= (:id %) (:id app)))
-              first
-              :environmental-variables)])
   (->> (get-in deployment-set [:applications-sets 0 :overwrites])
        first
        :applications
@@ -872,16 +863,17 @@
   ::edit-config
   (fn [{{:keys [::spec/module-applications-sets
                 ::spec/deployment-set-edited] :as db} :db}]
-    {:fx [[:dispatch [::edit :applications-sets
-                      [{:id         (:id module-applications-sets)
-                        :version    (apps-utils/module-version module-applications-sets)
-                        :overwrites (map-indexed
-                                      (fn [i [app-set current-overwrites]]
-                                        (applications-sets->overwrites db i app-set current-overwrites))
-                                      (map vector
-                                           (-> module-applications-sets :content :applications-sets)
-                                           (concat (get-in deployment-set-edited [:applications-sets 0 :overwrites])
-                                                   (repeat nil))))}]]]]}))
+    (let [overwrites (map-indexed
+                       (fn [i [app-set current-overwrites]]
+                         (applications-sets->overwrites db i app-set current-overwrites))
+                       (map vector
+                            (-> module-applications-sets :content :applications-sets)
+                            (concat (get-in deployment-set-edited [:applications-sets 0 :overwrites])
+                                    (repeat nil))))]
+      {:fx [[:dispatch [::edit :applications-sets
+                        [{:id         (:id module-applications-sets)
+                          :version    (apps-utils/module-version module-applications-sets)
+                          :overwrites overwrites}]]]]})))
 
 
 (reg-event-fx

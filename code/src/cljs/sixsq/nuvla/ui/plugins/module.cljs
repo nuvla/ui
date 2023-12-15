@@ -72,6 +72,21 @@
   [db db-path href]
   (get-in db (db-module-path db-path href)))
 
+(defn get-version-id
+  [module-versions version]
+  (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
+
+(defn- module-versions-indexed
+  [module]
+  (-> module :versions apps-utils/map-versions-index))
+
+(defn db-selected-version
+  [db db-path href]
+  (let [module            (db-module db db-path href)
+        module-content-id (-> module :content :id)
+        versions-indexed  (module-versions-indexed module)]
+    (get-version-id versions-indexed module-content-id)))
+
 (defn- update-db-module
   [db db-path href f]
   (update-in db (db-module-path db-path href) f))
@@ -208,8 +223,14 @@
   (fn [{db :db} [_ db-path href index new-value]]
     (let [change-event          (get-in db (conj db-path change-event-env-variables))
           update-env-vars       #(update-env-value-by-index % index new-value)
-          update-module-env-var #(update-module-env-vars % update-env-vars)]
-      {:db (update-db-module db db-path href update-module-env-var)
+          update-module-env-var #(update-module-env-vars % update-env-vars)
+          module                (db-module db db-path href)
+          versioned-href        (str href "_" (db-selected-version db db-path href))
+          env-var-name          (get-in (module-env-vars module) [index :name])
+          overwrite-map         (get-in db (db-module-overwrite-path db-path versioned-href))]
+      {:db (-> db
+               (assoc-in (conj (db-module-overwrite-path db-path versioned-href) :env env-var-name) new-value)
+               (update-db-module db-path href update-module-env-var))
        :fx [(when change-event [:dispatch change-event])]})))
 
 (reg-event-fx
@@ -234,14 +255,6 @@
       {:db (update-db-module db db-path href update-module-reg-cred)
        :fx [(when change-event [:dispatch change-event])]})))
 
-(defn get-version-id
-  [module-versions version]
-  (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
-
-(defn- module-versions-indexed
-  [module]
-  (-> module :versions apps-utils/map-versions-index))
-
 (reg-sub
   ::module
   (fn [db [_ db-path href]]
@@ -251,13 +264,6 @@
   ::module-overwrite
   (fn [db [_ db-path href]]
     (get-in db (db-module-overwrite-path db-path href))))
-
-(defn db-selected-version
-  [db db-path href]
-  (let [module            (db-module db db-path href)
-        module-content-id (-> module :content :id)
-        versions-indexed  (module-versions-indexed module)]
-    (get-version-id versions-indexed module-content-id)))
 
 (reg-sub
   ::new-version-module-href
@@ -277,9 +283,9 @@
           change-event     (get-in db (conj db-path change-event-module-version))
           overwrites       (get-in db (db-module-overwrite-path db-path new-version-href))]
       {:db (assoc-in db (db-new-version-module-href-path db-path href) version-module-href)
-       :fx [[:dispatch [::load-module db-path new-version-href overwrites]]
-            (when change-event
-              [:dispatch (conj change-event new-version-href)])]})))
+       :fx [[:dispatch [::load-module db-path new-version-href
+                        overwrites
+                        (when change-event (conj change-event new-version-href))]]]})))
 
 (defn latest-published-version
   [db db-path href]
@@ -459,13 +465,13 @@
       [EnvCredential env-name value error? on-change]
       ^{:key (str href "-" i)}
       [ui/FormInput
-       {:type          "text"
-        :name          env-name
-        :value         value
-        :read-only     read-only?
-        :error         error?
-        :fluid         true
-        :on-change     (ui-callback/input-callback on-change)}])))
+       {:type      "text"
+        :name      env-name
+        :value     value
+        :read-only read-only?
+        :error     error?
+        :fluid     true
+        :on-change (ui-callback/input-callback on-change)}])))
 
 (defn AsFormInput
   [db-path href read-only? error? overridden?

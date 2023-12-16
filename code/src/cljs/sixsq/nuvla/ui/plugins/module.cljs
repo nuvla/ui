@@ -226,8 +226,7 @@
           update-module-env-var #(update-module-env-vars % update-env-vars)
           module                (db-module db db-path href)
           versioned-href        (str href "_" (db-selected-version db db-path href))
-          env-var-name          (get-in (module-env-vars module) [index :name])
-          overwrite-map         (get-in db (db-module-overwrite-path db-path versioned-href))]
+          env-var-name          (get-in (module-env-vars module) [index :name])]
       {:db (-> db
                (assoc-in (conj (db-module-overwrite-path db-path versioned-href) :env env-var-name) new-value)
                (update-db-module db-path href update-module-env-var))

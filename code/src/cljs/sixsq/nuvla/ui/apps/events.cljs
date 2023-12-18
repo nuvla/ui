@@ -197,7 +197,8 @@
 
 (reg-event-fx
   ::set-active-tab
-  (fn [_ [_ active-tab db-path {:keys [ignore-chng-protection?]}]]
+  (fn [_ [_ active-tab db-path {:keys [ignore-chng-protection?]
+                                :or {ignore-chng-protection? false}}]]
     {:fx [[:dispatch [::nav-tab/change-tab {:db-path (or db-path [::spec/tab])
                                             :tab-key active-tab
                                             :ignore-chng-protection? ignore-chng-protection?}]]]}))

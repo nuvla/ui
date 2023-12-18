@@ -1210,7 +1210,7 @@
          [ui/GridColumn {:style {:text-align "right"}}
           [uix/Button {:icon     icons/i-pencil
                        :compact  true
-                       :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
+                       :on-click #(dispatch [::events/set-active-tab :details db-path {:ignore-chng-protection? true}])}]])]
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
                        :only      "mobile"}

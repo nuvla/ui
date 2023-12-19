@@ -262,13 +262,13 @@
 
 
 (defn TableRowCell
-  [{:keys [_key _placeholder _default-value _spec _width _on-change _on-validation
+  [{:keys [_key _placeholder _default-value _spec _width _on-change _on-validation _style
            _editable? _validate-form? _type _input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)
         show            (r/atom false)]
     (fn [{:keys [key placeholder default-value spec width on-change on-validation
-                 editable? validate-form? type input-help-msg]
+                 editable? validate-form? type input-help-msg style]
           :or   {editable? true, spec any?, type :input}}]
       (let [validate?   (boolean (or @local-validate? validate-form?))
             error?      (and validate? (not (s/valid? spec default-value)))
@@ -290,7 +290,8 @@
           (dispatch [on-validation key error?]))
 
         ^{:key (or key name)}
-        [ui/TableCell (when width {:width width})
+        [ui/TableCell (merge (when width {:width width})
+                             (when style {:style style}))
          input-help-msg
          (if editable?
            (if (#{:input :password} type)
@@ -322,11 +323,11 @@
         children))
 
 (defn TableRowField
-  [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
+  [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation _style
                    _required? _editable? _validate-form? _type _help-popup]}]
   (let [local-validate? (r/atom false)]
     (fn [name & {:keys [key _placeholder default-value spec _on-change on-validation
-                        required? editable? validate-form? _type help-popup]
+                        required? editable? validate-form? _type help-popup _style]
                  :or   {editable? true, spec any?}
                  :as   options}]
       (let [validate? (boolean (or @local-validate? validate-form?))

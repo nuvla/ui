@@ -555,7 +555,7 @@
             [ui/Table {:compact    true
                        :definition true}
              [ui/TableBody
-              [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
+              [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?, :style (when @editable? {:padding-left edit-cell-left-padding})
                :spec ::spec/name, :validate-form? @validate-form?, :required? true,
                :default-value name, :on-change (partial on-change ::events/name)
                :on-validation ::events/set-details-validation-error]

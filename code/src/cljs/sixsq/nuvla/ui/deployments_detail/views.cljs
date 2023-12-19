@@ -69,7 +69,7 @@
         parameters (subscribe [::subs/deployment-parameters])
         running    (sum-running-replicas @parameters)
         desired    (sum-desired-replicas @parameters)]
-    (when (and (= state "STARTED") running desired (not= running desired))
+    (when (and (deployments-utils/started? state) running desired (not= running desired))
       [ui/Segment
        [ui/Progress {:label    "deployment: started (replicas: running/required)"
                      :total    desired
@@ -96,7 +96,7 @@
      [ui/TableCell url-name]
      [ui/TableCell {:class ["show-on-hover-value"]}
       (cond
-        (and @url (= state deployments-utils/STOPPED)) @url
+        (and @url (deployments-utils/stopped? state)) @url
         @url (values/copy-value-to-clipboard
                [:a {:href @url, :target "_blank"} @url false]
                @url
@@ -399,7 +399,7 @@
 (defn StartUpdateButton
   [{:keys [data state] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
-        start      (#{"CREATED" "STOPPED"} state)
+        start      (#{deployments-utils/CREATED deployments-utils/STOPPED} state)
         first-step (if data :data :infra-services)
         button     (action-button
                      {:button-text (if start

@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]))
 
+(def ^:const CREATED "CREATED")
 (def ^:const STARTED "STARTED")
 (def ^:const STARTING "STARTING")
 (def ^:const STOPPED "STOPPED")

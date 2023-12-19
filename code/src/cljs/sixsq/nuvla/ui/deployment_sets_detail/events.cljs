@@ -554,15 +554,6 @@
 
 (defn overwritten-app-env-vars
   [deployment-set app]
-  (tap> [:overwritten-app-env-vars
-         app
-         deployment-set
-         (->> (get-in deployment-set [:applications-sets 0 :overwrites])
-              first
-              :applications
-              (filter #(= (:id %) (:id app)))
-              first
-              :environmental-variables)])
   (->> (get-in deployment-set [:applications-sets 0 :overwrites])
        first
        :applications
@@ -835,9 +826,9 @@
   (fn [{db :db} [_ apps-set apps]]
     (let [db-path (subs/create-apps-creation-db-path (:current-route db))
           apps    (mapv utils/enrich-app apps)]
-      {:fx (into
-             [[:db (update-in db db-path (fnil into []) [])]
-              [:dispatch [::fetch-app-picker-apps
+      {:db (update-in db db-path (fnil into []) [])
+       :fx (into
+             [[:dispatch [::fetch-app-picker-apps
                           ::spec/pagination-apps-picker]]]
              (map (fn [{:keys [id path] :as _app}]
                     [::apps-fx/get-module [path
@@ -872,24 +863,30 @@
   ::edit-config
   (fn [{{:keys [::spec/module-applications-sets
                 ::spec/deployment-set-edited] :as db} :db}]
-    {:fx [[:dispatch [::edit :applications-sets
-                      [{:id         (:id module-applications-sets)
-                        :version    (apps-utils/module-version module-applications-sets)
-                        :overwrites (map-indexed
-                                      (fn [i [app-set current-overwrites]]
-                                        (applications-sets->overwrites db i app-set current-overwrites))
-                                      (map vector
-                                           (-> module-applications-sets :content :applications-sets)
-                                           (concat (get-in deployment-set-edited [:applications-sets 0 :overwrites])
-                                                   (repeat nil))))}]]]]}))
+    (let [overwrites (map-indexed
+                       (fn [i [app-set current-overwrites]]
+                         (applications-sets->overwrites db i app-set current-overwrites))
+                       (map vector
+                            (-> module-applications-sets :content :applications-sets)
+                            (concat (get-in deployment-set-edited [:applications-sets 0 :overwrites])
+                                    (repeat nil))))]
+      {:fx [[:dispatch [::edit :applications-sets
+                        [{:id         (:id module-applications-sets)
+                          :version    (apps-utils/module-version module-applications-sets)
+                          :overwrites overwrites}]]]]})))
 
 
 (reg-event-fx
   ::change-apps-set-version
   (fn [{{:keys [::spec/deployment-set-edited] :as db} :db} [_ full-id]]
-    (let [deployment-set-edited (assoc-in deployment-set-edited
-                                          [:applications-sets 0 :version]
-                                          (some-> full-id (str/split #"_") second int))]
+    (let [app-set               (get-in deployment-set-edited [:applications-sets 0])
+          app-set-fleet         (get-in app-set [:overwrites 0 :fleet])
+          deployment-set-edited (assoc-in deployment-set-edited
+                                          [:applications-sets 0]
+                                          (-> app-set
+                                              (assoc :version (some-> full-id (str/split #"_") second int))
+                                              ;; leave only the fleet in the overwrites
+                                              (assoc :overwrites [{:fleet app-set-fleet}])))]
       {:db (assoc db ::spec/deployment-set-edited deployment-set-edited)
        :fx [[:dispatch [::get-application-sets
                         (-> deployment-set-edited :applications-sets first)]]]})))
@@ -1085,7 +1082,7 @@
             [:dispatch [::get-edges]]]})))
 
 (defn get-dynamic-fleet-filter-string
-  [{:keys [::spec/edge-picker-additional-filter] :as db}]
+  [{:keys [::spec/edge-picker-additional-filter] :as _db}]
   (if (seq edge-picker-additional-filter)
     edge-picker-additional-filter
     (general-utils/join-and

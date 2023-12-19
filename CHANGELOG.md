@@ -4,6 +4,42 @@
 
 ## Released
 
+## [2.36.0] - 2023-12-14
+
+- Job - Do not show job error message after subsequent successful deployments
+- Nuvlaedge detail - Fix display of 'Last boot' time on NuvlaEdge page
+- Notification configurations for the case of publication of applications
+  - Add definition of application publication notifications
+  - Module publish event criteria docu string
+- Module - Make the user that copies an app
+- Module app-set
+  - Overwrites not taken into account when updating from a specific module version
+- Deployment group
+  - Handle empty env var and reset to parent value separately
+  - Handle back button in DG details page
+  - Remove experimental flag for deployment group
+  - Stop message not counting correctly all deployments to be stopped
+  - Fix for: emptying a non-mandatory variable returns 400 error
+  - Highlight mandatory empty dropdown fields
+  - Show the same action buttons in Deployment Group creation and edition pages
+  - Fix for: When adding/removing apps in depl group links to marketplace are broken
+  - Adds apps link to app name in deployments table and make deployments table behave like other tables
+  - Deployment group creation/edition supports application sets correctly
+  - EULA and pricing info added to Start and Update dialogs
+  - Enabled edge picker when creating deployment group
+  - Fix issue with quantity
+  - Enables select all bulk deployment from edges page
+  - Review Apps Config tab layout
+  - Rename Deployment Sets to Deployment Groups
+  - Rename Application Sets to Application Bouquets
+  - Warning added when app version is behind latest published version
+  - Warning added to app set behind latest version
+  - Add version warning to application bouquet details page
+  - Allow selection of the elements on the deployments page via query parameters
+  - Enhance message when deleting or updating/starting/stopping a deployment group
+  - and many more check commit logs ...
+- Edges add modal - switch to "docker compose"
+
 ## [2.35.3] - 2023-11-10
 
 Deployment group detail - Fix permissions check on dep group creation (#1446)

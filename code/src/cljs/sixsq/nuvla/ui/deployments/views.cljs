@@ -166,7 +166,7 @@
 (defn DeploymentTableCell
   [{{:keys [id state module tags created-by] :as deployment} :row-data
     field-key                                                :field-key}
-   {:keys [no-module-name show-options?] :as options}]
+   {:keys [no-module-name show-options?] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url                   @(subscribe [::subs/deployment-url id primary-url-pattern])
@@ -183,16 +183,10 @@
                                                   [:img {:src   (or (:thumb-nail module) (:logo-url module))
                                                          :style {:width  "42px"
                                                                  :height "30px"}}]
-                                                  [module-plugin/LinkToAppView
-                                                   {:version-id (utils/get-version-number
-                                                                  (:versions module)
-                                                                  (:content module))
-                                                    :path       (:path module)
-                                                    :target     "_self"}
-                                                   [:div (:name module)]]])
+                                                  [:div (:name module)]])
                                :version        (utils/deployment-version deployment)
                                :status         state
-                               :url            (when url
+                               :url            (when (and url (utils/started? state))
                                                  [:a {:href url, :target "_blank", :rel "noreferrer"}
                                                   [ui/Icon {:name "external"}]
                                                   primary-url-name])
@@ -245,12 +239,11 @@
                        (mapv (fn [col]
                                (when col (assoc col :cell table-cell)))
                              [(when-not no-module-name
-                                {:field-key               :module.name
-                                 :cell-props              {:style {:overflow      "hidden",
-                                                                   :text-overflow "ellipsis",
-                                                                   :max-width     "20ch"}}
-                                 :header-content          (@tr [:module])
-                                 :stop-event-propagation? true})
+                                {:field-key      :module.name
+                                 :cell-props     {:style {:overflow      "hidden",
+                                                          :text-overflow "ellipsis",
+                                                          :max-width     "20ch"}}
+                                 :header-content (@tr [:module])})
                               {:field-key :version :no-sort? true}
                               {:field-key :status
                                :sort-key  :state}

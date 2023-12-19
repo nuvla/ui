@@ -5,7 +5,6 @@
             [sixsq.nuvla.ui.about.subs :as about-subs]
             [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-            [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as depl-group-subs]
             [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.edges.add-modal :as add-modal]

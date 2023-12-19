@@ -12,15 +12,13 @@
             [sixsq.nuvla.ui.apps.utils :as utils]
             [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
             [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-            [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]
-            [sixsq.nuvla.ui.deployment-sets-detail.subs :as depl-group-subs]
+            [sixsq.nuvla.ui.deployment-sets.events :as depl-group-events]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
-            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href pathify]]
@@ -153,20 +151,11 @@
       :basic   true
       :content (@tr [(keyword (str "save-or-discard-to-" mode))])}]))
 
-(defn create-deployment-set-from-apps-set
-  [module-id]
-  (let [id (random-uuid)]
-    (dispatch [::depl-group-events/fetch-apps-set-add-apps module-id])
-    (dispatch [::routing-events/navigate
-               routes/deployment-sets-details
-               {:uuid :create}
-               {depl-group-subs/creation-temp-id-key id}])))
-
 (defn deploy-click
   [module-id applications-sets?]
   (dispatch [::main-events/subscription-required-dispatch
              (if applications-sets?
-               (create-deployment-set-from-apps-set module-id)
+               [::depl-group-events/create-deployment-set-from-apps-set module-id]
                [::deployment-dialog-events/create-deployment
                 module-id :infra-services])]))
 
@@ -1223,7 +1212,7 @@
          [ui/GridColumn {:style {:text-align "right"}}
           [uix/Button {:icon     icons/i-pencil
                        :compact  true
-                       :on-click #(dispatch [::events/set-active-tab :details db-path])}]])]
+                       :on-click #(dispatch [::events/set-active-tab :details db-path {:ignore-chng-protection? true}])}]])]
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
                        :only      "mobile"}

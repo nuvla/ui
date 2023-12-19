@@ -124,6 +124,11 @@ those interactions.
    the `.env.e2e` file).
    Adjust the code to suit your needs, e.g., writing assertions using `expect`.
 
+   As an alternative, you can save the output of the code generation directly to a file:
+```bash
+npm run test:e2e:gen -- -o test.spec.js
+```
+
 3. Put new tests inside the `code/test/e2e/loggedin` directory.
    The file has to end with `.spec.js` (`.ts` for typescript files is possible).
 

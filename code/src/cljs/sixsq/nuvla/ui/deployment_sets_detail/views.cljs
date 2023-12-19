@@ -1504,10 +1504,11 @@
 
 (defn ConfigureAppTabHeader
   [i id]
-  (let [is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] id])]
+  (let [is-controlled-by-apps-set?          (subscribe [::subs/is-controlled-by-apps-set?])
+        is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] id])]
     [:<>
      [AppName {:idx i :id id}]
-     (when @is-behind-latest-published-version?
+     (when (and @is-behind-latest-published-version? (not @is-controlled-by-apps-set?))
        [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
                                        :color :orange}])]))
 
@@ -1516,9 +1517,10 @@
   (let [tr                                  (subscribe [::i18n-subs/tr])
         licenses-by-module-id               (subscribe [::subs/license-by-module-id])
         pricing-by-module-id                (subscribe [::subs/pricing-by-module-id])
+        is-controlled-by-apps-set?          (subscribe [::subs/is-controlled-by-apps-set?])
         is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] id])]
     [ui/TabPane {:attached true}
-     (when @is-behind-latest-published-version?
+     (when (and @is-behind-latest-published-version? (not @is-controlled-by-apps-set?))
        [WarningVersionBehind [:warning-not-latest-app-version]])
      [ui/Popup {:trigger (r/as-element
                            [LinkToModule [::spec/apps-sets i] id [:go-to-app]])

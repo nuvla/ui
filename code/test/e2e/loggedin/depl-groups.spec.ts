@@ -55,7 +55,7 @@ test('test', async ({ page }, { config }) => {
 
   await page.getByRole('link', { name: 'Edges' }).first().click();
 
-  await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete 2.y.z' }).click();
+  await page.locator('table tbody').getByRole('link').first().click();
 
   await page.getByRole('link', { name: 'Deployments' }).first().click();
   await expect(page).toHaveURL(baseURL + '/ui/deployments');

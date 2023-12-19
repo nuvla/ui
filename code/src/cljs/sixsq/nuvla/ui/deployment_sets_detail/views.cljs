@@ -773,6 +773,7 @@
 (defn LinkToAppConfig
   [creating? i cell-data row-data]
   (let [tr                                  (subscribe [::i18n-subs/tr])
+        is-controlled-by-apps-set?          (subscribe [::subs/is-controlled-by-apps-set?])
         is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] (:href row-data)])]
     (if creating?
       (tt/with-tooltip [:span cell-data] (@tr [:configure-app]))
@@ -792,7 +793,7 @@
           [:span {:style {:margin-left "0.5rem"}}
            [icons/GearIcon]]]
          (@tr [:configure-app]))
-       (when @is-behind-latest-published-version?
+       (when (and @is-behind-latest-published-version? (not @is-controlled-by-apps-set?))
          (tt/with-tooltip
            [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
                                                   :color :orange}]]
@@ -902,18 +903,16 @@
                                                                     (:content (:module row-data)))
                                                       :path       (:path (:module row-data))}
                                                      [icons/ArrowRightFromBracketIcon]]])}
-                                (when @can-edit-data?
+                                (when (and @can-edit-data? (not @is-controlled-by-apps-set?))
                                   {:field-key      :remove
                                    :header-content (str/capitalize (@tr [:remove]))
                                    :cell           (fn [{:keys [row-data]}]
-                                                     [RemoveButton {:enabled  (and (not @is-controlled-by-apps-set?) @edit-op-allowed?)
-                                                                    :tooltip  (if @is-controlled-by-apps-set?
-                                                                                (@tr [:remove-app-from-app-bouquet])
-                                                                                (edit-not-allowed-msg
-                                                                                  {:TR                         @tr
-                                                                                   :can-edit-data?             @can-edit-data?
-                                                                                   :edit-op-allowed?           @edit-op-allowed?
-                                                                                   :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
+                                                     [RemoveButton {:enabled  @edit-op-allowed?
+                                                                    :tooltip  (edit-not-allowed-msg
+                                                                                {:TR                         @tr
+                                                                                 :can-edit-data?             @can-edit-data?
+                                                                                 :edit-op-allowed?           @edit-op-allowed?
+                                                                                 :edit-not-allowed-in-state? @edit-not-allowed-in-state?})
                                                                     :on-click #(dispatch [::events/remove-app-from-creation-data row-data])}])})]))
                      :rows @apps-row}]])]
          (when (and @can-edit-data? (not @is-controlled-by-apps-set?))

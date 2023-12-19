@@ -817,7 +817,7 @@
         :save-before-configuring-apps                  "You must add at least one app to the deployment group before you can configure your apps."
         :save-deployment-set                           "Save deployment group?"
         :save-or-discard-to-publish                    "Save or discard your changes first in order to publish a new version"
-        :save-or-discard-to-un-publish                 "Save or discard your changes first in order to un-publish a new version"
+        :save-or-discard-to-un-publish                 "Save or discard your changes first in order to un-publish your version"
         :search                                        "Search"
         :see                                           "see"
         :see-more                                      "see more"

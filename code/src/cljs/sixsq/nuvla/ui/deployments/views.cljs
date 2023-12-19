@@ -186,7 +186,7 @@
                                                   [:div (:name module)]])
                                :version        (utils/deployment-version deployment)
                                :status         state
-                               :url            (when url
+                               :url            (when (and url (utils/started? state))
                                                  [:a {:href url, :target "_blank", :rel "noreferrer"}
                                                   [ui/Icon {:name "external"}]
                                                   primary-url-name])

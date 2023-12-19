@@ -272,7 +272,8 @@
                  :raised    true}
      [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:summary]))]
      [ui/Table {:basic  "very"
-                :padded false}
+                :padded false
+                :fixed true}
       [ui/TableBody
        (when name
          [ui/TableRow

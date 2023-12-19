@@ -297,11 +297,13 @@
         [uix/ModalDanger
          {:on-close           (fn [event]
                                 (reset! open? false)
+                                (reset! checked? false)
                                 (.stopPropagation event)
                                 (.preventDefault event))
           :on-confirm         #(do
                                  (dispatch [::events/stop-deployment id])
-                                 (reset! open? false))
+                                 (reset! open? false)
+                                 (reset! checked? false))
           :open               @open?
           :control-confirmed? checked?
           :trigger            (r/as-element button)

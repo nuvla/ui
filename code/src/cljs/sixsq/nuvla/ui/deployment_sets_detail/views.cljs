@@ -222,7 +222,12 @@
         validation            (subscribe [::subs/deployment-set-validation])
         open?                 (subscribe [::subs/modal-open? start-modal-id])
         eula-prices-accepted? (subscribe [::subs/eula-prices-accepted?])
-        confirmed?            (r/atom false)]
+        confirmed?            (r/atom false)
+        close-start-modal     (fn []
+                                (close-modal)
+                                (dispatch [::events/set ::spec/licenses-accepted? false])
+                                (dispatch [::events/set ::spec/prices-accepted? false])
+                                (reset! confirmed? false))]
     (fn [{:keys [id] :as deployment-set} warn-msg]
       [uix/ModalDanger
        {:on-confirm         #(dispatch [::events/operation
@@ -235,7 +240,7 @@
                               [icons/PlayIcon]
                               (str/capitalize (@tr [:start])))
         :open               @open?
-        :on-close           close-modal
+        :on-close           close-start-modal
         :content            [:div
                              [:h3 (depl-set->modal-content deployment-set)]
                              [EulaPrices]
@@ -245,7 +250,7 @@
                               [ui/MessageContent [ui/Checkbox {:label     warn-msg
                                                                :checked   @confirmed?
                                                                :fitted    true
-                                                               :on-change #(swap! confirmed? not)}]]]]
+                                                               :on-change (ui-callback/checked (partial reset! confirmed?))}]]]]
         :control-confirmed? confirmed?
         :all-confirmed?     (and @eula-prices-accepted? @confirmed?)
         :header             (@tr [:start-deployment-set])
@@ -287,7 +292,12 @@
         validation            (subscribe [::subs/deployment-set-validation])
         open?                 (subscribe [::subs/modal-open? update-modal-id])
         eula-prices-accepted? (subscribe [::subs/eula-prices-accepted?])
-        confirmed?            (r/atom false)]
+        confirmed?            (r/atom false)
+        close-update-modal    (fn []
+                                (close-modal)
+                                (dispatch [::events/set ::spec/licenses-accepted? false])
+                                (dispatch [::events/set ::spec/prices-accepted? false])
+                                (reset! confirmed? false))]
     (fn [{:keys [id] :as deployment-set} warn-msg]
       [uix/ModalDanger
        {:on-confirm         #(dispatch [::events/operation
@@ -300,7 +310,7 @@
                               [icons/RedoIcon]
                               (str/capitalize (@tr [:update])))
         :open               @open?
-        :on-close           close-modal
+        :on-close           close-update-modal
         :content            [:div
                              [:h3 (depl-set->modal-content deployment-set)]
                              [EulaPrices]
@@ -310,7 +320,7 @@
                               [ui/MessageContent [ui/Checkbox {:label     warn-msg
                                                                :checked   @confirmed?
                                                                :fitted    true
-                                                               :on-change #(swap! confirmed? not)}]]]]
+                                                               :on-change (ui-callback/checked (partial reset! confirmed?))}]]]]
         :control-confirmed? confirmed?
         :all-confirmed?     (and @eula-prices-accepted? @confirmed?)
         :header             (@tr [:update-deployment-set])

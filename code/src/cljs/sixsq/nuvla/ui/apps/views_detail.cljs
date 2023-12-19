@@ -142,6 +142,15 @@
       :icon        utils/un-publish-icon
       :button-text (@tr [:un-publish])}]))
 
+(defn DisabledPublishUnPublish [{:keys [mode]}]
+  (let [tr      (subscribe [::i18n-subs/tr])]
+    [ui/Popup
+     {:trigger (r/as-element [ui/MenuItem {:disabled true}
+                              [icons/CircleCheck]
+                              (str/capitalize (@tr [(keyword mode)]))])
+      :basic   true
+      :content (@tr [(keyword (str "save-or-discard-to-" mode))])}]))
+
 (defn deploy-click
   [module-id applications-sets?]
   (dispatch [::main-events/subscription-required-dispatch
@@ -164,7 +173,8 @@
         deploy-disabled? (subscribe [::subs/deploy-disabled?])
         can-publish?     (subscribe [::subs/can-publish?])
         can-unpublish?   (subscribe [::subs/can-unpublish?])
-        save-disabled?   (subscribe [::subs/save-btn-disabled?])]
+        save-disabled?   (subscribe [::subs/save-btn-disabled?])
+        page-changed?    (subscribe [::main-subs/changes-protection?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true}
@@ -214,10 +224,14 @@
           [DeleteButton @module])
 
         (when @can-unpublish?
-          [UnPublishButton @module])
+          (if @page-changed?
+            [DisabledPublishUnPublish {:mode "un-publish"}]
+            [UnPublishButton @module]))
 
         (when @can-publish?
-          [PublishButton @module])]])))
+          (if @page-changed?
+            [DisabledPublishUnPublish {:mode "publish"}]
+            [PublishButton @module]))]])))
 
 
 (defn save-modal
@@ -284,8 +298,7 @@
                     :auto-focus    true
                     :on-change     (ui-callback/input-callback #(reset! local-url %))
                     :on-key-press  (partial utils-forms/on-return-key
-                                            #(dispatch [::events/save-logo-url @local-url]))}]]
-        ]
+                                            #(dispatch [::events/save-logo-url @local-url]))}]]]
 
        [ui/ModalActions
         [uix/Button {:text     "Ok"

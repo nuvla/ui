@@ -432,7 +432,8 @@
                                    (when on-close
                                      (apply on-close args)))
                      :on-unmount (fn []
-                                   (reset! confirmed? (nil? danger-msg))
+                                   (when-not control-confirmed?
+                                     (reset! confirmed? (nil? danger-msg)))
                                    (reset! clicked? false))}
                     (some? open) (assoc :open open))
 

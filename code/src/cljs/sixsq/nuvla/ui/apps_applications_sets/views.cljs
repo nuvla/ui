@@ -352,7 +352,7 @@
           [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:app-version]))]
-        [ui/TableCell [values/AsLink module-content-id :label version-index] " " (apps-utils/up-to-date? version-index @versions-map @is-module-published? @tr)]]
+        [ui/TableCell [values/AsLink @module-content-id :label version-index] " " (apps-utils/up-to-date? version-index @versions-map @is-module-published? @tr)]]
        [apps-views-detail/AuthorVendor]
        [Tags @module]]]]))
 

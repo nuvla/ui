@@ -503,7 +503,7 @@
                  (not (str/blank? create-description)) (assoc :description create-description))]
       {::cimi-api-fx/add
        [:deployment-set body
-        #(dispatch [::routing-events/navigate routes/deployment-sets-details
+        #(dispatch [::routing-events/navigate routes/deployment-groups-details
                     {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
 
 
@@ -539,7 +539,7 @@
             [::cimi-api-fx/add
              [:deployment-set body
               #(do
-                 (dispatch [::routing-events/navigate routes/deployment-sets-details
+                 (dispatch [::routing-events/navigate routes/deployment-groups-details
                             {:uuid (general-utils/id->uuid (:resource-id %))}]))
               :on-error #(dispatch [::set-changes-protection true])]]]})))
 

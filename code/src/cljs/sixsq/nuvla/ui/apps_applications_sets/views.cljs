@@ -305,25 +305,6 @@
                                                       (dispatch [::events/add-apps-set])
                                                       (dispatch [::main-events/changes-protection? true])
                                                       (dispatch [::apps-events/validate-form]))}}))}]])))
-
-
-(defn up-to-date?
-  [v versions published?]
-  (when v
-    (let [tr                     (subscribe [::i18n-subs/tr])
-          last-version           (ffirst versions)
-          last-published-version (apps-utils/latest-published-index versions)]
-      (if published?
-        (if (= v last-published-version)
-          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-published]) ")"]
-          [:span [icons/WarningIcon {:color "orange"}]
-           (str (@tr [:not-up-to-date-published]))])
-        (if (= v last-version)
-          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-          [:span [icons/WarningIcon {:color "orange"}]
-           (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
-
-
 (defn Tags
   [module]
   (let [tr   (subscribe [::i18n-subs/tr])
@@ -343,7 +324,7 @@
         module-content-id    (subscribe [::apps-subs/module-content-id])
         version-index        (apps-utils/find-current-version @versions-map @module-content-id)
         is-module-published? (subscribe [::apps-subs/is-module-published?])
-        {:keys [id created updated name parent-path]} @module]
+        {:keys [id created updated name parent-path content]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -371,7 +352,7 @@
           [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:app-version]))]
-        [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
+        [ui/TableCell [values/AsLink (:id content) :label version-index] " " (apps-utils/up-to-date? version-index @versions-map @is-module-published? @tr)]]
        [apps-views-detail/AuthorVendor]
        [Tags @module]]]]))
 

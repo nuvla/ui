@@ -46,7 +46,8 @@
               {:id        refresh-action-depl-set-id
                :frequency 10000
                :event     [::get-deployment-set
-                           (uuid->depl-set-id uuid)]}]]
+                           (uuid->depl-set-id uuid)
+                           {:force-modules-reload? true}]}]]
             [:dispatch
              [::main-events/action-interval-start
               {:id        refresh-action-deployments-id
@@ -112,8 +113,8 @@
 
 (reg-event-fx
   ::get-application-sets
-  (fn [_ [_ {:keys [id version]}]]
-    {::cimi-api-fx/get [(str id "_" version) #(dispatch [::set-applications-sets %])]}))
+  (fn [_ [_ {:keys [id version]} opts]]
+    {::cimi-api-fx/get [(str id "_" version) #(dispatch [::set-applications-sets % opts])]}))
 
 
 (defn restore-applications
@@ -128,7 +129,8 @@
               (str apps-set-id "_" version)]])
 
 (defn load-module-configurations
-  [db modules-by-id is-controlled-by-apps-set? fx [id {:keys [applications]}]]
+  [db modules-by-id {:keys [is-controlled-by-apps-set? force-modules-reload?]}
+   fx [id {:keys [applications]}]]
   (->> applications
        (map (fn [{module-id :id :keys [version
                                        environmental-variables
@@ -137,9 +139,10 @@
                     loaded-version-no (when loaded-module (get-version-id (map-indexed vector (:versions loaded-module))
                                                                           (-> loaded-module :content :id)))]
                 (when (and (get modules-by-id module-id)
-                           (if is-controlled-by-apps-set?
-                             (not= loaded-version-no version)
-                             (nil? loaded-module)))
+                           (or force-modules-reload?
+                               (if is-controlled-by-apps-set?
+                                 (not= loaded-version-no version)
+                                 (nil? loaded-module))))
                   [:dispatch [::module-plugin/load-module
                               [::spec/apps-sets id]
                               (str module-id "_" version)
@@ -179,7 +182,9 @@
 
 (reg-event-fx
   ::load-apps-sets-response
-  (fn [{{:keys [::spec/module-applications-sets] :as db} :db} [_ {:keys [apps-sets-set total-apps-count apps apps-set-index->modul-id->app]}]]
+  (fn [{{:keys [::spec/module-applications-sets] :as db} :db}
+       [_ {:keys [apps-sets-set total-apps-count apps apps-set-index->modul-id->app]}
+        {:keys [force-modules-reload?]}]]
     (let [modules-by-id     (->> apps (map (juxt :id identity)) (into {}))
           enriched-apps-set (utils/enrich-app apps-sets-set)
           apps-sets         (->> apps-sets-set
@@ -195,7 +200,8 @@
           new-db            (reduce restore-applications
                                     db merged-configs)
           fx                (reduce (partial load-module-configurations db modules-by-id
-                                             (utils/is-controlled-by-apps-set module-applications-sets))
+                                             {:is-controlled-by-apps-set? (utils/is-controlled-by-apps-set module-applications-sets)
+                                              :force-modules-reload?      force-modules-reload?})
                                     [(load-apps-set-configuration (:id enriched-apps-set)
                                                                   (:version enriched-apps-set))]
                                     merged-configs)
@@ -228,7 +234,8 @@
 
 (reg-event-fx
   ::load-apps-sets
-  (fn [{{:keys [::spec/deployment-set ::spec/module-applications-sets]} :db} [_ apps-sets]]
+  (fn [{{:keys [::spec/deployment-set ::spec/module-applications-sets]} :db}
+       [_ apps-sets {:keys [force-modules-reload?]}]]
     (let [app-sets-by-app-set-id (->> deployment-set
                                       :applications-sets
                                       (map (juxt :id (if (utils/is-controlled-by-apps-set module-applications-sets)
@@ -240,29 +247,31 @@
                                   :last   10000}
           callback               #(if (instance? js/Error %)
                                     (cimi-api-fx/default-error-message % "load application bouquets failed")
-                                    (dispatch [::load-apps-sets-response {:apps-sets-set    apps-sets
-                                                                          :total-apps-count (count apps-urls)
-                                                                          :apps             (:resources %)
-                                                                          :apps-set-index->modul-id->app
-                                                                          (->> (app-sets-by-app-set-id
-                                                                                 (:id apps-sets))
-                                                                               :overwrites
-                                                                               (map :applications)
-                                                                               (map-indexed (fn [idx apps]
-                                                                                              [idx (zipmap
-                                                                                                     (map :id apps)
-                                                                                                     apps)]))
-                                                                               (into {}))}]))]
+                                    (dispatch [::load-apps-sets-response
+                                               {:apps-sets-set    apps-sets
+                                                :total-apps-count (count apps-urls)
+                                                :apps             (:resources %)
+                                                :apps-set-index->modul-id->app
+                                                (->> (app-sets-by-app-set-id
+                                                       (:id apps-sets))
+                                                     :overwrites
+                                                     (map :applications)
+                                                     (map-indexed (fn [idx apps]
+                                                                    [idx (zipmap
+                                                                           (map :id apps)
+                                                                           apps)]))
+                                                     (into {}))}
+                                               {:force-modules-reload? force-modules-reload?}]))]
       (if (seq apps-urls)
         {::cimi-api-fx/search [:module params callback]}
         (callback {:resources []})))))
 
 (reg-event-fx
   ::set-applications-sets
-  (fn [{:keys [db]} [_ {:keys [subtype] :as apps-sets}]]
+  (fn [{:keys [db]} [_ {:keys [subtype] :as apps-sets} opts]]
     (if (apps-utils/applications-sets? subtype)
       {:db (assoc db ::spec/module-applications-sets (utils/enrich-app apps-sets))
-       :fx [[:dispatch [::load-apps-sets apps-sets]]]}
+       :fx [[:dispatch [::load-apps-sets apps-sets opts]]]}
       {:dispatch [::messages-events/add
                   {:header  "Wrong module subtype"
                    :content (str "Selected module subtype:" subtype)
@@ -270,7 +279,7 @@
 
 (reg-event-fx
   ::set-deployment-set
-  (fn [{:keys [db]} [_ deployment-set fx]]
+  (fn [{:keys [db]} [_ deployment-set fx {:keys [force-modules-reload?]}]]
     (let [deployment-set-edited (get db ::spec/deployment-set-edited)]
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
                      ::spec/deployment-set deployment-set
@@ -284,7 +293,7 @@
             (when-let [apps-set (if (-> deployment-set-edited :applications-sets)
                                   (-> deployment-set-edited :applications-sets first)
                                   (-> deployment-set :applications-sets first))]
-              [:dispatch [::get-application-sets apps-set]])]})))
+              [:dispatch [::get-application-sets apps-set {:force-modules-reload? force-modules-reload?}]])]})))
 
 (reg-event-fx
   ::operation
@@ -314,8 +323,8 @@
 
 (reg-event-fx
   ::get-deployment-set
-  (fn [_ [_ id fx]]
-    {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % fx])
+  (fn [_ [_ id opts]]
+    {::cimi-api-fx/get [id #(dispatch [::set-deployment-set % nil opts])
                         :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::job-events/get-jobs id]]]}))
 

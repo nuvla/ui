@@ -17,6 +17,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
             [sixsq.nuvla.ui.routing.events :as routing-events]
@@ -644,7 +645,9 @@
            :color (when @nuvlabox (vc/status->color (:online @nuvlabox)))]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:app-version]))]
-         [ui/TableCell [values/AsLink (get-in module [:content :id]) :label @version] (up-to-date? @version @versions)] ]
+         [ui/TableCell
+          [module-plugin/LinkToAppView {:path (:path module) :version-id @version} @version]
+          (up-to-date? @version @versions)] ]
         (when deployment-set
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:deployment-group]))]

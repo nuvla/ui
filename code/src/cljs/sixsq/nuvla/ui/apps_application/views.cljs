@@ -248,7 +248,7 @@
         module-content-id    (subscribe [::apps-subs/module-content-id])
         version-index        (apps-utils/find-current-version @versions-map @module-content-id)
         is-module-published? (subscribe [::apps-subs/is-module-published?])
-        {:keys [id created updated name parent-path price content]} @module]
+        {:keys [id created updated name parent-path price]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -276,7 +276,7 @@
           [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:app-version]))]
-        [ui/TableCell [values/AsLink (:id content) :label version-index] " " (apps-utils/up-to-date? version-index @versions-map @is-module-published? @tr)]]
+        [ui/TableCell [values/AsLink module-content-id :label version-index] " " (apps-utils/up-to-date? version-index @versions-map @is-module-published? @tr)]]
        [apps-views-detail/AuthorVendor]
        (when (:vendor-email price)
          [ui/TableRow

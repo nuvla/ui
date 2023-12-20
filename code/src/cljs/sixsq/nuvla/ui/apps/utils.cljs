@@ -478,9 +478,9 @@ For more information on how to format your app description using Markdown syntax
         (if (= v last-published-version)
           [:span {:style {:margin-left 5}}[icons/CheckIconFull {:color "green"}] " (" (tr [:up-to-date-published]) ")"]
           [:span {:style {:margin-left 5}} [icons/WarningIcon {:color "orange"}]
-           (str (@tr [:not-up-to-date-published]))])
+           (str (tr [:not-up-to-date-published]))])
         (if (= v last-version)
           [:span {:style {:margin-left 5}} [icons/CheckIconFull {:color "green"}] " (" (tr [:up-to-date-latest]) ")"]
           [:span {:style {:margin-left 5}} [icons/WarningIcon {:color "orange"}]
-           (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
+           (str " (" (tr [:behind-version-1]) " " (- last-version v) " " (tr [:behind-version-2]) ")")])))))
 

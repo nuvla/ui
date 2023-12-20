@@ -643,7 +643,7 @@
           [deployments-utils/CloudNuvlaEdgeLink @deployment
            :color (when @nuvlabox (vc/status->color (:online @nuvlabox)))]]]
         [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:version-number]))]
+         [ui/TableCell (str/capitalize (@tr [:app-version]))]
          [ui/TableCell [values/AsLink (get-in module [:content :id]) :label @version] (up-to-date? @version @versions)] ]
         (when deployment-set
           [ui/TableRow

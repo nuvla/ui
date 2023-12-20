@@ -293,7 +293,7 @@
           [ui/TableCell (str/capitalize (@tr [:id]))]
           [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:version-number]))]
+        [ui/TableCell (str/capitalize (@tr [:app-version]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
        [apps-views-detail/AuthorVendor]
        (when (:vendor-email price)

@@ -66,7 +66,7 @@
                  :size     :small
                  :src      "/ui/images/by_sixsq_mark_red_on_transparent_300px.png"}]]
      [ui/ListSA
-      [ui/ListItem (@tr [:version-number]) ": " [main-components/SpanVersion]]
+      [ui/ListItem (@tr [:app-version]) ": " [main-components/SpanVersion]]
       [ui/ListItem [:a {:href   "https://sixsq.com/nuvla"
                         :target "_blank"}
                     (str/capitalize (@tr [:product-info]))]]

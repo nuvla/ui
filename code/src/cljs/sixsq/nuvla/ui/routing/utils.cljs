@@ -99,7 +99,8 @@
 (def alias->canonical {"nuvlabox"        "edges"
                        "edge"            "edges"
                        "infrastructures" "clouds"
-                       "deployment"      "deployments"})
+                       "deployment"      "deployments"
+                       "deployment-set"  "deployment-groups"})
 
 (defn split-path-alias
   [path]

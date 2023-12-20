@@ -441,7 +441,7 @@
                    :refresh-interval-ms 1000
                    :on-complete
                    #(do
-                      (dispatch [::routing-events/navigate routes/deployment-sets])
+                      (dispatch [::routing-events/navigate routes/deployment-groups])
                       (when-not (= "SUCCESS" (:state %))
                         (cimi-api-fx/default-error-message
                           %

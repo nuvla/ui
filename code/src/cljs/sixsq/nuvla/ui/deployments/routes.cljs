@@ -35,7 +35,7 @@
 (defn DeploymentsTabs
   []
   (let [tr         (subscribe [::i18n-subs/tr])
-        route-name (subscribe [::routing-subs/route-name])]
+        route-name (subscribe [::routing-subs/canonical-route-name])]
     [:div {:style {:border-bottom "2px solid rgba(34,36,38,.15)"
                    :min-height    "2.85714286em"
                    :display       :flex}}
@@ -50,7 +50,7 @@
 
 (defn DeploymentsMainContent
   []
-  (let [route-name (subscribe [::routing-subs/route-name])
+  (let [route-name (subscribe [::routing-subs/canonical-route-name])
         uuid       (subscribe [::routing-subs/path-param :uuid])]
     (fn []
       (case @route-name
@@ -64,7 +64,6 @@
           (dispatch [::dsd-events/init]))
 
         nil)
-      (prn :route-name @route-name)
       [:<>
        (when-not (= @route-name routes/deployment-groups-details)
          [DeploymentsTabs])

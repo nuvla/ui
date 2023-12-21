@@ -89,6 +89,18 @@
              :view #'DeploymentDetails}]])
         (utils/canonical->all-page-names "deployments")))
 
+(def deployment-group-routes
+  (mapv (fn [page-alias]
+          [page-alias
+           {:name     (create-route-name page-alias)
+            :view     #'deployment-sets-view
+            :dict-key :deployment-groups}
+           [""]
+           ["/" (create-route-name page-alias "-slashed")]
+           ["/:uuid"
+            {:name (create-route-name page-alias "-details")
+             :view #'deployment-sets-details-view}]])
+        (utils/canonical->all-page-names "deployment-groups")))
 
 (def r-routes
   [""
@@ -102,6 +114,7 @@
     edges-routes
     cloud-routes
     deployment-routes
+    deployment-group-routes
     ["sign-up"
      {:name      ::routes/sign-up
       :view      #'SessionPageWelcomeRedirect
@@ -162,16 +175,6 @@
     ["data/*uuid"
      {:name ::routes/data-details
       :view #'data-set-views/DataSet}]
-    ["deployment-groups"
-     {:name      ::routes/deployment-groups
-      :view      #'deployment-sets-view
-      :link-text "deployment-groups"}
-     [""]
-     ["/" ::routes/deployment-groups-slashed]]
-    ["deployment-groups/:uuid"
-     {:name      ::routes/deployment-groups-details
-      :view      #'deployment-sets-details-view
-      :link-text "deployment-groups"}]
     ["documentation"
      {:name      ::routes/documentation
       :view      #'documentation

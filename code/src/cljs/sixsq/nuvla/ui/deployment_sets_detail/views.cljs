@@ -58,14 +58,19 @@
 (defn ops-status-pending-str [tr-fn {:keys [deployments-to-add
                                             deployments-to-update
                                             deployments-to-remove] :as _ops-status}]
-  (str/join ", "
-            (remove nil?
-                    [(some-> deployments-to-add count
-                             (str " " (tr-fn [:deployments-to-add])))
-                     (some-> deployments-to-update count
-                             (str " " (tr-fn [:deployments-to-update])))
-                     (some-> deployments-to-remove count
-                             (str " " (tr-fn [:deployments-to-remove])))])))
+  (let [deployments->strings (->> [(some-> deployments-to-add count
+                                           (str " " (tr-fn [:deployments-to-add])))
+                                   (some-> deployments-to-update count
+                                           (str " " (tr-fn [:deployments-to-update])))
+                                   (some-> deployments-to-remove count
+                                           (str " " (tr-fn [:deployments-to-remove])))]
+                                  (remove nil?))
+        trim-deployment-string (fn [s] (when s (str/replace s #"deployments" "")))]
+    (->> (rest deployments->strings)                        ;; take all strings except the first one
+         (mapv trim-deployment-string)                      ;; remove the word deployments
+         (concat [(first deployments->strings)])            ;; add back the first string
+         (remove nil?)
+         (str/join ", "))))
 
 (defn- create-stop-wrng-msg
   [tr-fn {:keys [aggregations] :as _deployments-stats}]

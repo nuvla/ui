@@ -156,12 +156,18 @@
   [{:keys [status] :as ops-status}]
   (let [tr (subscribe [::i18n-subs/tr])]
     (if (= status "OK")
-      [:div
-       [ui/Icon {:name :circle :color (detail/ops-status->color status)}]
-       (@tr [:everything-is-up-to-date])]
-      [:div
-       [ui/Icon {:name :circle :color (detail/ops-status->color status)}]
-       (detail/ops-status-pending-str @tr ops-status)])))
+      [:div {:style {:height 35}}
+       [ui/Icon {:name :circle :color (detail/ops-status->color status)
+                 :style {:margin-right 5}}]
+        (@tr [:everything-is-up-to-date])]
+      [:div {:style {:display "flex"
+                     :height 35}}
+       [ui/Icon {:name :circle :color (detail/ops-status->color status)
+                 :style {:margin-right 5}}]
+       [:div (detail/ops-status-pending-str @tr {:deployments-to-add  (repeatedly 500 #(rand-int 11))
+                                                 :deployments-to-remove (repeatedly 500 #(rand-int 11))
+                                                 :deployments-to-update (repeatedly 500 #(rand-int 11))#_ops-status}
+                                            )]])))
 
 (defn DeploymentSetCard
   [{:keys [id updated name state description tags operational-status] :as  deployment-set}]
@@ -169,6 +175,7 @@
         locale (subscribe [::i18n-subs/locale])
         href   (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid id)})]
     ^{:key id}
+
     [uix/Card
      {:href        href
       :header      [:<>

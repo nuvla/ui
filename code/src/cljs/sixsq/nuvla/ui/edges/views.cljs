@@ -812,7 +812,7 @@
   (let [id (random-uuid)]
     (dispatch [::events/bulk-deploy-dynamic id])
     (dispatch [::routing-events/navigate
-               routes/deployment-sets-details
+               routes/deployment-groups-details
                {:uuid :create}
                {depl-group-subs/creation-temp-id-key id}])))
 
@@ -821,7 +821,7 @@
   (let [id (random-uuid)]
     (dispatch [::events/bulk-deploy-static])
     (dispatch [::routing-events/navigate
-               routes/deployment-sets-details
+               routes/deployment-groups-details
                {:uuid :create}
                {depl-group-subs/creation-temp-id-key id}])))
 

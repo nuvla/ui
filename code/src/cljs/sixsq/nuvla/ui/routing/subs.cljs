@@ -3,7 +3,8 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.spec :as spec]
-            [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]))
+            [sixsq.nuvla.ui.routing.utils :refer [get-query-param
+                                                  ->canonical-route]]))
 
 (reg-sub
   ::nav-path
@@ -20,7 +21,7 @@
 
 (reg-sub
   ::nav-url-active?
-  :<- [::route-name]
+  :<- [::canonical-route-name]
   :<- [::nav-path-first]
   (fn [[route-name nav-path-first] [_ route-names url]]
     (boolean
@@ -39,6 +40,11 @@
   ::route-name
   :<- [::current-route]
   :-> (comp :name :data))
+
+(reg-sub
+  ::canonical-route-name
+  :<- [::route-name]
+  :-> ->canonical-route)
 
 (reg-sub
   ::path-params

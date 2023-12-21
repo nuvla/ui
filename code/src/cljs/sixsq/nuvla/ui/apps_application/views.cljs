@@ -278,7 +278,7 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:app-version]))]
         [ui/TableCell
-         [module-plugin/LinkToAppView {:path path :version-id version-index} version-index]
+         version-index
          " "
          (apps-utils/up-to-date? version-index @versions-map @is-module-published? @tr)]]
        [apps-views-detail/AuthorVendor]

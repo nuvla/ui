@@ -1,7 +1,7 @@
 (def parent-version "6.7.12")
 (def sixsq-nuvla-api-version "2.0.11")
 
-(defproject sixsq.nuvla.ui/code "2.36.1"
+(defproject sixsq.nuvla.ui/code "2.36.2-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 

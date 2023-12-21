@@ -618,6 +618,7 @@
                                                             (module-plugin/db-module db [::spec/apps-sets i] id)
                                                             ) applications)))
                                                  (apply concat)
+                                                 (map utils/enrich-app)
                                                  vec)))))))
 
 (reg-event-db

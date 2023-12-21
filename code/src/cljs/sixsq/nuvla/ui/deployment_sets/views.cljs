@@ -164,10 +164,7 @@
                      :height 35}}
        [ui/Icon {:name :circle :color (detail/ops-status->color status)
                  :style {:margin-right 5}}]
-       [:div (detail/ops-status-pending-str @tr {:deployments-to-add  (repeatedly 500 #(rand-int 11))
-                                                 :deployments-to-remove (repeatedly 500 #(rand-int 11))
-                                                 :deployments-to-update (repeatedly 500 #(rand-int 11))#_ops-status}
-                                            )]])))
+       [:div (detail/ops-status-pending-str @tr ops-status)]])))
 
 (defn DeploymentSetCard
   [{:keys [id updated name state description tags operational-status] :as  deployment-set}]

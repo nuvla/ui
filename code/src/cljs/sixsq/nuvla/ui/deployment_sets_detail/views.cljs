@@ -55,7 +55,7 @@
           (str apps-count " " (str/lower-case (tr-fn (if (> apps-count 1) [:apps] [:app]))))
           (str edges-count " " (str/lower-case (tr-fn (if (> edges-count 1) [:edges] [:edge]))))]))
 
-(defn- ops-status-pending-str [tr-fn {:keys [deployments-to-add
+(defn ops-status-pending-str [tr-fn {:keys [deployments-to-add
                                              deployments-to-update
                                              deployments-to-remove] :as _ops-status}]
   (str/join ", "

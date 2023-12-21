@@ -152,8 +152,19 @@
            ^{:key id}
            [DeploymentSetRow deployment-set]))]]]))
 
+(defn DeploymentSetStatus
+  [{:keys [status] :as ops-status}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (if (= status "OK")
+      [:div
+       [ui/Icon {:name :circle :color (detail/ops-status->color status)}]
+       (@tr [:everything-is-up-to-date])]
+      [:div
+       [ui/Icon {:name :circle :color (detail/ops-status->color status)}]
+       (detail/ops-status-pending-str @tr ops-status)])))
+
 (defn DeploymentSetCard
-  [{:keys [id created name state description tags] :as _deployment-set}]
+  [{:keys [id updated name state description tags operational-status] :as  deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
         href   (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid id)})]
@@ -163,8 +174,9 @@
       :header      [:<>
                     [icons/Icon {:name (state->icon state)}]
                     (or name id)]
-      :meta        (str (@tr [:created]) " " (time/parse-ago created @locale))
+      :meta        (str (@tr [:updated]) " " (time/parse-ago updated @locale))
       :state       state
+      :extra       [DeploymentSetStatus operational-status]
       :description (when-not (str/blank? description) description)
       :tags        tags}]))
 

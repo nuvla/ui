@@ -152,7 +152,7 @@
            ^{:key id}
            [DeploymentSetRow deployment-set]))]]]))
 
-(defn DeploymentSetStatus
+(defn OperationalStatus
   [{:keys [status] :as ops-status}]
   (let [tr (subscribe [::i18n-subs/tr])]
     (if (= status "OK")
@@ -176,7 +176,7 @@
                     (or name id)]
       :meta        (str (@tr [:updated]) " " (time/parse-ago updated @locale))
       :state       state
-      :extra       [DeploymentSetStatus operational-status]
+      :extra       [OperationalStatus operational-status]
       :description (when-not (str/blank? description) description)
       :tags        tags}]))
 

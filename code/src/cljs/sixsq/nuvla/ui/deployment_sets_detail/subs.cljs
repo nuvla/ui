@@ -473,18 +473,25 @@
         (utils/unsaved-changes? stored edited))))
 
 (reg-sub
+  ::persist-in-progress?
+  :-> ::spec/persist-in-progress?)
+
+(reg-sub
   ::save-enabled?
   :<- [::deployment-set-edited]
   :<- [::edges-in-deployment-group-response]
   :<- [::apps-creation]
   :<- [::applications-sets]
   :<- [::unsaved-changes?]
-  (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes?] [_ creating?]]
-    (if creating?
-      (and (not (str/blank? (:name deployment-set-edited)))
-           (seq edges)
-           (seq apps-creation))
-      unsaved-changes?)))
+  :<- [::persist-in-progress?]
+  (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes? persist-in-progress?]
+       [_ creating?]]
+    (and (not persist-in-progress?)
+         (if creating?
+           (and (not (str/blank? (:name deployment-set-edited)))
+                (seq edges)
+                (seq apps-creation))
+           unsaved-changes?))))
 
 (reg-sub
   ::operation-enabled?

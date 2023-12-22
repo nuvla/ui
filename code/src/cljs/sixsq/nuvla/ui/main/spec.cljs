@@ -83,14 +83,13 @@
                                                           :order      20}
                                        "deployments"     {:key        routes/deployments
                                                           :route-names #{routes/deployments
-                                                                         routes/deployment-sets-details
                                                                          routes/deployment-groups-details
-                                                                         routes/deployment-sets}
-                                                          :label-kw   :deployments
-                                                          :name       "deployments"
-                                                          :icon       icons/i-rocket
+                                                                         routes/deployment-groups}
+                                                          :label-kw :deployments
+                                                          :name "deployments"
+                                                          :icon icons/i-rocket
                                                           :protected? true
-                                                          :order      30}
+                                                          :order 30}
                                        "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"
@@ -123,10 +122,10 @@
                                                           :icon       icons/i-code
                                                           :protected? false
                                                           :order      90}
-                                       "ui-demo"         {:key        routes/ui-demo
-                                                          :label-kw   :ui-demo
-                                                          :icon       icons/i-world
+                                       "ui-demo"         {:key             routes/ui-demo
+                                                          :label-kw        :ui-demo
+                                                          :icon            icons/i-world
                                                           :feature-flag-kw about-utils/feature-internal-ui-demo-page
-                                                          :order 100}}
+                                                          :order           100}}
                ::open-modal           nil
                ::stripe               nil})

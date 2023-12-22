@@ -320,9 +320,10 @@
                       (-> element :acl nil?))]
     (fn [{:keys [tags] :as _element} on-change-fn]
       (if @editing?
-        [:div {:style {:align-items "center"}}
+        [:div {:style {:display "flex" :align-items "center"}}
          [TagsDropdown {:tags tags :on-change-fn on-change-fn}]
          [ui/Button {:icon     "check"
+                     :style    {:margin-left 10}
                      :on-click #(reset! editing? false)}]]
         [ui/LabelGroup {:size  "tiny"
                         :color "teal"

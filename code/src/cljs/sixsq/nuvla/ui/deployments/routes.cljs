@@ -35,7 +35,7 @@
 (defn DeploymentsTabs
   []
   (let [tr         (subscribe [::i18n-subs/tr])
-        route-name (subscribe [::routing-subs/route-name])]
+        route-name (subscribe [::routing-subs/canonical-route-name])]
     [:div {:style {:border-bottom "2px solid rgba(34,36,38,.15)"
                    :min-height    "2.85714286em"
                    :display       :flex}}
@@ -44,42 +44,35 @@
                          :active? (= @route-name routes/deployments)
                          :icon    [icons/RocketIcon]}]
      [DeploymentTabItem {:label   (str/capitalize (@tr [:deployment-groups]))
-                         :href    (routing-utils/name->href routes/deployment-sets)
-                         :active? (boolean (#{routes/deployment-set
-                                              routes/deployment-sets}
-                                            @route-name))
+                         :href    (routing-utils/name->href routes/deployment-groups)
+                         :active? (= @route-name routes/deployment-groups)
                          :icon    [icons/BullseyeIcon]}]]))
 
 (defn DeploymentsMainContent
   []
-  (let [route-name          (subscribe [::routing-subs/route-name])
-        uuid                (subscribe [::routing-subs/path-param :uuid])]
+  (let [route-name (subscribe [::routing-subs/canonical-route-name])
+        uuid       (subscribe [::routing-subs/path-param :uuid])]
     (fn []
       (case @route-name
         ::routes/deployments (dispatch [::events/init])
 
-        (::routes/deployment-set ::routes/deployment-sets) (dispatch [::deployment-sets-events/refresh])
+        ::routes/deployment-groups (dispatch [::deployment-sets-events/refresh])
 
-        (::routes/deployment-groups-details ::routes/deployment-sets-details)
+        ::routes/deployment-groups-details
         (if (= "create" @uuid)
           (dispatch [::dsd-events/init-create])
           (dispatch [::dsd-events/init]))
 
         nil)
       [:<>
-       (when-not (#{routes/deployment-groups-details
-                    routes/deployment-sets-details}
-                  @route-name)
+       (when-not (= @route-name routes/deployment-groups-details)
          [DeploymentsTabs])
        [components/LoadingPage {}
         (case @route-name
           ::routes/deployments
           [DeploymentsView]
 
-          (::routes/deployment-set
-            ::routes/deployment-sets
-            ::routes/deployment-groups-details
-            ::routes/deployment-sets-details)
+          (::routes/deployment-groups ::routes/deployment-groups-details)
           [deployment-sets-views]
 
           [UnknownResource])]])))

@@ -748,8 +748,8 @@
 
 (defn NuvlaboxRow
   [{{:keys [id name description created state tags online
-            refresh-interval version created-by owner] :as nuvlabox} :row-data
-    field-key                                                        :field-key}]
+            refresh-interval version created-by owner nuvlabox-engine-version] :as nuvlabox} :row-data
+    field-key                                                                                :field-key}]
   (let [uuid                  (general-utils/id->uuid id)
         locale                @(subscribe [::i18n-subs/locale])
         last-heartbeat-moment @(subscribe [::subs/last-online nuvlabox])
@@ -768,7 +768,7 @@
                                :last-online
                                (when last-heartbeat-moment
                                  [uix/TimeAgo last-heartbeat-moment]),
-                               :version          (or engine-version (str version ".y.z"))}]
+                               :version          (or engine-version nuvlabox-engine-version (str version ".y.z"))}]
     (field-key->table-cell field-key)))
 
 (defn Pagination
@@ -812,7 +812,7 @@
   (let [id (random-uuid)]
     (dispatch [::events/bulk-deploy-dynamic id])
     (dispatch [::routing-events/navigate
-               routes/deployment-sets-details
+               routes/deployment-groups-details
                {:uuid :create}
                {depl-group-subs/creation-temp-id-key id}])))
 
@@ -821,7 +821,7 @@
   (let [id (random-uuid)]
     (dispatch [::events/bulk-deploy-static])
     (dispatch [::routing-events/navigate
-               routes/deployment-sets-details
+               routes/deployment-groups-details
                {:uuid :create}
                {depl-group-subs/creation-temp-id-key id}])))
 

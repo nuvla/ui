@@ -24,7 +24,7 @@
 
 (defn ns-name->ui-key
   [ns-name]
-  (or ({"deployment-sets" "deployment-groups"
+  (or ({"deployment-sets"        "deployment-groups"
         "deployment-sets-detail" "deployment-groups-detail"} ns-name)
       ns-name))
 
@@ -96,10 +96,22 @@
   (-> path (str/replace-first config/base-path "")
       (str/replace #"^/|/$" "")))
 
-(def alias->canonical {"nuvlabox"        "edges"
-                       "edge"            "edges"
-                       "infrastructures" "clouds"
-                       "deployment"      "deployments"})
+(def alias->canonical {"nuvlabox"               "edges"
+                       "edge"                   "edges"
+                       "infrastructures"        "clouds"
+                       "deployment"             "deployments"
+                       "deployment-set"         "deployment-groups"
+                       "deployment-set-details" "deployment-groups-details"})
+
+(defn ->canonical-route-name
+  [route-name]
+  (or (alias->canonical route-name) route-name))
+
+(defn ->canonical-route
+  [route]
+  (let [route-name-ns (namespace route)
+        route-name    (name route)]
+    (keyword route-name-ns (->canonical-route-name route-name))))
 
 (defn split-path-alias
   [path]

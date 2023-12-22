@@ -255,7 +255,8 @@
                  :raised    true}
      [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:summary]))]
      [ui/Table {:basic  "very"
-                :padded false}
+                :padded false
+                :fixed true}
       [ui/TableBody
        (when name
          [ui/TableRow
@@ -423,7 +424,8 @@
 
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
-        active-tab     (sub-apps-tab)]
+        active-tab     (sub-apps-tab)
+        editable?   (subscribe [::apps-subs/editable?])]
     @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
@@ -435,7 +437,8 @@
                                          :style      {:padding-bottom 8}}
                            (@tr [:grant-nuvla-access]) ff/nbsp
                            [uix/HelpPopup (@tr [:module-requires-user-rights])]]
-                          [ui/TableCell [RequiresUserRightsCheckbox]]]]
+                          [ui/TableCell (when @editable? {:style {:padding-left apps-views-detail/edit-cell-left-padding}})
+                           [RequiresUserRightsCheckbox]]]]
       :validation-event ::apps-events/set-details-validation-error}]))
 
 

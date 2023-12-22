@@ -17,11 +17,12 @@
 
 (defn generate-version
   {:shadow.build/stage :configure}
-  [{::build/keys [config] :as build-state} target]
+  [{::build/keys [config mode] :as build-state} target]
   (io/make-parents target)
   (let [release-version (:release-version config)
         snapshot?       (str/ends-with? release-version "SNAPSHOT")
-        version         (if snapshot?
+        dev?            (= mode :dev)
+        version         (if (and snapshot? (not dev?))
                           (str release-version "-" (git-commit-short-id))
                           release-version)]
     (spit (io/file target) version))

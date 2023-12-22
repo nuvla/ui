@@ -17,6 +17,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -229,24 +230,6 @@
                    [DockerComposeValidationPopup @validate-dc])]
          :default-open true]))))
 
-
-(defn up-to-date?
-  [v versions published?]
-  (when v
-    (let [tr                     (subscribe [::i18n-subs/tr])
-          last-version           (ffirst versions)
-          last-published-version (apps-utils/latest-published-index versions)]
-      (if published?
-        (if (= v last-published-version)
-          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-published]) ")"]
-          [:span [icons/WarningIcon {:color "orange"}]
-           (str (@tr [:not-up-to-date-published]))])
-        (if (= v last-version)
-          [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-          [:span [icons/WarningIcon {:color "orange"}]
-           (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
-
-
 (defn Tags
   [module]
   (let [tr   (subscribe [::i18n-subs/tr])
@@ -266,7 +249,7 @@
         module-content-id    (subscribe [::apps-subs/module-content-id])
         version-index        (apps-utils/find-current-version @versions-map @module-content-id)
         is-module-published? (subscribe [::apps-subs/is-module-published?])
-        {:keys [id created updated name parent-path price]} @module]
+        {:keys [id created updated name parent-path price path]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -294,8 +277,11 @@
           [ui/TableCell (str/capitalize (@tr [:id]))]
           [ui/TableCell [values/AsLink id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:version-number]))]
-        [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
+        [ui/TableCell (str/capitalize (@tr [:app-version]))]
+        [ui/TableCell
+         version-index
+         " "
+         (apps-utils/up-to-date? version-index @versions-map @is-module-published? @tr)]]
        [apps-views-detail/AuthorVendor]
        (when (:vendor-email price)
          [ui/TableRow

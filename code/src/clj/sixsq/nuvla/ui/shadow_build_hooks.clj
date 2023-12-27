@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.shadow-build-hooks
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as sh]
+            [clojure.string :as str]
             [shadow.build :as build]))
 
 (defn copy-assets
@@ -10,9 +11,19 @@
     (sh/sh "cp" "-r" source-path target-path))
   build-state)
 
+(defn- git-commit-short-id
+  []
+  (str/trim-newline (:out (sh/sh "git" "rev-parse" "--short" "HEAD"))))
+
 (defn generate-version
   {:shadow.build/stage :configure}
-  [{::build/keys [config] :as build-state} target]
+  [{::build/keys [config mode] :as build-state} target]
   (io/make-parents target)
-  (spit (io/file target) (:release-version config))
+  (let [release-version (:release-version config)
+        snapshot?       (str/ends-with? release-version "SNAPSHOT")
+        dev?            (= mode :dev)
+        version         (if (and snapshot? (not dev?))
+                          (str release-version "-" (git-commit-short-id))
+                          release-version)]
+    (spit (io/file target) version))
   build-state)

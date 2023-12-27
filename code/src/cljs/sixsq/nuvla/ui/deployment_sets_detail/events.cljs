@@ -377,30 +377,34 @@
 
 (reg-event-fx
   ::persist!
-  (fn [_ [_ {:keys [deployment-set success-msg on-success]}]]
+  (fn [{db :db} [_ {:keys [deployment-set success-msg on-success]}]]
     (let [resource-id (:id deployment-set)]
-      {::cimi-api-fx/edit
+      {:db (assoc db ::spec/persist-in-progress? true)
+       ::cimi-api-fx/edit
        [resource-id deployment-set
-        #(if (instance? js/Error %)
-           (let [{:keys [status message]} (response/parse-ex-info %)]
-             (dispatch [::messages-events/add
-                        {:header  (cond-> (str "error editing " resource-id)
-                                          status (str " (" status ")"))
-                         :content message
-                         :type    :error}]))
-           (do
-             (when success-msg
-               (dispatch [::messages-events/add
-                          {:header  success-msg
-                           :content success-msg
-                           :type    :success}]))
-             (dispatch [::set-deployment-set-edited %])
-             (dispatch [::set-apps-edited false])
-             (dispatch [::set-fleet-filter-edited false])
-             (dispatch [::set-deployment-set %])
-             (dispatch [::set-changes-protection false])
-             (dispatch [::disable-form-validation])
-             (when on-success (on-success))))]})))
+        (fn [response]
+          (dispatch [::set ::spec/persist-in-progress? false])
+          (if (instance? js/Error response)
+            (let [{:keys [status message]} (response/parse-ex-info response)]
+              (dispatch [::set ::spec/persist-in-progress? false])
+              (dispatch [::messages-events/add
+                         {:header  (cond-> (str "error editing " resource-id)
+                                           status (str " (" status ")"))
+                          :content message
+                          :type    :error}]))
+            (do
+              (when success-msg
+                (dispatch [::messages-events/add
+                           {:header  success-msg
+                            :content success-msg
+                            :type    :success}]))
+              (dispatch [::set-deployment-set-edited response])
+              (dispatch [::set-apps-edited false])
+              (dispatch [::set-fleet-filter-edited false])
+              (dispatch [::set-deployment-set response])
+              (dispatch [::set-changes-protection false])
+              (dispatch [::disable-form-validation])
+              (when on-success (on-success)))))]})))
 
 (reg-event-fx
   ::recompute-fleet
@@ -450,7 +454,7 @@
                    :refresh-interval-ms 1000
                    :on-complete
                    #(do
-                      (dispatch [::routing-events/navigate routes/deployment-sets])
+                      (dispatch [::routing-events/navigate routes/deployment-groups])
                       (when-not (= "SUCCESS" (:state %))
                         (cimi-api-fx/default-error-message
                           %
@@ -512,7 +516,7 @@
                  (not (str/blank? create-description)) (assoc :description create-description))]
       {::cimi-api-fx/add
        [:deployment-set body
-        #(dispatch [::routing-events/navigate routes/deployment-sets-details
+        #(dispatch [::routing-events/navigate routes/deployment-groups-details
                     {:uuid (general-utils/id->uuid (:resource-id %))}])]})))
 
 
@@ -544,13 +548,18 @@
     (let [body (if is-controlled-by-apps-set?
                  (apps-set-creation-body db)
                  (single-apps-creation-body db))]
-      {:fx [[:dispatch [::set-changes-protection false]]
+      {:db (assoc db ::spec/persist-in-progress? true)
+       :fx [[:dispatch [::set-changes-protection false]]
             [::cimi-api-fx/add
              [:deployment-set body
               #(do
-                 (dispatch [::routing-events/navigate routes/deployment-sets-details
+                 ;; in case of success we do not set back the persist-in-progress? to false
+                 ;; as we navigate away from the page and we don't want to re-enable the save button.
+                 (dispatch [::routing-events/navigate routes/deployment-groups-details
                             {:uuid (general-utils/id->uuid (:resource-id %))}]))
-              :on-error #(dispatch [::set-changes-protection true])]]]})))
+              :on-error (fn []
+                          (dispatch [::set-changes-protection true])
+                          (dispatch [::set ::spec/persist-in-progress? false]))]]]})))
 
 (defn overwritten-app-version
   [deployment-set app]
@@ -590,7 +599,8 @@
 
 (reg-event-fx
   ::do-edit
-  (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited? ::spec/deployment-set-edited] :as db} :db} [_ {:keys [deployment-set success-msg]}]]
+  (fn [{{:keys [current-route ::spec/edges ::spec/apps-edited? ::spec/deployment-set-edited] :as db} :db}
+       [_ {:keys [deployment-set success-msg]}]]
     (let [apps-path    (subs/create-apps-creation-db-path current-route)
           apps         (get-in db apps-path)
           fleet-filter (get-in deployment-set-edited subs/fleet-filter-path)
@@ -618,6 +628,7 @@
                                                             (module-plugin/db-module db [::spec/apps-sets i] id)
                                                             ) applications)))
                                                  (apply concat)
+                                                 (map utils/enrich-app)
                                                  vec)))))))
 
 (reg-event-db

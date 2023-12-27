@@ -17,6 +17,7 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.resource-log.views :as log-views]
             [sixsq.nuvla.ui.routing.events :as routing-events]
@@ -449,8 +450,8 @@
     (let [tr           (subscribe [::i18n-subs/tr])
           last-version (ffirst versions)]
       (if (= v last-version)
-        [:span [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-        [:span [icons/WarningIcon {:color "orange"}]
+        [:span {:style {:margin-left 5}} [icons/CheckIconFull {:color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
+        [:span {:style {:margin-left 5}} [icons/WarningIcon {:color "orange"}]
          (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
 
@@ -643,8 +644,10 @@
           [deployments-utils/CloudNuvlaEdgeLink @deployment
            :color (when @nuvlabox (vc/status->color (:online @nuvlabox)))]]]
         [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:version-number]))]
-         [ui/TableCell @version " " (up-to-date? @version @versions)]]
+         [ui/TableCell (str/capitalize (@tr [:app-version]))]
+         [ui/TableCell
+          [module-plugin/LinkToAppView {:path (:path module) :version-id @version} @version]
+          (up-to-date? @version @versions)] ]
         (when deployment-set
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:deployment-group]))]

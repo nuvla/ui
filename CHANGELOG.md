@@ -4,6 +4,26 @@
 
 ## Released
 
+## [2.36.1] - 2023-12-21
+
+- Tags component - Fix alignment of check button
+- Deployment table
+  - Show URL in deployments table only when deployment is in STARTED state
+  - Application link move to deployment details instead of application details
+- App detail
+  - Do not allow publish or unpublish an app version with unsaved changes
+  - Do not show warning about unsaved changes while editing a new app
+- Deployment groups
+  - Remove deployment-set* routes
+  - Get nuvlaedge engine version from resources, if present
+  - Enrich apps with version prop on init
+  - Forcing modules reload on refresh
+  - Clear the overrides when changing the version of the app bouquet
+  - Fix start/stop/update DG job descriptions
+  - Reset Deployment Group start/update modals
+  - Hide version warning and remove icon from apps overview pane in App Bouquet based DGs
+  - Add e2e test
+
 ## [2.36.0] - 2023-12-14
 
 - Job - Do not show job error message after subsequent successful deployments

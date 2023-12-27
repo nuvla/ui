@@ -21,6 +21,7 @@
 (s/def ::fleet-filter-edited string?)
 
 (s/def ::validate-form? boolean?)
+(s/def ::persist-in-progress? boolean?)
 
 (def default-ordering [[:created :desc]])
 (def pagination-default (pagination-plugin/build-spec
@@ -86,4 +87,5 @@
    ::apps-creation             nil
    ::apps-edited?              false
    ::fleet-filter              nil
-   ::fleet-filter-edited       nil})
+   ::fleet-filter-edited       nil
+   ::persist-in-progress?      false})

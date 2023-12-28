@@ -10,7 +10,11 @@
                                 parseISO
                                 startOfDay
                                 subDays
-                                subMilliseconds]]
+                                subMonths
+                                subMilliseconds
+                                interval
+                                eachDayOfInterval
+                                eachHourOfInterval]]
             ["date-fns/locale/fr$default" :as fr]))
 
 (def ^:const default-locale "en")
@@ -134,6 +138,13 @@
    (-> (now locale) (startOfDay) (subDays n))))
 
 
+(defn months-before
+  ([n]
+   (months-before n default-locale))
+  ([n locale]
+   (-> (now locale) (startOfDay) (subMonths n))))
+
+
 (defn time-value
   [iso8601]
   (str (-> iso8601 parse-iso8601 ago) " (" iso8601 ")"))
@@ -173,3 +184,13 @@
    (some-> time-str parse-iso8601 ago))
   ([time-str locale]
    (some-> time-str parse-iso8601 (ago locale))))
+
+(defn hours-between [{:keys [start-date end-date]}]
+  (eachHourOfInterval (clj->js {:start start-date
+                                :end   end-date})))
+
+(defn before? [date1 date2]
+  (isBefore date1 date2))
+
+
+

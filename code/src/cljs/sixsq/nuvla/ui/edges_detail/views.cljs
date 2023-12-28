@@ -31,7 +31,8 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
+            ["chartjs-adapter-date-fns"]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -892,6 +893,70 @@
            [ui/TableCell blk-in-out]
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
+
+(defn generate-fake-data []
+  (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
+                                             :end-date (time/now)})
+        percentages     (repeatedly (count dates-past-year) #(rand 99))]
+    (zipmap dates-past-year percentages)))
+
+(comment
+  (generate-fake-data))
+
+(def time-options ["past year" "past 3 months" "past month" "past week"])
+(defn HistoricalData []
+  (r/with-let [filter (r/atom (first time-options))]
+    (let [default-value     (first time-options)
+          fake-data         (->> (generate-fake-data)
+                                 (mapv (fn [[d p]]
+                                         {:x d
+                                          :y p})))
+          time-options      (mapv (fn [o] {:key o :text o :value o}) time-options)
+          data-to-display   (case @filter
+                              "past week" (remove #(time/before? (:x %) (time/days-before 7)) fake-data)
+                              "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) fake-data)
+                              "past month" (remove #(time/before? (:x %) (time/months-before 1)) fake-data)
+                              "past year" fake-data)
+          time-unit         (case @filter
+                              "past week"  "day"
+                              "past month" "day"
+                              "past 3 months" "month"
+                              "past year" "month")]
+      [ui/Grid {:columns   1
+                :stackable true
+                :divided   true
+                :celled    "internally"}
+       [ui/GridRow
+        [ui/GridColumn
+         [:div
+          [:span
+           "Show activity for "
+           [ui/Dropdown {:inline true
+                         :close-on-change true
+                         :options         time-options
+                         :default-value   default-value
+                         :on-change       (ui-callback/value
+                                            (fn [value]
+                                              (reset! filter value)))}]]
+          [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
+                                            :label           "CPU usage (%)"
+                                            :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                            :borderColor     "rgb(230, 99, 100)"
+                                            :fill            true}]}
+
+                      :options {:plugins {:legend {:display false}
+                                          :zoom   {:zoom {:drag {:enabled true}}}
+                                          :title  {:display  true
+                                                   :text     "1-core CPU load (%)"
+                                                   :position "top"}}
+                                :scales  {:x {:type  "time"
+                                              :title {:display "true"
+                                                      :text    "Time"}
+                                              :time  {:unit time-unit}}
+                                          :y {:max   100
+                                              :min   0
+                                              :title {:display "true"
+                                                      :text    "Percentage (%)"}}}}}]]]]])))
 
 
 (defn Load
@@ -2004,6 +2069,11 @@
                    :key     :peripherals
                    :icon    icons/i-usb-drive}
         :render   #(r/as-element [TabPeripherals])}
+       {:menuItem {:content (r/as-element [:span (str/capitalize "history")])
+                   :key     :historical-data
+                   :icon    icons/i-file-code}
+        :render   #(r/as-element [HistoricalData])}
+
        (when id
          (events-plugin/events-section
            {:db-path [::spec/events]

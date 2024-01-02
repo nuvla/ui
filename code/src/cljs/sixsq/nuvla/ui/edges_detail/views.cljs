@@ -898,65 +898,125 @@
   (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
                                              :end-date (time/now)})
         percentages     (repeatedly (count dates-past-year) #(rand 99))]
-    (zipmap dates-past-year percentages)))
+    (->> (zipmap dates-past-year percentages)
+         (mapv (fn [[d p]]
+                 {:x d
+                  :y p})))))
 
 (comment
   (generate-fake-data))
 
 (def time-options ["past year" "past 3 months" "past month" "past week"])
-(defn HistoricalData []
-  (r/with-let [filter (r/atom (first time-options))]
-    (let [default-value     (first time-options)
-          fake-data         (->> (generate-fake-data)
-                                 (mapv (fn [[d p]]
-                                         {:x d
-                                          :y p})))
-          time-options      (mapv (fn [o] {:key o :text o :value o}) time-options)
-          data-to-display   (case @filter
-                              "past week" (remove #(time/before? (:x %) (time/days-before 7)) fake-data)
-                              "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) fake-data)
-                              "past month" (remove #(time/before? (:x %) (time/months-before 1)) fake-data)
-                              "past year" fake-data)
-          time-unit         (case @filter
-                              "past week"  "day"
-                              "past month" "day"
-                              "past 3 months" "month"
-                              "past year" "month")]
-      [ui/Grid {:columns   1
-                :stackable true
-                :divided   true
-                :celled    "internally"}
-       [ui/GridRow
-        [ui/GridColumn
-         [:div
-          [:span
-           "Show activity for "
-           [ui/Dropdown {:inline true
-                         :close-on-change true
-                         :options         time-options
-                         :default-value   default-value
-                         :on-change       (ui-callback/value
-                                            (fn [value]
-                                              (reset! filter value)))}]]
-          [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
-                                            :label           "CPU usage (%)"
-                                            :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                            :borderColor     "rgb(230, 99, 100)"
-                                            :fill            true}]}
 
-                      :options {:plugins {:legend {:display false}
-                                          :zoom   {:zoom {:drag {:enabled true}}}
-                                          :title  {:display  true
-                                                   :text     "1-core CPU load (%)"
-                                                   :position "top"}}
-                                :scales  {:x {:type  "time"
-                                              :title {:display "true"
-                                                      :text    "Time"}
-                                              :time  {:unit time-unit}}
-                                          :y {:max   100
-                                              :min   0
-                                              :title {:display "true"
-                                                      :text    "Percentage (%)"}}}}}]]]]])))
+(def time-options-to-units {"past year" "month"
+                            "past 3 months" "month"
+                            "past month" "day"
+                            "past week" "day"})
+
+(defn TimeSelector [!time-filter]
+  (let [default-value     (first time-options)
+        time-options      (mapv (fn [o] {:key o :text o :value o}) time-options)]
+    [:span
+     "Show activity for "
+     [ui/Dropdown {:inline          true
+                   :close-on-change true
+                   :options         time-options
+                   :default-value   default-value
+                   :on-change       (ui-callback/value
+                                      (fn [value]
+                                        (reset! !time-filter value)))}]]))
+
+(defn LoadTimeSeries [data]
+  (r/with-let [filter (r/atom (first time-options))]
+    (let [data-to-display   (case @filter
+                              "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
+                              "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
+                              "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
+                              "past year" data)
+          time-unit         (get time-options-to-units @filter)]
+      [:div
+       [TimeSelector filter]
+       [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
+                                         :label           "CPU usage (%)"
+                                         :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                         :borderColor     "rgb(230, 99, 100)"
+                                         :fill            true}]}
+
+                   :options {:plugins {:legend {:display false}
+                                       :zoom   {:zoom {:drag {:enabled true}}}
+                                       :title  {:display  true
+                                                :text     "1-core CPU load (%)"
+                                                :position "top"}}
+                             :scales  {:x {:type  "time"
+                                           :title {:display "true"
+                                                   :text    "Time"}
+                                           :time  {:unit time-unit}}
+                                       :y {:max   100
+                                           :min   0
+                                           :title {:display "true"
+                                                   :text    "Percentage (%)"}}}}}]])))
+(defn generate-fake-online-offline-data []
+  (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
+                                             :end-date (time/now)})
+        statuses     (repeatedly (count dates-past-year) #(rand-nth ["online" "offline"]))]
+    (->> (zipmap dates-past-year statuses)
+         (mapv (fn [[d s]]
+                 {:x d
+                  :y (if (= "online" s) 1 -1)})))))
+
+(defn StatusTimeSeries [data]
+  (r/with-let [filter (r/atom (first time-options))]
+    (let [data-to-display   (case @filter
+                              "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
+                              "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
+                              "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
+                              "past year" data)
+          time-unit         (get time-options-to-units @filter)
+          grouped-by-status (group-by :y data-to-display)]
+      [:div
+       [TimeSelector filter]
+       [plot/Bar {:data    {:datasets [{:data               (sort-by :x (get grouped-by-status -1))
+                                        :label              "Offline"
+                                        :backgroundColor    "rgb(230, 99, 100)"
+                                        :borderColor        "rgb(230, 99, 100)"
+                                        :categoryPercentage 1.2
+                                        :barPercentage      1.2}
+                                       {:data               (sort-by :x (get grouped-by-status 1))
+                                        :categoryPercentage 1.2
+                                        :barPercentage      1.2
+                                        :label              "Online"
+                                        :backgroundColor    "rgb(68, 168, 50)"}]}
+
+                  :options {:plugins {:legend {:display true}
+                                      :tooltip {:callbacks {:label  (fn [tooltipItems data]
+                                                                      (.-label tooltipItems))}}
+                                      :zoom   {:zoom {:drag {:enabled true}}}
+                                      :title  {:display  true
+                                               :text     "NuvlaEdge status (online/offline)"
+                                               :position "top"}}
+                            :scales  {:x {:type  "time"
+                                          :border {:display true}
+                                          :grid    {:display false}
+                                          :title {:display "true"
+                                                  :text    "Time"}
+                                          :time  {:unit time-unit}}
+                                      :y {:max     2
+                                          :min     -1
+                                          :grid    {:display false}
+                                          :display false
+                                          :title   {:display "true"
+                                                    :text    "Percentage (%)"}}}}}]])))
+
+(defn HistoricalData []
+  [ui/Grid {:columns   1
+            :stackable true
+            :divided   true
+            :celled    "internally"}
+   [ui/GridRow
+    [ui/GridColumn
+     [LoadTimeSeries (generate-fake-data)]]
+    [ui/GridColumn
+     [StatusTimeSeries (generate-fake-online-offline-data)]]]])
 
 
 (defn Load

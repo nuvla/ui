@@ -14,7 +14,9 @@
                                 subMilliseconds
                                 interval
                                 eachDayOfInterval
-                                eachHourOfInterval]]
+                                eachHourOfInterval
+                                eachMinuteOfInterval
+                                getHours]]
             ["date-fns/locale/fr$default" :as fr]))
 
 (def ^:const default-locale "en")
@@ -189,8 +191,18 @@
   (eachHourOfInterval (clj->js {:start start-date
                                 :end   end-date})))
 
+(defn days-between [{:keys [start-date end-date]}]
+  (eachDayOfInterval (clj->js {:start start-date
+                                :end   end-date})))
+
+(defn minutes-between [{:keys [start-date end-date]}]
+  (eachMinuteOfInterval (clj->js {:start start-date
+                                :end   end-date})))
+
 (defn before? [date1 date2]
   (isBefore date1 date2))
+
+(getHours #inst"2023-08-31T12:00:00.000-00:00")
 
 
 

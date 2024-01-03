@@ -913,8 +913,8 @@
                             "past month" "day"
                             "past week" "day"})
 
-(defn TimeSelector [!time-filter]
-  (let [default-value     "past week"
+(defn TimeSelector [{:keys [on-change]}]
+  (let [default-value     (first time-options)
         time-options      (mapv (fn [o] {:key o :text o :value o}) time-options)]
     [:span
      "Show data for "
@@ -922,9 +922,7 @@
                    :close-on-change true
                    :options         time-options
                    :default-value   default-value
-                   :on-change       (ui-callback/value
-                                      (fn [value]
-                                        (reset! !time-filter value)))}]]))
+                   :on-change       on-change}]]))
 
 (defn CpuLoadTimeSeries [data]
   (r/with-let [time-filter (r/atom "past week")]
@@ -935,7 +933,9 @@
                                    "past year" data)
           axis-time-unit         (get time-options-to-units @time-filter)]
       [:div
-       [TimeSelector time-filter]
+       [TimeSelector {:on-change (ui-callback/value
+                                   (fn [value]
+                                     (reset! time-filter value)))}]
        [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
                                          :label           "CPU usage (%)"
                                          :backgroundColor "rgb(230, 99, 100, 0.5)"
@@ -979,7 +979,9 @@
                                    "past year"     data)
           axis-time-unit         (get time-options-to-units @time-filter)]
       [:div
-       [TimeSelector time-filter]
+       [TimeSelector {:on-change (ui-callback/value
+                                   (fn [value]
+                                     (reset! time-filter value)))}]
        [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
                                          :label           "Status"
                                          :backgroundColor "rgb(230, 99, 100)"

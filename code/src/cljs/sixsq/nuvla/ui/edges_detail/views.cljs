@@ -943,11 +943,13 @@
                                          :borderWidth     1}]}
 
                    :options {:plugins {:legend {:display false}
-                                       :zoom   {:zoom {:drag {:enabled true}}}
+                                       :zoom   {:pan {:enabled true}
+                                                :zoom {:wheel {:enabled true}
+                                                       :mode "x"}}
                                        :title  {:display  true
                                                 :text     "1-core CPU load (%)"
                                                 :position "top"}}
-                             :elements {:point {:radius 0}}
+                             :elements {:point {:radius 1}}
 
                              :scales  {:x {:type  "time"
                                            :title {:display "true"
@@ -969,10 +971,10 @@
 (defn StatusTimeSeries [data]
   (r/with-let [time-filter (r/atom "past week")]
     (let [data-to-display        (case @time-filter
-                                   "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
+                                   "past week"     (remove #(time/before? (:x %) (time/days-before 7)) data)
                                    "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
-                                   "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
-                                   "past year" data)
+                                   "past month"    (remove #(time/before? (:x %) (time/months-before 1)) data)
+                                   "past year"     data)
           axis-time-unit         (get time-options-to-units @time-filter)]
       [:div
        [TimeSelector time-filter]
@@ -983,12 +985,13 @@
                                          :borderWidth 1}]}
 
                    :options {:plugins {:legend  {:display false}
-                                       :tooltip {:callbacks {:label  (fn [tooltipItems data]
+                                       :tooltip {:callbacks {:label  (fn [tooltipItems _data]
                                                                        (if (= (.. tooltipItems -raw -y) 1)
                                                                          "Status: online"
-                                                                         "Status: offline")
-                                                                       #_(.-label tooltipItems))}}
-                                       :zoom    {:zoom {:drag {:enabled true}}}
+                                                                         "Status: offline"))}}
+                                       :zoom    {:pan {:enabled true}
+                                                 :zoom {:wheel {:enabled true}
+                                                        :mode "x"}}
                                        :title   {:display  true
                                                  :text     "NuvlaEdge Status (online/offline)"
                                                  :position "top"}}

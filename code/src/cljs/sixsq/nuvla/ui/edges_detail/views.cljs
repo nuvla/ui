@@ -906,7 +906,7 @@
 (comment
   (generate-fake-data))
 
-(def time-options ["past week" "past month" "past 3 months" "past year"])
+(def time-options ["past day" "past week" "past month" "past 3 months" "past year"])
 
 (defn TimeSelector [{:keys [on-change]}]
   (let [default-value     (first time-options)
@@ -920,8 +920,9 @@
                    :on-change       on-change}]]))
 
 (defn CpuLoadTimeSeries [data]
-  (r/with-let [time-filter (r/atom "past week")]
+  (r/with-let [time-filter (r/atom "past day")]
     (let [data-to-display        (case @time-filter
+                                   "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
                                    "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
                                    "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
                                    "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
@@ -964,8 +965,9 @@
                   :y (if (= "online" s) 1 0)})))))
 
 (defn StatusTimeSeries [data]
-  (r/with-let [time-filter (r/atom "past week")]
+  (r/with-let [time-filter (r/atom "past day")]
     (let [data-to-display        (case @time-filter
+                                   "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
                                    "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
                                    "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
                                    "past month"    (remove #(time/before? (:x %) (time/months-before 1)) data)

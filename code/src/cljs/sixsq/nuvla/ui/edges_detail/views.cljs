@@ -906,7 +906,7 @@
 (comment
   (generate-fake-data))
 
-(def time-options ["past year" "past 3 months" "past month" "past week"])
+(def time-options ["past week" "past month" "past 3 months" "past year"])
 
 (def time-options-to-units {"past year" "month"
                             "past 3 months" "month"
@@ -926,7 +926,7 @@
                                       (fn [value]
                                         (reset! !time-filter value)))}]]))
 
-(defn LoadTimeSeries [data]
+(defn CpuLoadTimeSeries [data]
   (r/with-let [time-filter (r/atom "past week")]
     (let [data-to-display        (case @time-filter
                                    "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
@@ -945,24 +945,26 @@
                    :options {:plugins {:legend {:display false}
                                        :zoom   {:pan {:enabled true}
                                                 :zoom {:wheel {:enabled true}
-                                                       :mode "x"}}
+                                                       :mode "x"}
+                                                :limits {:x {:min (apply min (mapv :x data-to-display))
+                                                             :max (apply max (mapv :x data-to-display))}}}
                                        :title  {:display  true
                                                 :text     "1-core CPU load (%)"
                                                 :position "top"}}
                              :elements {:point {:radius 1}}
 
-                             :scales  {:x {:type  "time"
-                                           :title {:display "true"
-                                                   :text    "Time"}
-                                           :time  {:unit axis-time-unit}}
-                                       :y {:max   100
-                                           :min   0
-                                           :title {:display "true"
-                                                   :text    "Percentage (%)"}}}}}]])))
+                             :scales {:x {:type  "time"
+                                          :title {:display "true"
+                                                  :text    "Time"}
+                                          :time  {:unit axis-time-unit}}
+                                      :y {:max   100
+                                          :min   0
+                                          :title {:display "true"
+                                                  :text    "Percentage (%)"}}}}}]])))
 (defn generate-fake-online-offline-data []
   (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
-                                             :end-date (time/now)})
-        statuses     (repeatedly (count dates-past-year) #(rand-nth ["online" "offline"]))]
+                                             :end-date   (time/now)})
+        statuses        (repeatedly (count dates-past-year) #(rand-nth ["online" "offline"]))]
     (->> (zipmap dates-past-year statuses)
          (mapv (fn [[d s]]
                  {:x d
@@ -971,7 +973,7 @@
 (defn StatusTimeSeries [data]
   (r/with-let [time-filter (r/atom "past week")]
     (let [data-to-display        (case @time-filter
-                                   "past week"     (remove #(time/before? (:x %) (time/days-before 7)) data)
+                                   "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
                                    "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
                                    "past month"    (remove #(time/before? (:x %) (time/months-before 1)) data)
                                    "past year"     data)
@@ -991,7 +993,9 @@
                                                                          "Status: offline"))}}
                                        :zoom    {:pan {:enabled true}
                                                  :zoom {:wheel {:enabled true}
-                                                        :mode "x"}}
+                                                        :mode "x"}
+                                                 :limits {:x {:min (apply min (mapv :x data-to-display))
+                                                              :max (apply max (mapv :x data-to-display))}}}
                                        :title   {:display  true
                                                  :text     "NuvlaEdge Status (online/offline)"
                                                  :position "top"}}
@@ -1018,7 +1022,7 @@
             :celled    "internally"}
    [ui/GridRow
     [ui/GridColumn
-     [LoadTimeSeries (generate-fake-data)]]
+     [CpuLoadTimeSeries (generate-fake-data)]]
     [ui/GridColumn
      [StatusTimeSeries (generate-fake-online-offline-data)]]]])
 

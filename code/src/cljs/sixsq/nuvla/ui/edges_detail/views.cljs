@@ -914,10 +914,10 @@
                             "past week" "day"})
 
 (defn TimeSelector [!time-filter]
-  (let [default-value     (first time-options)
+  (let [default-value     "past week"
         time-options      (mapv (fn [o] {:key o :text o :value o}) time-options)]
     [:span
-     "Show activity for "
+     "Show data for "
      [ui/Dropdown {:inline          true
                    :close-on-change true
                    :options         time-options
@@ -927,30 +927,32 @@
                                         (reset! !time-filter value)))}]]))
 
 (defn LoadTimeSeries [data]
-  (r/with-let [filter (r/atom (first time-options))]
-    (let [data-to-display   (case @filter
-                              "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
-                              "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
-                              "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
-                              "past year" data)
-          time-unit         (get time-options-to-units @filter)]
+  (r/with-let [time-filter (r/atom "past week")]
+    (let [data-to-display        (case @time-filter
+                                   "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
+                                   "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
+                                   "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
+                                   "past year" data)
+          axis-time-unit         (get time-options-to-units @time-filter)]
       [:div
-       [TimeSelector filter]
+       [TimeSelector time-filter]
        [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
                                          :label           "CPU usage (%)"
                                          :backgroundColor "rgb(230, 99, 100, 0.5)"
                                          :borderColor     "rgb(230, 99, 100)"
-                                         :fill            true}]}
+                                         :borderWidth     1}]}
 
                    :options {:plugins {:legend {:display false}
                                        :zoom   {:zoom {:drag {:enabled true}}}
                                        :title  {:display  true
                                                 :text     "1-core CPU load (%)"
                                                 :position "top"}}
+                             :elements {:point {:radius 0}}
+
                              :scales  {:x {:type  "time"
                                            :title {:display "true"
                                                    :text    "Time"}
-                                           :time  {:unit time-unit}}
+                                           :time  {:unit axis-time-unit}}
                                        :y {:max   100
                                            :min   0
                                            :title {:display "true"
@@ -962,50 +964,49 @@
     (->> (zipmap dates-past-year statuses)
          (mapv (fn [[d s]]
                  {:x d
-                  :y (if (= "online" s) 1 -1)})))))
+                  :y (if (= "online" s) 1 0)})))))
 
 (defn StatusTimeSeries [data]
-  (r/with-let [filter (r/atom (first time-options))]
-    (let [data-to-display   (case @filter
-                              "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
-                              "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
-                              "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
-                              "past year" data)
-          time-unit         (get time-options-to-units @filter)
-          grouped-by-status (group-by :y data-to-display)]
+  (r/with-let [time-filter (r/atom "past week")]
+    (let [data-to-display        (case @time-filter
+                                   "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
+                                   "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
+                                   "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
+                                   "past year" data)
+          axis-time-unit         (get time-options-to-units @time-filter)]
       [:div
-       [TimeSelector filter]
-       [plot/Bar {:data    {:datasets [{:data               (sort-by :x (get grouped-by-status -1))
-                                        :label              "Offline"
-                                        :backgroundColor    "rgb(230, 99, 100)"
-                                        :borderColor        "rgb(230, 99, 100)"
-                                        :categoryPercentage 1.2
-                                        :barPercentage      1.2}
-                                       {:data               (sort-by :x (get grouped-by-status 1))
-                                        :categoryPercentage 1.2
-                                        :barPercentage      1.2
-                                        :label              "Online"
-                                        :backgroundColor    "rgb(68, 168, 50)"}]}
+       [TimeSelector time-filter]
+       [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
+                                         :label           "Status"
+                                         :backgroundColor "rgb(230, 99, 100)"
+                                         :borderColor     "rgb(230, 99, 100)"
+                                         :borderWidth 1}]}
 
-                  :options {:plugins {:legend {:display true}
-                                      :tooltip {:callbacks {:label  (fn [tooltipItems data]
-                                                                      (.-label tooltipItems))}}
-                                      :zoom   {:zoom {:drag {:enabled true}}}
-                                      :title  {:display  true
-                                               :text     "NuvlaEdge status (online/offline)"
-                                               :position "top"}}
-                            :scales  {:x {:type  "time"
+                   :options {:plugins {:legend  {:display false}
+                                       :tooltip {:callbacks {:label  (fn [tooltipItems data]
+                                                                       (if (= (.. tooltipItems -raw -y) 1)
+                                                                         "Status: online"
+                                                                         "Status: offline")
+                                                                       #_(.-label tooltipItems))}}
+                                       :zoom    {:zoom {:drag {:enabled true}}}
+                                       :title   {:display  true
+                                                 :text     "NuvlaEdge Status (online/offline)"
+                                                 :position "top"}}
+                             :elements {:point {:radius 0}}
+                             :scales {:x {:type   "time"
                                           :border {:display true}
-                                          :grid    {:display false}
+                                          :grid   {:display false}
+                                          :title  {:display "true"
+                                                   :text    "Time"}
+                                          :time   {:unit axis-time-unit}}
+                                      :y {:max   2
+                                          :min   -1
+                                          :grid  {:display false}
+                                          :ticks {:callback (fn [label _idx _labels]
+                                                              (cond (= label 1) "online"
+                                                                    (= label 0) "offline"))}
                                           :title {:display "true"
-                                                  :text    "Time"}
-                                          :time  {:unit time-unit}}
-                                      :y {:max     2
-                                          :min     -1
-                                          :grid    {:display false}
-                                          :display false
-                                          :title   {:display "true"
-                                                    :text    "Percentage (%)"}}}}}]])))
+                                                  :text    "Status"}}}}}]])))
 
 (defn HistoricalData []
   [ui/Grid {:columns   1

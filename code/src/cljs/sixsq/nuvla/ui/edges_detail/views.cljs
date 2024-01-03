@@ -908,11 +908,6 @@
 
 (def time-options ["past week" "past month" "past 3 months" "past year"])
 
-(def time-options-to-units {"past year" "month"
-                            "past 3 months" "month"
-                            "past month" "day"
-                            "past week" "day"})
-
 (defn TimeSelector [{:keys [on-change]}]
   (let [default-value     (first time-options)
         time-options      (mapv (fn [o] {:key o :text o :value o}) time-options)]
@@ -930,8 +925,7 @@
                                    "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
                                    "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
                                    "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
-                                   "past year" data)
-          axis-time-unit         (get time-options-to-units @time-filter)]
+                                   "past year" data)]
       [:div
        [TimeSelector {:on-change (ui-callback/value
                                    (fn [value]
@@ -955,8 +949,7 @@
 
                              :scales {:x {:type  "time"
                                           :title {:display "true"
-                                                  :text    "Time"}
-                                          :time  {:unit axis-time-unit}}
+                                                  :text    "Time"}}
                                       :y {:max   100
                                           :min   0
                                           :title {:display "true"
@@ -976,8 +969,7 @@
                                    "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
                                    "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
                                    "past month"    (remove #(time/before? (:x %) (time/months-before 1)) data)
-                                   "past year"     data)
-          axis-time-unit         (get time-options-to-units @time-filter)]
+                                   "past year"     data)]
       [:div
        [TimeSelector {:on-change (ui-callback/value
                                    (fn [value]
@@ -1006,8 +998,7 @@
                                           :border {:display true}
                                           :grid   {:display false}
                                           :title  {:display "true"
-                                                   :text    "Time"}
-                                          :time   {:unit axis-time-unit}}
+                                                   :text    "Time"}}
                                       :y {:max   2
                                           :min   -1
                                           :grid  {:display false}
@@ -1018,15 +1009,16 @@
                                                   :text    "Status"}}}}}]])))
 
 (defn HistoricalData []
-  [ui/Grid {:columns   1
-            :stackable true
-            :divided   true
-            :celled    "internally"}
-   [ui/GridRow
-    [ui/GridColumn
-     [CpuLoadTimeSeries (generate-fake-data)]]
-    [ui/GridColumn
-     [StatusTimeSeries (generate-fake-online-offline-data)]]]])
+  [ui/TabPane
+   [ui/Grid {:columns   2
+             :stackable true
+             :divided   true
+             :celled    "internally"}
+    [ui/GridRow
+     [ui/GridColumn
+      [CpuLoadTimeSeries (generate-fake-data)]]
+     [ui/GridColumn
+      [StatusTimeSeries (generate-fake-online-offline-data)]]]]])
 
 
 (defn Load

@@ -46,6 +46,10 @@
                ::events                       (events-plugin/build-spec
                                                 :default-items-per-page 15)
                ::tab                          (tab-plugin/build-spec)
+               :history-filters    {:cpu {:timespan "past day"
+                                          :granularity [1 "hours"]}
+                                    :status {:timespan "past day"
+                                             :granularity [1 "hours"]}}
                ::nuvlaedge-release            nil})
 
 (s/def ::deployment-pagination any?)

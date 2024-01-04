@@ -154,3 +154,16 @@
   ::nuvlabox-current-playbook
   (fn [db]
     (::spec/nuvlabox-current-playbook db)))
+
+(reg-sub
+  ::nuvlaedge-history-filters
+  (fn [db]
+    (:history-filters db)))
+
+
+(reg-sub
+  ::history-filters
+  :<- [::nuvlaedge-history-filters]
+  (fn [nuvlaedge-history-filters [_ type]]
+    (js/console.log :nuvlaedge-filters nuvlaedge-history-filters)
+    (get nuvlaedge-history-filters type)))

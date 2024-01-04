@@ -397,3 +397,15 @@
                                         :orderby "release-date:desc"
                                         :last    10000}
                                        #(dispatch [::set-nuvlaedge-release (first (:resources %))])])))))
+
+
+(reg-event-db
+  ::set-time-filter
+  (fn [db [_ type time-filter]]
+    (js/console.log type time-filter)
+    (assoc-in db [:history-filters type :timespan] time-filter)))
+
+(reg-event-db
+  ::set-granularity-filter
+  (fn [db [_ type unit-quantity unit]]
+    (assoc-in db [:history-filters type :granularity] [unit-quantity unit])))

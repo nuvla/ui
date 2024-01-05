@@ -27,6 +27,7 @@
 (s/def ::nuvlaedge-release (s/nilable (s/keys :req-un [::id
                                                        ::pre-release])))
 
+(s/def ::edge-stats (s/nilable any?))
 
 (def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
@@ -46,7 +47,8 @@
                ::events                       (events-plugin/build-spec
                                                 :default-items-per-page 15)
                ::tab                          (tab-plugin/build-spec)
-               ::nuvlaedge-release            nil})
+               ::nuvlaedge-release            nil
+               ::edge-stats                   nil})
 
 (s/def ::deployment-pagination any?)
 

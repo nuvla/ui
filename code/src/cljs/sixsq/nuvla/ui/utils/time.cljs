@@ -10,7 +10,9 @@
                                 parseISO
                                 startOfDay
                                 subDays
+                                subWeeks
                                 subMonths
+                                subYears
                                 subMilliseconds
                                 interval
                                 eachDayOfInterval
@@ -48,6 +50,21 @@
   [date milliseconds]
   (subMilliseconds date milliseconds))
 
+(defn subtract-days
+  [date days]
+  (subDays date days))
+
+(defn subtract-weeks
+  [date weeks]
+  (subWeeks date weeks))
+
+(defn subtract-months
+  [date months]
+  (subMonths date months))
+
+(defn subtract-years
+  [date years]
+  (subYears date years))
 
 (defn parse-iso8601
   ([iso8601]

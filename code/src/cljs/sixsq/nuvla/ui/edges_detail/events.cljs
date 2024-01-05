@@ -12,7 +12,8 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (reg-event-fx
   ::set-nuvlabox-status
@@ -401,20 +402,21 @@
 
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox] :as _db} :db} [_]]
+  (fn [{{:keys [::spec/nuvlabox] :as _db} :db} [_ {:keys [from to granularity]}]]
     (let [nuvlabox-id-filter (str "nuvlaedge-id='" (:id nuvlabox) "'")
-          time-range-filter  (str "@timestamp>'2024-01-05T07:29:27.004Z'"
+          time-range-filter  (str "@timestamp>'" (time/time->utc-str from) "'"
                                   " and "
-                                  "@timestamp<'2024-01-06T09:29:27.004Z'")
+                                  "@timestamp<'" (time/time->utc-str to) "'")
           body               {:tsds-aggregation
                               (general-utils/edn->json
                                 {:aggregations
                                  {:tsds-stats
                                   {:date_histogram
                                    {:field          "@timestamp"
-                                    :fixed_interval "10m"}
+                                    :fixed_interval granularity}
                                    :aggregations
-                                   {:load {:avg {:field :load}}}}}})
+                                   {:load {:avg {:field :load}}
+                                    :mem  {:avg {:field :mem}}}}}})
                               :last   0
                               :filter (str "("
                                            nuvlabox-id-filter
@@ -432,10 +434,15 @@
 
 (reg-event-fx
   ::fetch-edge-stats-success
-  (fn []
-    (prn "success!!")))
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/edge-stats (->> response
+                                          :aggregations
+                                          :tsds-stats
+                                          :buckets))}))
 
 (reg-event-fx
   ::fetch-edge-stats-failure
   (fn []
     (prn "failure!!")))
+
+

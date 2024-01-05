@@ -896,7 +896,7 @@
 
 (defn generate-fake-data []
   (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
-                                             :end-date (time/now)})
+                                             :end-date   (time/now)})
         percentages     (repeatedly (count dates-past-year) #(rand 99))]
     (->> (zipmap dates-past-year percentages)
          (mapv (fn [[d p]]
@@ -906,11 +906,19 @@
 (comment
   (generate-fake-data))
 
+(defn prepare-cpu-load-data
+  [edge-stats]
+  (->> edge-stats
+       (map (juxt (comp time/parse-iso8601 :key_as_string) (comp :value :load)))
+       (mapv (fn [[d p]]
+               {:x d
+                :y p}))))
+
 (def time-options ["past day" "past week" "past month" "past 3 months" "past year"])
 
 (defn TimeSelector [{:keys [on-change]}]
-  (let [default-value     (first time-options)
-        time-options      (mapv (fn [o] {:key o :text o :value o}) time-options)]
+  (let [default-value (first time-options)
+        time-options  (mapv (fn [o] {:key o :text o :value o}) time-options)]
     [:span
      "Show data for "
      [ui/Dropdown {:inline          true
@@ -921,40 +929,88 @@
 
 (defn CpuLoadTimeSeries [data]
   (r/with-let [time-filter (r/atom "past day")]
-    (let [data-to-display        (case @time-filter
+    (let [data-to-display data #_(case @time-filter
                                    "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
                                    "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
                                    "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
                                    "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
                                    "past year" data)]
       [:div
-       [TimeSelector {:on-change (ui-callback/value
-                                   (fn [value]
-                                     (reset! time-filter value)))}]
+       #_[:p (prn-str data)]
+       #_[TimeSelector {:on-change (ui-callback/value
+                                     (fn [value]
+                                       (reset! time-filter value)))}]
        [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
                                          :label           "CPU usage (%)"
                                          :backgroundColor "rgb(230, 99, 100, 0.5)"
                                          :borderColor     "rgb(230, 99, 100)"
                                          :borderWidth     1}]}
 
-                   :options {:plugins {:legend {:display false}
-                                       :zoom   {:pan {:enabled true}
-                                                :zoom {:wheel {:enabled true}
-                                                       :mode "x"}
-                                                :limits {:x {:min (apply min (mapv :x data-to-display))
-                                                             :max (apply max (mapv :x data-to-display))}}}
-                                       :title  {:display  true
-                                                :text     "1-core CPU load (%)"
-                                                :position "top"}}
+                   :options {:plugins  {:legend {:display false}
+                                        :zoom   {:pan    {:enabled true}
+                                                 :zoom   {:wheel {:enabled true}
+                                                          :mode  "x"}
+                                                 :limits {:x {:min (apply min (mapv :x data-to-display))
+                                                              :max (apply max (mapv :x data-to-display))}}}
+                                        :title  {:display  true
+                                                 :text     "Average CPU load (%)"
+                                                 :position "top"}}
                              :elements {:point {:radius 1}}
 
-                             :scales {:x {:type  "time"
-                                          :title {:display "true"
-                                                  :text    "Time"}}
-                                      :y {:max   100
-                                          :min   0
-                                          :title {:display "true"
-                                                  :text    "Percentage (%)"}}}}}]])))
+                             :scales   {:x {:type  "time"
+                                            :title {:display "true"
+                                                    :text    "Time"}}
+                                        :y {:max   500
+                                            :min   0
+                                            :title {:display "true"
+                                                    :text    "Percentage (%)"}}}}}]])))
+
+(defn prepare-mem-usage-data
+  [edge-stats]
+  (->> edge-stats
+       (map (juxt (comp time/parse-iso8601 :key_as_string) (comp :value :mem)))
+       (mapv (fn [[d p]]
+               {:x d
+                :y p}))))
+
+(defn MemUsageTimeSeries [data]
+  (r/with-let [time-filter (r/atom "past day")]
+    (let [data-to-display data #_(case @time-filter
+                                   "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
+                                   "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
+                                   "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
+                                   "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
+                                   "past year" data)]
+      [:div
+       #_[:p (prn-str data)]
+       #_[TimeSelector {:on-change (ui-callback/value
+                                     (fn [value]
+                                       (reset! time-filter value)))}]
+       [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
+                                         :label           "MEM usage (Mb)"
+                                         :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                         :borderColor     "rgb(230, 99, 100)"
+                                         :borderWidth     1}]}
+
+                   :options {:plugins  {:legend {:display false}
+                                        :zoom   {:pan    {:enabled true}
+                                                 :zoom   {:wheel {:enabled true}
+                                                          :mode  "x"}
+                                                 :limits {:x {:min (apply min (mapv :x data-to-display))
+                                                              :max (apply max (mapv :x data-to-display))}}}
+                                        :title  {:display  true
+                                                 :text     "Average memory consumption (Mb)"
+                                                 :position "top"}}
+                             :elements {:point {:radius 1}}
+
+                             :scales   {:x {:type  "time"
+                                            :title {:display "true"
+                                                    :text    "Time"}}
+                                        :y {:max   10000
+                                            :min   0
+                                            :title {:display "true"
+                                                    :text    "Mem usage (Mb)"}}}}}]])))
+
 (defn generate-fake-online-offline-data []
   (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
                                              :end-date   (time/now)})
@@ -966,12 +1022,12 @@
 
 (defn StatusTimeSeries [data]
   (r/with-let [time-filter (r/atom "past day")]
-    (let [data-to-display        (case @time-filter
-                                   "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
-                                   "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
-                                   "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
-                                   "past month"    (remove #(time/before? (:x %) (time/months-before 1)) data)
-                                   "past year"     data)]
+    (let [data-to-display (case @time-filter
+                            "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
+                            "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
+                            "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
+                            "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
+                            "past year" data)]
       [:div
        [TimeSelector {:on-change (ui-callback/value
                                    (fn [value]
@@ -980,49 +1036,76 @@
                                          :label           "Status"
                                          :backgroundColor "rgb(230, 99, 100)"
                                          :borderColor     "rgb(230, 99, 100)"
-                                         :borderWidth 1}]}
+                                         :borderWidth     1}]}
 
-                   :options {:plugins {:legend  {:display false}
-                                       :tooltip {:callbacks {:label  (fn [tooltipItems _data]
+                   :options {:plugins  {:legend  {:display false}
+                                        :tooltip {:callbacks {:label (fn [tooltipItems _data]
                                                                        (if (= (.. tooltipItems -raw -y) 1)
                                                                          "Status: online"
                                                                          "Status: offline"))}}
-                                       :zoom    {:pan {:enabled true}
-                                                 :zoom {:wheel {:enabled true}
-                                                        :mode "x"}
-                                                 :limits {:x {:min (apply min (mapv :x data-to-display))
-                                                              :max (apply max (mapv :x data-to-display))}}}
-                                       :title   {:display  true
-                                                 :text     "NuvlaEdge Status (online/offline)"
-                                                 :position "top"}}
+                                        :zoom    {:pan    {:enabled true}
+                                                  :zoom   {:wheel {:enabled true}
+                                                           :mode  "x"}
+                                                  :limits {:x {:min (apply min (mapv :x data-to-display))
+                                                               :max (apply max (mapv :x data-to-display))}}}
+                                        :title   {:display  true
+                                                  :text     "NuvlaEdge Status (online/offline)"
+                                                  :position "top"}}
                              :elements {:point {:radius 0}}
-                             :scales {:x {:type   "time"
-                                          :border {:display true}
-                                          :grid   {:display false}
-                                          :title  {:display "true"
-                                                   :text    "Time"}}
-                                      :y {:max   2
-                                          :min   -1
-                                          :grid  {:display false}
-                                          :ticks {:callback (fn [label _idx _labels]
-                                                              (cond (= label 1) "online"
-                                                                    (= label 0) "offline"))}
-                                          :title {:display "true"
-                                                  :text    "Status"}}}}}]])))
+                             :scales   {:x {:type   "time"
+                                            :border {:display true}
+                                            :grid   {:display false}
+                                            :title  {:display "true"
+                                                     :text    "Time"}}
+                                        :y {:max   2
+                                            :min   -1
+                                            :grid  {:display false}
+                                            :ticks {:callback (fn [label _idx _labels]
+                                                                (cond (= label 1) "online"
+                                                                      (= label 0) "offline"))}
+                                            :title {:display "true"
+                                                    :text    "Status"}}}}}]])))
 
 (defn HistoricalData []
-  (dispatch [::events/fetch-edge-stats])
-  (fn []
-    [ui/TabPane
-     [ui/Grid {:columns   2
-               :stackable true
-               :divided   true
-               :celled    "internally"}
-      [ui/GridRow
-       [ui/GridColumn
-        [CpuLoadTimeSeries (generate-fake-data)]]
-       [ui/GridColumn
-        [StatusTimeSeries (generate-fake-online-offline-data)]]]]]))
+  (let [edge-stats          (subscribe [::subs/edge-stats])
+        default-granularity {"past day"      "10m"
+                             "past week"     "1h"
+                             "past 3 months" "1d"
+                             "past month"    "1d"
+                             "past year"     "10d"}
+        fetch-edge-stats    (fn fetch-edge-stats
+                              ([period] (fetch-edge-stats period (default-granularity period)))
+                              ([period granularity]
+                               (let [now (time/now)
+                                     [from to] (case period
+                                                 "past day" [(time/subtract-days now 1) now]
+                                                 "past week" [(time/subtract-weeks now 1) now]
+                                                 "past 3 months" [(time/subtract-months now 3) now]
+                                                 "past month" [(time/subtract-months now 1) now]
+                                                 "past year" [(time/subtract-years now 1) now])]
+                                 (dispatch [::events/fetch-edge-stats
+                                            {:from        from
+                                             :to          to
+                                             :granularity granularity}]))))]
+    (fetch-edge-stats (first time-options))
+    (fn []
+      [ui/TabPane
+       [ui/Grid {:columns   2
+                 :stackable true
+                 :divided   true
+                 :celled    "internally"}
+        [ui/GridRow
+         [ui/GridColumn
+          [TimeSelector {:on-change (ui-callback/value
+                                      (fn [period]
+                                        (fetch-edge-stats period (default-granularity period))))}]]]
+        [ui/GridRow
+         [ui/GridColumn
+          [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats)]]
+         [ui/GridColumn
+          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]]
+         #_[ui/GridColumn
+            [StatusTimeSeries (generate-fake-online-offline-data)]]]]])))
 
 
 (defn Load

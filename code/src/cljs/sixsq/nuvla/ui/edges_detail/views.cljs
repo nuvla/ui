@@ -1011,16 +1011,18 @@
                                                   :text    "Status"}}}}}]])))
 
 (defn HistoricalData []
-  [ui/TabPane
-   [ui/Grid {:columns   2
-             :stackable true
-             :divided   true
-             :celled    "internally"}
-    [ui/GridRow
-     [ui/GridColumn
-      [CpuLoadTimeSeries (generate-fake-data)]]
-     [ui/GridColumn
-      [StatusTimeSeries (generate-fake-online-offline-data)]]]]])
+  (dispatch [::events/fetch-edge-stats])
+  (fn []
+    [ui/TabPane
+     [ui/Grid {:columns   2
+               :stackable true
+               :divided   true
+               :celled    "internally"}
+      [ui/GridRow
+       [ui/GridColumn
+        [CpuLoadTimeSeries (generate-fake-data)]]
+       [ui/GridColumn
+        [StatusTimeSeries (generate-fake-online-offline-data)]]]]]))
 
 
 (defn Load

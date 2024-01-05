@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edges-detail.events
-  (:require [clojure.string :as str]
+  (:require [ajax.core :as ajax]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
@@ -157,9 +158,9 @@
     (let [resource-id (or id (:id nuvlabox))]
       (when resource-id
         {:fx [[:dispatch [::deployments-events/get-deployments
-                          {:filter-external-arg (str "nuvlabox='" (or id (:id nuvlabox)) "'")
+                          {:filter-external-arg   (str "nuvlabox='" (or id (:id nuvlabox)) "'")
                            :external-filter-only? true
-                           :pagination-db-path  ::spec/deployment-pagination}]]]}))))
+                           :pagination-db-path    ::spec/deployment-pagination}]]]}))))
 
 (reg-event-fx
   ::decommission
@@ -271,7 +272,7 @@
      [:nuvlabox
       {:filter (general-utils/filter-eq-ids (mapv :parent statuses))
        :select "id, name, nuvlabox-status"
-       :last 100}
+       :last   100}
       #(dispatch [::set-nuvlabox-managers
                   (into {}
                         (for [status statuses]
@@ -389,7 +390,7 @@
   ::get-nuvlaedge-release
   (fn [{{:keys [::spec/nuvlaedge-release] :as db} :db} [_ {:keys [nuvlabox-engine-version]}]]
     (when (and nuvlabox-engine-version
-            (not= (:release nuvlaedge-release) nuvlabox-engine-version))
+               (not= (:release nuvlaedge-release) nuvlabox-engine-version))
       (-> {:db (assoc db ::spec/nuvlaedge-release nil)}
           (assoc ::cimi-api-fx/search [:nuvlabox-release
                                        {:filter  (str "release='" nuvlabox-engine-version "'")
@@ -397,3 +398,44 @@
                                         :orderby "release-date:desc"
                                         :last    10000}
                                        #(dispatch [::set-nuvlaedge-release (first (:resources %))])])))))
+
+(reg-event-fx
+  ::fetch-edge-stats
+  (fn [{{:keys [::spec/nuvlabox] :as _db} :db} [_]]
+    (let [nuvlabox-id-filter (str "nuvlaedge-id='" (:id nuvlabox) "'")
+          time-range-filter  (str "@timestamp>'2024-01-05T07:29:27.004Z'"
+                                  " and "
+                                  "@timestamp<'2024-01-06T09:29:27.004Z'")
+          body               {:tsds-aggregation
+                              (general-utils/edn->json
+                                {:aggregations
+                                 {:tsds-stats
+                                  {:date_histogram
+                                   {:field          "@timestamp"
+                                    :fixed_interval "10m"}
+                                   :aggregations
+                                   {:load {:avg {:field :load}}}}}})
+                              :last   0
+                              :filter (str "("
+                                           nuvlabox-id-filter
+                                           " and "
+                                           time-range-filter
+                                           ")")
+                              }]
+      {:http-xhrio {:method          :put
+                    :uri             "/api/ts-nuvlaedge"
+                    :format          (ajax/url-request-format)
+                    :params          body
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-edge-stats-success]
+                    :on-failure      [::fetch-edge-stats-failure]}})))
+
+(reg-event-fx
+  ::fetch-edge-stats-success
+  (fn []
+    (prn "success!!")))
+
+(reg-event-fx
+  ::fetch-edge-stats-failure
+  (fn []
+    (prn "failure!!")))

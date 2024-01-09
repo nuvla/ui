@@ -1104,7 +1104,7 @@
                                                 (reset! selected-period period)
                                                 (fetch-edge-stats period @selected-granularity))))}]]
            [:span
-            "with data sent every "
+            "with data received every "
             [ui/Dropdown {:inline true
                           :close-on-change true
                           :default-value (default-granularity (first time-options))

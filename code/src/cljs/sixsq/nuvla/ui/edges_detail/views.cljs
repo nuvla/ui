@@ -1111,13 +1111,14 @@
         [ui/GridRow
          [ui/GridColumn
           [:div
-           [:span
+           [:span {:style {:margin-right 5}}
             "Show data for "
             [TimespanSelector {:on-change (ui-callback/value
                                             (fn [period]
                                               (do
                                                 (reset! selected-period period)
-                                                (fetch-edge-stats period @selected-granularity))))}]
+                                                (fetch-edge-stats period @selected-granularity))))}]]
+           [:span
             "with data sent every "
             [GranularitySelector {:on-change (ui-callback/value
                                                (fn [granularity]

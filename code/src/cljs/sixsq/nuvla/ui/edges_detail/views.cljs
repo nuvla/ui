@@ -916,16 +916,26 @@
 
 (def time-options ["past day" "past week" "past month" "past 3 months" "past year"])
 
-(defn TimeSelector [{:keys [on-change]}]
+(def granularity-options ["10m" "1h" "1d" "10d"])
+
+
+(defn TimespanSelector [{:keys [on-change]}]
   (let [default-value (first time-options)
         time-options  (mapv (fn [o] {:key o :text o :value o}) time-options)]
-    [:span
-     "Show data for "
-     [ui/Dropdown {:inline          true
-                   :close-on-change true
-                   :options         time-options
-                   :default-value   default-value
-                   :on-change       on-change}]]))
+    [ui/Dropdown {:inline          true
+                  :close-on-change true
+                  :options         time-options
+                  :default-value   default-value
+                  :on-change       on-change}]))
+
+(defn GranularitySelector [{:keys [on-change]}]
+  (let [default-value (first granularity-options)
+        granularity-options (mapv (fn [o] {:key o :text o :value o}) granularity-options)]
+    [ui/Dropdown {:inline          true
+                  :close-on-change true
+                  :options         granularity-options
+                  :default-value   default-value
+                  :on-change       on-change}]))
 
 (defn CpuLoadTimeSeries [data]
   (r/with-let [time-filter (r/atom "past day")]
@@ -937,7 +947,7 @@
                                    "past year" data)]
       [:div
        #_[:p (prn-str data)]
-       #_[TimeSelector {:on-change (ui-callback/value
+       #_[TimespanSelector {:on-change (ui-callback/value
                                      (fn [value]
                                        (reset! time-filter value)))}]
        [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
@@ -983,7 +993,7 @@
                                    "past year" data)]
       [:div
        #_[:p (prn-str data)]
-       #_[TimeSelector {:on-change (ui-callback/value
+       #_[TimespanSelector {:on-change (ui-callback/value
                                      (fn [value]
                                        (reset! time-filter value)))}]
        [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
@@ -1029,7 +1039,7 @@
                             "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
                             "past year" data)]
       [:div
-       [TimeSelector {:on-change (ui-callback/value
+       [TimespanSelector {:on-change (ui-callback/value
                                    (fn [value]
                                      (reset! time-filter value)))}]
        [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
@@ -1066,27 +1076,31 @@
                                             :title {:display "true"
                                                     :text    "Status"}}}}}]])))
 
+
+
 (defn HistoricalData []
   (let [edge-stats          (subscribe [::subs/edge-stats])
+        selected-period     (r/atom (first time-options))
         default-granularity {"past day"      "10m"
                              "past week"     "1h"
                              "past 3 months" "1d"
                              "past month"    "1d"
                              "past year"     "10d"}
-        fetch-edge-stats    (fn fetch-edge-stats
-                              ([period] (fetch-edge-stats period (default-granularity period)))
-                              ([period granularity]
-                               (let [now (time/now)
-                                     [from to] (case period
-                                                 "past day" [(time/subtract-days now 1) now]
-                                                 "past week" [(time/subtract-weeks now 1) now]
-                                                 "past 3 months" [(time/subtract-months now 3) now]
-                                                 "past month" [(time/subtract-months now 1) now]
-                                                 "past year" [(time/subtract-years now 1) now])]
-                                 (dispatch [::events/fetch-edge-stats
-                                            {:from        from
-                                             :to          to
-                                             :granularity granularity}]))))]
+        selected-granularity (r/atom (default-granularity @selected-period))
+        fetch-edge-stats     (fn fetch-edge-stats
+                               ([period] (fetch-edge-stats period (default-granularity period)))
+                               ([period granularity]
+                                (let [now (time/now)
+                                      [from to] (case period
+                                                  "past day" [(time/subtract-days now 1) now]
+                                                  "past week" [(time/subtract-weeks now 1) now]
+                                                  "past 3 months" [(time/subtract-months now 3) now]
+                                                  "past month" [(time/subtract-months now 1) now]
+                                                  "past year" [(time/subtract-years now 1) now])]
+                                  (dispatch [::events/fetch-edge-stats
+                                             {:from        from
+                                              :to          to
+                                              :granularity granularity}]))))]
     (fetch-edge-stats (first time-options))
     (fn []
       [ui/TabPane
@@ -1096,9 +1110,20 @@
                  :celled    "internally"}
         [ui/GridRow
          [ui/GridColumn
-          [TimeSelector {:on-change (ui-callback/value
-                                      (fn [period]
-                                        (fetch-edge-stats period (default-granularity period))))}]]]
+          [:div
+           [:span
+            "Show data for "
+            [TimespanSelector {:on-change (ui-callback/value
+                                            (fn [period]
+                                              (do
+                                                (reset! selected-period period)
+                                                (fetch-edge-stats period @selected-granularity))))}]
+            "with data sent every "
+            [GranularitySelector {:on-change (ui-callback/value
+                                               (fn [granularity]
+                                                 (do
+                                                   (reset! selected-granularity granularity)
+                                                   (fetch-edge-stats @selected-period granularity))))}]]]]]
         [ui/GridRow
          [ui/GridColumn
           [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats)]]

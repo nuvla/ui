@@ -918,25 +918,6 @@
 
 (def granularity-options ["10m" "1h" "1d" "10d"])
 
-
-(defn TimespanSelector [{:keys [on-change]}]
-  (let [default-value (first time-options)
-        time-options  (mapv (fn [o] {:key o :text o :value o}) time-options)]
-    [ui/Dropdown {:inline          true
-                  :close-on-change true
-                  :options         time-options
-                  :default-value   default-value
-                  :on-change       on-change}]))
-
-(defn GranularitySelector [{:keys [on-change]}]
-  (let [default-value (first granularity-options)
-        granularity-options (mapv (fn [o] {:key o :text o :value o}) granularity-options)]
-    [ui/Dropdown {:inline          true
-                  :close-on-change true
-                  :options         granularity-options
-                  :default-value   default-value
-                  :on-change       on-change}]))
-
 (defn CpuLoadTimeSeries [data]
   (r/with-let [time-filter (r/atom "past day")]
     (let [data-to-display data #_(case @time-filter
@@ -1039,7 +1020,7 @@
                             "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
                             "past year" data)]
       [:div
-       [TimespanSelector {:on-change (ui-callback/value
+       #_[TimespanSelector {:on-change (ui-callback/value
                                    (fn [value]
                                      (reset! time-filter value)))}]
        [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
@@ -1113,18 +1094,29 @@
           [:div
            [:span {:style {:margin-right 5}}
             "Show data for "
-            [TimespanSelector {:on-change (ui-callback/value
+            [ui/Dropdown {:inline true
+                          :close-on-change true
+                          :default-value (first time-options)
+                          :options (mapv (fn [o] {:key o :text o :value o}) time-options)
+                          :on-change (ui-callback/value
                                             (fn [period]
                                               (do
                                                 (reset! selected-period period)
                                                 (fetch-edge-stats period @selected-granularity))))}]]
            [:span
             "with data sent every "
-            [GranularitySelector {:on-change (ui-callback/value
-                                               (fn [granularity]
-                                                 (do
-                                                   (reset! selected-granularity granularity)
-                                                   (fetch-edge-stats @selected-period granularity))))}]]]]]
+            [ui/Dropdown {:inline true
+                          :close-on-change true
+                          :default-value (default-granularity (first time-options))
+                          :options (mapv (fn [o] {:key o :text o :value o}) (case @selected-period
+                                                                              "past day"  (remove #(when % (str/includes? % "d")) granularity-options)
+                                                                              "past week" (remove #(= % "10d") granularity-options)
+                                                                               granularity-options))
+                          :on-change (ui-callback/value
+                                       (fn [granularity]
+                                         (do
+                                           (reset! selected-granularity granularity)
+                                           (fetch-edge-stats @selected-period granularity))))}]]]]]
         [ui/GridRow
          [ui/GridColumn
           [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats)]]

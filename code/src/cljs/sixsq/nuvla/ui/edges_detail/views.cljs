@@ -917,7 +917,7 @@
 
 (def granularity-options ["10m" "1h" "1d" "10d"])
 
-(defn CpuLoadTimeSeries [data]
+(defn CpuLoadTimeSeries [data granularity]
   [:div
    [plot/Line {:data    {:datasets [{:data            (sort-by :x data)
                                      :label           "CPU usage (%)"
@@ -933,7 +933,10 @@
                                                           :max (apply max (mapv :x data))}}}
                                     :title  {:display  true
                                              :text     "Average CPU load (%)"
-                                             :position "top"}}
+                                             :position "top"}
+                                    :subtitle  {:display  true
+                                                :text     (str "Every " granularity)
+                                                :position "bottom"}}
                          :elements {:point {:radius 1}}
 
                          :scales   {:x {:type  "time"
@@ -952,7 +955,7 @@
                {:x d
                 :y p}))))
 
-(defn MemUsageTimeSeries [data]
+(defn MemUsageTimeSeries [data granularity]
   [:div
    [plot/Line {:data    {:datasets [{:data            (sort-by :x data)
                                      :label           "MEM usage (Mb)"
@@ -968,7 +971,10 @@
                                                           :max (apply max (mapv :x data))}}}
                                     :title  {:display  true
                                              :text     "Average memory consumption (Mb)"
-                                             :position "top"}}
+                                             :position "top"}
+                                    :subtitle  {:display  true
+                                                :text     (str "Every " granularity)
+                                                :position "bottom"}}
                          :elements {:point {:radius 1}}
 
                          :scales   {:x {:type  "time"
@@ -1034,76 +1040,57 @@
                                             :title {:display "true"
                                                     :text    "Status"}}}}}]])))
 
-
+(def period->granularity {"past day"      "10m"
+                          "past week"     "3h"
+                          "past month"    "12h"
+                          "past 3 months" "1d"
+                          "past year"     "5d"})
 
 (defn HistoricalData []
   (let [edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
         selected-period       (r/atom (first time-options))
-        default-granularity   {"past day"      "10m"
-                               "past week"     "1h"
-                               "past 3 months" "1d"
-                               "past month"    "1d"
-                               "past year"     "10d"}
-        selected-granularity   (r/atom (default-granularity @selected-period))
-        fetch-edge-stats       (fn fetch-edge-stats
-                                 ([period] (fetch-edge-stats period (default-granularity period)))
-                                 ([period granularity]
-                                  (let [now (time/now)
-                                        [from to] (case period
-                                                    "past day" [(time/subtract-days now 1) now]
-                                                    "past week" [(time/subtract-weeks now 1) now]
-                                                    "past 3 months" [(time/subtract-months now 3) now]
-                                                    "past month" [(time/subtract-months now 1) now]
-                                                    "past year" [(time/subtract-years now 1) now])]
-                                    (dispatch [::events/fetch-edge-stats
-                                               {:from        from
-                                                :to          to
-                                                :granularity granularity}]))))
-        filtered-granularity-opts (fn [opts] (case @selected-period
-                                               "past day" (remove #(when % (str/includes? % "d")) opts)
-                                               "past week" (remove #(= % "10d") opts)
-                                               opts))]
+        fetch-edge-stats       (fn [period]
+                                 (let [now (time/now)
+                                       [from to] (case period
+                                                   "past day" [(time/subtract-days now 1) now]
+                                                   "past week" [(time/subtract-weeks now 1) now]
+                                                   "past 3 months" [(time/subtract-months now 3) now]
+                                                   "past month" [(time/subtract-months now 1) now]
+                                                   "past year" [(time/subtract-years now 1) now])]
+                                   (dispatch [::events/fetch-edge-stats
+                                              {:from        from
+                                               :to          to
+                                               :granularity (get period->granularity period)}])))]
     (fetch-edge-stats (first time-options))
     (fn []
       [ui/TabPane
+       [:div {:style {:display "flex"
+                      :justify-content "end"
+                      :padding "1em"}}
+        [ui/Menu {:compact true}
+         [ui/Dropdown {:item            "true"
+                       :inline          true
+                       :close-on-change true
+                       :default-value   (first time-options)
+                       :options         (mapv (fn [o] {:key o :text o :value o}) time-options)
+                       :on-change       (ui-callback/value
+                                          (fn [period]
+                                            (do
+                                              (reset! selected-period period)
+                                              (fetch-edge-stats period))))}]]
+        (when @loading? [ui/Loader {:active true
+                                    :inline true
+                                    :size   "tiny"}])]
        [ui/Grid {:columns   2
                  :stackable true
                  :divided   true
                  :celled    "internally"}
         [ui/GridRow
          [ui/GridColumn
-          [:div
-           [:span {:style {:margin-right 5}}
-            "Show data for "
-            [ui/Dropdown {:inline true
-                          :close-on-change true
-                          :default-value (first time-options)
-                          :options (mapv (fn [o] {:key o :text o :value o}) time-options)
-                          :on-change (ui-callback/value
-                                            (fn [period]
-                                              (do
-                                                (reset! selected-period period)
-                                                (fetch-edge-stats period @selected-granularity))))}]]
-           [:span {:style {:margin-right 5}}
-            "with data received every "
-            [ui/Dropdown {:inline true
-                          :close-on-change true
-                          :default-value (default-granularity (first time-options))
-                          :options (mapv (fn [o] {:key o :text o :value o}) (filtered-granularity-opts granularity-options))
-                          :on-change (ui-callback/value
-                                       (fn [granularity]
-                                         (do
-                                           (reset! selected-granularity granularity)
-                                           (fetch-edge-stats @selected-period granularity))))}]]
-           (when @loading? [ui/Loader {:active true
-                                       :inline true
-                                       :size   "tiny"}])]]]
-        [ui/GridRow
+          [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats) (get period->granularity @selected-period)]]
          [ui/GridColumn
-          [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats)]]
-         [ui/GridColumn
-          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]]
+          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats) (get period->granularity @selected-period)]]
          #_[ui/GridColumn
             [StatusTimeSeries (generate-fake-online-offline-data)]]]]])))
 

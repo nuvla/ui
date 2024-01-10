@@ -12,7 +12,7 @@
 (def Scatter (reagent/adapt-react-class ScatterChart))
 
 (def Line (reagent/adapt-react-class LineChart))
-(.register Line zoomPlugin)
+(.register LineChart zoomPlugin)
 
 
 

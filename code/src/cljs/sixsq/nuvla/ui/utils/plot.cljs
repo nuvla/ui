@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.utils.plot
   (:require ["react-chartjs-2" :rename {Bar BarChart Doughnut DoughnutChart Line LineChart Scatter ScatterChart}]
             [reagent.core :as reagent]
-            ["chartjs-plugin-zoom" :refer [zoomPlugin]]))
+            ["chartjs-plugin-zoom" :refer [zoomPlugin]]
+            ["chartjs-adapter-date-fns"]))
 
 
 (def Bar (reagent/adapt-react-class BarChart))

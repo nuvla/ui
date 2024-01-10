@@ -31,8 +31,7 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            ["chartjs-adapter-date-fns"]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)

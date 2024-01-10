@@ -919,42 +919,31 @@
 (def granularity-options ["10m" "1h" "1d" "10d"])
 
 (defn CpuLoadTimeSeries [data]
-  (r/with-let [time-filter (r/atom "past day")]
-    (let [data-to-display data #_(case @time-filter
-                                   "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
-                                   "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
-                                   "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
-                                   "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
-                                   "past year" data)]
-      [:div
-       #_[:p (prn-str data)]
-       #_[TimespanSelector {:on-change (ui-callback/value
-                                     (fn [value]
-                                       (reset! time-filter value)))}]
-       [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
-                                         :label           "CPU usage (%)"
-                                         :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                         :borderColor     "rgb(230, 99, 100)"
-                                         :borderWidth     1}]}
+  [:div
+   [plot/Line {:data    {:datasets [{:data            (sort-by :x data)
+                                     :label           "CPU usage (%)"
+                                     :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                     :borderColor     "rgb(230, 99, 100)"
+                                     :borderWidth     1}]}
 
-                   :options {:plugins  {:legend {:display false}
-                                        :zoom   {:pan    {:enabled true}
-                                                 :zoom   {:wheel {:enabled true}
-                                                          :mode  "x"}
-                                                 :limits {:x {:min (apply min (mapv :x data-to-display))
-                                                              :max (apply max (mapv :x data-to-display))}}}
-                                        :title  {:display  true
-                                                 :text     "Average CPU load (%)"
-                                                 :position "top"}}
-                             :elements {:point {:radius 1}}
+               :options {:plugins  {:legend {:display false}
+                                    :zoom   {:pan    {:enabled true}
+                                             :zoom   {:wheel {:enabled true}
+                                                      :mode  "x"}
+                                             :limits {:x {:min (apply min (mapv :x data))
+                                                          :max (apply max (mapv :x data))}}}
+                                    :title  {:display  true
+                                             :text     "Average CPU load (%)"
+                                             :position "top"}}
+                         :elements {:point {:radius 1}}
 
-                             :scales   {:x {:type  "time"
-                                            :title {:display "true"
-                                                    :text    "Time"}}
-                                        :y {:max   500
-                                            :min   0
-                                            :title {:display "true"
-                                                    :text    "Percentage (%)"}}}}}]])))
+                         :scales   {:x {:type  "time"
+                                        :title {:display "true"
+                                                :text    "Time"}}
+                                    :y {:max   500
+                                        :min   0
+                                        :title {:display "true"
+                                                :text    "Percentage (%)"}}}}}]])
 
 (defn prepare-mem-usage-data
   [edge-stats]
@@ -965,42 +954,31 @@
                 :y p}))))
 
 (defn MemUsageTimeSeries [data]
-  (r/with-let [time-filter (r/atom "past day")]
-    (let [data-to-display data #_(case @time-filter
-                                   "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
-                                   "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
-                                   "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
-                                   "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
-                                   "past year" data)]
-      [:div
-       #_[:p (prn-str data)]
-       #_[TimespanSelector {:on-change (ui-callback/value
-                                     (fn [value]
-                                       (reset! time-filter value)))}]
-       [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
-                                         :label           "MEM usage (Mb)"
-                                         :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                         :borderColor     "rgb(230, 99, 100)"
-                                         :borderWidth     1}]}
+  [:div
+   [plot/Line {:data    {:datasets [{:data            (sort-by :x data)
+                                     :label           "MEM usage (Mb)"
+                                     :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                     :borderColor     "rgb(230, 99, 100)"
+                                     :borderWidth     1}]}
 
-                   :options {:plugins  {:legend {:display false}
-                                        :zoom   {:pan    {:enabled true}
-                                                 :zoom   {:wheel {:enabled true}
-                                                          :mode  "x"}
-                                                 :limits {:x {:min (apply min (mapv :x data-to-display))
-                                                              :max (apply max (mapv :x data-to-display))}}}
-                                        :title  {:display  true
-                                                 :text     "Average memory consumption (Mb)"
-                                                 :position "top"}}
-                             :elements {:point {:radius 1}}
+               :options {:plugins  {:legend {:display false}
+                                    :zoom   {:pan    {:enabled true}
+                                             :zoom   {:wheel {:enabled true}
+                                                      :mode  "x"}
+                                             :limits {:x {:min (apply min (mapv :x data))
+                                                          :max (apply max (mapv :x data))}}}
+                                    :title  {:display  true
+                                             :text     "Average memory consumption (Mb)"
+                                             :position "top"}}
+                         :elements {:point {:radius 1}}
 
-                             :scales   {:x {:type  "time"
-                                            :title {:display "true"
-                                                    :text    "Time"}}
-                                        :y {:max   10000
-                                            :min   0
-                                            :title {:display "true"
-                                                    :text    "Mem usage (Mb)"}}}}}]])))
+                         :scales   {:x {:type  "time"
+                                        :title {:display "true"
+                                                :text    "Time"}}
+                                    :y {:max   10000
+                                        :min   0
+                                        :title {:display "true"
+                                                :text    "Mem usage (Mb)"}}}}}]])
 
 (defn generate-fake-online-offline-data []
   (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
@@ -1123,7 +1101,6 @@
                                        :inline true
                                        :size "tiny"}])]]]
         [ui/GridRow
-
          [ui/GridColumn
           [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats)]]
          [ui/GridColumn

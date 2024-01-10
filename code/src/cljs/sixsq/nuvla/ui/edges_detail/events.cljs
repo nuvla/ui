@@ -402,7 +402,7 @@
 
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox] :as _db} :db} [_ {:keys [from to granularity]}]]
+  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity]}]]
     (let [nuvlabox-id-filter (str "nuvlaedge-id='" (:id nuvlabox) "'")
           time-range-filter  (str "@timestamp>'" (time/time->utc-str from) "'"
                                   " and "
@@ -424,7 +424,8 @@
                                            time-range-filter
                                            ")")
                               }]
-      {:http-xhrio {:method          :put
+      {:db (assoc db ::spec/loading? true)
+       :http-xhrio {:method          :put
                     :uri             "/api/ts-nuvlaedge"
                     :format          (ajax/url-request-format)
                     :params          body
@@ -438,11 +439,13 @@
     {:db (assoc db ::spec/edge-stats (->> response
                                           :aggregations
                                           :tsds-stats
-                                          :buckets))}))
+                                          :buckets)
+                   ::spec/loading? false)}))
 
 (reg-event-fx
   ::fetch-edge-stats-failure
-  (fn []
-    (prn "failure!!")))
+  (fn [{db :db} _]
+    (prn "failure!!!")
+    {:db (assoc db ::spec/loading? false)}))
 
 

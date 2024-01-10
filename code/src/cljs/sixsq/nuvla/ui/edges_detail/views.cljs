@@ -1061,6 +1061,7 @@
 
 (defn HistoricalData []
   (let [edge-stats          (subscribe [::subs/edge-stats])
+        loading?            (subscribe [::subs/loading?])
         selected-period     (r/atom (first time-options))
         default-granularity {"past day"      "10m"
                              "past week"     "1h"
@@ -1068,6 +1069,10 @@
                              "past month"    "1d"
                              "past year"     "10d"}
         selected-granularity (r/atom (default-granularity @selected-period))
+        granularity-options  (case @selected-period
+                               "past day"  (remove #(when % (str/includes? % "d")) granularity-options)
+                               "past week" (remove #(= % "10d") granularity-options)
+                               granularity-options)
         fetch-edge-stats     (fn fetch-edge-stats
                                ([period] (fetch-edge-stats period (default-granularity period)))
                                ([period granularity]
@@ -1103,21 +1108,22 @@
                                               (do
                                                 (reset! selected-period period)
                                                 (fetch-edge-stats period @selected-granularity))))}]]
-           [:span
+           [:span {:style {:margin-right 5}}
             "with data received every "
             [ui/Dropdown {:inline true
                           :close-on-change true
                           :default-value (default-granularity (first time-options))
-                          :options (mapv (fn [o] {:key o :text o :value o}) (case @selected-period
-                                                                              "past day"  (remove #(when % (str/includes? % "d")) granularity-options)
-                                                                              "past week" (remove #(= % "10d") granularity-options)
-                                                                               granularity-options))
+                          :options (mapv (fn [o] {:key o :text o :value o}) granularity-options)
                           :on-change (ui-callback/value
                                        (fn [granularity]
                                          (do
                                            (reset! selected-granularity granularity)
-                                           (fetch-edge-stats @selected-period granularity))))}]]]]]
+                                           (fetch-edge-stats @selected-period granularity))))}]]
+           (when @loading? [ui/Loader {:active true
+                                       :inline true
+                                       :size "tiny"}])]]]
         [ui/GridRow
+
          [ui/GridColumn
           [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats)]]
          [ui/GridColumn

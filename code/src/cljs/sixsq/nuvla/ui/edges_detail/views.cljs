@@ -926,11 +926,6 @@
                                      :borderWidth     1}]}
 
                :options {:plugins  {:legend {:display false}
-                                    :zoom   {:pan    {:enabled true}
-                                             :zoom   {:wheel {:enabled true}
-                                                      :mode  "x"}
-                                             :limits {:x {:min (apply min (mapv :x data))
-                                                          :max (apply max (mapv :x data))}}}
                                     :title  {:display  true
                                              :text     "Average CPU load (%)"
                                              :position "top"}
@@ -964,11 +959,6 @@
                                      :borderWidth     1}]}
 
                :options {:plugins  {:legend {:display false}
-                                    :zoom   {:pan    {:enabled true}
-                                             :zoom   {:wheel {:enabled true}
-                                                      :mode  "x"}
-                                             :limits {:x {:min (apply min (mapv :x data))
-                                                          :max (apply max (mapv :x data))}}}
                                     :title  {:display  true
                                              :text     "Average memory consumption (Mb)"
                                              :position "top"}
@@ -1067,7 +1057,12 @@
       [ui/TabPane
        [:div {:style {:display "flex"
                       :justify-content "end"
+                      :align-items "center"
                       :padding "1em"}}
+        (when @loading? [ui/Loader {:active true
+                                    :inline true
+                                    :style {:margin-right 10}
+                                    :size   "tiny"}])
         [ui/Menu {:compact true}
          [ui/Dropdown {:item            "true"
                        :inline          true
@@ -1078,10 +1073,7 @@
                                           (fn [period]
                                             (do
                                               (reset! selected-period period)
-                                              (fetch-edge-stats period))))}]]
-        (when @loading? [ui/Loader {:active true
-                                    :inline true
-                                    :size   "tiny"}])]
+                                              (fetch-edge-stats period))))}]]]
        [ui/Grid {:columns   2
                  :stackable true
                  :divided   true

@@ -1057,31 +1057,34 @@
                                                :to          to
                                                :granularity (get timespan->granularity timespan)}])))]
     (fetch-edge-stats (first timespan-options))
+    (js/console.log (fetch-edge-stats (second timespan-options)))
     (fn []
       [ui/TabPane
-       [:div {:style {:display "flex"
-                      :justify-content "end"
-                      :align-items "center"
-                      :padding "1em"}}
-        (when @loading? [ui/Loader {:active true
-                                    :inline true
-                                    :style {:margin-right 10}
-                                    :size   "tiny"}])
-        [ui/Menu {:compact true}
-         [ui/Dropdown {:item            true
-                       :inline          true
-                       :close-on-change true
-                       :default-value   (first timespan-options)
-                       :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
-                       :on-change       (ui-callback/value
-                                          (fn [period]
-                                            (do
-                                              (reset! selected-period period)
-                                              (fetch-edge-stats period))))}]]]
+
        [ui/Grid {:columns   2
                  :stackable true
                  :divided   true
                  :celled    "internally"}
+        [:div {:style {:display "flex"
+                       :width "100%"
+                       :justify-content "end"
+                       :align-items "center"
+                       :padding-bottom "1em"}}
+         (when @loading? [ui/Loader {:active true
+                                     :inline true
+                                     :style {:margin-right 10}
+                                     :size   "tiny"}])
+         [ui/Menu {:compact true}
+          [ui/Dropdown {:item            true
+                        :inline          true
+                        :close-on-change true
+                        :default-value   (first timespan-options)
+                        :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
+                        :on-change       (ui-callback/value
+                                           (fn [period]
+                                             (do
+                                               (reset! selected-period period)
+                                               (fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn
           [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats) (get timespan->granularity @selected-period)]]

@@ -1041,12 +1041,12 @@
   (let [edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
         selected-period       (r/atom (first timespan-options))
-        fetch-edge-stats       (fn [period]
+        fetch-edge-stats       (fn [timespan]
                                  (let [now (time/now)
-                                       [from to] (case period
-                                                   "last 15 minutes" [[(time/subtract-minutes now 15) now]]
-                                                   "last hour" [[(time/subtract-minutes now 60) now]]
-                                                   "last 6 hours" [[(time/subtract-minutes now 360) now]]
+                                       [from to] (case timespan
+                                                   "last 15 minutes" [(time/subtract-minutes now 15) now]
+                                                   "last hour" [(time/subtract-minutes now 60) now]
+                                                   "last 6 hours" [(time/subtract-minutes now 360) now]
                                                    "last day" [(time/subtract-days now 1) now]
                                                    "last week" [(time/subtract-days now 7) now]
                                                    "last month" [(time/subtract-months now 1) now]
@@ -1055,7 +1055,7 @@
                                    (dispatch [::events/fetch-edge-stats
                                               {:from        from
                                                :to          to
-                                               :granularity (get timespan->granularity period)}])))]
+                                               :granularity (get timespan->granularity timespan)}])))]
     (fetch-edge-stats (first timespan-options))
     (fn []
       [ui/TabPane
@@ -1068,7 +1068,7 @@
                                     :style {:margin-right 10}
                                     :size   "tiny"}])
         [ui/Menu {:compact true}
-         [ui/Dropdown {:item            "true"
+         [ui/Dropdown {:item            true
                        :inline          true
                        :close-on-change true
                        :default-value   (first timespan-options)

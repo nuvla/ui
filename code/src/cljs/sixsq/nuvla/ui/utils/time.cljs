@@ -14,6 +14,7 @@
                                 subMonths
                                 subYears
                                 subMilliseconds
+                                subMinutes
                                 interval
                                 eachDayOfInterval
                                 eachHourOfInterval
@@ -50,13 +51,13 @@
   [date milliseconds]
   (subMilliseconds date milliseconds))
 
+(defn subtract-minutes
+  [date minutes]
+  (subMinutes date minutes))
+
 (defn subtract-days
   [date days]
   (subDays date days))
-
-(defn subtract-weeks
-  [date weeks]
-  (subWeeks date weeks))
 
 (defn subtract-months
   [date months]

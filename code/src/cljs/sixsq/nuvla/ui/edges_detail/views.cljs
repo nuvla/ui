@@ -913,9 +913,7 @@
                {:x d
                 :y p}))))
 
-(def time-options ["past day" "past week" "past month" "past 3 months" "past year"])
-
-(def granularity-options ["10m" "1h" "1d" "10d"])
+(def timespan-options ["last 15 minutes" "last day" "last week" "last month" "last 3 months" "last year"])
 
 (defn CpuLoadTimeSeries [data granularity]
   [:div
@@ -1030,29 +1028,35 @@
                                             :title {:display "true"
                                                     :text    "Status"}}}}}]])))
 
-(def period->granularity {"past day"      "10m"
-                          "past week"     "3h"
-                          "past month"    "12h"
-                          "past 3 months" "1d"
-                          "past year"     "5d"})
+(def timespan->granularity {"last 15 minutes" "10s"
+                            "last hour"       "30s"
+                            "last 6 hours"    "3m"
+                            "last day"        "10m"
+                            "last week"       "1h"
+                            "last month"      "6h"
+                            "last 3 months"   "2d"
+                            "last year"       "7d"})
 
 (defn HistoricalData []
   (let [edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
-        selected-period       (r/atom (first time-options))
+        selected-period       (r/atom (first timespan-options))
         fetch-edge-stats       (fn [period]
                                  (let [now (time/now)
                                        [from to] (case period
-                                                   "past day" [(time/subtract-days now 1) now]
-                                                   "past week" [(time/subtract-weeks now 1) now]
-                                                   "past 3 months" [(time/subtract-months now 3) now]
-                                                   "past month" [(time/subtract-months now 1) now]
-                                                   "past year" [(time/subtract-years now 1) now])]
+                                                   "last 15 minutes" [[(time/subtract-minutes now 15) now]]
+                                                   "last hour" [[(time/subtract-minutes now 60) now]]
+                                                   "last 6 hours" [[(time/subtract-minutes now 360) now]]
+                                                   "last day" [(time/subtract-days now 1) now]
+                                                   "last week" [(time/subtract-days now 7) now]
+                                                   "last month" [(time/subtract-months now 1) now]
+                                                   "last 3 months" [(time/subtract-months now 3) now]
+                                                   "last year" [(time/subtract-years now 1) now])]
                                    (dispatch [::events/fetch-edge-stats
                                               {:from        from
                                                :to          to
-                                               :granularity (get period->granularity period)}])))]
-    (fetch-edge-stats (first time-options))
+                                               :granularity (get timespan->granularity period)}])))]
+    (fetch-edge-stats (first timespan-options))
     (fn []
       [ui/TabPane
        [:div {:style {:display "flex"
@@ -1067,8 +1071,8 @@
          [ui/Dropdown {:item            "true"
                        :inline          true
                        :close-on-change true
-                       :default-value   (first time-options)
-                       :options         (mapv (fn [o] {:key o :text o :value o}) time-options)
+                       :default-value   (first timespan-options)
+                       :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
                        :on-change       (ui-callback/value
                                           (fn [period]
                                             (do
@@ -1080,9 +1084,9 @@
                  :celled    "internally"}
         [ui/GridRow
          [ui/GridColumn
-          [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats) (get period->granularity @selected-period)]]
+          [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats) (get timespan->granularity @selected-period)]]
          [ui/GridColumn
-          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats) (get period->granularity @selected-period)]]
+          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats) (get timespan->granularity @selected-period)]]
          #_[ui/GridColumn
             [StatusTimeSeries (generate-fake-online-offline-data)]]]]])))
 

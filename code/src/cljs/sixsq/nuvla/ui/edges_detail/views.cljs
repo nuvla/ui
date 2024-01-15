@@ -1057,7 +1057,6 @@
                                                :to          to
                                                :granularity (get timespan->granularity timespan)}])))]
     (fetch-edge-stats (first timespan-options))
-    (js/console.log (fetch-edge-stats (second timespan-options)))
     (fn []
       [ui/TabPane
 

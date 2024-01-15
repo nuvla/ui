@@ -893,14 +893,15 @@
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
 
-(defn generate-fake-data []
-  (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
-                                             :end-date   (time/now)})
-        percentages     (repeatedly (count dates-past-year) #(rand 99))]
-    (->> (zipmap dates-past-year percentages)
-         (mapv (fn [[d p]]
-                 {:x d
-                  :y p})))))
+(defn generate-fake-data-cpu []
+  (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
+                                                       :end-date   (time/now)}))]
+    (->> dates-past-year
+         (mapv (fn [d]
+                 {:timestamp d
+                  :load   (rand 99)
+                  :load-1 (rand 99)
+                  :load-5 (rand 99)})))))
 
 (comment
   (generate-fake-data))
@@ -916,29 +917,52 @@
 (def timespan-options ["last 15 minutes" "last day" "last week" "last month" "last 3 months" "last year"])
 
 (defn CpuLoadTimeSeries [data granularity]
-  [:div
-   [plot/Line {:data    {:datasets [{:data            (sort-by :x data)
-                                     :label           "CPU usage (%)"
-                                     :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                     :borderColor     "rgb(230, 99, 100)"
-                                     :borderWidth     1}]}
+  (let [load-dataset (->> data
+                          (mapv (fn [d] (select-keys d [:timestamp :load])))
+                          (sort-by :timestamp)
+                          (mapv vals))
+        load-1-dataset (->> data
+                          (mapv (fn [d] (select-keys d [:timestamp :load-1])))
+                          (sort-by :timestamp)
+                          (mapv vals))
+        load-5-dataset (->> data
+                          (mapv (fn [d] (select-keys d [:timestamp :load-5])))
+                          (sort-by :timestamp)
+                          (mapv vals))]
+    [:div
+     [plot/Line {:data    {:datasets [{:data            load-dataset
+                                       :label           "CPU load"
+                                       :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                       :borderColor     "rgb(230, 99, 100)"
+                                       :borderWidth     1}
+                                      {:data            load-1-dataset
+                                       :label           "CPU load for the last minute"
+                                       :backgroundColor "rgb(99, 230, 178, 0.5019)"
+                                       :borderColor     "rgb(99, 230, 178, 0.5019)"
+                                       :borderWidth     1}
+                                      {:data            load-5-dataset
+                                       :label           "CPU load for the last 5 minutes"
+                                       :backgroundColor "rgb(99, 101, 230, 1)"
+                                       :borderColor     "rgb(99, 101, 230)"
+                                       :borderWidth     1}]}
 
-               :options {:plugins  {:legend {:display false}
-                                    :title  {:display  true
-                                             :text     "Average CPU load (%)"
-                                             :position "top"}
-                                    :subtitle  {:display  true
-                                                :text     (str "Every " granularity)
-                                                :position "bottom"}}
-                         :elements {:point {:radius 1}}
+                 :options {:plugins  {#_#_:legend   {:display false}
+                                      :legend {}
+                                      :title    {:display  true
+                                                 :text     "Average CPU load (%)"
+                                                 :position "top"}
+                                      :subtitle {:display  true
+                                                 :text     (str "Every " granularity)
+                                                 :position "bottom"}}
+                           :elements {:point {:radius 1}}
 
-                         :scales   {:x {:type  "time"
-                                        :title {:display "true"
-                                                :text    "Time"}}
-                                    :y {:max   500
-                                        :min   0
-                                        :title {:display "true"
-                                                :text    "Percentage (%)"}}}}}]])
+                           :scales   {:x {:type  "time"
+                                          :title {:display "true"
+                                                  :text    "Time"}}
+                                      :y {:max   500
+                                          :min   0
+                                          :title {:display "true"
+                                                  :text    "Percentage (%)"}}}}}]]))
 
 (defn prepare-mem-usage-data
   [edge-stats]
@@ -956,13 +980,13 @@
                                      :borderColor     "rgb(230, 99, 100)"
                                      :borderWidth     1}]}
 
-               :options {:plugins  {:legend {:display false}
-                                    :title  {:display  true
-                                             :text     "Average memory consumption (Mb)"
-                                             :position "top"}
-                                    :subtitle  {:display  true
-                                                :text     (str "Every " granularity)
-                                                :position "bottom"}}
+               :options {:plugins  {:legend   {:display false}
+                                    :title    {:display  true
+                                               :text     "Average memory consumption (Mb)"
+                                               :position "top"}
+                                    :subtitle {:display  true
+                                               :text     (str "Every " granularity)
+                                               :position "bottom"}}
                          :elements {:point {:radius 1}}
 
                          :scales   {:x {:type  "time"
@@ -1086,7 +1110,7 @@
                                                (fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn
-          [CpuLoadTimeSeries (prepare-cpu-load-data @edge-stats) (get timespan->granularity @selected-period)]]
+          [CpuLoadTimeSeries (generate-fake-data-cpu) #_(prepare-cpu-load-data @edge-stats) (get timespan->granularity @selected-period)]]
          [ui/GridColumn
           [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats) (get timespan->granularity @selected-period)]]
          #_[ui/GridColumn

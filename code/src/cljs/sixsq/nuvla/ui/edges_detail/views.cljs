@@ -899,9 +899,11 @@
     (->> dates-past-year
          (mapv (fn [d]
                  {:timestamp d
-                  :load   (rand 99)
-                  :load-1 (rand 99)
-                  :load-5 (rand 99)})))))
+                  :metric "cpu"
+                  :cpu       {:capacity 4
+                              :load     (rand 20)
+                              :load-1   (rand 20)
+                              :load-5   (rand 20)}})))))
 
 (defn generate-fake-data-tx-rx []
   (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
@@ -938,17 +940,29 @@
 
 (defn CpuLoadTimeSeries [data]
   (let [load-dataset (->> data
-                          (mapv (fn [d] (select-keys d [:timestamp :load])))
-                          (sort-by :timestamp)
-                          (mapv vals))
+                          (mapv (fn [d]
+                                  (let [load (get-in d [:cpu :load])
+                                        capacity (get-in d [:cpu :capacity])
+                                        percent (-> (general-utils/percentage load capacity)
+                                                    (general-utils/round-up :n-decimal 0))]
+                                    [(:timestamp d)
+                                     percent]))))
         load-1-dataset (->> data
-                          (mapv (fn [d] (select-keys d [:timestamp :load-1])))
-                          (sort-by :timestamp)
-                          (mapv vals))
+                            (mapv (fn [d]
+                                     (let [load (get-in d [:cpu :load-1])
+                                           capacity (get-in d [:cpu :capacity])
+                                           percent (-> (general-utils/percentage load capacity)
+                                                       (general-utils/round-up :n-decimal 0))]
+                                       [(:timestamp d)
+                                        percent]))))
         load-5-dataset (->> data
-                          (mapv (fn [d] (select-keys d [:timestamp :load-5])))
-                          (sort-by :timestamp)
-                          (mapv vals))]
+                            (mapv (fn [d]
+                                    (let [load (get-in d [:cpu :load-5])
+                                          capacity (get-in d [:cpu :capacity])
+                                          percent (-> (general-utils/percentage load capacity)
+                                                      (general-utils/round-up :n-decimal 0))]
+                                      [(:timestamp d)
+                                       percent]))))]
     [:div
      [plot/Line {:data    {:datasets [{:data            load-dataset
                                        :label           "CPU load"
@@ -1050,7 +1064,8 @@
                                    (dispatch [::events/fetch-edge-stats
                                               {:from        from
                                                :to          to
-                                               :granularity (get timespan->granularity timespan)}])))]
+                                               :granularity (get timespan->granularity timespan)}])))
+        fake-data (generate-fake-data-cpu)]
     (fetch-edge-stats (first timespan-options))
     (fn []
       [ui/TabPane
@@ -1081,7 +1096,7 @@
                                                (fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [CpuLoadTimeSeries (generate-fake-data-cpu) #_(prepare-cpu-load-data @edge-stats)]
+          [CpuLoadTimeSeries (sort-by :timestamp fake-data) #_(prepare-cpu-load-data @edge-stats)]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}

@@ -925,7 +925,7 @@
 
 (def timespan-options ["last 15 minutes" "last day" "last week" "last month" "last 3 months" "last year"])
 
-(defn CpuLoadTimeSeries [data granularity]
+(defn CpuLoadTimeSeries [data]
   (let [load-dataset (->> data
                           (mapv (fn [d] (select-keys d [:timestamp :load])))
                           (sort-by :timestamp)
@@ -955,14 +955,9 @@
                                        :borderColor     "rgb(99, 101, 230)"
                                        :borderWidth     1}]}
 
-                 :options {:plugins  {#_#_:legend   {:display false}
-                                      :legend {}
-                                      :title    {:display  true
+                 :options {:plugins  {:title    {:display  true
                                                  :text     "Average CPU load (%)"
-                                                 :position "top"}
-                                      :subtitle {:display  true
-                                                 :text     (str "Every " granularity)
-                                                 :position "bottom"}}
+                                                 :position "top"}}
                            :elements {:point {:radius 1}}
 
                            :scales   {:x {:type  "time"
@@ -973,7 +968,7 @@
                                           :title {:display "true"
                                                   :text    "Percentage (%)"}}}}}]]))
 
-(defn NetworkDataTimeSeries [data granularity]
+(defn NetworkDataTimeSeries [data]
   (let [bytes-transmitted-dataset (->> data
                                        (mapv (fn [d] (update d :bytes-transmitted (fn [x] (* -1 x)))))
                                        (mapv (fn [d] (select-keys d [:timestamp :bytes-transmitted])))
@@ -997,14 +992,9 @@
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
                                        :borderWidth     1}]}
 
-                 :options {:plugins  {#_#_:legend   {:display false}
-                                      :legend {}
-                                      :title    {:display  true
+                 :options {:plugins  {:title    {:display  true
                                                  :text     "Network Traffic (Bytes)"
-                                                 :position "top"}
-                                      :subtitle {:display  true
-                                                 :text     (str "Every " granularity)
-                                                 :position "bottom"}}
+                                                 :position "top"}}
                            :elements {:point {:radius 1}}
 
                            :scales   {:x {:type  "time"
@@ -1023,7 +1013,7 @@
                {:x d
                 :y p}))))
 
-(defn MemUsageTimeSeries [data granularity]
+(defn MemUsageTimeSeries [data]
   [:div
    [plot/Line {:data    {:datasets [{:data            (sort-by :x data)
                                      :label           "MEM usage (Mb)"
@@ -1034,10 +1024,7 @@
                :options {:plugins  {:legend   {:display false}
                                     :title    {:display  true
                                                :text     "Average memory consumption (Mb)"
-                                               :position "top"}
-                                    :subtitle {:display  true
-                                               :text     (str "Every " granularity)
-                                               :position "bottom"}}
+                                               :position "top"}}
                          :elements {:point {:radius 1}}
 
                          :scales   {:x {:type  "time"
@@ -1104,13 +1091,25 @@
                                                (reset! selected-period period)
                                                (fetch-edge-stats period))))}]]]
         [ui/GridRow
-         [ui/GridColumn
-          [CpuLoadTimeSeries (generate-fake-data-cpu) #_(prepare-cpu-load-data @edge-stats) (get timespan->granularity @selected-period)]]
-         [ui/GridColumn
-          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats) (get timespan->granularity @selected-period)]]]
+         [ui/GridColumn {:textAlign "center"}
+          [CpuLoadTimeSeries (generate-fake-data-cpu) #_(prepare-cpu-load-data @edge-stats)]
+          [ui/Label {:basic true
+                     :size "tiny"
+                     :style {:margin-top "1em"}}
+           (str "Every " (get timespan->granularity @selected-period))]]
+         [ui/GridColumn {:textAlign "center"}
+          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]
+          [ui/Label {:basic true
+                     :size "tiny"
+                     :style {:margin-top "1em"}}
+           (str "Every " (get timespan->granularity @selected-period))]]]
         [ui/GridRow
-         [ui/GridColumn
-          [NetworkDataTimeSeries (generate-fake-data-tx-rx)]]]]])))
+         [ui/GridColumn {:textAlign "center"}
+          [NetworkDataTimeSeries (generate-fake-data-tx-rx)]
+          [ui/Label {:basic true
+                     :size "tiny"
+                     :style {:margin-top "1em"}}
+           (str "Every " (get timespan->granularity @selected-period))]]]]])))
 
 
 (defn Load

@@ -983,16 +983,15 @@
                                     (mapv (fn [d] (select-keys d [:timestamp :bytes-received])))
                                     (sort-by :timestamp)
                                     (mapv vals))]
-    (js/console.log bytes-transmitted-dataset)
     [:div
      [plot/Line {:data    {:datasets [{:data            bytes-received-dataset
-                                       :label           "inbound"
+                                       :label           "Received"
                                        :fill true
                                        :backgroundColor "rgb(230, 99, 100, 0.5)"
                                        :borderColor     "rgb(230, 99, 100)"
                                        :borderWidth     1}
                                       {:data            bytes-transmitted-dataset
-                                       :label           "outbound"
+                                       :label           "Transmitted"
                                        :backgroundColor "rgb(99, 230, 178, 0.5019)"
                                        :fill true
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
@@ -1001,7 +1000,7 @@
                  :options {:plugins  {#_#_:legend   {:display false}
                                       :legend {}
                                       :title    {:display  true
-                                                 :text     "Average CPU load (%)"
+                                                 :text     "Network Traffic (Bytes)"
                                                  :position "top"}
                                       :subtitle {:display  true
                                                  :text     (str "Every " granularity)
@@ -1014,7 +1013,7 @@
                                       :y {:max   5000
                                           :min   -5000
                                           :title {:display "true"
-                                                  :text    "Percentage (%)"}}}}}]]))
+                                                  :text    "Bytes per second"}}}}}]]))
 
 (defn prepare-mem-usage-data
   [edge-stats]
@@ -1164,9 +1163,10 @@
          [ui/GridColumn
           [CpuLoadTimeSeries (generate-fake-data-cpu) #_(prepare-cpu-load-data @edge-stats) (get timespan->granularity @selected-period)]]
          [ui/GridColumn
-          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats) (get timespan->granularity @selected-period)]]
+          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats) (get timespan->granularity @selected-period)]]]
+        [ui/GridRow
          [ui/GridColumn
-            [NetworkDataTimeSeries (generate-fake-data-tx-rx)]]]]])))
+          [NetworkDataTimeSeries (generate-fake-data-tx-rx)]]]]])))
 
 
 (defn Load

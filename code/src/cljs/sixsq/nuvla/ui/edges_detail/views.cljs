@@ -1057,52 +1057,6 @@
                  {:x d
                   :y (if (= "online" s) 1 0)})))))
 
-(defn StatusTimeSeries [data]
-  (r/with-let [time-filter (r/atom "past day")]
-    (let [data-to-display (case @time-filter
-                            "past day" (remove #(time/before? (:x %) (time/days-before 1)) data)
-                            "past week" (remove #(time/before? (:x %) (time/days-before 7)) data)
-                            "past 3 months" (remove #(time/before? (:x %) (time/months-before 3)) data)
-                            "past month" (remove #(time/before? (:x %) (time/months-before 1)) data)
-                            "past year" data)]
-      [:div
-       #_[TimespanSelector {:on-change (ui-callback/value
-                                   (fn [value]
-                                     (reset! time-filter value)))}]
-       [plot/Line {:data    {:datasets [{:data            (sort-by :x data-to-display)
-                                         :label           "Status"
-                                         :backgroundColor "rgb(230, 99, 100)"
-                                         :borderColor     "rgb(230, 99, 100)"
-                                         :borderWidth     1}]}
-
-                   :options {:plugins  {:legend  {:display false}
-                                        :tooltip {:callbacks {:label (fn [tooltipItems _data]
-                                                                       (if (= (.. tooltipItems -raw -y) 1)
-                                                                         "Status: online"
-                                                                         "Status: offline"))}}
-                                        :zoom    {:pan    {:enabled true}
-                                                  :zoom   {:wheel {:enabled true}
-                                                           :mode  "x"}
-                                                  :limits {:x {:min (apply min (mapv :x data-to-display))
-                                                               :max (apply max (mapv :x data-to-display))}}}
-                                        :title   {:display  true
-                                                  :text     "NuvlaEdge Status (online/offline)"
-                                                  :position "top"}}
-                             :elements {:point {:radius 0}}
-                             :scales   {:x {:type   "time"
-                                            :border {:display true}
-                                            :grid   {:display false}
-                                            :title  {:display "true"
-                                                     :text    "Time"}}
-                                        :y {:max   2
-                                            :min   -1
-                                            :grid  {:display false}
-                                            :ticks {:callback (fn [label _idx _labels]
-                                                                (cond (= label 1) "online"
-                                                                      (= label 0) "offline"))}
-                                            :title {:display "true"
-                                                    :text    "Status"}}}}}]])))
-
 (def timespan->granularity {"last 15 minutes" "10s"
                             "last hour"       "30s"
                             "last 6 hours"    "3m"

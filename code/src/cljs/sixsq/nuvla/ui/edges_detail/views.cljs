@@ -915,6 +915,27 @@
                   :network   {:bytes-received    (rand 1000)
                               :bytes-transmitted (rand 1000)}})))))
 
+(defn generate-fake-data-ram []
+  (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
+                                                       :end-date   (time/now)}))]
+    (->> dates-past-year
+         (mapv (fn [d]
+                 {:timestamp d
+                  :metric "ram"
+                  :ram {:capacity 7936
+                        :used (rand 7936)}})))))
+
+(defn generate-fake-data-disk []
+  (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
+                                                       :end-date   (time/now)}))]
+    (->> dates-past-year
+         (mapv (fn [d]
+                 {:timestamp d
+                  :metric "disk"
+                  :disk {:device "vda1"
+                         :capacity 50
+                         :used (rand 40)}})))))
+
 (comment
   (generate-fake-data))
 
@@ -983,6 +1004,30 @@
 
                  :options (graph-options {:title    (str "Average " capacity "-core CPU load (%)")
                                           :y-config {:max   (* (inc capacity) 100)
+                                                     :min   0
+                                                     :title {:display "true"
+                                                             :text    "Percentage (%)"}}})}]]))
+
+(defn RamUsageTimeSeries [data]
+  (let [capacity       (-> (first data)
+                           (:ram)
+                           (:capacity))
+        load-dataset (->> data
+                          (mapv (fn [d]
+                                  (let [load (get-in d [:ram :used])
+                                        percent (-> (general-utils/percentage load capacity)
+                                                    (general-utils/round-up :n-decimal 0))]
+                                    [(:timestamp d)
+                                     percent]))))]
+    [:div
+     [plot/Line {:data    {:datasets [{:data            load-dataset
+                                       :label           "RAM usage"
+                                       :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                       :borderColor     "rgb(230, 99, 100)"
+                                       :borderWidth     1}]}
+
+                 :options (graph-options {:title    (str "Average RAM usage (%)")
+                                          :y-config {:max   100
                                                      :min   0
                                                      :title {:display "true"
                                                              :text    "Percentage (%)"}}})}]]))
@@ -1110,6 +1155,12 @@
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
           [NetworkDataTimeSeries (sort-by :timestamp (generate-fake-data-tx-rx))]
+          [ui/Label {:basic true
+                     :size "tiny"
+                     :style {:margin-top "1em"}}
+           (str "Every " (get timespan->granularity @selected-period))]]
+         [ui/GridColumn {:textAlign "center"}
+          [RamUsageTimeSeries (sort-by :timestamp (generate-fake-data-ram))]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}

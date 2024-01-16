@@ -925,6 +925,17 @@
 
 (def timespan-options ["last 15 minutes" "last day" "last week" "last month" "last 3 months" "last year"])
 
+(defn graph-options [{:keys [title y-config]}]
+  {:plugins  {:title    {:display  true
+                         :text     title
+                         :position "top"}}
+   :elements {:point {:radius 1}}
+
+   :scales   {:x {:type  "time"
+                  :title {:display "true"
+                          :text    "Time"}}
+              :y y-config}})
+
 (defn CpuLoadTimeSeries [data]
   (let [load-dataset (->> data
                           (mapv (fn [d] (select-keys d [:timestamp :load])))
@@ -955,18 +966,11 @@
                                        :borderColor     "rgb(99, 101, 230)"
                                        :borderWidth     1}]}
 
-                 :options {:plugins  {:title    {:display  true
-                                                 :text     "Average CPU load (%)"
-                                                 :position "top"}}
-                           :elements {:point {:radius 1}}
-
-                           :scales   {:x {:type  "time"
-                                          :title {:display "true"
-                                                  :text    "Time"}}
-                                      :y {:max   500
-                                          :min   0
-                                          :title {:display "true"
-                                                  :text    "Percentage (%)"}}}}}]]))
+                 :options (graph-options {:title   "Average CPU load (%)"
+                                          :y-config {:max   500
+                                                     :min   0
+                                                     :title {:display "true"
+                                                             :text    "Percentage (%)"}}})}]]))
 
 (defn NetworkDataTimeSeries [data]
   (let [bytes-transmitted-dataset (->> data
@@ -992,18 +996,11 @@
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
                                        :borderWidth     1}]}
 
-                 :options {:plugins  {:title    {:display  true
-                                                 :text     "Network Traffic (Bytes)"
-                                                 :position "top"}}
-                           :elements {:point {:radius 1}}
-
-                           :scales   {:x {:type  "time"
-                                          :title {:display "true"
-                                                  :text    "Time"}}
-                                      :y {:max   5000
-                                          :min   -5000
-                                          :title {:display "true"
-                                                  :text    "Bytes per second"}}}}}]]))
+                 :options (graph-options {:title   "Network Traffic (Bytes)"
+                                         :y-config {:max   5000
+                                                    :min   -5000
+                                                    :title {:display "true"
+                                                            :text    "Bytes per second"}}})}]]))
 
 (defn prepare-mem-usage-data
   [edge-stats]
@@ -1021,19 +1018,11 @@
                                      :borderColor     "rgb(230, 99, 100)"
                                      :borderWidth     1}]}
 
-               :options {:plugins  {:legend   {:display false}
-                                    :title    {:display  true
-                                               :text     "Average memory consumption (Mb)"
-                                               :position "top"}}
-                         :elements {:point {:radius 1}}
-
-                         :scales   {:x {:type  "time"
-                                        :title {:display "true"
-                                                :text    "Time"}}
-                                    :y {:max   10000
-                                        :min   0
-                                        :title {:display "true"
-                                                :text    "Mem usage (Mb)"}}}}}]])
+               :options (graph-options {:title   "Average memory consumption (Mb)"
+                                        :y-config {:max   10000
+                                                   :min   0
+                                                   :title {:display "true"
+                                                           :text    "Mem usage (Mb)"}}})}]])
 (def timespan->granularity {"last 15 minutes" "10s"
                             "last hour"       "30s"
                             "last 6 hours"    "3m"

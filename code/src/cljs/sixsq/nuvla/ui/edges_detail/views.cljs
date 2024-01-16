@@ -1047,16 +1047,6 @@
                                         :min   0
                                         :title {:display "true"
                                                 :text    "Mem usage (Mb)"}}}}}]])
-
-(defn generate-fake-online-offline-data []
-  (let [dates-past-year (time/hours-between {:start-date (time/days-before 365)
-                                             :end-date   (time/now)})
-        statuses        (repeatedly (count dates-past-year) #(rand-nth ["online" "offline"]))]
-    (->> (zipmap dates-past-year statuses)
-         (mapv (fn [[d s]]
-                 {:x d
-                  :y (if (= "online" s) 1 0)})))))
-
 (def timespan->granularity {"last 15 minutes" "10s"
                             "last hour"       "30s"
                             "last 6 hours"    "3m"

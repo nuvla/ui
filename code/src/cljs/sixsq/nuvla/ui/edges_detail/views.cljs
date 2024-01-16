@@ -1032,6 +1032,30 @@
                                                      :title {:display "true"
                                                              :text    "Percentage (%)"}}})}]]))
 
+(defn DiskUsageTimeSeries [data]
+  (let [capacity       (-> (first data)
+                           (:disk)
+                           (:capacity))
+        load-dataset (->> data
+                          (mapv (fn [d]
+                                  (let [load (get-in d [:disk :used])
+                                        percent (-> (general-utils/percentage load capacity)
+                                                    (general-utils/round-up :n-decimal 0))]
+                                    [(:timestamp d)
+                                     percent]))))]
+    [:div
+     [plot/Line {:data    {:datasets [{:data            load-dataset
+                                       :label           "Disk usage"
+                                       :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                       :borderColor     "rgb(230, 99, 100)"
+                                       :borderWidth     1}]}
+
+                 :options (graph-options {:title    (str "Average Disk usage (%) with device " (:device (:disk (first data))))
+                                          :y-config {:max   100
+                                                     :min   0
+                                                     :title {:display "true"
+                                                             :text    "Percentage (%)"}}})}]]))
+
 (defn NetworkDataTimeSeries [data]
   (let [bytes-transmitted-dataset (->> data
                                        (mapv (fn [d]
@@ -1147,7 +1171,8 @@
                      :style {:margin-top "1em"}}
            (str "Every " (get timespan->granularity @selected-period))]]
          [ui/GridColumn {:textAlign "center"}
-          [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]
+          [DiskUsageTimeSeries (sort-by :timestamp (generate-fake-data-disk))]
+          #_[MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}

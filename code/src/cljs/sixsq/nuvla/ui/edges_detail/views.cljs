@@ -903,6 +903,15 @@
                   :load-1 (rand 99)
                   :load-5 (rand 99)})))))
 
+(defn generate-fake-data-tx-rx []
+  (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
+                                                       :end-date   (time/now)}))]
+    (->> dates-past-year
+         (mapv (fn [d]
+                 {:timestamp d
+                  :bytes-received (rand 1000)
+                  :bytes-transmitted (rand 1000)})))))
+
 (comment
   (generate-fake-data))
 
@@ -961,6 +970,49 @@
                                                   :text    "Time"}}
                                       :y {:max   500
                                           :min   0
+                                          :title {:display "true"
+                                                  :text    "Percentage (%)"}}}}}]]))
+
+(defn NetworkDataTimeSeries [data granularity]
+  (let [bytes-transmitted-dataset (->> data
+                                       (mapv (fn [d] (update d :bytes-transmitted (fn [x] (* -1 x)))))
+                                       (mapv (fn [d] (select-keys d [:timestamp :bytes-transmitted])))
+                                       (sort-by :timestamp)
+                                       (mapv vals))
+        bytes-received-dataset (->> data
+                                    (mapv (fn [d] (select-keys d [:timestamp :bytes-received])))
+                                    (sort-by :timestamp)
+                                    (mapv vals))]
+    (js/console.log bytes-transmitted-dataset)
+    [:div
+     [plot/Line {:data    {:datasets [{:data            bytes-received-dataset
+                                       :label           "inbound"
+                                       :fill true
+                                       :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                       :borderColor     "rgb(230, 99, 100)"
+                                       :borderWidth     1}
+                                      {:data            bytes-transmitted-dataset
+                                       :label           "outbound"
+                                       :backgroundColor "rgb(99, 230, 178, 0.5019)"
+                                       :fill true
+                                       :borderColor     "rgb(99, 230, 178, 0.5019)"
+                                       :borderWidth     1}]}
+
+                 :options {:plugins  {#_#_:legend   {:display false}
+                                      :legend {}
+                                      :title    {:display  true
+                                                 :text     "Average CPU load (%)"
+                                                 :position "top"}
+                                      :subtitle {:display  true
+                                                 :text     (str "Every " granularity)
+                                                 :position "bottom"}}
+                           :elements {:point {:radius 1}}
+
+                           :scales   {:x {:type  "time"
+                                          :title {:display "true"
+                                                  :text    "Time"}}
+                                      :y {:max   5000
+                                          :min   -5000
                                           :title {:display "true"
                                                   :text    "Percentage (%)"}}}}}]]))
 
@@ -1113,8 +1165,8 @@
           [CpuLoadTimeSeries (generate-fake-data-cpu) #_(prepare-cpu-load-data @edge-stats) (get timespan->granularity @selected-period)]]
          [ui/GridColumn
           [MemUsageTimeSeries (prepare-mem-usage-data @edge-stats) (get timespan->granularity @selected-period)]]
-         #_[ui/GridColumn
-            [StatusTimeSeries (generate-fake-online-offline-data)]]]]])))
+         [ui/GridColumn
+            [NetworkDataTimeSeries (generate-fake-data-tx-rx)]]]]])))
 
 
 (defn Load

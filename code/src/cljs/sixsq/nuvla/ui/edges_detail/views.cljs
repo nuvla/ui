@@ -893,48 +893,65 @@
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
 
-(defn generate-fake-data-cpu []
-  (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
-                                                       :end-date   (time/now)}))]
-    (->> dates-past-year
-         (mapv (fn [d]
-                 {:timestamp d
-                  :metric "cpu"
-                  :cpu       {:capacity 4
-                              :load     (rand 20)
-                              :load-1   (rand 20)
-                              :load-5   (rand 20)}})))))
+(def timespan->granularity {"last 15 minutes" "10s"
+                            "last hour"       "30s"
+                            "last 6 hours"    "3m"
+                            "last day"        "10m"
+                            "last week"       "1h"
+                            "last month"      "6h"
+                            "last 3 months"   "2d"
+                            "last year"       "7d"})
 
-(defn generate-fake-data-tx-rx []
-  (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
-                                                       :end-date   (time/now)}))]
-    (->> dates-past-year
-         (mapv (fn [d]
-                 {:timestamp d
-                  :metric "network"
-                  :network   {:bytes-received    (rand 1000)
-                              :bytes-transmitted (rand 1000)}})))))
+(defn generate-timestamps [timespan]
+  (loop [i          0
+         timestamps []]
+    (if (> i 200)
+      timestamps
+      (recur (inc i) (conj timestamps (case timespan
+                                        "last 15 minutes" (time/subtract-milliseconds (time/now) (* i 10000))
+                                        "last hour" (time/subtract-milliseconds (time/now) (* i 30000))
+                                        "last 6 hours" (time/subtract-minutes (time/now) (* i 3))
+                                        "last day" (time/subtract-minutes (time/now) (* i 10))
+                                        "last week" (time/subtract-minutes (time/now) (* i 60))
+                                        "last month" (time/subtract-minutes (time/now) (* i 360))
+                                        "last 3 months" (time/subtract-days (time/now) (* i 2))
+                                        "last year" (time/subtract-days (time/now) (* i 7))))))))
 
-(defn generate-fake-data-ram []
-  (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
-                                                       :end-date   (time/now)}))]
-    (->> dates-past-year
-         (mapv (fn [d]
-                 {:timestamp d
-                  :metric "ram"
-                  :ram {:capacity 7936
-                        :used (rand 7936)}})))))
 
-(defn generate-fake-data-disk []
-  (let [dates-past-year (take 200 (time/hours-between {:start-date (time/days-before 365)
-                                                       :end-date   (time/now)}))]
-    (->> dates-past-year
-         (mapv (fn [d]
-                 {:timestamp d
-                  :metric "disk"
-                  :disk {:device "vda1"
-                         :capacity 50
-                         :used (rand 40)}})))))
+(defn generate-fake-data-cpu [timespan]
+  (->> (generate-timestamps timespan)
+       (mapv (fn [d]
+               {:timestamp d
+                :metric    "cpu"
+                :cpu       {:capacity 4
+                            :load     (rand 20)
+                            :load-1   (rand 20)
+                            :load-5   (rand 20)}}))))
+
+(defn generate-fake-data-tx-rx [timespan]
+  (->> (generate-timestamps timespan)
+       (mapv (fn [d]
+               {:timestamp d
+                :metric    "network"
+                :network   {:bytes-received    (rand 1000)
+                            :bytes-transmitted (rand 1000)}}))))
+
+(defn generate-fake-data-ram [timespan]
+  (->> (generate-timestamps timespan)
+       (mapv (fn [d]
+               {:timestamp d
+                :metric    "ram"
+                :ram       {:capacity 7936
+                            :used     (rand 7936)}}))))
+
+(defn generate-fake-data-disk [timespan]
+  (->> (generate-timestamps timespan)
+       (mapv (fn [d]
+               {:timestamp d
+                :metric    "disk"
+                :disk      {:device   "vda1"
+                            :capacity 50
+                            :used     (rand 40)}}))))
 
 (comment
   (generate-fake-data))
@@ -1033,6 +1050,7 @@
                                                              :text    "Percentage (%)"}}})}]]))
 
 (defn DiskUsageTimeSeries [data]
+  (js/console.log data)
   (let [capacity       (-> (first data)
                            (:disk)
                            (:capacity))
@@ -1106,15 +1124,6 @@
                                                    :min   0
                                                    :title {:display "true"
                                                            :text    "Mem usage (Mb)"}}})}]])
-(def timespan->granularity {"last 15 minutes" "10s"
-                            "last hour"       "30s"
-                            "last 6 hours"    "3m"
-                            "last day"        "10m"
-                            "last week"       "1h"
-                            "last month"      "6h"
-                            "last 3 months"   "2d"
-                            "last year"       "7d"})
-
 (defn HistoricalData []
   (let [edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
@@ -1133,9 +1142,8 @@
                                    (dispatch [::events/fetch-edge-stats
                                               {:from        from
                                                :to          to
-                                               :granularity (get timespan->granularity timespan)}])))
-        fake-data (generate-fake-data-cpu)]
-    (fetch-edge-stats (first timespan-options))
+                                               :granularity (get timespan->granularity timespan)}])))]
+    #_(fetch-edge-stats (first timespan-options))
     (fn []
       [ui/TabPane
 
@@ -1162,16 +1170,16 @@
                                            (fn [period]
                                              (do
                                                (reset! selected-period period)
-                                               (fetch-edge-stats period))))}]]]
+                                               #_(fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [CpuLoadTimeSeries (sort-by :timestamp fake-data) #_(prepare-cpu-load-data @edge-stats)]
+          [CpuLoadTimeSeries (sort-by :timestamp (generate-fake-data-cpu @selected-period)) #_(prepare-cpu-load-data @edge-stats)]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}
            (str "Every " (get timespan->granularity @selected-period))]]
          [ui/GridColumn {:textAlign "center"}
-          [DiskUsageTimeSeries (sort-by :timestamp (generate-fake-data-disk))]
+          [DiskUsageTimeSeries (sort-by :timestamp (generate-fake-data-disk @selected-period))]
           #_[MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]
           [ui/Label {:basic true
                      :size "tiny"
@@ -1179,13 +1187,13 @@
            (str "Every " (get timespan->granularity @selected-period))]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [NetworkDataTimeSeries (sort-by :timestamp (generate-fake-data-tx-rx))]
+          [NetworkDataTimeSeries (sort-by :timestamp (generate-fake-data-tx-rx @selected-period))]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}
            (str "Every " (get timespan->granularity @selected-period))]]
          [ui/GridColumn {:textAlign "center"}
-          [RamUsageTimeSeries (sort-by :timestamp (generate-fake-data-ram))]
+          [RamUsageTimeSeries (sort-by :timestamp (generate-fake-data-ram @selected-period))]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}

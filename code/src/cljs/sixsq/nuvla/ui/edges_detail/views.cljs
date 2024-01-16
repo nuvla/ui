@@ -911,8 +911,9 @@
     (->> dates-past-year
          (mapv (fn [d]
                  {:timestamp d
-                  :bytes-received (rand 1000)
-                  :bytes-transmitted (rand 1000)})))))
+                  :metric "network"
+                  :network   {:bytes-received    (rand 1000)
+                              :bytes-transmitted (rand 1000)}})))))
 
 (comment
   (generate-fake-data))
@@ -939,10 +940,12 @@
               :y y-config}})
 
 (defn CpuLoadTimeSeries [data]
-  (let [load-dataset (->> data
+  (let [capacity       (-> (first data)
+                           (:cpu)
+                           (:capacity))
+        load-dataset (->> data
                           (mapv (fn [d]
                                   (let [load (get-in d [:cpu :load])
-                                        capacity (get-in d [:cpu :capacity])
                                         percent (-> (general-utils/percentage load capacity)
                                                     (general-utils/round-up :n-decimal 0))]
                                     [(:timestamp d)
@@ -950,7 +953,6 @@
         load-1-dataset (->> data
                             (mapv (fn [d]
                                      (let [load (get-in d [:cpu :load-1])
-                                           capacity (get-in d [:cpu :capacity])
                                            percent (-> (general-utils/percentage load capacity)
                                                        (general-utils/round-up :n-decimal 0))]
                                        [(:timestamp d)
@@ -958,7 +960,6 @@
         load-5-dataset (->> data
                             (mapv (fn [d]
                                     (let [load (get-in d [:cpu :load-5])
-                                          capacity (get-in d [:cpu :capacity])
                                           percent (-> (general-utils/percentage load capacity)
                                                       (general-utils/round-up :n-decimal 0))]
                                       [(:timestamp d)
@@ -980,26 +981,25 @@
                                        :borderColor     "rgb(99, 101, 230)"
                                        :borderWidth     1}]}
 
-                 :options (graph-options {:title   "Average CPU load (%)"
-                                          :y-config {:max   500
+                 :options (graph-options {:title    (str "Average " capacity "-core CPU load (%)")
+                                          :y-config {:max   (* (inc capacity) 100)
                                                      :min   0
                                                      :title {:display "true"
                                                              :text    "Percentage (%)"}}})}]]))
 
 (defn NetworkDataTimeSeries [data]
   (let [bytes-transmitted-dataset (->> data
-                                       (mapv (fn [d] (update d :bytes-transmitted (fn [x] (* -1 x)))))
-                                       (mapv (fn [d] (select-keys d [:timestamp :bytes-transmitted])))
-                                       (sort-by :timestamp)
-                                       (mapv vals))
-        bytes-received-dataset (->> data
-                                    (mapv (fn [d] (select-keys d [:timestamp :bytes-received])))
-                                    (sort-by :timestamp)
-                                    (mapv vals))]
+                                       (mapv (fn [d]
+                                               [(:timestamp d)
+                                                (* -1 (get-in d [:network :bytes-transmitted]))])))
+        bytes-received-dataset    (->> data
+                                       (mapv (fn [d]
+                                               [(:timestamp d)
+                                                (get-in d [:network :bytes-received])])))]
     [:div
      [plot/Line {:data    {:datasets [{:data            bytes-received-dataset
                                        :label           "Received"
-                                       :fill true
+                                       :fill            true
                                        :backgroundColor "rgb(230, 99, 100, 0.5)"
                                        :borderColor     "rgb(230, 99, 100)"
                                        :borderWidth     1}
@@ -1109,7 +1109,7 @@
            (str "Every " (get timespan->granularity @selected-period))]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [NetworkDataTimeSeries (generate-fake-data-tx-rx)]
+          [NetworkDataTimeSeries (sort-by :timestamp (generate-fake-data-tx-rx))]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}

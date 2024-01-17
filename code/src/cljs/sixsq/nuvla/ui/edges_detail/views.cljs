@@ -953,6 +953,13 @@
                             :capacity 50
                             :used     (rand 40)}}))))
 
+(defn generate-fake-data-status [timespan]
+  (->> (generate-timestamps timespan)
+       (mapv (fn [d]
+               {:timestamp d
+                :metric    "status"
+                :status   (rand-int 2)}))))
+
 (comment
   (generate-fake-data))
 
@@ -1050,7 +1057,6 @@
                                                              :text    "Percentage (%)"}}})}]]))
 
 (defn DiskUsageTimeSeries [data]
-  (js/console.log data)
   (let [capacity       (-> (first data)
                            (:disk)
                            (:capacity))
@@ -1074,6 +1080,42 @@
                                                      :title {:display "true"
                                                              :text    "Percentage (%)"}}})}]]))
 
+(defn NEStatusTimeSeries [data]
+  (let [dataset  (->> data
+                      (mapv (fn [d]
+                              {:x (:timestamp d)
+                               :y 1
+                               :status (:status d)}) ))]
+    [:div
+     [plot/Line {:data    {:datasets [{:data           dataset
+                                       :label           "status"
+                                       :spanGaps false
+                                       :fill true
+                                       :segment {:backgroundColor (fn [ctx]
+                                                                    (let [p0-status (.. ^Map ctx -p0 -raw -status)
+                                                                          p1-status (.. ^Map ctx -p1 -raw -status)]
+                                                                      (cond (= p0-status p1-status 1)
+                                                                            "rgb(136, 230, 99, 1)"
+                                                                            (= p0-status p1-status 0)
+                                                                            "rgb(230, 99, 100)"
+                                                                            (and (= p0-status 1) (= p1-status 0))
+                                                                            "rgb(218, 150, 151)"
+                                                                            (and (= p0-status 0) (= p1-status 1))
+                                                                            "rgb(173, 227, 152, 1)")))}
+                                       :borderWidth 1}]}
+
+                 :options (graph-options {:title    "NE Status (online/offline)"
+                                          :y-config {:max   1
+                                                     :min   0
+                                                     :ticks {:min 0
+                                                             :max 1
+                                                             :stepSize 1
+                                                             :callback (fn [label idx labels]
+                                                                         (case label
+                                                                           0 "Offline"
+                                                                           1 "Online"))}
+                                                     :title {:display false}}})}]]))
+
 (defn NetworkDataTimeSeries [data]
   (let [bytes-transmitted-dataset (->> data
                                        (mapv (fn [d]
@@ -1093,7 +1135,7 @@
                                       {:data            bytes-transmitted-dataset
                                        :label           "Transmitted"
                                        :backgroundColor "rgb(99, 230, 178, 0.5019)"
-                                       :fill true
+                                       :fill            true
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
                                        :borderWidth     1}]}
 
@@ -1194,6 +1236,13 @@
            (str "Every " (get timespan->granularity @selected-period))]]
          [ui/GridColumn {:textAlign "center"}
           [RamUsageTimeSeries (sort-by :timestamp (generate-fake-data-ram @selected-period))]
+          [ui/Label {:basic true
+                     :size "tiny"
+                     :style {:margin-top "1em"}}
+           (str "Every " (get timespan->granularity @selected-period))]]]
+        [ui/GridRow
+         [ui/GridColumn {:textAlign "center"}
+          [NEStatusTimeSeries (sort-by :timestamp (generate-fake-data-status @selected-period))]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}

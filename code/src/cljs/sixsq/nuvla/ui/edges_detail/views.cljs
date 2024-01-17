@@ -1106,8 +1106,9 @@
                                :y 1
                                :status (:status d)}) ))]
     [:div
-     [plot/Bar {:data    {:datasets [{:data           dataset
-                                       :label           "status"
+     [plot/Bar {:height 100
+                :data    {:datasets [{:data           dataset
+                                      :label           "status"
                                       :categoryPercentage 1.0
                                       :barPercentage 1.0
                                       :borderColor (fn [ctx]
@@ -1133,7 +1134,8 @@
 
                  :options (graph-options {:title    "NE Status (online/offline)"
                                           :plugins {:tooltip { :callbacks {:label (fn [tooltipItems _data]
-                                                                                    (str "value: " (.. tooltipItems -raw -status)))}}}
+                                                                                    (str "value: " (.. tooltipItems -raw -status)))}}
+                                                    :legend {:display false}}
                                           :y-config {:max   1
                                                      :min   0
                                                      :ticks {:display false}

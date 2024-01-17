@@ -958,7 +958,7 @@
        (mapv (fn [d]
                {:timestamp d
                 :metric    "status"
-                :status   (rand-int 2)}))))
+                :status   (rand 1)}))))
 
 (comment
   (generate-fake-data))
@@ -973,10 +973,11 @@
 
 (def timespan-options ["last 15 minutes" "last day" "last week" "last month" "last 3 months" "last year"])
 
-(defn graph-options [{:keys [title y-config]}]
-  {:plugins  {:title    {:display  true
-                         :text     title
-                         :position "top"}}
+(defn graph-options [{:keys [title y-config plugins]}]
+  {:plugins  (merge {:title {:display  true
+                             :text     title
+                             :position "top"}}
+                    plugins)
    :elements {:point {:radius 1}}
 
    :scales   {:x {:type  "time"
@@ -1080,6 +1081,24 @@
                                                      :title {:display "true"
                                                              :text    "Percentage (%)"}}})}]]))
 
+
+(defn interpolate [start end percentage]
+  (let [beta (- 1.0 percentage)]
+    (mapv #(+ (* %1 beta) (* %2 percentage)) start end)))
+
+(defn color-gradient [color1 color2 percentage]
+  (interpolate color1 color2 percentage))
+
+(def red [255 0 0])
+(def green [0 255 0])
+
+(defn to-rgb [color-vector]
+  (str "rgb(" (str/join "," color-vector) ")"))
+
+
+(comment
+  (color-gradient color1 color2 0.8))
+
 (defn NEStatusTimeSeries [data]
   (let [dataset  (->> data
                       (mapv (fn [d]
@@ -1087,11 +1106,19 @@
                                :y 1
                                :status (:status d)}) ))]
     [:div
-     [plot/Line {:data    {:datasets [{:data           dataset
+     [plot/Bar {:data    {:datasets [{:data           dataset
                                        :label           "status"
-                                       :spanGaps false
-                                       :fill true
-                                       :segment {:backgroundColor (fn [ctx]
+                                      :categoryPercentage 1.0
+                                      :barPercentage 1.0
+                                      :borderColor (fn [ctx]
+                                                     (let [element-status (.. ^Map ctx -raw -status)
+                                                           color-gradient (color-gradient red green element-status)]
+                                                       (to-rgb color-gradient)))
+                                       :backgroundColor (fn [ctx]
+                                                          (let [element-status (.. ^Map ctx -raw -status)
+                                                                color-gradient (color-gradient red green element-status)]
+                                                            (to-rgb color-gradient)))
+                                       #_#_:segment {:backgroundColor (fn [ctx]
                                                                     (let [p0-status (.. ^Map ctx -p0 -raw -status)
                                                                           p1-status (.. ^Map ctx -p1 -raw -status)]
                                                                       (cond (= p0-status p1-status 1)
@@ -1105,15 +1132,11 @@
                                        :borderWidth 1}]}
 
                  :options (graph-options {:title    "NE Status (online/offline)"
+                                          :plugins {:tooltip { :callbacks {:label (fn [tooltipItems _data]
+                                                                                    (str "value: " (.. tooltipItems -raw -status)))}}}
                                           :y-config {:max   1
                                                      :min   0
-                                                     :ticks {:min 0
-                                                             :max 1
-                                                             :stepSize 1
-                                                             :callback (fn [label idx labels]
-                                                                         (case label
-                                                                           0 "Offline"
-                                                                           1 "Online"))}
+                                                     :ticks {:display false}
                                                      :title {:display false}}})}]]))
 
 (defn NetworkDataTimeSeries [data]
@@ -1139,11 +1162,11 @@
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
                                        :borderWidth     1}]}
 
-                 :options (graph-options {:title   "Network Traffic (Bytes)"
-                                         :y-config {:max   5000
-                                                    :min   -5000
-                                                    :title {:display "true"
-                                                            :text    "Bytes per second"}}})}]]))
+                 :options (graph-options {:title    "Network Traffic (Bytes)"
+                                          :y-config {:max   5000
+                                                     :min   -5000
+                                                     :title {:display "true"
+                                                             :text    "Bytes per second"}}})}]]))
 
 (defn prepare-mem-usage-data
   [edge-stats]
@@ -1161,7 +1184,7 @@
                                      :borderColor     "rgb(230, 99, 100)"
                                      :borderWidth     1}]}
 
-               :options (graph-options {:title   "Average memory consumption (Mb)"
+               :options (graph-options {:title    "Average memory consumption (Mb)"
                                         :y-config {:max   10000
                                                    :min   0
                                                    :title {:display "true"

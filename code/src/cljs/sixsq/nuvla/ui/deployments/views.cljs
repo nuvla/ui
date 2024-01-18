@@ -371,14 +371,15 @@
   (let [terms   (general-utils/aggregate-to-map
                   (get-in summary [:aggregations :terms:state :buckets]))
         created (:CREATED terms 0)
-        pending (:PENDING terms 0)]
+        pending (:PENDING terms 0)
+        stopping (:STOPPING terms 0)]
+    (js/console.log :terms terms)
     {:total    (:count summary)
      :started  (:STARTED terms 0)
      :created  created
      :stopped  (:STOPPED terms 0)
      :error    (:ERROR terms 0)
-     :pending  pending
-     :starting (+ (:STARTING terms 0) created pending)}))
+     :pending  (+ pending stopping (:UPDATING terms 0) (:STARTING terms 0))}))
 
 (def default-states
   [{:key   :total
@@ -388,10 +389,10 @@
     :icons          [(utils/state->icon utils/STARTED)],
     :label          utils/STARTED,
     :positive-color "green"}
-   {:key            :starting-plus,
-    :icons          [(utils/state->icon utils/STARTING)],
-    :label          utils/STARTING,
-    :positive-color "orange"}
+   {:key            :pending,
+    :icons          [(utils/state->icon utils/PENDING)],
+    :label          utils/PENDING,
+    :positive-color "brown"}
    {:key            :stopped,
     :icons          [(utils/state->icon utils/STOPPED)],
     :label          utils/STOPPED,

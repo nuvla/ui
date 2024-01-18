@@ -25,7 +25,8 @@
   (let [icons-map {STARTED  icons/i-circle-play
                    STARTING icons/i-loader
                    STOPPED  icons/i-circle-stop
-                   ERROR    icons/i-triangle-exclamation}]
+                   ERROR    icons/i-triangle-exclamation
+                   PENDING  icons/i-sync}]
     (get icons-map state)))
 
 (defn resolve-url-pattern
@@ -101,6 +102,7 @@
   (case state
     ("all" nil "TOTAL") nil
     STARTING "state='RUNNING' or state='PENDING' or state='CREATED'"
+    PENDING "state='RUNNING' or state='PENDING' or state='STOPPING'"
     (str "state='" state "'")))
 
 (defn get-filter-param

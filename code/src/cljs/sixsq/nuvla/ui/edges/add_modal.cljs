@@ -344,7 +344,19 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Kubernetes"]
             [ui/Image {:src   "/ui/images/kubernetes.svg"
-                       :style {:width "110px"}}]]]]]
+                       :style {:width "110px"}}]]
+           (when (= k8s-based @install-strategy)
+             [ui/CardContent {:extra true}
+              [ui/Checkbox {:toggle    true
+                            :label     (@tr [:nuvlabox-modal-enable-playbooks])
+                            :checked   @playbooks-toggle
+                            :on-change #(swap! playbooks-toggle not)}]
+              [ui/Popup
+               {:trigger        (r/as-element [ui/Icon {:class icons/i-info
+                                                        :style {:margin-left "1em"}}])
+                :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
+                :on             "hover"
+                :hide-on-scroll true}]])]]]
         [ui/Form
          [ui/Header {:style {:text-align "center"}} "Docker"]
          [ui/Segment {:raised true}

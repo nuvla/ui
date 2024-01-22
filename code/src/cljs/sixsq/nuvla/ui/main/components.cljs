@@ -135,7 +135,7 @@
 
 (defn StatisticState
   ([{:keys [value icons label clickable? positive-color set-state-selector-event
-            state-selector-subs stacked? on-click selected?]
+            state-selector-subs stacked? on-click selected? size]
      :or   {positive-color "black"}}]
    (let [state-selector (when state-selector-subs @(subscribe [state-selector-subs]))
          is-selected?   (if (some? selected?)

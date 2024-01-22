@@ -373,7 +373,6 @@
         created (:CREATED terms 0)
         pending (:PENDING terms 0)
         stopping (:STOPPING terms 0)]
-    (js/console.log :terms terms)
     {:total    (:count summary)
      :started  (:STARTED terms 0)
      :created  created
@@ -402,24 +401,59 @@
     :label          utils/ERROR,
     :positive-color "red"}])
 
+(def extra-states
+  [{:key            :created
+    :icons          [icons/i-sticky-note]
+    :label          "CREATED"}
+   {:key   :starting
+    :icons [icons/i-play]
+    :label utils/STARTING
+    }
+   {:key   :updating
+    :icons [icons/i-gear]
+    :label utils/UPDATING
+    }
+   {:key :stopping
+    :icons [icons/i-gear]
+    :label utils/STOPPING
+    }])
+
 (defn StatisticStates
   [_clickable? summary-subs _states]
   (let [summary (subscribe [summary-subs])]
     (fn [clickable? _summary-subs states-override]
       (let [states->counts (state-aggs->state->count @summary)
-            states         (or states-override default-states)]
-        [ui/GridColumn {:width 8}
-         (into [ui/StatisticGroup {:size  "tiny"
-                                   :style {:justify-content "center"}}
-                (for [state states]
-                  ^{:key (:key state)}
-                  [components/StatisticState
-                   (merge state
-                          {:value                    (states->counts (:key state))
-                           :stacked?                 true
-                           :clickable?               (or (:clickable? state) clickable?)
-                           :set-state-selector-event ::events/set-state-selector
-                           :state-selector-subs      ::subs/state-selector})])])]))))
+            states         (concat default-states extra-states) #_(or states-override default-states)]
+
+        (into [ui/StatisticGroup {:size "mini"}
+               (for [state default-states]
+                 ^{:key (:key state)}
+                 [components/StatisticState
+                  (merge state
+                         {:value                    (states->counts (:key state))
+                          :stacked?                 true
+                          :clickable?               (or (:clickable? state) clickable?)
+                          :set-state-selector-event ::events/set-state-selector
+                          :state-selector-subs      ::subs/state-selector})])])))))
+
+(defn StatisticStatesExtra
+  [_clickable? summary-subs _states]
+  (let [summary (subscribe [summary-subs])]
+    (fn [clickable? _summary-subs states-override]
+      (let [states->counts (state-aggs->state->count @summary)
+            states         extra-states]
+
+        (into [ui/StatisticGroup {:size  "mini"
+                                  }
+               (for [state states]
+                 ^{:key (:key state)}
+                 [components/StatisticState
+                  (merge state
+                         {:value                    (states->counts (:key state))
+                          :stacked?                 true
+                          :clickable?               (or (:clickable? state) clickable?)
+                          :set-state-selector-event ::events/set-state-selector
+                          :state-selector-subs      ::subs/state-selector})])])))))
 
 (defn TitledCardDeployments
   [& children]
@@ -434,7 +468,9 @@
   (let [tr @(subscribe [::i18n-subs/tr])]
     [TitledCardDeployments
      ^{:key "deployment-overview-stats"}
-     [StatisticStates false sub-key]
+     [:div
+      [StatisticStates false sub-key]
+      [StatisticStatesExtra false sub-key]]
      ^{:key "deployment-overview-button"}
      [uix/Button {:class    "center"
                   :color    "blue"
@@ -474,7 +510,13 @@
                :style     {:margin-top    0
                            :margin-bottom 0}}
       [ControlBar]
-      [StatisticStates true ::subs/deployments-summary]]
+      [ui/GridColumn {:width 10
+                      :style {:display "flex"
+                              :align-items "center"}
+                      #_#_:style {:padding-top "1em"
+                              :padding-bottom "1em"}}
+       [StatisticStates true ::subs/deployments-summary]
+       [StatisticStatesExtra true ::subs/deployments-summary]]]
      [bulk-progress-plugin/MonitoredJobs
       {:db-path [::spec/bulk-jobs]}]
      [DeploymentsDisplay]

@@ -15,6 +15,7 @@
 (def ^:const CREATED "CREATED")
 (def ^:const STARTED "STARTED")
 (def ^:const STARTING "STARTING")
+(def ^:const STOPPING "STOPPING")
 (def ^:const STOPPED "STOPPED")
 (def ^:const ERROR "ERROR")
 (def ^:const PENDING "PENDING")

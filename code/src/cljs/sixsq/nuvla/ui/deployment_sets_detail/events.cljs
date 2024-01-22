@@ -525,10 +525,13 @@
   (let [edges-path   (subs/current-route->edges-db-path current-route)
         fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))
         apps-path    (subs/create-apps-creation-db-path current-route)]
-    (merge {:fleet   (:resources (get-in db edges-path))
-            :modules (map
-                       (fn [app] (str (:id app) "_" (:version app)))
-                       (get-in db apps-path))}
+    (merge {:fleet      (:resources (get-in db edges-path))
+            :modules    (map
+                          (fn [app] (str (:id app) "_" (:version app)))
+                          (get-in db apps-path))
+            :overwrites (map
+                          (fn [app] (application-overwrites db 0 app nil))
+                          (get-in db apps-path))}
            (when fleet-filter {:fleet-filter fleet-filter})
            deployment-set-edited)))
 
@@ -538,7 +541,11 @@
         fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))]
     (merge {:applications-sets [{:id         (:id module-applications-sets)
                                  :version    (:version module-applications-sets)
-                                 :overwrites [(cond-> {:fleet (:resources (get-in db edges-path))}
+                                 :overwrites [(cond-> {:fleet (:resources (get-in db edges-path))
+                                                       :applications (map
+                                                                       (fn [app] (application-overwrites db 0 app nil))
+                                                                       (get-in module-applications-sets
+                                                                               [:content :applications-sets 0 :applications]))}
                                                       fleet-filter (assoc :fleet-filter fleet-filter))]}]}
            (dissoc deployment-set-edited :applications-sets))))
 

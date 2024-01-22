@@ -4,6 +4,11 @@
 
 ## Released
 
+## [2.36.2] - 2023-10-18
+
+- Fix for missing registries credentials on deployments linked to DGs
+- Make action check not deployment-specific
+
 ## [2.36.1] - 2023-12-21
 
 - Tags component - Fix alignment of check button

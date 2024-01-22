@@ -477,6 +477,7 @@
         :last-30-days                                  "last 30 days"
         :last-7-days                                   "last 7 days"
         :last-boot                                     "Last Boot"
+        :last-changed                                  "Last changed"
         :last-online                                   "last online"
         :leave-empty-to-generate-ssh-keypair           "To generate a new SSH keypair, leave this field empty"
         :less                                          "less"

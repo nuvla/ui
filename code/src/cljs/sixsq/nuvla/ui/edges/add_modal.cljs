@@ -428,7 +428,7 @@
            (@tr [:nuvlabox-modal-more-info])]]
          [:a {:href     ""
               :on-click (fn [] (do (reset! install-strategy nil)
-                                   (reset! playbooks-toggle nil)))} [icons/ArrowLeftIcon] "back to selection"]]))))
+                                   (reset! playbooks-toggle nil)))} [icons/ArrowLeftIcon] (@tr [:back-to-selection])]]))))
 
 
 (defn AddModal

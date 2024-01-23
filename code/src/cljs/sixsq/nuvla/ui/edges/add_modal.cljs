@@ -690,6 +690,7 @@
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]
                  [ui/Button {:positive true
                              :loading  @creating
+                             :disabled (not (contains? #{k8s-based usb-install compose-install} @install-strategy))
                              :on-click on-add-fn}
                   (@tr [:create])]]])])))
 

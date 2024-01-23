@@ -331,7 +331,8 @@
          [ui/CardGroup {:centered    true
                         :itemsPerRow 2}
           [ui/Card
-           {:on-click (fn [] (reset! install-strategy docker-based))}
+           {:on-click (fn [] (do (reset! install-strategy docker-based)
+                                 (reset! playbooks-toggle nil)))}
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker"]
             [icons/DockerIcon {:size :massive}]]]
@@ -432,7 +433,8 @@
                :target "_blank"}
            (@tr [:nuvlabox-modal-more-info])]]
          [:a {:href     ""
-              :on-click (fn [] (reset! install-strategy nil))} [icons/ArrowLeftIcon] "back to selection"]]))))
+              :on-click (fn [] (do (reset! install-strategy nil)
+                                   (reset! playbooks-toggle nil)))} [icons/ArrowLeftIcon] "back to selection"]]))))
 
 
 (defn AddModal

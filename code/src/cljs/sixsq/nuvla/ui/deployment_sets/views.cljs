@@ -152,6 +152,12 @@
            ^{:key id}
            [DeploymentSetRow deployment-set]))]]]))
 
+(defn ops-status-overview-string [tr-fn {:keys [deployments-to-add deployments-to-remove deployments-to-update] :as _ops-status}]
+  (let [deployments-sum (+ (count deployments-to-add)
+                           (count deployments-to-remove)
+                           (count deployments-to-update))]
+    (str deployments-sum " " (tr-fn [:deployments-to-add-remove-update]))))
+
 (defn OperationalStatus
   [{:keys [status] :as ops-status}]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -164,7 +170,7 @@
                      :height 35}}
        [ui/Icon {:name :circle :color (detail/ops-status->color status)
                  :style {:margin-right 5}}]
-       [:div (detail/ops-status-pending-str @tr ops-status)]])))
+       [:div (ops-status-overview-string @tr ops-status)]])))
 
 (defn DeploymentSetCard
   [{:keys [id updated name state description tags operational-status] :as  deployment-set}]

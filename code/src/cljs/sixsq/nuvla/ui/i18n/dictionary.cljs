@@ -329,6 +329,7 @@
         :deployment-will-cost                          "this deployment will cost: "
         :deployments                                   "deployments"
         :deployments-to-add                            "deployments to add"
+        :deployments-to-add-remove-update              "deployments to add, remove, or update"
         :deployments-to-remove                         "deployments to remove"
         :deployments-to-update                         "deployments to update"
         :describe                                      "describe"

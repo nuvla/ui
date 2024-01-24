@@ -402,33 +402,14 @@
 
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity]}]]
-    (let [nuvlabox-id-filter (str "nuvlaedge-id='" (:id nuvlabox) "'")
-          time-range-filter  (str "@timestamp>'" (time/time->utc-str from) "'"
-                                  " and "
-                                  "@timestamp<'" (time/time->utc-str to) "'")
-          body               {:tsds-aggregation
-                              (general-utils/edn->json
-                                {:aggregations
-                                 {:tsds-stats
-                                  {:date_histogram
-                                   {:field          "@timestamp"
-                                    :fixed_interval granularity}
-                                   :aggregations
-                                   {:load {:avg {:field :load}}
-                                    :mem  {:avg {:field :mem}}}}}})
-                              :last   0
-                              :filter (str "("
-                                           nuvlabox-id-filter
-                                           " and "
-                                           time-range-filter
-                                           ")")
-                              }]
+  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity datasets]}]]
+    (let [datasets-to-query (->> datasets
+                                 (map #(str "dataset=" %))
+                                 (str/join "&"))
+          uri (str "/api/" (:id nuvlabox) "/data?" datasets-to-query "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
       {:db (assoc db ::spec/loading? true)
-       :http-xhrio {:method          :put
-                    :uri             "/api/ts-nuvlaedge"
-                    :format          (ajax/url-request-format)
-                    :params          body
+       :http-xhrio {:method          :get
+                    :uri             uri
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-edge-stats-success]
                     :on-failure      [::fetch-edge-stats-failure]}})))
@@ -436,10 +417,7 @@
 (reg-event-fx
   ::fetch-edge-stats-success
   (fn [{db :db} [_ response]]
-    {:db (assoc db ::spec/edge-stats (->> response
-                                          :aggregations
-                                          :tsds-stats
-                                          :buckets)
+    {:db (assoc db ::spec/edge-stats response
                    ::spec/loading? false)}))
 
 (reg-event-fx

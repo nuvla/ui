@@ -893,14 +893,14 @@
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
 
-(def timespan->granularity {"last 15 minutes" "10s"
-                            "last hour"       "30s"
-                            "last 6 hours"    "3m"
-                            "last day"        "10m"
-                            "last week"       "1h"
-                            "last month"      "6h"
-                            "last 3 months"   "2d"
-                            "last year"       "7d"})
+(def timespan->granularity {"last 15 minutes" "10-seconds"
+                            "last hour"       "30-seconds"
+                            "last 6 hours"    "3-minutes"
+                            "last day"        "10-minutes"
+                            "last week"       "1-hours"
+                            "last month"      "6-hours"
+                            "last 3 months"   "2-days"
+                            "last year"       "7-days"})
 
 (defn generate-timestamps [timespan]
   (loop [i          0
@@ -986,26 +986,30 @@
               :y y-config}})
 
 (defn CpuLoadTimeSeries [data]
-  (let [capacity       (-> (first data)
-                           (:cpu)
-                           (:capacity))
+  (let [data (-> data
+                 (first)
+                 (:ts-data))
+        cpu-capacity-over-time (map (fn [d] (get-in d [:aggregations :avg-cpu-capacity])) data)
         load-dataset (->> data
                           (mapv (fn [d]
-                                  (let [load (get-in d [:cpu :load])
+                                  (let [load (get-in d [:aggregations :avg-cpu-load])
+                                        capacity  (get-in d [:aggregations :avg-cpu-capacity])
                                         percent (-> (general-utils/percentage load capacity)
                                                     (general-utils/round-up :n-decimal 0))]
                                     [(:timestamp d)
                                      percent]))))
         load-1-dataset (->> data
                             (mapv (fn [d]
-                                     (let [load (get-in d [:cpu :load-1])
+                                     (let [load (get-in d [:aggregations :avg-cpu-load-1])
+                                           capacity  (get-in d [:aggregations :avg-cpu-capacity])
                                            percent (-> (general-utils/percentage load capacity)
                                                        (general-utils/round-up :n-decimal 0))]
                                        [(:timestamp d)
                                         percent]))))
         load-5-dataset (->> data
                             (mapv (fn [d]
-                                    (let [load (get-in d [:cpu :load-5])
+                                    (let [load (get-in d [:aggregations :avg-cpu-load-5])
+                                          capacity  (get-in d [:aggregations :avg-cpu-capacity])
                                           percent (-> (general-utils/percentage load capacity)
                                                       (general-utils/round-up :n-decimal 0))]
                                       [(:timestamp d)
@@ -1027,19 +1031,19 @@
                                        :borderColor     "rgb(99, 101, 230)"
                                        :borderWidth     1}]}
 
-                 :options (graph-options {:title    (str "Average " capacity "-core CPU load (%)")
-                                          :y-config {:max   (* (inc capacity) 100)
+                 :options (graph-options {:title    "Average CPU load (%)"
+                                          :y-config {:max   (* (inc (apply max cpu-capacity-over-time)) 100)
                                                      :min   0
                                                      :title {:display "true"
                                                              :text    "Percentage (%)"}}})}]]))
 
 (defn RamUsageTimeSeries [data]
-  (let [capacity       (-> (first data)
-                           (:ram)
-                           (:capacity))
+  (let [capacity     (-> (first data)
+                         (:ram)
+                         (:capacity))
         load-dataset (->> data
                           (mapv (fn [d]
-                                  (let [load (get-in d [:ram :used])
+                                  (let [load    (get-in d [:ram :used])
                                         percent (-> (general-utils/percentage load capacity)
                                                     (general-utils/round-up :n-decimal 0))]
                                     [(:timestamp d)
@@ -1209,8 +1213,9 @@
                                    (dispatch [::events/fetch-edge-stats
                                               {:from        from
                                                :to          to
-                                               :granularity (get timespan->granularity timespan)}])))]
-    #_(fetch-edge-stats (first timespan-options))
+                                               :granularity (get timespan->granularity timespan)
+                                               :datasets ["cpu-stats" "disk-stats" "network-stats" "power-consumption-stats"]}])))]
+    (js/console.log @edge-stats)
     (fn []
       [ui/TabPane
 
@@ -1236,11 +1241,10 @@
                         :on-change       (ui-callback/value
                                            (fn [period]
                                              (do
-                                               (reset! selected-period period)
-                                               #_(fetch-edge-stats period))))}]]]
+                                               (fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [CpuLoadTimeSeries (sort-by :timestamp (generate-fake-data-cpu @selected-period)) #_(prepare-cpu-load-data @edge-stats)]
+          [CpuLoadTimeSeries (:cpu-stats @edge-stats) #_(sort-by :timestamp (generate-fake-data-cpu @selected-period)) #_(prepare-cpu-load-data @edge-stats)]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}

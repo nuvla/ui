@@ -437,25 +437,38 @@
                           :state-selector-subs      ::subs/state-selector})])])))))
 
 (defn StatisticStates
-  [_clickable? summary-subs _states !extra-states-visible?]
-  (let [summary (subscribe [summary-subs])]
+  [_clickable? summary-subs _states]
+  (let [summary (subscribe [summary-subs])
+        extra-states-visible? (r/atom false)]
     (fn [clickable? _summary-subs states-override]
       (let [states->counts (state-aggs->state->count @summary)
             states         (or states-override default-states)]
-        [ui/GridColumn {:width 8}
-         (into [ui/StatisticGroup {:size "tiny"}
-                (for [state states]
-                  ^{:key (:key state)}
-                  [components/StatisticState
-                   (merge state
-                          {:value                    (states->counts (:key state))
-                           :stacked?                 true
-                           :clickable?               (or (:clickable? state) clickable?)
-                           :set-state-selector-event ::events/set-state-selector
-                           :state-selector-subs      ::subs/state-selector})])])
-         (when @!extra-states-visible?
-           [ui/Segment
-            [StatisticStatesExtra true ::subs/deployments-summary]])]))))
+        [:<>
+         [ui/GridColumn {:width 8}
+          (into [ui/StatisticGroup {:size "tiny"}
+                 (for [state states]
+                   ^{:key (:key state)}
+                   [components/StatisticState
+                    (merge state
+                           {:value                    (states->counts (:key state))
+                            :stacked?                 true
+                            :clickable?               (or (:clickable? state) clickable?)
+                            :set-state-selector-event ::events/set-state-selector
+                            :state-selector-subs      ::subs/state-selector})])])
+          (when @extra-states-visible?
+            [ui/Segment
+             [StatisticStatesExtra true ::subs/deployments-summary]])]
+         [ui/GridColumn {:width 4}
+          [ui/Button {:icon     true
+                      :style    {:margin "1rem"}
+                      :on-click #(swap! extra-states-visible? not)}
+           (if @extra-states-visible?
+             [icons/AngleUpIcon]
+             [icons/AngleDownIcon])
+
+           (if @extra-states-visible?
+             "Show fewer states"
+             "Show more states")]]]))))
 
 
 
@@ -473,8 +486,7 @@
     [TitledCardDeployments
      ^{:key "deployment-overview-stats"}
      [:div
-      [StatisticStates false sub-key]
-      [StatisticStatesExtra false sub-key]]
+      [StatisticStates false sub-key]]
      ^{:key "deployment-overview-button"}
      [uix/Button {:class    "center"
                   :color    "blue"
@@ -506,25 +518,17 @@
 
 (defn DeploymentsView
   []
-  (let [extra-states-visible? (r/atom false)]
-    (fn []
-      [:<>
-       [MenuBar]
-       [ui/Grid {:stackable true
-                 :reversed  "mobile"
-                 :style     {:margin-top    0
-                             :margin-bottom 0}}
-        [ControlBar]
+  (fn []
+    [:<>
+     [MenuBar]
+     [ui/Grid {:stackable true
+               :reversed  "mobile"
+               :style     {:margin-top    0
+                           :margin-bottom 0}}
+      [ControlBar]
 
-        [StatisticStates true ::subs/deployments-summary nil extra-states-visible?]
-        [ui/GridColumn {:width 4}
-         [ui/Button {:icon     true
-                     :style    {:margin "1rem"}
-                     :on-click #(swap! extra-states-visible? not)}
-          [icons/ArrowDownIcon]
-
-          "Show more states"]]]
-       [bulk-progress-plugin/MonitoredJobs
-        {:db-path [::spec/bulk-jobs]}]
-       [DeploymentsDisplay]
-       [Pagination]])))
+      [StatisticStates true ::subs/deployments-summary]]
+     [bulk-progress-plugin/MonitoredJobs
+      {:db-path [::spec/bulk-jobs]}]
+     [DeploymentsDisplay]
+     [Pagination]]))

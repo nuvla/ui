@@ -378,7 +378,10 @@
      :created  created
      :stopped  (:STOPPED terms 0)
      :error    (:ERROR terms 0)
-     :pending  (+ pending stopping (:UPDATING terms 0) (:STARTING terms 0))}))
+     :starting (:STARTING terms 0)
+     :updating (:UPDATING terms 0)
+     :stopping stopping
+     :pending  pending}))
 
 (def default-states
   [{:key   :total
@@ -418,24 +421,6 @@
     :label utils/STOPPING
     }])
 
-(defn StatisticStates
-  [_clickable? summary-subs _states]
-  (let [summary (subscribe [summary-subs])]
-    (fn [clickable? _summary-subs states-override]
-      (let [states->counts (state-aggs->state->count @summary)
-            states         (concat default-states extra-states) #_(or states-override default-states)]
-
-        (into [ui/StatisticGroup {:size "mini"}
-               (for [state default-states]
-                 ^{:key (:key state)}
-                 [components/StatisticState
-                  (merge state
-                         {:value                    (states->counts (:key state))
-                          :stacked?                 true
-                          :clickable?               (or (:clickable? state) clickable?)
-                          :set-state-selector-event ::events/set-state-selector
-                          :state-selector-subs      ::subs/state-selector})])])))))
-
 (defn StatisticStatesExtra
   [_clickable? summary-subs _states]
   (let [summary (subscribe [summary-subs])]
@@ -454,6 +439,29 @@
                           :clickable?               (or (:clickable? state) clickable?)
                           :set-state-selector-event ::events/set-state-selector
                           :state-selector-subs      ::subs/state-selector})])])))))
+
+(defn StatisticStates
+  [_clickable? summary-subs _states !extra-states-visible?]
+  (let [summary (subscribe [summary-subs])]
+    (fn [clickable? _summary-subs states-override]
+      (let [states->counts (state-aggs->state->count @summary)
+            states         (or states-override default-states)]
+        [ui/GridColumn {:width 8}
+         (into [ui/StatisticGroup {:size "tiny"}
+                (for [state states]
+                  ^{:key (:key state)}
+                  [components/StatisticState
+                   (merge state
+                          {:value                    (states->counts (:key state))
+                           :stacked?                 true
+                           :clickable?               (or (:clickable? state) clickable?)
+                           :set-state-selector-event ::events/set-state-selector
+                           :state-selector-subs      ::subs/state-selector})])])
+         (when @!extra-states-visible?
+           [ui/Segment
+            [StatisticStatesExtra true ::subs/deployments-summary]])]))))
+
+
 
 (defn TitledCardDeployments
   [& children]
@@ -502,22 +510,25 @@
 
 (defn DeploymentsView
   []
-  (fn []
-    [:<>
-     [MenuBar]
-     [ui/Grid {:stackable true
-               :reversed  "mobile"
-               :style     {:margin-top    0
-                           :margin-bottom 0}}
-      [ControlBar]
-      [ui/GridColumn {:width 10
-                      :style {:display "flex"
-                              :align-items "center"}
-                      #_#_:style {:padding-top "1em"
-                              :padding-bottom "1em"}}
-       [StatisticStates true ::subs/deployments-summary]
-       [StatisticStatesExtra true ::subs/deployments-summary]]]
-     [bulk-progress-plugin/MonitoredJobs
-      {:db-path [::spec/bulk-jobs]}]
-     [DeploymentsDisplay]
-     [Pagination]]))
+  (let [extra-states-visible? (r/atom false)]
+    (fn []
+      [:<>
+       [MenuBar]
+       [ui/Grid {:stackable true
+                 :reversed  "mobile"
+                 :style     {:margin-top    0
+                             :margin-bottom 0}}
+        [ControlBar]
+
+        [StatisticStates true ::subs/deployments-summary nil extra-states-visible?]
+        [ui/GridColumn {:width 4}
+         [ui/Button {:icon     true
+                     :style    {:margin "1rem"}
+                     :on-click #(swap! extra-states-visible? not)}
+          [icons/ArrowDownIcon]
+
+          "Show more states"]]]
+       [bulk-progress-plugin/MonitoredJobs
+        {:db-path [::spec/bulk-jobs]}]
+       [DeploymentsDisplay]
+       [Pagination]])))

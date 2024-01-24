@@ -391,10 +391,9 @@
     :icons          [(utils/state->icon utils/STARTED)],
     :label          utils/STARTED,
     :positive-color "green"}
-   {:key            :pending,
-    :icons          [(utils/state->icon utils/PENDING)],
-    :label          utils/PENDING,
-    :positive-color "brown"}
+   {:key            :starting,
+    :icons          [(utils/state->icon utils/STARTING)],
+    :label          utils/STARTING}
    {:key            :stopped,
     :icons          [(utils/state->icon utils/STOPPED)],
     :label          utils/STOPPED,
@@ -405,21 +404,18 @@
     :positive-color "red"}])
 
 (def extra-states
-  [{:key            :created
+  [{:key    :created
     :icons          [icons/i-sticky-note]
     :label          "CREATED"}
-   {:key   :starting
-    :icons [icons/i-play]
-    :label utils/STARTING
-    }
+   {:key   :pending
+    :icons [icons/i-sync]
+    :label utils/PENDING}
    {:key   :updating
-    :icons [icons/i-gear]
-    :label utils/UPDATING
-    }
+    :icons [icons/i-sync]
+    :label utils/UPDATING}
    {:key :stopping
-    :icons [icons/i-gear]
-    :label utils/STOPPING
-    }])
+    :icons [icons/i-sync]
+    :label utils/STOPPING}])
 
 (defn StatisticStatesExtra
   [_clickable? summary-subs _states]

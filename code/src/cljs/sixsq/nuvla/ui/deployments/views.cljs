@@ -418,23 +418,19 @@
     :label utils/STOPPING}])
 
 (defn StatisticStatesExtra
-  [_clickable? summary-subs _states]
-  (let [summary (subscribe [summary-subs])]
-    (fn [clickable? _summary-subs states-override]
-      (let [states->counts (state-aggs->state->count @summary)
-            states         extra-states]
+  [clickable? summary]
+  (let [states->counts (state-aggs->state->count summary)]
 
-        (into [ui/StatisticGroup {:size  "mini"
-                                  }
-               (for [state states]
-                 ^{:key (:key state)}
-                 [components/StatisticState
-                  (merge state
-                         {:value                    (states->counts (:key state))
-                          :stacked?                 true
-                          :clickable?               (or (:clickable? state) clickable?)
-                          :set-state-selector-event ::events/set-state-selector
-                          :state-selector-subs      ::subs/state-selector})])])))))
+    (into [ui/StatisticGroup {:size "mini"}
+           (for [state extra-states]
+             ^{:key (:key state)}
+             [components/StatisticState
+              (merge state
+                     {:value                    (states->counts (:key state))
+                      :stacked?                 true
+                      :clickable?               (or (:clickable? state) clickable?)
+                      :set-state-selector-event ::events/set-state-selector
+                      :state-selector-subs      ::subs/state-selector})])])))
 
 (defn StatisticStates
   [_clickable? summary-subs _states]
@@ -457,7 +453,7 @@
                             :state-selector-subs      ::subs/state-selector})])])
           (when @extra-states-visible?
             [ui/Segment
-             [StatisticStatesExtra true ::subs/deployments-summary]])]
+             [StatisticStatesExtra true @summary]])]
          [ui/GridColumn {:width 4}
           [ui/Button {:icon     true
                       :style    {:margin "1rem"}

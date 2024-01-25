@@ -1007,7 +1007,7 @@
                                         percent]))))
         load-5-dataset (->> data
                             (mapv (fn [d]
-                                    (let [load (get-in d [:aggregations :avg-load-5])
+                                    (let [load (get-in d [:aggregations :avg-cpu-load-5])
                                           capacity  (get-in d [:aggregations :avg-cpu-capacity])
                                           percent (-> (general-utils/percentage load capacity)
                                                       (general-utils/round-up :n-decimal 0))]
@@ -1061,24 +1061,24 @@
                                                              :text    "Percentage (%)"}}})}]]))
 
 (defn DiskUsageTimeSeries [data]
-  (let [capacity     (-> (first data)
-                         (:disk)
-                           (:capacity))
-        load-dataset (->> data
-                          (mapv (fn [d]
-                                  (let [load (get-in d [:disk :used])
-                                        percent (-> (general-utils/percentage load capacity)
-                                                    (general-utils/round-up :n-decimal 0))]
-                                    [(:timestamp d)
-                                     percent]))))]
+  (let [disk-load-dataset (fn [{:keys [ts-data dimensions] :as _dataset}]
+                            (let [device-name     (:disk.device dimensions)
+                                  data-to-display (mapv (fn [d]
+                                                          (let [load     (get-in d [:aggregations :avg-disk-used])
+                                                                capacity (get-in d [:aggregations :avg-disk-capacity])
+                                                                percent  (-> (general-utils/percentage load capacity)
+                                                                             (general-utils/round-up :n-decimal 0))]
+                                                            [(:timestamp d)
+                                                             percent])) ts-data)]
+                              {:data            data-to-display
+                               :label           (str "Disk usage (%) for device " device-name)
+                               :backgroundColor "rgb(230, 99, 100, 0.5)"
+                               :borderColor     "rgb(230, 99, 100)"
+                               :borderWidth     1}))]
     [:div
-     [plot/Line {:data    {:datasets [{:data            load-dataset
-                                       :label           "Disk usage"
-                                       :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                       :borderColor     "rgb(230, 99, 100)"
-                                       :borderWidth     1}]}
+     [plot/Line {:data    {:datasets (mapv disk-load-dataset data)}
 
-                 :options (graph-options {:title    (str "Average Disk usage (%) with device " (:device (:disk (first data))))
+                 :options (graph-options {:title    "Average Disk Usage (%)"
                                           :y-config {:max   100
                                                      :min   0
                                                      :title {:display "true"
@@ -1249,7 +1249,7 @@
                      :style {:margin-top "1em"}}
            (str "Every " (get timespan->granularity @selected-period))]]
          [ui/GridColumn {:textAlign "center"}
-          [DiskUsageTimeSeries (sort-by :timestamp (generate-fake-data-disk @selected-period))]
+          [DiskUsageTimeSeries (:disk-stats @edge-stats) #_(sort-by :timestamp (generate-fake-data-disk @selected-period))]
           #_[MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]
           [ui/Label {:basic true
                      :size "tiny"

@@ -1145,33 +1145,49 @@
                                                      :title {:display false}}})}]]))
 
 (defn NetworkDataTimeSeries [data]
-  (let [bytes-transmitted-dataset (->> data
-                                       (mapv (fn [d]
-                                               [(:timestamp d)
-                                                (* -1 (get-in d [:network :bytes-transmitted]))])))
-        bytes-received-dataset    (->> data
-                                       (mapv (fn [d]
-                                               [(:timestamp d)
-                                                (get-in d [:network :bytes-received])])))]
-    [:div
-     [plot/Line {:data    {:datasets [{:data            bytes-received-dataset
-                                       :label           "Received"
-                                       :fill            true
-                                       :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                       :borderColor     "rgb(230, 99, 100)"
-                                       :borderWidth     1}
-                                      {:data            bytes-transmitted-dataset
-                                       :label           "Transmitted"
-                                       :backgroundColor "rgb(99, 230, 178, 0.5019)"
-                                       :fill            true
-                                       :borderColor     "rgb(99, 230, 178, 0.5019)"
-                                       :borderWidth     1}]}
+  (r/with-let [
 
-                 :options (graph-options {:title    "Network Traffic (Bytes)"
-                                          :y-config {:max   5000
-                                                     :min   -5000
-                                                     :title {:display "true"
-                                                             :text    "Bytes per second"}}})}]]))
+               selected-inteface         (r/atom nil)]
+    (let [interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
+          timeseries-data           (->> data
+                                         (filterv #(= @selected-inteface (get-in % [:dimensions :network.interface])))
+                                         (first)
+                                         (:ts-data))
+          bytes-received-dataset    (->> timeseries-data
+                                         (mapv (fn [d]
+                                                 [(:timestamp d)
+                                                  (* -1 (/ (get-in d [:aggregations :bytes-received])
+                                                           1000000))])))
+          bytes-transmitted-dataset (->> timeseries-data
+                                         (mapv (fn [d]
+                                                 [(:timestamp d)
+                                                  (/ (get-in d [:aggregations :bytes-transmitted])
+                                                     1000000)])))]
+      (js/console.log @selected-inteface data)
+      [:div
+       (when (seq interfaces)
+         [ui/Dropdown {:inline          true
+                       :close-on-change true
+                       :default-value   (first interfaces)
+                       :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
+                       :on-change       (ui-callback/value
+                                          #(reset! selected-inteface %))}])
+       [plot/Line {:data    {:datasets [{:data            bytes-received-dataset
+                                         :label           "Received"
+                                         :fill            true
+                                         :backgroundColor "rgb(230, 99, 100, 0.5)"
+                                         :borderColor     "rgb(230, 99, 100)"
+                                         :borderWidth     1}
+                                        {:data            bytes-transmitted-dataset
+                                         :label           "Transmitted"
+                                         :backgroundColor "rgb(99, 230, 178, 0.5019)"
+                                         :fill            true
+                                         :borderColor     "rgb(99, 230, 178, 0.5019)"
+                                         :borderWidth     1}]}
+
+                   :options (graph-options {:title    (str "Network Traffic (Bytes) for " @selected-inteface)
+                                            :y-config {:title {:display "true"
+                                                               :text    "Megabytes"}}})}]])))
 
 (defn prepare-mem-usage-data
   [edge-stats]
@@ -1257,7 +1273,7 @@
            (str "Every " (get timespan->granularity @selected-period))]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [NetworkDataTimeSeries (sort-by :timestamp (generate-fake-data-tx-rx @selected-period))]
+          [NetworkDataTimeSeries (:network-stats @edge-stats)]
           [ui/Label {:basic true
                      :size "tiny"
                      :style {:margin-top "1em"}}

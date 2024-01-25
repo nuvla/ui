@@ -420,7 +420,6 @@
 (defn StatisticStatesExtra
   [clickable? summary]
   (let [states->counts (state-aggs->state->count summary)]
-
     (into [ui/StatisticGroup {:size "mini"}
            (for [state extra-states]
              ^{:key (:key state)}
@@ -481,8 +480,7 @@
   (let [tr @(subscribe [::i18n-subs/tr])]
     [TitledCardDeployments
      ^{:key "deployment-overview-stats"}
-     [:div
-      [StatisticStates false sub-key]]
+     [StatisticStates false sub-key]
      ^{:key "deployment-overview-button"}
      [uix/Button {:class    "center"
                   :color    "blue"
@@ -522,7 +520,6 @@
                :style     {:margin-top    0
                            :margin-bottom 0}}
       [ControlBar]
-
       [StatisticStates true ::subs/deployments-summary]]
      [bulk-progress-plugin/MonitoredJobs
       {:db-path [::spec/bulk-jobs]}]

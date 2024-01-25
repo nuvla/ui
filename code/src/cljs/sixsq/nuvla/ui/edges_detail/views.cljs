@@ -989,7 +989,6 @@
   (let [data (-> data
                  (first)
                  (:ts-data))
-        cpu-capacity-over-time (map (fn [d] (get-in d [:aggregations :avg-cpu-capacity])) data)
         load-dataset (->> data
                           (mapv (fn [d]
                                   (let [load (get-in d [:aggregations :avg-cpu-load])
@@ -1008,7 +1007,7 @@
                                         percent]))))
         load-5-dataset (->> data
                             (mapv (fn [d]
-                                    (let [load (get-in d [:aggregations :avg-cpu-load-5])
+                                    (let [load (get-in d [:aggregations :avg-load-5])
                                           capacity  (get-in d [:aggregations :avg-cpu-capacity])
                                           percent (-> (general-utils/percentage load capacity)
                                                       (general-utils/round-up :n-decimal 0))]
@@ -1027,12 +1026,12 @@
                                        :borderWidth     1}
                                       {:data            load-5-dataset
                                        :label           "CPU load for the last 5 minutes"
-                                       :backgroundColor "rgb(99, 101, 230, 1)"
-                                       :borderColor     "rgb(99, 101, 230)"
+                                       :backgroundColor "rgb(99, 165, 230, 1)"
+                                       :borderColor     "rgb(99, 165, 230)"
                                        :borderWidth     1}]}
 
                  :options (graph-options {:title    "Average CPU load (%)"
-                                          :y-config {:max   (* (inc (apply max cpu-capacity-over-time)) 100)
+                                          :y-config {:max   200
                                                      :min   0
                                                      :title {:display "true"
                                                              :text    "Percentage (%)"}}})}]]))
@@ -1062,8 +1061,8 @@
                                                              :text    "Percentage (%)"}}})}]]))
 
 (defn DiskUsageTimeSeries [data]
-  (let [capacity       (-> (first data)
-                           (:disk)
+  (let [capacity     (-> (first data)
+                         (:disk)
                            (:capacity))
         load-dataset (->> data
                           (mapv (fn [d]
@@ -1215,7 +1214,7 @@
                                                :to          to
                                                :granularity (get timespan->granularity timespan)
                                                :datasets ["cpu-stats" "disk-stats" "network-stats" "power-consumption-stats"]}])))]
-    (js/console.log @edge-stats)
+    (fetch-edge-stats (first timespan-options))
     (fn []
       [ui/TabPane
 

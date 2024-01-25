@@ -1040,12 +1040,13 @@
                                                              :text    "Percentage (%)"}}})}]]))
 
 (defn RamUsageTimeSeries [data]
-  (let [capacity     (-> (first data)
-                         (:ram)
-                         (:capacity))
+  (let [data (-> data
+                 (first)
+                 (:ts-data))
         load-dataset (->> data
                           (mapv (fn [d]
-                                  (let [load    (get-in d [:ram :used])
+                                  (let [load (get-in d [:aggregations :avg-ram-used])
+                                        capacity  (get-in d [:aggregations :avg-ram-capacity])
                                         percent (-> (general-utils/percentage load capacity)
                                                     (general-utils/round-up :n-decimal 0))]
                                     [(:timestamp d)
@@ -1074,7 +1075,6 @@
                                                             [(:timestamp d)
                                                              percent])) ts-data)]
                               {:data            data-to-display
-                               :spanGaps true
                                :label           (str "Disk usage (%) for device " device-name)
                                :backgroundColor "rgb(230, 99, 100, 0.5)"
                                :borderColor     "rgb(230, 99, 100)"
@@ -1218,12 +1218,11 @@
   [ui/Label {:basic true
              :size "tiny"
              :style {:margin-top "1em"}}
-   (str "Every " (str/replace (get timespan->granularity timespan) #"-" " "))])
+   (str "Data received every " (str/replace (get timespan->granularity timespan) #"-" " "))])
 (defn HistoricalData []
   (let [edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
         selected-period       (r/atom (first timespan-options))
-        granularity ""
         fetch-edge-stats       (fn [timespan]
                                  (let [now (time/now)
                                        [from to] (case timespan
@@ -1239,11 +1238,9 @@
                                               {:from        from
                                                :to          to
                                                :granularity (get timespan->granularity timespan)
-                                               :datasets ["cpu-stats" "disk-stats" "network-stats" "power-consumption-stats"]}])))]
+                                               :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}])))]
     (fetch-edge-stats (first timespan-options))
     (fn []
-      (js/console.log @selected-period )
-
       [ui/TabPane
 
        [ui/Grid {:columns   2
@@ -1283,7 +1280,7 @@
           [NetworkDataTimeSeries (:network-stats @edge-stats)]
           [GraphLabel @selected-period]]
          [ui/GridColumn {:textAlign "center"}
-          [RamUsageTimeSeries (sort-by :timestamp (generate-fake-data-ram @selected-period))]
+          [RamUsageTimeSeries (:ram-stats @edge-stats) #_(sort-by :timestamp (generate-fake-data-ram @selected-period))]
           [GraphLabel @selected-period]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}

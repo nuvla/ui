@@ -1015,16 +1015,19 @@
                                        percent]))))]
     [:div
      [plot/Line {:data    {:datasets [{:data            load-dataset
+
                                        :label           "CPU load"
                                        :backgroundColor "rgb(230, 99, 100, 0.5)"
                                        :borderColor     "rgb(230, 99, 100)"
                                        :borderWidth     1}
                                       {:data            load-1-dataset
+
                                        :label           "CPU load for the last minute"
                                        :backgroundColor "rgb(99, 230, 178, 0.5019)"
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
                                        :borderWidth     1}
                                       {:data            load-5-dataset
+
                                        :label           "CPU load for the last 5 minutes"
                                        :backgroundColor "rgb(99, 165, 230, 1)"
                                        :borderColor     "rgb(99, 165, 230)"
@@ -1071,6 +1074,7 @@
                                                             [(:timestamp d)
                                                              percent])) ts-data)]
                               {:data            data-to-display
+                               :spanGaps true
                                :label           (str "Disk usage (%) for device " device-name)
                                :backgroundColor "rgb(230, 99, 100, 0.5)"
                                :borderColor     "rgb(230, 99, 100)"
@@ -1145,9 +1149,7 @@
                                                      :title {:display false}}})}]]))
 
 (defn NetworkDataTimeSeries [data]
-  (r/with-let [
-
-               selected-inteface         (r/atom nil)]
+  (r/with-let [selected-inteface         (r/atom nil)]
     (let [interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
           timeseries-data           (->> data
                                          (filterv #(= @selected-inteface (get-in % [:dimensions :network.interface])))
@@ -1156,36 +1158,37 @@
           bytes-received-dataset    (->> timeseries-data
                                          (mapv (fn [d]
                                                  [(:timestamp d)
-                                                  (* -1 (/ (get-in d [:aggregations :bytes-received])
-                                                           1000000))])))
+                                                  (/ (get-in d [:aggregations :bytes-received])
+                                                     1000000)])))
           bytes-transmitted-dataset (->> timeseries-data
                                          (mapv (fn [d]
                                                  [(:timestamp d)
-                                                  (/ (get-in d [:aggregations :bytes-transmitted])
-                                                     1000000)])))]
-      (js/console.log @selected-inteface data)
-      [:div
+                                                  (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
+                                                           1000000))])))]
+      [:div {:style {:display "flex"
+                     :flex-direction "column"
+                     :align-items "end"}}
        (when (seq interfaces)
          [ui/Dropdown {:inline          true
                        :close-on-change true
-                       :default-value   (first interfaces)
+                       :placeholder     "Choose a network interface"
                        :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
                        :on-change       (ui-callback/value
                                           #(reset! selected-inteface %))}])
-       [plot/Line {:data    {:datasets [{:data            bytes-received-dataset
-                                         :label           "Received"
+       [plot/Line {:data    {:datasets [{:data            bytes-transmitted-dataset
+                                         :label           "Transmitted"
                                          :fill            true
                                          :backgroundColor "rgb(230, 99, 100, 0.5)"
                                          :borderColor     "rgb(230, 99, 100)"
                                          :borderWidth     1}
-                                        {:data            bytes-transmitted-dataset
-                                         :label           "Transmitted"
+                                        {:data            bytes-received-dataset
+                                         :label           "Received"
                                          :backgroundColor "rgb(99, 230, 178, 0.5019)"
                                          :fill            true
                                          :borderColor     "rgb(99, 230, 178, 0.5019)"
                                          :borderWidth     1}]}
 
-                   :options (graph-options {:title    (str "Network Traffic (Bytes) for " @selected-inteface)
+                   :options (graph-options {:title    (str "Network Traffic (Megabytes)")
                                             :y-config {:title {:display "true"
                                                                :text    "Megabytes"}}})}]])))
 
@@ -1210,10 +1213,17 @@
                                                    :min   0
                                                    :title {:display "true"
                                                            :text    "Mem usage (Mb)"}}})}]])
+
+(defn GraphLabel [timespan]
+  [ui/Label {:basic true
+             :size "tiny"
+             :style {:margin-top "1em"}}
+   (str "Every " (str/replace (get timespan->granularity timespan) #"-" " "))])
 (defn HistoricalData []
   (let [edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
         selected-period       (r/atom (first timespan-options))
+        granularity ""
         fetch-edge-stats       (fn [timespan]
                                  (let [now (time/now)
                                        [from to] (case timespan
@@ -1232,6 +1242,8 @@
                                                :datasets ["cpu-stats" "disk-stats" "network-stats" "power-consumption-stats"]}])))]
     (fetch-edge-stats (first timespan-options))
     (fn []
+      (js/console.log @selected-period )
+
       [ui/TabPane
 
        [ui/Grid {:columns   2
@@ -1256,41 +1268,27 @@
                         :on-change       (ui-callback/value
                                            (fn [period]
                                              (do
+                                               (reset! selected-period period)
                                                (fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
           [CpuLoadTimeSeries (:cpu-stats @edge-stats) #_(sort-by :timestamp (generate-fake-data-cpu @selected-period)) #_(prepare-cpu-load-data @edge-stats)]
-          [ui/Label {:basic true
-                     :size "tiny"
-                     :style {:margin-top "1em"}}
-           (str "Every " (get timespan->granularity @selected-period))]]
+          [GraphLabel @selected-period]]
          [ui/GridColumn {:textAlign "center"}
           [DiskUsageTimeSeries (:disk-stats @edge-stats) #_(sort-by :timestamp (generate-fake-data-disk @selected-period))]
           #_[MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]
-          [ui/Label {:basic true
-                     :size "tiny"
-                     :style {:margin-top "1em"}}
-           (str "Every " (get timespan->granularity @selected-period))]]]
+          [GraphLabel @selected-period]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
           [NetworkDataTimeSeries (:network-stats @edge-stats)]
-          [ui/Label {:basic true
-                     :size "tiny"
-                     :style {:margin-top "1em"}}
-           (str "Every " (get timespan->granularity @selected-period))]]
+          [GraphLabel @selected-period]]
          [ui/GridColumn {:textAlign "center"}
           [RamUsageTimeSeries (sort-by :timestamp (generate-fake-data-ram @selected-period))]
-          [ui/Label {:basic true
-                     :size "tiny"
-                     :style {:margin-top "1em"}}
-           (str "Every " (get timespan->granularity @selected-period))]]]
+          [GraphLabel @selected-period]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
           [NEStatusTimeSeries (sort-by :timestamp (generate-fake-data-status @selected-period))]
-          [ui/Label {:basic true
-                     :size "tiny"
-                     :style {:margin-top "1em"}}
-           (str "Every " (get timespan->granularity @selected-period))]]]]])))
+          [GraphLabel @selected-period]]]]])))
 
 
 (defn Load

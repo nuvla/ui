@@ -918,41 +918,6 @@
                                         "last year" (time/subtract-days (time/now) (* i 7))))))))
 
 
-(defn generate-fake-data-cpu [timespan]
-  (->> (generate-timestamps timespan)
-       (mapv (fn [d]
-               {:timestamp d
-                :metric    "cpu"
-                :cpu       {:capacity 4
-                            :load     (rand 20)
-                            :load-1   (rand 20)
-                            :load-5   (rand 20)}}))))
-
-(defn generate-fake-data-tx-rx [timespan]
-  (->> (generate-timestamps timespan)
-       (mapv (fn [d]
-               {:timestamp d
-                :metric    "network"
-                :network   {:bytes-received    (rand 1000)
-                            :bytes-transmitted (rand 1000)}}))))
-
-(defn generate-fake-data-ram [timespan]
-  (->> (generate-timestamps timespan)
-       (mapv (fn [d]
-               {:timestamp d
-                :metric    "ram"
-                :ram       {:capacity 7936
-                            :used     (rand 7936)}}))))
-
-(defn generate-fake-data-disk [timespan]
-  (->> (generate-timestamps timespan)
-       (mapv (fn [d]
-               {:timestamp d
-                :metric    "disk"
-                :disk      {:device   "vda1"
-                            :capacity 50
-                            :used     (rand 40)}}))))
-
 (defn generate-fake-data-status [timespan]
   (->> (generate-timestamps timespan)
        (mapv (fn [d]
@@ -962,14 +927,6 @@
 
 (comment
   (generate-fake-data))
-
-(defn prepare-cpu-load-data
-  [edge-stats]
-  (->> edge-stats
-       (map (juxt (comp time/parse-iso8601 :key_as_string) (comp :value :load)))
-       (mapv (fn [[d p]]
-               {:x d
-                :y p}))))
 
 (def timespan-options ["last 15 minutes" "last day" "last week" "last month" "last 3 months" "last year"])
 
@@ -1192,28 +1149,6 @@
                                             :y-config {:title {:display "true"
                                                                :text    "Megabytes"}}})}]])))
 
-(defn prepare-mem-usage-data
-  [edge-stats]
-  (->> edge-stats
-       (map (juxt (comp time/parse-iso8601 :key_as_string) (comp :value :mem)))
-       (mapv (fn [[d p]]
-               {:x d
-                :y p}))))
-
-(defn MemUsageTimeSeries [data]
-  [:div
-   [plot/Line {:data    {:datasets [{:data            (sort-by :x data)
-                                     :label           "MEM usage (Mb)"
-                                     :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                     :borderColor     "rgb(230, 99, 100)"
-                                     :borderWidth     1}]}
-
-               :options (graph-options {:title    "Average memory consumption (Mb)"
-                                        :y-config {:max   10000
-                                                   :min   0
-                                                   :title {:display "true"
-                                                           :text    "Mem usage (Mb)"}}})}]])
-
 (defn GraphLabel [timespan]
   [ui/Label {:basic true
              :size "tiny"
@@ -1269,18 +1204,17 @@
                                                (fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [CpuLoadTimeSeries (:cpu-stats @edge-stats) #_(sort-by :timestamp (generate-fake-data-cpu @selected-period)) #_(prepare-cpu-load-data @edge-stats)]
+          [CpuLoadTimeSeries (:cpu-stats @edge-stats)]
           [GraphLabel @selected-period]]
          [ui/GridColumn {:textAlign "center"}
-          [DiskUsageTimeSeries (:disk-stats @edge-stats) #_(sort-by :timestamp (generate-fake-data-disk @selected-period))]
-          #_[MemUsageTimeSeries (prepare-mem-usage-data @edge-stats)]
+          [DiskUsageTimeSeries (:disk-stats @edge-stats) ]
           [GraphLabel @selected-period]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
           [NetworkDataTimeSeries (:network-stats @edge-stats)]
           [GraphLabel @selected-period]]
          [ui/GridColumn {:textAlign "center"}
-          [RamUsageTimeSeries (:ram-stats @edge-stats) #_(sort-by :timestamp (generate-fake-data-ram @selected-period))]
+          [RamUsageTimeSeries (:ram-stats @edge-stats)]
           [GraphLabel @selected-period]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}

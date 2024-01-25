@@ -420,7 +420,8 @@
 (defn StatisticStatesExtra
   [clickable? summary]
   (let [states->counts (state-aggs->state->count summary)]
-    (into [ui/StatisticGroup {:size "mini"}
+    (into [ui/StatisticGroup {:size "mini"
+                              :style {:margin-top "10px"}}
            (for [state extra-states]
              ^{:key (:key state)}
              [components/StatisticState

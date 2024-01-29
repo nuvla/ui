@@ -1098,7 +1098,8 @@
 
 (defn NetworkDataTimeSeries [selected-timespan data]
   (r/with-let [selected-intefaces (r/atom [])]
-    (let [interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
+    (let [tr                        (subscribe [::i18n-subs/tr])
+          interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
           selected-interfaces-data  (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface])) data)
           bytes-received-dataset    (fn [interface]
                                       (->> (:ts-data interface)
@@ -1140,7 +1141,7 @@
          [ui/Dropdown {:inline          true
                        :multiple        true
                        :close-on-change true
-                       :placeholder     "Choose a network interface"
+                       :placeholder     (@tr [:choose-interface])
                        :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
                        :on-change       (ui-callback/value
                                           #(reset! selected-intefaces %))}])

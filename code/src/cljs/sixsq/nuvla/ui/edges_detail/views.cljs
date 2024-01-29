@@ -930,28 +930,50 @@
 
 (def timespan-options ["last 15 minutes" "last day" "last week" "last month" "last 3 months" "last year"])
 
-(defn graph-options [{:keys [title y-config plugins]}]
-  {:plugins  (merge {:title {:display  true
-                             :text     title
-                             :position "top"}}
-                    plugins)
-   :elements {:point {:radius 1}}
+(defn timespan-to-period [timespan]
+  (let [now (time/now)]
+    (case timespan
+      "last 15 minutes" [(time/subtract-minutes now 15) now]
+      "last hour" [(time/subtract-minutes now 60) now]
+      "last 6 hours" [(time/subtract-minutes now 360) now]
+      "last day" [(time/subtract-days now 1) now]
+      "last week" [(time/subtract-days now 7) now]
+      "last month" [(time/subtract-months now 1) now]
+      "last 3 months" [(time/subtract-months now 3) now]
+      "last year" [(time/subtract-years now 1) now])))
 
-   :scales   {:x {:type  "time"
-                  :title {:display "true"
-                          :text    "Time"}}
-              :y y-config}})
+(defn graph-options [timespan {:keys [title y-config plugins]}]
+  (let [[from to] (timespan-to-period timespan)]
+    {:plugins  (merge {:title {:display  true
+                               :text     title
+                               :position "top"}}
+                      plugins)
+     :elements {:point {:radius 1}}
 
-(defn CpuLoadTimeSeries [data]
-  (let [data (-> data
-                 (first)
-                 (:ts-data))
-        load-dataset (->> data
-                          (mapv (fn [d]
-                                  (let [load (get-in d [:aggregations :avg-cpu-load])
-                                        capacity  (get-in d [:aggregations :avg-cpu-capacity])
-                                        percent (-> (general-utils/percentage load capacity)
-                                                    (general-utils/round-up :n-decimal 0))]
+     :scales   {:x {:type  "time"
+                    :min   from
+                    :max   to
+                    :time {:unit (case timespan
+                                   (or "last 15 minutes"
+                                       "last hour"
+                                       "last 6 hours") "minute"
+                                   "last day" "hour"
+                                   "last year" "month"
+                                   "day")}
+                    :title {:display "true"
+                            :text    "Time"}}
+                :y y-config}}))
+
+(defn CpuLoadTimeSeries [selected-timespan data]
+  (let [data           (-> data
+                           (first)
+                           (:ts-data))
+        load-dataset   (->> data
+                            (mapv (fn [d]
+                                    (let [load     (get-in d [:aggregations :avg-cpu-load])
+                                          capacity (get-in d [:aggregations :avg-cpu-capacity])
+                                          percent  (-> (general-utils/percentage load capacity)
+                                                       (general-utils/round-up :n-decimal 0))]
                                     [(:timestamp d)
                                      percent]))))
         load-1-dataset (->> data
@@ -993,13 +1015,13 @@
                                        :borderColor     "rgb(99, 165, 230)"
                                        :borderWidth     1}]}
 
-                 :options (graph-options {:title    "Average CPU load (%)"
-                                          :y-config {:max   200
-                                                     :min   0
-                                                     :title {:display "true"
-                                                             :text    "Percentage (%)"}}})}]]))
+                 :options (graph-options selected-timespan {:title    "Average CPU load (%)"
+                                                            :y-config {:max   200
+                                                                       :min   0
+                                                                       :title {:display "true"
+                                                                               :text    "Percentage (%)"}}})}]]))
 
-(defn RamUsageTimeSeries [data]
+(defn RamUsageTimeSeries [selected-timespan data]
   (let [data (-> data
                  (first)
                  (:ts-data))
@@ -1020,13 +1042,13 @@
                                        :borderColor     "rgb(230, 99, 100)"
                                        :borderWidth     1}]}
 
-                 :options (graph-options {:title    (str "Average RAM usage (%)")
-                                          :y-config {:max   100
-                                                     :min   0
-                                                     :title {:display "true"
-                                                             :text    "Percentage (%)"}}})}]]))
+                 :options (graph-options selected-timespan {:title    (str "Average RAM usage (%)")
+                                                            :y-config {:max   100
+                                                                       :min   0
+                                                                       :title {:display "true"
+                                                                               :text    "Percentage (%)"}}})}]]))
 
-(defn DiskUsageTimeSeries [data]
+(defn DiskUsageTimeSeries [selected-timespan data]
   (let [disk-load-dataset (fn [{:keys [ts-data dimensions] :as _dataset}]
                             (let [device-name     (:disk.device dimensions)
                                   data-to-display (mapv (fn [d]
@@ -1045,11 +1067,11 @@
     [:div
      [plot/Line {:data    {:datasets (mapv disk-load-dataset data)}
 
-                 :options (graph-options {:title    "Average Disk Usage (%)"
-                                          :y-config {:max   100
-                                                     :min   0
-                                                     :title {:display "true"
-                                                             :text    "Percentage (%)"}}})}]]))
+                 :options (graph-options selected-timespan {:title    "Average Disk Usage (%)"
+                                                            :y-config {:max   100
+                                                                       :min   0
+                                                                       :title {:display "true"
+                                                                               :text    "Percentage (%)"}}})}]]))
 
 
 (defn interpolate [start end percentage]
@@ -1069,7 +1091,7 @@
 (comment
   (color-gradient color1 color2 0.8))
 
-(defn NEStatusTimeSeries [data]
+(defn NEStatusTimeSeries [selected-timespan data]
   (let [dataset  (->> data
                       (mapv (fn [d]
                               {:x (:timestamp d)
@@ -1091,14 +1113,14 @@
                                                             (to-rgb color-gradient)))
                                        :borderWidth 1}]}
 
-                 :options (graph-options {:title    "NE Status (online/offline)"
-                                          :plugins {:tooltip { :callbacks {:label (fn [tooltipItems _data]
-                                                                                    (str "value: " (.. tooltipItems -raw -status)))}}
-                                                    :legend {:display false}}
-                                          :y-config {:max   1
-                                                     :min   0
-                                                     :ticks {:display false}
-                                                     :title {:display false}}})}]]))
+                 :options (graph-options selected-timespan {:title    "NE Status (online/offline)"
+                                                            :plugins {:tooltip { :callbacks {:label (fn [tooltipItems _data]
+                                                                                                      (str "value: " (.. tooltipItems -raw -status)))}}
+                                                                      :legend {:display false}}
+                                                            :y-config {:max   1
+                                                                       :min   0
+                                                                       :ticks {:display false}
+                                                                       :title {:display false}}})}]]))
 
 (def colors ["#A8E6CF61"
              "#DCEDC161"
@@ -1111,7 +1133,7 @@
              "#D5E1DF61"
              "#E2B3A361"])
 
-(defn NetworkDataTimeSeries [data]
+(defn NetworkDataTimeSeries [selected-timespan data]
   (r/with-let [selected-intefaces (r/atom [])]
     (let [interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
           timeseries-data           (->> data
@@ -1163,9 +1185,9 @@
                                           #(reset! selected-intefaces %))}])
        [plot/Line {:data    {:datasets datasets-to-display}
 
-                   :options (graph-options {:title    (str "Network Traffic (Megabytes)")
-                                            :y-config {:title {:display "true"
-                                                               :text    "Megabytes"}}})}]])))
+                   :options (graph-options selected-timespan {:title    (str "Network Traffic (Megabytes)")
+                                                              :y-config {:title {:display "true"
+                                                                                 :text    "Megabytes"}}})}]])))
 
 (defn GraphLabel [timespan]
   [ui/Label {:basic true
@@ -1178,15 +1200,7 @@
         selected-period       (r/atom (first timespan-options))
         fetch-edge-stats       (fn [timespan]
                                  (let [now (time/now)
-                                       [from to] (case timespan
-                                                   "last 15 minutes" [(time/subtract-minutes now 15) now]
-                                                   "last hour" [(time/subtract-minutes now 60) now]
-                                                   "last 6 hours" [(time/subtract-minutes now 360) now]
-                                                   "last day" [(time/subtract-days now 1) now]
-                                                   "last week" [(time/subtract-days now 7) now]
-                                                   "last month" [(time/subtract-months now 1) now]
-                                                   "last 3 months" [(time/subtract-months now 3) now]
-                                                   "last year" [(time/subtract-years now 1) now])]
+                                       [from to] (timespan-to-period timespan)]
                                    (dispatch [::events/fetch-edge-stats
                                               {:from        from
                                                :to          to
@@ -1222,21 +1236,21 @@
                                                (fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [CpuLoadTimeSeries (:cpu-stats @edge-stats)]
+          [CpuLoadTimeSeries @selected-period (:cpu-stats @edge-stats)]
           [GraphLabel @selected-period]]
          [ui/GridColumn {:textAlign "center"}
-          [DiskUsageTimeSeries (:disk-stats @edge-stats) ]
+          [DiskUsageTimeSeries @selected-period (:disk-stats @edge-stats) ]
           [GraphLabel @selected-period]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [NetworkDataTimeSeries (:network-stats @edge-stats)]
+          [NetworkDataTimeSeries @selected-period (:network-stats @edge-stats)]
           [GraphLabel @selected-period]]
          [ui/GridColumn {:textAlign "center"}
-          [RamUsageTimeSeries (:ram-stats @edge-stats)]
+          [RamUsageTimeSeries  @selected-period (:ram-stats @edge-stats)]
           [GraphLabel @selected-period]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [NEStatusTimeSeries (sort-by :timestamp (generate-fake-data-status @selected-period))]
+          [NEStatusTimeSeries @selected-period (sort-by :timestamp (generate-fake-data-status @selected-period))]
           [GraphLabel @selected-period]]]]])))
 
 

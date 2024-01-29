@@ -976,26 +976,23 @@
 
 (defn CpuLoadTimeSeries [selected-timespan data]
   (let [ts-data           (-> data
-                           (first)
-                           (:ts-data))]
+                              (first)
+                              (:ts-data))]
     [:div
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
-                                       :spanGaps true
-
+                                       :spanGaps        true
                                        :label           "CPU load"
                                        :backgroundColor "rgb(230, 99, 100, 0.5)"
                                        :borderColor     "rgb(230, 99, 100)"
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
-                                       :spanGaps true
-
+                                       :spanGaps        true
                                        :label           "CPU load for the last minute"
                                        :backgroundColor "rgb(99, 230, 178, 0.5019)"
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
                                        :spanGaps true
-
                                        :label           "CPU load for the last 5 minutes"
                                        :backgroundColor "rgb(99, 165, 230, 1)"
                                        :borderColor     "rgb(99, 165, 230)"
@@ -1088,16 +1085,16 @@
                                                                        :ticks {:display false}
                                                                        :title {:display false}}})}]]))
 
-(def colors ["#A8E6CF61"
-             "#DCEDC161"
-             "#504A0961"
-             "#FFAAA561"
-             "#FF8B9461"
-             "#97A39F61"
-             "#A4B5C661"
-             "#EACACB61"
-             "#D5E1DF61"
-             "#E2B3A361"])
+(def colors-palette ["#A8E6CF61"
+                     "#DCEDC161"
+                     "#504A0961"
+                     "#FFAAA561"
+                     "#FF8B9461"
+                     "#97A39F61"
+                     "#A4B5C661"
+                     "#EACACB61"
+                     "#D5E1DF61"
+                     "#E2B3A361"])
 
 (defn NetworkDataTimeSeries [selected-timespan data]
   (r/with-let [selected-intefaces (r/atom [])]
@@ -1115,22 +1112,22 @@
                                                    [(:timestamp d)
                                                     (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
                                                              1000000))]))))
-          datasets-to-display      (loop [chart-colors colors
-                                          timeseries selected-interfaces-data
+          datasets-to-display      (loop [chart-colors        colors-palette
+                                          timeseries          selected-interfaces-data
                                           datasets-to-display []]
                                      (if (empty? timeseries)
                                        datasets-to-display
                                        (recur (drop 2 chart-colors)
                                               (rest timeseries)
                                               (concat datasets-to-display [{:data            (bytes-transmitted-dataset (first timeseries))
-                                                                            :label           "Transmitted"
+                                                                            :label           (str "Transmitted (" (get-in (first timeseries) [:dimensions :network.interface]) ")")
                                                                             :spanGaps        true
                                                                             :fill            true
                                                                             :backgroundColor (or (first chart-colors) "gray")
                                                                             :borderColor     (or (first chart-colors) "gray")
                                                                             :borderWidth     1}
                                                                            {:data            (bytes-received-dataset (first timeseries))
-                                                                            :label           "Received"
+                                                                            :label           (str "Received (" (get-in (first timeseries) [:dimensions :network.interface]) ")")
                                                                             :spanGaps        true
                                                                             :backgroundColor (or (second chart-colors) "gray")
                                                                             :fill            true

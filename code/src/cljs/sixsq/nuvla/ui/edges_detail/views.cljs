@@ -964,50 +964,36 @@
                             :text    "Time"}}
                 :y y-config}}))
 
+(defn timestamp+percentage [ts-data load-key capacity-key]
+  (mapv (fn [d]
+          (let [load     (get-in d [:aggregations load-key])
+                capacity (get-in d [:aggregations capacity-key])
+                percent  (-> (general-utils/percentage load capacity)
+                             (general-utils/round-up :n-decimal 0))]
+            [(:timestamp d)
+             percent]))
+        ts-data))
+
 (defn CpuLoadTimeSeries [selected-timespan data]
-  (let [data           (-> data
+  (let [ts-data           (-> data
                            (first)
-                           (:ts-data))
-        load-dataset   (->> data
-                            (mapv (fn [d]
-                                    (let [load     (get-in d [:aggregations :avg-cpu-load])
-                                          capacity (get-in d [:aggregations :avg-cpu-capacity])
-                                          percent  (-> (general-utils/percentage load capacity)
-                                                       (general-utils/round-up :n-decimal 0))]
-                                    [(:timestamp d)
-                                     percent]))))
-        load-1-dataset (->> data
-                            (mapv (fn [d]
-                                     (let [load (get-in d [:aggregations :avg-cpu-load-1])
-                                           capacity  (get-in d [:aggregations :avg-cpu-capacity])
-                                           percent (-> (general-utils/percentage load capacity)
-                                                       (general-utils/round-up :n-decimal 0))]
-                                       [(:timestamp d)
-                                        percent]))))
-        load-5-dataset (->> data
-                            (mapv (fn [d]
-                                    (let [load (get-in d [:aggregations :avg-cpu-load-5])
-                                          capacity  (get-in d [:aggregations :avg-cpu-capacity])
-                                          percent (-> (general-utils/percentage load capacity)
-                                                      (general-utils/round-up :n-decimal 0))]
-                                      [(:timestamp d)
-                                       percent]))))]
+                           (:ts-data))]
     [:div
-     [plot/Line {:data    {:datasets [{:data            load-dataset
+     [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
                                        :spanGaps true
 
                                        :label           "CPU load"
                                        :backgroundColor "rgb(230, 99, 100, 0.5)"
                                        :borderColor     "rgb(230, 99, 100)"
                                        :borderWidth     1}
-                                      {:data            load-1-dataset
+                                      {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
                                        :spanGaps true
 
                                        :label           "CPU load for the last minute"
                                        :backgroundColor "rgb(99, 230, 178, 0.5019)"
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
                                        :borderWidth     1}
-                                      {:data            load-5-dataset
+                                      {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
                                        :spanGaps true
 
                                        :label           "CPU load for the last 5 minutes"
@@ -1022,21 +1008,12 @@
                                                                                :text    "Percentage (%)"}}})}]]))
 
 (defn RamUsageTimeSeries [selected-timespan data]
-  (let [data (-> data
+  (let [ts-data (-> data
                  (first)
-                 (:ts-data))
-        load-dataset (->> data
-                          (mapv (fn [d]
-                                  (let [load (get-in d [:aggregations :avg-ram-used])
-                                        capacity  (get-in d [:aggregations :avg-ram-capacity])
-                                        percent (-> (general-utils/percentage load capacity)
-                                                    (general-utils/round-up :n-decimal 0))]
-                                    [(:timestamp d)
-                                     percent]))))]
+                 (:ts-data))]
     [:div
-     [plot/Line {:data    {:datasets [{:data            load-dataset
-                                       :spanGaps true
-
+     [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
+                                       :spanGaps        true
                                        :label           "RAM usage"
                                        :backgroundColor "rgb(230, 99, 100, 0.5)"
                                        :borderColor     "rgb(230, 99, 100)"
@@ -1051,13 +1028,7 @@
 (defn DiskUsageTimeSeries [selected-timespan data]
   (let [disk-load-dataset (fn [{:keys [ts-data dimensions] :as _dataset}]
                             (let [device-name     (:disk.device dimensions)
-                                  data-to-display (mapv (fn [d]
-                                                          (let [load     (get-in d [:aggregations :avg-disk-used])
-                                                                capacity (get-in d [:aggregations :avg-disk-capacity])
-                                                                percent  (-> (general-utils/percentage load capacity)
-                                                                             (general-utils/round-up :n-decimal 0))]
-                                                            [(:timestamp d)
-                                                             percent])) ts-data)]
+                                  data-to-display (timestamp+percentage ts-data :avg-disk-used :avg-disk-capacity) ]
                               {:data            data-to-display
                                :spanGaps        true
                                :label           (str "Disk usage (%) for device " device-name)
@@ -1066,7 +1037,6 @@
                                :borderWidth     1}))]
     [:div
      [plot/Line {:data    {:datasets (mapv disk-load-dataset data)}
-
                  :options (graph-options selected-timespan {:title    "Average Disk Usage (%)"
                                                             :y-config {:max   100
                                                                        :min   0
@@ -1136,8 +1106,7 @@
 (defn NetworkDataTimeSeries [selected-timespan data]
   (r/with-let [selected-intefaces (r/atom [])]
     (let [interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
-          timeseries-data           (->> data
-                                         (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface]))))
+          selected-interfaces-data  (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface])) data)
           bytes-received-dataset    (fn [interface]
                                       (->> (:ts-data interface)
                                            (mapv (fn [d]
@@ -1151,27 +1120,26 @@
                                                     (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
                                                              1000000))]))))
           datasets-to-display      (loop [chart-colors colors
-                                          timeseries timeseries-data
+                                          timeseries selected-interfaces-data
                                           datasets-to-display []]
                                      (if (empty? timeseries)
                                        datasets-to-display
                                        (recur (drop 2 chart-colors)
                                               (rest timeseries)
                                               (concat datasets-to-display [{:data            (bytes-transmitted-dataset (first timeseries))
-                                                                                  :label           "Transmitted"
-                                                                                  :spanGaps        true
-                                                                                  :fill            true
-                                                                                  :backgroundColor (or (first chart-colors) "gray")
-                                                                                  :borderColor     (or (first chart-colors) "gray")
-                                                                                  :borderWidth     1}
-                                                                                 {:data            (bytes-received-dataset (first timeseries))
-                                                                                  :label           "Received"
-                                                                                  :spanGaps        true
-                                                                                  :backgroundColor (or (second chart-colors) "gray")
-                                                                                  :fill            true
-                                                                                  :borderColor     (or (second chart-colors) "gray")
-                                                                                  :borderWidth     1}]))))]
-      (js/console.log @selected-intefaces datasets-to-display)
+                                                                            :label           "Transmitted"
+                                                                            :spanGaps        true
+                                                                            :fill            true
+                                                                            :backgroundColor (or (first chart-colors) "gray")
+                                                                            :borderColor     (or (first chart-colors) "gray")
+                                                                            :borderWidth     1}
+                                                                           {:data            (bytes-received-dataset (first timeseries))
+                                                                            :label           "Received"
+                                                                            :spanGaps        true
+                                                                            :backgroundColor (or (second chart-colors) "gray")
+                                                                            :fill            true
+                                                                            :borderColor     (or (second chart-colors) "gray")
+                                                                            :borderWidth     1}]))))]
       [:div {:style {:display        "flex"
                      :flex-direction "column"
                      :align-items    "end"}}
@@ -1184,7 +1152,6 @@
                        :on-change       (ui-callback/value
                                           #(reset! selected-intefaces %))}])
        [plot/Line {:data    {:datasets datasets-to-display}
-
                    :options (graph-options selected-timespan {:title    (str "Network Traffic (Megabytes)")
                                                               :y-config {:title {:display "true"
                                                                                  :text    "Megabytes"}}})}]])))
@@ -1197,19 +1164,17 @@
 (defn HistoricalData []
   (let [edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
-        selected-period       (r/atom (first timespan-options))
-        fetch-edge-stats       (fn [timespan]
-                                 (let [now (time/now)
-                                       [from to] (timespan-to-period timespan)]
-                                   (dispatch [::events/fetch-edge-stats
-                                              {:from        from
-                                               :to          to
-                                               :granularity (get timespan->granularity timespan)
-                                               :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}])))]
+        selected-timespan     (r/atom (first timespan-options))
+        fetch-edge-stats      (fn [timespan]
+                                (let [[from to] (timespan-to-period timespan)]
+                                  (dispatch [::events/fetch-edge-stats
+                                             {:from        from
+                                              :to          to
+                                              :granularity (get timespan->granularity timespan)
+                                              :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}])))]
     (fetch-edge-stats (first timespan-options))
     (fn []
       [ui/TabPane
-
        [ui/Grid {:columns   2
                  :stackable true
                  :divided   true
@@ -1232,26 +1197,26 @@
                         :on-change       (ui-callback/value
                                            (fn [period]
                                              (do
-                                               (reset! selected-period period)
+                                               (reset! selected-timespan period)
                                                (fetch-edge-stats period))))}]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [CpuLoadTimeSeries @selected-period (:cpu-stats @edge-stats)]
-          [GraphLabel @selected-period]]
+          [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]
+          [GraphLabel @selected-timespan]]
          [ui/GridColumn {:textAlign "center"}
-          [DiskUsageTimeSeries @selected-period (:disk-stats @edge-stats) ]
-          [GraphLabel @selected-period]]]
+          [DiskUsageTimeSeries @selected-timespan (:disk-stats @edge-stats) ]
+          [GraphLabel @selected-timespan]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [NetworkDataTimeSeries @selected-period (:network-stats @edge-stats)]
-          [GraphLabel @selected-period]]
+          [NetworkDataTimeSeries @selected-timespan (:network-stats @edge-stats)]
+          [GraphLabel @selected-timespan]]
          [ui/GridColumn {:textAlign "center"}
-          [RamUsageTimeSeries  @selected-period (:ram-stats @edge-stats)]
-          [GraphLabel @selected-period]]]
+          [RamUsageTimeSeries  @selected-timespan (:ram-stats @edge-stats)]
+          [GraphLabel @selected-timespan]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
-          [NEStatusTimeSeries @selected-period (sort-by :timestamp (generate-fake-data-status @selected-period))]
-          [GraphLabel @selected-period]]]]])))
+          [NEStatusTimeSeries @selected-timespan (sort-by :timestamp (generate-fake-data-status @selected-timespan))]
+          [GraphLabel @selected-timespan]]]]])))
 
 
 (defn Load

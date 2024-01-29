@@ -1011,7 +1011,7 @@
   (let [ts-data (-> data
                  (first)
                  (:ts-data))]
-    [:div
+    [:div {:style {:margin-top 35}}
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
                                        :spanGaps        true
                                        :label           "RAM usage"

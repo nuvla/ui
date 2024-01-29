@@ -972,18 +972,21 @@
                                        percent]))))]
     [:div
      [plot/Line {:data    {:datasets [{:data            load-dataset
+                                       :spanGaps true
 
                                        :label           "CPU load"
                                        :backgroundColor "rgb(230, 99, 100, 0.5)"
                                        :borderColor     "rgb(230, 99, 100)"
                                        :borderWidth     1}
                                       {:data            load-1-dataset
+                                       :spanGaps true
 
                                        :label           "CPU load for the last minute"
                                        :backgroundColor "rgb(99, 230, 178, 0.5019)"
                                        :borderColor     "rgb(99, 230, 178, 0.5019)"
                                        :borderWidth     1}
                                       {:data            load-5-dataset
+                                       :spanGaps true
 
                                        :label           "CPU load for the last 5 minutes"
                                        :backgroundColor "rgb(99, 165, 230, 1)"
@@ -1010,6 +1013,8 @@
                                      percent]))))]
     [:div
      [plot/Line {:data    {:datasets [{:data            load-dataset
+                                       :spanGaps true
+
                                        :label           "RAM usage"
                                        :backgroundColor "rgb(230, 99, 100, 0.5)"
                                        :borderColor     "rgb(230, 99, 100)"
@@ -1032,6 +1037,7 @@
                                                             [(:timestamp d)
                                                              percent])) ts-data)]
                               {:data            data-to-display
+                               :spanGaps        true
                                :label           (str "Disk usage (%) for device " device-name)
                                :backgroundColor "rgb(230, 99, 100, 0.5)"
                                :borderColor     "rgb(230, 99, 100)"
@@ -1083,17 +1089,6 @@
                                                           (let [element-status (.. ^Map ctx -raw -status)
                                                                 color-gradient (color-gradient red green element-status)]
                                                             (to-rgb color-gradient)))
-                                       #_#_:segment {:backgroundColor (fn [ctx]
-                                                                    (let [p0-status (.. ^Map ctx -p0 -raw -status)
-                                                                          p1-status (.. ^Map ctx -p1 -raw -status)]
-                                                                      (cond (= p0-status p1-status 1)
-                                                                            "rgb(136, 230, 99, 1)"
-                                                                            (= p0-status p1-status 0)
-                                                                            "rgb(230, 99, 100)"
-                                                                            (and (= p0-status 1) (= p1-status 0))
-                                                                            "rgb(218, 150, 151)"
-                                                                            (and (= p0-status 0) (= p1-status 1))
-                                                                            "rgb(173, 227, 152, 1)")))}
                                        :borderWidth 1}]}
 
                  :options (graph-options {:title    "NE Status (online/offline)"
@@ -1134,12 +1129,14 @@
                                           #(reset! selected-inteface %))}])
        [plot/Line {:data    {:datasets [{:data            bytes-transmitted-dataset
                                          :label           "Transmitted"
+                                         :spanGaps        true
                                          :fill            true
                                          :backgroundColor "rgb(230, 99, 100, 0.5)"
                                          :borderColor     "rgb(230, 99, 100)"
                                          :borderWidth     1}
                                         {:data            bytes-received-dataset
                                          :label           "Received"
+                                         :spanGaps        true
                                          :backgroundColor "rgb(99, 230, 178, 0.5019)"
                                          :fill            true
                                          :borderColor     "rgb(99, 230, 178, 0.5019)"

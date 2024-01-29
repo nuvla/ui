@@ -957,8 +957,8 @@
                                    (or "last 15 minutes"
                                        "last hour"
                                        "last 6 hours") "minute"
-                                   "last day" "hour"
-                                   "last year" "month"
+                                   "last day"          "hour"
+                                   "last year"         "month"
                                    "day")}
                     :title {:display "true"
                             :text    "Time"}}
@@ -1056,10 +1056,6 @@
 
 (defn to-rgb [color-vector]
   (str "rgb(" (str/join "," color-vector) ")"))
-
-
-(comment
-  (color-gradient color1 color2 0.8))
 
 (defn NEStatusTimeSeries [selected-timespan data]
   (let [dataset  (->> data

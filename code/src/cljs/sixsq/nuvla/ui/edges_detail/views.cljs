@@ -1100,47 +1100,68 @@
                                                      :ticks {:display false}
                                                      :title {:display false}}})}]]))
 
+(def colors ["#A8E6CF61"
+             "#DCEDC161"
+             "#504A0961"
+             "#FFAAA561"
+             "#FF8B9461"
+             "#97A39F61"
+             "#A4B5C661"
+             "#EACACB61"
+             "#D5E1DF61"
+             "#E2B3A361"])
+
 (defn NetworkDataTimeSeries [data]
-  (r/with-let [selected-inteface         (r/atom nil)]
+  (r/with-let [selected-intefaces (r/atom [])]
     (let [interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
           timeseries-data           (->> data
-                                         (filterv #(= @selected-inteface (get-in % [:dimensions :network.interface])))
-                                         (first)
-                                         (:ts-data))
-          bytes-received-dataset    (->> timeseries-data
-                                         (mapv (fn [d]
-                                                 [(:timestamp d)
-                                                  (/ (get-in d [:aggregations :bytes-received])
-                                                     1000000)])))
-          bytes-transmitted-dataset (->> timeseries-data
-                                         (mapv (fn [d]
-                                                 [(:timestamp d)
-                                                  (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
-                                                           1000000))])))]
-      [:div {:style {:display "flex"
+                                         (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface]))))
+          bytes-received-dataset    (fn [interface]
+                                      (->> (:ts-data interface)
+                                           (mapv (fn [d]
+                                                   [(:timestamp d)
+                                                    (/ (get-in d [:aggregations :bytes-received])
+                                                       1000000)]))))
+          bytes-transmitted-dataset (fn [interface]
+                                      (->> (:ts-data interface)
+                                           (mapv (fn [d]
+                                                   [(:timestamp d)
+                                                    (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
+                                                             1000000))]))))
+          datasets-to-display      (loop [chart-colors colors
+                                          timeseries timeseries-data
+                                          datasets-to-display []]
+                                     (if (empty? timeseries)
+                                       datasets-to-display
+                                       (recur (drop 2 chart-colors)
+                                              (rest timeseries)
+                                              (concat datasets-to-display [{:data            (bytes-transmitted-dataset (first timeseries))
+                                                                                  :label           "Transmitted"
+                                                                                  :spanGaps        true
+                                                                                  :fill            true
+                                                                                  :backgroundColor (or (first chart-colors) "gray")
+                                                                                  :borderColor     (or (first chart-colors) "gray")
+                                                                                  :borderWidth     1}
+                                                                                 {:data            (bytes-received-dataset (first timeseries))
+                                                                                  :label           "Received"
+                                                                                  :spanGaps        true
+                                                                                  :backgroundColor (or (second chart-colors) "gray")
+                                                                                  :fill            true
+                                                                                  :borderColor     (or (second chart-colors) "gray")
+                                                                                  :borderWidth     1}]))))]
+      (js/console.log @selected-intefaces datasets-to-display)
+      [:div {:style {:display        "flex"
                      :flex-direction "column"
-                     :align-items "end"}}
+                     :align-items    "end"}}
        (when (seq interfaces)
          [ui/Dropdown {:inline          true
+                       :multiple        true
                        :close-on-change true
                        :placeholder     "Choose a network interface"
                        :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
                        :on-change       (ui-callback/value
-                                          #(reset! selected-inteface %))}])
-       [plot/Line {:data    {:datasets [{:data            bytes-transmitted-dataset
-                                         :label           "Transmitted"
-                                         :spanGaps        true
-                                         :fill            true
-                                         :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                         :borderColor     "rgb(230, 99, 100)"
-                                         :borderWidth     1}
-                                        {:data            bytes-received-dataset
-                                         :label           "Received"
-                                         :spanGaps        true
-                                         :backgroundColor "rgb(99, 230, 178, 0.5019)"
-                                         :fill            true
-                                         :borderColor     "rgb(99, 230, 178, 0.5019)"
-                                         :borderWidth     1}]}
+                                          #(reset! selected-intefaces %))}])
+       [plot/Line {:data    {:datasets datasets-to-display}
 
                    :options (graph-options {:title    (str "Network Traffic (Megabytes)")
                                             :y-config {:title {:display "true"

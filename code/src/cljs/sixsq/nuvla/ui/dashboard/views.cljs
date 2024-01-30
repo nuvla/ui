@@ -135,7 +135,7 @@
   []
   (let [{:keys [resource tab-key tab-event]} utils/target-deployments]
     [deployments-views/DeploymentsOverviewSegment
-     {:sub-key  ::deployments-subs/deployments
+     {:sub-key  ::deployments-subs/deployments-summary-all
       :on-click #(do (when (and tab-event tab-key)
                        (dispatch [tab-event tab-key]))
                      (dispatch [::routing-events/navigate resource]))}]))

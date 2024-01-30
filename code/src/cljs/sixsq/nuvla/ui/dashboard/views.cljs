@@ -1,16 +1,19 @@
 (ns sixsq.nuvla.ui.dashboard.views
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.apps.spec :as spec]
             [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
             [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
             [sixsq.nuvla.ui.dashboard.events :as events]
             [sixsq.nuvla.ui.dashboard.utils :as utils]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
+            [sixsq.nuvla.ui.deployments.views :as deployments-views]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -90,11 +93,12 @@
                              :border-radius   "8px"
                              :overflow        :hidden}}
 
-     [:h4 {:class "ui-header"}
-      [icons/BoxIcon]
-      (str/upper-case "NuvlaEdges")]
+     [:div
+      [:h4 {:class "ui-header"}
+       [icons/BoxIcon]
+       "NuvlaEdges"]
 
-     [StatisticStatesEdge]
+      [StatisticStatesEdge]]
 
      [ui/Button {:class    "center"
                  :content  (tr [:show-me])
@@ -129,27 +133,12 @@
 ; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
 (defn TabOverviewDeployments
   []
-  (let [tr @(subscribe [::i18n-subs/tr])
-        {:keys [resource tab-key tab-event]} utils/target-deployments]
-    [ui/Segment {:secondary true
-                 :raised    true
-                 :class     "nuvla-deployments"
-                 :style     {:display         "flex"
-                             :flex-direction  "column"
-                             :justify-content "space-between"
-                             :border-radius   "8px"
-                             :overflow        :hidden}}
-
-     [:h4 {:class "ui-header ui-card-header"} [icons/RocketIcon]
-      (str/upper-case (tr [:deployments]))]
-
-     [StatisticStates ::deployments-subs/deployments-summary-all]
-
-     [ui/Button {:class    "center"
-                 :content  (tr [:show-me])
-                 :on-click #(do (when (and tab-event tab-key)
-                                  (dispatch [tab-event tab-key]))
-                                (dispatch [::routing-events/navigate resource]))}]]))
+  (let [{:keys [resource tab-key tab-event]} utils/target-deployments]
+    [deployments-views/DeploymentsOverviewSegment
+     {:sub-key  ::deployments-subs/deployments
+      :on-click #(do (when (and tab-event tab-key)
+                       (dispatch [tab-event tab-key]))
+                     (dispatch [::routing-events/navigate resource]))}]))
 
 
 (defn Statistics
@@ -192,7 +181,8 @@
         [ui/GridRow
          [ui/GridColumn {:stretched true}
           [TabOverviewDeployments]]
-         [ui/GridColumn {:stretched true}
+         [ui/GridColumn {:stretched true
+                         :style {:max-height 320}}
           [TabOverviewNuvlaBox]]]]]]]))
 
 

@@ -60,6 +60,20 @@
       "last 3 months" [(time/subtract-months now 3) now]
       "last year" [(time/subtract-years now 1) now])))
 
+(def default-colors-palette ["#E6636480"
+                             "#63E6B280"
+                             "#63A5E680"])
+
+(def pastel-colors-palette ["#FFAAA561"
+                            "#A8E6CF61"
+                            "#FF8B9461"
+                            "#DCEDC161"
+                            "#EACACB61"
+                            "#504A0961"
+                            "#D5E1DF61"
+                            "#97A39F61"
+                            "#E2B3A361"
+                            "#A4B5C661"])
 (defn graph-options [timespan {:keys [title y-config plugins]}]
   (let [[from to] (timespan-to-period timespan)]
     {:plugins  (merge {:title {:display  true
@@ -100,20 +114,20 @@
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
                                        :spanGaps        true
                                        :label           "CPU load"
-                                       :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                       :borderColor     "rgb(230, 99, 100)"
+                                       :backgroundColor (first default-colors-palette)
+                                       :borderColor     (first default-colors-palette)
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
                                        :spanGaps        true
                                        :label           "CPU load for the last minute"
-                                       :backgroundColor "rgb(99, 230, 178, 0.5019)"
-                                       :borderColor     "rgb(99, 230, 178, 0.5019)"
+                                       :backgroundColor (second default-colors-palette)
+                                       :borderColor     (second default-colors-palette)
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
                                        :spanGaps true
                                        :label           "CPU load for the last 5 minutes"
-                                       :backgroundColor "rgb(99, 165, 230, 1)"
-                                       :borderColor     "rgb(99, 165, 230)"
+                                       :backgroundColor (nth default-colors-palette 2)
+                                       :borderColor     (nth default-colors-palette 2)
                                        :borderWidth     1}]}
 
                  :options (graph-options selected-timespan {:title    "Average CPU load (%)"
@@ -141,17 +155,23 @@
                                                                                :text    "Percentage (%)"}}})}]]))
 
 (defn DiskUsageTimeSeries [selected-timespan data]
-  (let [disk-load-dataset (fn [{:keys [ts-data dimensions] :as _dataset}]
-                            (let [device-name     (:disk.device dimensions)
-                                  data-to-display (timestamp+percentage ts-data :avg-disk-used :avg-disk-capacity) ]
-                              {:data            data-to-display
-                               :spanGaps        true
-                               :label           (str "Disk usage (%) for device " device-name)
-                               :backgroundColor "rgb(230, 99, 100, 0.5)"
-                               :borderColor     "rgb(230, 99, 100)"
-                               :borderWidth     1}))]
+  (let [datasets-to-display (loop [chart-colors        default-colors-palette
+                                   devices-data        data
+                                   datasets-to-display []]
+                              (let [{:keys [ts-data dimensions]} (first devices-data)
+                                    device-name (:disk.device dimensions)]
+                                (if (empty? devices-data)
+                                  datasets-to-display
+                                  (recur (drop 2 chart-colors)
+                                         (rest devices-data)
+                                         (conj datasets-to-display {:data            (timestamp+percentage ts-data :avg-disk-used :avg-disk-capacity)
+                                                                    :label           (str "Disk usage (%) for device " device-name)
+                                                                    :spanGaps        true
+                                                                    :backgroundColor (or (first chart-colors) "gray")
+                                                                    :borderColor     (or (first chart-colors) "gray")
+                                                                    :borderWidth     1})))))]
     [:div
-     [plot/Line {:data    {:datasets (mapv disk-load-dataset data)}
+     [plot/Line {:data    {:datasets datasets-to-display}
                  :options (graph-options selected-timespan {:title    "Average Disk Usage (%)"
                                                             :y-config {:max   100
                                                                        :min   0
@@ -202,36 +222,24 @@
                                                                       :min   0
                                                                       :ticks {:display false}
                                                                       :title {:display false}}})}]]))
-
-(def colors-palette ["#FFAAA561"
-                     "#A8E6CF61"
-                     "#FF8B9461"
-                     "#DCEDC161"
-                     "#EACACB61"
-                     "#504A0961"
-                     "#D5E1DF61"
-                     "#97A39F61"
-                     "#E2B3A361"
-                     "#A4B5C661"])
-
 (defn NetworkDataTimeSeries [selected-timespan data]
   (r/with-let [selected-intefaces (r/atom [])]
               (let [tr                        (subscribe [::i18n-subs/tr])
                     interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
                     selected-interfaces-data  (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface])) data)
-                    bytes-received-dataset    (fn [interface-data]
-                                                (->> (:ts-data interface-data)
+                    bytes-received-dataset    (fn [{:keys [ts-data]}]
+                                                (->> ts-data
                                                      (mapv (fn [d]
                                                              [(:timestamp d)
                                                               (/ (get-in d [:aggregations :bytes-received])
                                                                  1000000)]))))
-                    bytes-transmitted-dataset (fn [interface-data]
-                                                (->> (:ts-data interface-data)
+                    bytes-transmitted-dataset (fn [{:keys [ts-data]}]
+                                                (->> ts-data
                                                      (mapv (fn [d]
                                                              [(:timestamp d)
                                                               (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
                                                                        1000000))]))))
-                    datasets-to-display      (loop [chart-colors        colors-palette
+                    datasets-to-display      (loop [chart-colors        pastel-colors-palette
                                                     interfaces-data     selected-interfaces-data
                                                     datasets-to-display []]
                                                (if (empty? interfaces-data)

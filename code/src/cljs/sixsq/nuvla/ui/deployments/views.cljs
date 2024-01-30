@@ -434,7 +434,8 @@
 
 (defn StatisticStates
   [_clickable? summary-subs _states]
-  (let [summary (subscribe [summary-subs])
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        summary               (subscribe [summary-subs])
         extra-states-visible? (r/atom false)]
     (fn [clickable? _summary-subs states-override]
       (let [states->counts (state-aggs->state->count @summary)
@@ -463,8 +464,8 @@
              [icons/AngleDownIcon])
 
            (if @extra-states-visible?
-             "Show fewer states"
-             "Show more states")]]]))))
+             (@tr [:show-fewer-states])
+             (@tr [:show-more-states]))]]]))))
 
 
 

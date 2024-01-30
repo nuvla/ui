@@ -59,21 +59,6 @@
       "last month" [(time/subtract-months now 1) now]
       "last 3 months" [(time/subtract-months now 3) now]
       "last year" [(time/subtract-years now 1) now])))
-
-(def default-colors-palette ["#E6636480"
-                             "#63E6B280"
-                             "#63A5E680"])
-
-(def pastel-colors-palette ["#FFAAA561"
-                            "#A8E6CF61"
-                            "#FF8B9461"
-                            "#DCEDC161"
-                            "#EACACB61"
-                            "#504A0961"
-                            "#D5E1DF61"
-                            "#97A39F61"
-                            "#E2B3A361"
-                            "#A4B5C661"])
 (defn graph-options [timespan {:keys [title y-config plugins]}]
   (let [[from to] (timespan-to-period timespan)]
     {:plugins  (merge {:title {:display  true
@@ -114,20 +99,20 @@
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
                                        :spanGaps        true
                                        :label           "CPU load"
-                                       :backgroundColor (first default-colors-palette)
-                                       :borderColor     (first default-colors-palette)
+                                       :backgroundColor (first plot/default-colors-palette)
+                                       :borderColor     (first plot/default-colors-palette)
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
                                        :spanGaps        true
                                        :label           "CPU load for the last minute"
-                                       :backgroundColor (second default-colors-palette)
-                                       :borderColor     (second default-colors-palette)
+                                       :backgroundColor (second plot/default-colors-palette)
+                                       :borderColor     (second plot/default-colors-palette)
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
                                        :spanGaps true
                                        :label           "CPU load for the last 5 minutes"
-                                       :backgroundColor (nth default-colors-palette 2)
-                                       :borderColor     (nth default-colors-palette 2)
+                                       :backgroundColor (nth plot/default-colors-palette 2)
+                                       :borderColor     (nth plot/default-colors-palette 2)
                                        :borderWidth     1}]}
 
                  :options (graph-options selected-timespan {:title    "Average CPU load (%)"
@@ -144,8 +129,8 @@
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
                                        :spanGaps        true
                                        :label           "RAM usage"
-                                       :backgroundColor "rgb(230, 99, 100, 0.5)"
-                                       :borderColor     "rgb(230, 99, 100)"
+                                       :backgroundColor (first plot/default-colors-palette)
+                                       :borderColor     (first plot/default-colors-palette)
                                        :borderWidth     1}]}
 
                  :options (graph-options selected-timespan {:title    (str "Average RAM usage (%)")
@@ -155,7 +140,7 @@
                                                                                :text    "Percentage (%)"}}})}]]))
 
 (defn DiskUsageTimeSeries [selected-timespan data]
-  (let [datasets-to-display (loop [chart-colors        default-colors-palette
+  (let [datasets-to-display (loop [chart-colors        plot/default-colors-palette
                                    devices-data        data
                                    datasets-to-display []]
                               (let [{:keys [ts-data dimensions]} (first devices-data)
@@ -179,18 +164,7 @@
                                                                                :text    "Percentage (%)"}}})}]]))
 
 
-(defn interpolate [start end percentage]
-  (let [beta (- 1.0 percentage)]
-    (mapv #(+ (* %1 beta) (* %2 percentage)) start end)))
 
-(defn color-gradient [color1 color2 percentage]
-  (interpolate color1 color2 percentage))
-
-(def red [255 0 0])
-(def green [0 255 0])
-
-(defn to-rgb [color-vector]
-  (str "rgb(" (str/join "," color-vector) ")"))
 
 (defn NEStatusTimeSeries [selected-timespan data]
   (let [dataset  (->> data
@@ -206,12 +180,12 @@
                                       :barPercentage 1.0
                                       :borderColor (fn [ctx]
                                                      (let [element-status (.. ^Map ctx -raw -status)
-                                                           color-gradient (color-gradient red green element-status)]
-                                                       (to-rgb color-gradient)))
+                                                           color-gradient (plot/color-gradient plot/red plot/green element-status)]
+                                                       (plot/to-rgb color-gradient)))
                                       :backgroundColor (fn [ctx]
                                                          (let [element-status (.. ^Map ctx -raw -status)
-                                                               color-gradient (color-gradient red green element-status)]
-                                                           (to-rgb color-gradient)))
+                                                               color-gradient (plot/color-gradient plot/red plot/green element-status)]
+                                                           (plot/to-rgb color-gradient)))
                                       :borderWidth 1}]}
 
                 :options (graph-options selected-timespan {:title    "NE Status (online/offline)"
@@ -239,7 +213,7 @@
                                                              [(:timestamp d)
                                                               (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
                                                                        1000000))]))))
-                    datasets-to-display      (loop [chart-colors        pastel-colors-palette
+                    datasets-to-display      (loop [chart-colors        plot/pastel-colors-palette
                                                     interfaces-data     selected-interfaces-data
                                                     datasets-to-display []]
                                                (if (empty? interfaces-data)

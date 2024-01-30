@@ -102,32 +102,6 @@
                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
                                 (dispatch [::routing-events/navigate resource]))}]]))
-
-
-(defn StatisticStates
-  [summary-subs]
-  (let [summary       (subscribe [summary-subs])
-        terms         (general-utils/aggregate-to-map
-                        (get-in @summary [:aggregations :terms:state :buckets]))
-        started       (:STARTED terms 0)
-        starting      (:STARTING terms 0)
-        created       (:CREATED terms 0)
-        stopped       (:STOPPED terms 0)
-        error         (:ERROR terms 0)
-        pending       (:PENDING terms 0)
-        starting-plus (+ starting created pending)
-        total         (:count @summary)]
-    [ui/GridColumn {:class "wide"
-                    :style {:padding "0.2rem"}}
-     [ui/StatisticGroup {:size  "tiny"
-                         :style {:justify-content "center"}}
-      [Statistic {:value total :icon icons/i-rocket :label "TOTAL" :color "black"}]
-      [Statistic {:value started :icon (deployments-utils/state->icon deployments-utils/STARTED) :label deployments-utils/STARTED :color "green"}]
-      [Statistic {:value starting-plus :icon (deployments-utils/state->icon deployments-utils/STARTING) :label deployments-utils/STARTING :color "orange"}]
-      [Statistic {:value stopped :icon (deployments-utils/state->icon deployments-utils/STOPPED) :label deployments-utils/STOPPED :color "orange"}]
-      [Statistic {:value error :icon (deployments-utils/state->icon deployments-utils/ERROR) :label deployments-utils/ERROR :positive-color "red"}]]]))
-
-; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
 (defn TabOverviewDeployments
   []
   (let [{:keys [resource tab-key tab-event]} utils/target-deployments]

@@ -1141,7 +1141,7 @@
          [ui/Dropdown {:inline          true
                        :multiple        true
                        :close-on-change true
-                       :placeholder     (@tr [:choose-interface])
+                       :placeholder     (@tr [:choose-network-interface])
                        :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
                        :on-change       (ui-callback/value
                                           #(reset! selected-intefaces %))}])

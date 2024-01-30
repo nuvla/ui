@@ -130,7 +130,7 @@
         :change-password                               "change password"
         :change-version                                "Change version"
         :choose-eula                                   "Set an End-User License Agreement. This is mandatory for published and paying apps."
-        :choose-interface                              "Choose a network interface"
+        :choose-network-interface                              "Choose a network interface"
         :choose-predefined-one                         "Choose a predefined one"
         :cimi                                          "api"
         :city                                          "City"

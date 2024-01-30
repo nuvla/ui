@@ -85,7 +85,6 @@
                  :style     {:display         "flex"
                              :flex-direction  "column"
                              :justify-content "space-between"
-                             :border-radius   "8px"
                              :overflow        :hidden}}
 
      [:div

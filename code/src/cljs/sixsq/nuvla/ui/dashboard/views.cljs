@@ -14,6 +14,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]))
 
 
@@ -94,9 +95,10 @@
 
       [StatisticStatesEdge]]
 
-     [ui/Button {:class    "center"
-                 :content  (tr [:show-me])
-                 :on-click #(do (when (and tab-index tab-index-event)
+     [uix/Button {:class   "center"
+                  :icon (utils/type->icon utils/type-nbs)
+                  :content  (tr [:show-me])
+                  :on-click #(do (when (and tab-index tab-index-event)
                                   (dispatch [tab-index-event tab-index]))
                                 (dispatch [::routing-events/navigate resource]))}]]))
 (defn TabOverviewDeployments

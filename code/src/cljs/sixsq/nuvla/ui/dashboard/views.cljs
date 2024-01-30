@@ -1,7 +1,5 @@
 (ns sixsq.nuvla.ui.dashboard.views
-  (:require [clojure.string :as str]
-            [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.apps.spec :as spec]
+  (:require [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
             [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
             [sixsq.nuvla.ui.dashboard.events :as events]
@@ -13,7 +11,6 @@
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.general :as general-utils]

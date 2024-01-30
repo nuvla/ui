@@ -368,10 +368,10 @@
 
 (defn state-aggs->state->count
   [summary]
-  (let [terms   (general-utils/aggregate-to-map
-                  (get-in summary [:aggregations :terms:state :buckets]))
-        created (:CREATED terms 0)
-        pending (:PENDING terms 0)
+  (let [terms    (general-utils/aggregate-to-map
+                   (get-in summary [:aggregations :terms:state :buckets]))
+        created  (:CREATED terms 0)
+        pending  (:PENDING terms 0)
         stopping (:STOPPING terms 0)]
     {:total    (:count summary)
      :started  (:STARTED terms 0)
@@ -384,9 +384,9 @@
      :pending  pending}))
 
 (def default-states
-  [{:key   :total
-    :icons [icons/i-rocket]
-    :label "TOTAL"}
+  [{:key            :total
+    :icons          [icons/i-rocket]
+    :label          "TOTAL"}
    {:key            :started,
     :icons          [(utils/state->icon utils/STARTED)],
     :label          utils/STARTED,
@@ -404,16 +404,16 @@
     :positive-color "red"}])
 
 (def extra-states
-  [{:key    :created
-    :icons          [icons/i-sticky-note]
-    :label          "CREATED"}
+  [{:key   :created
+    :icons [icons/i-sticky-note]
+    :label "CREATED"}
    {:key   :pending
     :icons [icons/i-sync]
     :label utils/PENDING}
    {:key   :updating
     :icons [icons/i-sync]
     :label utils/UPDATING}
-   {:key :stopping
+   {:key   :stopping
     :icons [icons/i-sync]
     :label utils/STOPPING}])
 

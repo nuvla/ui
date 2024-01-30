@@ -100,10 +100,7 @@
 
 (defn state-filter
   [state]
-  (case state
-    ("all" nil "TOTAL") nil
-    STARTING "state='RUNNING' or state='PENDING' or state='CREATED'"
-    PENDING "state='RUNNING' or state='PENDING' or state='STOPPING'"
+  (when-not (contains? #{"all" nil "TOTAL"} state)
     (str "state='" state "'")))
 
 (defn get-filter-param

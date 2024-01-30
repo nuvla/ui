@@ -5,7 +5,6 @@
             [sixsq.nuvla.ui.dashboard.events :as events]
             [sixsq.nuvla.ui.dashboard.utils :as utils]
             [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
-            [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.deployments.views :as deployments-views]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.edges.utils :as edges-utils]
@@ -13,7 +12,6 @@
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.style :as utils-style]))

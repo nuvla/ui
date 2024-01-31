@@ -351,7 +351,7 @@
          (when @csv-modal-visible?
            [CSVModal {:on-close #(reset! csv-modal-visible? false)}])
          [uix/Button {:icon [icons/i-share]
-                      :text "Export data"
+                      :text "Export data (.csv)"
                       :on-click #(reset! csv-modal-visible? true)}]
          [:div
           (when @loading? [ui/Loader {:active true

@@ -112,6 +112,32 @@
                                     (dispatch [::close-add-update-notification-method-modal])
                                     (dispatch [::get-notification-methods])))]}))))
 
+(defn -notification-method->event
+  [{:keys [id name description method destination]}]
+  {:description (str "test notification: '" name "' for method '" method
+                                 "' with destination '" destination "'")
+               :name "test.notification"
+               :category "action"
+               :severity "medium"
+               :content {:resource {:href id
+                                    :content {:name        name
+                                              :description description
+                                              :method      method
+                                              :destination destination}}}})
+
+(reg-event-fx
+  ::test-notification-method
+  (fn [_ [_ notif-method]]
+    {::cimi-api-fx/add [:event (-notification-method->event notif-method)
+                          #(do
+                             (let [{:keys [status message resource-id]} (response/parse %)]
+                               (dispatch [::messages-events/add
+                                          {:header  (cond-> (str "test notification created " resource-id)
+                                                            status (str " (" status ")"))
+                                           :content message
+                                           :type    :success}])))]}))
+
+
 
 (reg-event-db
   ::deactivate-notification-method-create-button

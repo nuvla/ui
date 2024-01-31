@@ -402,7 +402,7 @@
 
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity datasets]}]]
+  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity datasets csv]}]]
     (let [datasets-to-query (->> datasets
                                  (map #(str "dataset=" %))
                                  (str/join "&"))
@@ -411,6 +411,7 @@
        :http-xhrio {:method          :get
                     :uri             uri
                     :response-format (ajax/json-response-format {:keywords? true})
+                    :headers         (when csv {:accept "text/csv"})
                     :on-success      [::fetch-edge-stats-success]
                     :on-failure      [::fetch-edge-stats-failure]}})))
 

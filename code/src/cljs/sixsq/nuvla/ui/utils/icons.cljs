@@ -669,3 +669,5 @@
 (defn UndoIcon
   [opts]
   [I opts i-undo])
+
+(def i-share "share square outline")

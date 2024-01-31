@@ -6,8 +6,10 @@
             [sixsq.nuvla.ui.edges-detail.events :as events]
             [sixsq.nuvla.ui.edges-detail.subs :as subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -250,6 +252,71 @@
                                                                         :y-config {:title {:display "true"
                                                                                            :text    "Megabytes"}}})}]])))
 
+(defn CSVModal [{:keys [on-close]}]
+  (r/with-let [form-data (r/atom nil)
+               metrics [{:label "CPU Load"
+                         :value "cpu-stats"}
+                        {:label "Disk Usage"
+                         :value "disk-stats"}
+                        {:label "Network Traffic"
+                         :value "network-stats"}
+                        {:label "Ram Usage"
+                         :value "ram-stats"}]]
+    (js/console.log @form-data)
+    [ui/Modal {:close-icon true
+               :open       true
+               :onClose    on-close}
+     [ui/ModalHeader "Export data"]
+     [ui/ModalContent
+      [ui/ModalDescription
+       [:p "Choose the metric and the period for which you wish to export data (in " [:b ".csv"] " format)"]
+       [ui/Form
+        [:div
+
+         [ui/Header {:as "h4"
+                     :attached "top"
+                     :style    {:background-color "#00000008"}} "Metric"]
+         (into [ui/Segment {:attached true}]
+               (for [metric metrics]
+                 [ui/FormField
+                  [ui/Radio
+                   {:label     (:label metric)
+                    :name      "radioGroupMetric"
+                    :value     (:value metric)
+                    :checked   (= (:metric @form-data)
+                                  (:value metric))
+                    :on-change (fn [_e t]
+                                 (swap! form-data assoc :metric (. t -value)))}]]))]
+        [:div
+         [ui/Header {:as       "h4"
+                     :attached "top"
+                     :style    {:background-color "#00000008"}} "Period"]
+         (into [ui/Segment {:attached true}]
+               (for [timespan timespan-options]
+                 [ui/FormField
+              [ui/Radio
+               {:label     timespan
+                :name      "radioGroupTimespan"
+                :value     timespan
+                :checked   (= (:timespan @form-data)
+                              timespan)
+                :on-change (fn [_e t]
+                             (swap! form-data assoc :timespan (. t -value)))}]]))]]]]
+     [ui/ModalActions
+      [uix/Button {:text     "Export"
+                   :icon [icons/i-share]
+                   :positive true
+                   :disabled (or (not (:metric @form-data))
+                                 (not (:timespan @form-data)))
+                   :active   true
+                   :on-click #(let [[from to] (timespan-to-period (:timespan @form-data))]
+                                (dispatch [::events/fetch-edge-stats
+                                           {:from        from
+                                            :to          to
+                                            :csv true
+                                            :granularity (get timespan->granularity (:timespan @form-data))
+                                            :datasets [(:metric @form-data)]}]))}]]]))
+
 (defn GraphLabel [timespan]
   [ui/Label {:basic true
              :size  "tiny"
@@ -259,7 +326,9 @@
 (defn TimeSeries []
   (let [edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
-        selected-timespan     (r/atom (first timespan-options))
+        initial-timespan      (first timespan-options)
+        selected-timespan     (r/atom initial-timespan)
+        csv-modal-visible?    (r/atom false)
         fetch-edge-stats      (fn [timespan]
                                 (let [[from to] (timespan-to-period timespan)]
                                   (dispatch [::events/fetch-edge-stats
@@ -267,7 +336,7 @@
                                               :to          to
                                               :granularity (get timespan->granularity timespan)
                                               :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}])))]
-    (fetch-edge-stats (first timespan-options))
+    (fetch-edge-stats initial-timespan)
     (fn []
       [ui/TabPane
        [ui/Grid {:columns   2
@@ -276,24 +345,30 @@
                  :celled    "internally"}
         [:div {:style {:display "flex"
                        :width "100%"
-                       :justify-content "end"
+                       :justify-content "space-between"
                        :align-items "center"
                        :padding-bottom "1em"}}
-         (when @loading? [ui/Loader {:active true
-                                     :inline true
-                                     :style {:margin-right 10}
-                                     :size   "tiny"}])
-         [ui/Menu {:compact true}
-          [ui/Dropdown {:item            true
-                        :inline          true
-                        :close-on-change true
-                        :default-value   (first timespan-options)
-                        :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
-                        :on-change       (ui-callback/value
-                                           (fn [period]
-                                             (do
-                                               (reset! selected-timespan period)
-                                               (fetch-edge-stats period))))}]]]
+         (when @csv-modal-visible?
+           [CSVModal {:on-close #(reset! csv-modal-visible? false)}])
+         [uix/Button {:icon [icons/i-share]
+                      :text "Export data"
+                      :on-click #(reset! csv-modal-visible? true)}]
+         [:div
+          (when @loading? [ui/Loader {:active true
+                                      :inline true
+                                      :style  {:margin-right 10}
+                                      :size   "tiny"}])
+          [ui/Menu {:compact true}
+           [ui/Dropdown {:item            true
+                         :inline          true
+                         :close-on-change true
+                         :default-value   initial-timespan
+                         :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
+                         :on-change       (ui-callback/value
+                                            (fn [period]
+                                              (do
+                                                (reset! selected-timespan period)
+                                                (fetch-edge-stats period))))}]]]]
         [ui/GridRow
          [ui/GridColumn {:textAlign "center"}
           [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]

@@ -13,10 +13,12 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
-(def timespan->granularity {"last 15 minutes" "10-seconds"
-                            "last hour"       "30-seconds"
-                            "last 6 hours"    "3-minutes"
-                            "last day"        "10-minutes"
+(def timespan-options ["last 15 minutes" "last hour" "last 12 hours" "last day" "last week" "last month" "last 3 months" "last year"])
+
+(def timespan->granularity {"last 15 minutes" "1-minutes"
+                            "last hour"       "2-minutes"
+                            "last 12 hours"   "3-minutes"
+                            "last day"        "30-minutes"
                             "last week"       "1-hours"
                             "last month"      "6-hours"
                             "last 3 months"   "2-days"
@@ -30,7 +32,7 @@
       (recur (inc i) (conj timestamps (case timespan
                                         "last 15 minutes" (time/subtract-milliseconds (time/now) (* i 10000))
                                         "last hour" (time/subtract-milliseconds (time/now) (* i 30000))
-                                        "last 6 hours" (time/subtract-minutes (time/now) (* i 3))
+                                        "last 12 hours" (time/subtract-minutes (time/now) (* i 3))
                                         "last day" (time/subtract-minutes (time/now) (* i 10))
                                         "last week" (time/subtract-minutes (time/now) (* i 60))
                                         "last month" (time/subtract-minutes (time/now) (* i 360))
@@ -47,15 +49,12 @@
 
 (comment
   (generate-fake-data))
-
-(def timespan-options ["last 15 minutes" "last day" "last week" "last month" "last 3 months" "last year"])
-
 (defn timespan-to-period [timespan]
   (let [now (time/now)]
     (case timespan
       "last 15 minutes" [(time/subtract-minutes now 15) now]
       "last hour" [(time/subtract-minutes now 60) now]
-      "last 6 hours" [(time/subtract-minutes now 360) now]
+      "last 12 hours" [(time/subtract-minutes now 360) now]
       "last day" [(time/subtract-days now 1) now]
       "last week" [(time/subtract-days now 7) now]
       "last month" [(time/subtract-months now 1) now]
@@ -75,7 +74,7 @@
                     :time {:unit (case timespan
                                    (or "last 15 minutes"
                                        "last hour"
-                                       "last 6 hours") "minute"
+                                       "last 12 hours") "minute"
                                    "last day"          "hour"
                                    "last year"         "month"
                                    "day")}

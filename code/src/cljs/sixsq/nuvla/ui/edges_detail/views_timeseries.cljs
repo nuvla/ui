@@ -346,6 +346,9 @@
                                :margin-right 5
                                :color "rgba(40,40,40,.3)"}} "Showing data for the"]
                [ui/Dropdown {:inline          true
+                             :style {:min-width 120
+                                     :display "flex"
+                                     :justify-content "space-between"}
                              :loading         @loading?
                              :close-on-change true
                              :default-value   initial-timespan

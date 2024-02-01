@@ -102,6 +102,7 @@
         :attributes                                    "attributes"
         :author                                        "author"
         :automatic-refresh-in                          "automatic refresh in"
+        :back-to-selection                             "Back to selection"
         :balance                                       "Balance"
         :bank-account                                  "SEPA"
         :become-a-vendor                               "To sell your app on Nuvla, become a vendor (see in profile page)."

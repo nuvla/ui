@@ -4,7 +4,11 @@
 
 ## Released
 
-## [2.36.2] - 2023-10-18
+## [2.36.3] - 2024-01-29
+
+- Enable host-level management for Kubernetes-deployed NuvlaEdges
+
+## [2.36.2] - 2024-01-18
 
 - Fix for missing registries credentials on deployments linked to DGs
 - Make action check not deployment-specific

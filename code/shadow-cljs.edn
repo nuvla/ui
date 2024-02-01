@@ -9,7 +9,7 @@
  :repositories      {"sixsq-community-releases" {:url "https://nexus.sixsq.com/content/repositories/releases-community-rhel7/"}}
 
  :builds            {:nuvla-ui {:target            :browser
-                                :release-version   "2.36.3-SNAPSHOT"
+                                :release-version   "2.36.4-SNAPSHOT"
                                 :output-dir        "resources/public/ui/js"
                                 :asset-path        "/ui/js"
                                 :js-options        {:ignore-exports true}

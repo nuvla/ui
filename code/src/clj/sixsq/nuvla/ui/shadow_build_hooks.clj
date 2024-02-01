@@ -19,15 +19,11 @@
 
 (defn- git-commit-short-id
   []
-  (prn "CF_PAGES_COMMIT_SHA=" (System/getenv "CF_PAGES_COMMIT_SHA"))
-  (prn "CF_PAGES_COMMIT_SHA_short=" (when-let [cloudflare-sha (System/getenv "CF_PAGES_COMMIT_SHA")]
-                                      (git-rev-parse cloudflare-sha)))
-  (prn "printenv:" (:out (sh/sh "printenv")))
   (or
     (when-let [github-sha (System/getenv "GITHUB_SHA")]
       (git-rev-parse (str github-sha "^")))
     (when-let [cloudflare-sha (System/getenv "CF_PAGES_COMMIT_SHA")]
-      (git-rev-parse cloudflare-sha))
+      (subs cloudflare-sha 0 8))
     (git-rev-parse "HEAD")
     (str "rand" (rand-int 99999))))
 

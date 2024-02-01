@@ -19,17 +19,9 @@
 
 (defn- git-commit-short-id
   []
-  (prn "printenv" (:out (sh/sh "printenv")))
-  (prn "GITHUB_SHA=" (System/getenv "GITHUB_SHA"))
-  (prn "GITHUB_REF=" (System/getenv "GITHUB_REF"))
-  (prn "git log" (:out (sh/sh "git" "--no-pager" "log" "-n" "4")))
-  (prn "head^ :" (git-rev-parse "HEAD^"))
-  (prn "head :" (git-rev-parse "HEAD"))
-  (prn "github sha short:" (when-let [github-sha (System/getenv "GITHUB_SHA")]
-                             (git-rev-parse (str github-sha))))
-  (prn "github sha short^:" (when-let [github-sha (System/getenv "GITHUB_SHA")]
-                   (git-rev-parse (str github-sha "^"))))
   (or
+    (when-let [github-pr-sha (System/getenv "GITHUB_PR_COMMIT_SHA")]
+      (git-rev-parse github-pr-sha))
     (when-let [cloudflare-sha (System/getenv "CF_PAGES_COMMIT_SHA")]
       (subs cloudflare-sha 0 8))
     (git-rev-parse "HEAD")

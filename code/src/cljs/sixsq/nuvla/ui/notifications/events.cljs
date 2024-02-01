@@ -118,9 +118,9 @@
     {::cimi-api-fx/operation
      [(:id notif-method) "test"
       #(do
-         (let [{:keys [status message resource-id]} (response/parse %)]
+         (let [{:keys [status message]} (response/parse %)]
            (dispatch [::messages-events/add
-                      {:header  (cond-> (str "notification method test submitted " resource-id)
+                      {:header  (cond-> (str "notification method test submitted")
                                         status (str " (" status ")"))
                        :content message
                        :type    :success}])))]}))

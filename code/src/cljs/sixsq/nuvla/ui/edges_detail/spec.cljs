@@ -29,6 +29,8 @@
 
 (s/def ::edge-stats (s/nilable any?))
 
+(s/def ::timespan (s/nilable any?))
+
 (def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
                ::nuvlabox-associated-ssh-keys nil
@@ -48,7 +50,9 @@
                                                 :default-items-per-page 15)
                ::tab                          (tab-plugin/build-spec)
                ::nuvlaedge-release            nil
-               ::edge-stats                   nil})
+               ::edge-stats                   nil
+               ::stats-loading?               nil
+               ::timespan                     "last 15 minutes"})
 
 (s/def ::deployment-pagination any?)
 

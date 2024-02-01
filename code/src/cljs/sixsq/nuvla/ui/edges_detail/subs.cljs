@@ -158,3 +158,7 @@
 (reg-sub
   ::edge-stats
   :-> ::spec/edge-stats)
+
+(reg-sub
+  ::timespan
+  :-> ::spec/timespan)

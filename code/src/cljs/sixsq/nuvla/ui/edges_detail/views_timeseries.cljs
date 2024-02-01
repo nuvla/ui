@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.edges-detail.events :as events]
             [sixsq.nuvla.ui.edges-detail.subs :as subs]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]
@@ -259,7 +260,6 @@
                          :value "network-stats"}
                         {:label "Ram Usage"
                          :value "ram-stats"}]]
-    (js/console.log @form-data)
     [ui/Modal {:close-icon true
                :open       true
                :onClose    on-close}
@@ -319,20 +319,28 @@
              :style {:margin-top "1em"}}
    (str "Per " (str/replace (get timespan->granularity timespan) #"-" " "))])
 
+(defn refresh-history [timespan]
+  (dispatch [::main-events/action-interval-start
+             {:id        :nuvlabox-fetch-edge-stats
+              :frequency 30000
+              :event     [::events/fetch-edge-stats {:timespan timespan
+                                                     :granularity (get timespan->granularity timespan)
+                                                     :datasets    ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}]}]))
+
 (defn TimeSeries []
   (let [edge-stats         (subscribe [::subs/edge-stats])
         loading?           (subscribe [::subs/loading?])
         initial-timespan   (first timespan-options)
-        selected-timespan  (r/atom initial-timespan)
+        selected-timespan  (subscribe [::subs/timespan])
         csv-modal-visible? (r/atom false)
+        datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]
         fetch-edge-stats   (fn [timespan]
-                             (let [[from to] (timespan-to-period timespan)]
-                               (dispatch [::events/fetch-edge-stats
-                                             {:from        from
-                                              :to          to
-                                              :granularity (get timespan->granularity timespan)
-                                              :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}])))]
-    (fetch-edge-stats initial-timespan)
+                             (dispatch [::events/fetch-edge-stats
+                                        {:timespan    timespan
+                                         :granularity (get timespan->granularity timespan)
+                                         :datasets    ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}]))]
+    (refresh-history @selected-timespan)
+    (fetch-edge-stats (first timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}
              [ui/MenuItem {:icon     [icons/i-share]
@@ -356,10 +364,8 @@
                              :on-change       (ui-callback/value
                                                 (fn [period]
                                                   (do
-                                                    (reset! selected-timespan period)
-                                                    (fetch-edge-stats period))))}]]]]
+                                                    (dispatch [::events/set-selected-timespan period (timespan->granularity period) datasets]))))}]]]]
        [ui/TabPane
-
         [ui/Grid {:columns   2
                   :stackable true
                   :divided   true

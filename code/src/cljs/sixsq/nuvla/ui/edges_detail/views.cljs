@@ -38,12 +38,14 @@
 (def refresh-action-id :nuvlabox-get-nuvlabox)
 
 
-(defn refresh
+(defn refresh-nuvlaedge-data
   [uuid]
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
               :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
+
+
 
 (defn DecommissionButton
   [nuvlabox]
@@ -671,7 +673,9 @@
   (let [can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
-        loading?          (subscribe [::subs/loading?])]
+        loading?          (subscribe [::subs/loading?])
+        active-tab        (subscribe [::tab-plugin/active-tab [::spec/tab]])
+        current-timespan  (subscribe [::subs/timespan])]
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
                         @nuvlabox
@@ -688,10 +692,18 @@
             (when @can-delete?
               ^{:key "delete-nb"}
               [DeleteButton @nuvlabox]))
+
           [components/RefreshMenu
-           {:action-id  refresh-action-id
+           {:action-id  (if (= :historical-data @active-tab)
+                          :nuvlabox-fetch-edge-stats
+                          refresh-action-id)
             :loading?   @loading?
-            :on-refresh #(refresh uuid)}]]]))))
+            :on-refresh (fn [_]
+                          (let [now (time/now)]
+                            (js/console.log now)
+                            (if (= :historical-data @active-tab)
+                              (timeseries/refresh-history @current-timespan)
+                              (refresh-nuvlaedge-data uuid))))}]]]))))
 
 
 (defn get-available-actions
@@ -1935,7 +1947,7 @@
                                                         (cond-> {}
                                                                 @enabled-changed? (assoc :enabled (not (:enabled @selected-playbook)))
                                                                 (and @run-changed? (not-empty @run)) (assoc :run @run))])
-                                             (refresh (general-utils/id->uuid (:id @nuvlabox)))
+                                             #_(refresh-nuvlaedge-data (general-utils/id->uuid (:id @nuvlabox)))
                                              (reset! run-changed? false)
                                              (reset! enabled-changed? false)
                                              (reset! run nil))}]]
@@ -2076,7 +2088,7 @@
 
 (defn EdgeDetails
   [uuid]
-  (refresh uuid)
+  (refresh-nuvlaedge-data uuid)
   (let [nb-status @(subscribe [::subs/nuvlabox-status])]
     [components/LoadingPage {:dimmable? true}
      [:<>

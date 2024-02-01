@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.edges-detail.events
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
-            [goog.window :as g]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
@@ -15,6 +14,20 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.utils.time :as time]))
+
+(defn timespan-to-period [timespan]
+  (let [now (time/now)]
+    (case timespan
+      "last 15 minutes" [(time/subtract-minutes now 15) now]
+      "last hour" [(time/subtract-minutes now 60) now]
+      "last 12 hours" [(time/subtract-minutes now 360) now]
+      "last day" [(time/subtract-days now 1) now]
+      "last week" [(time/subtract-days now 7) now]
+      "last month" [(time/subtract-months now 1) now]
+      "last 3 months" [(time/subtract-months now 3) now]
+      "last year" [(time/subtract-years now 1) now])))
+
+(timespan-to-period "last 15 minutes")
 
 (reg-event-fx
   ::set-nuvlabox-status
@@ -403,18 +416,18 @@
 
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity datasets csv]}]]
-    (let [datasets-to-query (->> datasets
+  (fn [{{:keys [::spec/nuvlabox ::spec/timespan] :as db} :db} [_ {:keys [granularity timespan datasets]}]]
+    (js/console.log nuvlabox)
+    (let [[from to] (timespan-to-period timespan)
+          datasets-to-query (->> datasets
                                  (map #(str "dataset=" %))
                                  (str/join "&"))
           uri (str "/api/" (:id nuvlabox) "/data?" datasets-to-query "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
       {:db (assoc db ::spec/loading? true)
        :http-xhrio {:method          :get
                     :uri             uri
-                    :response-format (if-not csv (ajax/json-response-format {:keywords? true})
-                                                 (ajax/text-response-format))
-                    :headers         (when csv {"Accept" "text/csv"})
-                    :on-success      [::fetch-edge-stats-success]
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success    [::fetch-edge-stats-success]
                     :on-failure      [::fetch-edge-stats-failure]}})))
 
 (reg-event-fx
@@ -430,10 +443,17 @@
                     :on-failure      [::fetch-edge-stats-failure]}})))
 
 (reg-event-fx
+  ::set-selected-timespan
+  (fn [{db :db} [_ timespan granularity datasets]]
+    {:db (assoc db ::spec/timespan timespan)
+     :fx [[:dispatch [::fetch-edge-stats {:timespan timespan
+                                          :granularity granularity
+                                          :datasets datasets}]]] }))
+
+(reg-event-fx
   ::fetch-edge-stats-csv-success
   (fn [{db :db} [_ response]]
-    (.open js/window (str "data:text/csv,"
-                          response))
+    (.open js/window (str "data:text/csv," response))
     {:db (assoc db ::spec/loading? false)}))
 
 

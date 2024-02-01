@@ -19,11 +19,11 @@
 
 (defn- git-commit-short-id
   []
-  (prn "GITHUB_SHA="(System/getenv "GITHUB_SHA"))
-  (prn "git log: \n" (:out (sh/sh "git" "--no-pager" "log" "-n" "4")))
-  (prn "printenv: \n" (:out (sh/sh "printenv")))
   (or
-    (some-> (System/getenv "GITHUB_SHA") git-rev-parse)
+    (when-let [github-sha (System/getenv "GITHUB_SHA")]
+      (git-rev-parse (str github-sha "^")))
+    (when-let [cloudflare-sha (System/getenv "CF_PAGES_COMMIT_SHA")]
+      (git-rev-parse cloudflare-sha))
     (git-rev-parse "HEAD")
     (str "rand" (rand-int 99999))))
 

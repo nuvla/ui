@@ -22,6 +22,10 @@
   (prn "printenv" (:out (sh/sh "printenv")))
   (prn "GITHUB_SHA=" (System/getenv "GITHUB_SHA"))
   (prn "git log" (:out (sh/sh "git" "--no-pager" "log" "-n" "4")))
+  (prn "github sha short:" (when-let [github-sha (System/getenv "GITHUB_SHA")]
+                             (git-rev-parse (str github-sha))))
+  (prn "github sha short^:" (when-let [github-sha (System/getenv "GITHUB_SHA")]
+                   (git-rev-parse (str github-sha "^"))))
   (or
     (when-let [github-sha (System/getenv "GITHUB_SHA")]
       (git-rev-parse (str github-sha "^")))

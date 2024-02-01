@@ -101,19 +101,16 @@
                                   (apply max))]
     [:div
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
-                                       :spanGaps        true
                                        :label           "CPU load"
                                        :backgroundColor (first plot/default-colors-palette)
                                        :borderColor     (first plot/default-colors-palette)
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
-                                       :spanGaps        true
                                        :label           "CPU load for the last minute"
                                        :backgroundColor (second plot/default-colors-palette)
                                        :borderColor     (second plot/default-colors-palette)
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
-                                       :spanGaps true
                                        :label           "CPU load for the last 5 minutes"
                                        :backgroundColor (nth plot/default-colors-palette 2)
                                        :borderColor     (nth plot/default-colors-palette 2)
@@ -131,7 +128,6 @@
                     (:ts-data))]
     [:div {:style {:margin-top 35}}
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
-                                       :spanGaps        true
                                        :label           "RAM usage"
                                        :backgroundColor (first plot/default-colors-palette)
                                        :borderColor     (first plot/default-colors-palette)
@@ -155,7 +151,6 @@
                                          (rest devices-data)
                                          (conj datasets-to-display {:data            (timestamp+percentage ts-data :avg-disk-used :avg-disk-capacity)
                                                                     :label           (str "Disk usage (%) for device " device-name)
-                                                                    :spanGaps        true
                                                                     :backgroundColor (or (first chart-colors) "gray")
                                                                     :borderColor     (or (first chart-colors) "gray")
                                                                     :borderWidth     1})))))]
@@ -226,14 +221,12 @@
                                                         (rest interfaces-data)
                                                         (concat datasets-to-display [{:data            (bytes-transmitted-dataset (first interfaces-data))
                                                                                       :label           (str "Transmitted (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
-                                                                                      :spanGaps        true
                                                                                       :fill            true
                                                                                       :backgroundColor (or (first chart-colors) "gray")
                                                                                       :borderColor     (or (first chart-colors) "gray")
                                                                                       :borderWidth     1}
                                                                                      {:data            (bytes-received-dataset (first interfaces-data))
                                                                                       :label           (str "Received (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
-                                                                                      :spanGaps        true
                                                                                       :backgroundColor (or (second chart-colors) "gray")
                                                                                       :fill            true
                                                                                       :borderColor     (or (second chart-colors) "gray")

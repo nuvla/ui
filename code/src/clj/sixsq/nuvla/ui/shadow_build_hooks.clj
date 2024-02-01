@@ -24,6 +24,7 @@
   (prn "GITHUB_REF=" (System/getenv "GITHUB_REF"))
   (prn "git log" (:out (sh/sh "git" "--no-pager" "log" "-n" "4")))
   (prn "head^ :" (git-rev-parse "HEAD^"))
+  (prn "head :" (git-rev-parse "HEAD"))
   (prn "github sha short:" (when-let [github-sha (System/getenv "GITHUB_SHA")]
                              (git-rev-parse (str github-sha))))
   (prn "github sha short^:" (when-let [github-sha (System/getenv "GITHUB_SHA")]

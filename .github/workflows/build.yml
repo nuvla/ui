@@ -51,6 +51,10 @@ jobs:
           distribution: 'zulu'
           java-version: '11'
 
+      - name: lein install
+        working-directory: code
+        run: lein install
+
       - name: Setup Sonar Scanner
         uses: warchant/setup-sonar-scanner@v3
         with:

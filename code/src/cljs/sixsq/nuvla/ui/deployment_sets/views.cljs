@@ -152,19 +152,41 @@
            ^{:key id}
            [DeploymentSetRow deployment-set]))]]]))
 
+(defn ops-status-overview-string [tr-fn {:keys [deployments-to-add deployments-to-remove deployments-to-update] :as _ops-status}]
+  (let [deployments-sum (+ (count deployments-to-add)
+                           (count deployments-to-remove)
+                           (count deployments-to-update))]
+    (str deployments-sum " " (tr-fn [:deployments-to-add-remove-update]))))
+
+(defn OperationalStatus
+  [{:keys [status] :as ops-status}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (if (= status "OK")
+      [:div {:style {:height 35}}
+       [ui/Icon {:name :circle :color (detail/ops-status->color status)
+                 :style {:margin-right 5}}]
+        (@tr [:everything-is-up-to-date])]
+      [:div {:style {:display "flex"
+                     :height 35}}
+       [ui/Icon {:name :circle :color (detail/ops-status->color status)
+                 :style {:margin-right 5}}]
+       [:div (ops-status-overview-string @tr ops-status)]])))
+
 (defn DeploymentSetCard
-  [{:keys [id created name state description tags] :as _deployment-set}]
+  [{:keys [id updated name state description tags operational-status] :as  deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
         href   (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid id)})]
     ^{:key id}
+
     [uix/Card
      {:href        href
       :header      [:<>
                     [icons/Icon {:name (state->icon state)}]
                     (or name id)]
-      :meta        (str (@tr [:created]) " " (time/parse-ago created @locale))
+      :meta        (str (str/capitalize (@tr [:updated])) " " (time/parse-ago updated @locale))
       :state       state
+      :extra       [OperationalStatus operational-status]
       :description (when-not (str/blank? description) description)
       :tags        tags}]))
 

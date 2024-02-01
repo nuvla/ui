@@ -19,8 +19,11 @@
 
 (defn- git-commit-short-id
   []
+  (prn "GITHUB_SHA="(System/getenv "GITHUB_SHA"))
+  (prn "git log: \n" (:out (sh/sh "git" "--no-pager" "log" "-n" "4")))
+  (prn "printenv: \n" (:out (sh/sh "printenv")))
   (or
-    (git-rev-parse (System/getenv "GITHUB_SHA"))
+    (some-> (System/getenv "GITHUB_SHA") git-rev-parse)
     (git-rev-parse "HEAD")
     (str "rand" (rand-int 99999))))
 

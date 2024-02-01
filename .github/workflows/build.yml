@@ -51,6 +51,10 @@ jobs:
           distribution: 'zulu'
           java-version: '11'
 
+      - name: Set commit SHA in environment variable
+        if: github.event_name == 'pull_request'
+        run: echo "GITHUB_PR_COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+
       - name: lein install
         working-directory: code
         run: lein install

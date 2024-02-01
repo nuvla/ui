@@ -95,7 +95,10 @@
 (defn CpuLoadTimeSeries [selected-timespan data]
   (let [ts-data           (-> data
                               (first)
-                              (:ts-data))]
+                              (:ts-data))
+        max-avg-cpu-capacity (->> ts-data
+                                  (mapv (fn [d] (get-in d [:aggregations :avg-cpu-capacity])))
+                                  (apply max))]
     [:div
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
                                        :spanGaps        true
@@ -117,7 +120,7 @@
                                        :borderWidth     1}]}
 
                  :options (graph-options selected-timespan {:title    "Average CPU load (%)"
-                                                            :y-config {:max   200
+                                                            :y-config {:max   (* max-avg-cpu-capacity 100)
                                                                        :min   0
                                                                        :title {:display "true"
                                                                                :text    "Percentage (%)"}}})}]]))

@@ -20,8 +20,8 @@
 (defn- git-commit-short-id
   []
   (or
-    (when-let [github-sha (System/getenv "GITHUB_SHA")]
-      (git-rev-parse (str github-sha "^")))
+    (when-let [github-pr-sha (System/getenv "GITHUB_PR_COMMIT_SHA")]
+      (git-rev-parse github-pr-sha))
     (when-let [cloudflare-sha (System/getenv "CF_PAGES_COMMIT_SHA")]
       (subs cloudflare-sha 0 8))
     (git-rev-parse "HEAD")

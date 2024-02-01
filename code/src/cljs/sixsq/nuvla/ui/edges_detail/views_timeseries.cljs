@@ -310,80 +310,78 @@
                                  (not (:timespan @form-data)))
                    :active   true
                    :on-click #(let [[from to] (timespan-to-period (:timespan @form-data))]
-                                (dispatch [::events/fetch-edge-stats
+                                (dispatch [::events/fetch-edge-stats-csv
                                            {:from        from
                                             :to          to
-                                            :csv true
                                             :granularity (get timespan->granularity (:timespan @form-data))
-                                            :datasets [(:metric @form-data)]}]))}]]]))
+                                            :dataset     (:metric @form-data)}]))}]]]))
 
 (defn GraphLabel [timespan]
   [ui/Label {:basic true
              :size  "tiny"
              :style {:margin-top "1em"}}
-   (str "Data received every " (str/replace (get timespan->granularity timespan) #"-" " "))])
+   (str "Per " (str/replace (get timespan->granularity timespan) #"-" " "))])
 
 (defn TimeSeries []
-  (let [edge-stats            (subscribe [::subs/edge-stats])
-        loading?              (subscribe [::subs/loading?])
-        initial-timespan      (first timespan-options)
-        selected-timespan     (r/atom initial-timespan)
-        csv-modal-visible?    (r/atom false)
-        fetch-edge-stats      (fn [timespan]
-                                (let [[from to] (timespan-to-period timespan)]
-                                  (dispatch [::events/fetch-edge-stats
+  (let [edge-stats         (subscribe [::subs/edge-stats])
+        loading?           (subscribe [::subs/loading?])
+        initial-timespan   (first timespan-options)
+        selected-timespan  (r/atom initial-timespan)
+        csv-modal-visible? (r/atom false)
+        fetch-edge-stats   (fn [timespan]
+                             (let [[from to] (timespan-to-period timespan)]
+                               (dispatch [::events/fetch-edge-stats
                                              {:from        from
                                               :to          to
                                               :granularity (get timespan->granularity timespan)
                                               :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}])))]
     (fetch-edge-stats initial-timespan)
     (fn []
-      [ui/TabPane
-       [ui/Grid {:columns   2
-                 :stackable true
-                 :divided   true
-                 :celled    "internally"}
-        [:div {:style {:display "flex"
-                       :width "100%"
-                       :justify-content "space-between"
-                       :align-items "center"
-                       :padding-bottom "1em"}}
+      [:div [ui/Menu {:width "100%"}
+             [ui/MenuItem {:icon     [icons/i-share]
+                           :item     true
+                           :content  "Export data (.csv)"
+                           :on-click #(reset! csv-modal-visible? true)}]
+             [ui/MenuMenu {:position "right"}
+              [ui/MenuItem
+               [:span {:style {:display     "flex"
+                               :align-items "center"
+                               :margin-right 5
+                               :color "rgba(40,40,40,.3)"}} "Showing data for the"]
+               [ui/Dropdown {:inline          true
+                             :loading         @loading?
+                             :close-on-change true
+                             :default-value   initial-timespan
+                             :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
+                             :on-change       (ui-callback/value
+                                                (fn [period]
+                                                  (do
+                                                    (reset! selected-timespan period)
+                                                    (fetch-edge-stats period))))}]]]]
+       [ui/TabPane
+
+        [ui/Grid {:columns   2
+                  :stackable true
+                  :divided   true
+                  :celled    "internally"}
+
          (when @csv-modal-visible?
            [CSVModal {:on-close #(reset! csv-modal-visible? false)}])
-         [uix/Button {:icon [icons/i-share]
-                      :text "Export data (.csv)"
-                      :on-click #(reset! csv-modal-visible? true)}]
-         [:div
-          (when @loading? [ui/Loader {:active true
-                                      :inline true
-                                      :style  {:margin-right 10}
-                                      :size   "tiny"}])
-          [ui/Menu {:compact true}
-           [ui/Dropdown {:item            true
-                         :inline          true
-                         :close-on-change true
-                         :default-value   initial-timespan
-                         :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
-                         :on-change       (ui-callback/value
-                                            (fn [period]
-                                              (do
-                                                (reset! selected-timespan period)
-                                                (fetch-edge-stats period))))}]]]]
-        [ui/GridRow
-         [ui/GridColumn {:textAlign "center"}
-          [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]
-          [GraphLabel @selected-timespan]]
-         [ui/GridColumn {:textAlign "center"}
-          [DiskUsageTimeSeries @selected-timespan (:disk-stats @edge-stats) ]
-          [GraphLabel @selected-timespan]]]
-        [ui/GridRow
-         [ui/GridColumn {:textAlign "center"}
-          [NetworkDataTimeSeries @selected-timespan (:network-stats @edge-stats)]
-          [GraphLabel @selected-timespan]]
-         [ui/GridColumn {:textAlign "center"}
-          [RamUsageTimeSeries  @selected-timespan (:ram-stats @edge-stats)]
-          [GraphLabel @selected-timespan]]]
-        [ui/GridRow
-         [ui/GridColumn {:textAlign "center"}
-          [NEStatusTimeSeries @selected-timespan (sort-by :timestamp (generate-fake-data-status @selected-timespan))]
-          [GraphLabel @selected-timespan]]]]])))
+         [ui/GridRow
+          [ui/GridColumn {:textAlign "center"}
+           [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]
+           [GraphLabel @selected-timespan]]
+          [ui/GridColumn {:textAlign "center"}
+           [DiskUsageTimeSeries @selected-timespan (:disk-stats @edge-stats)]
+           [GraphLabel @selected-timespan]]]
+         [ui/GridRow
+          [ui/GridColumn {:textAlign "center"}
+           [NetworkDataTimeSeries @selected-timespan (:network-stats @edge-stats)]
+           [GraphLabel @selected-timespan]]
+          [ui/GridColumn {:textAlign "center"}
+           [RamUsageTimeSeries @selected-timespan (:ram-stats @edge-stats)]
+           [GraphLabel @selected-timespan]]]
+         [ui/GridRow
+          [ui/GridColumn {:textAlign "center"}
+           [NEStatusTimeSeries @selected-timespan (sort-by :timestamp (generate-fake-data-status @selected-timespan))]
+           [GraphLabel @selected-timespan]]]]]])))

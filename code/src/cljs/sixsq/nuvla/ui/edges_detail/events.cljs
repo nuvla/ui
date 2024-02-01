@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.edges-detail.events
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
+            [goog.window :as g]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
@@ -410,10 +411,31 @@
       {:db (assoc db ::spec/loading? true)
        :http-xhrio {:method          :get
                     :uri             uri
-                    :response-format (ajax/json-response-format {:keywords? true})
-                    :headers         (when csv {:accept "text/csv"})
+                    :response-format (if-not csv (ajax/json-response-format {:keywords? true})
+                                                 (ajax/text-response-format))
+                    :headers         (when csv {"Accept" "text/csv"})
                     :on-success      [::fetch-edge-stats-success]
                     :on-failure      [::fetch-edge-stats-failure]}})))
+
+(reg-event-fx
+  ::fetch-edge-stats-csv
+  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity dataset]}]]
+    (let [uri (str "/api/" (:id nuvlabox) "/data?dataset=" dataset "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
+      {:db (assoc db ::spec/loading? true)
+       :http-xhrio {:method          :get
+                    :uri             uri
+                    :response-format (ajax/text-response-format)
+                    :headers         {"Accept" "text/csv"}
+                    :on-success      [::fetch-edge-stats-csv-success]
+                    :on-failure      [::fetch-edge-stats-failure]}})))
+
+(reg-event-fx
+  ::fetch-edge-stats-csv-success
+  (fn [{db :db} [_ response]]
+    (.open js/window (str "data:text/csv,"
+                          response))
+    {:db (assoc db ::spec/loading? false)}))
+
 
 (reg-event-fx
   ::fetch-edge-stats-success
@@ -423,8 +445,8 @@
 
 (reg-event-fx
   ::fetch-edge-stats-failure
-  (fn [{db :db} _]
-    (prn "failure!!!")
+  (fn [{db :db} response]
+    (prn :failure response)
     {:db (assoc db ::spec/loading? false)}))
 
 

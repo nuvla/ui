@@ -184,7 +184,7 @@
       :header      [:<>
                     [icons/Icon {:name (state->icon state)}]
                     (or name id)]
-      :meta        (str (@tr [:modified]) " " (time/parse-ago updated @locale))
+      :meta        (str (str/capitalize (@tr [:updated])) " " (time/parse-ago updated @locale))
       :state       state
       :extra       [OperationalStatus operational-status]
       :description (when-not (str/blank? description) description)

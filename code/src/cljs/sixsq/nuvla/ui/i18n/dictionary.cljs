@@ -505,7 +505,6 @@
         :messages                                      "messages"
         :method                                        "method"
         :methods                                       "methods"
-        :modified                                      "Modified"
         :module                                        "application"
         :module-change-logo                            "Change logo"
         :module-copied                                 "Application copied"

@@ -101,17 +101,17 @@
                                   (apply max))]
     [:div
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
-                                       :label           "CPU load"
+                                       :label           "Load"
                                        :backgroundColor (first plot/default-colors-palette)
                                        :borderColor     (first plot/default-colors-palette)
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
-                                       :label           "CPU load for the last minute"
+                                       :label           "Load for the last 1m"
                                        :backgroundColor (second plot/default-colors-palette)
                                        :borderColor     (second plot/default-colors-palette)
                                        :borderWidth     1}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
-                                       :label           "CPU load for the last 5 minutes"
+                                       :label           "Load for the last 5m"
                                        :backgroundColor (nth plot/default-colors-palette 2)
                                        :borderColor     (nth plot/default-colors-palette 2)
                                        :borderWidth     1}]}
@@ -147,10 +147,10 @@
                                     device-name (:disk.device dimensions)]
                                 (if (empty? devices-data)
                                   datasets-to-display
-                                  (recur (drop 2 chart-colors)
+                                  (recur (drop 1 chart-colors)
                                          (rest devices-data)
                                          (conj datasets-to-display {:data            (timestamp+percentage ts-data :avg-disk-used :avg-disk-capacity)
-                                                                    :label           (str "Disk usage (%) for device " device-name)
+                                                                    :label           device-name
                                                                     :backgroundColor (or (first chart-colors) "gray")
                                                                     :borderColor     (or (first chart-colors) "gray")
                                                                     :borderWidth     1})))))]

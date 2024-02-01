@@ -112,6 +112,20 @@
                                     (dispatch [::close-add-update-notification-method-modal])
                                     (dispatch [::get-notification-methods])))]}))))
 
+(reg-event-fx
+  ::test-notification-method
+  (fn [_ [_ notif-method]]
+    {::cimi-api-fx/operation
+     [(:id notif-method) "test"
+      #(do
+         (let [{:keys [status message]} (response/parse %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "notification method test submitted")
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :success}])))]}))
+
+
 
 (reg-event-db
   ::deactivate-notification-method-create-button

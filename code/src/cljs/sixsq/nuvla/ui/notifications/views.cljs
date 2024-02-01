@@ -1012,30 +1012,56 @@
       :danger-msg  (@tr [:notification-method-delete-warning])
       :button-text (@tr [:delete])}]))
 
+(defn NotifMethodTableCellEllipsis
+  [what]
+  [ui/TableCell {:floated :left
+                 :style   {:overflow      "hidden"
+                           :text-overflow "ellipsis"
+                           :max-width     "20ch"}}
+   [:span what]] )
 
 (defn single-notification-method
   [{:keys [method name description destination] :as notif-method}]
   [ui/TableRow
-   [ui/TableCell {:floated :left}
-    [:span name]]
-   [ui/TableCell {:floated :left}
-    [:span description]]
+   [NotifMethodTableCellEllipsis name]
+   [NotifMethodTableCellEllipsis description]
    [ui/TableCell {:floated :left}
     [:span method]]
-   [ui/TableCell {:floated :left
-                  :style   {:overflow      "hidden"
-                            :text-overflow "ellipsis"
-                            :max-width     "20ch"}}
-    [:span destination]]
-   [ui/TableCell {:floated :right
-                  :width   1
-                  :align   :right}
+   [NotifMethodTableCellEllipsis destination]
+   [ui/TableCell {:floated :right}
+    [ui/Popup
+     {:trigger        (r/as-element
+                        [:span
+                         [icons/BellIcon
+                           {:color    :green
+                            :style    {:cursor :pointer}
+                            :on-click #(dispatch [::events/test-notification-method notif-method])}]])
+      :content        "Test notification"
+      :on             "hover"
+      :position       "top left"
+      :hide-on-scroll true}]
     (when (general-utils/can-delete? notif-method)
-      [DeleteButtonNotificationMethod notif-method])
+      [ui/Popup
+       {:trigger        (r/as-element
+                          [:span
+                           [DeleteButtonNotificationMethod notif-method]])
+        :content        "Delete"
+        :on             "hover"
+        :position       "top left"
+        :hide-on-scroll true}])
     (when (general-utils/can-edit? notif-method)
-      [icons/GearIcon {:color    :blue
-                       :style    {:cursor :pointer}
-                       :on-click #(dispatch [::events/open-add-update-notification-method-modal notif-method false])}])]])
+      [ui/Popup
+       {:trigger        (r/as-element
+                          [:span
+                           [icons/GearIcon
+                            {:color    :blue
+                             :style    {:cursor :pointer}
+                             :on-click #(dispatch [::events/open-add-update-notification-method-modal notif-method false])}]])
+        :content        "Edit"
+        :on             "hover"
+        :position       "top left"
+        :hide-on-scroll true}]
+      )]])
 
 
 (defn DeleteButtonSubscriptionConfig

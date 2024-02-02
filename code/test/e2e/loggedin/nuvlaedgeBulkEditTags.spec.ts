@@ -15,6 +15,14 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
 
   await expect(page).toHaveURL(edgesPageRegex);
 
+   // Remove multiple tags on one edge
+  await selectAll();
+  await editTagsModal();
+
+  await page.getByText('Remove all tags').click();
+  await page.getByRole('button', { name: 'edit tags' }).click();
+  await page.getByRole('button', { name: 'Yes: Remove all tags' }).click();
+
   // ---------- TESTING WITH SELECTION BY CHECKBOXES -----------
   // Add one tag on all edges
   await selectAll();

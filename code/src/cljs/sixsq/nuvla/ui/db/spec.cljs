@@ -22,6 +22,7 @@
             [sixsq.nuvla.ui.i18n.spec :as i18n]
             [sixsq.nuvla.ui.intercom.spec :as intercom]
             [sixsq.nuvla.ui.job.spec :as job]
+            [sixsq.nuvla.ui.notifications.spec :as notifications]
             [sixsq.nuvla.ui.main.spec :as main]
             [sixsq.nuvla.ui.messages.spec :as messages]
             [sixsq.nuvla.ui.profile.spec :as profile]
@@ -56,6 +57,7 @@
          intercom/defaults
          main/defaults
          messages/defaults
+         notifications/defaults
          edges/defaults
          edges/pagination-default
          edges-detail/defaults

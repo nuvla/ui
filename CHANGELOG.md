@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Query params based browsing for tabs on Notifications page
+
 ## Released
 
 ## [2.36.3] - 2024-01-29

@@ -1,6 +1,9 @@
 (ns sixsq.nuvla.ui.notifications.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+            [sixsq.nuvla.ui.utils.spec :as utils-spec]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            ))
 
 (s/def ::name utils-spec/nonblank-string)
 (s/def ::description utils-spec/nonblank-string)
@@ -131,8 +134,17 @@
 
 (s/def ::notification-method-create-button-visible? boolean?)
 
+;;
+;; Tabs
+;;
 
-(def defaults {::notification-method                    {}
+(s/def ::tab any?)
+
+(def subscriptions-key :subscriptions)
+(def methods-key :methods)
+
+(def defaults {::tab                                    (tab-plugin/build-spec :default-tab subscriptions-key)
+               ::notification-method                    {}
                ::notification-methods                   []
                ::add-notification-method-modal-visible? false
                ::notification-method-modal-visible?     false})

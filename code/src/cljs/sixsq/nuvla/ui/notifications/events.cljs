@@ -9,6 +9,11 @@
             [sixsq.nuvla.ui.notifications.utils :as utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
+(reg-event-fx
+  ::init
+  (fn [{db :db}]
+    {:db (merge db spec/defaults)}))
+
 ;;
 ;; notification-methods
 ;;

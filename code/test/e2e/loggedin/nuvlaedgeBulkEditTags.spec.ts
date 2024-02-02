@@ -27,6 +27,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   // Add one tag on all edges
   await selectAll();
   await editTagsModal();
+  await page.waitForTimeout(500);
   await page.locator('div[role="combobox"] input[type="text"]').fill('AddTagTest');
   await page.locator('div[role="combobox"] input[type="text"]').press('Enter');
   await closeDropDown();
@@ -41,6 +42,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await selectFirst();
   await editTagsModal();
 
+  await page.waitForTimeout(500);
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest1');
   await page.locator('div[role="combobox"] input[type="text"]').press('Enter');
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest2');
@@ -65,6 +67,8 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await selectFirst();
   await editTagsModal();
 
+
+  await page.waitForTimeout(500);
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest1');
   await page.locator('div[role="combobox"] input[type="text"]').press('Enter');
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest2');
@@ -108,6 +112,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   };
   await selectAllEmptySearch();
   await editTagsModal();
+  await page.waitForTimeout(500);
   await page.locator('div[role="combobox"] input[type="text"]').fill('AddTagTest');
   await page.locator('div[role="combobox"] input[type="text"]').press('Enter');
   await closeDropDown();
@@ -124,6 +129,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await selectAllSearchDonot();
   await editTagsModal();
 
+  await page.waitForTimeout(500);
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest1');
   await page.locator('div[role="combobox"] input[type="text"]').press('Enter');
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest2');
@@ -148,6 +154,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await selectAllSearchDonot();
   await editTagsModal();
 
+  await page.waitForTimeout(500);
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest1');
   await page.locator('div[role="combobox"] input[type="text"]').press('Enter');
   await page.locator('div[role="combobox"] input[type="text"]').fill('SetTagTest2');

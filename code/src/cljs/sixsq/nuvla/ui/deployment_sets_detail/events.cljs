@@ -74,6 +74,7 @@
   ;; called when editing page is entered
   ::init
   (fn []
+    (js/console.warn "init")
     {:fx [[:dispatch [::refresh-operational-status-and-reset]]
           [:dispatch [::set-changes-protection false]]]}))
 
@@ -85,6 +86,7 @@
 (reg-event-fx
   ::reset-create
   (fn [{{:keys [current-route] :as db} :db}]
+    (js/console.warn "reset-create")
     {:db (-> db
              (merge spec/defaults)
              (assoc (subs/create-apps-creation-db-path current-route) nil

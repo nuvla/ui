@@ -5,13 +5,11 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.edges-detail.events :as events]
             [sixsq.nuvla.ui.edges-detail.subs :as subs]
-            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -45,8 +43,8 @@
                 capacity (get-in d [:aggregations capacity-key])
                 percent  (-> (general-utils/percentage load capacity)
                              (general-utils/round-up :n-decimal 0))]
-            [(:timestamp d)
-             percent]))
+            (assoc d :x (:timestamp d)
+                     :y percent)))
         ts-data))
 
 (defn CpuLoadTimeSeries [selected-timespan data]
@@ -55,25 +53,39 @@
                               (:ts-data))
         max-avg-cpu-capacity (->> ts-data
                                   (mapv (fn [d] (get-in d [:aggregations :avg-cpu-capacity])))
-                                  (apply max))]
+                                  (apply max))
+        formatted-tooltip (fn [tooltip-items load-key capacity-key]
+                            (let [raw-data (. ^Map tooltip-items -raw)
+                                  aggregations (. ^Map raw-data -aggregations)]
+                              (-> (js->clj aggregations)
+                                  (select-keys [(name load-key) (name capacity-key)]))))]
     [:div
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
                                        :label           "Load"
                                        :backgroundColor (first plot/default-colors-palette)
                                        :borderColor     (first plot/default-colors-palette)
-                                       :borderWidth     1}
+                                       :borderWidth     1
+                                       :tooltip         {:callbacks {:label (fn [tooltipItems _data]
+                                                                              (formatted-tooltip tooltipItems :avg-cpu-load :avg-cpu-capacity))}}}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
                                        :label           "Load for the last 1m"
                                        :backgroundColor (second plot/default-colors-palette)
                                        :borderColor     (second plot/default-colors-palette)
-                                       :borderWidth     1}
+                                       :borderWidth     1
+                                       :tooltip         {:callbacks {:label (fn [tooltipItems _data]
+                                                                              (formatted-tooltip tooltipItems :avg-cpu-load-1 :avg-cpu-capacity))}}}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
                                        :label           "Load for the last 5m"
                                        :backgroundColor (nth plot/default-colors-palette 2)
                                        :borderColor     (nth plot/default-colors-palette 2)
-                                       :borderWidth     1}]}
+                                       :borderWidth     1
+                                       :tooltip         {:callbacks {:label (fn [tooltipItems _data]
+                                                                              (formatted-tooltip tooltipItems :avg-cpu-load-5 :avg-cpu-capacity))}}}]}
 
                  :options (graph-options selected-timespan {:title    "Average CPU load (%)"
+                                                            :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
+                                                                                                      (str (. ^Map (. ^Map tooltipItems -raw) -aggregations)))}}
+                                                                       :legend  {:display false}}
                                                             :y-config {:max   (* max-avg-cpu-capacity 100)
                                                                        :min   0
                                                                        :title {:display "true"
@@ -150,7 +162,7 @@
 
                   :options (graph-options selected-timespan {:title    "NE Status (online/offline)"
                                                              :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
-                                                                                                       (str "value: " (.. tooltipItems -raw -status)))}}
+                                                                                                       (str "value: " (.. ^Map tooltipItems -raw -status)))}}
                                                                         :legend  {:display false}}
                                                              :y-config {:max   1
                                                                         :min   0
@@ -225,58 +237,60 @@
                          :value "ram-stats"}
                         {:label "NuvlaEdge status (online/offline)"
                          :value "online-status-stats"}]]
-    [ui/Modal {:close-icon true
-               :open       true
-               :onClose    on-close}
-     [ui/ModalHeader "Export data"]
-     [ui/ModalContent
-      [ui/ModalDescription
-       [:p "Choose the metric and the period for which you wish to export data (in " [:b ".csv"] " format)"]
-       [ui/Form
-        [:div
+    (fn []
+      (let [tr (subscribe [::i18n-subs/tr])]
+        [ui/Modal {:close-icon true
+                   :open       true
+                   :onClose    on-close}
+         [ui/ModalHeader (@tr "Export data")]
+         [ui/ModalContent
+          [ui/ModalDescription
+           [:p "Choose the metric and the period for which you wish to export raw data in " [:b ".csv"] " format."]
+           [ui/Form
+            [:div
 
-         [ui/Header {:as "h4"
-                     :attached "top"
-                     :style    {:background-color "#00000008"}} "Metric"]
-         (into [ui/Segment {:attached true}]
-               (for [metric metrics]
-                 [ui/FormField
-                  [ui/Radio
-                   {:label     (:label metric)
-                    :name      "radioGroupMetric"
-                    :value     (:value metric)
-                    :checked   (= (:metric @form-data)
-                                  (:value metric))
-                    :on-change (fn [_e t]
-                                 (swap! form-data assoc :metric (. t -value)))}]]))]
-        [:div
-         [ui/Header {:as       "h4"
-                     :attached "top"
-                     :style    {:background-color "#00000008"}} "Period"]
-         (into [ui/Segment {:attached true}]
-               (for [timespan timespan-options]
-                 [ui/FormField
-              [ui/Radio
-               {:label     timespan
-                :name      "radioGroupTimespan"
-                :value     timespan
-                :checked   (= (:timespan @form-data)
-                              timespan)
-                :on-change (fn [_e t]
-                             (swap! form-data assoc :timespan (. t -value)))}]]))]]]]
-     [ui/ModalActions
-      [uix/Button {:text     "Export"
-                   :icon [icons/i-share]
-                   :positive true
-                   :disabled (or (not (:metric @form-data))
-                                 (not (:timespan @form-data)))
-                   :active   true
-                   :on-click #(let [[from to] (ts-utils/timespan-to-period (:timespan @form-data))]
-                                (dispatch [::events/fetch-edge-stats-csv
-                                           {:from        from
-                                            :to          to
-                                            :granularity (get ts-utils/timespan->granularity (:timespan @form-data))
-                                            :dataset     (:metric @form-data)}]))}]]]))
+             [ui/Header {:as       "h4"
+                         :attached "top"
+                         :style    {:background-color "#00000008"}} "Metric"]
+             (into [ui/Segment {:attached true}]
+                   (for [metric metrics]
+                     [ui/FormField
+                      [ui/Radio
+                       {:label     (:label metric)
+                        :name      "radioGroupMetric"
+                        :value     (:value metric)
+                        :checked   (= (:metric @form-data)
+                                      (:value metric))
+                        :on-change (fn [_e t]
+                                     (swap! form-data assoc :metric (. t -value)))}]]))]
+            [:div
+             [ui/Header {:as       "h4"
+                         :attached "top"
+                         :style    {:background-color "#00000008"}} "Period"]
+             (into [ui/Segment {:attached true}]
+                   (for [timespan timespan-options]
+                     [ui/FormField
+                      [ui/Radio
+                       {:label     timespan
+                        :name      "radioGroupTimespan"
+                        :value     timespan
+                        :checked   (= (:timespan @form-data)
+                                      timespan)
+                        :on-change (fn [_e t]
+                                     (swap! form-data assoc :timespan (. t -value)))}]]))]]]]
+         [ui/ModalActions
+          [uix/Button {:text     "Export"
+                       :icon     [icons/i-share]
+                       :positive true
+                       :disabled (or (not (:metric @form-data))
+                                     (not (:timespan @form-data)))
+                       :active   true
+                       :on-click #(let [[from to] (ts-utils/timespan-to-period (:timespan @form-data))]
+                                    (dispatch [::events/fetch-edge-stats-csv
+                                               {:from        from
+                                                :to          to
+                                                :granularity (get ts-utils/timespan->granularity (:timespan @form-data))
+                                                :dataset     (:metric @form-data)}]))}]]]))))
 
 (defn GraphLabel [timespan]
   [ui/Label {:basic true

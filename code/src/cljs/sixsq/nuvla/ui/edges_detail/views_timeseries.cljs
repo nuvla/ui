@@ -197,10 +197,9 @@
                                                                       :ticks {:display false}
                                                                       :title {:display false}}})}]]))
 (defn NetworkDataTimeSeries [selected-timespan data]
-  (r/with-let [interfaces          (mapv #(get-in % [:dimensions :network.interface]) data)
-               initial-interface   (or ((set interfaces) "eth0") (first interfaces))
-               selected-intefaces  (r/atom [initial-interface])]
+  (r/with-let [selected-intefaces  (r/atom [])]
               (let [tr                        (subscribe [::i18n-subs/tr])
+                    interfaces          (mapv #(get-in % [:dimensions :network.interface]) data)
                     selected-interfaces-data  (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface])) data)
                     bytes-received-dataset    (fn [{:keys [ts-data]}]
                                                 (->> ts-data
@@ -240,7 +239,6 @@
                    [ui/Dropdown {:inline          true
                                  :multiple        true
                                  :close-on-change true
-                                 :default-value   [initial-interface]
                                  :placeholder     (@tr [:choose-network-interface])
                                  :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
                                  :on-change       (ui-callback/value
@@ -343,7 +341,6 @@
     (fn []
       [:div [ui/Menu {:width "100%"}
              [ui/MenuItem {:icon     [icons/i-share]
-                           :item     true
                            :content  "Export data (.csv)"
                            :on-click #(reset! csv-modal-visible? true)}]
              [ui/MenuMenu {:position "right"}
@@ -362,8 +359,7 @@
                              :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
                              :on-change       (ui-callback/value
                                                 (fn [period]
-                                                  (do
-                                                    (dispatch [::events/set-selected-timespan period (timespan->granularity period) datasets]))))}]]]]
+                                                  (dispatch [::events/set-selected-timespan period (timespan->granularity period) datasets])))}]]]]
        [ui/TabPane
         [ui/Grid {:columns   2
                   :stackable true

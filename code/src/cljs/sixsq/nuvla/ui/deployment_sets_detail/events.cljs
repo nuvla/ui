@@ -447,6 +447,7 @@
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db} [_ {:keys [forceable? deletable?]}]]
     (let [id (:id deployment-set)
+          navigate-deployment-groups #(dispatch [::routing-events/navigate routes/deployment-groups])
           cb (fn [response]
                (dispatch
                  [::job-events/wait-job-to-complete
@@ -454,14 +455,14 @@
                    :refresh-interval-ms 1000
                    :on-complete
                    #(do
-                      (dispatch [::routing-events/navigate routes/deployment-groups])
+                      (navigate-deployment-groups)
                       (when-not (= "SUCCESS" (:state %))
                         (cimi-api-fx/default-error-message
                           %
                           "Failed to delete deployment group")) ())}]))]
       (cond
         deletable?
-        {::cimi-api-fx/delete [id cb]}
+        {::cimi-api-fx/delete [id navigate-deployment-groups]}
         forceable?
         {::cimi-api-fx/operation [id "force-delete" cb]}))))
 

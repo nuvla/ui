@@ -303,27 +303,13 @@
              :style {:margin-top "1em"}}
    (str "Per " (str/replace (get timespan->granularity timespan) #"-" " "))])
 
-(defn refresh-history [timespan]
-  (dispatch [::main-events/action-interval-start
-             {:id        :nuvlabox-fetch-edge-stats
-              :frequency 30000
-              :event     [::events/fetch-edge-stats {:timespan timespan
-                                                     :granularity (get timespan->granularity timespan)
-                                                     :datasets    ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}]}]))
-
 (defn TimeSeries []
   (let [edge-stats         (subscribe [::subs/edge-stats])
         loading?           (subscribe [::subs/loading?])
         initial-timespan   (first timespan-options)
         selected-timespan  (subscribe [::subs/timespan])
         csv-modal-visible? (r/atom false)
-        datasets           ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]
-        fetch-edge-stats   (fn [timespan]
-                             (dispatch [::events/set-selected-timespan
-                                        timespan
-                                        (get timespan->granularity timespan)
-                                        ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]]))]
-    (fetch-edge-stats (first timespan-options))
+        datasets           ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]]
     (fn []
       [:div [ui/Menu {:width "100%"}
              [ui/MenuItem {:icon     [icons/i-share]

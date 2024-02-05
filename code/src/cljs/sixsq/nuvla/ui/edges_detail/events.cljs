@@ -27,6 +27,15 @@
       "last 3 months" [(time/subtract-months now 3) now]
       "last year" [(time/subtract-years now 1) now])))
 
+(def timespan->granularity {"last 15 minutes" "1-minutes"
+                            "last hour"       "2-minutes"
+                            "last 12 hours"   "3-minutes"
+                            "last day"        "30-minutes"
+                            "last week"       "1-hours"
+                            "last month"      "6-hours"
+                            "last 3 months"   "2-days"
+                            "last year"       "7-days"})
+
 (timespan-to-period "last 15 minutes")
 
 (reg-event-fx
@@ -147,7 +156,7 @@
 
 (reg-event-fx
   ::get-nuvlabox
-  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook] :as db} :db} [_ id]]
+  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook ::spec/timespan] :as db} :db} [_ id]]
     {:db                  (cond-> db
                                   (not= (:id nuvlabox) id)
                                   (merge spec/defaults))
@@ -163,6 +172,9 @@
                            [:dispatch [::job-events/get-jobs id]]
                            [:dispatch [::get-deployments-for-edge id]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
+                           [:dispatch [::fetch-edge-stats {:timespan timespan
+                                                           :granularity (timespan->granularity timespan)
+                                                           :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)
                                                                          nil)]]]}))

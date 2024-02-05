@@ -19,8 +19,8 @@
 (def red [255 0 0])
 (def green [0 255 0])
 
-(defn color-gradient [color1 color2 percentage]
-  (interpolate color1 color2 percentage))
+(defn color-gradient [percentage]
+  (interpolate red green percentage))
 
 (defn to-rgb [color-vector]
   (str "rgb(" (str/join "," color-vector) ")"))

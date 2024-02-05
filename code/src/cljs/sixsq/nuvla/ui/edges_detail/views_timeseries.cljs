@@ -167,41 +167,45 @@
 
 
 (defn NEStatusTimeSeries [selected-timespan data]
-  (let [dataset  (->> data
-                      (mapv (fn [d]
-                              {:x (:timestamp d)
-                               :y 1
-                               :status (:status d)}) ))]
+  (let [ts-data (-> data
+                    (first)
+                    (:ts-data))
+        dataset (->> ts-data
+                     (mapv (fn [d]
+                             {:x      (:timestamp d)
+                              :y      1
+                              :status (-> d :aggregations :avg-online)})))]
     [:div
-     [plot/Bar {:height  100
-                :data    {:datasets [{:data           dataset
-                                      :label           "status"
-                                      :categoryPercentage 1.0
-                                      :barPercentage 1.0
-                                      :borderColor (fn [ctx]
-                                                     (let [element-status (.. ^Map ctx -raw -status)
-                                                           color-gradient (plot/color-gradient plot/red plot/green element-status)]
-                                                       (plot/to-rgb color-gradient)))
-                                      :backgroundColor (fn [ctx]
-                                                         (let [element-status (.. ^Map ctx -raw -status)
-                                                               color-gradient (plot/color-gradient plot/red plot/green element-status)]
-                                                           (plot/to-rgb color-gradient)))
-                                      :borderWidth 1}]}
+     (when (seq dataset)
+       [plot/Bar {:height  100
+                  :data    {:datasets [{:data               dataset
+                                        :label              "status"
+                                        :categoryPercentage 1.0
+                                        :barPercentage      1.0
+                                        :borderColor        (fn [ctx]
+                                                              (when-let [element-status (.. ^Map ctx -raw -status)]
+                                                                (let [color-gradient (plot/color-gradient element-status)]
+                                                                  (plot/to-rgb color-gradient))))
+                                        :backgroundColor    (fn [ctx]
+                                                              (when-let [element-status (.. ^Map ctx -raw -status)]
+                                                                (let [color-gradient (plot/color-gradient element-status)]
+                                                                  (plot/to-rgb color-gradient))))
+                                        :borderWidth        1}]}
 
-                :options (graph-options selected-timespan {:title    "NE Status (online/offline)"
-                                                           :plugins {:tooltip { :callbacks {:label (fn [tooltipItems _data]
-                                                                                                     (str "value: " (.. tooltipItems -raw -status)))}}
-                                                                     :legend {:display false}}
-                                                           :y-config {:max   1
-                                                                      :min   0
-                                                                      :ticks {:display false}
-                                                                      :title {:display false}}})}]]))
+                  :options (graph-options selected-timespan {:title    "NE Status (online/offline)"
+                                                             :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
+                                                                                                       (str "value: " (.. tooltipItems -raw -status)))}}
+                                                                        :legend  {:display false}}
+                                                             :y-config {:max   1
+                                                                        :min   0
+                                                                        :ticks {:display false}
+                                                                        :title {:display false}}})}])]))
 (defn NetworkDataTimeSeries [selected-timespan data]
-  (r/with-let [selected-intefaces  (r/atom [])]
-              (let [tr                        (subscribe [::i18n-subs/tr])
-                    interfaces          (mapv #(get-in % [:dimensions :network.interface]) data)
-                    selected-interfaces-data  (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface])) data)
-                    bytes-received-dataset    (fn [{:keys [ts-data]}]
+  (r/with-let [selected-intefaces (r/atom [])]
+    (let [tr                                  (subscribe [::i18n-subs/tr])
+          interfaces                          (mapv #(get-in % [:dimensions :network.interface]) data)
+          selected-interfaces-data            (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface])) data)
+          bytes-received-dataset              (fn [{:keys [ts-data]}]
                                                 (->> ts-data
                                                      (mapv (fn [d]
                                                              [(:timestamp d)
@@ -331,12 +335,12 @@
         initial-timespan   (first timespan-options)
         selected-timespan  (subscribe [::subs/timespan])
         csv-modal-visible? (r/atom false)
-        datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]
+        datasets           ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]
         fetch-edge-stats   (fn [timespan]
-                             (dispatch [::events/fetch-edge-stats
-                                        {:timespan    timespan
-                                         :granularity (get timespan->granularity timespan)
-                                         :datasets    ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}]))]
+                             (dispatch [::events/set-selected-timespan
+                                        timespan
+                                        (get timespan->granularity timespan)
+                                        ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]]))]
     (fetch-edge-stats (first timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}
@@ -384,5 +388,5 @@
            [GraphLabel @selected-timespan]]]
          [ui/GridRow
           [ui/GridColumn {:textAlign "center"}
-           [NEStatusTimeSeries @selected-timespan (sort-by :timestamp (generate-fake-data-status @selected-timespan))]
+           [NEStatusTimeSeries @selected-timespan (:online-status-stats @edge-stats)]
            [GraphLabel @selected-timespan]]]]]])))

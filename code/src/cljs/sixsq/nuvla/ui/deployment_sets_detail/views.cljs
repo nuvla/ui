@@ -390,7 +390,7 @@
 
 (defn DeleteButton
   [deployment-set warn-msg]
-  (js/console.info "DB" (str (select-keys deployment-set [:operations :id])) " - " warn-msg)
+  (js/console.warn "DeleteButton render" (str (select-keys deployment-set [:operations :id])) " - " warn-msg)
   (let [tr         (subscribe [::i18n-subs/tr])
         content    (depl-set->modal-content deployment-set)
         deletable? (general-utils/can-operation? "delete" deployment-set)

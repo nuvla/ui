@@ -58,6 +58,7 @@
   :<- [::deployment-set-stored]
   :<- [::deployment-set-edited]
   (fn [[stored edited]]
+    (js/console.warn "Sub deployment-set-stored-and-edited stored:" (str stored) " edited:" (str edited))
     [stored edited]))
 
 (reg-sub

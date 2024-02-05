@@ -56,9 +56,8 @@
                                   (apply max))
         formatted-tooltip (fn [tooltip-items load-key capacity-key]
                             (let [raw-data (. ^Map tooltip-items -raw)
-                                  aggregations (. ^Map raw-data -aggregations)]
-                              (-> (js->clj aggregations)
-                                  (select-keys [(name load-key) (name capacity-key)]))))]
+                                  aggregations (js->clj (. ^Map raw-data -aggregations) :keywordize-keys true)]
+                              (str "Load: " (get aggregations load-key) ", Capacity: " (get aggregations capacity-key))))]
     [:div
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
                                        :label           "Load"

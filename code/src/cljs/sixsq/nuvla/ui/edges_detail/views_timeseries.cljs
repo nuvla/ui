@@ -25,31 +25,6 @@
                             "last 3 months"   "2-days"
                             "last year"       "7-days"})
 
-(defn generate-timestamps [timespan]
-  (loop [i          0
-         timestamps []]
-    (if (> i 200)
-      timestamps
-      (recur (inc i) (conj timestamps (case timespan
-                                        "last 15 minutes" (time/subtract-milliseconds (time/now) (* i 10000))
-                                        "last hour" (time/subtract-milliseconds (time/now) (* i 30000))
-                                        "last 12 hours" (time/subtract-minutes (time/now) (* i 3))
-                                        "last day" (time/subtract-minutes (time/now) (* i 10))
-                                        "last week" (time/subtract-minutes (time/now) (* i 60))
-                                        "last month" (time/subtract-minutes (time/now) (* i 360))
-                                        "last 3 months" (time/subtract-days (time/now) (* i 2))
-                                        "last year" (time/subtract-days (time/now) (* i 7))))))))
-
-
-(defn generate-fake-data-status [timespan]
-  (->> (generate-timestamps timespan)
-       (mapv (fn [d]
-               {:timestamp d
-                :metric    "status"
-                :status   (rand 1)}))))
-
-(comment
-  (generate-fake-data))
 (defn timespan-to-period [timespan]
   (let [now (time/now)]
     (case timespan

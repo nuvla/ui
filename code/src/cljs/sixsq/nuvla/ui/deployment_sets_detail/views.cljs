@@ -390,6 +390,7 @@
 
 (defn DeleteButton
   [deployment-set warn-msg]
+  (js/console.info "DB" (str (select-keys deployment-set [:operations :id])) " - " warn-msg)
   (let [tr         (subscribe [::i18n-subs/tr])
         content    (depl-set->modal-content deployment-set)
         deletable? (general-utils/can-operation? "delete" deployment-set)
@@ -406,7 +407,7 @@
     (js/console.warn "Delete button - deletable?:" deletable? "forceable?:" forceable? "menu-item disabled?:" (and
                                                                                                     (not forceable?)
                                                                                                     (not deletable?))
-                     "deployment-set:" (select-keys deployment-set [:operations :id]))
+                     "deployment-set:" (str (select-keys deployment-set [:operations :id])))
     [uix/ModalDanger
      {:on-confirm         #(do
                              (js/console.warn "on-confirm DELETE deployment set deletable?:" deletable? "forceable?:" forceable?)

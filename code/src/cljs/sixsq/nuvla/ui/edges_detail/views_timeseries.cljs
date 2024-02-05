@@ -175,57 +175,62 @@
                                                                         :min   0
                                                                         :ticks {:display false}
                                                                         :title {:display false}}})}])]))
-(defn NetworkDataTimeSeries [selected-timespan data]
-  (r/with-let [selected-intefaces (r/atom [])]
-    (let [tr                                  (subscribe [::i18n-subs/tr])
-          interfaces                          (mapv #(get-in % [:dimensions :network.interface]) data)
-          selected-interfaces-data            (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface])) data)
-          bytes-received-dataset              (fn [{:keys [ts-data]}]
-                                                (->> ts-data
-                                                     (mapv (fn [d]
-                                                             [(:timestamp d)
-                                                              (/ (get-in d [:aggregations :bytes-received])
-                                                                 1000000)]))))
-                    bytes-transmitted-dataset (fn [{:keys [ts-data]}]
-                                                (->> ts-data
-                                                     (mapv (fn [d]
-                                                             [(:timestamp d)
-                                                              (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
-                                                                       1000000))]))))
-                    datasets-to-display      (loop [chart-colors        plot/pastel-colors-palette
-                                                    interfaces-data     selected-interfaces-data
-                                                    datasets-to-display []]
-                                               (if (empty? interfaces-data)
-                                                 datasets-to-display
-                                                 (recur (drop 2 chart-colors)
-                                                        (rest interfaces-data)
-                                                        (concat datasets-to-display [{:data            (bytes-transmitted-dataset (first interfaces-data))
-                                                                                      :label           (str "Transmitted (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
-                                                                                      :fill            true
-                                                                                      :backgroundColor (or (first chart-colors) "gray")
-                                                                                      :borderColor     (or (first chart-colors) "gray")
-                                                                                      :borderWidth     1}
-                                                                                     {:data            (bytes-received-dataset (first interfaces-data))
-                                                                                      :label           (str "Received (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
-                                                                                      :backgroundColor (or (second chart-colors) "gray")
-                                                                                      :fill            true
-                                                                                      :borderColor     (or (second chart-colors) "gray")
-                                                                                      :borderWidth     1}]))))]
-                [:div {:style {:display        "flex"
-                               :flex-direction "column"
-                               :align-items    "end"}}
-                 (when (seq interfaces)
-                   [ui/Dropdown {:inline          true
-                                 :multiple        true
-                                 :close-on-change true
-                                 :placeholder     (@tr [:choose-network-interface])
-                                 :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
-                                 :on-change       (ui-callback/value
-                                                    #(reset! selected-intefaces %))}])
-                 [plot/Line {:data    {:datasets datasets-to-display}
-                             :options (graph-options selected-timespan {:title    (str "Network Traffic (Megabytes)")
-                                                                        :y-config {:title {:display "true"
-                                                                                           :text    "Megabytes"}}})}]])))
+(defn NetworkDataTimeSeries [_selected-timespan data]
+  (when data
+    (let [interfaces          (mapv #(get-in % [:dimensions :network.interface]) data)
+          initial-interface   (or ((set interfaces) "eth0") (first interfaces))
+          selected-intefaces (r/atom [initial-interface])]
+      (fn [selected-timespan data]
+        (let [tr                        (subscribe [::i18n-subs/tr])
+              interfaces                (mapv #(get-in % [:dimensions :network.interface]) data)
+              selected-interfaces-data  (filterv #(contains? (set @selected-intefaces) (get-in % [:dimensions :network.interface])) data)
+              bytes-received-dataset    (fn [{:keys [ts-data]}]
+                                          (->> ts-data
+                                               (mapv (fn [d]
+                                                       [(:timestamp d)
+                                                        (/ (get-in d [:aggregations :bytes-received])
+                                                           1000000)]))))
+              bytes-transmitted-dataset (fn [{:keys [ts-data]}]
+                                          (->> ts-data
+                                               (mapv (fn [d]
+                                                       [(:timestamp d)
+                                                        (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
+                                                                 1000000))]))))
+              datasets-to-display       (loop [chart-colors        plot/pastel-colors-palette
+                                               interfaces-data     selected-interfaces-data
+                                               datasets-to-display []]
+                                          (if (empty? interfaces-data)
+                                            datasets-to-display
+                                            (recur (drop 2 chart-colors)
+                                                   (rest interfaces-data)
+                                                   (concat datasets-to-display [{:data            (bytes-transmitted-dataset (first interfaces-data))
+                                                                                 :label           (str "Transmitted (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
+                                                                                 :fill            true
+                                                                                 :backgroundColor (or (first chart-colors) "gray")
+                                                                                 :borderColor     (or (first chart-colors) "gray")
+                                                                                 :borderWidth     1}
+                                                                                {:data            (bytes-received-dataset (first interfaces-data))
+                                                                                 :label           (str "Received (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
+                                                                                 :backgroundColor (or (second chart-colors) "gray")
+                                                                                 :fill            true
+                                                                                 :borderColor     (or (second chart-colors) "gray")
+                                                                                 :borderWidth     1}]))))]
+          [:div {:style {:display        "flex"
+                         :flex-direction "column"
+                         :align-items    "end"}}
+           (when (seq interfaces)
+             [ui/Dropdown {:inline          true
+                           :multiple        true
+                           :close-on-change true
+                           :default-value   [initial-interface]
+                           :placeholder     (@tr [:choose-network-interface])
+                           :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
+                           :on-change       (ui-callback/value
+                                              #(reset! selected-intefaces %))}])
+           [plot/Line {:data    {:datasets datasets-to-display}
+                       :options (graph-options selected-timespan {:title    (str "Network Traffic (Megabytes)")
+                                                                  :y-config {:title {:display "true"
+                                                                                     :text    "Megabytes"}}})}]])))))
 
 (defn CSVModal [{:keys [on-close]}]
   (r/with-let [form-data (r/atom nil)

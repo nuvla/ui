@@ -406,8 +406,7 @@
            :danger-msg  warn-msg})]
     (js/console.warn "Delete button - deletable?:" deletable? "forceable?:" forceable? "menu-item disabled?:" (and
                                                                                                     (not forceable?)
-                                                                                                    (not deletable?))
-                     "deployment-set:" (str (select-keys deployment-set [:operations :id])))
+                                                                                                    (not deletable?)))
     [uix/ModalDanger
      {:on-confirm         #(do
                              (js/console.warn "on-confirm DELETE deployment set deletable?:" deletable? "forceable?:" forceable?)

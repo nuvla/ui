@@ -404,8 +404,10 @@
            :button-text (str/capitalize (@tr [:delete]))
            :danger-msg  warn-msg})]
     [uix/ModalDanger
-     {:on-confirm         #(dispatch [::events/delete {:deletable? deletable?
-                                                       :forceable? forceable?}])
+     {:on-confirm         #(do
+                             (js/console.warn "DELETE deployment set deletable?:" deletable? "forceable?:" forceable?)
+                             (dispatch [::events/delete {:deletable? deletable?
+                                                         :forceable? forceable?}]))
       :trigger            (r/as-element [ui/MenuItem
                                          {:disabled (and
                                                       (not forceable?)

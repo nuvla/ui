@@ -174,7 +174,7 @@
                            [:dispatch [::get-nuvlabox-playbooks id]]
                            [:dispatch [::fetch-edge-stats {:timespan timespan
                                                            :granularity (timespan->granularity timespan)
-                                                           :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}]]
+                                                           :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]}]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)
                                                                          nil)]]]}))

@@ -261,7 +261,9 @@
                         {:label "Network Traffic"
                          :value "network-stats"}
                         {:label "Ram Usage"
-                         :value "ram-stats"}]]
+                         :value "ram-stats"}
+                        {:label "NuvlaEdge status (online/offline)"
+                         :value "online-status-stats"}]]
     [ui/Modal {:close-icon true
                :open       true
                :onClose    on-close}

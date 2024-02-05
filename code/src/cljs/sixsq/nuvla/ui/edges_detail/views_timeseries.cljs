@@ -12,32 +12,13 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (def timespan-options ["last 15 minutes" "last hour" "last 12 hours" "last day" "last week" "last month" "last 3 months" "last year"])
 
-(def timespan->granularity {"last 15 minutes" "1-minutes"
-                            "last hour"       "2-minutes"
-                            "last 12 hours"   "3-minutes"
-                            "last day"        "30-minutes"
-                            "last week"       "1-hours"
-                            "last month"      "6-hours"
-                            "last 3 months"   "2-days"
-                            "last year"       "7-days"})
-
-(defn timespan-to-period [timespan]
-  (let [now (time/now)]
-    (case timespan
-      "last 15 minutes" [(time/subtract-minutes now 15) now]
-      "last hour" [(time/subtract-minutes now 60) now]
-      "last 12 hours" [(time/subtract-minutes now 360) now]
-      "last day" [(time/subtract-days now 1) now]
-      "last week" [(time/subtract-days now 7) now]
-      "last month" [(time/subtract-months now 1) now]
-      "last 3 months" [(time/subtract-months now 3) now]
-      "last year" [(time/subtract-years now 1) now])))
 (defn graph-options [timespan {:keys [title y-config plugins]}]
-  (let [[from to] (timespan-to-period timespan)]
+  (let [[from to] (ts-utils/timespan-to-period timespan)]
     {:plugins  (merge {:title {:display  true
                                :text     title
                                :position "top"}}
@@ -290,18 +271,18 @@
                    :disabled (or (not (:metric @form-data))
                                  (not (:timespan @form-data)))
                    :active   true
-                   :on-click #(let [[from to] (timespan-to-period (:timespan @form-data))]
+                   :on-click #(let [[from to] (ts-utils/timespan-to-period (:timespan @form-data))]
                                 (dispatch [::events/fetch-edge-stats-csv
                                            {:from        from
                                             :to          to
-                                            :granularity (get timespan->granularity (:timespan @form-data))
+                                            :granularity (get ts-utils/timespan->granularity (:timespan @form-data))
                                             :dataset     (:metric @form-data)}]))}]]]))
 
 (defn GraphLabel [timespan]
   [ui/Label {:basic true
              :size  "tiny"
              :style {:margin-top "1em"}}
-   (str "Per " (str/replace (get timespan->granularity timespan) #"-" " "))])
+   (str "Per " (str/replace (get ts-utils/timespan->granularity timespan) #"-" " "))])
 
 (defn TimeSeries []
   (let [edge-stats         (subscribe [::subs/edge-stats])
@@ -313,7 +294,7 @@
         fetch-edge-stats   (fn [timespan]
                              (dispatch [::events/set-selected-timespan
                                         timespan
-                                        (get timespan->granularity timespan)
+                                        (get ts-utils/timespan->granularity timespan)
                                         ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]]))]
 
     (fetch-edge-stats (first timespan-options))
@@ -337,8 +318,8 @@
                              :default-value   initial-timespan
                              :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
                              :on-change       (ui-callback/value
-                                                (fn [period]
-                                                  (dispatch [::events/set-selected-timespan period (timespan->granularity period) datasets])))}]]]]
+                                                (fn [timespan]
+                                                  (dispatch [::events/set-selected-timespan timespan (ts-utils/timespan->granularity timespan) datasets])))}]]]]
        [ui/TabPane
         [ui/Grid {:columns   2
                   :stackable true

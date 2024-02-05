@@ -13,30 +13,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]
-            [sixsq.nuvla.ui.utils.time :as time]))
-
-(defn timespan-to-period [timespan]
-  (let [now (time/now)]
-    (case timespan
-      "last 15 minutes" [(time/subtract-minutes now 15) now]
-      "last hour" [(time/subtract-minutes now 60) now]
-      "last 12 hours" [(time/subtract-minutes now 360) now]
-      "last day" [(time/subtract-days now 1) now]
-      "last week" [(time/subtract-days now 7) now]
-      "last month" [(time/subtract-months now 1) now]
-      "last 3 months" [(time/subtract-months now 3) now]
-      "last year" [(time/subtract-years now 1) now])))
-
-(def timespan->granularity {"last 15 minutes" "1-minutes"
-                            "last hour"       "2-minutes"
-                            "last 12 hours"   "3-minutes"
-                            "last day"        "30-minutes"
-                            "last week"       "1-hours"
-                            "last month"      "6-hours"
-                            "last 3 months"   "2-days"
-                            "last year"       "7-days"})
-
-(timespan-to-period "last 15 minutes")
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (reg-event-fx
   ::set-nuvlabox-status
@@ -173,7 +150,7 @@
                            [:dispatch [::get-deployments-for-edge id]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
                            [:dispatch [::fetch-edge-stats {:timespan timespan
-                                                           :granularity (timespan->granularity timespan)
+                                                           :granularity (ts-utils/timespan->granularity timespan)
                                                            :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]}]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)
@@ -429,7 +406,7 @@
 (reg-event-fx
   ::fetch-edge-stats
   (fn [{{:keys [::spec/nuvlabox ::spec/timespan] :as db} :db} [_ {:keys [granularity timespan datasets]}]]
-    (let [[from to] (timespan-to-period timespan)
+    (let [[from to] (ts-utils/timespan-to-period timespan)
           datasets-to-query (->> datasets
                                  (map #(str "dataset=" %))
                                  (str/join "&"))
@@ -438,7 +415,7 @@
        :http-xhrio {:method          :get
                     :uri             uri
                     :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success    [::fetch-edge-stats-success]
+                    :on-success      [::fetch-edge-stats-success]
                     :on-failure      [::fetch-edge-stats-failure]}})))
 
 (reg-event-fx

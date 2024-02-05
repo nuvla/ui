@@ -403,9 +403,13 @@
           {:header      (@tr [:delete-deployment-set])
            :button-text (str/capitalize (@tr [:delete]))
            :danger-msg  warn-msg})]
+    (js/console.warn "Delete button - deletable?:" deletable? "forceable?:" forceable? "menu-item disabled?:" (and
+                                                                                                    (not forceable?)
+                                                                                                    (not deletable?))
+                     "deployment-set:" (select-keys deployment-set [:operations :id]))
     [uix/ModalDanger
      {:on-confirm         #(do
-                             (js/console.warn "DELETE deployment set deletable?:" deletable? "forceable?:" forceable?)
+                             (js/console.warn "on-confirm DELETE deployment set deletable?:" deletable? "forceable?:" forceable?)
                              (dispatch [::events/delete {:deletable? deletable?
                                                          :forceable? forceable?}]))
       :trigger            (r/as-element [ui/MenuItem

@@ -339,7 +339,6 @@
                                         {:timespan    timespan
                                          :granularity (get timespan->granularity timespan)
                                          :datasets    ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats"]}]))]
-    (refresh-history @selected-timespan)
     (fetch-edge-stats (first timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}

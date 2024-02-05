@@ -694,16 +694,10 @@
               [DeleteButton @nuvlabox]))
 
           [components/RefreshMenu
-           {:action-id  (if (= :historical-data @active-tab)
-                          :nuvlabox-fetch-edge-stats
-                          refresh-action-id)
+           {:action-id  refresh-action-id
             :loading?   @loading?
             :on-refresh (fn [_]
-                          (let [now (time/now)]
-                            (js/console.log now)
-                            (if (= :historical-data @active-tab)
-                              (timeseries/refresh-history @current-timespan)
-                              (refresh-nuvlaedge-data uuid))))}]]]))))
+                          (refresh-nuvlaedge-data uuid))}]]]))))
 
 
 (defn get-available-actions

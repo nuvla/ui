@@ -56,8 +56,9 @@
                                   (apply max))
         formatted-tooltip (fn [tooltip-items load-key capacity-key]
                             (let [raw-data (. ^Map tooltip-items -raw)
-                                  aggregations (js->clj (. ^Map raw-data -aggregations) :keywordize-keys true)]
-                              (str "Load: " (get aggregations load-key) ", Capacity: " (get aggregations capacity-key))))]
+                                  aggregations (. ^Map raw-data -aggregations)]
+                              (-> (js->clj aggregations)
+                                  (select-keys [(name load-key) (name capacity-key)]))))]
     [:div
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
                                        :label           "Load"
@@ -82,9 +83,6 @@
                                                                               (formatted-tooltip tooltipItems :avg-cpu-load-5 :avg-cpu-capacity))}}}]}
 
                  :options (graph-options selected-timespan {:title    "Average CPU load (%)"
-                                                            :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
-                                                                                                      (str (. ^Map (. ^Map tooltipItems -raw) -aggregations)))}}
-                                                                       :legend  {:display false}}
                                                             :y-config {:max   (* max-avg-cpu-capacity 100)
                                                                        :min   0
                                                                        :title {:display "true"

@@ -241,10 +241,10 @@
         [ui/Modal {:close-icon true
                    :open       true
                    :onClose    on-close}
-         [ui/ModalHeader (@tr "Export data")]
+         [ui/ModalHeader (@tr [:export-data])]
          [ui/ModalContent
           [ui/ModalDescription
-           [:p "Choose the metric and the period for which you wish to export raw data in " [:b ".csv"] " format."]
+           [:p (@tr [:choose-metric-period])]
            [ui/Form
             [:div
 

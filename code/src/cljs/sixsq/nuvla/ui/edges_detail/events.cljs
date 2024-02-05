@@ -417,7 +417,6 @@
 (reg-event-fx
   ::fetch-edge-stats
   (fn [{{:keys [::spec/nuvlabox ::spec/timespan] :as db} :db} [_ {:keys [granularity timespan datasets]}]]
-    (js/console.log nuvlabox)
     (let [[from to] (timespan-to-period timespan)
           datasets-to-query (->> datasets
                                  (map #(str "dataset=" %))

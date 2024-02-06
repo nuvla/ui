@@ -58,7 +58,7 @@
                             (let [raw-data (. ^Map tooltip-items -raw)
                                   aggregations (. ^Map raw-data -aggregations)]
                               (str (name load-key) ": "
-                                   (aget aggregations (name load-key)) ", "
+                                   (general-utils/round-up (aget aggregations (name load-key)) :n-decimal 2) ", "
                                    (name capacity-key) ": "
                                    (aget aggregations (name capacity-key)))))]
     [:div

@@ -431,6 +431,7 @@
         validation                 (subscribe [::subs/deployment-set-validation])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     (fn [{:keys [deployment-set]}]
+      (js/console.warn "SaveButton save-enabled?:" @save-enabled?)
       [ui/Popup
        {:trigger
         (r/as-element
@@ -1376,6 +1377,7 @@
   (let [tr        @(subscribe [::i18n-subs/tr])
         disabled? @(subscribe [::subs/create-start-disabled?])
         on-click  #(dispatch [::events/save-start %])]
+    (js/console.warn "MenuBarNew")
     [ui/Menu
      [ui/MenuItem {:disabled disabled?
                    :on-click (partial on-click false)}

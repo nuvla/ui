@@ -487,6 +487,7 @@
   :<- [::persist-in-progress?]
   (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes? persist-in-progress?]
        [_ creating?]]
+    (js/console.warn "Sub ::save-enabled? creating?:" creating? "persist-in-progress?:" persist-in-progress? "(not (str/blank? (:name deployment-set-edited))):" (not (str/blank? (:name deployment-set-edited))) "(seq edges):" (boolean (seq edges)) "(seq apps-creation)" (boolean (seq apps-creation)))
     (and (not persist-in-progress?)
          (if creating?
            (and (not (str/blank? (:name deployment-set-edited)))

@@ -47,20 +47,21 @@
                      :y percent)))
         ts-data))
 
+(defn format-tooltip [tooltip-items load-key capacity-key]
+  (let [raw-data     (. ^Map tooltip-items -raw)
+        aggregations (. ^Map raw-data -aggregations)]
+    (str (name load-key) ": "
+         (general-utils/round-up (aget aggregations (name load-key)) :n-decimal 2) ", "
+         (name capacity-key) ": "
+         (aget aggregations (name capacity-key)))))
+
 (defn CpuLoadTimeSeries [selected-timespan data]
   (let [ts-data           (-> data
                               (first)
                               (:ts-data))
         max-avg-cpu-capacity (->> ts-data
                                   (mapv (fn [d] (get-in d [:aggregations :avg-cpu-capacity])))
-                                  (apply max))
-        formatted-tooltip (fn [tooltip-items load-key capacity-key]
-                            (let [raw-data (. ^Map tooltip-items -raw)
-                                  aggregations (. ^Map raw-data -aggregations)]
-                              (str (name load-key) ": "
-                                   (general-utils/round-up (aget aggregations (name load-key)) :n-decimal 2) ", "
-                                   (name capacity-key) ": "
-                                   (aget aggregations (name capacity-key)))))]
+                                  (apply max))]
     [:div
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
                                        :label           "Load"
@@ -68,21 +69,21 @@
                                        :borderColor     (first plot/default-colors-palette)
                                        :borderWidth     1
                                        :tooltip         {:callbacks {:label (fn [tooltipItems _data]
-                                                                              (formatted-tooltip tooltipItems :avg-cpu-load :avg-cpu-capacity))}}}
+                                                                              (format-tooltip tooltipItems :avg-cpu-load :avg-cpu-capacity))}}}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
                                        :label           "Load for the last 1m"
                                        :backgroundColor (second plot/default-colors-palette)
                                        :borderColor     (second plot/default-colors-palette)
                                        :borderWidth     1
                                        :tooltip         {:callbacks {:label (fn [tooltipItems _data]
-                                                                              (formatted-tooltip tooltipItems :avg-cpu-load-1 :avg-cpu-capacity))}}}
+                                                                              (format-tooltip tooltipItems :avg-cpu-load-1 :avg-cpu-capacity))}}}
                                       {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
                                        :label           "Load for the last 5m"
                                        :backgroundColor (nth plot/default-colors-palette 2)
                                        :borderColor     (nth plot/default-colors-palette 2)
                                        :borderWidth     1
                                        :tooltip         {:callbacks {:label (fn [tooltipItems _data]
-                                                                              (formatted-tooltip tooltipItems :avg-cpu-load-5 :avg-cpu-capacity))}}}]}
+                                                                              (format-tooltip tooltipItems :avg-cpu-load-5 :avg-cpu-capacity))}}}]}
 
                  :options (graph-options selected-timespan {:title    "Average CPU load (%)"
                                                             :y-config {:max   (* max-avg-cpu-capacity 100)
@@ -97,6 +98,8 @@
     [:div {:style {:margin-top 35}}
      [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
                                        :label           "RAM usage"
+                                       :tooltip         {:callbacks {:label (fn [tooltipItems _data]
+                                                                              (format-tooltip tooltipItems :avg-ram-used :avg-ram-capacity))}}
                                        :backgroundColor (first plot/default-colors-palette)
                                        :borderColor     (first plot/default-colors-palette)
                                        :borderWidth     1}]}
@@ -119,6 +122,8 @@
                                          (rest devices-data)
                                          (conj datasets-to-display {:data            (timestamp+percentage ts-data :avg-disk-used :avg-disk-capacity)
                                                                     :label           device-name
+                                                                    :tooltip         {:callbacks {:label (fn [tooltipItems _data]
+                                                                                                           (format-tooltip tooltipItems :avg-disk-used :avg-disk-capacity))}}
                                                                     :backgroundColor (or (first chart-colors) "gray")
                                                                     :borderColor     (or (first chart-colors) "gray")
                                                                     :borderWidth     1})))))]
@@ -161,7 +166,8 @@
 
                   :options (graph-options selected-timespan {:title    "NE Status (online/offline)"
                                                              :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
-                                                                                                       (str "value: " (.. ^Map tooltipItems -raw -status)))}}
+                                                                                                       (when-let [status (.. ^Map tooltipItems -raw -status)]
+                                                                                                         (str "status-average: " status)))}}
                                                                         :legend  {:display false}}
                                                              :y-config {:max   1
                                                                         :min   0

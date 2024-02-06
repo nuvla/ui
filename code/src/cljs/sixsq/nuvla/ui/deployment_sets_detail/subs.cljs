@@ -58,7 +58,6 @@
   :<- [::deployment-set-stored]
   :<- [::deployment-set-edited]
   (fn [[stored edited]]
-    (js/console.warn "Sub deployment-set-stored-and-edited stored:" (str stored) " edited:" (str edited))
     [stored edited]))
 
 (reg-sub
@@ -487,7 +486,6 @@
   :<- [::persist-in-progress?]
   (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes? persist-in-progress?]
        [_ creating?]]
-    (js/console.warn "Sub ::save-enabled? creating?:" creating? "persist-in-progress?:" persist-in-progress? "(not (str/blank? (:name deployment-set-edited))):" (not (str/blank? (:name deployment-set-edited))) "(seq edges):" (boolean (seq edges)) "(seq apps-creation)" (boolean (seq apps-creation)))
     (and (not persist-in-progress?)
          (if creating?
            (and (not (str/blank? (:name deployment-set-edited)))

@@ -62,7 +62,6 @@
   ;; called when editing page is entered the first time, and when changes are ignored
   ::reset
   (fn [{:keys [db]}]
-    (js/console.warn "reset")
     {:db (-> db
              (merge db spec/defaults)
              (assoc ::spec/reset-changes-event [::reset]))
@@ -86,7 +85,6 @@
 (reg-event-fx
   ::reset-create
   (fn [{{:keys [current-route] :as db} :db}]
-    (js/console.warn "reset-create")
     {:db (-> db
              (merge spec/defaults)
              (assoc (subs/create-apps-creation-db-path current-route) nil
@@ -283,7 +281,6 @@
   ::set-deployment-set
   (fn [{:keys [db]} [_ deployment-set fx {:keys [force-modules-reload?]}]]
     (let [deployment-set-edited (get db ::spec/deployment-set-edited)]
-      (js/console.warn "Event set-deployment-set:" (str deployment-set))
       {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
                      ::spec/deployment-set deployment-set
                      ::main-spec/loading? false

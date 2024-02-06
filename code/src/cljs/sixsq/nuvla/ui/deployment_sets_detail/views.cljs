@@ -390,7 +390,6 @@
 
 (defn DeleteButton
   [deployment-set warn-msg]
-  (js/console.warn "DeleteButton render" (str (select-keys deployment-set [:operations :id])) " - " warn-msg)
   (let [tr         (subscribe [::i18n-subs/tr])
         content    (depl-set->modal-content deployment-set)
         deletable? (general-utils/can-operation? "delete" deployment-set)
@@ -404,14 +403,9 @@
           {:header      (@tr [:delete-deployment-set])
            :button-text (str/capitalize (@tr [:delete]))
            :danger-msg  warn-msg})]
-    (js/console.warn "Delete button - deletable?:" deletable? "forceable?:" forceable? "menu-item disabled?:" (and
-                                                                                                    (not forceable?)
-                                                                                                    (not deletable?)))
     [uix/ModalDanger
-     {:on-confirm         #(do
-                             (js/console.warn "on-confirm DELETE deployment set deletable?:" deletable? "forceable?:" forceable?)
-                             (dispatch [::events/delete {:deletable? deletable?
-                                                         :forceable? forceable?}]))
+     {:on-confirm         #(dispatch [::events/delete {:deletable? deletable?
+                                                       :forceable? forceable?}])
       :trigger            (r/as-element [ui/MenuItem
                                          {:disabled (and
                                                       (not forceable?)
@@ -431,7 +425,6 @@
         validation                 (subscribe [::subs/deployment-set-validation])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     (fn [{:keys [deployment-set]}]
-      (js/console.warn "SaveButton save-enabled?:" (str @save-enabled?))
       [ui/Popup
        {:trigger
         (r/as-element
@@ -1377,7 +1370,6 @@
   (let [tr        @(subscribe [::i18n-subs/tr])
         disabled? @(subscribe [::subs/create-start-disabled?])
         on-click  #(dispatch [::events/save-start %])]
-    (js/console.warn "MenuBarNew")
     [ui/Menu
      [ui/MenuItem {:disabled disabled?
                    :on-click (partial on-click false)}

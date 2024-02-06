@@ -75,8 +75,7 @@
   ;; called when editing page is entered
   ::init
   (fn []
-    (js/console.warn "init")
-    {:fx [[:dispatch [::refresh-operational-status-and-reset]]
+    {:fx [[:dispatch [::refresh-operational-status]]
           [:dispatch [::set-changes-protection false]]]}))
 
 (reg-event-fx
@@ -333,13 +332,13 @@
      :fx               [[:dispatch [::job-events/get-jobs id]]]}))
 
 (reg-event-fx
-  ::refresh-operational-status-and-reset
+  ::refresh-operational-status
   (fn [{{:keys [current-route]} :db} [_]]
     (let [uuid (-> current-route :path-params :uuid)
           id   (uuid->depl-set-id uuid)]
       {::cimi-api-fx/operation
        [id "operational-status"
-        #(dispatch [::reset id])
+        refresh
         :on-error #(cimi-api-fx/default-error-message
                      %
                      "Failed to fetch operational status")]})))

@@ -431,7 +431,7 @@
         validation                 (subscribe [::subs/deployment-set-validation])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     (fn [{:keys [deployment-set]}]
-      (js/console.warn "SaveButton save-enabled?:" @save-enabled?)
+      (js/console.warn "SaveButton save-enabled?:" (str @save-enabled?))
       [ui/Popup
        {:trigger
         (r/as-element

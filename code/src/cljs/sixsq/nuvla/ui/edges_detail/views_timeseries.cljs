@@ -167,7 +167,7 @@
                   :options (graph-options selected-timespan {:title    "NE Status (online/offline)"
                                                              :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
                                                                                                        (when-let [status (.. ^Map tooltipItems -raw -status)]
-                                                                                                         (str "status-average: " status)))}}
+                                                                                                         (str "status-average: " (general-utils/round-up status :n-decimal 2))))}}
                                                                         :legend  {:display false}}
                                                              :y-config {:max   1
                                                                         :min   0
@@ -175,8 +175,8 @@
                                                                         :title {:display false}}})}])]))
 (defn NetworkDataTimeSeries [_selected-timespan data]
   (when data
-    (let [interfaces          (mapv #(get-in % [:dimensions :network.interface]) data)
-          initial-interface   (or ((set interfaces) "eth0") (first interfaces))
+    (let [interfaces         (mapv #(get-in % [:dimensions :network.interface]) data)
+          initial-interface  (or ((set interfaces) "eth0") (first interfaces))
           selected-intefaces (r/atom [initial-interface])]
       (fn [selected-timespan data]
         (let [tr                        (subscribe [::i18n-subs/tr])

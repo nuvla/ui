@@ -62,6 +62,7 @@
   ;; called when editing page is entered the first time, and when changes are ignored
   ::reset
   (fn [{:keys [db]}]
+    (js/console.warn "reset")
     {:db (-> db
              (merge db spec/defaults)
              (assoc ::spec/reset-changes-event [::reset]))

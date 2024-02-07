@@ -2,7 +2,18 @@
 
 ## Unreleased
 
+- Query params based browsing for tabs on Notifications page
+
 ## Released
+
+## [2.36.3] - 2024-01-29
+
+- Enable host-level management for Kubernetes-deployed NuvlaEdges
+
+## [2.36.2] - 2024-01-18
+
+- Fix for missing registries credentials on deployments linked to DGs
+- Make action check not deployment-specific
 
 ## [2.36.1] - 2023-12-21
 

@@ -321,6 +321,20 @@
 (def k8s-based "k8s")
 (def form-valid-strategies #{usb-install compose-install k8s-based})
 
+(defn PlaybooksToggle [!playbooks-toggle]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:div
+     [ui/Checkbox {:toggle    true
+                   :label     (@tr [:nuvlabox-modal-enable-playbooks])
+                   :checked   @!playbooks-toggle
+                   :on-change #(swap! !playbooks-toggle not)}]
+     [ui/Popup
+      {:trigger        (r/as-element [ui/Icon {:class icons/i-info
+                                               :style {:margin-left "1em"}}])
+       :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
+       :on             "hover"
+       :hide-on-scroll true}]]))
+
 (defn- InstallMethod
   [_]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -331,7 +345,8 @@
          [ui/CardGroup {:centered    true
                         :itemsPerRow 2}
           [ui/Card
-           {:on-click (fn [] (reset! install-strategy docker-based))}
+           {:on-click (fn [] (do (reset! install-strategy docker-based)
+                                 (reset! playbooks-toggle nil)))}
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker"]
             [icons/DockerIcon {:size :massive}]]]
@@ -344,7 +359,10 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Kubernetes"]
             [ui/Image {:src   "/ui/images/kubernetes.svg"
-                       :style {:width "110px"}}]]]]]
+                       :style {:width "110px"}}]]
+           (when (= k8s-based @install-strategy)
+             [ui/CardContent {:extra true}
+              [PlaybooksToggle playbooks-toggle]])]]]
         [ui/Form
          [ui/Header {:style {:text-align "center"}} "Docker"]
          [ui/Segment {:raised true}
@@ -366,18 +384,7 @@
           [:div {:style {:margin  "10px 5px 5px 5px"
                          :display (if (= @install-strategy "compose")
                                     "block" "none")}}
-           [ui/Checkbox {:toggle    true
-                         :label     (@tr [:nuvlabox-modal-enable-playbooks])
-                         :checked   @playbooks-toggle
-                         :on-change #(swap! playbooks-toggle not)}]
-           [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:class icons/i-info
-                                                     :style {:margin-left "1em"}}])
-             :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
-             :on             "hover"
-             :hide-on-scroll true}]]
-
-
+           [PlaybooksToggle playbooks-toggle]]
           [ui/Divider {:fitted     true
                        :horizontal true
                        :style      {:text-transform "lowercase"
@@ -420,7 +427,8 @@
                :target "_blank"}
            (@tr [:nuvlabox-modal-more-info])]]
          [:a {:href     ""
-              :on-click (fn [] (reset! install-strategy nil))} [icons/ArrowLeftIcon] "back to selection"]]))))
+              :on-click (fn [] (do (reset! install-strategy nil)
+                                   (reset! playbooks-toggle nil)))} [icons/ArrowLeftIcon] (@tr [:back-to-selection])]]))))
 
 
 (defn AddModal
@@ -682,6 +690,7 @@
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]
                  [ui/Button {:positive true
                              :loading  @creating
+                             :disabled (nil? (form-valid-strategies @install-strategy))
                              :on-click on-add-fn}
                   (@tr [:create])]]])])))
 

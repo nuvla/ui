@@ -368,30 +368,32 @@
 
 (defn state-aggs->state->count
   [summary]
-  (let [terms   (general-utils/aggregate-to-map
-                  (get-in summary [:aggregations :terms:state :buckets]))
-        created (:CREATED terms 0)
-        pending (:PENDING terms 0)]
+  (let [terms    (general-utils/aggregate-to-map
+                   (get-in summary [:aggregations :terms:state :buckets]))
+        created  (:CREATED terms 0)
+        pending  (:PENDING terms 0)
+        stopping (:STOPPING terms 0)]
     {:total    (:count summary)
      :started  (:STARTED terms 0)
      :created  created
      :stopped  (:STOPPED terms 0)
      :error    (:ERROR terms 0)
-     :pending  pending
-     :starting (+ (:STARTING terms 0) created pending)}))
+     :starting (:STARTING terms 0)
+     :updating (:UPDATING terms 0)
+     :stopping stopping
+     :pending  pending}))
 
 (def default-states
-  [{:key   :total
-    :icons [icons/i-rocket]
-    :label "TOTAL"}
+  [{:key            :total
+    :icons          [icons/i-rocket]
+    :label          "TOTAL"}
    {:key            :started,
     :icons          [(utils/state->icon utils/STARTED)],
     :label          utils/STARTED,
     :positive-color "green"}
-   {:key            :starting-plus,
+   {:key            :starting,
     :icons          [(utils/state->icon utils/STARTING)],
-    :label          utils/STARTING,
-    :positive-color "orange"}
+    :label          utils/STARTING}
    {:key            :stopped,
     :icons          [(utils/state->icon utils/STOPPED)],
     :label          utils/STOPPED,
@@ -401,24 +403,71 @@
     :label          utils/ERROR,
     :positive-color "red"}])
 
+(def extra-states
+  [{:key   :created
+    :icons [icons/i-sticky-note]
+    :label "CREATED"}
+   {:key   :pending
+    :icons [icons/i-sync]
+    :label utils/PENDING}
+   {:key   :updating
+    :icons [icons/i-sync]
+    :label utils/UPDATING}
+   {:key   :stopping
+    :icons [icons/i-sync]
+    :label utils/STOPPING}])
+
+(defn StatisticStatesExtra
+  [clickable? summary]
+  (let [states->counts (state-aggs->state->count summary)]
+    (into [ui/StatisticGroup {:size "mini"
+                              :style {:margin-top "10px"}}
+           (for [state extra-states]
+             ^{:key (:key state)}
+             [components/StatisticState
+              (merge state
+                     {:value                    (states->counts (:key state))
+                      :stacked?                 true
+                      :clickable?               (or (:clickable? state) clickable?)
+                      :set-state-selector-event ::events/set-state-selector
+                      :state-selector-subs      ::subs/state-selector})])])))
+
 (defn StatisticStates
   [_clickable? summary-subs _states]
-  (let [summary (subscribe [summary-subs])]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        summary               (subscribe [summary-subs])
+        extra-states-visible? (r/atom false)]
     (fn [clickable? _summary-subs states-override]
       (let [states->counts (state-aggs->state->count @summary)
             states         (or states-override default-states)]
-        [ui/GridColumn {:width 8}
-         (into [ui/StatisticGroup {:size  "tiny"
-                                   :style {:justify-content "center"}}
-                (for [state states]
-                  ^{:key (:key state)}
-                  [components/StatisticState
-                   (merge state
-                          {:value                    (states->counts (:key state))
-                           :stacked?                 true
-                           :clickable?               (or (:clickable? state) clickable?)
-                           :set-state-selector-event ::events/set-state-selector
-                           :state-selector-subs      ::subs/state-selector})])])]))))
+        [:<>
+         [ui/GridColumn {:width 8}
+          (into [ui/StatisticGroup {:size "tiny"}
+                 (for [state states]
+                   ^{:key (:key state)}
+                   [components/StatisticState
+                    (merge state
+                           {:value                    (states->counts (:key state))
+                            :stacked?                 true
+                            :clickable?               (or (:clickable? state) clickable?)
+                            :set-state-selector-event ::events/set-state-selector
+                            :state-selector-subs      ::subs/state-selector})])])
+          (when @extra-states-visible?
+            [ui/Segment
+             [StatisticStatesExtra true @summary]])]
+         [ui/GridColumn {:width 4}
+          [ui/Button {:icon     true
+                      :style    {:margin "1rem"}
+                      :on-click #(swap! extra-states-visible? not)}
+           (if @extra-states-visible?
+             [icons/AngleUpIcon]
+             [icons/AngleDownIcon])
+
+           (if @extra-states-visible?
+             (@tr [:show-fewer-states])
+             (@tr [:show-more-states]))]]]))))
+
+
 
 (defn TitledCardDeployments
   [& children]

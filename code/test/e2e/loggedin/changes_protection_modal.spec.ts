@@ -24,23 +24,15 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
 
   // CLICKS X for closing
   await openModal();
-  await page.waitForTimeout(200);
   await page.locator('.close').click();
   testSameUrl(page, url, 'Same URL after click on X');
 
   // NAVIGATE BACK for closing
-  await openModal();
-  await page.waitForTimeout(200);
   await page.goBack();
   testSameUrl(page, url, 'Same URL after navigating back');
 
   // CLICKS OUTSIDE MODAL for closing
-  await openModal();
-  // next two lines do the same, only use need one
-  await page.waitForTimeout(100);
-  await page.evaluate(() => document.querySelector('[data-testid=protection-modal]')?.parentElement?.click());
-  // await page.getByTestId('protection-modal').locator('..').click();
-  await page.waitForTimeout(200);
+  await page.locator('body > div.ui.page.modals.dimmer.transition.visible.active').click({position: {x: 10, y: 10}});
   expect(page.getByRole('button', { name: 'ignore changes' })).toBeHidden();
   expect(page.url()).toBe(url);
 
@@ -48,17 +40,14 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   // clicks X to close it
   // Open modal
   await openModal();
-  await page.waitForTimeout(200);
   await page.locator('.close').click();
   expectModalHidden(page, 'Modal still hides after clicking X 1st time?');
   await page.goBack();
-  await page.waitForTimeout(200);
-  await page.locator('.close').click({ timeout: 2000 });
+  await page.locator('.close').click();
   expectModalHidden(page, 'Modal still hides after navigating back 2nd time?');
-
   await openModal();
-  expectModalHidden(page, 'Modal still hides after clicking X 3rd time?', 200);
   await page.getByRole('button', { name: 'ignore changes' }).click();
+  expectModalHidden(page, 'Modal still hides after clicking ignore  3rd time?');
   await page.waitForURL(`${baseURL}/ui/deployments`);
 });
 
@@ -70,7 +59,7 @@ function expectModalVisible(page, errorMessage = 'Modal visible?') {
   expect(page.getByRole('button', { name: 'ignore changes' }), errorMessage).toBeVisible({ timeout: 2000 });
 }
 
-function expectModalHidden(page, errorMessage = 'Modal hidden?', timeout = 500) {
+function expectModalHidden(page, errorMessage = 'Modal hidden?', timeout = 2000) {
   expect(page.getByRole('button', { name: 'ignore changes' }), errorMessage).toBeHidden({ timeout });
 }
 

@@ -715,7 +715,7 @@
   [id creating?]
   (let [tr                         (subscribe [::i18n-subs/tr])
         can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
-        edit-op-allowed?           (subscribe [::subs/edit-op-allowed?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         fleet-filter               (subscribe [::subs/fleet-filter])]
     (tt/with-tooltip
@@ -1137,7 +1137,7 @@
         add-to-select (fn []
                         (dispatch [::events/get-selected-edge-ids creating?]))
         update-filter (fn []
-                        (dispatch [::events/update-fleet-filter])
+                        (dispatch [::events/update-fleet-filter creating?])
                         (dispatch [::events/set-opened-modal nil]))
         fleet-filter  (subscribe [::subs/fleet-filter])]
     (fn []

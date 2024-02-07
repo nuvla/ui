@@ -15,6 +15,7 @@
 (def ^:const CREATED "CREATED")
 (def ^:const STARTED "STARTED")
 (def ^:const STARTING "STARTING")
+(def ^:const STOPPING "STOPPING")
 (def ^:const STOPPED "STOPPED")
 (def ^:const ERROR "ERROR")
 (def ^:const PENDING "PENDING")
@@ -25,7 +26,8 @@
   (let [icons-map {STARTED  icons/i-circle-play
                    STARTING icons/i-loader
                    STOPPED  icons/i-circle-stop
-                   ERROR    icons/i-triangle-exclamation}]
+                   ERROR    icons/i-triangle-exclamation
+                   PENDING  icons/i-sync}]
     (get icons-map state)))
 
 (defn resolve-url-pattern
@@ -98,9 +100,7 @@
 
 (defn state-filter
   [state]
-  (case state
-    ("all" nil "TOTAL") nil
-    STARTING "state='RUNNING' or state='PENDING' or state='CREATED'"
+  (when-not (contains? #{"all" nil "TOTAL"} state)
     (str "state='" state "'")))
 
 (defn get-filter-param

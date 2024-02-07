@@ -12,6 +12,8 @@
             [sixsq.nuvla.ui.notifications.spec :as spec]
             [sixsq.nuvla.ui.notifications.subs :as subs]
             [sixsq.nuvla.ui.notifications.utils :as utils]
+            [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -1012,30 +1014,56 @@
       :danger-msg  (@tr [:notification-method-delete-warning])
       :button-text (@tr [:delete])}]))
 
+(defn NotifMethodTableCellEllipsis
+  [what]
+  [ui/TableCell {:floated :left
+                 :style   {:overflow      "hidden"
+                           :text-overflow "ellipsis"
+                           :max-width     "20ch"}}
+   [:span what]] )
 
 (defn single-notification-method
   [{:keys [method name description destination] :as notif-method}]
   [ui/TableRow
-   [ui/TableCell {:floated :left}
-    [:span name]]
-   [ui/TableCell {:floated :left}
-    [:span description]]
+   [NotifMethodTableCellEllipsis name]
+   [NotifMethodTableCellEllipsis description]
    [ui/TableCell {:floated :left}
     [:span method]]
-   [ui/TableCell {:floated :left
-                  :style   {:overflow      "hidden"
-                            :text-overflow "ellipsis"
-                            :max-width     "20ch"}}
-    [:span destination]]
-   [ui/TableCell {:floated :right
-                  :width   1
-                  :align   :right}
+   [NotifMethodTableCellEllipsis destination]
+   [ui/TableCell {:floated :right}
+    [ui/Popup
+     {:trigger        (r/as-element
+                        [:span
+                         [icons/BellIcon
+                           {:color    :green
+                            :style    {:cursor :pointer}
+                            :on-click #(dispatch [::events/test-notification-method notif-method])}]])
+      :content        "Test notification"
+      :on             "hover"
+      :position       "top left"
+      :hide-on-scroll true}]
     (when (general-utils/can-delete? notif-method)
-      [DeleteButtonNotificationMethod notif-method])
+      [ui/Popup
+       {:trigger        (r/as-element
+                          [:span
+                           [DeleteButtonNotificationMethod notif-method]])
+        :content        "Delete"
+        :on             "hover"
+        :position       "top left"
+        :hide-on-scroll true}])
     (when (general-utils/can-edit? notif-method)
-      [icons/GearIcon {:color    :blue
-                       :style    {:cursor :pointer}
-                       :on-click #(dispatch [::events/open-add-update-notification-method-modal notif-method false])}])]])
+      [ui/Popup
+       {:trigger        (r/as-element
+                          [:span
+                           [icons/GearIcon
+                            {:color    :blue
+                             :style    {:cursor :pointer}
+                             :on-click #(dispatch [::events/open-add-update-notification-method-modal notif-method false])}]])
+        :content        "Edit"
+        :on             "hover"
+        :position       "top left"
+        :hide-on-scroll true}]
+      )]])
 
 
 (defn DeleteButtonSubscriptionConfig
@@ -1192,26 +1220,29 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [{:menuItem {:content (str/capitalize (@tr [:subscriptions]))
-                 :key     :subscriptions
+                 :key     spec/subscriptions-key
                  :icon    "list alternate outline"}
       :render   #(r/as-element [TabSubscriptions])}
      {:menuItem {:content (str/capitalize (@tr [:methods]))
-                 :key     :methods
+                 :key     spec/methods-key
                  :icon    "at"}
       :render   #(r/as-element [TabMethods])}]))
 
 
 (defn TabsAll
   []
+  (dispatch [::events/init])
   (dispatch [::events/get-notification-methods])
   (fn []
     [components/LoadingPage {}
-     [ui/Tab
-      {:menu  {:secondary true
-               :pointing  true
-               :style     {:display        "flex"
-                           :flex-direction "row"
-                           :flex-wrap      "wrap"}}
+     [tab-plugin/Tab
+      {:db-path      [::spec/tab]
+       :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
+       :menu         {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
        :panes (tabs)}]]))
 
 

@@ -596,7 +596,8 @@
 
     (when (or state left-state)
       [ui/Grid {:style   {:color          "initial"
-                          :padding-bottom 5}
+                          :padding-bottom 5
+                          :padding-top 5}
                 :columns 2}
        [ui/GridColumn left-state]
        [ui/GridColumn {:text-align :right}

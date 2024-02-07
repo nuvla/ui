@@ -74,7 +74,7 @@
   ;; called when editing page is entered
   ::init
   (fn []
-    {:fx [[:dispatch [::refresh-operational-status-and-reset]]
+    {:fx [[:dispatch [::refresh-operational-status]]
           [:dispatch [::set-changes-protection false]]]}))
 
 (reg-event-fx
@@ -329,13 +329,13 @@
      :fx               [[:dispatch [::job-events/get-jobs id]]]}))
 
 (reg-event-fx
-  ::refresh-operational-status-and-reset
+  ::refresh-operational-status
   (fn [{{:keys [current-route]} :db} [_]]
     (let [uuid (-> current-route :path-params :uuid)
           id   (uuid->depl-set-id uuid)]
       {::cimi-api-fx/operation
        [id "operational-status"
-        #(dispatch [::reset id])
+        refresh
         :on-error #(cimi-api-fx/default-error-message
                      %
                      "Failed to fetch operational status")]})))
@@ -447,6 +447,7 @@
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db} [_ {:keys [forceable? deletable?]}]]
     (let [id (:id deployment-set)
+          navigate-deployment-groups #(dispatch [::routing-events/navigate routes/deployment-groups])
           cb (fn [response]
                (dispatch
                  [::job-events/wait-job-to-complete
@@ -454,14 +455,14 @@
                    :refresh-interval-ms 1000
                    :on-complete
                    #(do
-                      (dispatch [::routing-events/navigate routes/deployment-groups])
+                      (navigate-deployment-groups)
                       (when-not (= "SUCCESS" (:state %))
                         (cimi-api-fx/default-error-message
                           %
                           "Failed to delete deployment group")) ())}]))]
       (cond
         deletable?
-        {::cimi-api-fx/delete [id cb]}
+        {::cimi-api-fx/delete [id navigate-deployment-groups]}
         forceable?
         {::cimi-api-fx/operation [id "force-delete" cb]}))))
 
@@ -525,10 +526,13 @@
   (let [edges-path   (subs/current-route->edges-db-path current-route)
         fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))
         apps-path    (subs/create-apps-creation-db-path current-route)]
-    (merge {:fleet   (:resources (get-in db edges-path))
-            :modules (map
-                       (fn [app] (str (:id app) "_" (:version app)))
-                       (get-in db apps-path))}
+    (merge {:fleet      (:resources (get-in db edges-path))
+            :modules    (map
+                          (fn [app] (str (:id app) "_" (:version app)))
+                          (get-in db apps-path))
+            :overwrites (map
+                          (fn [app] (application-overwrites db 0 app nil))
+                          (get-in db apps-path))}
            (when fleet-filter {:fleet-filter fleet-filter})
            deployment-set-edited)))
 
@@ -538,7 +542,11 @@
         fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))]
     (merge {:applications-sets [{:id         (:id module-applications-sets)
                                  :version    (:version module-applications-sets)
-                                 :overwrites [(cond-> {:fleet (:resources (get-in db edges-path))}
+                                 :overwrites [(cond-> {:fleet (:resources (get-in db edges-path))
+                                                       :applications (map
+                                                                       (fn [app] (application-overwrites db 0 app nil))
+                                                                       (get-in module-applications-sets
+                                                                               [:content :applications-sets 0 :applications]))}
                                                       fleet-filter (assoc :fleet-filter fleet-filter))]}]}
            (dissoc deployment-set-edited :applications-sets))))
 
@@ -662,12 +670,14 @@
                 ::spec/deployment-set-edited] :as db} :db} [_ creating?]]
     (let [callback     (fn [response]
                          (dispatch [::set-edges response]))
-          fleet-filter (get-in deployment-set-edited subs/fleet-filter-path)
           edge-ids     (if creating?
                          (let [path (subs/current-route->edges-db-path current-route)]
                            (:resources (get-in db path)))
                          (get-target-fleet-ids deployment-set-edited))]
-      (if (or (seq edge-ids) fleet-filter)
+      (if (seq edge-ids)
+        ;; even for the fleet filter case, fetch the computed edges only:
+        ;; when the fleet filter changes, a recompute fleet action is still needed to refresh
+        ;; the actual edges targeted by the DG
         {::cimi-api-fx/search [:nuvlabox
                                {:filter      (general-utils/filter-eq-ids edge-ids)
                                 :last        10000
@@ -944,7 +954,8 @@
 (reg-event-fx
   ::get-edges-for-edge-picker-modal
   (fn [{:keys [current-route] :as db}]
-    (let [fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))]
+    (let [fleet-filter (or (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))
+                           (get-in db (subs/current-route->fleet-filter-db-path current-route)))]
       {:fx [[:dispatch [::get-picker-edges]]
             (when-not fleet-filter [:dispatch [::get-edge-picker-edges-summary]])]})))
 
@@ -953,13 +964,15 @@
   (fn [{{:keys [current-route
                 ::spec/edge-picker-ordering] :as db} :db} _]
     (let [ordering     (or edge-picker-ordering spec/default-ordering)
-          fleet-filter (get-in db (subs/current-route->fleet-filter-db-path current-route))
+          fleet-filter (or (get-in db (subs/current-route->fleet-filter-db-path current-route))
+                           (get-in db (subs/current-route->fleet-filter-edited-db-path current-route)))
           edges        (get-in db (subs/current-route->edges-db-path current-route))]
       {::cimi-api-fx/search
        [:nuvlabox
         (->> {:orderby (ordering->order-string ordering)
               :filter  (general-utils/join-and
                          (get-full-filter-string db)
+                         ;; when edges are NOT based on a filter, exclude the already selected edges
                          (when-not fleet-filter (general-utils/filter-neq-ids (:resources edges))))}
              (pagination-plugin/first-last-params
                db [::spec/edge-picker-pagination]))
@@ -1083,6 +1096,17 @@
          (dispatch [::add-edges creating? %]))]}))
 
 (reg-event-fx
+  ::update-fleet-filter-edge-ids
+  (fn [{db :db} [_]]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:filter (get-full-filter-string db)
+       :select "id"}
+      #(do
+         (dispatch [::set-opened-modal nil])
+         (dispatch [::set-edges %]))]}))
+
+(reg-event-fx
   ::show-fleet-changes-only
   (fn [{{:keys [::spec/changed-edges] :as db} :db} [_ changed-fleet]]
     {:db (assoc db ::spec/changed-edges
@@ -1110,7 +1134,7 @@
 
 (reg-event-fx
   ::update-fleet-filter
-  (fn [{{:keys [::spec/deployment-set ::spec/deployment-set-edited current-route] :as db} :db} [_]]
+  (fn [{{:keys [::spec/deployment-set ::spec/deployment-set-edited current-route] :as db} :db} [_ creating?]]
     (let [new-fleet-filter       (get-dynamic-fleet-filter-string db)
           updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
@@ -1121,7 +1145,10 @@
             [:dispatch [::set-changes-protection
                         (utils/unsaved-changes?
                           deployment-set updated-deployment-set)]]
-            [:dispatch [::get-edges]]]})))
+            (if creating?
+              ;; implicitly recompute the fleet during DG creation
+              [:dispatch [::update-fleet-filter-edge-ids]]
+              [:dispatch [::get-edges]])]})))
 
 (reg-event-fx
   ::get-apps-for-sets

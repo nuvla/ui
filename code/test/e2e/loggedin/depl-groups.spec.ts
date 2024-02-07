@@ -36,6 +36,8 @@ test('test', async ({ page }, { config }) => {
 
   await page.getByRole('button', { name: 'Add to deployment group' }).click();
 
+  await expect(page.getByRole('button', { name: 'Add to deployment group' })).toBeHidden();
+
   await page.locator('a:has-text("Save")').click();
 
   const depSetUrlRegExp = new RegExp(`${baseURL}/ui/deployment-groups/([0-9a-f-]{20,})`

@@ -74,7 +74,7 @@
   ;; called when editing page is entered
   ::init
   (fn []
-    {:fx [[:dispatch [::refresh-operational-status-and-reset]]
+    {:fx [[:dispatch [::refresh-operational-status]]
           [:dispatch [::set-changes-protection false]]]}))
 
 (reg-event-fx
@@ -329,13 +329,13 @@
      :fx               [[:dispatch [::job-events/get-jobs id]]]}))
 
 (reg-event-fx
-  ::refresh-operational-status-and-reset
+  ::refresh-operational-status
   (fn [{{:keys [current-route]} :db} [_]]
     (let [uuid (-> current-route :path-params :uuid)
           id   (uuid->depl-set-id uuid)]
       {::cimi-api-fx/operation
        [id "operational-status"
-        #(dispatch [::reset id])
+        refresh
         :on-error #(cimi-api-fx/default-error-message
                      %
                      "Failed to fetch operational status")]})))
@@ -447,6 +447,7 @@
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db} [_ {:keys [forceable? deletable?]}]]
     (let [id (:id deployment-set)
+          navigate-deployment-groups #(dispatch [::routing-events/navigate routes/deployment-groups])
           cb (fn [response]
                (dispatch
                  [::job-events/wait-job-to-complete
@@ -454,14 +455,14 @@
                    :refresh-interval-ms 1000
                    :on-complete
                    #(do
-                      (dispatch [::routing-events/navigate routes/deployment-groups])
+                      (navigate-deployment-groups)
                       (when-not (= "SUCCESS" (:state %))
                         (cimi-api-fx/default-error-message
                           %
                           "Failed to delete deployment group")) ())}]))]
       (cond
         deletable?
-        {::cimi-api-fx/delete [id cb]}
+        {::cimi-api-fx/delete [id navigate-deployment-groups]}
         forceable?
         {::cimi-api-fx/operation [id "force-delete" cb]}))))
 

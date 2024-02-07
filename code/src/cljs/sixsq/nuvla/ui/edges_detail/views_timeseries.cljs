@@ -348,7 +348,9 @@
           [ui/GridColumn {:textAlign "center"}
            [RamUsageTimeSeries @selected-timespan (:ram-stats @edge-stats)]
            [GraphLabel @selected-timespan]]]
-         [ui/GridRow
-          [ui/GridColumn {:textAlign "center"}
+         [ui/GridRow {:columns 1
+                      :centered true}
+          [ui/GridColumn {:textAlign "center"
+                          :width 8}
            [NEStatusTimeSeries @selected-timespan (:online-status-stats @edge-stats)]
            [GraphLabel @selected-timespan]]]]]])))

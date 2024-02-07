@@ -210,7 +210,7 @@
                                                                      :y-config {:title {:display "true"
                                                                                         :text    "Megabytes"}}})}]])))))
 
-(defn CSVModal [{:keys [on-close]}]
+(defn ExportDataModal [{:keys [on-close]}]
   (r/with-let [form-data (r/atom nil)
                metrics   [{:label "CPU Load"
                            :value "cpu-stats"}
@@ -284,24 +284,24 @@
    (str "Per " (str/replace (get ts-utils/timespan->granularity timespan) #"-" " "))])
 
 (defn TimeSeries []
-  (let [edge-stats         (subscribe [::subs/edge-stats])
-        loading?           (subscribe [::subs/loading?])
-        initial-timespan   (first timespan-options)
-        selected-timespan  (subscribe [::subs/timespan])
-        csv-modal-visible? (r/atom false)
-        datasets           ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]
-        fetch-edge-stats   (fn [timespan]
-                             (dispatch [::events/set-selected-timespan
-                                        timespan
-                                        (get ts-utils/timespan->granularity timespan)
-                                        datasets]))]
+  (let [edge-stats            (subscribe [::subs/edge-stats])
+        loading?              (subscribe [::subs/loading?])
+        initial-timespan      (first timespan-options)
+        selected-timespan     (subscribe [::subs/timespan])
+        export-modal-visible? (r/atom false)
+        datasets              ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]
+        fetch-edge-stats      (fn [timespan]
+                                (dispatch [::events/set-selected-timespan
+                                           timespan
+                                           (get ts-utils/timespan->granularity timespan)
+                                           datasets]))]
 
     (fetch-edge-stats (first timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}
              [ui/MenuItem {:icon     icons/i-export
                            :content  "Export data (.csv)"
-                           :on-click #(reset! csv-modal-visible? true)}]
+                           :on-click #(reset! export-modal-visible? true)}]
              [ui/MenuMenu {:position "right"}
               [ui/MenuItem
                [:span {:style {:display      "flex"
@@ -325,8 +325,8 @@
                   :divided   true
                   :celled    "internally"}
 
-         (when @csv-modal-visible?
-           [CSVModal {:on-close #(reset! csv-modal-visible? false)}])
+         (when @export-modal-visible?
+           [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
          [ui/GridRow
           [ui/GridColumn {:textAlign "center"}
            [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]

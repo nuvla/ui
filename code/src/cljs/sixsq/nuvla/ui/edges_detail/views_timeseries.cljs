@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edges-detail.views-timeseries
   (:require [clojure.string :as str]
+            [goog.object :as goog-obj]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -51,9 +52,9 @@
   (let [raw-data     (. ^Map tooltip-items -raw)
         aggregations (. ^Map raw-data -aggregations)]
     (str (name load-key) ": "
-         (general-utils/round-up (aget aggregations (name load-key)) :n-decimal 2) ", "
+         (general-utils/round-up (goog-obj/get aggregations (name load-key)) :n-decimal 2) ", "
          (name capacity-key) ": "
-         (aget aggregations (name capacity-key)))))
+         (goog-obj/get aggregations (name capacity-key)))))
 
 (defn CpuLoadTimeSeries [selected-timespan data]
   (let [ts-data           (-> data

@@ -16,6 +16,8 @@
 
 (def timespan-options ["last 15 minutes" "last hour" "last 12 hours" "last day" "last week" "last month" "last 3 months" "last year"])
 
+(defn data->ts-data [data] (-> data first :ts-data))
+
 (defn graph-options [timespan {:keys [title y-config plugins]}]
   (let [[from to] (ts-utils/timespan-to-period timespan)]
     {:plugins  (merge {:title {:display  true
@@ -27,13 +29,13 @@
      :scales   {:x {:type  "time"
                     :min   from
                     :max   to
-                    :time {:unit (case timespan
-                                   (or "last 15 minutes"
-                                       "last hour"
-                                       "last 12 hours") "minute"
-                                   "last day"          "hour"
-                                   "last year"         "month"
-                                   "day")}
+                    :time  {:unit (case timespan
+                                    (or "last 15 minutes"
+                                        "last hour"
+                                        "last 12 hours") "minute"
+                                    "last day" "hour"
+                                    "last year" "month"
+                                    "day")}
                     :title {:display "true"
                             :text    "Time"}}
                 :y y-config}}))
@@ -57,59 +59,45 @@
          (goog-obj/get aggregations (name capacity-key)))))
 
 (defn CpuLoadTimeSeries [selected-timespan data]
-  (let [ts-data           (-> data
-                              (first)
-                              (:ts-data))
-        max-avg-cpu-capacity (->> ts-data
-                                  (mapv (fn [d] (get-in d [:aggregations :avg-cpu-capacity])))
-                                  (apply max))]
+  (let [ts-data (data->ts-data data)]
     [:div
-     [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
-                                       :label           "Load"
-                                       :backgroundColor (first plot/default-colors-palette)
-                                       :borderColor     (first plot/default-colors-palette)
-                                       :borderWidth     1
-                                       :tooltip         {:callbacks {:label (fn [tooltipItems _data]
-                                                                              (format-tooltip tooltipItems :avg-cpu-load :avg-cpu-capacity))}}}
-                                      {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
-                                       :label           "Load for the last 1m"
-                                       :backgroundColor (second plot/default-colors-palette)
-                                       :borderColor     (second plot/default-colors-palette)
-                                       :borderWidth     1
-                                       :tooltip         {:callbacks {:label (fn [tooltipItems _data]
-                                                                              (format-tooltip tooltipItems :avg-cpu-load-1 :avg-cpu-capacity))}}}
-                                      {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
-                                       :label           "Load for the last 5m"
-                                       :backgroundColor (nth plot/default-colors-palette 2)
-                                       :borderColor     (nth plot/default-colors-palette 2)
-                                       :borderWidth     1
-                                       :tooltip         {:callbacks {:label (fn [tooltipItems _data]
-                                                                              (format-tooltip tooltipItems :avg-cpu-load-5 :avg-cpu-capacity))}}}]}
+     [plot/Line {:updateMode "none"
+                 :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
+                                          :label           "Load"
+                                          :backgroundColor (first plot/default-colors-palette)
+                                          :borderColor     (first plot/default-colors-palette)
+                                          :borderWidth     1}
+                                         {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
+                                          :label           "Load for the last 1m"
+                                          :backgroundColor (second plot/default-colors-palette)
+                                          :borderColor     (second plot/default-colors-palette)
+                                          :borderWidth     1}
+                                         {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
+                                          :label           "Load for the last 5m"
+                                          :backgroundColor (nth plot/default-colors-palette 2)
+                                          :borderColor     (nth plot/default-colors-palette 2)
+                                          :borderWidth     1}]}
 
-                 :options (graph-options selected-timespan {:title    "Average CPU load (%)"
-                                                            :y-config {:max   (* max-avg-cpu-capacity 100)
-                                                                       :min   0
-                                                                       :title {:display "true"
-                                                                               :text    "Percentage (%)"}}})}]]))
+                 :options    (graph-options selected-timespan {:title    "Average CPU load (%)"
+                                                               :y-config {:max   100
+                                                                          :min   0
+                                                                          :title {:display "true"
+                                                                                  :text    "Percentage (%)"}}})}]]))
 
 (defn RamUsageTimeSeries [selected-timespan data]
-  (let [ts-data (-> data
-                    (first)
-                    (:ts-data))]
+  (let [ts-data (data->ts-data data)]
     [:div {:style {:margin-top 35}}
-     [plot/Line {:data    {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
-                                       :label           "RAM usage"
-                                       :tooltip         {:callbacks {:label (fn [tooltipItems _data]
-                                                                              (format-tooltip tooltipItems :avg-ram-used :avg-ram-capacity))}}
-                                       :backgroundColor (first plot/default-colors-palette)
-                                       :borderColor     (first plot/default-colors-palette)
-                                       :borderWidth     1}]}
-
-                 :options (graph-options selected-timespan {:title    (str "Average RAM usage (%)")
-                                                            :y-config {:max   100
-                                                                       :min   0
-                                                                       :title {:display "true"
-                                                                               :text    "Percentage (%)"}}})}]]))
+     [plot/Line {:updateMode "none"
+                 :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
+                                          :label           "RAM usage"
+                                          :backgroundColor (first plot/default-colors-palette)
+                                          :borderColor     (first plot/default-colors-palette)
+                                          :borderWidth     1}]}
+                 :options    (graph-options selected-timespan {:title    (str "Average RAM usage (%)")
+                                                               :y-config {:max   100
+                                                                          :min   0
+                                                                          :title {:display "true"
+                                                                                  :text    "Percentage (%)"}}})}]]))
 
 (defn DiskUsageTimeSeries [selected-timespan data]
   (let [datasets-to-display (loop [chart-colors        plot/default-colors-palette
@@ -123,26 +111,23 @@
                                          (rest devices-data)
                                          (conj datasets-to-display {:data            (timestamp+percentage ts-data :avg-disk-used :avg-disk-capacity)
                                                                     :label           device-name
-                                                                    :tooltip         {:callbacks {:label (fn [tooltipItems _data]
-                                                                                                           (format-tooltip tooltipItems :avg-disk-used :avg-disk-capacity))}}
                                                                     :backgroundColor (or (first chart-colors) "gray")
                                                                     :borderColor     (or (first chart-colors) "gray")
                                                                     :borderWidth     1})))))]
     [:div
-     [plot/Line {:data    {:datasets datasets-to-display}
-                 :options (graph-options selected-timespan {:title    "Average Disk Usage (%)"
-                                                            :y-config {:max   100
-                                                                       :min   0
-                                                                       :title {:display "true"
-                                                                               :text    "Percentage (%)"}}})}]]))
+     [plot/Line {:updateMode "none"
+                 :data       {:datasets datasets-to-display}
+                 :options    (graph-options selected-timespan {:title    "Average Disk Usage (%)"
+                                                               :y-config {:max   100
+                                                                          :min   0
+                                                                          :title {:display "true"
+                                                                                  :text    "Percentage (%)"}}})}]]))
 
 
 
 
 (defn NEStatusTimeSeries [selected-timespan data]
-  (let [ts-data (-> data
-                    (first)
-                    (:ts-data))
+  (let [ts-data (data->ts-data data)
         dataset (->> ts-data
                      (mapv (fn [d]
                              {:x      (:timestamp d)
@@ -150,30 +135,31 @@
                               :status (-> d :aggregations :avg-online)})))]
     [:div
      (when (seq dataset)
-       [plot/Bar {:height  100
-                  :data    {:datasets [{:data               dataset
-                                        :label              "status"
-                                        :categoryPercentage 1.0
-                                        :barPercentage      1.0
-                                        :borderColor        (fn [ctx]
-                                                              (when-let [element-status (.. ^Map ctx -raw -status)]
-                                                                (let [color-gradient (plot/color-gradient element-status)]
-                                                                  (plot/to-rgb color-gradient))))
-                                        :backgroundColor    (fn [ctx]
-                                                              (when-let [element-status (.. ^Map ctx -raw -status)]
-                                                                (let [color-gradient (plot/color-gradient element-status)]
-                                                                  (plot/to-rgb color-gradient))))
-                                        :borderWidth        1}]}
+       [plot/Bar {:updateMode "none"
+                  :height     100
+                  :data       {:datasets [{:data               dataset
+                                           :label              "status"
+                                           :categoryPercentage 1.0
+                                           :barPercentage      1.0
+                                           :borderColor        (fn [ctx]
+                                                                 (when-let [element-status (.. ^Map ctx -raw -status)]
+                                                                   (let [color-gradient (plot/color-gradient element-status)]
+                                                                     (plot/to-rgb color-gradient))))
+                                           :backgroundColor    (fn [ctx]
+                                                                 (when-let [element-status (.. ^Map ctx -raw -status)]
+                                                                   (let [color-gradient (plot/color-gradient element-status)]
+                                                                     (plot/to-rgb color-gradient))))
+                                           :borderWidth        1}]}
 
-                  :options (graph-options selected-timespan {:title    "NE Status (online/offline)"
-                                                             :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
-                                                                                                       (when-let [status (.. ^Map tooltipItems -raw -status)]
-                                                                                                         (str "status-average: " (general-utils/round-up status :n-decimal 2))))}}
-                                                                        :legend  {:display false}}
-                                                             :y-config {:max   1
-                                                                        :min   0
-                                                                        :ticks {:display false}
-                                                                        :title {:display false}}})}])]))
+                  :options    (graph-options selected-timespan {:title    "NE Status (online/offline)"
+                                                                :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
+                                                                                                          (when-let [status (.. ^Map tooltipItems -raw -status)]
+                                                                                                            (str "online: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
+                                                                           :legend  {:display false}}
+                                                                :y-config {:max   1
+                                                                           :min   0
+                                                                           :ticks {:display false}
+                                                                           :title {:display false}}})}])]))
 (defn NetworkDataTimeSeries [_selected-timespan data]
   (when data
     (let [interfaces         (mapv #(get-in % [:dimensions :network.interface]) data)
@@ -226,23 +212,24 @@
                            :options         (mapv (fn [o] {:key o :text o :value o}) interfaces)
                            :on-change       (ui-callback/value
                                               #(reset! selected-intefaces %))}])
-           [plot/Line {:data    {:datasets datasets-to-display}
-                       :options (graph-options selected-timespan {:title    (str "Network Traffic (Megabytes)")
-                                                                  :y-config {:title {:display "true"
-                                                                                     :text    "Megabytes"}}})}]])))))
+           [plot/Line {:updateMode "none"
+                       :data       {:datasets datasets-to-display}
+                       :options    (graph-options selected-timespan {:title    (str "Network Traffic (Megabytes)")
+                                                                     :y-config {:title {:display "true"
+                                                                                        :text    "Megabytes"}}})}]])))))
 
 (defn CSVModal [{:keys [on-close]}]
   (r/with-let [form-data (r/atom nil)
-               metrics [{:label "CPU Load"
-                         :value "cpu-stats"}
-                        {:label "Disk Usage"
-                         :value "disk-stats"}
-                        {:label "Network Traffic"
-                         :value "network-stats"}
-                        {:label "Ram Usage"
-                         :value "ram-stats"}
-                        {:label "NuvlaEdge status (online/offline)"
-                         :value "online-status-stats"}]]
+               metrics   [{:label "CPU Load"
+                           :value "cpu-stats"}
+                          {:label "Disk Usage"
+                           :value "disk-stats"}
+                          {:label "Network Traffic"
+                           :value "network-stats"}
+                          {:label "Ram Usage"
+                           :value "ram-stats"}
+                          {:label "NuvlaEdge status (online/offline)"
+                           :value "online-status-stats"}]]
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])]
         [ui/Modal {:close-icon true
@@ -286,7 +273,7 @@
                                      (swap! form-data assoc :timespan (. t -value)))}]]))]]]]
          [ui/ModalActions
           [uix/Button {:text     "Export"
-                       :icon     [icons/i-share]
+                       :icon     icons/i-export
                        :positive true
                        :disabled (or (not (:metric @form-data))
                                      (not (:timespan @form-data)))
@@ -315,24 +302,24 @@
                              (dispatch [::events/set-selected-timespan
                                         timespan
                                         (get ts-utils/timespan->granularity timespan)
-                                        ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]]))]
+                                        datasets]))]
 
     (fetch-edge-stats (first timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}
-             [ui/MenuItem {:icon     [icons/i-share]
+             [ui/MenuItem {:icon     icons/i-export
                            :content  "Export data (.csv)"
                            :on-click #(reset! csv-modal-visible? true)}]
              [ui/MenuMenu {:position "right"}
               [ui/MenuItem
-               [:span {:style {:display     "flex"
-                               :align-items "center"
+               [:span {:style {:display      "flex"
+                               :align-items  "center"
                                :margin-right 5
-                               :color "rgba(40,40,40,.3)"}} "Showing data for the"]
+                               :color        "rgba(40,40,40,.3)"}} "Showing data for the"]
                [ui/Dropdown {:inline          true
-                             :style {:min-width 120
-                                     :display "flex"
-                                     :justify-content "space-between"}
+                             :style           {:min-width       120
+                                               :display         "flex"
+                                               :justify-content "space-between"}
                              :loading         @loading?
                              :close-on-change true
                              :default-value   initial-timespan

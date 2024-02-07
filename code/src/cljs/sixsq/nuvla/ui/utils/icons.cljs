@@ -670,4 +670,7 @@
   [opts]
   [I opts i-undo])
 
-(def i-share "share square outline")
+(def i-export "share square outline")
+(defn ExportIcon
+  [opts]
+  [I opts i-export])

@@ -48,8 +48,9 @@
 
 
 (defn merge-module
-  [{current-content :content :as current-module}
-   {resolved-content :content :as resolved-module}]
+  [{current-content :content :as _current-module}
+   {resolved-content :content :as resolved-module}
+   module-version-href]
   (let [params (merge-module-element :name #(select-keys % [:value])
                                      (:output-parameters current-content)
                                      (:output-parameters resolved-content))
@@ -66,7 +67,7 @@
               (seq params) (assoc :output-parameters params)
               (seq env) (assoc :environmental-variables env)
               (seq files) (assoc :files files))
-      :href (:id current-module))))
+      :href module-version-href)))
 
 (defn infra-app-compatible?
   [{app-subtype :subtype app-compatibility :compatibility :as _module}

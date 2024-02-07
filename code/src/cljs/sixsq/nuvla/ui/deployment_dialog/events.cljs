@@ -488,4 +488,4 @@
   (fn [{{:keys [::spec/deployment]} :db} [_ module-version-href]]
     {::cimi-api-fx/get
      [module-version-href
-      #(dispatch [::set-deployment (update deployment :module utils/merge-module %)])]}))
+      #(dispatch [::set-deployment (update deployment :module utils/merge-module % module-version-href)])]}))

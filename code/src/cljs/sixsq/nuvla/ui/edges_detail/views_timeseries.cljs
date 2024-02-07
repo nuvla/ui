@@ -19,6 +19,7 @@
 (defn data->ts-data [data] (-> data first :ts-data))
 
 (defn graph-options [timespan {:keys [title y-config plugins]}]
+
   (let [[from to] (ts-utils/timespan-to-period timespan)]
     {:plugins  (merge {:title {:display  true
                                :text     title
@@ -30,9 +31,9 @@
                     :min   from
                     :max   to
                     :time  {:unit (case timespan
-                                    (or "last 15 minutes"
-                                        "last hour"
-                                        "last 12 hours") "minute"
+                                    ("last 15 minutes"
+                                      "last hour"
+                                      "last 12 hours") "minute"
                                     "last day" "hour"
                                     "last year" "month"
                                     "day")}

@@ -51,48 +51,51 @@
         ts-data))
 
 (defn CpuLoadTimeSeries [selected-timespan data]
-  (let [ts-data (data->ts-data data)]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        ts-data (data->ts-data data)]
     [:div
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
-                                          :label           "Load"
+                                          :label           (@tr [:load])
                                           :backgroundColor (first plot/default-colors-palette)
                                           :borderColor     (first plot/default-colors-palette)
                                           :borderWidth     1}
                                          {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
-                                          :label           "Load for the last 1m"
+                                          :label           (@tr [:load-1-m])
                                           :backgroundColor (second plot/default-colors-palette)
                                           :borderColor     (second plot/default-colors-palette)
                                           :borderWidth     1}
                                          {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
-                                          :label           "Load for the last 5m"
+                                          :label           (@tr [:load-5-m])
                                           :backgroundColor (nth plot/default-colors-palette 2)
                                           :borderColor     (nth plot/default-colors-palette 2)
                                           :borderWidth     1}]}
 
-                 :options    (graph-options selected-timespan {:title    "Average CPU load (%)"
+                 :options    (graph-options selected-timespan {:title    (str (@tr [:average-cpu-load]) " (%)")
                                                                :y-config {:max   100
                                                                           :min   0
                                                                           :title {:display "true"
                                                                                   :text    "Percentage (%)"}}})}]]))
 
 (defn RamUsageTimeSeries [selected-timespan data]
-  (let [ts-data (data->ts-data data)]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        ts-data (data->ts-data data)]
     [:div {:style {:margin-top 35}}
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
-                                          :label           "RAM usage"
                                           :backgroundColor (first plot/default-colors-palette)
                                           :borderColor     (first plot/default-colors-palette)
                                           :borderWidth     1}]}
-                 :options    (graph-options selected-timespan {:title    (str "Average RAM usage (%)")
+                 :options    (graph-options selected-timespan {:title    (str (@tr [:average-ram-usage]) " (%)")
+                                                               :plugins  {:legend {:display false}}
                                                                :y-config {:max   100
                                                                           :min   0
                                                                           :title {:display "true"
                                                                                   :text    "Percentage (%)"}}})}]]))
 
 (defn DiskUsageTimeSeries [selected-timespan data]
-  (let [datasets-to-display (loop [chart-colors        plot/default-colors-palette
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        datasets-to-display (loop [chart-colors        plot/default-colors-palette
                                    devices-data        data
                                    datasets-to-display []]
                               (let [{:keys [ts-data dimensions]} (first devices-data)
@@ -109,17 +112,18 @@
     [:div
      [plot/Line {:updateMode "none"
                  :data       {:datasets datasets-to-display}
-                 :options    (graph-options selected-timespan {:title    "Average Disk Usage (%)"
+                 :options    (graph-options selected-timespan {:title    (str (@tr [:average-disk-usage]) " (%)")
                                                                :y-config {:max   100
                                                                           :min   0
                                                                           :title {:display "true"
-                                                                                  :text    "Percentage (%)"}}})}]]))
+                                                                                  :text    (str (@tr [:percentage]) " (%)")}}})}]]))
 
 
 
 
 (defn NEStatusTimeSeries [selected-timespan data]
-  (let [ts-data (data->ts-data data)
+  (let [tr      (subscribe [::i18n-subs/tr])
+        ts-data (data->ts-data data)
         dataset (->> ts-data
                      (mapv (fn [d]
                              {:x      (:timestamp d)
@@ -143,13 +147,14 @@
                                                                      (plot/to-rgb color-gradient))))
                                            :borderWidth        1}]}
 
-                  :options    (graph-options selected-timespan {:title    "NE Status (online/offline)"
+                  :options    (graph-options selected-timespan {:title    (str (@tr [:nuvlaedge-status]) " (" (@tr [:online]) "/" (@tr [:offline]) ")")
                                                                 :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
                                                                                                           (when-let [status (.. ^Map tooltipItems -raw -status)]
                                                                                                             (str "online: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
                                                                            :legend  {:display false}}
                                                                 :y-config {:max   1
                                                                            :min   0
+                                                                           :grid  {:display false}
                                                                            :ticks {:display false}
                                                                            :title {:display false}}})}])]))
 (defn NetworkDataTimeSeries [_selected-timespan data]
@@ -181,13 +186,13 @@
                                             (recur (drop 2 chart-colors)
                                                    (rest interfaces-data)
                                                    (concat datasets-to-display [{:data            (bytes-transmitted-dataset (first interfaces-data))
-                                                                                 :label           (str "Transmitted (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
+                                                                                 :label           (str (@tr [:transmitted]) " (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
                                                                                  :fill            true
                                                                                  :backgroundColor (or (first chart-colors) "gray")
                                                                                  :borderColor     (or (first chart-colors) "gray")
                                                                                  :borderWidth     1}
                                                                                 {:data            (bytes-received-dataset (first interfaces-data))
-                                                                                 :label           (str "Received (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
+                                                                                 :label           (str (@tr [:received]) " (" (get-in (first interfaces-data) [:dimensions :network.interface]) ")")
                                                                                  :backgroundColor (or (second chart-colors) "gray")
                                                                                  :fill            true
                                                                                  :borderColor     (or (second chart-colors) "gray")
@@ -206,24 +211,24 @@
                                               #(reset! selected-intefaces %))}])
            [plot/Line {:updateMode "none"
                        :data       {:datasets datasets-to-display}
-                       :options    (graph-options selected-timespan {:title    (str "Network Traffic (Megabytes)")
+                       :options    (graph-options selected-timespan {:title    (str (@tr [:network-traffic]) " (" (@tr [:megabytes]) ")")
                                                                      :y-config {:title {:display "true"
-                                                                                        :text    "Megabytes"}}})}]])))))
+                                                                                        :text    (@tr [:megabytes])}}})}]])))))
 
 (defn ExportDataModal [{:keys [on-close]}]
-  (r/with-let [form-data (r/atom nil)
-               metrics   [{:label "CPU Load"
-                           :value "cpu-stats"}
-                          {:label "Disk Usage"
-                           :value "disk-stats"}
-                          {:label "Network Traffic"
-                           :value "network-stats"}
-                          {:label "Ram Usage"
-                           :value "ram-stats"}
-                          {:label "NuvlaEdge status (online/offline)"
-                           :value "online-status-stats"}]]
+  (r/with-let [form-data (r/atom nil)]
     (fn []
-      (let [tr (subscribe [::i18n-subs/tr])]
+      (let [tr      (subscribe [::i18n-subs/tr])
+            metrics [{:label   (@tr [:average-cpu-load])
+                        :value "cpu-stats"}
+                       {:label (@tr [:average-disk-usage])
+                        :value "disk-stats"}
+                       {:label (@tr [:network-traffic])
+                        :value "network-stats"}
+                       {:label (@tr [:average-ram-usage])
+                        :value "ram-stats"}
+                       {:label (str (@tr [:nuvlaedge-status]) " (" (@tr [:online]) "/" (@tr [:offline]) ")")
+                        :value "online-status-stats"}]]
         [ui/Modal {:close-icon true
                    :open       true
                    :onClose    on-close}
@@ -236,7 +241,7 @@
 
              [ui/Header {:as       "h4"
                          :attached "top"
-                         :style    {:background-color "#00000008"}} "Metric"]
+                         :style    {:background-color "#00000008"}} (@tr [:metric])]
              (into [ui/Segment {:attached true}]
                    (for [metric metrics]
                      [ui/FormField
@@ -251,20 +256,20 @@
             [:div
              [ui/Header {:as       "h4"
                          :attached "top"
-                         :style    {:background-color "#00000008"}} "Period"]
+                         :style    {:background-color "#00000008"}} (str/capitalize (@tr [:period]))]
              (into [ui/Segment {:attached true}]
-                   (for [timespan timespan-options]
+                   (for [option timespan-options]
                      [ui/FormField
                       [ui/Radio
-                       {:label     timespan
+                       {:label     (@tr [(ts-utils/format-option option)])
                         :name      "radioGroupTimespan"
-                        :value     timespan
+                        :value     option
                         :checked   (= (:timespan @form-data)
-                                      timespan)
+                                      option)
                         :on-change (fn [_e t]
                                      (swap! form-data assoc :timespan (. t -value)))}]]))]]]]
          [ui/ModalActions
-          [uix/Button {:text     "Export"
+          [uix/Button {:text     (@tr [:export])
                        :icon     icons/i-export
                        :positive true
                        :disabled (or (not (:metric @form-data))
@@ -278,13 +283,15 @@
                                                 :dataset     (:metric @form-data)}]))}]]]))))
 
 (defn GraphLabel [timespan]
-  [ui/Label {:basic true
-             :size  "tiny"
-             :style {:margin-top "1em"}}
-   (str "Per " (str/replace (get ts-utils/timespan->granularity timespan) #"-" " "))])
-
+  (let [tr (subscribe [::i18n-subs/tr])
+        [number unit] (str/split (get ts-utils/timespan->granularity timespan) #"-")]
+    [ui/Label {:basic true
+               :size  "tiny"
+               :style {:margin-top "1em"}}
+     (str "Per " number " " (@tr [(keyword unit)]))]))
 (defn TimeSeries []
-  (let [edge-stats            (subscribe [::subs/edge-stats])
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
         initial-timespan      (first timespan-options)
         selected-timespan     (subscribe [::subs/timespan])
@@ -300,14 +307,14 @@
     (fn []
       [:div [ui/Menu {:width "100%"}
              [ui/MenuItem {:icon     icons/i-export
-                           :content  "Export data (.csv)"
+                           :content  (str (@tr [:export-data]) " (.csv)")
                            :on-click #(reset! export-modal-visible? true)}]
              [ui/MenuMenu {:position "right"}
               [ui/MenuItem
                [:span {:style {:display      "flex"
                                :align-items  "center"
                                :margin-right 5
-                               :color        "rgba(40,40,40,.3)"}} "Showing data for the"]
+                               :color        "rgba(40,40,40,.3)"}} (@tr [:showing-data-for])]
                [ui/Dropdown {:inline          true
                              :style           {:min-width       120
                                                :display         "flex"
@@ -315,7 +322,7 @@
                              :loading         @loading?
                              :close-on-change true
                              :default-value   initial-timespan
-                             :options         (mapv (fn [o] {:key o :text o :value o}) timespan-options)
+                             :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) timespan-options)
                              :on-change       (ui-callback/value
                                                 (fn [timespan]
                                                   (dispatch [::events/set-selected-timespan timespan (ts-utils/timespan->granularity timespan) datasets])))}]]]]

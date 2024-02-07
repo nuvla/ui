@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.utils.timeseries
-  (:require [sixsq.nuvla.ui.utils.time :as time]))
+  (:require [clojure.string :as str]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (defn timespan-to-period [timespan]
   (let [now (time/now)]
@@ -21,3 +22,8 @@
                             "last month"      "6-hours"
                             "last 3 months"   "2-days"
                             "last year"       "7-days"})
+
+(defn format-option [option-str]
+  (-> option-str
+      (str/replace #" " "-")
+      (keyword)))

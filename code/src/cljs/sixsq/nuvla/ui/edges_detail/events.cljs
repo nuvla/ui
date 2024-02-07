@@ -454,7 +454,11 @@
 (reg-event-fx
   ::fetch-edge-stats-failure
   (fn [{db :db} response]
-    (prn :failure response)
-    {:db (assoc db ::spec/loading? false)}))
+    (let [{:keys [message]} (response/parse response)]
+      {:db (assoc db ::spec/loading? false)
+       :fx [[:dispatch [::messages-events/add
+                        {:header  "Could not fetch NuvlaEdge statistics"
+                         :content message
+                         :type    :error}]]]})))
 
 

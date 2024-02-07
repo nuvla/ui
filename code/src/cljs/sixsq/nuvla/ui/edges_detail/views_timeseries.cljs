@@ -49,8 +49,8 @@
         ts-data))
 
 (defn format-tooltip [tooltip-items load-key capacity-key]
-  (let [raw-data     (. ^Map tooltip-items -raw)
-        aggregations (. ^Map raw-data -aggregations)]
+  (let [raw-data     (. tooltip-items -raw)
+        aggregations (. raw-data -aggregations)]
     (str (name load-key) ": "
          (general-utils/round-up (goog-obj/get aggregations (name load-key)) :n-decimal 2) ", "
          (name capacity-key) ": "

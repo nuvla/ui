@@ -204,25 +204,25 @@
       :else form-modules)))
 
 (defn AdditionalModulesTable [compose-files {:keys [on-module-change module-checked?]}]
-  (let [tr                                         (subscribe [::i18n-subs/tr])
-        scopes                                     (set (map :scope compose-files))
-        scopes-additional-features                 #{"security"}
-        scopes-peripherals-discovery               (set/difference scopes scopes-additional-features)]
+  (let [tr                            (subscribe [::i18n-subs/tr])
+        modules                       (set (map :scope compose-files))
+        modules-additional-features   #{"security"}
+        modules-peripherals-discovery (set/difference modules modules-additional-features)]
     [ui/Table style/definition
      [ui/TableBody
-      (when (seq scopes-additional-features)
+      (when (seq modules-additional-features)
         [ui/TableRow
          [ui/TableCell {:collapsing true} (@tr [:additional-features])]
          ^{:key (or key name)}
          [ui/TableCell
           (doall
-            (for [scope scopes-additional-features]
-              [ui/Checkbox {:key       scope
-                            :label     scope
-                            :checked   (module-checked? scope)
+            (for [module modules-additional-features]
+              [ui/Checkbox {:key       module
+                            :label     module
+                            :checked   (module-checked? module)
                             :style     {:margin "1em"}
-                            :on-change (on-module-change scope)}]))]])
-      (when (seq scopes-peripherals-discovery)
+                            :on-change (on-module-change module)}]))]])
+      (when (seq modules-peripherals-discovery)
         [ui/TableRow
          [ui/TableCell {:collapsing true} [ui/Popup
                                            {:trigger        (r/as-element [:span (@tr [:peripherals-discovery])])
@@ -232,13 +232,13 @@
          ^{:key (or key name)}
          [ui/TableCell
           (doall
-            (for [scope scopes-peripherals-discovery]
-              (when-not (#{"core" ""} scope)
-                [ui/Checkbox {:key       scope
-                              :label     scope
-                              :checked   (module-checked? scope)
+            (for [module modules-peripherals-discovery]
+              (when-not (#{"core" ""} module)
+                [ui/Checkbox {:key       module
+                              :label     module
+                              :checked   (module-checked? module)
                               :style     {:margin "1em"}
-                              :on-change (on-module-change scope)}])))]])]]))
+                              :on-change (on-module-change module)}])))]])]]))
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr             (subscribe [::i18n-subs/tr])

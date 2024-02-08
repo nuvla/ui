@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edges.add-modal
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
@@ -430,6 +431,12 @@
               :on-click (fn [] (do (reset! install-strategy nil)
                                    (reset! playbooks-toggle nil)))} [icons/ArrowLeftIcon] (@tr [:back-to-selection])]]))))
 
+(defn ScopeCheckbox [scope {:keys [on-change checked?]}]
+  [ui/Checkbox {:key       scope
+                :label     scope
+                :checked   checked?
+                :style     {:margin "1em"}
+                :on-change on-change}])
 
 (defn AddModal
   []
@@ -620,8 +627,22 @@
 
                  (let [{nb-rel                      :nb-rel
                         nb-assets                   :nb-assets
-                        {:keys [compose-files url]} :nb-selected}
-                       @nuvlabox-release-data]
+                        {:keys [compose-files url]} :nb-selected} @nuvlabox-release-data
+                       scopes                                     (set (map :scope compose-files))
+                       scopes-additional-features                 #{"security"}
+                       scopes-peripherals-discovery               (set/difference scopes scopes-additional-features)
+                       add-remove-scope                           (fn [scope]
+                                                                    (ui-callback/checked
+                                                                      (fn [checked]
+                                                                        (if checked
+                                                                          (swap! nuvlabox-release-data assoc
+                                                                                 :nb-assets
+                                                                                 (conj nb-assets scope))
+                                                                          (swap! nuvlabox-release-data assoc
+                                                                                 :nb-assets
+                                                                                 (-> @nuvlabox-release-data
+                                                                                     :nb-assets
+                                                                                     (disj scope)))))))]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
@@ -646,33 +667,30 @@
                          :target "_blank"
                          :style  {:margin "1em"}}
                      (@tr [:nuvlabox-release-notes])]
-                    [ui/Container
-                     (when (> (count compose-files) 1)
-                       [ui/Popup
-                        {:trigger        (r/as-element [:span (@tr [:additional-modules])])
-                         :content        (str (@tr [:additional-modules-popup]))
-                         :on             "hover"
-                         :hide-on-scroll true}])
-                     (doall
-                       (for [{:keys [scope]} compose-files]
-                         (when-not (#{"core" ""} scope)
-                           [ui/Checkbox {:key       scope
-                                         :label     scope
-                                         :checked   (contains?
-                                                      (:nb-assets @nuvlabox-release-data)
-                                                      scope)
-                                         :style     {:margin "1em"}
-                                         :on-change (ui-callback/checked
-                                                      (fn [checked]
-                                                        (if checked
-                                                          (swap! nuvlabox-release-data assoc
-                                                                 :nb-assets
-                                                                 (conj nb-assets scope))
-                                                          (swap! nuvlabox-release-data assoc
-                                                                 :nb-assets
-                                                                 (-> @nuvlabox-release-data
-                                                                     :nb-assets
-                                                                     (disj scope))))))}])))]
+                    [ui/Table style/definition
+                     [ui/TableBody
+                      (when (seq scopes-additional-features)
+                        [ui/TableRow
+                         [ui/TableCell {:collapsing true} (@tr [:additional-features])]
+                         ^{:key (or key name)}
+                         [ui/TableCell
+                          (doall
+                            (for [scope scopes-additional-features]
+                              [ScopeCheckbox scope {:checked?  (contains? (:nb-assets @nuvlabox-release-data) scope)
+                                                    :on-change (add-remove-scope scope) }]))]])
+                      (when (seq scopes-peripherals-discovery)
+                        [ui/TableRow
+                         [ui/TableCell {:collapsing true} [ui/Popup
+                                                           {:trigger        (r/as-element [:span (@tr [:peripherals-discovery])])
+                                                            :content        (str (@tr [:additional-modules-popup]))
+                                                            :on             "hover"
+                                                            :hide-on-scroll true}]]
+                         [ui/TableCell
+                          (doall
+                            (for [scope scopes-peripherals-discovery]
+                              (when-not (#{"core" ""} scope)
+                                [ScopeCheckbox scope {:checked?  (contains? (:nb-assets @nuvlabox-release-data) scope)
+                                                      :on-change (add-remove-scope scope)}])))]])]]
 
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:nuvlabox-modal-install-method])]

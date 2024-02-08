@@ -450,10 +450,7 @@
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
-                                    :nb-assets   (->> first-nb-release
-                                                      :compose-files
-                                                      (map :scope)
-                                                      set)}
+                                    :nb-assets #{}}
         nuvlabox-release-data      (r/atom default-release-data)
         advanced?                  (r/atom false)
         install-strategy-default   nil

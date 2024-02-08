@@ -149,7 +149,8 @@
                            [:dispatch [::job-events/get-jobs id]]
                            [:dispatch [::get-deployments-for-edge id]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
-                           [:dispatch [::fetch-edge-stats {:timespan timespan
+                           [:dispatch [::fetch-edge-stats {:nuvlaedge-id id
+                                                           :timespan timespan
                                                            :granularity (ts-utils/timespan->granularity timespan)
                                                            :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]}]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
@@ -405,12 +406,12 @@
 
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox ::spec/timespan] :as db} :db} [_ {:keys [granularity timespan datasets]}]]
+  (fn [{{:keys [::spec/nuvlabox ::spec/timespan] :as db} :db} [_ {:keys [granularity timespan datasets nuvlaedge-id]}]]
     (let [[from to] (ts-utils/timespan-to-period timespan)
           datasets-to-query (->> datasets
                                  (map #(str "dataset=" %))
                                  (str/join "&"))
-          uri (str "/api/" (:id nuvlabox) "/data?" datasets-to-query "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
+          uri (str "/api/" (or nuvlaedge-id (:id nuvlabox)) "/data?" datasets-to-query "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
       {:db (assoc db ::spec/loading? true)
        :http-xhrio {:method          :get
                     :uri             uri

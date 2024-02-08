@@ -121,6 +121,8 @@
                                                                 :color  "darkorange"}}
                                                  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation}])
                                                  (@tr [:nuvlabox-pre-release])])]))))
+
+
 (defn AddRevokeSSHButton
   [{:keys [id] :as _resource} operation show? _title _icon _button-text]
   (let [tr            (subscribe [::i18n-subs/tr])

@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.edges.add-modal
-  (:require [clojure.set :as set]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
@@ -619,7 +618,8 @@
 
                  (let [{nb-rel                      :nb-rel
                         nb-assets                   :nb-assets
-                        {:keys [compose-files url]} :nb-selected} @nuvlabox-release-data]
+                        {:keys [compose-files url]} :nb-selected}
+                       @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]

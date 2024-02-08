@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edges-detail.views
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.acl.views :as acl]
@@ -28,6 +29,7 @@
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
@@ -119,8 +121,6 @@
                                                                 :color  "darkorange"}}
                                                  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation}])
                                                  (@tr [:nuvlabox-pre-release])])]))))
-
-
 (defn AddRevokeSSHButton
   [{:keys [id] :as _resource} operation show? _title _icon _button-text]
   (let [tr            (subscribe [::i18n-subs/tr])
@@ -201,6 +201,42 @@
 
       :else form-modules)))
 
+(defn AdditionalModulesTable [compose-files {:keys [on-module-change module-checked?]}]
+  (let [tr                                         (subscribe [::i18n-subs/tr])
+        scopes                                     (set (map :scope compose-files))
+        scopes-additional-features                 #{"security"}
+        scopes-peripherals-discovery               (set/difference scopes scopes-additional-features)]
+    [ui/Table style/definition
+     [ui/TableBody
+      (when (seq scopes-additional-features)
+        [ui/TableRow
+         [ui/TableCell {:collapsing true} (@tr [:additional-features])]
+         ^{:key (or key name)}
+         [ui/TableCell
+          (doall
+            (for [scope scopes-additional-features]
+              [ui/Checkbox {:key       scope
+                            :label     scope
+                            :checked   (module-checked? scope)
+                            :style     {:margin "1em"}
+                            :on-change (on-module-change scope)}]))]])
+      (when (seq scopes-peripherals-discovery)
+        [ui/TableRow
+         [ui/TableCell {:collapsing true} [ui/Popup
+                                           {:trigger        (r/as-element [:span (@tr [:peripherals-discovery])])
+                                            :content        (str (@tr [:additional-modules-popup]))
+                                            :on             "hover"
+                                            :hide-on-scroll true}]]
+         ^{:key (or key name)}
+         [ui/TableCell
+          (doall
+            (for [scope scopes-peripherals-discovery]
+              (when-not (#{"core" ""} scope)
+                [ui/Checkbox {:key       scope
+                              :label     scope
+                              :checked   (module-checked? scope)
+                              :style     {:margin "1em"}
+                              :on-change (on-module-change scope)}])))]])]]))
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -285,26 +321,14 @@
                               :on-change   (ui-callback/value #(on-change-fn %))
                               :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]
            (let [{:keys [compose-files]} selected-release]
-             [ui/Container
-              (when (> (count compose-files) 1)
-                [ui/Popup
-                 {:trigger        (r/as-element [:span (@tr [:additional-modules])])
-                  :content        (str (@tr [:additional-modules-popup]))
-                  :on             "hover"
-                  :hide-on-scroll true}])
-              (doall
-                (for [{:keys [scope]} compose-files]
-                  (when-not (#{"core" ""} scope)
-                    (let [scope-key (keyword scope)]
-                      [ui/Checkbox {:key       scope
-                                    :label     scope
-                                    :checked   (get
-                                                 selected-modules
-                                                 scope-key
-                                                 false)
-                                    :style     {:margin "1em"}
-                                    :on-change (fn []
-                                                 (swap! form-data update-in [:modules scope-key] not))}]))))])]
+             [AdditionalModulesTable compose-files {:on-module-change (fn [scope]
+                                                                        (let [scope-key (keyword scope)]
+                                                                          (ui-callback/checked
+                                                                            (fn [checked]
+                                                                              (swap! form-data assoc-in [:modules scope-key] checked)))))
+                                                    :module-checked?  (fn [scope] (get selected-modules
+                                                                                       (keyword scope)
+                                                                                       false))}])]
           [uix/Accordion
            [:<>
             [ui/Form

@@ -430,14 +430,6 @@
          [:a {:href     ""
               :on-click (fn [] (do (reset! install-strategy nil)
                                    (reset! playbooks-toggle nil)))} [icons/ArrowLeftIcon] (@tr [:back-to-selection])]]))))
-
-(defn ScopeCheckbox [scope {:keys [on-change checked?]}]
-  [ui/Checkbox {:key       scope
-                :label     scope
-                :checked   checked?
-                :style     {:margin "1em"}
-                :on-change on-change}])
-
 (defn AddModal
   []
   (let [modal-id                   spec/modal-add-id
@@ -627,22 +619,7 @@
 
                  (let [{nb-rel                      :nb-rel
                         nb-assets                   :nb-assets
-                        {:keys [compose-files url]} :nb-selected} @nuvlabox-release-data
-                       scopes                                     (set (map :scope compose-files))
-                       scopes-additional-features                 #{"security"}
-                       scopes-peripherals-discovery               (set/difference scopes scopes-additional-features)
-                       add-remove-scope                           (fn [scope]
-                                                                    (ui-callback/checked
-                                                                      (fn [checked]
-                                                                        (if checked
-                                                                          (swap! nuvlabox-release-data assoc
-                                                                                 :nb-assets
-                                                                                 (conj nb-assets scope))
-                                                                          (swap! nuvlabox-release-data assoc
-                                                                                 :nb-assets
-                                                                                 (-> @nuvlabox-release-data
-                                                                                     :nb-assets
-                                                                                     (disj scope)))))))]
+                        {:keys [compose-files url]} :nb-selected} @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
@@ -667,30 +644,20 @@
                          :target "_blank"
                          :style  {:margin "1em"}}
                      (@tr [:nuvlabox-release-notes])]
-                    [ui/Table style/definition
-                     [ui/TableBody
-                      (when (seq scopes-additional-features)
-                        [ui/TableRow
-                         [ui/TableCell {:collapsing true} (@tr [:additional-features])]
-                         ^{:key (or key name)}
-                         [ui/TableCell
-                          (doall
-                            (for [scope scopes-additional-features]
-                              [ScopeCheckbox scope {:checked?  (contains? (:nb-assets @nuvlabox-release-data) scope)
-                                                    :on-change (add-remove-scope scope) }]))]])
-                      (when (seq scopes-peripherals-discovery)
-                        [ui/TableRow
-                         [ui/TableCell {:collapsing true} [ui/Popup
-                                                           {:trigger        (r/as-element [:span (@tr [:peripherals-discovery])])
-                                                            :content        (str (@tr [:additional-modules-popup]))
-                                                            :on             "hover"
-                                                            :hide-on-scroll true}]]
-                         [ui/TableCell
-                          (doall
-                            (for [scope scopes-peripherals-discovery]
-                              (when-not (#{"core" ""} scope)
-                                [ScopeCheckbox scope {:checked?  (contains? (:nb-assets @nuvlabox-release-data) scope)
-                                                      :on-change (add-remove-scope scope)}])))]])]]
+                    [edges-detail/AdditionalModulesTable compose-files
+                     {:on-module-change (fn [scope]
+                                          (ui-callback/checked
+                                            (fn [checked]
+                                              (if checked
+                                                (swap! nuvlabox-release-data assoc
+                                                       :nb-assets
+                                                       (conj nb-assets scope))
+                                                (swap! nuvlabox-release-data assoc
+                                                       :nb-assets
+                                                       (-> @nuvlabox-release-data
+                                                           :nb-assets
+                                                           (disj scope)))))))
+                      :module-checked?  (fn [scope] (contains? (:nb-assets @nuvlabox-release-data) scope))}]
 
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:nuvlabox-modal-install-method])]

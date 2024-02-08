@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
@@ -442,8 +443,8 @@
 (reg-event-fx
   ::fetch-edge-stats-csv-success
   (fn [{db :db} [_ response]]
-    (.open js/window (str "data:text/csv," response))
-    {:db (assoc db ::spec/loading? false)}))
+    {:db (assoc db ::spec/loading? false)
+     :fx [[:dispatch [::main-events/open-link (str "data:text/csv," response)]]]}))
 
 
 (reg-event-fx

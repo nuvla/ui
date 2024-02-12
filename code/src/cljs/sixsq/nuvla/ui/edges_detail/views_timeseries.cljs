@@ -12,13 +12,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
-
-(def timespan-options ["last 15 minutes" "last hour" "last 12 hours" "last day" "last week" "last month" "last 3 months" "last year"])
-
-(defn data->ts-data [data] (-> data first :ts-data))
-
 (defn graph-options [timespan {:keys [title y-config plugins]}]
-
   (let [[from to] (ts-utils/timespan-to-period timespan)]
     {:plugins  (merge {:title {:display  true
                                :text     title
@@ -52,7 +46,7 @@
 
 (defn CpuLoadTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (data->ts-data data)]
+        ts-data (ts-utils/data->ts-data data)]
     [:div
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
@@ -79,7 +73,7 @@
 
 (defn RamUsageTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (data->ts-data data)]
+        ts-data (ts-utils/data->ts-data data)]
     [:div {:style {:margin-top 35}}
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
@@ -123,7 +117,7 @@
 
 (defn NEStatusTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (data->ts-data data)
+        ts-data (ts-utils/data->ts-data data)
         dataset (->> ts-data
                      (mapv (fn [d]
                              {:x      (:timestamp d)
@@ -258,7 +252,7 @@
                          :attached "top"
                          :style    {:background-color "#00000008"}} (str/capitalize (@tr [:period]))]
              (into [ui/Segment {:attached true}]
-                   (for [option timespan-options]
+                   (for [option ts-utils/timespan-options]
                      [ui/FormField
                       [ui/Radio
                        {:label     (@tr [(ts-utils/format-option option)])
@@ -293,7 +287,7 @@
   (let [tr                    (subscribe [::i18n-subs/tr])
         edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
-        initial-timespan      (first timespan-options)
+        initial-timespan      (first ts-utils/timespan-options)
         selected-timespan     (subscribe [::subs/timespan])
         export-modal-visible? (r/atom false)
         datasets              ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]
@@ -303,7 +297,7 @@
                                            (get ts-utils/timespan->granularity timespan)
                                            datasets]))]
 
-    (fetch-edge-stats (first timespan-options))
+    (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}
              [ui/MenuItem {:icon     icons/i-export
@@ -322,7 +316,7 @@
                              :loading         @loading?
                              :close-on-change true
                              :default-value   initial-timespan
-                             :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) timespan-options)
+                             :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
                              :on-change       (ui-callback/value
                                                 (fn [timespan]
                                                   (dispatch [::events/set-selected-timespan timespan (ts-utils/timespan->granularity timespan) datasets])))}]]]]

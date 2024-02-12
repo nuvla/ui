@@ -27,3 +27,8 @@
   (-> option-str
       (str/replace #" " "-")
       (keyword)))
+
+(def timespan-options ["last 15 minutes" "last hour" "last 12 hours" "last day" "last week" "last month" "last 3 months" "last year"])
+
+(defn data->ts-data [data]
+  (-> data first :ts-data))

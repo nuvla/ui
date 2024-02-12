@@ -30,6 +30,9 @@
 (s/def ::edges-tags (s/nilable (s/* string?)))
 (s/def ::edges-without-edit-rights any?)
 
+(s/def ::fleet-stats (s/nilable any?))
+
+(s/def ::fleet-timespan (s/nilable any?))
 ; ssh key association
 (s/def ::ssh-keys-available any?)
 (s/def ::nuvlabox-clusters any?)
@@ -58,8 +61,9 @@
 (def table-view :table)
 (def map-view :map)
 (def cluster-view :cluster)
+(def history-view :history)
 
-(def view-types [cards-view table-view map-view cluster-view])
+(def view-types [cards-view table-view map-view cluster-view history-view])
 
 
 (def modal-add-id ::add)
@@ -96,6 +100,7 @@
    ::additional-filter             nil
    ::external-restriction-filter   nil
    ::select                        (table-plugin/build-bulk-edit-spec)
+   ::fleet-timespan                "last 15 minutes"
    })
 
 (def pagination-default {::pagination (pagination-plugin/build-spec

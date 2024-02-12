@@ -226,3 +226,11 @@
 (reg-sub
   ::selection
   :-> ::spec/select)
+
+(reg-sub
+  ::fleet-stats
+  :-> ::spec/fleet-stats)
+
+(reg-sub
+  ::fleet-timespan
+  :-> ::spec/fleet-timespan)

@@ -285,6 +285,11 @@
   [opts]
   [I opts i-chart-network])
 
+(def i-history "fas fa-history")
+
+(defn HistoryIcon [opts]
+  [I opts i-history])
+
 (def i-check "fal fa-check")
 (defn CheckIcon
   [opts]

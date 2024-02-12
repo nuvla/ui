@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.edges.events
-  (:require [clojure.edn :as edn]
+  (:require [ajax.core :as ajax]
+            [clojure.edn :as edn]
             [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -20,7 +22,8 @@
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
@@ -532,3 +535,41 @@
     {:storage/set {:session? false
                    :name     spec/local-storage-key
                    :value    (merge (edn/read-string storage) preference)}}))
+
+(reg-event-fx
+  ::fetch-fleet-stats
+  (fn [{{:keys [::spec/fleet-timespan] :as db} :db} [_ {:keys [granularity timespan datasets nuvlaedge-ids]}]]
+    (let [[from to] (ts-utils/timespan-to-period timespan)
+          filter-str (->> nuvlaedge-ids
+                          (map (fn [ne-id]
+                                 (str "id='" ne-id "'")))
+                          (str/join " or " )) ]
+      {:db (assoc db ::spec/loading? true)
+       :http-xhrio {:method          :patch
+                    :headers         {:bulk true}
+                    :uri             "/api/nuvlabox/data"
+                    :format          (ajax/json-request-format)
+                    :params          {:filter      (str "(" filter-str ")")
+                                      :dataset     datasets
+                                      :from        (.toISOString from)
+                                      :to          (.toISOString to)
+                                      :granularity granularity}
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-fleet-stats-success]
+                    :on-failure      [::fetch-fleet-stats-failure]}})))
+
+(reg-event-fx
+  ::fetch-fleet-stats-success
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/fleet-stats response
+                   ::spec/loading? false)}))
+
+(reg-event-fx
+  ::fetch-fleet-stats-failure
+  (fn [{db :db} response]
+    (let [{:keys [message]} (response/parse response)]
+      {:db (assoc db ::spec/loading? false)
+      :fx [[:dispatch [::messages-events/add
+                        {:header  "Could not fetch NuvlaEdge fleet statistics"
+                         :content message
+                         :type    :error}]]]})))

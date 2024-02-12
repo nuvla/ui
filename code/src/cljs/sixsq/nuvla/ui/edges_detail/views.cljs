@@ -1941,7 +1941,7 @@
                                                         (cond-> {}
                                                                 @enabled-changed? (assoc :enabled (not (:enabled @selected-playbook)))
                                                                 (and @run-changed? (not-empty @run)) (assoc :run @run))])
-                                             #_(refresh-nuvlaedge-data (general-utils/id->uuid (:id @nuvlabox)))
+                                             (refresh-nuvlaedge-data (general-utils/id->uuid (:id @nuvlabox)))
                                              (reset! run-changed? false)
                                              (reset! enabled-changed? false)
                                              (reset! run nil))}]]

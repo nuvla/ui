@@ -387,8 +387,11 @@
   ::add-coupon
   (fn [{{:keys [::spec/customer] :as db} :db} [_ coupon]]
     (let [on-success #(dispatch [::add-coupon-result %])
+          on-error   #(dispatch [::set-error (-> % response/parse-ex-info :message) :add-coupon])
           data       {:coupon coupon}]
-      {::cimi-api-fx/operation [(:id customer) "add-coupon" on-success :data data]
+      {::cimi-api-fx/operation [(:id customer) "add-coupon" on-success
+                                :data data
+                                :on-error on-error]
        :db                     (update db ::spec/loading conj :add-coupon)})))
 
 (reg-event-fx

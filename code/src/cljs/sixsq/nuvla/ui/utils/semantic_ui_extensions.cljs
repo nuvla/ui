@@ -166,12 +166,12 @@
       (when copy
         [ui/Popup
          {:trigger  (r/as-element
-                      [:span
-                       [ui/CopyToClipboard {:text value}
-                        [icons/Icon {:style {:margin-left 10}
-                                     :link  true
-                                     :size  "large"
-                                     :name  "clone"}]]])
+                      [:span [ui/CopyToClipboard {:text value}
+                              [:span [icons/Icon
+                                      {:style {:margin-left 10}
+                                       :link  true
+                                       :size  "large"
+                                       :name  "clone"}]]]])
           :position "top center"}
          [TR :click-to-copy]])]]]])
 
@@ -362,7 +362,7 @@
 
 (defn link-on-click
   [href event]
-  (when-not (.-metaKey event)              ;;cmd key not pressed
+  (when-not (.-metaKey event)                               ;;cmd key not pressed
     (dispatch [:sixsq.nuvla.ui.routing.events/navigate href])
     (.preventDefault event)
     (.stopPropagation event)))
@@ -597,7 +597,7 @@
     (when (or state left-state)
       [ui/Grid {:style   {:color          "initial"
                           :padding-bottom 5
-                          :padding-top 5}
+                          :padding-top    5}
                 :columns 2}
        [ui/GridColumn left-state]
        [ui/GridColumn {:text-align :right}

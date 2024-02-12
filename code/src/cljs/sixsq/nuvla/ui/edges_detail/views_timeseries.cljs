@@ -42,8 +42,8 @@
 
 (defn timestamp+percentage [ts-data load-key capacity-key]
   (mapv (fn [d]
-          (let [load     (get-in d [:aggregations load-key])
-                capacity (get-in d [:aggregations capacity-key])
+          (let [load     (get-in d [:aggregations load-key :value])
+                capacity (get-in d [:aggregations capacity-key :value])
                 percent  (-> (general-utils/percentage load capacity)
                              (general-utils/round-up :n-decimal 0))]
             (assoc d :x (:timestamp d)
@@ -128,7 +128,7 @@
                      (mapv (fn [d]
                              {:x      (:timestamp d)
                               :y      1
-                              :status (-> d :aggregations :avg-online)})))]
+                              :status (-> d :aggregations :avg-online :value)})))]
     [:div
      (when (seq dataset)
        [plot/Bar {:updateMode "none"
@@ -170,13 +170,13 @@
                                           (->> ts-data
                                                (mapv (fn [d]
                                                        [(:timestamp d)
-                                                        (/ (get-in d [:aggregations :bytes-received])
+                                                        (/ (get-in d [:aggregations :bytes-received :value])
                                                            1000000)]))))
               bytes-transmitted-dataset (fn [{:keys [ts-data]}]
                                           (->> ts-data
                                                (mapv (fn [d]
                                                        [(:timestamp d)
-                                                        (* -1 (/ (get-in d [:aggregations :bytes-transmitted])
+                                                        (* -1 (/ (get-in d [:aggregations :bytes-transmitted :value])
                                                                  1000000))]))))
               datasets-to-display       (loop [chart-colors        plot/pastel-colors-palette
                                                interfaces-data     selected-interfaces-data

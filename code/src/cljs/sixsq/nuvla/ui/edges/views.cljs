@@ -1019,7 +1019,7 @@
           spec/table-view [NuvlaboxTable]
           spec/map-view [NuvlaboxMap]
           spec/cluster-view [views-clusters/NuvlaboxClusters]
-          spec/history-view [views-timeseries/FleetStatusTimeSeries]
+          spec/history-view [views-timeseries/FleetTimeSeries]
           [NuvlaboxTable])
         [Pagination @view-type]]])))
 

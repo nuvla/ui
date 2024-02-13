@@ -180,7 +180,8 @@
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                      ::main-spec/loading? false)
-       :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
+       :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]
+            [:dispatch [::fetch-fleet-stats]]]})))
 
 
 (reg-event-fx
@@ -307,8 +308,7 @@
             [:dispatch [::get-nuvlabox-locations]]
             [:dispatch [::routing-events/store-in-query-param {:db-path [db-path]
                                                                :value   state-selector}]]
-            [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]
-             ]]})))
+            [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]]})))
 
 
 (reg-event-fx
@@ -536,11 +536,21 @@
                    :name     spec/local-storage-key
                    :value    (merge (edn/read-string storage) preference)}}))
 
+(def stats-to-query ["online-status-stats"])
+
+(reg-event-fx
+  ::set-selected-fleet-timespan
+  (fn [{db :db} [_ timespan]]
+    {:db (assoc db ::spec/fleet-timespan timespan)
+     :fx [[:dispatch [::fetch-fleet-stats]]] }))
+
 (reg-event-fx
   ::fetch-fleet-stats
-  (fn [{{:keys [::spec/fleet-timespan] :as db} :db} [_ {:keys [granularity timespan datasets nuvlaedge-ids]}]]
-    (let [[from to] (ts-utils/timespan-to-period timespan)
-          filter-str (->> nuvlaedge-ids
+  (fn [{{:keys [::spec/fleet-timespan ::spec/nuvlaboxes] :as db} :db}]
+    (let [[from to] (ts-utils/timespan-to-period fleet-timespan)
+          filter-str (->> nuvlaboxes
+                          (:resources)
+                          (mapv :id)
                           (map (fn [ne-id]
                                  (str "id='" ne-id "'")))
                           (str/join " or " )) ]
@@ -550,10 +560,10 @@
                     :uri             "/api/nuvlabox/data"
                     :format          (ajax/json-request-format)
                     :params          {:filter      (str "(" filter-str ")")
-                                      :dataset     datasets
+                                      :dataset     stats-to-query
                                       :from        (.toISOString from)
                                       :to          (.toISOString to)
-                                      :granularity granularity}
+                                      :granularity (ts-utils/timespan->granularity fleet-timespan)}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-fleet-stats-success]
                     :on-failure      [::fetch-fleet-stats-failure]}})))

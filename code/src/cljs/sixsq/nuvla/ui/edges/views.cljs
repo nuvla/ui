@@ -435,10 +435,7 @@
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
-                                    :nb-assets   (->> first-nb-release
-                                                      :compose-files
-                                                      (map :scope)
-                                                      set)}
+                                    :nb-assets   #{}}
         nuvlabox-release-data      (r/atom default-release-data)
         advanced?                  (r/atom false)
         install-strategy-default   nil
@@ -627,33 +624,20 @@
                          :target "_blank"
                          :style  {:margin "1em"}}
                      (@tr [:nuvlabox-release-notes])]
-                    [ui/Container
-                     (when (> (count compose-files) 1)
-                       [ui/Popup
-                        {:trigger        (r/as-element [:span (@tr [:additional-modules])])
-                         :content        (str (@tr [:additional-modules-popup]))
-                         :on             "hover"
-                         :hide-on-scroll true}])
-                     (doall
-                       (for [{:keys [scope]} compose-files]
-                         (when-not (#{"core" ""} scope)
-                           [ui/Checkbox {:key       scope
-                                         :label     scope
-                                         :checked   (contains?
-                                                      (:nb-assets @nuvlabox-release-data)
-                                                      scope)
-                                         :style     {:margin "1em"}
-                                         :on-change (ui-callback/checked
-                                                      (fn [checked]
-                                                        (if checked
-                                                          (swap! nuvlabox-release-data assoc
-                                                                 :nb-assets
-                                                                 (conj nb-assets scope))
-                                                          (swap! nuvlabox-release-data assoc
-                                                                 :nb-assets
-                                                                 (-> @nuvlabox-release-data
-                                                                     :nb-assets
-                                                                     (disj scope))))))}])))]
+                    [edges-detail/AdditionalModulesTable compose-files
+                     {:on-module-change (fn [scope]
+                                          (ui-callback/checked
+                                            (fn [checked]
+                                              (if checked
+                                                (swap! nuvlabox-release-data assoc
+                                                       :nb-assets
+                                                       (conj nb-assets scope))
+                                                (swap! nuvlabox-release-data assoc
+                                                       :nb-assets
+                                                       (-> @nuvlabox-release-data
+                                                           :nb-assets
+                                                           (disj scope)))))))
+                      :module-checked?  (fn [scope] (contains? (:nb-assets @nuvlabox-release-data) scope))}]
 
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:nuvlabox-modal-install-method])]

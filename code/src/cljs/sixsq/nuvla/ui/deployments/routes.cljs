@@ -61,7 +61,7 @@
         ::routes/deployment-groups-details
         (if (= @uuid "create")
           (dispatch [::dsd-events/init-create])
-          (dispatch [::dsd-events/init]))
+          (dispatch [::dsd-events/init @uuid]))
 
         nil)
       [:<>

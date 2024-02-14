@@ -47,7 +47,7 @@
                :frequency 10000
                :event     [::get-deployment-set
                            (uuid->depl-set-id uuid)
-                           {:force-modules-reload? true}]}]]
+                           {:force-modules-reload? false}]}]]
             [:dispatch
              [::main-events/action-interval-start
               {:id        refresh-action-deployments-id
@@ -59,22 +59,13 @@
   (dispatch [::refresh]))
 
 (reg-event-fx
-  ;; called when editing page is entered the first time, and when changes are ignored
-  ::reset
-  (fn [{:keys [db]}]
-    {:db (-> db
-             (merge db spec/defaults)
-             (assoc ::spec/reset-changes-event [::reset]))
-     :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
-          [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
-          [:dispatch [::refresh]]
-          [:dispatch [::enable-form-validation]]]}))
-
-(reg-event-fx
   ;; called when editing page is entered
   ::init
-  (fn []
-    {:fx [[:dispatch [::refresh-operational-status]]
+  (fn [_ [_ uuid]]
+    {:fx [[::get-deployment-set
+           (uuid->depl-set-id uuid)
+           {:force-modules-reload? true}]
+          [:dispatch [::refresh-operational-status]]
           [:dispatch [::set-changes-protection false]]]}))
 
 (reg-event-fx

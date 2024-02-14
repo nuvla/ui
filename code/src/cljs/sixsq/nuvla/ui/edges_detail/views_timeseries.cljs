@@ -138,13 +138,15 @@
                                            :categoryPercentage 1.0
                                            :barPercentage      1.0
                                            :borderColor (fn [ctx]
-                                                              (when-let [element-status (.. ^Map ctx -raw -status)]
+                                                              (if-let [element-status (.. ^Map ctx -raw -status)]
                                                                 (let [color-gradient (plot/color-gradient element-status)]
-                                                                  (plot/to-rgb color-gradient))))
-                                           :backgroundColor (fn [ctx]
-                                                                  (when-let [element-status (.. ^Map ctx -raw -status)]
+                                                                  (plot/to-rgb color-gradient))
+                                                                "gray"))
+                                          :backgroundColor (fn [ctx]
+                                                                  (if-let [element-status (.. ^Map ctx -raw -status)]
                                                                     (let [color-gradient (plot/color-gradient element-status)]
-                                                                      (plot/to-rgb color-gradient))))
+                                                                      (plot/to-rgb color-gradient))
+                                                                    "gray"))
                                            :borderWidth        1}]
                                          [])}
 

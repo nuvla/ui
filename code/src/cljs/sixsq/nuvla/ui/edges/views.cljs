@@ -435,7 +435,7 @@
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
-                                    :nb-assets   #{}}
+                                    :nb-assets   #{""}}
         nuvlabox-release-data      (r/atom default-release-data)
         advanced?                  (r/atom false)
         install-strategy-default   nil
@@ -616,9 +616,7 @@
                                                            utils/get-major-version
                                                            general-utils/str->int))
                                        (swap! nuvlabox-release-data
-                                              assoc :nb-selected nb-selected)
-                                       (swap! nuvlabox-release-data assoc :nb-assets
-                                              (set (map :scope (:compose-files nb-selected)))))))}]
+                                              assoc :nb-selected nb-selected))))}]
 
                     [:a {:href   url
                          :target "_blank"

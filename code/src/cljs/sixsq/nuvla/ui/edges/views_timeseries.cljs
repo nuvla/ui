@@ -33,40 +33,38 @@
                           x-config)
                 :y y-config}}))
 
-(defn FleetStatusTimeSeries [timespan data]
-  (let [data (ts-utils/data->ts-data data)
-        online-dataset (->> data
-                            (map (fn [d]
-                                   (let [avg-value (get-in d [:aggregations :adjusted-avg-avg-online :value])]
-                                     (assoc d :x (:timestamp d)
-                                              :y (* (general-utils/round-up avg-value :n-decimal 2) 100))))))
-        offline-dataset (->> data
-                             (map (fn [d]
-                                    (let [avg-value (get-in d [:aggregations :adjusted-avg-avg-online :value])
-                                          online-percentage (* (general-utils/round-up avg-value :n-decimal 2) 100)]
-                                      (assoc d :x (:timestamp d)
-                                               :y (- 100 online-percentage))))))]
-    [plot/Bar {:data    {:datasets [{:data            online-dataset
-                                     :label           "online"
-                                     :backgroundColor "green"}
-                                    {:data            offline-dataset
-                                     :label           "offline"
-                                     :backgroundColor "red"}]}
+(defn timestamp+value [data value-key]
+  (mapv (fn [d]
+          (assoc d :x (:timestamp d)
+                   :y (get-in d [:aggregations value-key :value]))) data))
 
-               :options (graph-options timespan {:title    "Fleet uptime percentage over time"
-                                                          :x-config {:stacked true}
-                                                          :y-config {:max     100
-                                                                     :min     0
-                                                                     :title   {:display "true"
-                                                                               :text    "Percentage (%)"}
-                                                                     :stacked true
-                                                                     }})}]))
+(defn FleetStatusTimeSeries [timespan data]
+  (let [ts-data (ts-utils/data->ts-data data)]
+    [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
+                                     :label           "online"
+                                     :backgroundColor "#21d32c88"}
+                                    {:data            (mapv (fn [d]
+                                                              (let [offline-edges (get-in d [:aggregations :virtual-edges-offline :value])
+                                                                    unknown-edges (get-in d [:aggregations :virtual-edges-unknown-state :value])]
+                                                                (assoc d :x (:timestamp d)
+                                                                         :y (+ offline-edges unknown-edges)))) ts-data)
+                                     :label           "unknown or offline"
+                                     :backgroundColor "#eab81198"}]}
+
+               :options (graph-options timespan {:title    "Fleet status"
+                                                 :x-config {:stacked true}
+                                                 :y-config {:max     (get-in data [:dimensions :nuvlaedge-count])
+                                                            :min     0
+                                                            :title   {:display "true"
+                                                                      :text    "Number of NuvlaEdges"}
+                                                            :stacked true
+                                                            }})}]))
 
 (defn FleetTimeSeries []
-  (let [tr                     (subscribe [::i18n-subs/tr])
-        loading?                (subscribe [::subs/loading?])
-        fleet-stats            (subscribe [::subs/fleet-stats])
-        current-timespan       (subscribe [::subs/fleet-timespan])
+  (let [tr               (subscribe [::i18n-subs/tr])
+        loading?         (subscribe [::subs/loading?])
+        fleet-stats      (subscribe [::subs/fleet-stats])
+        current-timespan (subscribe [::subs/fleet-timespan])
         initial-timespan (first ts-utils/timespan-options)]
     (fn []
       [:div [ui/Menu {:width "100%"}

@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.utils.form-fields
   (:require [re-frame.core :refer [subscribe]]
             [reagent.core :as reagent]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.general :as utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]

@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.main.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.about.utils :as about-utils]
+            [sixsq.nuvla.ui.pages.about.utils :as about-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 

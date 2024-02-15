@@ -5,16 +5,16 @@
             [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
             [reagent.core :as r]
             [reagent.dom :as rdom]
-            [sixsq.nuvla.ui.about.events :as about-events]
-            [sixsq.nuvla.ui.cimi.events :as api-events]
+            [sixsq.nuvla.ui.pages.about.events :as about-events]
+            [sixsq.nuvla.ui.pages.cimi.events :as api-events]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.db.events :as db-events]
-            [sixsq.nuvla.ui.i18n.events :as i18n-events]
+            [sixsq.nuvla.ui.common-components.i18n.events :as i18n-events]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.views :as main-views]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.router :refer [init-routes!]]
-            [sixsq.nuvla.ui.session.events :as session-events]
+            [sixsq.nuvla.ui.pages.session.events :as session-events]
             [taoensso.timbre :as log]))
 
 

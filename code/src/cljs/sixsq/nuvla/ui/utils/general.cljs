@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [goog.string :as gstring]
             [goog.string.format]
-            [sixsq.nuvla.ui.session.utils :as session-utils]
+            [sixsq.nuvla.ui.pages.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 
 

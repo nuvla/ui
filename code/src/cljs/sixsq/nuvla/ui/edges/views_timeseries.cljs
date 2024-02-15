@@ -4,25 +4,58 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.edges.subs :as subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.icons :as icons]
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.edges.events :as events]
     [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn timestamp+value [data value-key]
   (mapv (fn [d]
           (assoc d :x (:timestamp d)
                    :y (get-in d [:aggregations value-key :value]))) data))
 
+(defn info-edge [bucket]
+  (when bucket
+    {:name       (-> bucket :name)
+     :id         (-> bucket :key)
+     :avg-online (-> bucket :edge-avg-online :value)}))
+(defn OnlineStatsByEdge [{:keys [on-close]}]
+  (let [fleet-stats   (subscribe [::subs/fleet-stats])
+        stats-by-edge (:online-status-by-edge @fleet-stats)
+        ts-data       (ts-utils/data->ts-data stats-by-edge)]
+    [ui/Card [ui/CardContent
+              [ui/CardHeader {:style {:display "flex"
+                                      :justify-content "space-between"}} [:span "Online NuvlaEdges"]
+               [icons/CloseIcon {:link     true
+                                 :color "black"
+                                 :on-click on-close}]]
+              [ui/CardMeta {:style {:font-size "tiny"}} (str "on " (time/time->format (:timestamp (first ts-data))))]]
+     [ui/CardContent
+      (into [ui/CardDescription {:style {:display "flex"
+                                         :flex-direction "column"}}]
+            (mapv (fn [bucket]
+                    (when-let [{:keys [name id avg-online time]} (info-edge bucket)]
+
+                      [values/AsLink (general-utils/id->uuid id) :page "edges" :label name]))
+                  (-> (first ts-data)
+                      :aggregations
+                      :avg-online
+                      :buckets)))]]))
+
 (defn FleetStatusTimeSeries [timespan data]
-  (r/with-let [ extra-info-visible? (r/atom false)]
+  (r/with-let [extra-info-visible? (r/atom false)]
 
     (let [ts-data             (ts-utils/data->ts-data data)
           [from to] (ts-utils/timespan-to-period timespan)]
-      [:div {:style {:display "flex"}}
+      [:div {:style {:display "flex"
+                     :align-items "center"
+                     :justify-content "space-between"
+                     :width 800}}
        [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
                                         :label           "online"
                                         :backgroundColor "#21d32c88"}
@@ -56,18 +89,24 @@
                                            }}
                             :elements {:point {:radius 1}}
                             :onClick  (fn [_evt element _chart]
-                                        (when-let [raw-data (.. (first element) -element -$context -raw)]
-                                          (js/console.log raw-data)
-                                          #_(reset! element-data (js->clj raw-data :keywordize-keys true))
-                                          (swap! extra-info-visible? not)))
-                            :onHover (fn [evt chartElement]
-                                           (let [cursor (if (first chartElement)
-                                                          "pointer"
-                                                          "default")]
-                                             (set! (.. evt -native -target -style -cursor) cursor)))
+                                        (when-let [raw-data (js->clj (.. (first element) -element -$context -raw) :keywordize-keys true)]
+                                          (let [from        (js/Date. (:timestamp raw-data))
+                                                granularity (ts-utils/timespan->granularity timespan)
+                                                to          (ts-utils/add-time from granularity)]
+                                            (dispatch [::events/fetch-fleet-stats {:from from
+                                                                                   :to to
+                                                                                   :granularity granularity
+                                                                                   :dataset ["online-status-by-edge"]}])
+                                            (reset! extra-info-visible? true))))
+                            :onHover  (fn [evt chartElement]
+                                        (let [cursor (if (first chartElement)
+                                                       "pointer"
+                                                       "default")]
+                                          (set! (.. evt -native -target -style -cursor) cursor)))
                             }}]
-       (when @extra-info-visible?
-         [:div "hello"])])))
+
+       [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")}}
+        [OnlineStatsByEdge {:on-close #(reset! extra-info-visible? false)}]]])))
 
 (defn FleetTimeSeries []
   (let [tr               (subscribe [::i18n-subs/tr])
@@ -96,6 +135,4 @@
                                                   (dispatch [::events/set-selected-fleet-timespan timespan])))}]]]]
 
        [ui/TabPane
-        [:div {:style {:max-width 800
-                       :margin    "0 auto"}}
-         [FleetStatusTimeSeries @current-timespan (:online-status-stats @fleet-stats)]]]])))
+        [FleetStatusTimeSeries @current-timespan (:online-status-stats @fleet-stats)]]])))

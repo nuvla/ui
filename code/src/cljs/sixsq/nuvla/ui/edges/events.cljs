@@ -168,20 +168,25 @@
           [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]
           [:dispatch [::get-nuvlabox-locations]]]}))
 
+(def stats-to-query ["online-status-stats"])
 (reg-event-fx
   ::set-nuvlaboxes
-  (fn [{:keys [db]} [_ nuvlaboxes]]
-    (if (instance? js/Error nuvlaboxes)
-      (dispatch [::messages-events/add
-                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlaedges")
-                                     status (str " (" status ")"))
-                    :content message
-                    :type    :error})])
-      {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                     ::main-spec/loading? false)
-       :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]
-            [:dispatch [::fetch-fleet-stats]]]})))
+  (fn [{{:keys [::spec/fleet-timespan] :as db} :db} [_ nuvlaboxes]]
+    (let [[from to] (ts-utils/timespan-to-period fleet-timespan)]
+      (if (instance? js/Error nuvlaboxes)
+        (dispatch [::messages-events/add
+                   (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                     {:header  (cond-> (str "failure getting nuvlaedges")
+                                       status (str " (" status ")"))
+                      :content message
+                      :type    :error})])
+        {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
+                       ::main-spec/loading? false)
+         :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]
+              [:dispatch [::fetch-fleet-stats {:from from
+                                               :to to
+                                               :dataset stats-to-query
+                                               :granularity (ts-utils/timespan->granularity fleet-timespan)}]]]}))))
 
 
 (reg-event-fx
@@ -535,20 +540,20 @@
     {:storage/set {:session? false
                    :name     spec/local-storage-key
                    :value    (merge (edn/read-string storage) preference)}}))
-
-(def stats-to-query ["online-status-stats"])
-
 (reg-event-fx
   ::set-selected-fleet-timespan
   (fn [{db :db} [_ timespan]]
-    {:db (assoc db ::spec/fleet-timespan timespan)
-     :fx [[:dispatch [::fetch-fleet-stats]]] }))
+    (let [[from to] (ts-utils/timespan-to-period timespan)]
+      {:db (assoc db ::spec/fleet-timespan timespan)
+       :fx [[:dispatch [::fetch-fleet-stats {:from from
+                                             :to to
+                                             :granularity (ts-utils/timespan->granularity timespan)
+                                             :dataset stats-to-query}]]]})))
 
 (reg-event-fx
   ::fetch-fleet-stats
-  (fn [{{:keys [::spec/fleet-timespan ::spec/nuvlaboxes] :as db} :db}]
-    (let [[from to] (ts-utils/timespan-to-period fleet-timespan)
-          filter-str (->> nuvlaboxes
+  (fn [{{:keys [::spec/nuvlaboxes] :as db} :db} [_ {:keys [from to granularity dataset]}]]
+    (let [filter-str (->> nuvlaboxes
                           (:resources)
                           (mapv :id)
                           (map (fn [ne-id]
@@ -560,26 +565,28 @@
                     :uri             "/api/nuvlabox/data"
                     :format          (ajax/json-request-format)
                     :params          {:filter      (str "(" filter-str ")")
-                                      :dataset     stats-to-query
+                                      :dataset     dataset
                                       :from        (.toISOString from)
                                       :to          (.toISOString to)
-                                      :granularity (ts-utils/timespan->granularity fleet-timespan)}
+                                      :granularity granularity}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-fleet-stats-success]
                     :on-failure      [::fetch-fleet-stats-failure]}})))
 
 (reg-event-fx
   ::fetch-fleet-stats-success
-  (fn [{db :db} [_ response]]
-    {:db (assoc db ::spec/fleet-stats response
-                   ::spec/loading? false)}))
+  (fn [{db :db} [_ {:keys [online-status-stats online-status-by-edge] :as _response}]]
+    {:db (cond-> db
+                 online-status-stats (assoc-in [::spec/fleet-stats :online-status-stats] online-status-stats)
+                 online-status-by-edge (assoc-in [::spec/fleet-stats :online-status-by-edge] online-status-by-edge)
+                 true (assoc ::spec/loading? false))}))
 
 (reg-event-fx
   ::fetch-fleet-stats-failure
   (fn [{db :db} response]
     (let [{:keys [message]} (response/parse response)]
       {:db (assoc db ::spec/loading? false)
-      :fx [[:dispatch [::messages-events/add
+       :fx [[:dispatch [::messages-events/add
                         {:header  "Could not fetch NuvlaEdge fleet statistics"
                          :content message
                          :type    :error}]]]})))

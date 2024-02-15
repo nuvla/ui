@@ -32,3 +32,10 @@
 
 (defn data->ts-data [data]
   (-> data first :ts-data))
+
+(defn add-time [timestamp granularity]
+  (let [[amount unit] (str/split granularity #"-")]
+    (cond
+      (= unit "minutes") (time/add-minutes timestamp (js/parseInt amount))
+      (= unit "hours") (time/add-hours timestamp (js/parseInt amount))
+      (= unit "days") (time/add-days timestamp (js/parseInt amount)))))

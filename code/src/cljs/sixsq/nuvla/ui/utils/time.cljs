@@ -1,5 +1,8 @@
 (ns sixsq.nuvla.ui.utils.time
   (:require ["date-fns" :refer [addMilliseconds
+                                addMinutes
+                                addHours
+                                addDays
                                 differenceInMilliseconds
                                 differenceInMinutes
                                 format
@@ -46,6 +49,18 @@
 (defn add-milliseconds
   [date milliseconds]
   (addMilliseconds date milliseconds))
+
+(defn add-minutes
+  [date minutes]
+  (addMinutes date minutes))
+
+(defn add-hours
+  [date hours]
+  (addHours date hours))
+
+(defn add-days
+  [date days]
+  (addDays date days))
 
 
 (defn subtract-milliseconds

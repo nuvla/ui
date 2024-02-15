@@ -19,6 +19,6 @@
   [enabled-feature-flags k]
   (contains? enabled-feature-flags k))
 
-(defn keep-exsiting-feature-flags
+(defn keep-existing-feature-flags
   [enabled-feature-flags]
   (set/intersection existing-feature-flags-keys enabled-feature-flags))

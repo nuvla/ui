@@ -26,6 +26,6 @@
                      (->> persisted-feature-flags
                           general-utils/json->edn
                           set
-                          utils/keep-exsiting-feature-flags))
+                          utils/keep-existing-feature-flags))
            db)}))
 

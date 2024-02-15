@@ -308,3 +308,11 @@
       [LeftPanel]]
      [ui/GridColumn
       [RightPanel]]]))
+
+(defn SessionPageWelcomeRedirect
+  []
+  [SessionPage true])
+
+(defn SessionPageWithoutWelcomeRedirect
+  []
+  [SessionPage false])

@@ -15,9 +15,8 @@
             [sixsq.nuvla.ui.pages.data-set.views :as data-set-views]
             [sixsq.nuvla.ui.pages.data.views :refer [data-view]]
             [sixsq.nuvla.ui.pages.deployments-detail.views :refer [DeploymentDetails]]
-            [sixsq.nuvla.ui.pages.deployments.routes :refer [deployment-sets-details-view
-                                                       deployment-sets-view
-                                                       deployments-view]]
+            [sixsq.nuvla.ui.pages.deployments.routes
+             :refer [deployment-sets-details-view deployment-sets-view deployments-view]]
             [sixsq.nuvla.ui.pages.docs.views :refer [documentation]]
             [sixsq.nuvla.ui.pages.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
@@ -27,18 +26,10 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as subs]
             [sixsq.nuvla.ui.routing.utils :as utils]
-            [sixsq.nuvla.ui.pages.session.views :as session-views]
+            [sixsq.nuvla.ui.pages.session.views :refer [SessionPageWelcomeRedirect SessionPageWithoutWelcomeRedirect]]
             [sixsq.nuvla.ui.pages.ui-demo.views :refer [UiDemo]]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
             [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]))
-
-(defn SessionPageWelcomeRedirect
-  []
-  [session-views/SessionPage true])
-
-(defn SessionPageWithoutWelcomeRedirect
-  []
-  [session-views/SessionPage false])
 
 (defn- create-route-name
   ([page-alias]

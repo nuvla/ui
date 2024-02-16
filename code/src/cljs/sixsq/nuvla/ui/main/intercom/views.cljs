@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.pages.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.intercom :as intercom]))
 
-(defn widget
+(defn Widget
   []
   (fn []
     (let [_                   (subscribe [::route-subs/nav-path])

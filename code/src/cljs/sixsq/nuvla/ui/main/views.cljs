@@ -25,7 +25,6 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
-
 (defn crumb
   [index {:keys [text icon-class] :as segment}]
   (let [nav-path   (subscribe [::route-subs/nav-path])
@@ -58,11 +57,9 @@
      :icon-class (or (:icon @page-info)
                      "fa-light fa-house")}))
 
-
 (defn decorate-breadcrumbs
   [nav-path]
   (conj (rest nav-path) (format-first-crumb nav-path)))
-
 
 (defn breadcrumbs-links []
   (let [nav-path           (subscribe [::route-subs/nav-path])
@@ -73,13 +70,11 @@
                       (map crumb (range))
                       (interpose [ui/BreadcrumbDivider {:icon "chevron right"}]))))))
 
-
 (defn breadcrumb-option
   [index segment]
   {:key   segment
    :value index
    :text  (utils/truncate segment 8)})
-
 
 (defn breadcrumbs-dropdown []
   (let [path        (subscribe [::route-subs/nav-path])
@@ -92,33 +87,31 @@
       :on-change (ui-callback/value callback-fn)
       :options   options}]))
 
-
-(defn breadcrumbs []
+(defn Breadcrumbs []
   (let [is-mobile? (subscribe [::subs/is-mobile-device?])]
     (if @is-mobile?
       [breadcrumbs-dropdown]
       [breadcrumbs-links])))
 
-(defn footer
-  []
-  (let [grid-style   {:style {:padding-top    5
-                              :padding-bottom 5
-                              :text-align     "center"}}
-        current-year (.getFullYear (time/now))]
-    [ui/Segment {:class "footer" :style {:border-radius 0
-                                         :z-index       10}}
-     [ui/Grid {:columns 3}
-      [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
-      [ui/GridColumn grid-style
-       [:a {:on-click #(dispatch [::routing-events/navigate routes/about])
-            :style    {:cursor "pointer"}}
-        [main-components/SpanVersion]]]
-      [ui/GridColumn grid-style
-       [i18n-views/LocaleDropdown]]]]))
+(defn Footer []
+  (when-not @(subscribe [::subs/iframe?])
+    (let [grid-style   {:style {:padding-top    5
+                                :padding-bottom 5
+                                :text-align     "center"}}
+          current-year (.getFullYear (time/now))]
 
+      [ui/Segment {:class "footer" :style {:border-radius 0
+                                           :z-index       10}}
+       [ui/Grid {:columns 3}
+        [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
+        [ui/GridColumn grid-style
+         [:a {:on-click #(dispatch [::routing-events/navigate routes/about])
+              :style    {:cursor "pointer"}}
+          [main-components/SpanVersion]]]
+        [ui/GridColumn grid-style
+         [i18n-views/LocaleDropdown]]]])))
 
-(defn ignore-changes-modal
-  []
+(defn IgnoreChangesModal []
   (let [tr                       (subscribe [::i18n-subs/tr])
         navigation-info          (subscribe [::subs/ignore-changes-modal])
         do-not-ignore-changes-fn #(dispatch [::events/do-not-ignore-changes])]
@@ -142,8 +135,7 @@
                    :on-click #(do (dispatch [::events/ignore-changes])
                                   (dispatch [::apps-events/form-valid]))}]]]))
 
-(defn subscription-required-modal
-  []
+(defn SubscriptionRequiredModal []
   (let [tr                  (subscribe [::i18n-subs/tr])
         open-subs-required? (subscribe [::subs/modal-open? :subscription-required])
         open-subs-unpaid?   (subscribe [::subs/modal-open? :subscription-unpaid])]
@@ -172,20 +164,26 @@
        (when @open-subs-required?
          [:p [icons/InfoIconFull] (@tr [:subscription-required-content-group])])]]]))
 
+(defn RouterView []
+  (let [CurrentView   @(subscribe [::route-subs/current-view])
+        current-route @(subscribe [::route-subs/current-route])
+        path          @(subscribe [::route-subs/nav-path])]
+    (when current-route
+      [CurrentView
+       (assoc current-route :path path
+                            :pathname (:path current-route))])))
 
-(defn contents
-  []
-  (let [content-key      (subscribe [::subs/content-key])
-        is-small-device? (subscribe [::subs/is-small-device?])]
-    (fn []
-      [ui/Container
-       (cond-> {:as    "main"
-                :key   @content-key
-                :id    "nuvla-ui-content"
-                :fluid true}
-               @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
-       [router-component]])))
-
+(defn Contents []
+  (let [content-key   @(subscribe [::subs/content-key])
+        small-device? @(subscribe [::subs/is-small-device?])
+        on-click      (when small-device? #(dispatch [::events/close-sidebar]))]
+    [ui/Container
+     {:as       "main"
+      :key      content-key
+      :id       "nuvla-ui-content"
+      :fluid    true
+      :on-click on-click}
+     [RouterView]]))
 
 (defn UpdateUIVersion
   []
@@ -216,31 +214,34 @@
                    :circular true
                    :content  (@tr [:new-ui-version])}]])]))
 
-
-(defn header
-  []
+(defn Header []
   [:header
    [ui/Menu {:class      "nuvla-ui-header"
              :borderless true}
-
     [ui/MenuItem {:aria-label "toggle sidebar"
                   :link       true
                   :on-click   #(dispatch [::events/toggle-sidebar])}
      [icons/BarsIcon]]
-
-    [ui/MenuItem [breadcrumbs]]
-
-
+    [ui/MenuItem [Breadcrumbs]]
     [ui/MenuMenu {:position "right"}
      [UpdateUIVersion]
      [messages/bell-menu]
      [session-views/AuthnMenu]]]
-
    [messages/alert-slider]
    [messages/alert-modal]])
 
-(defn AppLoader
-  []
+(defn MessageSubscriptionCanceled []
+  (let [subs-canceled? @(subscribe [::profile-subs/subscription-canceled?])]
+    (when subs-canceled?
+      [uix/Message {:icon    "warning"
+                    :header  [uix/TR :subscription-is-canceled]
+                    :content [:span
+                              [uix/TR :to-reactivate-your-subscription]
+                              [:a {:href (name->href routes/profile)} [uix/TR :go-to-profile]]
+                              [uix/TR :make-sure-you-have-pm]]
+                    :type    :error}])))
+
+(defn AppLoader []
   (let [tr     (subscribe [::i18n-subs/tr])
         error? (subscribe [::api-subs/cloud-entry-point-error?])]
     [ui/Container
@@ -251,49 +252,52 @@
                     :content    (@tr [:service-unavailable])
                     :subheader  (@tr [:take-coffee-back-soon])}])]]))
 
-(defn app []
-  (let [show?            (subscribe [::subs/sidebar-open?])
-        iframe?          (subscribe [::subs/iframe?])
-        is-small-device? (subscribe [::subs/is-small-device?])
-        resource-path    (subscribe [::route-subs/nav-path])
-        app-loading?     (subscribe [::subs/app-loading?])
-        subs-canceled?   (subscribe [::profile-subs/subscription-canceled?])]
-    (if @app-loading?
-      [AppLoader]
-      [:div {:id "nuvla-ui-main"}
-       (if (#{"sign-in"
-              "sign-up"
-              "reset-password"
-              "set-password"
-              "sign-in-token"
-              nil} (first @resource-path))
-         [router-component]
-         [:<>
-          [intercom/widget]
-          [sidebar/Menu]
-          [:div {:class (str "nuvla-" (case (first @resource-path)
-                                        ("deployment-set" "deployment-groups")
-                                        "deployments"
+(defn MainDiv [children]
+  (let [show?            @(subscribe [::subs/sidebar-open?])
+        is-small-device? @(subscribe [::subs/is-small-device?])
+        nav-path-first   @(subscribe [::route-subs/nav-path-first])
+        class            (str "nuvla-" (case nav-path-first
+                                         ("deployment-set" "deployment-groups")
+                                         "deployments"
 
-                                        (first @resource-path)))
-                 :style {:transition  "0.5s"
-                         :margin-left (if (and (not @is-small-device?) @show?)
-                                        sidebar/sidebar-width "0")}}
-           [ui/Dimmer {:active   (and @is-small-device? @show?)
-                       :inverted true
-                       :style    {:z-index 999}
-                       :on-click #(dispatch [::events/close-sidebar])}]
-           [header]
-           [:div {:ref main-components/ref}
-            (when @subs-canceled?
-              [uix/Message {:icon    "warning"
-                            :header  [uix/TR :subscription-is-canceled]
-                            :content [:span
-                                      [uix/TR :to-reactivate-your-subscription]
-                                      [:a {:href (name->href routes/profile)} [uix/TR :go-to-profile]]
-                                      [uix/TR :make-sure-you-have-pm]]
-                            :type    :error}])
-            [contents]
-            [ignore-changes-modal]
-            [subscription-required-modal]
-            (when-not @iframe? [footer])]]])])))
+                                         nav-path-first))
+        style            {:transition  "0.5s"
+                          :margin-left (if (and (not is-small-device?) show?)
+                                         sidebar/sidebar-width "0")}]
+    [:div {:class class :style style}
+     children]))
+
+(defn LayoutAuthenticationPage
+  []
+  )
+
+(defn LayoutPage []
+  [:<>
+   [intercom/Widget]
+   [sidebar/Menu]
+   [MainDiv
+    [:<>
+     [Header]
+     [:div {:ref main-components/ref}
+      [MessageSubscriptionCanceled]
+      [Contents]
+      [IgnoreChangesModal]
+      [SubscriptionRequiredModal]
+      [Footer]]]]])
+
+(defn AppRender []
+  (let [nav-path-first @(subscribe [::route-subs/nav-path-first])]
+    [:div {:id "nuvla-ui-main"}
+     (if (#{"sign-in"
+            "sign-up"
+            "reset-password"
+            "set-password"
+            "sign-in-token"
+            nil} nav-path-first)
+       [RouterView]
+       [LayoutPage])]))
+
+(defn App []
+  (if @(subscribe [::subs/app-loading?])
+    [AppLoader]
+    [AppRender]))

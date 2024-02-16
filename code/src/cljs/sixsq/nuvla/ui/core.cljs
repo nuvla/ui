@@ -27,7 +27,7 @@
 
 (defn mount-root []
   (clear-subscription-cache!)
-  (rdom/render [main-views/app] (gdom/getElement "app")))
+  (rdom/render [main-views/App] (gdom/getElement "app")))
 
 
 (defn visibility-watcher []

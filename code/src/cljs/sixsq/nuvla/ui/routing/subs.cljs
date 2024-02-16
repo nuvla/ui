@@ -42,6 +42,16 @@
   :-> (comp :name :data))
 
 (reg-sub
+  ::current-layout
+  :<- [::current-route]
+  :-> (comp :layout :data))
+
+(reg-sub
+  ::current-view
+  :<- [::current-route]
+  :-> (comp :view :data))
+
+(reg-sub
   ::canonical-route-name
   :<- [::route-name]
   :-> ->canonical-route)

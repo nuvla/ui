@@ -1,10 +1,13 @@
 (ns sixsq.nuvla.ui.routing.router
-  (:require [re-frame.core :refer [dispatch subscribe]]
+  (:require [re-frame.core :refer [dispatch]]
             [reitit.coercion.spec :as rss]
             [reitit.core :as r]
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
             [reitit.frontend.history :as rfh]
+            [sixsq.nuvla.ui.pages.session.events :as session-events]
+            [sixsq.nuvla.ui.app.view :refer [LayoutPage
+                                             LayoutAuthentication]]
             [sixsq.nuvla.ui.pages.about.views :refer [About]]
             [sixsq.nuvla.ui.pages.apps.views :as app-views]
             [sixsq.nuvla.ui.pages.cimi.views :refer [ApiView]]
@@ -24,9 +27,11 @@
             [sixsq.nuvla.ui.pages.profile.views :refer [profile]]
             [sixsq.nuvla.ui.routing.events :as events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.subs :as subs]
             [sixsq.nuvla.ui.routing.utils :as utils]
-            [sixsq.nuvla.ui.pages.session.views :refer [SessionPageWelcomeRedirect SessionPageWithoutWelcomeRedirect]]
+            [sixsq.nuvla.ui.pages.session.reset-password-views :as reset-password-views]
+            [sixsq.nuvla.ui.pages.session.set-password-views :as set-password-views]
+            [sixsq.nuvla.ui.pages.session.sign-in-views :as sign-in-views]
+            [sixsq.nuvla.ui.pages.session.sign-up-views :as sign-up-views]
             [sixsq.nuvla.ui.pages.ui-demo.views :refer [UiDemo]]
             [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
             [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]))
@@ -40,63 +45,75 @@
 (def edges-routes
   (mapv (fn [page-alias]
           [[page-alias
-            {:name     (create-route-name page-alias)
-             :view     #'edges-view
-             :dict-key :edges}
+            {:name       (create-route-name page-alias)
+             :layout     #'LayoutPage
+             :view       #'edges-view
+             :protected? true
+             :dict-key   :edges}
             [""]
             ["/" (create-route-name page-alias "-slashed")]]
            [(str page-alias "/:uuid")
-            {:name (create-route-name page-alias "-details")
-             :view #'DetailedViewPage}]
+            {:name   (create-route-name page-alias "-details")
+             :layout #'LayoutPage
+             :view   #'DetailedViewPage}]
            [(str page-alias "/nuvlabox-cluster/:uuid")
-            {:name (create-route-name page-alias "-cluster-details")
-             :view #'views-cluster/ClusterViewPage}]])
+            {:name   (create-route-name page-alias "-cluster-details")
+             :layout #'LayoutPage
+             :view   #'views-cluster/ClusterViewPage}]])
         (utils/canonical->all-page-names "edges")))
 
 (def cloud-routes
   (mapv (fn [page-alias]
           [page-alias
-           {:name     (create-route-name page-alias)
-            :view     #'clouds-view
-            :dict-key :clouds}
+           {:name       (create-route-name page-alias)
+            :layout     #'LayoutPage
+            :view       #'clouds-view
+            :protected? true
+            :dict-key   :clouds}
            [""]
            ["/" (create-route-name page-alias "-slashed")]
            ["/:uuid"
-            {:name (create-route-name page-alias "-details")
-             :view #'clouds-view}]])
+            {:name   (create-route-name page-alias "-details")
+             :layout #'LayoutPage
+             :view   #'clouds-view}]])
         (utils/canonical->all-page-names "clouds")))
-
 
 (def deployment-routes
   (mapv (fn [page-alias]
           [page-alias
-           {:name     (create-route-name page-alias)
-            :view     #'deployments-view
-            :dict-key :deployments}
+           {:name       (create-route-name page-alias)
+            :layout     #'LayoutPage
+            :view       #'deployments-view
+            :protected? true
+            :dict-key   :deployments}
            [""]
            ["/" (create-route-name page-alias "-slashed")]
            ["/:uuid"
-            {:name (create-route-name page-alias "-details")
-             :view #'DeploymentDetails}]])
+            {:name   (create-route-name page-alias "-details")
+             :layout #'LayoutPage
+             :view   #'DeploymentDetails}]])
         (utils/canonical->all-page-names "deployments")))
 
 (def deployment-group-routes
   (mapv (fn [page-alias]
           [page-alias
            {:name     (create-route-name page-alias)
+            :layout   #'LayoutPage
             :view     #'deployment-sets-view
             :dict-key :deployment-groups}
            [""]
            ["/" (create-route-name page-alias "-slashed")]
            ["/:uuid"
-            {:name (create-route-name page-alias "-details")
-             :view #'deployment-sets-details-view}]])
+            {:name   (create-route-name page-alias "-details")
+             :layout #'LayoutPage
+             :view   #'deployment-sets-details-view}]])
         (utils/canonical->all-page-names "deployment-groups")))
 
 (def r-routes
   [""
-   {:name ::routes/root
-    :view #'home-view}
+   {:name        ::routes/root
+    :layout      #'LayoutPage
+    :view        #'home-view}
    ["/"]
    [(str base-path "/")                                     ;; sixsq.nuvla.ui.config/base-path = "/ui" on nuvla.io
     [""
@@ -107,27 +124,33 @@
     deployment-routes
     deployment-group-routes
     ["sign-up"
-     {:name      ::routes/sign-up
-      :view      #'SessionPageWelcomeRedirect
-      :link-text "Sign up"}]
+     {:name          ::routes/sign-up
+      :layout        #'LayoutAuthentication
+      :view          #'sign-up-views/Form
+      :link-text     "Sign up"}]
     ["sign-in"
-     {:name      ::routes/sign-in
-      :view      #'SessionPageWelcomeRedirect
-      :link-text "login"}]
+     {:name          ::routes/sign-in
+      :layout        #'LayoutAuthentication
+      :view          #'sign-in-views/Form
+      :link-text     "login"}]
     ["reset-password"
-     {:name      ::routes/reset-password
-      :view      #'SessionPageWelcomeRedirect
-      :link-text "Reset password"}]
+     {:name          ::routes/reset-password
+      :layout        #'LayoutAuthentication
+      :view          #'reset-password-views/Form
+      :link-text     "Reset password"}]
     ["set-password"
-     {:name      ::routes/set-password
-      :view      #'SessionPageWithoutWelcomeRedirect
-      :link-text "Set password"}]
+     {:name          ::routes/set-password
+      :layout        #'LayoutAuthentication
+      :view          #'set-password-views/Form
+      :link-text     "Set password"}]
     ["sign-in-token"
-     {:name      ::routes/sign-in-token
-      :view      #'SessionPageWelcomeRedirect
-      :link-text "sign in token"}]
+     {:name          ::routes/sign-in-token
+      :layout        #'LayoutAuthentication
+      :view          #'sign-in-views/FormTokenValidation
+      :link-text     "sign in token"}]
     ["about"
      {:name      ::routes/about
+      :layout    #'LayoutPage
       :view      #'About
       :link-text "About"}]
     ["welcome"
@@ -137,43 +160,57 @@
      {:name      ::routes/home-slash
       :link-text "home"}]
     ["dashboard"
-     {:name      ::routes/dashboard
-      :view      #'dashboard-view
-      :link-text "dashboard"}]
+     {:name       ::routes/dashboard
+      :layout     #'LayoutPage
+      :view       #'dashboard-view
+      :protected? true
+      :link-text  "dashboard"}]
     ["apps"
-     {:name      ::routes/apps
-      :view      #'app-views/AppsOverview
-      :link-text "Apps"}
+     {:name       ::routes/apps
+      :layout     #'LayoutPage
+      :view       #'app-views/AppsOverview
+      :protected? true
+      :link-text  "Apps"}
      [""]
      ["/" ::routes/apps-slashed]
      ["/*sub-path"
-      {:name ::routes/apps-details
-       :view #'app-views/AppDetailsRoute}]]
+      {:name   ::routes/apps-details
+       :layout #'LayoutPage
+       :view   #'app-views/AppDetailsRoute}]]
     ["credentials"
-     {:name      ::routes/credentials
-      :view      #'credentials-view
-      :link-text "credentials"}
+     {:name       ::routes/credentials
+      :layout     #'LayoutPage
+      :view       #'credentials-view
+      :protected? true
+      :link-text  "credentials"}
      [""]
      ["/" ::routes/credentials-slash]]
     ["notifications"
-     {:name      ::routes/notifications
-      :view      #'notifications-view
-      :link-text "notifications"}]
+     {:name       ::routes/notifications
+      :layout     #'LayoutPage
+      :view       #'notifications-view
+      :protected? true
+      :link-text  "notifications"}]
     ["data"
-     {:name      ::routes/data
-      :view      #'data-view
-      :link-text "data"}]
+     {:name       ::routes/data
+      :layout     #'LayoutPage
+      :view       #'data-view
+      :protected? true
+      :link-text  "data"}]
     ["data/*uuid"
-     {:name ::routes/data-details
-      :view #'data-set-views/DataSet}]
+     {:name   ::routes/data-details
+      :layout #'LayoutPage
+      :view   #'data-set-views/DataSet}]
     ["documentation"
      {:name      ::routes/documentation
+      :layout    #'LayoutPage
       :view      #'documentation
       :link-text "documentation"}
      [""]
      ["/*sub-path" ::routes/documentation-sub-page]]
     ["api"
      {:name      ::routes/api
+      :layout    #'LayoutPage
       :view      #'ApiView
       :link-text "api"}
      [""]
@@ -181,15 +218,18 @@
      ["/*sub-path"
       {:name ::routes/api-sub-page}]]
     ["profile"
-     {:name ::routes/profile
-      :view #'profile}]
+     {:name   ::routes/profile
+      :layout #'LayoutPage
+      :view   #'profile}]
     ["ui-demo"
      {:name      ::routes/ui-demo
+      :layout    #'LayoutPage
       :view      #'UiDemo
       :link-text "ui-demo"}]]
    ["/*"
-    {:name ::routes/catch-all
-     :view #'UnknownResource}]])
+    {:name   ::routes/catch-all
+     :layout #'LayoutPage
+     :view   #'UnknownResource}]])
 
 (def router
   (rf/router
@@ -214,15 +254,6 @@
                              (and (rfh/ignore-anchor-click? router e el uri)
                                   (not= "false" (.getAttribute el "data-reitit-handle-click"))
                                   (not= "#" (first (.getAttribute el "href")))))}))
-
-(defn router-component []
-  (let [current-route @(subscribe [::subs/current-route])
-        path          @(subscribe [::subs/nav-path])
-        view          (-> current-route :data :view)]
-    [:<>
-     (when current-route
-       [view (assoc current-route :path path
-                                  :pathname (:path current-route))])]))
 
 (comment
   (r/match-by-name router ::routes/nuvlabox)

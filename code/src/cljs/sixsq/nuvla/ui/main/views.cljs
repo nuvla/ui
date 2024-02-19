@@ -2,10 +2,8 @@
   (:require [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.pages.apps.apps-applications-sets.views]
             [sixsq.nuvla.ui.pages.apps.events :as apps-events]
-            [sixsq.nuvla.ui.pages.cimi.subs :as api-subs]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.i18n.views :as i18n-views]
-            [sixsq.nuvla.ui.main.intercom.views :as intercom]
             [sixsq.nuvla.ui.main.components :as main-components]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
@@ -13,7 +11,6 @@
             [sixsq.nuvla.ui.common-components.messages.views :as messages]
             [sixsq.nuvla.ui.pages.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.routing.events :as routing-events]
-            [sixsq.nuvla.ui.routing.router :refer [router-component]]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.routing.utils :refer [name->href trim-path]]
@@ -164,16 +161,7 @@
        (when @open-subs-required?
          [:p [icons/InfoIconFull] (@tr [:subscription-required-content-group])])]]]))
 
-(defn RouterView []
-  (let [CurrentView   @(subscribe [::route-subs/current-view])
-        current-route @(subscribe [::route-subs/current-route])
-        path          @(subscribe [::route-subs/nav-path])]
-    (when current-route
-      [CurrentView
-       (assoc current-route :path path
-                            :pathname (:path current-route))])))
-
-(defn Contents []
+(defn Contents [View]
   (let [content-key   @(subscribe [::subs/content-key])
         small-device? @(subscribe [::subs/is-small-device?])
         on-click      (when small-device? #(dispatch [::events/close-sidebar]))]
@@ -183,7 +171,7 @@
       :id       "nuvla-ui-content"
       :fluid    true
       :on-click on-click}
-     [RouterView]]))
+     View]))
 
 (defn UpdateUIVersion
   []
@@ -241,17 +229,6 @@
                               [uix/TR :make-sure-you-have-pm]]
                     :type    :error}])))
 
-(defn AppLoader []
-  (let [tr     (subscribe [::i18n-subs/tr])
-        error? (subscribe [::api-subs/cloud-entry-point-error?])]
-    [ui/Container
-     [ui/Loader {:active true :size "massive"}
-      (when @error?
-        [ui/Header {:text-align :center
-                    :as         :h2
-                    :content    (@tr [:service-unavailable])
-                    :subheader  (@tr [:take-coffee-back-soon])}])]]))
-
 (defn MainDiv [children]
   (let [show?            @(subscribe [::subs/sidebar-open?])
         is-small-device? @(subscribe [::subs/is-small-device?])
@@ -266,38 +243,3 @@
                                          sidebar/sidebar-width "0")}]
     [:div {:class class :style style}
      children]))
-
-(defn LayoutAuthenticationPage
-  []
-  )
-
-(defn LayoutPage []
-  [:<>
-   [intercom/Widget]
-   [sidebar/Menu]
-   [MainDiv
-    [:<>
-     [Header]
-     [:div {:ref main-components/ref}
-      [MessageSubscriptionCanceled]
-      [Contents]
-      [IgnoreChangesModal]
-      [SubscriptionRequiredModal]
-      [Footer]]]]])
-
-(defn AppRender []
-  (let [nav-path-first @(subscribe [::route-subs/nav-path-first])]
-    [:div {:id "nuvla-ui-main"}
-     (if (#{"sign-in"
-            "sign-up"
-            "reset-password"
-            "set-password"
-            "sign-in-token"
-            nil} nav-path-first)
-       [RouterView]
-       [LayoutPage])]))
-
-(defn App []
-  (if @(subscribe [::subs/app-loading?])
-    [AppLoader]
-    [AppRender]))

@@ -3,7 +3,9 @@
             [reitit.frontend :refer [match-by-path]]
             [reitit.frontend.controllers :as rfc]
             [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.pages.session.spec :as session-spec]
             [sixsq.nuvla.ui.routing.effects :as fx]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as utils]
             [sixsq.nuvla.ui.utils.helpers :refer [update-values]]
             [taoensso.timbre :as log]))
@@ -25,20 +27,29 @@
 
 (reg-event-fx
   ::navigated
-  (fn [{db :db} [_ {:keys [path query-params] :as new-match}]]
+  (fn [{{:keys [::session-spec/session] :as db} :db} [_ {:keys [data path query-params] :as new-match}]]
     (let [old-match                  (:current-route db)
           controllers                (rfc/apply-controllers (:controllers old-match) new-match)
           new-match-with-controllers (assoc new-match :controllers controllers)
           view-changed?              (not= (:view (:data old-match))
-                                           (:view (:data new-match-with-controllers)))]
+                                           (:view (:data new-match-with-controllers)))
+          init-dispatch              (:init-dispatch data)
+          protected-redirect?        (and (:protected? data) (nil? session))]
       {:db                   (-> db
                                  (assoc :current-route new-match-with-controllers
                                         ::main-spec/nav-path (utils/split-path-alias path)
                                         ::main-spec/nav-query-params query-params)
                                  (dissoc after-nav-cb-key))
-       :fx                   [(when view-changed?
-                                [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])
-                              [::fx/after-nav-cb (after-nav-cb-key db)]]
+       :fx                   (if protected-redirect?
+                               [[:dispatch [::navigate routes/sign-in nil
+                                            {:redirect (-> new-match
+                                                           (utils/gen-href nil)
+                                                           utils/strip-base-path)}]]]
+                               [(when view-changed?
+                                 [:dispatch [:sixsq.nuvla.ui.main.events/bulk-actions-interval-after-navigation]])
+                               [::fx/after-nav-cb (after-nav-cb-key db)]
+                               (when init-dispatch
+                                 [:dispatch init-dispatch])])
        ::fx/set-window-title [(utils/strip-base-path (:path new-match))]})))
 
 (reg-event-db
@@ -112,7 +123,7 @@
     (let [{:keys [route-name
                   path-params
                   query-params]} (utils/new-route-data current-route new-partial-route-data)
-          push-state?            (:push-state? new-partial-route-data)]
+          push-state? (:push-state? new-partial-route-data)]
       {:db (assoc db ::ignore-changes-protection true)
        :fx [[(if push-state? ::fx/push-state ::fx/replace-state)
              (utils/name->href

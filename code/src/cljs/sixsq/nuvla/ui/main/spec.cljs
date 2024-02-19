@@ -65,21 +65,17 @@
                ::pages                {"welcome"         {:key        routes/home
                                                           :label-kw   :home
                                                           :icon       icons/i-house
-                                                          :protected? false
                                                           :order      0}
                                        "documentation"   {:key        routes/documentation
                                                           :label-kw   :api-doc
-                                                          :icon       "info"
-                                                          :protected? false}
+                                                          :icon       "info"}
                                        "dashboard"       {:key        routes/dashboard
                                                           :label-kw   :dashboard
                                                           :icon       icons/i-gauge
-                                                          :protected? true
                                                           :order      10}
                                        "apps"            {:key        routes/apps
                                                           :label-kw   :apps
                                                           :icon       icons/i-layer-group
-                                                          :protected? true
                                                           :order      20}
                                        "deployments"     {:key        routes/deployments
                                                           :route-names #{routes/deployments
@@ -88,39 +84,32 @@
                                                           :label-kw :deployments
                                                           :name "deployments"
                                                           :icon icons/i-rocket
-                                                          :protected? true
                                                           :order 30}
                                        "edges"           {:key        routes/edges
                                                           :label-kw   :edges
                                                           :name       "edges"
                                                           :icon       icons/i-box
-                                                          :protected? true
                                                           :order      40}
                                        "credentials"     {:key        routes/credentials
                                                           :label-kw   :credentials
                                                           :icon       icons/i-key
-                                                          :protected? true
                                                           :order      50}
                                        "notifications"   {:key        routes/notifications
                                                           :label-kw   :notifications
                                                           :icon       icons/i-bell
-                                                          :protected? true
                                                           :order      60}
                                        "data"            {:key             routes/data
                                                           :label-kw        :data
                                                           :icon            icons/i-db
-                                                          :protected?      true
                                                           :iframe-visible? true
                                                           :order           70}
                                        "clouds"          {:key        routes/clouds
                                                           :label-kw   :infra-service-short
                                                           :icon       icons/i-cloud
-                                                          :protected? true
                                                           :order      80}
                                        "api"             {:key        routes/api
                                                           :label-kw   :api
                                                           :icon       icons/i-code
-                                                          :protected? false
                                                           :order      90}
                                        "ui-demo"         {:key             routes/ui-demo
                                                           :label-kw        :ui-demo

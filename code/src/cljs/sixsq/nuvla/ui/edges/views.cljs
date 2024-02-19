@@ -2,9 +2,6 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.about.subs :as about-subs]
-            [sixsq.nuvla.ui.about.utils :as about-utils]
-            [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as depl-group-subs]
             [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.edges.add-modal :as add-modal]
@@ -24,7 +21,6 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
-            [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.map :as map]
@@ -32,10 +28,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]
-            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
-            [sixsq.nuvla.ui.utils.zip :as zip]))
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 (def show-state-statistics (r/atom false))
 
@@ -170,251 +163,6 @@
           :loading?   @loading?
           :on-refresh #(dispatch [::events/refresh-root])}]]])))
 
-
-(def usb-doc-url "https://docs.nuvla.io/nuvlaedge/installation/install-with-usb-stick/")
-(def compose-doc-url "https://docs.nuvla.io/nuvlaedge/installation/install-with-compose-files/")
-
-
-(defn NuvlaDocs
-  [tr url]
-  [ui/Container {:text-align :center
-                 :style      {:margin "0.5em"}}
-   [:span (@tr [:nuvlabox-documentation])
-    [:a {:href   url
-         :target "_blank"}
-     (@tr [:nuvla-docs])]]])
-
-
-(defn CreateSSHKeyMessage
-  [new-private-ssh-key private-ssh-key-file tr]
-  [ui/Message {:icon    true
-               :warning true}
-   [icons/WarningIcon]
-   [ui/MessageContent
-    [ui/MessageHeader
-     [:span
-      [:a {:href     (str "data:text/plain;charset=utf-8,"
-                          (js/encodeURIComponent new-private-ssh-key))
-           :target   "_blank"
-           :download private-ssh-key-file
-           :key      private-ssh-key-file}
-       [ui/Icon {:name "privacy"}] private-ssh-key-file]]]
-    (@tr [:nuvlabox-modal-private-ssh-key-info])]])
-
-(defn CreatedNuvlaBox
-  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys
-   _new-private-ssh-key playbooks-toggle _on-close-fn]
-  (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
-        nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
-        playbooks-cronjob    (subscribe [::subs/nuvlabox-playbooks-cronjob])
-        private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
-        public-keys          (when (seq @nuvlabox-ssh-keys)
-                               (str (str/join "\\n" (:public-keys @nuvlabox-ssh-keys)) "\\n"))
-        zip-url              (r/atom nil)
-        envsubst             (cond-> {"${NUVLABOX_UUID}"  nuvlabox-id
-                                      "${NUVLAEDGE_UUID}" nuvlabox-id}
-                                     public-keys (assoc "${NUVLABOX_SSH_PUB_KEY}" public-keys
-                                                        "${NUVLAEDGE_SSH_PUB_KEY}" public-keys))
-        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
-                                                          (partial general-utils/envsubst-str envsubst))]
-    (when playbooks-toggle
-      (dispatch [::events/enable-host-level-management nuvlabox-id]))
-    (zip/create download-files #(reset! zip-url %))
-    (when @nuvlabox-ssh-keys
-      (dispatch [::events/assign-ssh-keys @nuvlabox-ssh-keys nuvlabox-id]))
-    (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys
-         new-private-ssh-key playbooks-toggle on-close-fn]
-      (let [tr                  (subscribe [::i18n-subs/tr])
-            nuvlabox-name-or-id (str "NuvlaEdge " (or (:name creation-data)
-                                                      (general-utils/id->short-uuid nuvlabox-id)))
-            execute-command     (str "docker compose -p nuvlaedge -f "
-                                     (str/join " -f " (map :name download-files)) " up -d")]
-        [:<>
-         [uix/ModalHeader {:header (str nuvlabox-name-or-id " created") :icon "box"}]
-
-         (when (or @new-private-ssh-key playbooks-toggle)
-           [ui/Segment {:basic true}
-            (when playbooks-toggle
-              [ui/Message {:icon true}
-               [icons/Icon {:name    (if @playbooks-cronjob icons/i-circle-check icons/i-spinner)
-                            :loading (if @playbooks-cronjob false true)}]
-               [ui/MessageContent
-                [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
-                                   (when @playbooks-cronjob
-                                     [ui/Popup {:content        (@playbooks-cronjob :cronjob)
-                                                :wide           "very"
-                                                :position       "bottom center"
-                                                :hide-on-scroll true
-                                                :hoverable      true
-                                                :trigger        (r/as-element [ui/IconGroup
-                                                                               [ui/Icon {:name "eye"}]
-                                                                               [ui/Icon {:corner true
-                                                                                         :name   "exclamation"}]])}])]]
-                (if @playbooks-cronjob
-                  [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
-                              " ")
-                   (values/copy-value-to-clipboard
-                     "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
-                  (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
-
-            (when @new-private-ssh-key
-              [CreateSSHKeyMessage @new-private-ssh-key private-ssh-key-file tr])])
-
-         [ui/ModalContent
-          [ui/Container
-           [ui/CardGroup {:centered true}
-            [ui/Card
-             [ui/CardContent {:text-align :center}
-              [ui/Header [:span {:style {:overflow-wrap "break-word"}} nuvlabox-name-or-id]]
-              [icons/BoxIcon {:color "green"
-                              :size  :massive}]]
-             [ui/CopyToClipboard {:text nuvlabox-id}
-              [ui/Button {:positive true
-                          :icon     "clipboard"
-                          :content  (@tr [:copy-nuvlabox-id])}]]]]
-
-           [ui/Divider {:horizontal true}
-            [ui/Header (@tr [:nuvlabox-quick-install])]]
-
-           [ui/SegmentGroup {:raised true}
-            [ui/Segment {:loading    (nil? @zip-url)
-                         :text-align :center}
-             [ui/Label {:circular true
-                        :color    "green"} "1"]
-             [:h5 {:style {:margin "0.5em 0 1em 0"}}
-              (str/capitalize (@tr [:download])) " compose file(s)"]
-             [:a {:href     @zip-url
-                  :target   "_blank"
-                  :style    {:margin "1em"}
-                  :download "nuvlaedge.zip"} "nuvlaedge.zip " [ui/Icon {:name "download"}]]]
-
-            [ui/Segment {:text-align :center}
-             [ui/Label {:circular true
-                        :color    "green"} "2"]
-             [:h5 {:style {:margin "0.5em 0 1em 0"}}
-              (@tr [:nuvlabox-unzip-execute])
-              (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
-             [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]]
-
-           [:div {:style {:margin "20px 0px 0px 0px"}}
-            [NuvlaDocs tr compose-doc-url]]]]
-
-         [ui/ModalActions
-          [ui/Button {:positive true
-                      :on-click on-close-fn} (@tr [:close])]]]))))
-
-
-(defn CreatedNuvlaBoxUSBTrigger
-  [_creation-data nuvlabox-release-data _new-api-key _nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
-  (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
-        nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
-        private-ssh-key-file "nuvlabox.ssh.private"
-        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals)
-        download-files-names (map :name download-files)]
-    (fn [creation-data _nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
-      (let [tr                    (subscribe [::i18n-subs/tr])
-            apikey                (:resource-id new-api-key)
-            apisecret             (:secret-key new-api-key)
-            nb-trigger-file-base  {:assets      download-files-names
-                                   :version     (:release nuvlabox-release)
-                                   :name        (:name creation-data)
-                                   :description (:description creation-data)
-                                   :script      (str @cimi-fx/NUVLA_URL
-                                                     "/ui/downloads/nuvlaedge-self-registration.py.gpg")
-                                   :endpoint    @cimi-fx/NUVLA_URL
-                                   :vpn         (:vpn-server-id creation-data)
-                                   :apikey      apikey
-                                   :apisecret   apisecret}
-            nuvlabox-trigger-file (if @nuvlabox-ssh-keys
-                                    (assoc nb-trigger-file-base :ssh @nuvlabox-ssh-keys)
-                                    nb-trigger-file-base)]
-        [:<>
-         [uix/ModalHeader {:header (@tr [:nuvlabox-modal-usb-header]) :icon "usb"}]
-
-         [ui/Segment {:basic true}
-          [ui/Message {:icon true}
-           [icons/Icon {:name (if apikey icons/i-circle-check icons/i-spinner)}]
-           [ui/MessageContent
-            [ui/MessageHeader
-             (@tr [:nuvlabox-usb-key])]
-            (if apikey
-              [:span (str (@tr [:nuvlabox-usb-key-ready]) " ")
-               [:a {:href   (str "api/" apikey)
-                    :target "_blank"}
-                apikey] " "
-               [ui/Popup {:content (@tr [:nuvlabox-modal-usb-apikey-warning])
-                          :trigger (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
-                                                           :color "orange"}])}]]
-              (@tr [:nuvlabox-usb-key-wait]))]]
-          (when @new-private-ssh-key
-            [CreateSSHKeyMessage @new-private-ssh-key private-ssh-key-file tr])]
-
-         [ui/ModalContent
-          [ui/Container
-           [ui/CardGroup {:centered true}
-            [ui/Card
-             [ui/CardContent {:text-align :center}
-              [ui/Header [:span {:style {:overflow-wrap "break-word"}}
-                          (@tr [:nuvlabox-modal-usb-trigger-file])]]
-              [icons/Icon {:name    (if apikey icons/i-file-code icons/i-spinner)
-                           :loading (nil? apikey)
-                           :color   "green"
-                           :size    :massive}]]
-             [:a {:href     (str "data:text/plain;charset=utf-8,"
-                                 (js/encodeURIComponent
-                                   (general-utils/edn->json nuvlabox-trigger-file)))
-                  :target   "_blank"
-                  :download "nuvlabox-installation-trigger-usb.nuvla"}
-              [ui/Button {:style          {:border-radius "inherit"}
-                          :href           (str "data:text/plain;charset=utf-8,"
-                                               (js/encodeURIComponent
-                                                 (general-utils/edn->json nuvlabox-trigger-file)))
-                          :target         "_blank"
-                          :download       "nuvlabox-installation-trigger-usb.nuvla"
-                          :positive       true
-                          :fluid          true
-                          :loading        (nil? apikey)
-                          :icon           "download"
-                          :label-position "left"
-                          :as             "div"
-                          :content        (@tr [:download])}]]]]
-
-           [ui/Divider {:horizontal true}
-            [ui/Header (@tr [:instructions])]]
-
-           [ui/SegmentGroup {:raised true}
-            [ui/Segment {:loading    (nil? nuvlabox-trigger-file)
-                         :text-align :center
-                         :raised     true}
-             [ui/Label {:circular true
-                        :color    "green"} "1"]
-             [:h5 {:style {:margin "0.5em 0 1em 0"}}
-              (@tr [:nuvlabox-modal-usb-copy])
-              [ui/Popup {:content (@tr [:nuvlabox-modal-usb-copy-warning])
-                         :trigger (r/as-element [ui/Icon {:class icons/i-info}])}]]]
-
-            [ui/Segment {:text-align :center
-                         :raised     true}
-             [ui/Label {:circular true
-                        :color    "green"} "2"]
-             [:h5 {:style {:margin "0.5em 0 1em 0"}}
-              (@tr [:nuvlabox-modal-usb-plug])]
-             [:span (@tr [:nuvlabox-modal-usb-plug-info])]]
-
-            [ui/Segment {:text-align :center
-                         :raised     true}
-             [ui/Label {:circular true
-                        :color    "green"} "3"]
-             [:h5 {:style {:margin "0.5em 0 1em 0"}}
-              (@tr [:repeat])]
-             [:span (@tr [:repeat-info])]]]]
-
-          [:div {:style {:margin "20px 0px 0px 0px"}}
-           [NuvlaDocs tr usb-doc-url]]]
-
-         [ui/ModalActions
-          [ui/Button {:positive true
-                      :on-click on-close-fn} (@tr [:close])]]]))))
 
 (defn AddModalWrapper
   []

@@ -640,7 +640,7 @@
                                        (swap! nuvlabox-release-data
                                               assoc :nb-selected nb-selected)
                                        (swap! nuvlabox-release-data assoc :nb-assets
-                                              #{}))))}]
+                                              #{""}))))}]
 
                     [:a {:href   url
                          :target "_blank"

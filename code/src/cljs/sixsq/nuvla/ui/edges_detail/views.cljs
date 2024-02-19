@@ -186,16 +186,16 @@
 
 
 (defn- calc-new-modules-on-release-change [form-data new-release]
-  (let [form-modules     (:modules form-data)
+  (let [form-modules     {}
         form-release-old (get-in form-data [:nuvlabox-release :release])]
     (cond
 
       (and (not (subs/security-available? form-release-old))
-           (subs/security-available? new-release))
+           (subs/security-available? (:release new-release)))
       (assoc form-modules :security
-                          (get form-modules :security true))
+                          (get form-modules :security false))
 
-      (and (not (subs/security-available? new-release))
+      (and (not (subs/security-available? (:release new-release)))
            (subs/security-available? form-release-old))
       (if (form-modules :security)
         (dissoc form-modules :security)
@@ -251,7 +251,7 @@
         form-data      (r/atom nil)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   (fn [release]
-                         (let [release-new (:release (get @releases-by-id release))
+                         (let [release-new (get @releases-by-id release)
                                new-modules (calc-new-modules-on-release-change @form-data release-new)]
                            (swap! form-data assoc
                                   :modules new-modules

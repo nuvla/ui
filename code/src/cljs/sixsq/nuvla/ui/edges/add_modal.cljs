@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.about.subs :as about-subs]
+            [sixsq.nuvla.ui.about.utils :as about-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.edges.events :as events]
@@ -337,10 +339,11 @@
 
 (defn- InstallMethod
   [_]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        k8s-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-edge-on-k8s])]
     (fn [{:keys [install-strategy-error install-strategy playbooks-toggle default-ttl usb-trigger-key-ttl]}]
       (if
-        (nil? (#{docker-based compose-install usb-install} @install-strategy))
+        (and (nil? (#{docker-based compose-install usb-install} @install-strategy)) @k8s-enabled?)
         [:div {:display :flex}
          [ui/CardGroup {:centered    true
                         :itemsPerRow 2}
@@ -350,7 +353,6 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker"]
             [icons/DockerIcon {:size :massive}]]]
-
           [ui/Card
            {:on-click (fn [] (reset! install-strategy k8s-based))
             :raised   true

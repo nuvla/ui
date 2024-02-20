@@ -206,7 +206,7 @@
 (defn AdditionalModulesTable [compose-files {:keys [on-module-change module-checked?]}]
   (let [tr                            (subscribe [::i18n-subs/tr])
         modules                       (set (map :scope compose-files))
-        modules-additional-features   #{"security"}
+        modules-additional-features   (set/intersection modules #{"security"})
         modules-peripherals-discovery (set/difference modules modules-additional-features)]
     [ui/Table style/definition
      [ui/TableBody

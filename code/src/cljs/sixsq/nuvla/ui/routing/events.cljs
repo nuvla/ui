@@ -70,7 +70,6 @@
                        [:dispatch [::reset-ignore-changes-protection]]]}
           revert {:fx [[:dispatch [::navigate-back]]
                        [:dispatch [::reset-ignore-changes-protection]]]}]
-
       (if (and changes-protection? (not ignore-changes-protection))
         {:db (assoc db
                ::main-spec/ignore-changes-modal event

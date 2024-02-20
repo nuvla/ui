@@ -10,6 +10,7 @@
             [sixsq.nuvla.ui.main.subs :as subs]
             [sixsq.nuvla.ui.pages.session.views :as session-views]
             [sixsq.nuvla.ui.pages.session.events :as session-events]
+            [sixsq.nuvla.ui.pages.session.subs :as session-subs]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
@@ -24,6 +25,7 @@
 
 (defn LayoutAuthentication []
   (dispatch [::session-events/init])
+  ^{:key @(subscribe [::session-subs/session])}
   [ui/Grid {:stackable true
             :columns   2
             :style     {:margin           0

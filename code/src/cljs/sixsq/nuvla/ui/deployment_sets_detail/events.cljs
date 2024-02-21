@@ -402,7 +402,7 @@
               (dispatch [::set-deployment-set-edited response])
               (dispatch [::set-apps-edited false])
               (dispatch [::set-fleet-filter-edited false])
-              (dispatch [::set-deployment-set response])
+              (dispatch [::set-deployment-set response nil {:force-modules-reload? true}])
               (dispatch [::set-changes-protection false])
               (dispatch [::disable-form-validation])
               (when on-success (on-success)))))]})))

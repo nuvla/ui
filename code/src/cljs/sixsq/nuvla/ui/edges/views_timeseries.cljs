@@ -110,6 +110,7 @@
         fleet-stats      (subscribe [::subs/fleet-stats])
         current-timespan (subscribe [::subs/fleet-timespan])
         initial-timespan (first ts-utils/timespan-options)]
+    (dispatch [::events/set-selected-fleet-timespan initial-timespan])
     (fn []
       [:div [ui/Menu {:width "100%"}
              [ui/MenuMenu {:position "right"}

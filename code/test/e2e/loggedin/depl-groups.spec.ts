@@ -32,6 +32,8 @@ test('test', async ({ page }, { config }) => {
 
   await page.locator('.nuvla-edges button.add-button').click();
 
+  await page.getByPlaceholder('Search...').fill('e2e test do not delete');
+
   await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW endtoend@sixsq.com' }).click();
 
   await page.getByRole('button', { name: 'Add to deployment group' }).click();

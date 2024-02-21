@@ -8,7 +8,8 @@ test('Creating an Edge with an older version',  async ({ page, context }, { proj
         route.fulfill({ status: 200, body: JSON.stringify(NuvlaEdgeRelease())});
       });
     await page.getByRole('link', { name: 'Edges' }).click();
-    const edgeName = 'NE with older release';
+     const newEdgeNameStart = `e2e Testing: Edge creation and deletion in`;
+      const newEdgeName = `${newEdgeNameStart} ${project.name} ${new Date().toISOString()}`;
 
   const edgesPageRegex = /\/ui\/edges/;
 
@@ -18,7 +19,7 @@ test('Creating an Edge with an older version',  async ({ page, context }, { proj
 
   await page.locator('input[type="input"]').click();
 
-  await page.locator('input[type="input"]').fill(edgeName);
+  await page.locator('input[type="input"]').fill(newEdgeName);
   // We add the security module
   await page.getByText('security').click();
 

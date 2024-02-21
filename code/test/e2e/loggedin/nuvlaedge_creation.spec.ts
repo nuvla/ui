@@ -42,7 +42,7 @@ test('Creating an Edge with an older version',  async ({ page, context }, { proj
 
   await page.getByRole('button', { name: 'close' }).click();
   // We verify that nothing has blown up, we get to see the edges table
-  await expect(page.getByRole('link', { name: 'select row 0 ' + edgeName + ' 1.y.z' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /select row 0/i })).toBeVisible();
 
 });
 

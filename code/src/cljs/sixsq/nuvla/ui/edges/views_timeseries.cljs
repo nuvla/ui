@@ -26,7 +26,7 @@
      :avg-online (-> bucket :edge-avg-online :value)}))
 (defn OnlineStatsByEdge [{:keys [on-close]}]
   (let [fleet-stats   (subscribe [::subs/fleet-stats])
-        stats-by-edge (:online-status-by-edge @fleet-stats)
+        stats-by-edge (:availability-by-edge @fleet-stats)
         ts-data       (ts-utils/data->ts-data stats-by-edge)]
     [ui/Card [ui/CardContent
               [ui/CardHeader {:style {:display "flex"
@@ -39,12 +39,12 @@
       (into [ui/CardDescription {:style {:display "flex"
                                          :flex-direction "column"}}]
             (mapv (fn [bucket]
+                    (js/console.log bucket)
                     (when-let [{:keys [name id avg-online time]} (info-edge bucket)]
-
                       [values/AsLink (general-utils/id->uuid id) :page "edges" :label name]))
                   (-> (first ts-data)
                       :aggregations
-                      :avg-online
+                      :by-edge
                       :buckets)))]]))
 
 (defn FleetStatusTimeSeries [timespan data]
@@ -53,10 +53,7 @@
     (let [ts-data   (ts-utils/data->ts-data data)
           [from to] (ts-utils/timespan-to-period timespan)]
       [:div {:style {:max-width 800
-                     :margin    "0 auto"}}#_{:style {:display "flex"
-                     :align-items "center"
-                     :justify-content "space-between"
-                     :width 800}}
+                     :margin    "0 auto"}}
        [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
                                         :label           "available"
                                         :backgroundColor "#21d32c88"}
@@ -93,7 +90,7 @@
                                             (dispatch [::events/fetch-fleet-stats {:from        from
                                                                                    :to          to
                                                                                    :granularity granularity
-                                                                                   :dataset     ["online-status-by-edge"]}])
+                                                                                   :dataset     ["availability-by-edge"]}])
                                             (reset! extra-info-visible? true))))
                             :onHover  (fn [evt chartElement]
                                         (let [cursor (if (first chartElement)
@@ -132,4 +129,4 @@
                                                   (dispatch [::events/set-selected-fleet-timespan timespan])))}]]]]
 
        [ui/TabPane
-        [FleetStatusTimeSeries @current-timespan (:online-status-stats @fleet-stats)]]])))
+        [FleetStatusTimeSeries @current-timespan (:availability-stats @fleet-stats)]]])))

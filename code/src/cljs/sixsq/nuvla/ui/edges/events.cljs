@@ -578,8 +578,8 @@
   ::fetch-fleet-stats-success
   (fn [{db :db} [_ {:keys [availability-stats availability-by-edge] :as _response}]]
     {:db (cond-> db
-                 availability-stats (assoc-in [::spec/fleet-stats :online-status-stats] availability-stats)
-                 availability-by-edge (assoc-in [::spec/fleet-stats :online-status-by-edge] availability-by-edge)
+                 availability-stats (assoc-in [::spec/fleet-stats :availability-stats] availability-stats)
+                 availability-by-edge (assoc-in [::spec/fleet-stats :availability-by-edge] availability-by-edge)
                  true (assoc ::spec/loading? false))}))
 
 (reg-event-fx

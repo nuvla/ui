@@ -168,7 +168,8 @@
           [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]
           [:dispatch [::get-nuvlabox-locations]]]}))
 
-(def stats-to-query ["online-status-stats"])
+(def fleet-availability-stats ["availability-stats"])
+
 (reg-event-fx
   ::set-nuvlaboxes
   (fn [{{:keys [::spec/fleet-timespan] :as db} :db} [_ nuvlaboxes]]
@@ -183,9 +184,9 @@
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                        ::main-spec/loading? false)
          :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]
-              [:dispatch [::fetch-fleet-stats {:from from
-                                               :to to
-                                               :dataset stats-to-query
+              [:dispatch [::fetch-fleet-stats {:from        from
+                                               :to          to
+                                               :dataset     fleet-availability-stats
                                                :granularity (ts-utils/timespan->granularity fleet-timespan)}]]]}))))
 
 
@@ -545,10 +546,10 @@
   (fn [{db :db} [_ timespan]]
     (let [[from to] (ts-utils/timespan-to-period timespan)]
       {:db (assoc db ::spec/fleet-timespan timespan)
-       :fx [[:dispatch [::fetch-fleet-stats {:from from
-                                             :to to
+       :fx [[:dispatch [::fetch-fleet-stats {:from        from
+                                             :to          to
                                              :granularity (ts-utils/timespan->granularity timespan)
-                                             :dataset stats-to-query}]]]})))
+                                             :dataset     fleet-availability-stats}]]]})))
 
 (reg-event-fx
   ::fetch-fleet-stats
@@ -575,10 +576,10 @@
 
 (reg-event-fx
   ::fetch-fleet-stats-success
-  (fn [{db :db} [_ {:keys [online-status-stats online-status-by-edge] :as _response}]]
+  (fn [{db :db} [_ {:keys [availability-stats availability-by-edge] :as _response}]]
     {:db (cond-> db
-                 online-status-stats (assoc-in [::spec/fleet-stats :online-status-stats] online-status-stats)
-                 online-status-by-edge (assoc-in [::spec/fleet-stats :online-status-by-edge] online-status-by-edge)
+                 availability-stats (assoc-in [::spec/fleet-stats :online-status-stats] availability-stats)
+                 availability-by-edge (assoc-in [::spec/fleet-stats :online-status-by-edge] availability-by-edge)
                  true (assoc ::spec/loading? false))}))
 
 (reg-event-fx

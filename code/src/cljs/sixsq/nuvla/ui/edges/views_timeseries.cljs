@@ -50,24 +50,22 @@
 (defn FleetStatusTimeSeries [timespan data]
   (r/with-let [extra-info-visible? (r/atom false)]
 
-    (let [ts-data             (ts-utils/data->ts-data data)
+    (let [ts-data   (ts-utils/data->ts-data data)
           [from to] (ts-utils/timespan-to-period timespan)]
-      [:div {:style {:display "flex"
+      [:div {:style {:max-width 800
+                     :margin    "0 auto"}}#_{:style {:display "flex"
                      :align-items "center"
                      :justify-content "space-between"
                      :width 800}}
        [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
-                                        :label           "online"
+                                        :label           "available"
                                         :backgroundColor "#21d32c88"}
-                                       {:data            (mapv (fn [d]
-                                                                 (let [offline-edges (get-in d [:aggregations :virtual-edges-offline :value])
-                                                                       unknown-edges (get-in d [:aggregations :virtual-edges-unknown-state :value])]
-                                                                   (assoc d :x (:timestamp d)
-                                                                            :y (+ offline-edges unknown-edges)))) ts-data)
-                                        :label           "unknown or offline"
+                                       {:data            (timestamp+value ts-data :virtual-edges-offline)
+                                        :label           "unavailable"
                                         :backgroundColor "#eab81198"}]}
 
-                  :options {:title    "Fleet status"
+                  :options {:plugins  {:title {:text    "Fleet availability"
+                                               :display true}}
                             :scales   {:x {:type    "time"
                                            :min     from
                                            :max     to
@@ -85,25 +83,23 @@
                                            :min     0
                                            :title   {:display "true"
                                                      :text    "Number of NuvlaEdges"}
-                                           :stacked true
-                                           }}
+                                           :stacked true}}
                             :elements {:point {:radius 1}}
                             :onClick  (fn [_evt element _chart]
                                         (when-let [raw-data (js->clj (.. (first element) -element -$context -raw) :keywordize-keys true)]
                                           (let [from        (js/Date. (:timestamp raw-data))
                                                 granularity (ts-utils/timespan->granularity timespan)
                                                 to          (ts-utils/add-time from granularity)]
-                                            (dispatch [::events/fetch-fleet-stats {:from from
-                                                                                   :to to
+                                            (dispatch [::events/fetch-fleet-stats {:from        from
+                                                                                   :to          to
                                                                                    :granularity granularity
-                                                                                   :dataset ["online-status-by-edge"]}])
+                                                                                   :dataset     ["online-status-by-edge"]}])
                                             (reset! extra-info-visible? true))))
                             :onHover  (fn [evt chartElement]
                                         (let [cursor (if (first chartElement)
                                                        "pointer"
                                                        "default")]
-                                          (set! (.. evt -native -target -style -cursor) cursor)))
-                            }}]
+                                          (set! (.. evt -native -target -style -cursor) cursor)))}}]
 
        [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")}}
         [OnlineStatsByEdge {:on-close #(reset! extra-info-visible? false)}]]])))

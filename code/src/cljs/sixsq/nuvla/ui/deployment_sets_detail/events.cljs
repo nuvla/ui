@@ -59,12 +59,22 @@
   (dispatch [::refresh]))
 
 (reg-event-fx
+  ;; called when editing page is entered the first time, and when changes are ignored
+  ::reset
+  (fn [{:keys [db]}]
+    {:db (-> db
+             (merge db spec/defaults)
+             (assoc ::spec/reset-changes-event [::reset]))
+     :fx [[:dispatch [::main-events/action-interval-delete {:id refresh-action-depl-set-id}]]
+          [:dispatch [::main-events/action-interval-delete {:id refresh-action-deployments-id}]]
+          [:dispatch [::refresh]]
+          [:dispatch [::enable-form-validation]]]}))
+
+(reg-event-fx
   ;; called when editing page is entered
   ::init
-  (fn [_ [_ uuid]]
-    {:fx [[::get-deployment-set
-           (uuid->depl-set-id uuid)
-           {:force-modules-reload? true}]
+  (fn []
+    {:fx [[:dispatch [::reset]]
           [:dispatch [::refresh-operational-status]]
           [:dispatch [::set-changes-protection false]]]}))
 
@@ -437,20 +447,20 @@
 (reg-event-fx
   ::delete
   (fn [{{:keys [::spec/deployment-set]} :db} [_ {:keys [forceable? deletable?]}]]
-    (let [id (:id deployment-set)
+    (let [id                         (:id deployment-set)
           navigate-deployment-groups #(dispatch [::routing-events/navigate routes/deployment-groups])
-          cb (fn [response]
-               (dispatch
-                 [::job-events/wait-job-to-complete
-                  {:job-id              (:location response)
-                   :refresh-interval-ms 1000
-                   :on-complete
-                   #(do
-                      (navigate-deployment-groups)
-                      (when-not (= "SUCCESS" (:state %))
-                        (cimi-api-fx/default-error-message
-                          %
-                          "Failed to delete deployment group")) ())}]))]
+          cb                         (fn [response]
+                                       (dispatch
+                                         [::job-events/wait-job-to-complete
+                                          {:job-id              (:location response)
+                                           :refresh-interval-ms 1000
+                                           :on-complete
+                                           #(do
+                                              (navigate-deployment-groups)
+                                              (when-not (= "SUCCESS" (:state %))
+                                                (cimi-api-fx/default-error-message
+                                                  %
+                                                  "Failed to delete deployment group")) ())}]))]
       (cond
         deletable?
         {::cimi-api-fx/delete [id navigate-deployment-groups]}
@@ -533,7 +543,7 @@
         fleet-filter (get-in db (subs/current-route->fleet-filter-edited-db-path current-route))]
     (merge {:applications-sets [{:id         (:id module-applications-sets)
                                  :version    (:version module-applications-sets)
-                                 :overwrites [(cond-> {:fleet (:resources (get-in db edges-path))
+                                 :overwrites [(cond-> {:fleet        (:resources (get-in db edges-path))
                                                        :applications (map
                                                                        (fn [app] (application-overwrites db 0 app nil))
                                                                        (get-in module-applications-sets
@@ -659,12 +669,12 @@
   (fn [{{:keys [current-route
                 ::spec/edges-ordering
                 ::spec/deployment-set-edited] :as db} :db} [_ creating?]]
-    (let [callback     (fn [response]
-                         (dispatch [::set-edges response]))
-          edge-ids     (if creating?
-                         (let [path (subs/current-route->edges-db-path current-route)]
-                           (:resources (get-in db path)))
-                         (get-target-fleet-ids deployment-set-edited))]
+    (let [callback (fn [response]
+                     (dispatch [::set-edges response]))
+          edge-ids (if creating?
+                     (let [path (subs/current-route->edges-db-path current-route)]
+                       (:resources (get-in db path)))
+                     (get-target-fleet-ids deployment-set-edited))]
       (if (seq edge-ids)
         ;; even for the fleet filter case, fetch the computed edges only:
         ;; when the fleet filter changes, a recompute fleet action is still needed to refresh

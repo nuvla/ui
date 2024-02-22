@@ -30,17 +30,18 @@
         ts-data       (ts-utils/data->ts-data stats-by-edge)]
     [ui/Card [ui/CardContent
               [ui/CardHeader {:style {:display "flex"
-                                      :justify-content "space-between"}} [:span "Online NuvlaEdges"]
+                                      :align-items "center"
+                                      :justify-content "space-between"}} [:span "Available NuvlaEdges"]
                [icons/CloseIcon {:link     true
                                  :color "black"
                                  :on-click on-close}]]
-              [ui/CardMeta {:style {:font-size "tiny"}} (str "on " (time/time->format (:timestamp (first ts-data))))]]
+              [ui/CardMeta {:style {:font-size "tiny"}}
+               (str "on " (time/time->format (:timestamp (first ts-data))))]]
      [ui/CardContent
       (into [ui/CardDescription {:style {:display "flex"
                                          :flex-direction "column"}}]
             (mapv (fn [bucket]
-                    (js/console.log bucket)
-                    (when-let [{:keys [name id avg-online time]} (info-edge bucket)]
+                    (when-let [{:keys [name id]} (info-edge bucket)]
                       [values/AsLink (general-utils/id->uuid id) :page "edges" :label name]))
                   (-> (first ts-data)
                       :aggregations
@@ -53,7 +54,8 @@
     (let [ts-data   (ts-utils/data->ts-data data)
           [from to] (ts-utils/timespan-to-period timespan)]
       [:div {:style {:max-width 800
-                     :margin    "0 auto"}}
+                     :display "flex"
+                     :align-items "center"}}
        [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
                                         :label           "available"
                                         :backgroundColor "#21d32c88"}
@@ -98,7 +100,8 @@
                                                        "default")]
                                           (set! (.. evt -native -target -style -cursor) cursor)))}}]
 
-       [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")}}
+       [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")
+                      :height 150}}
         [OnlineStatsByEdge {:on-close #(reset! extra-info-visible? false)}]]])))
 
 (defn FleetTimeSeries []

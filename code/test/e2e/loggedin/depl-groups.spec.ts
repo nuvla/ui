@@ -32,7 +32,7 @@ test('test', async ({ page }, { config }) => {
 
   await page.locator('.nuvla-edges button.add-button').click();
 
-  await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW endtoend@sixsq.com' }).click();
+  await page.getByRole('link', { name: /select row 0/i }).click();
 
   await page.getByRole('button', { name: 'Add to deployment group' }).click();
 

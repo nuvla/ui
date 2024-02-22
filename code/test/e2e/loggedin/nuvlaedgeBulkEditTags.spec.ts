@@ -33,9 +33,8 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await closeDropDown();
   await page.getByRole('button', { name: 'edit tags' }).click();
   await page.getByRole('button', { name: 'Yes: Add tags' }).click();
-
   // ASSERTION 1
-  await expect(page.getByText('2 Edges updated with operation: Add tags')).toBeVisible();
+  await expect(page.getByText('2 Edges updated with operation: Add tags', {exact: true})).toBeVisible();
   await expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(2);
 
   // Set multiple tags on one edge
@@ -55,7 +54,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.getByRole('button', { name: 'Yes: Set tags' }).click();
 
   // ASSERTION 2
-  await expect(page.getByText('1 Edge updated with operation: Set tags')).toBeVisible();
+  await expect(page.getByText('1 Edge updated with operation: Set tags', {exact: true})).toBeVisible();
   await page.waitForTimeout(500);
   await expect(page.getByRole('link').filter({ hasText: 'SetTagTest1' })).toHaveCount(1);
   await expect(page.getByRole('link').filter({ hasText: 'SetTagTest2' })).toHaveCount(1);
@@ -80,7 +79,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.getByRole('button', { name: 'Yes: Remove specific tags' }).click();
 
   // ASSERTION 3
-  await expect(page.getByText('1 Edge updated with operation: Remove specific tags')).toBeVisible();
+  await expect(page.getByText('1 Edge updated with operation: Remove specific tags', {exact: true})).toBeVisible();
   await page.waitForTimeout(500);
   await expect(page.getByRole('link').filter({ hasText: 'SetTagTest1' })).toHaveCount(0);
   await expect(page.getByRole('link').filter({ hasText: 'SetTagTest2' })).toHaveCount(0);
@@ -96,7 +95,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.getByRole('button', { name: 'Yes: Remove all tags' }).click();
 
   // ASSERTION 4
-  await expect(page.getByText('2 Edges updated with operation: Remove all tags')).toBeVisible();
+  await expect(page.getByText('2 Edges updated with operation: Remove all tags', {exact: true})).toBeVisible();
   await page.waitForTimeout(500);
   await expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(0);
 
@@ -120,7 +119,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.getByRole('button', { name: 'Yes: Add tags' }).click();
 
   // ASSERTION 1
-  await expect(page.getByText('2 Edges updated with operation: Add tags')).toBeVisible();
+  await expect(page.getByText('2 Edges updated with operation: Add tags', {exact: true})).toBeVisible();
   await page.waitForTimeout(500);
   await expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(2);
 
@@ -142,7 +141,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.getByRole('button', { name: 'Yes: Set tags' }).click();
 
   // ASSERTION 2
-  await expect(page.getByText('1 Edge updated with operation: Set tags')).toBeVisible();
+  await expect(page.getByText('1 Edge updated with operation: Set tags', {exact: true})).toBeVisible();
   await page.waitForTimeout(500);
   await expect(page.getByRole('link').filter({ hasText: 'SetTagTest1' })).toHaveCount(1);
   await expect(page.getByRole('link').filter({ hasText: 'SetTagTest2' })).toHaveCount(1);
@@ -166,7 +165,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.getByPlaceholder('Search ...').fill('');
 
   // ASSERTION 3
-  await expect(page.getByText('1 Edge updated with operation: Remove specific tags')).toBeVisible();
+  await expect(page.getByText('1 Edge updated with operation: Remove specific tags', {exact: true})).toBeVisible();
   await page.waitForTimeout(500);
   await expect(page.getByRole('link').filter({ hasText: 'SetTagTest1' })).toHaveCount(0);
   await expect(page.getByRole('link').filter({ hasText: 'SetTagTest2' })).toHaveCount(0);
@@ -182,7 +181,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
   await page.getByRole('button', { name: 'Yes: Remove all tags' }).click();
 
   // ASSERTION 4
-  await expect(page.getByText('2 Edges updated with operation: Remove all tags')).toBeVisible();
+  await expect(page.getByText('2 Edges updated with operation: Remove all tags', {exact: true})).toBeVisible();
   await page.waitForTimeout(500);
   await expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(0);
 });

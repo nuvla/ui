@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.acl.utils
   (:require [clojure.set :as set]
+            [clojure.string :as str]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 
@@ -235,3 +236,8 @@
              (extract-rights authn-info acl))))))
 
 (def can-edit-data? (partial has-rights? #{:edit-data}))
+
+(defn principal?
+  [principal]
+  (or (str/starts-with? principal "group/")
+      (str/starts-with? principal "user/")))

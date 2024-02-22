@@ -6,6 +6,24 @@
 
 ## Released
 
+## [2.36.4] - 2024-02-21
+
+- Notifications page
+  - Tabs browsing via query params
+  - Allow user to trigger notification test
+- Deployment detail page - Version update of an existing deployment bugfix
+- Deployment group
+  - Display last updated and operational status on card
+  - On automatic page refresh we loose unsaved changes
+  - Reload DG apps on save
+  - Fix inconsistency of dynamic filter definition and number of edges
+- Profile page - Add coupon modal hang on error fix
+- Acl - Principal show error message when not entering a group or a user id
+- UIX - CopyToClipboardDownload click to copy not working bugfix
+- Make statistics component accurately represent all states
+- Review e2e tests and attempt to fix flaky tests
+- Build version - support Github and Cloudflare commit short id extraction
+
 ## [2.36.3] - 2024-01-29
 
 - Enable host-level management for Kubernetes-deployed NuvlaEdges

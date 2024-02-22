@@ -159,16 +159,21 @@
                        (swap! ui-acl utils/acl-remove-principle-from-rights principal)
                        (on-change (utils/ui-acl-format->acl @ui-acl)))}])]]))
 
-
 (defn DropdownPrincipals
   [_opts _ui-acl]
   (let [tr          (subscribe [::i18n-subs/tr])
         add-item    (r/atom nil)
+        error       (r/atom nil)
+        reset-error #(reset! error nil)
         on-add-item (ui-callback/value
-                      #(reset! add-item {:key   %
-                                         :value %
-                                         :text  %
-                                         :icon  (utils/id->icon %)}))
+                      #(do
+                         (if (utils/principal? %)
+                           (do (reset! add-item {:key   %
+                                                 :value %
+                                                 :text  %
+                                                 :icon  (utils/id->icon %)})
+                               (reset-error))
+                           (reset! error %))))
         search      (fn [opts query-search]
                       (->> opts
                            (filter #(let [pattern (re-pattern
@@ -188,12 +193,17 @@
                       :upward               false
                       :options              (cond-> @options @add-item (conj @add-item))
                       :search               search
+                      :on-click             reset-error
                       :allow-additions      true
+                      :error                (boolean @error)
+                      :placeholder          (when @error (r/as-element [:b (@tr [:not-able-to-resolve]) " " @error]))
                       :select-on-navigation false
                       :select-on-blur       false
                       :addition-label       (@tr [:add-by-user-group-id])
                       :on-add-item          on-add-item
-                      :on-change            (ui-callback/value on-change)}]))))
+                      :on-change            (ui-callback/value
+                                              #(when (utils/principal? %)
+                                                 (on-change %)))}]))))
 
 (defn AddRight
   [{:keys [on-change _mode] :as _opts} ui-acl]

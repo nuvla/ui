@@ -3,6 +3,7 @@
 
 (def dictionary
   {:en {
+        :not-able-to-resolve                           "Failed to resolve"
         :about                                         "about"
         :about-starting-these-updates                  "You're about to start these updates"
         :about-subtitle                                "This software is brought to you by"
@@ -1099,6 +1100,7 @@
         }
 
    :fr {
+        :not-able-to-resolve                           "Échec de la résolution de"
         :about                                         "à propos"
         :about-starting-these-updates                  "Vous êtes sur le point de démarrer ces mises à jour"
         :about-subtitle                                "Ce logiciel vous est fournit par"

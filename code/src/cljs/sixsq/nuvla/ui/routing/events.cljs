@@ -27,14 +27,15 @@
 
 (reg-event-fx
   ::navigated
-  (fn [{{:keys [::session-spec/session] :as db} :db} [_ {:keys [data path query-params] :as new-match}]]
+  (fn [{{:keys [::session-spec/session
+                ::session-spec/session-loading?] :as db} :db} [_ {:keys [data path query-params] :as new-match}]]
     (let [old-match                  (:current-route db)
           controllers                (rfc/apply-controllers (:controllers old-match) new-match)
           new-match-with-controllers (assoc new-match :controllers controllers)
           view-changed?              (not= (:view (:data old-match))
                                            (:view (:data new-match-with-controllers)))
           init-dispatch              (:init-dispatch data)
-          protected-redirect?        (and (:protected? data) (nil? session))]
+          protected-redirect?        (and (:protected? data) (false? session-loading?) (nil? session))]
       {:db                   (-> db
                                  (assoc :current-route new-match-with-controllers
                                         ::main-spec/nav-path (utils/split-path-alias path)

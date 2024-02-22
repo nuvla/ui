@@ -124,33 +124,36 @@
                               :y      1
                               :status (-> d :aggregations :avg-online :value)})))]
     [:div
-     (when (seq dataset)
-       [plot/Bar {:updateMode "none"
-                  :height     100
-                  :data       {:datasets [{:data               dataset
+     [plot/Bar {:updateMode "none"
+                :height     100
+                :data       {:datasets (if (seq ts-data)
+                                         [{:data               dataset
                                            :label              "status"
                                            :categoryPercentage 1.0
                                            :barPercentage      1.0
-                                           :borderColor        (fn [ctx]
-                                                                 (when-let [element-status (.. ^Map ctx -raw -status)]
-                                                                   (let [color-gradient (plot/color-gradient element-status)]
-                                                                     (plot/to-rgb color-gradient))))
-                                           :backgroundColor    (fn [ctx]
-                                                                 (when-let [element-status (.. ^Map ctx -raw -status)]
-                                                                   (let [color-gradient (plot/color-gradient element-status)]
-                                                                     (plot/to-rgb color-gradient))))
-                                           :borderWidth        1}]}
+                                           :borderColor (fn [ctx]
+                                                              (if-let [element-status (.. ^Map ctx -raw -status)]
+                                                                (let [color-gradient (plot/color-gradient element-status)]
+                                                                  (plot/to-rgb color-gradient))
+                                                                "gray"))
+                                          :backgroundColor (fn [ctx]
+                                                                  (if-let [element-status (.. ^Map ctx -raw -status)]
+                                                                    (let [color-gradient (plot/color-gradient element-status)]
+                                                                      (plot/to-rgb color-gradient))
+                                                                    "gray"))
+                                           :borderWidth        1}]
+                                         [])}
 
-                  :options    (graph-options selected-timespan {:title    (str (@tr [:nuvlaedge-status]) " (" (@tr [:online]) "/" (@tr [:offline]) ")")
-                                                                :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
-                                                                                                          (when-let [status (.. ^Map tooltipItems -raw -status)]
-                                                                                                            (str "online: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
-                                                                           :legend  {:display false}}
-                                                                :y-config {:max   1
-                                                                           :min   0
-                                                                           :grid  {:display false}
-                                                                           :ticks {:display false}
-                                                                           :title {:display false}}})}])]))
+                :options    (graph-options selected-timespan {:title    (str (@tr [:nuvlaedge-status]) " (" (@tr [:online]) "/" (@tr [:offline]) ")")
+                                                              :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
+                                                                                                        (when-let [status (.. ^Map tooltipItems -raw -status)]
+                                                                                                          (str "online: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
+                                                                         :legend  {:display false}}
+                                                              :y-config {:max   1
+                                                                         :min   0
+                                                                         :grid  {:display false}
+                                                                         :ticks {:display false}
+                                                                         :title {:display false}}})}]]))
 (defn NetworkDataTimeSeries [_selected-timespan data]
   (when data
     (let [interfaces         (mapv #(get-in % [:dimensions :network.interface]) data)

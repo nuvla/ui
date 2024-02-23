@@ -5,7 +5,6 @@
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
             [reitit.frontend.history :as rfh]
-            [sixsq.nuvla.ui.pages.session.events :as session-events]
             [sixsq.nuvla.ui.app.view :refer [LayoutPage
                                              LayoutAuthentication]]
             [sixsq.nuvla.ui.pages.about.views :refer [About]]

@@ -12,7 +12,35 @@
             [sixsq.nuvla.ui.pages.session.events :as session-events]
             [sixsq.nuvla.ui.pages.session.subs :as session-subs]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.utils :as routing-utils]
+            [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+
+(defn WatcherRedirectProtectedPage
+  []
+  (when @(subscribe [::route-subs/protected-page?])
+    (dispatch [::routing-events/navigate routes/sign-in nil
+               {:redirect (-> @(subscribe [::route-subs/current-route])
+                              (routing-utils/gen-href nil)
+                              routing-utils/strip-base-path)}])))
+
+(defn FollowRedirect
+  []
+  (let [redirect @(subscribe [::route-subs/query-param :redirect])]
+    (js/console.warn "FollowRedirect" redirect)
+    (dispatch [::routing-events/navigate
+               (or (some-> redirect js/decodeURIComponent)
+                   (routing-utils/name->href routes/home))])))
+
+(defn SessionRedirector
+  []
+  [:<>
+   (let [session @(subscribe [::session-subs/session])]
+     (js/console.warn "SessionRedirector" session)
+     (if session
+      [FollowRedirect]
+      [WatcherRedirectProtectedPage]))])
 
 (defn RouterView []
   (let [CurrentView   @(subscribe [::route-subs/current-view])
@@ -25,20 +53,21 @@
 
 (defn LayoutAuthentication []
   (dispatch [::session-events/init])
-  ^{:key @(subscribe [::session-subs/session])}
-  [ui/Grid {:stackable true
-            :columns   2
-            :style     {:margin           0
-                        :background-color "white"
-                        :padding          0}}
-
-   [ui/GridColumn {:class "login-left"}
-    [session-views/LeftPanel]]
-   [ui/GridColumn
-    [RouterView]]])
+  [:<>
+   [SessionRedirector]
+   [ui/Grid {:stackable true
+             :columns   2
+             :style     {:margin           0
+                         :background-color "white"
+                         :padding          0}}
+    [ui/GridColumn {:class "login-left"}
+     [session-views/LeftPanel]]
+    [ui/GridColumn
+     [RouterView]]]])
 
 (defn LayoutPage []
   [:<>
+   [SessionRedirector]
    [intercom/Widget]
    [sidebar/Menu]
    [main-views/MainDiv

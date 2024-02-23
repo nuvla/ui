@@ -2,7 +2,7 @@
   (:require [re-frame.core :refer [reg-event-fx]]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :as route-utils]))
+            [sixsq.nuvla.ui.routing.utils :as routing-utils]))
 
 ;; TODO: Refactor/move to additional filter or main fx
 (reg-event-fx
@@ -14,6 +14,6 @@
                      :value    filter-string}
        :fx          [[:dispatch
                       [::main-events/open-link
-                       (route-utils/name->href
+                       (routing-utils/name->href
                          {:route-name   ::routes/edges
                           :query-params {:filter-storage-key uuid}})]]]})))

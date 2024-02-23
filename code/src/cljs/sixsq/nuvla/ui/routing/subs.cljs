@@ -52,6 +52,11 @@
   :-> :layout)
 
 (reg-sub
+  ::protected-page?
+  :<- [::current-route-data]
+  :-> :protected?)
+
+(reg-sub
   ::current-view
   :<- [::current-route-data]
   :-> :view)

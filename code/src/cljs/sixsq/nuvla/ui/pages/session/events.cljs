@@ -11,7 +11,6 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.pages.session.effects :as fx]
             [sixsq.nuvla.ui.pages.session.spec :as spec]
             [sixsq.nuvla.ui.utils.response :as response]))
@@ -244,15 +243,10 @@
 
 (reg-event-fx
   ::init
-  (fn [{{:keys [::spec/session
-                ::i18n-spec/tr
+  (fn [{{:keys [::i18n-spec/tr
                 ::main-spec/nav-query-params]} :db}]
-    (let [{:keys [redirect error message]} nav-query-params]
-      {:fx [(when session
-              [:dispatch [::routing-events/navigate
-                          (or (some-> redirect js/decodeURIComponent)
-                              (name->href routes/home))]])
-            (when error
+    (let [{:keys [error message]} nav-query-params]
+      {:fx [(when error
               [:dispatch [::set-error-message
                           (or (tr [(keyword error)]) error)]])
             (when message

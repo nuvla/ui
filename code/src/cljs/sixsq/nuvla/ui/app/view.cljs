@@ -28,7 +28,6 @@
 (defn FollowRedirect
   []
   (let [redirect @(subscribe [::route-subs/query-param :redirect])]
-    (js/console.warn "FollowRedirect" redirect)
     (dispatch [::routing-events/navigate
                (or (some-> redirect js/decodeURIComponent)
                    (routing-utils/name->href routes/home))])))
@@ -37,7 +36,6 @@
   []
   [:<>
    (let [session @(subscribe [::session-subs/session])]
-     (js/console.warn "SessionRedirector" session)
      (if session
       [FollowRedirect]
       [WatcherRedirectProtectedPage]))])

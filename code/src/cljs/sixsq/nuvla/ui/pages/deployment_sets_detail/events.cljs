@@ -1123,8 +1123,7 @@
                                      (merge deployment-set-edited)
                                      (assoc-in subs/fleet-filter-path fleet-filter))]
       {:db (assoc-in db path fleet-filter)
-       :fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
-            [:dispatch [::get-edges]]]})))
+       :fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]]})))
 
 (defn get-dynamic-fleet-filter-string
   [{:keys [::spec/edge-picker-additional-filter] :as _db}]

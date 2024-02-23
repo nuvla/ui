@@ -21,7 +21,7 @@
             [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.common-components.resource-log.views :as log-views]
-            [sixsq.nuvla.ui.pages.session.subs :as session-subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.map :as map]

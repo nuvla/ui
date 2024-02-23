@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.pages.session.utils
+(ns sixsq.nuvla.ui.session.utils
   (:require [clojure.string :as str]))
 
 (def ^:const user-tmpl-email-password "user-template/email-password")

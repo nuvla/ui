@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.pages.session.spec
+(ns sixsq.nuvla.ui.session.spec
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.config :as config]))
 

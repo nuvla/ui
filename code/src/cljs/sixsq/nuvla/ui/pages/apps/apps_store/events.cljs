@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.pages.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-fx

@@ -1,10 +1,10 @@
-(ns sixsq.nuvla.ui.pages.session.subs
+(ns sixsq.nuvla.ui.session.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.pages.cimi.subs :as cimi-subs]
-            [sixsq.nuvla.ui.pages.session.spec :as spec]
-            [sixsq.nuvla.ui.pages.session.utils :as utils]
+            [sixsq.nuvla.ui.session.spec :as spec]
+            [sixsq.nuvla.ui.session.utils :as utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 

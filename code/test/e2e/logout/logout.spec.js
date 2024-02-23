@@ -8,9 +8,7 @@ test('Logout logs me out', async ({ page, context }, { project, config }) => {
 
   await page.goto(welcomePageUrl);
   await page.getByText(/^logout$/i).click();
-  await expect(page).toHaveURL(signInPageUrl);
-
-  await page.goto(welcomePageUrl);
+  await expect(page).toHaveURL(welcomePageUrl);
 
   // Testing redirect to login page when navigating
   await page.getByRole('link', { name: 'Edges' }).click();

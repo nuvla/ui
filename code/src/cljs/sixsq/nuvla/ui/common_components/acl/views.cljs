@@ -6,7 +6,7 @@
             [sixsq.nuvla.ui.common-components.acl.utils :as utils]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.pages.session.subs :as session-subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]

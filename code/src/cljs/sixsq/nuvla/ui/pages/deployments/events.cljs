@@ -14,7 +14,7 @@
             [sixsq.nuvla.ui.routing.events :as route-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param]]
-            [sixsq.nuvla.ui.pages.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]))
 

@@ -13,9 +13,9 @@
             [sixsq.nuvla.ui.pages.profile.spec :as spec]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.pages.session.events :as session-events]
-            [sixsq.nuvla.ui.pages.session.spec :as session-spec]
-            [sixsq.nuvla.ui.pages.session.utils :as session-utils :refer [get-active-claim]]
+            [sixsq.nuvla.ui.session.events :as session-events]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :as session-utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 

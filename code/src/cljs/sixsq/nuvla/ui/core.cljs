@@ -14,7 +14,7 @@
             [sixsq.nuvla.ui.app.view :refer [App]]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.router :refer [init-routes!]]
-            [sixsq.nuvla.ui.pages.session.events :as session-events]
+            [sixsq.nuvla.ui.session.events :as session-events]
             [taoensso.timbre :as log]))
 
 (defn dev-setup []

@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.messages.events :as events]
             [sixsq.nuvla.ui.common-components.messages.subs :as subs]
-            [sixsq.nuvla.ui.pages.session.subs :as session-subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]

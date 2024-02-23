@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.pages.session.sign-up-views
+(ns sixsq.nuvla.ui.session.sign-up-views
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
             [form-validator.core :as fv]
@@ -8,10 +8,10 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.profile.views :as profile-views]
-            [sixsq.nuvla.ui.pages.session.components :as comp]
-            [sixsq.nuvla.ui.pages.session.events :as events]
-            [sixsq.nuvla.ui.pages.session.subs :as subs]
-            [sixsq.nuvla.ui.pages.session.utils :as utils]
+            [sixsq.nuvla.ui.session.components :as comp]
+            [sixsq.nuvla.ui.session.events :as events]
+            [sixsq.nuvla.ui.session.subs :as subs]
+            [sixsq.nuvla.ui.session.utils :as utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.spec :as us]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))

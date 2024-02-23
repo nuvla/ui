@@ -1,10 +1,10 @@
-(ns sixsq.nuvla.ui.pages.session.reset-password-views
+(ns sixsq.nuvla.ui.session.reset-password-views
   (:require [cljs.spec.alpha :as s]
             [form-validator.core :as fv]
             [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.pages.session.components :as comp]
-            [sixsq.nuvla.ui.pages.session.events :as events]
+            [sixsq.nuvla.ui.session.components :as comp]
+            [sixsq.nuvla.ui.session.events :as events]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.spec :as us]))
 

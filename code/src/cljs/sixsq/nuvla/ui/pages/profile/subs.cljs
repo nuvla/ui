@@ -3,7 +3,7 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.profile.spec :as spec]
-            [sixsq.nuvla.ui.pages.session.subs :as session-subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub

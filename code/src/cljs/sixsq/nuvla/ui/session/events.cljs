@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.pages.session.events
+(ns sixsq.nuvla.ui.session.events
   (:require [ajax.core :as ajax]
             [clojure.string :as str]
             [day8.re-frame.http-fx]
@@ -11,8 +11,8 @@
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.pages.session.effects :as fx]
-            [sixsq.nuvla.ui.pages.session.spec :as spec]
+            [sixsq.nuvla.ui.session.effects :as fx]
+            [sixsq.nuvla.ui.session.spec :as spec]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 
@@ -46,8 +46,7 @@
   ::logout
   (fn []
     {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
-                                (dispatch [::intercom-events/clear-events])
-                                (dispatch [::routing-events/navigate routes/sign-in]))]}))
+                                (dispatch [::intercom-events/clear-events]))]}))
 
 
 (reg-event-db

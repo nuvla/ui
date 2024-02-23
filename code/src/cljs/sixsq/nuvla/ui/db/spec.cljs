@@ -28,7 +28,7 @@
             [sixsq.nuvla.ui.pages.profile.spec :as profile]
             [sixsq.nuvla.ui.common-components.resource-log.spec :as resource-log]
             [sixsq.nuvla.ui.routing.router :refer [router]]
-            [sixsq.nuvla.ui.pages.session.spec :as session]))
+            [sixsq.nuvla.ui.session.spec :as session]))
 
 (def default-db
   (merge about/defaults

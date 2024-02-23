@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.pages.session.subs :as session-subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.intercom :as intercom]))
 
 (defn Widget

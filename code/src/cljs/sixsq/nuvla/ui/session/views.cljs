@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.pages.session.views
+(ns sixsq.nuvla.ui.session.views
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
@@ -7,9 +7,9 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.pages.session.events :as events]
-            [sixsq.nuvla.ui.pages.session.subs :as subs]
-            [sixsq.nuvla.ui.pages.session.utils :as utils]
+            [sixsq.nuvla.ui.session.events :as events]
+            [sixsq.nuvla.ui.session.subs :as subs]
+            [sixsq.nuvla.ui.session.utils :as utils]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]

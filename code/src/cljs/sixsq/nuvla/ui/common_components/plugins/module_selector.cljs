@@ -11,7 +11,7 @@
             [sixsq.nuvla.ui.common-components.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination]
-            [sixsq.nuvla.ui.pages.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))

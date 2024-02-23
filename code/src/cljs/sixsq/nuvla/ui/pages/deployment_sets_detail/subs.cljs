@@ -9,7 +9,7 @@
             [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
-            [sixsq.nuvla.ui.pages.session.subs :as session-subs]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def creation-temp-id-key :temp-id)

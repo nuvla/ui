@@ -16,8 +16,8 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param
                                                   get-stored-db-value-from-query-param]]
-            [sixsq.nuvla.ui.pages.session.spec :as session-spec]
-            [sixsq.nuvla.ui.pages.session.utils :refer [get-active-claim]]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]))

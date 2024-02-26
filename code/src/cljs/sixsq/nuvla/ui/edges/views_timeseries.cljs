@@ -54,8 +54,10 @@
     (let [ts-data   (ts-utils/data->ts-data data)
           [from to] (ts-utils/timespan-to-period timespan)]
       [:div {:style {:max-width 800
+                     :margin "0 auto"}} #_{:style {:max-width 800
                      :display "flex"
-                     :align-items "center"}}
+                     :align-items "center"}
+               }
        [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
                                         :label           "available"
                                         :backgroundColor "#21d32c88"}
@@ -64,7 +66,9 @@
                                         :backgroundColor "#eab81198"}]}
 
                   :options {:plugins  {:title {:text    "Fleet availability"
-                                               :display true}}
+                                               :display true}
+                                       :subtitle {:text "Availability of commissioned NuvlaEdges"
+                                                  :display true}}
                             :scales   {:x {:type    "time"
                                            :min     from
                                            :max     to
@@ -84,7 +88,7 @@
                                                      :text    "Number of NuvlaEdges"}
                                            :stacked true}}
                             :elements {:point {:radius 1}}
-                            :onClick  (fn [_evt element _chart]
+                            #_#_:onClick  (fn [_evt element _chart]
                                         (when-let [raw-data (js->clj (.. (first element) -element -$context -raw) :keywordize-keys true)]
                                           (let [from        (js/Date. (:timestamp raw-data))
                                                 granularity (ts-utils/timespan->granularity timespan)

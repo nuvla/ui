@@ -554,12 +554,15 @@
 (reg-event-fx
   ::fetch-fleet-stats
   (fn [{{:keys [::spec/nuvlaboxes] :as db} :db} [_ {:keys [from to granularity dataset]}]]
-    (let [filter-str (->> nuvlaboxes
-                          (:resources)
-                          (mapv :id)
-                          (map (fn [ne-id]
-                                 (str "id='" ne-id "'")))
-                          (str/join " or " )) ]
+    (let [filter-str (if (seq (:resources nuvlaboxes))
+                       (->> nuvlaboxes
+                            (:resources)
+                            (mapv :id)
+                            (map (fn [ne-id]
+                                   (str "id='" ne-id "'")))
+                            (str/join " or "))
+                       ;; FIXME: shortcut to avoid sending filter=()
+                       "id='nuvlabox/not_existent'")]
       {:db (assoc db ::spec/loading? true)
        :http-xhrio {:method          :patch
                     :headers         {:bulk true}

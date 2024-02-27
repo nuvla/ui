@@ -27,37 +27,42 @@
 (defn OnlineStatsByEdge [{:keys [on-close]}]
   (let [fleet-stats   (subscribe [::subs/fleet-stats])
         stats-by-edge (:availability-by-edge @fleet-stats)
-        ts-data       (ts-utils/data->ts-data stats-by-edge)]
+        ts-data       (ts-utils/data->ts-data stats-by-edge)
+        n             10]
     [ui/Card [ui/CardContent
-              [ui/CardHeader {:style {:display "flex"
-                                      :align-items "center"
-                                      :justify-content "space-between"}} [:span "Available NuvlaEdges"]
+              [ui/CardHeader {:style {:display         "flex"
+                                      :align-items     "center"
+                                      :justify-content "space-between"}} [:span "NuvlaEdges with lowest availability"]
                [icons/CloseIcon {:link     true
-                                 :color "black"
+                                 :color    "black"
                                  :on-click on-close}]]
               [ui/CardMeta {:style {:font-size "tiny"}}
                (str "on " (time/time->format (:timestamp (first ts-data))))]]
      [ui/CardContent
-      (into [ui/CardDescription {:style {:display "flex"
+      (into [ui/CardDescription {:style {:display        "flex"
                                          :flex-direction "column"}}]
             (mapv (fn [bucket]
-                    (when-let [{:keys [name id]} (info-edge bucket)]
-                      [values/AsLink (general-utils/id->uuid id) :page "edges" :label name]))
-                  (-> (first ts-data)
-                      :aggregations
-                      :by-edge
-                      :buckets)))]]))
+                    (when-let [{:keys [name id avg-online]} (info-edge bucket)]
+                      [values/AsLink (general-utils/id->uuid id) :page "edges" :label (str name " - " (int (* 100 avg-online)) "%")]))
+                  (->> (first ts-data)
+                       :aggregations
+                       :by-edge
+                       :buckets
+                       (filter (fn [{:keys [edge-avg-online]}]
+                                 (< (:value edge-avg-online) 1)))
+                       (sort-by (comp :value :egde-avg-online))
+                       (take n))))]]))
 
 (defn FleetStatusTimeSeries [timespan data]
   (r/with-let [extra-info-visible? (r/atom false)]
 
-    (let [ts-data   (ts-utils/data->ts-data data)
+    (let [ts-data (ts-utils/data->ts-data data)
           [from to] (ts-utils/timespan-to-period timespan)]
-      [:div {:style {:max-width 800
-                     :margin "0 auto"}} #_{:style {:max-width 800
-                     :display "flex"
-                     :align-items "center"}
-               }
+      [:div #_{:style {:max-width 800
+                       :margin    "0 auto"}}
+       {:style {:max-width   800
+                :display     "flex"
+                :align-items "center"}}
        [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
                                         :label           "available"
                                         :backgroundColor "#21d32c88"}
@@ -65,9 +70,9 @@
                                         :label           "unavailable"
                                         :backgroundColor "#eab81198"}]}
 
-                  :options {:plugins  {:title {:text    "Fleet availability"
-                                               :display true}
-                                       :subtitle {:text "Availability of commissioned NuvlaEdges"
+                  :options {:plugins  {:title    {:text    "Fleet availability"
+                                                  :display true}
+                                       :subtitle {:text    "Availability of commissioned NuvlaEdges"
                                                   :display true}}
                             :scales   {:x {:type    "time"
                                            :min     from
@@ -104,8 +109,9 @@
                                                        "default")]
                                           (set! (.. evt -native -target -style -cursor) cursor)))}}]
 
-       [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")
-                      :height 150}}
+       [:div {:style {:visibility  (if @extra-info-visible? "visible" "hidden")
+                      :height      150
+                      :margin-left 50}}
         [OnlineStatsByEdge {:on-close #(reset! extra-info-visible? false)}]]])))
 
 (defn FleetTimeSeries []

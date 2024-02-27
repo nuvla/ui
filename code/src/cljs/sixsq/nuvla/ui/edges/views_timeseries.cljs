@@ -88,7 +88,7 @@
                                                      :text    "Number of NuvlaEdges"}
                                            :stacked true}}
                             :elements {:point {:radius 1}}
-                            #_#_:onClick  (fn [_evt element _chart]
+                            :onClick  (fn [_evt element _chart]
                                         (when-let [raw-data (js->clj (.. (first element) -element -$context -raw) :keywordize-keys true)]
                                           (let [from        (js/Date. (:timestamp raw-data))
                                                 granularity (ts-utils/timespan->granularity timespan)

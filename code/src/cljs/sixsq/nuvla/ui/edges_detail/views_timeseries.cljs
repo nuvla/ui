@@ -123,7 +123,7 @@
                              {:x      (:timestamp d)
                               :y      1
                               :status (-> d :aggregations :avg-online :value)})))]
-    [:div
+    [:div#nuvlaedge-status
      [plot/Bar {:updateMode "none"
                 :height     100
                 :data       {:datasets (if (seq ts-data)

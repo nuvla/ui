@@ -30,6 +30,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
@@ -1284,12 +1285,39 @@
          :on             "hover"
          :hide-on-scroll true}]])))
 
+(defn AvailabilityWidget []
+  (let [edge-stats (subscribe [::subs/edge-stats])
+        availability-stats (:availability-stats @edge-stats)
+        ts-data            (-> availability-stats first :ts-data)
+        no-of-measurements (-> ts-data count)
+        avg-online-values (map (comp :value :avg-online :aggregations) ts-data)
+        avg-percentage   76 #_(general-utils/percentage (apply + avg-online-values) no-of-measurements)]
+    (dispatch [::events/set-selected-timespan "last 15 minutes"
+               (get ts-utils/timespan->granularity "last 15 minutes")
+               ["availability-stats"]])
+    [:div {:style {:margin "0.5em 0 1em 0"}} "Availability: "
+     [ui/Label {#_#_:style {:background-color "#B8E7B8"}
+                :color (cond (> avg-percentage 95) "green"
+                             (> avg-percentage 75) "yellow"
+                             (> avg-percentage 0) "red"
+                             :else "gray")
+                :basic true
+                :size  :large}
+      [:span (str avg-percentage "% available")
+       [:span {:style {:font-size "small"
+                       :color       "grey"
+                       :font-weight 300}} " in the past 15m." " " [:a {:style    {:cursor "pointer" #_#_:font-size "x-small"}
+                                                                                     :on-click #(do (dispatch [::tab-plugin/change-tab {:db-path [::spec/tab]
+                                                                                                                                        :tab-key :historical-data}])
+                                                                                                    (.scrollIntoView (.getElementById js/document "nuvlaedge-status")))} [:span "Show me" [ui/Icon {:class icons/i-arrow-right}]]]]]]]))
+
 (defn StatusInfo
   [nb-status]
   [:<>
    [OperationalStatus nb-status]
    [NextTelemetryStatus nb-status]
-   [StatusNotes nb-status]])
+   [StatusNotes nb-status]
+   [AvailabilityWidget]])
 
 (defn TabOverviewStatus
   [{:keys [online] :as nb-status}]

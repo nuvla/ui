@@ -360,6 +360,11 @@
   [opts]
   [I opts i-arrow-left])
 
+(def i-arrow-right "fa-light fa-arrow-right")
+(defn ArrowRightIcon
+  [opts]
+  [I opts i-arrow-right])
+
 (def i-arrow-right-bracket "fa-light fa-arrow-right-from-bracket")
 (defn ArrowRightFromBracketIcon
   [opts]

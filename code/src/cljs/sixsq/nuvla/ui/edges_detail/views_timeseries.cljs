@@ -225,7 +225,7 @@
                        {:label (@tr [:average-ram-usage])
                         :value "ram-stats"}
                        {:label (str (@tr [:nuvlaedge-status]) " (" (@tr [:online]) "/" (@tr [:offline]) ")")
-                        :value "online-status-stats"}]]
+                        :value "availability-stats"}]]
         [ui/Modal {:close-icon true
                    :open       true
                    :onClose    on-close}
@@ -293,7 +293,7 @@
         initial-timespan      (first ts-utils/timespan-options)
         selected-timespan     (subscribe [::subs/timespan])
         export-modal-visible? (r/atom false)
-        datasets              ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "online-status-stats"]
+        datasets              ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"]
         fetch-edge-stats      (fn [timespan]
                                 (dispatch [::events/set-selected-timespan
                                            timespan
@@ -349,5 +349,5 @@
                       :centered true}
           [ui/GridColumn {:textAlign "center"
                           :width 8}
-           [NEStatusTimeSeries @selected-timespan (:online-status-stats @edge-stats)]
+           [NEStatusTimeSeries @selected-timespan (:availability-stats @edge-stats)]
            [GraphLabel @selected-timespan]]]]]])))

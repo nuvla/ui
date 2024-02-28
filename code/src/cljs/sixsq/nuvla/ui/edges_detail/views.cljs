@@ -1290,8 +1290,8 @@
         availability-stats (:availability-stats @edge-stats)
         ts-data            (-> availability-stats first :ts-data)
         no-of-measurements (-> ts-data count)
-        avg-online-values (map (comp :value :avg-online :aggregations) ts-data)
-        avg-percentage   76 #_(general-utils/percentage (apply + avg-online-values) no-of-measurements)]
+        avg-online-values  (map (comp :value :avg-online :aggregations) ts-data)
+        avg-percentage     (general-utils/percentage (apply + avg-online-values) no-of-measurements)]
     (dispatch [::events/set-selected-timespan "last 15 minutes"
                (get ts-utils/timespan->granularity "last 15 minutes")
                ["availability-stats"]])

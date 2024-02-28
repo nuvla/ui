@@ -77,6 +77,7 @@
                             :scales   {:x {:type    "time"
                                            :min     from
                                            :max     to
+                                           :grid    {:display false}
                                            :time    {:unit (case timespan
                                                              ("last 15 minutes"
                                                                "last hour"

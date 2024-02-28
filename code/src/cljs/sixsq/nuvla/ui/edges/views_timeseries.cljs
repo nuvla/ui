@@ -31,8 +31,9 @@
         n             10]
     [ui/Card [ui/CardContent
               [ui/CardHeader {:style {:display         "flex"
-                                      :align-items     "center"
-                                      :justify-content "space-between"}} [:span "NuvlaEdges with lowest availability"]
+                                      :align-items     "start"
+                                      :justify-content "space-between"}}
+               [:span "NEs with lowest availability"]
                [icons/CloseIcon {:link     true
                                  :color    "black"
                                  :on-click on-close}]]

@@ -43,7 +43,7 @@
                                          :flex-direction "column"}}]
             (mapv (fn [bucket]
                     (when-let [{:keys [name id avg-online]} (info-edge bucket)]
-                      [values/AsLink (general-utils/id->uuid id) :page "edges" :label (str name " - " (int (* 100 avg-online)) "%")]))
+                      [values/AsLink (str (general-utils/id->uuid id) "?edges-detail-tab=historical-data") :page "edges" :label (str name " - " (int (* 100 avg-online)) "%")]))
                   (->> (first ts-data)
                        :aggregations
                        :by-edge

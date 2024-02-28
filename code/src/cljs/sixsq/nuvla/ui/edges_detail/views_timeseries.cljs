@@ -144,11 +144,11 @@
                                            :borderWidth        1}]
                                          [])}
 
-                :options    (graph-options selected-timespan {:title    (str (@tr [:nuvlaedge-status]) " (" (@tr [:online]) "/" (@tr [:offline]) ")")
-                                                              :plugins  {:tooltip {:callbacks {:label (fn [tooltipItems _data]
-                                                                                                        (when-let [status (.. ^Map tooltipItems -raw -status)]
-                                                                                                          (str "online: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
-                                                                         :legend  {:display false}}
+                :options    (graph-options selected-timespan {:title (@tr [:nuvlaedge-availability])
+                                                              :plugins {:tooltip {:callbacks {:label (fn [tooltipItems _data]
+                                                                                                       (when-let [status (.. ^Map tooltipItems -raw -status)]
+                                                                                                         (str "available: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
+                                                                        :legend  {:display false}}
                                                               :y-config {:max   1
                                                                          :min   0
                                                                          :grid  {:display false}
@@ -224,7 +224,7 @@
                         :value "network-stats"}
                        {:label (@tr [:average-ram-usage])
                         :value "ram-stats"}
-                       {:label (str (@tr [:nuvlaedge-status]) " (" (@tr [:online]) "/" (@tr [:offline]) ")")
+                       {:label (@tr [:nuvlaedge-availability])
                         :value "availability-stats"}]]
         [ui/Modal {:close-icon true
                    :open       true

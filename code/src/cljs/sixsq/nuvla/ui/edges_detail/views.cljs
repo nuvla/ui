@@ -1300,22 +1300,26 @@
                ["availability-stats"]])
     [ui/TableRow
      [ui/TableCell "Availability"]
-     [ui/TableCell
+     [ui/TableCell {:style {:display "flex"
+                            :align-items "center"
+                            :justify-content "space-between"}}
       [ui/Label {:color (cond (> avg-percentage 95) "green"
                               (> avg-percentage 75) "yellow"
                               (> avg-percentage 0) "red"
                               :else "gray")
                  :basic true
                  :size  :large}
-       [:span (str avg-percentage "% available")
-        [:span {:style {:font-size   "small"
-                        :color       "grey"
-                        :font-weight 300}} " in the past 15m." " "
-         [:a {:style    {:cursor    "pointer"
-                         :font-size "small"}
-              :on-click #(do (dispatch [::tab-plugin/change-tab {:db-path [::spec/tab]
-                                                                 :tab-key :historical-data}])
-                             (.scrollIntoView (.getElementById js/document "nuvlaedge-status")))} [:span "Show me" [ui/Icon {:class icons/i-arrow-right}]]]]]]]]))
+       (str avg-percentage "% available")]
+      [:span {:style {:font-size   "small"
+                      :color       "grey"
+                      :font-weight 300
+                      :margin-left 10}} "last 15 minutes"]
+      [:a {:style    {:cursor    "pointer"
+                      :font-size "small"
+                      :margin-left 10}
+           :on-click #(do (dispatch [::tab-plugin/change-tab {:db-path [::spec/tab]
+                                                              :tab-key :historical-data}])
+                          (.scrollIntoView (.getElementById js/document "nuvlaedge-status")))} [:span "Show me" [ui/Icon {:class icons/i-arrow-right}]]]]]))
 
 (defn StatusInfo
   [nb-status]

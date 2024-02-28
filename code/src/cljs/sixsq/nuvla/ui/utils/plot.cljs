@@ -17,10 +17,12 @@
   (let [beta (- 1.0 percentage)]
     (mapv #(+ (* %1 beta) (* %2 percentage)) start end)))
 (def red [255 0 0])
+
+(def orange [234 184 17])
 (def green [0 255 0])
 
 (defn color-gradient [percentage]
-  (interpolate red green percentage))
+  (interpolate orange green percentage))
 
 (defn to-rgb [color-vector]
   (str "rgb(" (str/join "," color-vector) ")"))

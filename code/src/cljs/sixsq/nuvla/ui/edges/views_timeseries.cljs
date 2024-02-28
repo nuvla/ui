@@ -50,7 +50,7 @@
                        :buckets
                        (filter (fn [{:keys [edge-avg-online]}]
                                  (< (:value edge-avg-online) 1)))
-                       (sort-by (comp :value :egde-avg-online))
+                       (sort-by (comp :value :edge-avg-online))
                        (take n))))]]))
 
 (defn FleetStatusTimeSeries [timespan data]

@@ -3,6 +3,7 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.apps-application.spec :as application-spec]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -19,10 +20,13 @@
 
 (def change-event-module-version ::change-event-module-version)
 (def change-event-env-variables ::change-event-env-variables)
+(def change-event-files ::change-event-files)
 
 (def change-event-registries-credentials ::change-event-registries-credentials)
 
 (def module-env-vars-path [:content :environmental-variables])
+
+(def module-files-path [:content :files])
 
 (def module-private-registries-path [:content :private-registries])
 
@@ -106,6 +110,10 @@
 (defn- update-module-env-vars
   [module f]
   (update-in module module-env-vars-path f))
+
+(defn- module-files
+  [module]
+  (get-in module module-files-path))
 
 (defn- update-module-registries-credentials
   [module f]
@@ -523,6 +531,48 @@
               i env-variable show-required?]))
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
+
+(defn SingleFile
+  [{:keys [db-path href change-event read-only?]
+    :or   {read-only? false}
+    :as   _opts} _idx _file]
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    (fn [_opts idx {:keys [file-name file-content]}]
+      [ui/TableRow {:key idx, :vertical-align "top"}
+       [ui/TableCell {:floated :left
+                      :width   3}
+        [:span file-name]]
+       [ui/TableCell {:floated :left
+                      :width   12}
+        [ui/Form
+         [ui/TextArea {:rows          10
+                       :read-only     read-only?
+                       :default-value file-content
+                       :on-change     (ui-callback/value
+                                        #(dispatch [::update-file-content db-path file-name %]))}]]]])))
+
+(defn Files
+  [{:keys [db-path href change-event read-only?]
+    :or   {read-only? false}
+    :as   opts}]
+  (dispatch [::helpers/set db-path change-event-files change-event])
+  (let [tr     @(subscribe [::i18n-subs/tr])
+        module @(subscribe [::module db-path href])
+        files  (module-files module)]
+    (if (empty? files)
+      [ui/Message
+       (str/capitalize (str (tr [:no-files]) "."))]
+      [:div [ui/Table {:style {:margin-top 10}}
+             [ui/TableHeader
+              [ui/TableRow
+               [ui/TableHeaderCell {:content (str/capitalize (tr [:filename]))}]
+               [ui/TableHeaderCell {:content (str/capitalize (tr [:content]))}]
+               (when-not read-only?
+                 [ui/TableHeaderCell {:content (str/capitalize (tr [:action]))}])]]
+             [ui/TableBody
+              (for [[idx file] (map-indexed vector files)]
+                ^{:key (str "file_" idx)}
+                [SingleFile opts idx file])]]])))
 
 (defn DropdownContainerRegistry
   [{:keys [db-path href read-only? required?]

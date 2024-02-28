@@ -121,6 +121,14 @@
       :label (@tr [:env-variables])
       :default-open true]
      [uix/Accordion
+      [module-plugin/Files
+       {:db-path           db-path
+        :href              module-id
+        :change-event      [::main-events/changes-protection? true]
+        :read-only?        (not @editable?)}]
+      :label (@tr [:env-variables])
+      :default-open true]
+     [uix/Accordion
       [module-plugin/RegistriesCredentials
        {:db-path      db-path
         :href         module-id

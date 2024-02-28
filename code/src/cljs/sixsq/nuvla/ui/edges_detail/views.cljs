@@ -186,14 +186,14 @@
 
 
 (defn- calc-new-modules-on-release-change [form-data new-release]
-  (let [form-modules     {}
+  (let [form-modules     (:modules form-data)
         form-release-old (get-in form-data [:nuvlabox-release :release])]
     (cond
 
       (and (not (subs/security-available? form-release-old))
            (subs/security-available? (:release new-release)))
       (assoc form-modules :security
-                          (get form-modules :security false))
+                          (get form-modules :security true))
 
       (and (not (subs/security-available? (:release new-release)))
            (subs/security-available? form-release-old))

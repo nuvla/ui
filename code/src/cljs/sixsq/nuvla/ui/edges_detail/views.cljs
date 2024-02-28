@@ -1225,29 +1225,30 @@
 (defn TelemetryLastTime
   [last-telemetry]
   (when last-telemetry
-    [:div
-     "Last telemetry report was "
-     [uix/TimeAgo last-telemetry]]))
+    [ui/TableRow
+     [ui/TableCell "Last telemetry report"]
+     [ui/TableCell [uix/TimeAgo last-telemetry]]]))
 
 (defn TelemetryNextTime
   [next-telemetry]
   (let [locale                (subscribe [::i18n-subs/locale])
         next-telemetry-moment (some-> next-telemetry time/parse-iso8601)]
+
     [uix/ForceRerenderComponentByDelay
      (fn []
        (when next-telemetry-moment
-         [:p
-          (if (time/before-now? next-telemetry-moment)
-            [:<> "Missing telemetry report for "]
-            [:<> "Next telemetry report is expected in "])
-          (time/format-distance next-telemetry-moment @locale)]))
+         [ui/TableRow
+          [ui/TableCell (if (time/before-now? next-telemetry-moment)
+                          [:<> "Missing telemetry report for "]
+                          [:<> "Next telemetry report in"])]
+          [ui/TableCell (time/format-distance next-telemetry-moment @locale)]]))
      5000]))
 
 (defn NextTelemetryStatus
   [{:keys [next-telemetry last-telemetry next-heartbeat] :as _nb-status}]
   (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])]
-    [:div
-     ; next-heartbeat was equivalent to next-telemetry in api-server before v.6.2.0
+
+    [:<>                                                ; next-heartbeat was equivalent to next-telemetry in api-server before v.6.2.0
      [TelemetryNextTime (or next-telemetry next-heartbeat)]
      [TelemetryLastTime (or last-telemetry
                             (utils/parse-compute-last-from-next
@@ -1268,22 +1269,24 @@
   (let [tr        @(subscribe [::i18n-subs/tr])
         outdated? (utils/telemetry-outdated? nb-status)]
     (when status
-      [:div {:style {:margin "0.5em 0 1em 0"}}
-       (if outdated?
-         (tr [:nuvlaedge-operational-status-was])
-         (tr [:nuvlaedge-operational-status]))
-       [ui/Popup
-        {:trigger        (r/as-element
-                           [ui/Label
-                            {:style {:cursor "help"}
-                             :size  :small
-                             :basic true
-                             :color (utils/operational-status->color status)}
-                            status])
-         :content        (tr [:nuvlabox-operational-status-popup])
-         :position       "bottom center"
-         :on             "hover"
-         :hide-on-scroll true}]])))
+      [ui/TableRow
+
+       [ui/TableCell (if outdated?
+                       (tr [:nuvlaedge-operational-status-was])
+                       (tr [:nuvlaedge-operational-status]))]
+       [ui/TableCell
+        [ui/Popup
+         {:trigger        (r/as-element
+                            [ui/Label
+                             {:style {:cursor "help"}
+                              :size  :small
+                              :basic true
+                              :color (utils/operational-status->color status)}
+                             status])
+          :content        (tr [:nuvlabox-operational-status-popup])
+          :position       "bottom center"
+          :on             "hover"
+          :hide-on-scroll true}]]])))
 
 (defn AvailabilityWidget []
   (let [edge-stats (subscribe [::subs/edge-stats])
@@ -1295,29 +1298,33 @@
     (dispatch [::events/set-selected-timespan "last 15 minutes"
                (get ts-utils/timespan->granularity "last 15 minutes")
                ["availability-stats"]])
-    [:div {:style {:margin "0.5em 0 1em 0"}} "Availability: "
-     [ui/Label {#_#_:style {:background-color "#B8E7B8"}
-                :color (cond (> avg-percentage 95) "green"
-                             (> avg-percentage 75) "yellow"
-                             (> avg-percentage 0) "red"
-                             :else "gray")
-                :basic true
-                :size  :large}
-      [:span (str avg-percentage "% available")
-       [:span {:style {:font-size "small"
-                       :color       "grey"
-                       :font-weight 300}} " in the past 15m." " " [:a {:style    {:cursor "pointer" #_#_:font-size "x-small"}
-                                                                                     :on-click #(do (dispatch [::tab-plugin/change-tab {:db-path [::spec/tab]
-                                                                                                                                        :tab-key :historical-data}])
-                                                                                                    (.scrollIntoView (.getElementById js/document "nuvlaedge-status")))} [:span "Show me" [ui/Icon {:class icons/i-arrow-right}]]]]]]]))
+    [ui/TableRow
+     [ui/TableCell "Availability"]
+     [ui/TableCell
+      [ui/Label {:color (cond (> avg-percentage 95) "green"
+                              (> avg-percentage 75) "yellow"
+                              (> avg-percentage 0) "red"
+                              :else "gray")
+                 :basic true
+                 :size  :large}
+       [:span (str avg-percentage "% available")
+        [:span {:style {:font-size   "small"
+                        :color       "grey"
+                        :font-weight 300}} " in the past 15m." " "
+         [:a {:style    {:cursor    "pointer"
+                         :font-size "small"}
+              :on-click #(do (dispatch [::tab-plugin/change-tab {:db-path [::spec/tab]
+                                                                 :tab-key :historical-data}])
+                             (.scrollIntoView (.getElementById js/document "nuvlaedge-status")))} [:span "Show me" [ui/Icon {:class icons/i-arrow-right}]]]]]]]]))
 
 (defn StatusInfo
   [nb-status]
   [:<>
-   [OperationalStatus nb-status]
-   [NextTelemetryStatus nb-status]
-   [StatusNotes nb-status]
-   [AvailabilityWidget]])
+   [ui/Table {:basic "very"}
+    [OperationalStatus nb-status]
+    [AvailabilityWidget]
+    [NextTelemetryStatus nb-status]
+    [StatusNotes nb-status]]])
 
 (defn TabOverviewStatus
   [{:keys [online] :as nb-status}]
@@ -1333,6 +1340,7 @@
         :position       "bottom center"
         :on             "hover"
         :hide-on-scroll true}]]
+
      [StatusOrNotAvailable nb-status [StatusInfo nb-status]]]))
 
 (defn TabOverviewTags

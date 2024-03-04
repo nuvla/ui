@@ -1306,8 +1306,7 @@
                             :white-space "nowrap"}}
       [ui/Label {:color (cond (> avg-percentage 95) "green"
                               (> avg-percentage 75) "yellow"
-                              (> avg-percentage 0) "red"
-                              :else "gray")
+                              :else "red")
                  :basic true
                  :size  :large}
        (str avg-percentage "% available")]

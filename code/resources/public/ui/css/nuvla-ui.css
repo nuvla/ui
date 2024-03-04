@@ -1181,4 +1181,15 @@ i.link.icon.app-details-add-config-param-icon:hover {
 .ts-datepicker {
   border: none;
   padding-left: 0.5em;
+  font-family: 'Poppins';
+  font-size: small;
+
+}
+
+
+.ts-dropdown {
+  min-width: 120px;
+  display: flex;
+  justify-content: space-between;
+  color: black;
 }

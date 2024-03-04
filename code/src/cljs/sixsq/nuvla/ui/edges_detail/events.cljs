@@ -152,7 +152,7 @@
                            [:dispatch [::get-nuvlabox-playbooks id]]
                            [:dispatch [::fetch-edge-stats {:nuvlaedge-id id
                                                            :timespan timespan
-                                                           :granularity (ts-utils/timespan->granularity timespan)
+                                                           :granularity (ts-utils/granularity-for-timespan timespan)
                                                            :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"]}]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)
@@ -408,7 +408,9 @@
 (reg-event-fx
   ::fetch-edge-stats
   (fn [{{:keys [::spec/nuvlabox ::spec/timespan] :as db} :db} [_ {:keys [granularity timespan datasets nuvlaedge-id]}]]
-    (let [[from to] (ts-utils/timespan-to-period timespan)
+    (let [[from to] (if (ts-utils/custom-timespan? timespan)
+                      timespan
+                      (ts-utils/timespan-to-period timespan))
           datasets-to-query (->> datasets
                                  (map #(str "dataset=" %))
                                  (str/join "&"))
@@ -432,13 +434,15 @@
                     :on-success      [::fetch-edge-stats-csv-success]
                     :on-failure      [::fetch-edge-stats-failure]}})))
 
+(def edge-stats-datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"])
+
 (reg-event-fx
   ::set-selected-timespan
-  (fn [{db :db} [_ timespan granularity datasets]]
+  (fn [{db :db} [_ timespan]]
     {:db (assoc db ::spec/timespan timespan)
      :fx [[:dispatch [::fetch-edge-stats {:timespan timespan
-                                          :granularity granularity
-                                          :datasets datasets}]]] }))
+                                          :granularity (ts-utils/granularity-for-timespan timespan)
+                                          :datasets edge-stats-datasets}]]] }))
 
 (reg-event-fx
   ::fetch-edge-stats-csv-success

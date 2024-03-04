@@ -98,7 +98,7 @@
                             :onClick  (fn [_evt element _chart]
                                         (when-let [raw-data (js->clj (.. (first element) -element -$context -raw) :keywordize-keys true)]
                                           (let [from        (js/Date. (:timestamp raw-data))
-                                                granularity (ts-utils/timespan->granularity timespan)
+                                                granularity (ts-utils/fixed-timespan->granularity timespan)
                                                 to          (ts-utils/add-time from granularity)]
                                             (dispatch [::events/fetch-fleet-stats {:from        from
                                                                                    :to          to

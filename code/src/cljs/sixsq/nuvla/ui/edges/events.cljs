@@ -187,7 +187,7 @@
               [:dispatch [::fetch-fleet-stats {:from        from
                                                :to          to
                                                :dataset     fleet-availability-stats
-                                               :granularity (ts-utils/timespan->granularity fleet-timespan)}]]]}))))
+                                               :granularity (ts-utils/fixed-timespan->granularity fleet-timespan)}]]]}))))
 
 
 (reg-event-fx
@@ -548,7 +548,7 @@
       {:db (assoc db ::spec/fleet-timespan timespan)
        :fx [[:dispatch [::fetch-fleet-stats {:from        from
                                              :to          to
-                                             :granularity (ts-utils/timespan->granularity timespan)
+                                             :granularity (ts-utils/fixed-timespan->granularity timespan)
                                              :dataset     fleet-availability-stats}]]]})))
 
 (reg-event-fx

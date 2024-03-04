@@ -1177,3 +1177,8 @@ i.link.icon.app-details-add-config-param-icon:hover {
 .missing-edges-panel {
   margin-top: 7px;
 }
+
+.ts-datepicker {
+  border: none;
+  padding-left: 0.5em;
+}

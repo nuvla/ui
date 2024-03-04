@@ -10,6 +10,7 @@
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 (defn graph-options [timespan {:keys [title y-config plugins]}]
@@ -279,6 +280,9 @@
                                                 :granularity (get ts-utils/timespan->granularity (:timespan @form-data))
                                                 :dataset     (:metric @form-data)}]))}]]]))))
 
+(defn custom-timespan? [timespan]
+  (not (contains? (set ts-utils/timespan-options) timespan)))
+
 (defn GraphLabel [timespan]
   (let [tr (subscribe [::i18n-subs/tr])
         [number unit] (str/split (get ts-utils/timespan->granularity timespan) #"-")]
@@ -288,6 +292,7 @@
      (str "Per " number " " (@tr [(keyword unit)]))]))
 (defn TimeSeries []
   (let [tr                    (subscribe [::i18n-subs/tr])
+        locale                (subscribe [::i18n-subs/locale])
         edge-stats            (subscribe [::subs/edge-stats])
         loading?              (subscribe [::subs/loading?])
         initial-timespan      (first ts-utils/timespan-options)
@@ -298,8 +303,9 @@
                                 (dispatch [::events/set-selected-timespan
                                            timespan
                                            (get ts-utils/timespan->granularity timespan)
-                                           datasets]))]
-
+                                           datasets]))
+        custom-timespan          (r/atom {})]
+    (js/console.log @selected-timespan)
     (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}
@@ -317,12 +323,76 @@
                                                :display         "flex"
                                                :justify-content "space-between"}
                              :loading         @loading?
+                             :disabled        (custom-timespan? @selected-timespan)
                              :close-on-change true
                              :default-value   initial-timespan
                              :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
                              :on-change       (ui-callback/value
                                                 (fn [timespan]
-                                                  (dispatch [::events/set-selected-timespan timespan (ts-utils/timespan->granularity timespan) datasets])))}]]]]
+                                                  (dispatch [::events/set-selected-timespan timespan (ts-utils/timespan->granularity timespan) datasets])))}]
+               [:span {:style {:margin-left "1em"
+                               :color "rgba(40,40,40,.3)"}} "or"]
+
+               #_[ui/DatePicker {:custom-input     (r/as-element
+
+                                                   [ui/Input
+                                                    {:style {:min-width "10em"
+                                                             :height    "1em"}}])
+                               :selects-end      true
+                               :show-time-select true
+                               :selected         (:to @custom-timespan)
+                               :date-format      "MMMM d, yyyy hh:mm aa"
+                               :time-format      "HH:mm"
+                               :time-intervals   1
+                               :locale           (or (time/locale-string->locale-object @locale) @locale)
+                               :fixed-height     true
+                               :on-change        #(swap! custom-timespan assoc :to %)}]]
+              [ui/MenuItem
+               [:div {:style {:display       "flex"
+                              :align-items   "center"
+                              :border-radius "0.5em"
+                              :border-color  "#DADADA"
+                              :border-style  "solid"
+                              :overflow      "hidden"}}
+                [:div {:style {:font-weight      "bold"
+                               :background-color "#DADADA"
+                               :padding          "0.5em"
+                               :border           "none"}} (@tr [:from])]
+                [ui/DatePicker {:selects-end      true
+                                :show-time-select true
+                                :className        "ts-datepicker"
+                                :selected         (:from @custom-timespan)
+                                :placeholderText      "Select a date"
+                                :date-format      "dd/MM/yyyy, HH:mm"
+                                :time-format      "HH:mm"
+                                :time-intervals   1
+                                :locale           (or (time/locale-string->locale-object @locale) @locale)
+                                :fixed-height     true
+                                :on-change        #(swap! custom-timespan assoc :from %)}]]
+               [:div {:style {:display       "flex"
+                              :align-items   "center"
+                              :border-radius "0.5em"
+                              :border-color  "#DADADA"
+                              :border-style  "solid"
+                              :overflow      "hidden"
+                              :margin-left   "1em"}}
+                [:div {:style {:font-weight      "bold"
+                               :background-color "#DADADA"
+                               :padding          "0.5em"
+                               :border           "none"}} (@tr [:to])]
+                [ui/DatePicker {:selects-end      true
+                                :show-time-select true
+                                :className        "ts-datepicker"
+                                :placeholderText  "Select a date"
+                                :selected         (:to @custom-timespan)
+                                :date-format      "dd/MM/yyyy, HH:mm"
+                                :time-format      "HH:mm"
+                                :time-intervals   1
+                                :locale           (or (time/locale-string->locale-object @locale) @locale)
+                                :fixed-height     true
+                                :on-change        #(do (swap! custom-timespan assoc :to %)
+                                                       #_(dispatch [::events/set-selected-timespan {:from (:from @custom-timespan)
+                                                                                                  :to %}]))}]]]]]
        [ui/TabPane
         [ui/Grid {:columns   2
                   :stackable true

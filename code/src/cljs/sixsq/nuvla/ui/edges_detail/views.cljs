@@ -1302,7 +1302,8 @@
      [ui/TableCell "Availability"]
      [ui/TableCell {:style {:display "flex"
                             :align-items "center"
-                            :justify-content "space-between"}}
+                            :justify-content "space-between"
+                            :white-space "nowrap"}}
       [ui/Label {:color (cond (> avg-percentage 95) "green"
                               (> avg-percentage 75) "yellow"
                               (> avg-percentage 0) "red"

@@ -290,20 +290,16 @@
                :style {:margin-top "1em"}}
      (str "Per " number " " (@tr [(keyword unit)]))]))
 (defn TimeSeries []
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        locale                (subscribe [::i18n-subs/locale])
-        edge-stats            (subscribe [::subs/edge-stats])
-        loading?              (subscribe [::subs/loading?])
-        initial-timespan      (first ts-utils/timespan-options)
-        custom-date?          (r/atom false)
-        selected-timespan     (subscribe [::subs/timespan])
-        export-modal-visible? (r/atom false)
-        datasets              ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"]
-        fetch-edge-stats      (fn [timespan]
-                                (dispatch [::events/set-selected-timespan
-                                           timespan
-                                           (get ts-utils/fixed-timespan->granularity timespan)
-                                           datasets]))
+  (let [tr                      (subscribe [::i18n-subs/tr])
+        locale                  (subscribe [::i18n-subs/locale])
+        edge-stats              (subscribe [::subs/edge-stats])
+        loading?                (subscribe [::subs/loading?])
+        initial-timespan        (first ts-utils/timespan-options)
+        custom-option-selected? (r/atom false)
+        selected-timespan       (subscribe [::subs/timespan])
+        export-modal-visible?   (r/atom false)
+        fetch-edge-stats        (fn [timespan]
+                                (dispatch [::events/set-selected-timespan timespan]))
         custom-timespan          (r/atom {})]
     (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
@@ -317,85 +313,98 @@
                                :align-items  "center"
                                :margin-right 5
                                :color        "rgba(40,40,40,.3)"}} (@tr [:showing-data-for])]]
-              [ui/MenuItem {:style {:background-color (if-not (ts-utils/custom-timespan? @selected-timespan)
-                                                        "#DADADA7C")}}
+
+              [ui/MenuItem {:style          {:background-color (if-not (ts-utils/custom-timespan? @selected-timespan)
+                                                                 "#DADADA7C")}
+                            :display        "flex"
+                            :flex-direction "column"}
                [ui/Dropdown {:inline          true
                              :className       "ts-dropdown"
                              :basic           true
-                             :style           {:display "flex"
+                             :style           {:display         "flex"
                                                :justify-content "space-between"}
                              :loading         @loading?
                              :close-on-change true
                              :default-value   initial-timespan
-                             :options (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
+                             :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
                              :on-change       (ui-callback/value
                                                 (fn [timespan]
+                                                  (js/console.log :timespan timespan)
                                                   (if-not (= "custom" timespan)
-                                                    (do (reset! custom-date? false)
-                                                        (dispatch [::events/set-selected-timespan timespan (ts-utils/fixed-timespan->granularity timespan) datasets]))
-                                                    (reset! custom-date? true))))}]]
-              [ui/MenuItem {:style {:background-color (if (ts-utils/custom-timespan? @selected-timespan)
-                                                        "#DADADA7C")}}
-               [:div {:style {:display       "flex"
-                              :align-items   "center"
-                              :border-radius "0.5em"
-                              :border-color  "#DADADA"
-                              :border-style  "solid"
-                              :overflow      "hidden"}}
-                [:div {:style {:font-weight      "bold"
-                               :background-color "#DADADA"
-                               :padding          "0.5em"
-                               :border           "none"}} (@tr [:from])]
-                [ui/DatePicker {:show-time-select     true
-                                :disabled             (not @custom-date?)
-                                :className            "ts-datepicker"
-                                :start-date           (:from @custom-timespan)
-                                :end-date             (:to @custom-timespan)
-                                :selected         (:from @custom-timespan)
-                                :selects-start  true
-                                :placeholderText      "Select a date"
-                                :date-format      "dd/MM/yyyy, HH:mm"
-                                :time-format      "HH:mm"
-                                :max-date          (time/now)
-                                :time-intervals   1
-                                :locale           (or (time/locale-string->locale-object @locale) @locale)
-                                :fixed-height     true
-                                :on-change        #(do (swap! custom-timespan assoc :from %)
-                                                       (when (:to @custom-timespan)
-                                                         (dispatch [::events/set-selected-timespan [%
-                                                                                                    (:to @custom-timespan)]])))}]]
-               [:div {:style {:display       "flex"
-                              :align-items   "center"
-                              :border-radius "0.5em"
-                              :border-color  "#DADADA"
-                              :color "red"
-                              :border-style  "solid"
-                              :overflow      "hidden"
-                              :margin-left   "2em"}}
-                [:div {:style {:font-weight      "bold"
-                               :background-color "#DADADA"
-                               :padding          "0.5em"
-                               :border           "none"}} (@tr [:to])]
-                [ui/DatePicker {:selects-end      true
-                                :disabled             (not @custom-date?)
+                                                    (do (reset! custom-option-selected? false)
+                                                        (dispatch [::events/set-selected-timespan timespan]))
+                                                    (reset! custom-option-selected? true))))}]]
 
-                                :show-time-select true
-                                :className        "ts-datepicker"
-                                :start-date       (:from @custom-timespan)
-                                :end-date         (:to @custom-timespan)
-                                :max-date          (time/now)
-                                :min-date          (:from @custom-timespan)
-                                :placeholderText  "Select a date"
-                                :selected         (:to @custom-timespan)
-                                :date-format      "dd/MM/yyyy, HH:mm"
-                                :time-format      "HH:mm"
-                                :time-intervals   1
-                                :locale           (or (time/locale-string->locale-object @locale) @locale)
-                                :fixed-height     true
-                                :on-change        #(do (swap! custom-timespan assoc :to %)
-                                                       (when (:from @custom-timespan)
-                                                         (dispatch [::events/set-selected-timespan [(:from @custom-timespan)
-                                                                                                    %]])))}]]]]]
+              ]]
+       (when @custom-option-selected?
+         [:div {:style {:display         "flex"
+                        :justify-content "end"
+                        :width           "100%"}}
+          [ui/Menu {:compact true
+                    :style {:padding "1em"
+                            :margin-bottom "1rem"}}
+           [:div {:style {:display       "flex"
+                          :align-items   "center"
+                          :border-radius "0.5em"
+                          :border-color  "#DADADA"
+                          :border-style  "solid"
+                          :overflow      "hidden"}}
+            [:div {:style {:font-weight      "bold"
+                           :background-color "#DADADA"
+                           :height "100%"
+                           :padding          "0.5em"
+                           :border           "none"}} (@tr [:from])]
+            [ui/DatePicker {:show-time-select true
+                            :disabled         (not @custom-option-selected?)
+                            :className        "ts-datepicker"
+                            :start-date       (:from @custom-timespan)
+                            :end-date         (:to @custom-timespan)
+                            :selected         (:from @custom-timespan)
+                            :selects-start    true
+                            :placeholderText  "Select a date"
+                            :date-format      "dd/MM/yyyy, HH:mm"
+                            :time-format      "HH:mm"
+                            :max-date         (time/now)
+                            :time-intervals   1
+                            :locale           (or (time/locale-string->locale-object @locale) @locale)
+                            :fixed-height     true
+                            :on-change        #(do (swap! custom-timespan assoc :from %)
+                                                   (when (:to @custom-timespan)
+                                                     (dispatch [::events/set-selected-timespan [%
+                                                                                                (:to @custom-timespan)]])))}]]
+           [:div {:style {:display       "flex"
+                          :align-items   "center"
+                          :border-radius "0.5em"
+                          :border-color  "#DADADA"
+                          :border-style  "solid"
+                          :overflow      "hidden"
+                          :margin-left   "2em"}}
+            [:div {:style {:font-weight      "bold"
+                           :background-color "#DADADA"
+                           :padding          "0.5em"
+                           :border           "none"}} (@tr [:to])]
+            [ui/DatePicker {:selects-end      true
+                            :disabled         (not @custom-option-selected?)
+
+                            :show-time-select true
+                            :className        "ts-datepicker"
+                            :start-date       (:from @custom-timespan)
+                            :end-date         (:to @custom-timespan)
+                            :max-date         (time/now)
+                            :min-date         (:from @custom-timespan)
+                            :placeholderText  "Select a date"
+                            :selected         (:to @custom-timespan)
+                            :date-format      "dd/MM/yyyy, HH:mm"
+                            :time-format      "HH:mm"
+                            :time-intervals   1
+                            :locale           (or (time/locale-string->locale-object @locale) @locale)
+                            :fixed-height     true
+                            :on-change        #(do (swap! custom-timespan assoc :to %)
+                                                   (when (:from @custom-timespan)
+                                                     (dispatch [::events/set-selected-timespan [(:from @custom-timespan)
+                                                                                                %]])))}]]]])
+
+
        [ui/TabPane
         [ui/Grid {:columns   2
                   :stackable true

@@ -126,7 +126,7 @@
         :href              module-id
         :change-event      [::main-events/changes-protection? true]
         :read-only?        (not @editable?)}]
-      :label (@tr [:env-variables])
+      :label (@tr [:module-files])
       :default-open true]
      [uix/Accordion
       [module-plugin/RegistriesCredentials

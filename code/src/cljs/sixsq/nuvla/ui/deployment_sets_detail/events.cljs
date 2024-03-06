@@ -135,6 +135,7 @@
   (->> applications
        (map (fn [{module-id :id :keys [version
                                        environmental-variables
+                                       files
                                        registries-credentials]}]
               (let [loaded-module     (module-plugin/db-module db [::spec/apps-sets id] module-id)
                     loaded-version-no (when loaded-module (get-version-id (map-indexed vector (:versions loaded-module))
@@ -151,6 +152,10 @@
                                                          (->> environmental-variables
                                                               (map (juxt :name :value))
                                                               (into {})))
+                               :files                  (when (seq files)
+                                                         (->> files
+                                                              (map (juxt :file-name :file-content))
+                                                              (into {})))
                                :registries-credentials registries-credentials}
                               [::init-app-row-data false]]]))))
        (concat fx)))
@@ -166,20 +171,26 @@
                         [::init-app-row-data false]]]]})))
 
 (defn- merge-vector-of-maps
-  [scn prm]
+  [k scn prm]
   (vals (merge
-          (into {} (map (juxt :name identity) scn))
-          (into {} (map (juxt :name identity) prm)))))
+          (into {} (map (juxt k identity) scn))
+          (into {} (map (juxt k identity) prm)))))
 
 (defn- merge-app-overwrites
   [modul-id->app app]
   (let [app-from-depl-set (get modul-id->app (:id app))
         merged-env        (merge-vector-of-maps
+                            :name
                             (:environmental-variables app)
-                            (:environmental-variables app-from-depl-set))]
+                            (:environmental-variables app-from-depl-set))
+        merged-files      (merge-vector-of-maps
+                            :file-name
+                            (:files app)
+                            (:files app-from-depl-set))]
     (assoc
       (merge app app-from-depl-set)
-      :environmental-variables merged-env)))
+      :environmental-variables merged-env
+      :files merged-files)))
 
 (reg-event-fx
   ::load-apps-sets-response
@@ -472,11 +483,13 @@
   (let [db-path         [::spec/apps-sets i]
         version-changed (module-plugin/db-new-version db db-path id)
         env-changed     (module-plugin/db-changed-env-vars db db-path id)
+        files-changed   (module-plugin/db-changed-files db db-path id)
         regs-creds      (module-plugin/db-module-registries-credentials
                           db db-path id)]
     (cond-> {:id      id
              :version (or version-changed (:version current-overwrites) version)}
             (seq env-changed) (assoc :environmental-variables env-changed)
+            (seq files-changed) (assoc :files files-changed)
             (seq regs-creds) (assoc :registries-credentials regs-creds))))
 
 
@@ -588,15 +601,26 @@
        first
        :environmental-variables))
 
+(defn overwritten-app-files
+  [deployment-set app]
+  (->> (get-in deployment-set [:applications-sets 0 :overwrites])
+       first
+       :applications
+       (filter #(= (:id %) (:id app)))
+       first
+       :files))
+
 (defn new-overwrites
   [deployment-set apps]
   (map (fn [app]
-         (let [env-vars (overwritten-app-env-vars deployment-set app)]
+         (let [env-vars (overwritten-app-env-vars deployment-set app)
+               files    (overwritten-app-files deployment-set app)]
            (cond->
              {:id      (:id app)
               :version (or (:version app)
                            (overwritten-app-version deployment-set app))}
-             (seq env-vars) (assoc :environmental-variables env-vars))))
+             (seq env-vars) (assoc :environmental-variables env-vars)
+             (seq files) (assoc :files files))))
        apps))
 
 (defn new-modules
@@ -920,7 +944,8 @@
                                               (assoc :overwrites [{:fleet app-set-fleet}])))]
       {:db (assoc db ::spec/deployment-set-edited deployment-set-edited)
        :fx [[:dispatch [::get-application-sets
-                        (-> deployment-set-edited :applications-sets first)]]]})))
+                        (-> deployment-set-edited :applications-sets first)
+                        {:force-modules-reload? true}]]]})))
 
 
 (reg-event-db

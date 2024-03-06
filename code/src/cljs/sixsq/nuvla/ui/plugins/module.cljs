@@ -114,6 +114,10 @@
   [module]
   (get-in module module-files-path))
 
+(defn- initial-file-content-by-index
+  [files index]
+  (get-in files [index ::initial-file-content]))
+
 (defn- new-file-content-by-index
   [files index]
   (get-in files [index ::new-file-content]))
@@ -132,7 +136,9 @@
 
 (defn- reset-env-value-by-index
   [env-vars index]
-  (update env-vars index dissoc ::new-value))
+  (if-let [initial-value (get-in env-vars [index ::initial-value])]
+    (update env-vars index assoc ::new-value initial-value)
+    (update env-vars index dissoc ::new-value)))
 
 (defn- update-file-content-by-index
   [files index file-content]
@@ -140,7 +146,9 @@
 
 (defn- reset-file-content-by-index
   [files index]
-  (update files index dissoc ::new-file-content))
+  (if-let [initial-file-content (get-in files [index ::initial-file-content])]
+    (update files index assoc ::new-file-content initial-file-content)
+    (update files index dissoc ::new-file-content)))
 
 (defn- update-registry-credential-by-index
   [registries-credentials index value]
@@ -158,7 +166,9 @@
   [environment-variables env]
   (mapv (fn [{env-name :name :as environment-variable}]
           (if-let [env-value (get env env-name)]
-            (assoc environment-variable ::new-value env-value)
+            (assoc environment-variable
+              ::initial-value env-value
+              ::new-value env-value)
             environment-variable))
         environment-variables))
 
@@ -166,7 +176,9 @@
   [files overridden-files]
   (mapv (fn [{:keys [file-name] :as file}]
           (if-let [file-content (get overridden-files file-name)]
-            (assoc file ::new-file-content file-content)
+            (assoc file
+              ::initial-file-content file-content
+              ::new-file-content file-content)
             file))
         files))
 
@@ -454,6 +466,12 @@
     (new-file-content-by-index (db-module-files db db-path href) index)))
 
 (reg-sub
+  ::module-overridden-file-content?
+  (fn [db [_ db-path href index]]
+    (not= (initial-file-content-by-index (db-module-files db db-path href) index)
+          (new-file-content-by-index (db-module-files db db-path href) index))))
+
+(reg-sub
   ::registries-loading?
   (fn [db [_ db-path href]]
     (get-in db (db-module-loading-registries-path db-path href) false)))
@@ -597,13 +615,13 @@
            (let [var-in-error (boolean (vars-in-error (:name env-variable)))]
              ^{:key (str (:name env-variable) "_" i)}
              [AsFormInput db-path href read-only? var-in-error
-              (::new-value env-variable)
+              (not= (::initial-value env-variable) (::new-value env-variable))
               i env-variable show-required?]))
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 
 (defn SingleFile
-  [{:keys [db-path href read-only?]
+  [{:keys [db-path href read-only? overridden?]
     :or   {read-only? false}
     :as   _opts} _idx _file]
   (fn [_opts index {:keys [file-name file-content]}]
@@ -613,7 +631,7 @@
                                  (.preventDefault event)
                                  (.stopPropagation event))
           updated-file-content @(subscribe [::module-new-file-content db-path href index])
-          overridden?          (some? updated-file-content)
+          overridden?          @(subscribe [::module-overridden-file-content? db-path href index])
           file-content         (or updated-file-content file-content "")
           on-change            #(dispatch [::update-file-content db-path href index %])]
       [ui/TableRow {:key index, :vertical-align "top"}

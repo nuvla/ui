@@ -1442,6 +1442,25 @@
                               :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
      :label (@tr [:env-variables])]))
 
+(defn FilesApp
+  [i module-id creating?]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        can-edit-data?             (subscribe [::subs/can-edit-data? creating?])
+        edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
+        edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
+    [uix/Accordion
+     (tt/with-tooltip
+       [:div [module-plugin/Files
+              {:db-path           [::spec/apps-sets i]
+               :href              module-id
+               :change-event      [::events/edit-config]
+               :read-only?        (or (not @can-edit-data?) (not @edit-op-allowed?))}]]
+       (edit-not-allowed-msg {:TR                         @tr
+                              :can-edit-data?             @can-edit-data?
+                              :edit-op-allowed?           @edit-op-allowed?
+                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
+     :label (@tr [:module-files])]))
+
 
 (defn- AppName [{:keys [idx id]}]
   (let [app    (subscribe [::module-plugin/module
@@ -1537,6 +1556,7 @@
                 :content (@tr [:open-app-in-new-window])}]
      [ModuleVersionsApp i id creating?]
      [EnvVariablesApp i id creating?]
+     [FilesApp i id creating?]
      (when-let [license (get @licenses-by-module-id id)]
        [AppLicense license])
      (when-let [pricing (get @pricing-by-module-id id)]

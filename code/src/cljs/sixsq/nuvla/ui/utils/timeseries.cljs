@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [sixsq.nuvla.ui.utils.time :as time]))
 
-(def timespan-options ["last 15 minutes" "last hour" "last 12 hours" "last day" "last week" "last month" "last 3 months" "last year" "custom"])
+(def timespan-options ["last 15 minutes" "last hour" "last 12 hours" "last day" "last week" "last month" "last 3 months" "last year" "custom period"])
 (defn custom-timespan? [timespan]
   (not (contains? (set timespan-options) timespan)))
 
@@ -17,7 +17,7 @@
       "last month" [(time/subtract-months now 1) now]
       "last 3 months" [(time/subtract-months now 3) now]
       "last year" [(time/subtract-years now 1) now])))
-(def fixed-timespan->granularity {"last 15 minutes" "1-minutes"
+(def fixed-timespan->granularity {"last 15 minutes"       "1-minutes"
                                   "last hour"             "2-minutes"
                                   "last 12 hours"         "3-minutes"
                                   "last day"              "30-minutes"

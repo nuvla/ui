@@ -289,6 +289,7 @@
                :size  "tiny"
                :style {:margin-top "1em"}}
      (str "Per " number " " (@tr [(keyword unit)]))]))
+
 (defn TimeSeries []
   (let [tr                      (subscribe [::i18n-subs/tr])
         locale                  (subscribe [::i18n-subs/locale])
@@ -310,14 +311,14 @@
                                :align-items  "center"
                                :margin-right 5
                                :color        "rgba(40,40,40,.3)"}} (@tr [:showing-data-for])]]
-              [ui/MenuItem {:class (if-not (= "custom" @currently-selected-option) "active")}
+              [ui/MenuItem {:class (if-not (= "custom period" @currently-selected-option) "active")}
 
                [ui/Dropdown {:inline          true
                              :className       "ts-dropdown"
                              :basic           true
+                             :scrollable      true
                              :style           {:display         "flex"
-                                               :justify-content "space-between"
-                                               :color (if (= "custom" @currently-selected-option) "#8080805f" "black")}
+                                               :justify-content "space-between"}
                              :loading         @loading?
                              :close-on-change true
                              :value           @currently-selected-option
@@ -325,12 +326,12 @@
                              :on-change       (ui-callback/value
                                                 (fn [timespan]
                                                   (reset! currently-selected-option timespan)
-                                                  (when-not (= "custom" timespan)
+                                                  (when-not (= "custom period" timespan)
                                                     (reset! currently-selected-option timespan)
                                                     (reset! custom-timespan {})
                                                     (dispatch [::events/set-selected-timespan timespan]))))}]]
               [ui/MenuItem [:span {:style {:color "rgba(40,40,40,.3)"}} "or"]]
-              [ui/MenuItem {:class  (if (= "custom" @currently-selected-option) "active")
+              [ui/MenuItem {:class  (if (= "custom period" @currently-selected-option) "active")
                             :style {:padding          10
                                     :font-weight      "bold"}}
                [:div {:style {:display          "flex"
@@ -345,21 +346,21 @@
                                :height           "100%"
                                :padding          "0.5em"
                                :border           "none"}} (@tr [:from])]
-                [ui/DatePicker {:show-time-select true
+                [ui/DatePicker {:show-time-select false
                                 :className        "ts-datepicker"
                                 :start-date       (:from @custom-timespan)
                                 :end-date         (:to @custom-timespan)
                                 :selected         (:from @custom-timespan)
                                 :selects-start    true
                                 :placeholderText  "Select a date"
-                                :date-format      "dd/MM/yyyy, HH:mm"
+                                :date-format      "dd/MM/yyyy"
                                 :time-format      "HH:mm"
                                 :max-date         (time/days-before 1)
                                 :time-intervals   1
                                 :locale           (or (time/locale-string->locale-object @locale) @locale)
                                 :fixed-height     true
                                 :on-change        #(do (swap! custom-timespan assoc :from %)
-                                                       (reset! currently-selected-option "custom")
+                                                       (reset! currently-selected-option "custom period")
                                                        (when (:to @custom-timespan)
                                                          (dispatch [::events/set-selected-timespan [%
                                                                                                     (:to @custom-timespan)]])))}]]
@@ -377,7 +378,7 @@
                                :padding          "0.5em"
                                :border           "none"}} (str/capitalize (@tr [:to]))]
                 [ui/DatePicker {:selects-end      true
-                                :show-time-select true
+                                :show-time-select false
                                 :className        "ts-datepicker"
                                 :start-date       (:from @custom-timespan)
                                 :end-date         (:to @custom-timespan)
@@ -385,13 +386,13 @@
                                 :min-date         (:from @custom-timespan)
                                 :placeholderText  "Select a date"
                                 :selected         (:to @custom-timespan)
-                                :date-format      "dd/MM/yyyy, HH:mm"
+                                :date-format      "dd/MM/yyyy"
                                 :time-format      "HH:mm"
                                 :time-intervals   1
                                 :locale           (or (time/locale-string->locale-object @locale) @locale)
                                 :fixed-height     true
                                 :on-change        #(do (swap! custom-timespan assoc :to %)
-                                                       (reset! currently-selected-option "custom")
+                                                       (reset! currently-selected-option "custom period")
                                                        (when (:from @custom-timespan)
                                                          (dispatch [::events/set-selected-timespan [(:from @custom-timespan)
                                                                                                     %]])))}]]]]

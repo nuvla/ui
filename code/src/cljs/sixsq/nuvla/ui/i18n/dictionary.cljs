@@ -251,6 +251,7 @@
         :current-user                                  "current user"
         :current-version                               "Current version: "
         :custom                                        "custom"
+        :custom-period                                 "custom period"
         :custom-license                                "Custom license"
         :customer-service                              "Customer service"
         :customer-service-email                        "Customer service email"

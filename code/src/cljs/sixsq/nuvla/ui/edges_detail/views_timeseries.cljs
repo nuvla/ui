@@ -295,7 +295,7 @@
         edge-stats              (subscribe [::subs/edge-stats])
         loading?                (subscribe [::subs/loading?])
         initial-timespan        (first ts-utils/timespan-options)
-        custom-option-selected? (r/atom false)
+        currently-selected-option (r/atom initial-timespan)
         selected-timespan       (subscribe [::subs/timespan])
         export-modal-visible?   (r/atom false)
         fetch-edge-stats        (fn [timespan]
@@ -304,105 +304,107 @@
     (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}
-             [ui/MenuItem {:icon     icons/i-export
-                           :content  (str (@tr [:export-data]) " (.csv)")
-                           :on-click #(reset! export-modal-visible? true)}]
-             [ui/MenuMenu {:position "right"}
+             [ui/MenuMenu {:position "left"}
               [ui/MenuItem
                [:span {:style {:display      "flex"
                                :align-items  "center"
                                :margin-right 5
                                :color        "rgba(40,40,40,.3)"}} (@tr [:showing-data-for])]]
+              [ui/MenuItem {:style {:background-color (if-not (= "custom" @currently-selected-option) "#f7f4f4")}}
 
-              [ui/MenuItem {:style          {:background-color (if-not (ts-utils/custom-timespan? @selected-timespan)
-                                                                 "#DADADA7C")}
-                            :display        "flex"
-                            :flex-direction "column"}
                [ui/Dropdown {:inline          true
                              :className       "ts-dropdown"
                              :basic           true
                              :style           {:display         "flex"
-                                               :justify-content "space-between"}
+                                               :justify-content "space-between"
+                                               :color (if (= "custom" @currently-selected-option) "#8080805f" "black")}
                              :loading         @loading?
                              :close-on-change true
-                             :default-value   initial-timespan
+                             :value           @currently-selected-option
                              :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
                              :on-change       (ui-callback/value
                                                 (fn [timespan]
-                                                  (js/console.log :timespan timespan)
                                                   (if-not (= "custom" timespan)
-                                                    (do (reset! custom-option-selected? false)
+                                                    (do (reset! currently-selected-option timespan)
+                                                        (reset! custom-timespan {})
                                                         (dispatch [::events/set-selected-timespan timespan]))
-                                                    (reset! custom-option-selected? true))))}]]
+                                                    (reset! currently-selected-option timespan))))}]]
+              [ui/MenuItem [:span {:style {:color "rgba(40,40,40,.3)"}} "or"]]
+              [ui/MenuItem {:style {:padding          10
+                                    :font-weight      "bold"
+                                    :background-color (if (= "custom" @currently-selected-option) "#f7f4f4")}}
+               [:div {:style {:display          "flex"
+                              :margin-left      "1em"
+                              :align-items   "center"
+                              :border-radius "0.5em"
+                              :border-color  "#DADADA"
+                              :border-style  "solid"
+                              :overflow      "hidden"
+                              :background-color "white"}}
+                [:div {:style {:background-color "#DADADA"
+                               :height           "100%"
+                               :padding          "0.5em"
+                               :border           "none"}} (@tr [:from])]
+                [ui/DatePicker {:show-time-select true
+                                :className        "ts-datepicker"
+                                :start-date       (:from @custom-timespan)
+                                :end-date         (:to @custom-timespan)
+                                :selected         (:from @custom-timespan)
+                                :selects-start    true
+                                :placeholderText  "Select a date"
+                                :date-format      "dd/MM/yyyy, HH:mm"
+                                :time-format      "HH:mm"
+                                :max-date         (time/now)
+                                :time-intervals   1
+                                :locale           (or (time/locale-string->locale-object @locale) @locale)
+                                :fixed-height     true
+                                :on-change        #(do (swap! custom-timespan assoc :from %)
+                                                       (reset! currently-selected-option "custom")
+                                                       (when (:to @custom-timespan)
+                                                         (dispatch [::events/set-selected-timespan [%
+                                                                                                    (:to @custom-timespan)]])))}]]
+               [:div {:style {:display       "flex"
+                              :align-items   "center"
+                              :border-radius "0.5em"
+                              :border-color  "#DADADA"
+                              :border-style  "solid"
+                              :overflow      "hidden"
+                              :margin-left   "1em"
+                              :margin-right  "1em"
+                              :background-color "white"}}
+                [:div {:style {:height           "100%"
+                               :background-color "#DADADA"
+                               :padding          "0.5em"
+                               :border           "none"}} (str/capitalize (@tr [:to]))]
+                [ui/DatePicker {:selects-end      true
+                                :show-time-select true
+                                :className        "ts-datepicker"
+                                :start-date       (:from @custom-timespan)
+                                :end-date         (:to @custom-timespan)
+                                :max-date         (time/now)
+                                :min-date         (:from @custom-timespan)
+                                :placeholderText  "Select a date"
+                                :selected         (:to @custom-timespan)
+                                :date-format      "dd/MM/yyyy, HH:mm"
+                                :time-format      "HH:mm"
+                                :time-intervals   1
+                                :locale           (or (time/locale-string->locale-object @locale) @locale)
+                                :fixed-height     true
+                                :on-change        #(do (swap! custom-timespan assoc :to %)
+                                                       (reset! currently-selected-option "custom")
+                                                       (when (:from @custom-timespan)
+                                                         (dispatch [::events/set-selected-timespan [(:from @custom-timespan)
+                                                                                                    %]])))}]]]
 
-              ]]
-       (when @custom-option-selected?
-         [:div {:style {:display         "flex"
-                        :justify-content "end"
-                        :width           "100%"}}
-          [ui/Menu {:compact true
-                    :style {:padding "1em"
-                            :margin-bottom "1rem"}}
-           [:div {:style {:display       "flex"
-                          :align-items   "center"
-                          :border-radius "0.5em"
-                          :border-color  "#DADADA"
-                          :border-style  "solid"
-                          :overflow      "hidden"}}
-            [:div {:style {:font-weight      "bold"
-                           :background-color "#DADADA"
-                           :height "100%"
-                           :padding          "0.5em"
-                           :border           "none"}} (@tr [:from])]
-            [ui/DatePicker {:show-time-select true
-                            :disabled         (not @custom-option-selected?)
-                            :className        "ts-datepicker"
-                            :start-date       (:from @custom-timespan)
-                            :end-date         (:to @custom-timespan)
-                            :selected         (:from @custom-timespan)
-                            :selects-start    true
-                            :placeholderText  "Select a date"
-                            :date-format      "dd/MM/yyyy, HH:mm"
-                            :time-format      "HH:mm"
-                            :max-date         (time/now)
-                            :time-intervals   1
-                            :locale           (or (time/locale-string->locale-object @locale) @locale)
-                            :fixed-height     true
-                            :on-change        #(do (swap! custom-timespan assoc :from %)
-                                                   (when (:to @custom-timespan)
-                                                     (dispatch [::events/set-selected-timespan [%
-                                                                                                (:to @custom-timespan)]])))}]]
-           [:div {:style {:display       "flex"
-                          :align-items   "center"
-                          :border-radius "0.5em"
-                          :border-color  "#DADADA"
-                          :border-style  "solid"
-                          :overflow      "hidden"
-                          :margin-left   "2em"}}
-            [:div {:style {:font-weight      "bold"
-                           :background-color "#DADADA"
-                           :padding          "0.5em"
-                           :border           "none"}} (@tr [:to])]
-            [ui/DatePicker {:selects-end      true
-                            :disabled         (not @custom-option-selected?)
 
-                            :show-time-select true
-                            :className        "ts-datepicker"
-                            :start-date       (:from @custom-timespan)
-                            :end-date         (:to @custom-timespan)
-                            :max-date         (time/now)
-                            :min-date         (:from @custom-timespan)
-                            :placeholderText  "Select a date"
-                            :selected         (:to @custom-timespan)
-                            :date-format      "dd/MM/yyyy, HH:mm"
-                            :time-format      "HH:mm"
-                            :time-intervals   1
-                            :locale           (or (time/locale-string->locale-object @locale) @locale)
-                            :fixed-height     true
-                            :on-change        #(do (swap! custom-timespan assoc :to %)
-                                                   (when (:from @custom-timespan)
-                                                     (dispatch [::events/set-selected-timespan [(:from @custom-timespan)
-                                                                                                %]])))}]]]])
+
+              ]
+
+             [ui/MenuItem {:icon     icons/i-export
+                           :position "right"
+                           :content  (str (@tr [:export-data]) " (.csv)")
+                           :on-click #(reset! export-modal-visible? true)}]]
+
 
 
        [ui/TabPane

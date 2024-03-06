@@ -29,7 +29,7 @@
 (defn custom-timespan->granularity [distance]
   (cond
     (str/includes? distance "minutes") "1-minutes"
-    (str/includes? distance "hours") "3-minutes"
+    (str/includes? distance "hours") "10-minutes"
     (str/includes? distance "days") "6-hours"
     (str/includes? distance "months") "2-days"
     (str/includes? distance "month") "6-hours"

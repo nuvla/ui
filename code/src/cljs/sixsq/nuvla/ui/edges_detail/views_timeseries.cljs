@@ -310,7 +310,7 @@
                                :align-items  "center"
                                :margin-right 5
                                :color        "rgba(40,40,40,.3)"}} (@tr [:showing-data-for])]]
-              [ui/MenuItem {:style {:background-color (if-not (= "custom" @currently-selected-option) "#f7f4f4")}}
+              [ui/MenuItem {:class (if-not (= "custom" @currently-selected-option) "active")}
 
                [ui/Dropdown {:inline          true
                              :className       "ts-dropdown"
@@ -324,22 +324,22 @@
                              :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
                              :on-change       (ui-callback/value
                                                 (fn [timespan]
-                                                  (if-not (= "custom" timespan)
-                                                    (do (reset! currently-selected-option timespan)
-                                                        (reset! custom-timespan {})
-                                                        (dispatch [::events/set-selected-timespan timespan]))
-                                                    (reset! currently-selected-option timespan))))}]]
+                                                  (reset! currently-selected-option timespan)
+                                                  (when-not (= "custom" timespan)
+                                                    (reset! currently-selected-option timespan)
+                                                    (reset! custom-timespan {})
+                                                    (dispatch [::events/set-selected-timespan timespan]))))}]]
               [ui/MenuItem [:span {:style {:color "rgba(40,40,40,.3)"}} "or"]]
-              [ui/MenuItem {:style {:padding          10
-                                    :font-weight      "bold"
-                                    :background-color (if (= "custom" @currently-selected-option) "#f7f4f4")}}
+              [ui/MenuItem {:class  (if (= "custom" @currently-selected-option) "active")
+                            :style {:padding          10
+                                    :font-weight      "bold"}}
                [:div {:style {:display          "flex"
                               :margin-left      "1em"
-                              :align-items   "center"
-                              :border-radius "0.5em"
-                              :border-color  "#DADADA"
-                              :border-style  "solid"
-                              :overflow      "hidden"
+                              :align-items      "center"
+                              :border-radius    "0.5em"
+                              :border-color     "#DADADA"
+                              :border-style     "solid"
+                              :overflow         "hidden"
                               :background-color "white"}}
                 [:div {:style {:background-color "#DADADA"
                                :height           "100%"
@@ -354,7 +354,7 @@
                                 :placeholderText  "Select a date"
                                 :date-format      "dd/MM/yyyy, HH:mm"
                                 :time-format      "HH:mm"
-                                :max-date         (time/now)
+                                :max-date         (time/days-before 1)
                                 :time-intervals   1
                                 :locale           (or (time/locale-string->locale-object @locale) @locale)
                                 :fixed-height     true
@@ -394,18 +394,12 @@
                                                        (reset! currently-selected-option "custom")
                                                        (when (:from @custom-timespan)
                                                          (dispatch [::events/set-selected-timespan [(:from @custom-timespan)
-                                                                                                    %]])))}]]]
-
-
-
-              ]
+                                                                                                    %]])))}]]]]
 
              [ui/MenuItem {:icon     icons/i-export
                            :position "right"
                            :content  (str (@tr [:export-data]) " (.csv)")
                            :on-click #(reset! export-modal-visible? true)}]]
-
-
 
        [ui/TabPane
         [ui/Grid {:columns   2

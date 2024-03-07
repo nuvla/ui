@@ -51,23 +51,23 @@
     [:div
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
-                                          :label           (@tr [:load])
+                                          :label           (@tr [:last-15m])
                                           :backgroundColor (first plot/default-colors-palette)
                                           :borderColor     (first plot/default-colors-palette)
                                           :borderWidth     1}
                                          {:data            (timestamp+percentage ts-data :avg-cpu-load-1 :avg-cpu-capacity)
-                                          :label           (@tr [:load-1-m])
+                                          :label           (@tr [:last-1m])
                                           :backgroundColor (second plot/default-colors-palette)
                                           :borderColor     (second plot/default-colors-palette)
                                           :borderWidth     1}
                                          {:data            (timestamp+percentage ts-data :avg-cpu-load-5 :avg-cpu-capacity)
-                                          :label           (@tr [:load-5-m])
+                                          :label           (@tr [:last-5m])
                                           :backgroundColor (nth plot/default-colors-palette 2)
                                           :borderColor     (nth plot/default-colors-palette 2)
                                           :borderWidth     1}]}
 
                  :options    (graph-options selected-timespan {:title    (str (@tr [:average-cpu-load]) " (%)")
-                                                               :y-config {:max   100
+                                                               :y-config {:max   200
                                                                           :min   0
                                                                           :title {:display "true"
                                                                                   :text    "Percentage (%)"}}})}]]))

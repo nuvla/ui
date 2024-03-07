@@ -26,23 +26,23 @@
                                   "last 3 months"         "2-days"
                                   "last year"             "7-days"})
 
-(defn custom-timespan->granularity [distance]
-  (cond
-    (str/includes? distance "minutes") "1-minutes"
-    (str/includes? distance "hours") "10-minutes"
-    (str/includes? distance "days") "6-hours"
-    (str/includes? distance "months") "2-days"
-    (str/includes? distance "month") "6-hours"
-    (str/includes? distance "day") "30-minutes"
-    (str/includes? distance "year") "7-days"))
+(defn custom-timespan->granularity [timespan]
+  (let [[from to] timespan
+        distance (time/distance-between from to)]
+        (cond
+          (str/includes? distance "minutes") "1-minutes"
+          (str/includes? distance "hours") "10-minutes"
+          (str/includes? distance "days") "6-hours"
+          (str/includes? distance "months") "2-days"
+          (str/includes? distance "month") "6-hours"
+          (str/includes? distance "day") "30-minutes"
+          (str/includes? distance "year") "7-days")))
 
 
 
 (defn granularity-for-timespan [timespan]
   (if (custom-timespan? timespan)
-    (let [[from to] timespan
-          distance (time/distance-between from to)]
-      (custom-timespan->granularity distance))
+    (custom-timespan->granularity timespan)
     (get fixed-timespan->granularity timespan)))
 
 (defn format-option [option-str]

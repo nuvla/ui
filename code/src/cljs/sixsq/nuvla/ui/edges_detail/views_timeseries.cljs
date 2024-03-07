@@ -213,7 +213,7 @@
                                                                      :y-config {:title {:display "true"
                                                                                         :text    (@tr [:megabytes])}}})}]])))))
 
-(defn CustomPeriodSelector [!state {:keys [on-change-fn-from on-change-fn-to]}]
+(defn CustomPeriodSelector [timespan {:keys [on-change-fn-from on-change-fn-to]}]
   (let [tr                      (subscribe [::i18n-subs/tr])
         locale                  (subscribe [::i18n-subs/locale])]
     [:<>
@@ -232,9 +232,9 @@
                      :border           "none"}} (@tr [:from])]
       [ui/DatePicker {:show-time-select false
                       :className        "ts-datepicker"
-                      :start-date       (:from @!state)
-                      :end-date         (:to @!state)
-                      :selected         (:from @!state)
+                      :start-date       (:from timespan)
+                      :end-date         (:to timespan)
+                      :selected         (:from timespan)
                       :selects-start    true
                       :placeholderText  "Select a date"
                       :date-format      "dd/MM/yyyy"
@@ -260,12 +260,12 @@
       [ui/DatePicker {:selects-end      true
                       :show-time-select false
                       :className        "ts-datepicker"
-                      :start-date       (:from @!state)
-                      :end-date         (:to @!state)
+                      :start-date       (:from timespan)
+                      :end-date         (:to timespan)
                       :max-date         (time/now)
-                      :min-date         (:from @!state)
+                      :min-date         (:from timespan)
                       :placeholderText  "Select a date"
-                      :selected         (:to @!state)
+                      :selected         (:to timespan)
                       :date-format      "dd/MM/yyyy"
                       :time-format      "HH:mm"
                       :time-intervals   1
@@ -274,21 +274,20 @@
                       :on-change        on-change-fn-to}]]]))
 
 (defn ExportDataModal [{:keys [on-close]}]
-  (r/with-let [form-data (r/atom nil)
-               custom-period-selected? (r/atom false)
-               custom-timespan (r/atom {})]
+  (r/with-let [state (r/atom {:form-data {}
+                              :custom-period-selected? false})]
     (fn []
       (let [tr      (subscribe [::i18n-subs/tr])
             metrics [{:label   (@tr [:average-cpu-load])
-                        :value "cpu-stats"}
-                       {:label (@tr [:average-disk-usage])
-                        :value "disk-stats"}
-                       {:label (@tr [:network-traffic])
-                        :value "network-stats"}
-                       {:label (@tr [:average-ram-usage])
-                        :value "ram-stats"}
-                       {:label (@tr [:nuvlaedge-availability])
-                        :value "availability-stats"}]]
+                      :value "cpu-stats"}
+                     {:label (@tr [:average-disk-usage])
+                      :value "disk-stats"}
+                     {:label (@tr [:network-traffic])
+                      :value "network-stats"}
+                     {:label (@tr [:average-ram-usage])
+                      :value "ram-stats"}
+                     {:label (@tr [:nuvlaedge-availability])
+                      :value "availability-stats"}]]
         [ui/Modal {:close-icon true
                    :open       true
                    :onClose    on-close}
@@ -298,75 +297,77 @@
            [:p (@tr [:choose-metric-period])]
            [ui/Form
             [:div
-
              [ui/Header {:as       "h4"
                          :attached "top"
                          :style    {:background-color "#00000008"}} (@tr [:metric])]
              (into [ui/Segment {:attached true}]
-                   (for [metric metrics]
+                   (for [{:keys [label value]} metrics]
                      [ui/FormField
                       [ui/Radio
-                       {:label     (:label metric)
+                       {:label     label
                         :name      "radioGroupMetric"
-                        :value     (:value metric)
-                        :checked   (= (:metric @form-data)
-                                      (:value metric))
+                        :value     value
+                        :checked   (= (get-in @state [:form-data :metric])
+                                      value)
                         :on-change (fn [_e t]
-                                     (swap! form-data assoc :metric (. t -value)))}]]))]
+                                     (swap! state assoc-in [:form-data :metric] (. t -value)))}]]))]
             [:div
              [ui/Header {:as       "h4"
                          :attached "top"
-                         :style    {:background-color "#00000008"}} (str/capitalize (@tr [:period]))]
+                         :style    {:background-color "#00000008"}}
+              (str/capitalize (@tr [:period]))]
              (into [ui/Segment {:attached true}]
-                   (conj
-                          (mapv (fn [option]
-                                  [ui/FormField
-                                   [ui/Radio
-                                    {:label     (@tr [(ts-utils/format-option option)])
-                                     :name      "radioGroupTimespan"
-                                     :value     option
-                                     :checked   (= (:timespan @form-data)
-                                                   option)
-                                     :on-change (fn [_e t]
-                                                  (reset! custom-period-selected? false)
-                                                  (swap! form-data assoc :timespan (. t -value)))}]])
-                                (drop-last ts-utils/timespan-options))
-                          [:div {:style {:display     "flex"
-                                         :align-items "center"}}
-                           [ui/FormField
-                            [ui/Radio
-                             {:label     (@tr [(ts-utils/format-option "custom period")])
-                              :name      "radioGroupTimespan"
-                              :value     "custom period"
-                              :checked   (= (:timespan @form-data)
-                                            "custom period")
-                              :on-change (fn [_e t]
-                                           (when (= "custom period" (. t -value))
-                                             (swap! form-data assoc :timespan (. t -value))
-                                             (reset! custom-period-selected? true)))}]]
-                           [:div {:style {:display "flex"
-                                          :margin-bottom 10
-                                          :visibility (if @custom-period-selected? "visible"
-                                                                                   "hidden")}}
-                            [CustomPeriodSelector custom-timespan {:on-change-fn-from #(swap! custom-timespan assoc :from %)
-                                                                   :on-change-fn-to #(swap! custom-timespan assoc :to %)}]]]))]]]]
+                   (conj (mapv (fn [option]
+                                 (when-not (= "custom period" option)
+                                   [ui/FormField
+                                    [ui/Radio
+                                     {:label     (@tr [(ts-utils/format-option option)])
+                                      :name      "radioGroupTimespan"
+                                      :value     option
+                                      :checked   (= (get-in @state [:form-data :timespan-option])
+                                                    option)
+                                      :on-change (fn [_e t]
+                                                   (let [[from to] (ts-utils/timespan-to-period (. t -value))]
+                                                     (swap! state assoc :custom-period-selected? false)
+                                                     (swap! state assoc-in [:form-data :timespan-option] (. t -value))
+                                                     (swap! state assoc-in [:form-data :from] from)
+                                                     (swap! state assoc-in [:form-data :to] to)))}]]))
+                               ts-utils/timespan-options)
+                         [:div {:style {:display     "flex"
+                                        :align-items "center"}}
+                          [ui/FormField
+                           [ui/Radio
+                            {:label          (@tr [(ts-utils/format-option "custom period")])
+                             :name           "radioGroupTimespan"
+                             :value          "custom period"
+                             :checked        (= (get-in @state [:form-data :timespan-option])
+                                                "custom period")
+                             :on-change (fn [_e t]
+                                          (swap! state assoc-in [:form-data :timespan-option] (. t -value))
+                                          (swap! state update-in [:form-data] dissoc :from :to)
+                                          (swap! state assoc :custom-period-selected? true))}]]
+                          [:div {:style {:display       "flex"
+                                         :margin-bottom 10
+                                         :visibility    (if (:custom-period-selected? @state)
+                                                          "visible"
+                                                          "hidden")}}
+                           [CustomPeriodSelector (:form-data @state)
+                            {:on-change-fn-from #(swap! state assoc-in [:form-data :from] %)
+                             :on-change-fn-to   #(swap! state assoc-in [:form-data :to] %)}]]]))]]]]
          [ui/ModalActions
           [uix/Button {:text     (@tr [:export])
                        :icon     icons/i-export
                        :positive true
-                       :disabled (or (not (:metric @form-data))
-                                     (not (:timespan @form-data)))
+                       :disabled (or (not (-> @state :form-data :metric))
+                                     (not (-> @state :form-data :from))
+                                     (not (-> @state :form-data :to)))
                        :active   true
-                       :on-click #(let [[from to] (if (= "custom period" (:timespan @form-data))
-                                                    [(:from @custom-timespan) (:to @custom-timespan)]
-                                                    (ts-utils/timespan-to-period (:timespan @form-data)))]
+                       :on-click #(let [{:keys [from to metric] :as form-data} (:form-data @state)]
                                     (dispatch [::events/fetch-edge-stats-csv
                                                {:from        from
                                                 :to          to
-                                                :granularity (if (= "custom period" (:timespan @form-data))
-                                                               (ts-utils/custom-timespan->granularity [(:from @custom-timespan) (:to @custom-timespan)])
-                                                               (ts-utils/fixed-timespan->granularity (:timespan @form-data)))
-                                                :dataset     (:metric @form-data)}]))}]]]))))
+                                                :granularity (ts-utils/granularity-for-timespan form-data)
+                                                :dataset     metric}]))}]]]))))
 
 (defn GraphLabel [timespan]
   (let [tr (subscribe [::i18n-subs/tr])
@@ -375,6 +376,7 @@
                :size  "tiny"
                :style {:margin-top "1em"}}
      (str "Per " number " " (@tr [(keyword unit)]))]))
+
 (defn TimeSeries []
   (let [tr                        (subscribe [::i18n-subs/tr])
         edge-stats                (subscribe [::subs/edge-stats])
@@ -425,7 +427,7 @@
                               :visibility  (if (= "custom period" @currently-selected-option)
                                              "visible"
                                              "hidden")}}
-                [CustomPeriodSelector custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
+                [CustomPeriodSelector @custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
                                                                                (when (:to @custom-timespan)
                                                                                  (dispatch [::events/set-selected-timespan {:from %
                                                                                                                             :to (:to @custom-timespan)

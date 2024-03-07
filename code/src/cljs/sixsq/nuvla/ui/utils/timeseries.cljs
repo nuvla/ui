@@ -2,33 +2,33 @@
   (:require [clojure.string :as str]
             [sixsq.nuvla.ui.utils.time :as time]))
 
-(def timespan-options ["last 15 minutes" "last hour" "last 12 hours" "last day" "last week" "last month" "last 3 months" "last year" "custom period"])
-(defn custom-timespan? [timespan]
-  (not (contains? (set timespan-options) timespan)))
+(def timespan-options ["last 15 minutes" "last hour" "last 6 hours" "last day" "last week" "last month" "last 3 months" "last year" "custom period"])
+(defn custom-timespan? [timespan-option]
+  (= "custom period" timespan-option))
 
 (defn timespan-to-period [timespan]
   (let [now (time/now)]
     (case timespan
       "last 15 minutes" [(time/subtract-minutes now 15) now]
       "last hour" [(time/subtract-minutes now 60) now]
-      "last 12 hours" [(time/subtract-minutes now 360) now]
+      "last 6 hours" [(time/subtract-minutes now 360) now]
       "last day" [(time/subtract-days now 1) now]
       "last week" [(time/subtract-days now 7) now]
       "last month" [(time/subtract-months now 1) now]
       "last 3 months" [(time/subtract-months now 3) now]
       "last year" [(time/subtract-years now 1) now])))
-(def fixed-timespan->granularity {"last 15 minutes"       "1-minutes"
-                                  "last hour"             "2-minutes"
-                                  "last 12 hours"         "3-minutes"
-                                  "last day"              "30-minutes"
-                                  "last week"             "1-hours"
-                                  "last month"            "6-hours"
-                                  "last 3 months"         "2-days"
-                                  "last year"             "7-days"})
+(def fixed-timespan->granularity
+  {"last 15 minutes"       "1-minutes"
+   "last hour"             "2-minutes"
+   "last 6 hours"         "3-minutes"
+   "last day"              "30-minutes"
+   "last week"             "1-hours"
+   "last month"            "6-hours"
+   "last 3 months"         "2-days"
+   "last year"             "7-days"})
 
-(defn custom-timespan->granularity [timespan]
-  (let [[from to] timespan
-        distance (time/distance-between from to)]
+(defn custom-timespan->granularity [{:keys [from to]}]
+  (let [distance (time/distance-between from to)]
         (cond
           (str/includes? distance "minutes") "1-minutes"
           (str/includes? distance "hours") "10-minutes"
@@ -40,10 +40,10 @@
 
 
 
-(defn granularity-for-timespan [timespan]
-  (if (custom-timespan? timespan)
+(defn granularity-for-timespan [{:keys [timespan-option] :as timespan}]
+  (if (custom-timespan? timespan-option)
     (custom-timespan->granularity timespan)
-    (get fixed-timespan->granularity timespan)))
+    (get fixed-timespan->granularity timespan-option)))
 
 (defn format-option [option-str]
   (-> option-str

@@ -82,7 +82,7 @@
                                            :time    {:unit (case timespan
                                                              ("last 15 minutes"
                                                                "last hour"
-                                                               "last 12 hours") "minute"
+                                                               "last 6 hours") "minute"
                                                              "last day" "hour"
                                                              "last year" "month"
                                                              "day")}

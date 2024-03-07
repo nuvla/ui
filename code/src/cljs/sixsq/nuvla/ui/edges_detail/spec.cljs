@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as tab-plugin]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (s/def ::nuvlabox (s/nilable any?))
 (s/def ::nuvlabox-status (s/nilable any?))
@@ -52,7 +53,9 @@
                ::nuvlaedge-release            nil
                ::edge-stats                   nil
                ::stats-loading?               nil
-               ::timespan                     "last 15 minutes"})
+               ::timespan                     {:timespan-option "last 15 minutes"
+                                               :from   (time/subtract-minutes (time/now) 15)
+                                               :to     (time/now)}})
 
 (s/def ::deployment-pagination any?)
 

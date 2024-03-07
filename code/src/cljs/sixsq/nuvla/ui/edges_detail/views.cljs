@@ -674,9 +674,7 @@
   (let [can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
-        loading?          (subscribe [::subs/loading?])
-        active-tab        (subscribe [::tab-plugin/active-tab [::spec/tab]])
-        current-timespan  (subscribe [::subs/timespan])]
+        loading?          (subscribe [::subs/loading?])]
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
                         @nuvlabox

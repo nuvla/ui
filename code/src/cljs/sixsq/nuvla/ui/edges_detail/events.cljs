@@ -135,28 +135,33 @@
 (reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook ::spec/timespan] :as db} :db} [_ id]]
-    {:db                  (cond-> db
-                                  (not= (:id nuvlabox) id)
-                                  (merge spec/defaults))
-     ::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
-                           :on-error #(dispatch [::set-nuvlabox nil])]
-     ::cimi-api-fx/search [:nuvlabox-peripheral
-                           {:filter  (str "parent='" id "'")
-                            :last    10000
-                            :orderby "id"}
-                           #(dispatch [::set-nuvlabox-peripherals %])]
-     :fx                  [[:dispatch [::events-plugin/load-events
-                                       [::spec/events] id false]]
-                           [:dispatch [::job-events/get-jobs id]]
-                           [:dispatch [::get-deployments-for-edge id]]
-                           [:dispatch [::get-nuvlabox-playbooks id]]
-                           [:dispatch [::fetch-edge-stats {:nuvlaedge-id id
-                                                           :timespan timespan
-                                                           :granularity (ts-utils/granularity-for-timespan timespan)
-                                                           :datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"]}]]
-                           [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
-                                                                         (:id nuvlabox-current-playbook)
-                                                                         nil)]]]}))
+    (let [{:keys [timespan-option]} timespan
+          [from to] (if (= "custom period" timespan-option)
+                      [(:from timespan) (:to timespan)]
+                      (ts-utils/timespan-to-period timespan-option))]
+      {:db                  (cond-> db
+                                    (not= (:id nuvlabox) id)
+                                    (merge spec/defaults))
+       ::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
+                             :on-error #(dispatch [::set-nuvlabox nil])]
+       ::cimi-api-fx/search [:nuvlabox-peripheral
+                             {:filter  (str "parent='" id "'")
+                              :last    10000
+                              :orderby "id"}
+                             #(dispatch [::set-nuvlabox-peripherals %])]
+       :fx                  [[:dispatch [::events-plugin/load-events
+                                         [::spec/events] id false]]
+                             [:dispatch [::job-events/get-jobs id]]
+                             [:dispatch [::get-deployments-for-edge id]]
+                             [:dispatch [::get-nuvlabox-playbooks id]]
+                             [:dispatch [::fetch-edge-stats {:nuvlaedge-id id
+                                                             :from         from
+                                                             :to           to
+                                                             :granularity  (ts-utils/granularity-for-timespan timespan)
+                                                             :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"]}]]
+                             [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
+                                                                           (:id nuvlabox-current-playbook)
+                                                                           nil)]]]})))
 
 (reg-event-fx
   ::get-deployments-for-edge
@@ -407,11 +412,8 @@
 
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox ::spec/timespan] :as db} :db} [_ {:keys [granularity timespan datasets nuvlaedge-id]}]]
-    (let [[from to] (if (ts-utils/custom-timespan? timespan)
-                      timespan
-                      (ts-utils/timespan-to-period timespan))
-          datasets-to-query (->> datasets
+  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [granularity from to datasets nuvlaedge-id]}]]
+    (let [datasets-to-query (->> datasets
                                  (map #(str "dataset=" %))
                                  (str/join "&"))
           uri (str "/api/" (or nuvlaedge-id (:id nuvlabox)) "/data?" datasets-to-query "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
@@ -439,10 +441,12 @@
 (reg-event-fx
   ::set-selected-timespan
   (fn [{db :db} [_ timespan]]
-    {:db (assoc db ::spec/timespan timespan)
-     :fx [[:dispatch [::fetch-edge-stats {:timespan timespan
-                                          :granularity (ts-utils/granularity-for-timespan timespan)
-                                          :datasets edge-stats-datasets}]]] }))
+    (let [{:keys [from to]} timespan]
+      {:db (assoc db ::spec/timespan timespan)
+       :fx [[:dispatch [::fetch-edge-stats {:from from
+                                            :to to
+                                            :granularity (ts-utils/granularity-for-timespan timespan)
+                                            :datasets    edge-stats-datasets}]]]})))
 
 (reg-event-fx
   ::fetch-edge-stats-csv-success

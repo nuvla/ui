@@ -488,7 +488,7 @@
         :last                                          "last"
         :last-30-days                                  "last 30 days"
         :last-15-minutes                               "last 15 minutes"
-        :last-12-hours                                 "last 6 hours"
+        :last-6-hours                                 "last 6 hours"
         :last-7-days                                   "last 7 days"
         :last-3-months                                 "last 3 months"
         :last-boot                                     "Last Boot"

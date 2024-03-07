@@ -14,9 +14,7 @@
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 (defn graph-options [timespan {:keys [title y-config plugins]}]
-  (let [[from to] (if (ts-utils/custom-timespan? timespan)
-                    timespan
-                    (ts-utils/timespan-to-period timespan)) ]
+  (let [{:keys [from to]} timespan]
     {:plugins  (merge {:title {:display  true
                                :text     title
                                :position "top"}}
@@ -26,10 +24,10 @@
      :scales   {:x {:type  "time"
                     :min   from
                     :max   to
-                    :time  {:unit (case timespan
+                    :time  {:unit (case (:timespan-option timespan)
                                     ("last 15 minutes"
                                       "last hour"
-                                      "last 12 hours") "minute"
+                                      "last 6 hours") "minute"
                                     "last day" "hour"
                                     "last year" "month"
                                     "day")}
@@ -124,7 +122,7 @@
         dataset (->> ts-data
                      (mapv (fn [d]
                              {:x      (:timestamp d)
-                              :y      1
+                              :y      (if (seq (:aggregations d)) 1 nil)
                               :status (-> d :aggregations :avg-online :value)})))]
     [:div#nuvlaedge-status
      [plot/Bar {:updateMode "none"
@@ -386,7 +384,10 @@
         selected-timespan         (subscribe [::subs/timespan])
         export-modal-visible?     (r/atom false)
         fetch-edge-stats          (fn [timespan]
-                                    (dispatch [::events/set-selected-timespan timespan]))
+                                    (let [[from to] (ts-utils/timespan-to-period timespan)]
+                                      (dispatch [::events/set-selected-timespan {:timespan-option timespan
+                                                                                 :from from
+                                                                                 :to to}])))
         custom-timespan           (r/atom {})]
     (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
@@ -402,7 +403,7 @@
                [ui/Dropdown {:inline          true
                              :className       "ts-dropdown"
                              :basic           true
-                             :scrollable      true
+                             :scrolling      true
                              :style           {:display         "flex"
                                                :justify-content "space-between"}
                              :loading         @loading?
@@ -413,22 +414,27 @@
                                                 (fn [timespan]
                                                   (reset! currently-selected-option timespan)
                                                   (when-not (= "custom period" timespan)
-                                                    (reset! currently-selected-option timespan)
-                                                    (reset! custom-timespan {})
-                                                    (dispatch [::events/set-selected-timespan timespan]))))}]
-               [:div {:style {:display   "flex"
+                                                    (let [[from to] (ts-utils/timespan-to-period timespan)]
+                                                      (reset! currently-selected-option timespan)
+                                                      (reset! custom-timespan {})
+                                                      (dispatch [::events/set-selected-timespan {:timespan-option timespan
+                                                                                                 :from from
+                                                                                                 :to to}])))))}]
+               [:div {:style {:display     "flex"
                               :margin-left 10
-                              :visibility (if (= "custom period" @currently-selected-option)
-                                            "visible"
-                                            "hidden")}}
+                              :visibility  (if (= "custom period" @currently-selected-option)
+                                             "visible"
+                                             "hidden")}}
                 [CustomPeriodSelector custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
                                                                                (when (:to @custom-timespan)
-                                                                                 (dispatch [::events/set-selected-timespan [%
-                                                                                                                            (:to @custom-timespan)]])))
-                                                       :on-change-fn-to #(do (swap! custom-timespan assoc :to %)
-                                                                             (when (:from @custom-timespan)
-                                                                               (dispatch [::events/set-selected-timespan [(:from @custom-timespan)
-                                                                                                                          %]])))}]]]]
+                                                                                 (dispatch [::events/set-selected-timespan {:from %
+                                                                                                                            :to (:to @custom-timespan)
+                                                                                                                            :timespan-option "custom period"}])))
+                                                       :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
+                                                                               (when (:from @custom-timespan)
+                                                                                 (dispatch [::events/set-selected-timespan {:from (:from @custom-timespan)
+                                                                                                                            :to %
+                                                                                                                            :timespan-option "custom period"}])))}]]]]
              [ui/MenuItem {:icon     icons/i-export
                            :position "right"
                            :content  (str (@tr [:export-data]) " (.csv)")

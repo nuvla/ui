@@ -1293,9 +1293,9 @@
         no-of-measurements (-> ts-data count)
         avg-online-values  (map (comp :value :avg-online :aggregations) ts-data)
         avg-percentage     (general-utils/percentage (apply + avg-online-values) no-of-measurements)]
-    (dispatch [::events/set-selected-timespan "last 15 minutes"
-               (get ts-utils/fixed-timespan->granularity "last 15 minutes")
-               ["availability-stats"]])
+    (dispatch [::events/set-selected-timespan {:timespan-option "last 15 minutes"
+                                               :from (time/subtract-minutes (time/now) 15)
+                                               :to   (time/now)}])
     [ui/TableRow
      [ui/TableCell "Availability"]
      [ui/TableCell {:style {:display "flex"

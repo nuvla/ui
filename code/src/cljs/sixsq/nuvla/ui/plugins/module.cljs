@@ -55,6 +55,10 @@
   [db-path href]
   (db-module-versioned-subpath db-path href ::overwrite))
 
+(defn- db-module-reset-to-path
+  [db-path href]
+  (db-module-versioned-subpath db-path href ::reset-to))
+
 (defn- db-new-version-module-href-path
   [db-path href]
   (db-module-subpath db-path href ::new-version-module-href-path))
@@ -114,10 +118,6 @@
   [module]
   (get-in module module-files-path))
 
-(defn- initial-file-content-by-index
-  [files index]
-  (get-in files [index ::initial-file-content]))
-
 (defn- new-file-content-by-index
   [files index]
   (get-in files [index ::new-file-content]))
@@ -136,9 +136,7 @@
 
 (defn- reset-env-value-by-index
   [env-vars index]
-  (if-let [initial-value (get-in env-vars [index ::initial-value])]
-    (update env-vars index assoc ::new-value initial-value)
-    (update env-vars index dissoc ::new-value)))
+  (update env-vars index dissoc ::new-value))
 
 (defn- update-file-content-by-index
   [files index file-content]
@@ -146,9 +144,7 @@
 
 (defn- reset-file-content-by-index
   [files index]
-  (if-let [initial-file-content (get-in files [index ::initial-file-content])]
-    (update files index assoc ::new-file-content initial-file-content)
-    (update files index dissoc ::new-file-content)))
+  (update files index dissoc ::new-file-content))
 
 (defn- update-registry-credential-by-index
   [registries-credentials index value]
@@ -167,7 +163,6 @@
   (mapv (fn [{env-name :name :as environment-variable}]
           (if-let [env-value (get env env-name)]
             (assoc environment-variable
-              ::initial-value env-value
               ::new-value env-value)
             environment-variable))
         environment-variables))
@@ -177,7 +172,6 @@
   (mapv (fn [{:keys [file-name] :as file}]
           (if-let [file-content (get overridden-files file-name)]
             (assoc file
-              ::initial-file-content file-content
               ::new-file-content file-content)
             file))
         files))
@@ -186,9 +180,22 @@
   [db db-path href loading?]
   (assoc-in db (db-module-loading-registries-path db-path href) loading?))
 
+(defn- init-reset-to
+  [db db-path href module reset-to]
+  (assoc-in db (db-module-reset-to-path db-path href)
+            (-> reset-to
+                (update :env #(merge (->> module :content :environmental-variables
+                                          (map (juxt :name :value))
+                                          (into {}))
+                                     %))
+                (update :files #(merge (->> module :content :files
+                                            (map (juxt :file :file-content))
+                                            (into {}))
+                                       %)))))
+
 (reg-event-fx
   ::set-module
-  (fn [{db :db} [_ db-path href module on-success-event]]
+  (fn [{db :db} [_ db-path href module on-success-event reset-to]]
     (let [overwrite-map               (get-in db (db-module-overwrite-path db-path href))
           update-env-vars             #(overwrite-env % (:env overwrite-map))
           overwrite-module-env        #(update-module-env-vars % update-env-vars)
@@ -197,19 +204,21 @@
           overwrite-module-regs-creds #(if-let [registries-credentials (:registries-credentials overwrite-map)]
                                          (update-module-registries-credentials % (constantly registries-credentials))
                                          %)]
-      {:db (-> module
-               overwrite-module-env
-               overwrite-module-files
-               overwrite-module-regs-creds
-               (set-db-module db db-path href))
+      {:db (-> (-> module
+                   overwrite-module-env
+                   overwrite-module-files
+                   overwrite-module-regs-creds
+                   (set-db-module db db-path href))
+               (init-reset-to db-path href module reset-to))
        :fx (cond-> [[:dispatch [::load-infra-registries db-path href]]]
                    on-success-event (conj [:dispatch on-success-event]))})))
 
 (reg-event-fx
   ::load-module
-  (fn [{db :db} [_ db-path href overwrite on-success-event]]
-    {:db               (assoc-in db (db-module-overwrite-path db-path href) overwrite)
-     ::cimi-api-fx/get [href #(dispatch [::set-module db-path href % on-success-event])]}))
+  (fn [{db :db} [_ db-path href overwrite on-success-event reset-to]]
+    {:db               (-> db
+                           (assoc-in (db-module-overwrite-path db-path href) overwrite))
+     ::cimi-api-fx/get [href #(dispatch [::set-module db-path href % on-success-event reset-to])]}))
 
 (reg-event-db
   ::set-resolved-private-registries
@@ -281,11 +290,18 @@
 (reg-event-fx
   ::reset-env-value
   (fn [{db :db} [_ db-path href index]]
-    (let [change-event          (get-in db (conj db-path change-event-env-variables))
-          update-env-vars       #(reset-env-value-by-index % index)
-          update-module-env-var #(update-module-env-vars % update-env-vars)]
-      {:db (update-db-module db db-path href update-module-env-var)
-       :fx [(when change-event [:dispatch change-event])]})))
+    #_(let [change-event          (get-in db (conj db-path change-event-env-variables))
+            update-env-vars       #(reset-env-value-by-index % index)
+            update-module-env-var #(update-module-env-vars % update-env-vars)]
+        {:db (update-db-module db db-path href update-module-env-var)
+         :fx [(when change-event [:dispatch change-event])]})
+    (let [versioned-href         (str href "_" (db-selected-version db db-path href))
+          module                 (db-module db db-path href)
+          env-vars               (get-in module module-env-vars-path)
+          env-var                (get env-vars index)
+          reset-to               (get-in db (db-module-reset-to-path db-path versioned-href))
+          reset-to-env-var-value (get-in reset-to [:env (:name env-var)])]
+      {:fx [[:dispatch [::update-env db-path href index reset-to-env-var-value]]]})))
 
 (reg-event-fx
   ::update-file-content
@@ -302,13 +318,29 @@
        :fx [(when change-event [:dispatch change-event])]})))
 
 (reg-event-fx
-  ::reset-file-content
-  (fn [{db :db} [_ db-path href index]]
+  ::update-file-override-and-reset
+  (fn [{db :db} [_ db-path href index file-content]]
     (let [change-event       (get-in db (conj db-path change-event-files))
           update-files       #(reset-file-content-by-index % index)
-          update-module-file #(update-module-files % update-files)]
-      {:db (update-db-module db db-path href update-module-file)
+          update-module-file #(update-module-files % update-files)
+          module             (db-module db db-path href)
+          versioned-href     (str href "_" (db-selected-version db db-path href))
+          file-name          (get-in (module-files module) [index :file-name])]
+      {:db (-> db
+               (assoc-in (conj (db-module-overwrite-path db-path versioned-href) :files file-name) file-content)
+               (update-db-module db-path href update-module-file))
        :fx [(when change-event [:dispatch change-event])]})))
+
+(reg-event-fx
+  ::reset-file-content
+  (fn [{db :db} [_ db-path href index]]
+    (let [versioned-href        (str href "_" (db-selected-version db db-path href))
+          module                (db-module db db-path href)
+          files                 (get-in module module-files-path)
+          file                  (get files index)
+          reset-to              (get-in db (db-module-reset-to-path db-path versioned-href))
+          reset-to-file-content (get-in reset-to [:files (:file-name file)])]
+      {:fx [[:dispatch [::update-file-content db-path href index reset-to-file-content]]]})))
 
 (reg-event-fx
   ::update-registry-credential
@@ -331,7 +363,8 @@
 (reg-sub
   ::module-overwrite
   (fn [db [_ db-path href]]
-    (get-in db (db-module-overwrite-path db-path href))))
+    (let [versioned-href (str href "_" (db-selected-version db db-path href))]
+      (get-in db (db-module-overwrite-path db-path versioned-href)))))
 
 (reg-sub
   ::new-version-module-href
@@ -456,6 +489,19 @@
          (into #{}))))
 
 (reg-sub
+  ::module-overridden-env-var?
+  (fn [db [_ db-path href index]]
+    (let [module                 (db-module db db-path href)
+          env-vars               (get-in module module-env-vars-path)
+          env-var                (get env-vars index)
+          versioned-href         (str href "_" (db-selected-version db db-path href))
+          env-var-value          (env-vars-value-by-index (db-module-env-vars db db-path versioned-href) index)
+          reset-to               (get-in db (db-module-reset-to-path db-path versioned-href))
+          reset-to-env-var-value (get-in reset-to [:env (:name env-var)])]
+      (and (some? env-var-value)
+           (not= reset-to-env-var-value env-var-value)))))
+
+(reg-sub
   ::module-env-vars-in-error
   (fn [db [_ db-path href]]
     (db-module-env-vars-in-error db db-path href)))
@@ -468,8 +514,15 @@
 (reg-sub
   ::module-overridden-file-content?
   (fn [db [_ db-path href index]]
-    (not= (initial-file-content-by-index (db-module-files db db-path href) index)
-          (new-file-content-by-index (db-module-files db db-path href) index))))
+    (let [file-content          (new-file-content-by-index (db-module-files db db-path href) index)
+          module                (db-module db db-path href)
+          files                 (get-in module module-files-path)
+          file                  (get files index)
+          versioned-href        (str href "_" (db-selected-version db db-path href))
+          reset-to              (get-in db (db-module-reset-to-path db-path versioned-href))
+          reset-to-file-content (get-in reset-to [:files (:file-name file)])]
+      (and (some? file-content)
+           (not= reset-to-file-content file-content)))))
 
 (reg-sub
   ::registries-loading?
@@ -569,12 +622,13 @@
         :on-change (ui-callback/input-callback on-change)}])))
 
 (defn AsFormInput
-  [db-path href read-only? error? overridden?
+  [db-path href read-only? error?
    i {env-name        :name
       env-description :description
       env-required    :required :as env-variable}
    show-required?]
   (let [tr              (subscribe [::i18n-subs/tr])
+        overridden?     @(subscribe [::module-overridden-env-var? db-path href i])
         reset-env-value (fn [event]
                           (dispatch [::reset-env-value db-path href i])
                           (.preventDefault event)
@@ -615,25 +669,26 @@
            (let [var-in-error (boolean (vars-in-error (:name env-variable)))]
              ^{:key (str (:name env-variable) "_" i)}
              [AsFormInput db-path href read-only? var-in-error
-              (not= (::initial-value env-variable) (::new-value env-variable))
               i env-variable show-required?]))
          env-variables)]
       [ui/Message (tr [:module-no-env-variables])])))
 
 (defn SingleFile
-  [{:keys [db-path href read-only? overridden?]
+  [{:keys [db-path href read-only?]
     :or   {read-only? false}
     :as   _opts} _idx _file]
   (fn [_opts index {:keys [file-name file-content]}]
-    (let [tr                   @(subscribe [::i18n-subs/tr])
-          reset-file-content   (fn [event]
-                                 (dispatch [::reset-file-content db-path href index])
-                                 (.preventDefault event)
-                                 (.stopPropagation event))
-          updated-file-content @(subscribe [::module-new-file-content db-path href index])
-          overridden?          @(subscribe [::module-overridden-file-content? db-path href index])
-          file-content         (or updated-file-content file-content "")
-          on-change            #(dispatch [::update-file-content db-path href index %])]
+    (let [tr                    @(subscribe [::i18n-subs/tr])
+          reset-file-content    (fn [event]
+                                  (dispatch [::reset-file-content db-path href index])
+                                  (.preventDefault event)
+                                  (.stopPropagation event))
+          updated-file-content  @(subscribe [::module-new-file-content db-path href index])
+          overridden?           @(subscribe [::module-overridden-file-content? db-path href index])
+          module-overrides      @(subscribe [::module-overwrite db-path href])
+          file-content-override (get-in module-overrides [:files file-name])
+          merged-file-content   (or updated-file-content file-content-override file-content "")
+          on-change             #(dispatch [::update-file-content db-path href index %])]
       [ui/TableRow {:key index, :vertical-align "top"}
        [ui/TableCell {:floated :left
                       :width   3}
@@ -643,7 +698,7 @@
         [ui/Form
          [ui/TextArea {:rows      10
                        :read-only read-only?
-                       :value     file-content
+                       :value     merged-file-content
                        :on-change (ui-callback/value on-change)}]]]
        [ui/TableCell {:floated :right
                       :width   1

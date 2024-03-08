@@ -130,35 +130,51 @@
               (str apps-set-id "_" version)]])
 
 (defn load-module-configurations
-  [db modules-by-id {:keys [is-controlled-by-apps-set? force-modules-reload?]}
+  [{:keys [::spec/module-applications-sets] :as db}
+   modules-by-id {:keys [is-controlled-by-apps-set? force-modules-reload?]}
    fx [id {:keys [applications]}]]
-  (->> applications
-       (map (fn [{module-id :id :keys [version
-                                       environmental-variables
-                                       files
-                                       registries-credentials]}]
-              (let [loaded-module     (module-plugin/db-module db [::spec/apps-sets id] module-id)
-                    loaded-version-no (when loaded-module (get-version-id (map-indexed vector (:versions loaded-module))
-                                                                          (-> loaded-module :content :id)))]
-                (when (and (get modules-by-id module-id)
-                           (or force-modules-reload?
-                               (if is-controlled-by-apps-set?
-                                 (not= loaded-version-no version)
-                                 (nil? loaded-module))))
-                  [:dispatch [::module-plugin/load-module
-                              [::spec/apps-sets id]
-                              (str module-id "_" version)
-                              {:env                    (when (seq environmental-variables)
-                                                         (->> environmental-variables
-                                                              (map (juxt :name :value))
-                                                              (into {})))
-                               :files                  (when (seq files)
-                                                         (->> files
-                                                              (map (juxt :file-name :file-content))
-                                                              (into {})))
-                               :registries-credentials registries-credentials}
-                              [::init-app-row-data false]]]))))
-       (concat fx)))
+  (let [app-set-overrides (get-in module-applications-sets
+                                  [:content :applications-sets 0 :applications])]
+    (->> applications
+         (map (fn [{module-id :id :keys [version
+                                         environmental-variables
+                                         files
+                                         registries-credentials]}]
+                (let [app-set-module-overrides (->> app-set-overrides
+                                                    (filter #(= module-id (:id %)))
+                                                    first)
+                      app-set-env-vars         (:environmental-variables app-set-module-overrides)
+                      app-set-file-overrides   (:files app-set-module-overrides)
+                      loaded-module            (module-plugin/db-module db [::spec/apps-sets id] module-id)
+                      loaded-version-no        (when loaded-module (get-version-id (map-indexed vector (:versions loaded-module))
+                                                                                   (-> loaded-module :content :id)))]
+                  (when (and (get modules-by-id module-id)
+                             (or force-modules-reload?
+                                 (if is-controlled-by-apps-set?
+                                   (not= loaded-version-no version)
+                                   (nil? loaded-module))))
+                    [:dispatch [::module-plugin/load-module
+                                [::spec/apps-sets id]
+                                (str module-id "_" version)
+                                {:env                    (when (seq environmental-variables)
+                                                           (->> environmental-variables
+                                                                (map (juxt :name :value))
+                                                                (into {})))
+                                 :files                  (when (seq files)
+                                                           (->> files
+                                                                (map (juxt :file-name :file-content))
+                                                                (into {})))
+                                 :registries-credentials registries-credentials}
+                                [::init-app-row-data false]
+                                {:env   (when (seq app-set-env-vars)
+                                          (->> app-set-env-vars
+                                               (map (juxt :name :value))
+                                               (into {})))
+                                 :files (when (seq app-set-file-overrides)
+                                          (->> app-set-file-overrides
+                                               (map (juxt :file-name :file-content))
+                                               (into {})))}]]))))
+         (concat fx))))
 
 (reg-event-fx
   ::load-module-configuration
@@ -946,7 +962,6 @@
        :fx [[:dispatch [::get-application-sets
                         (-> deployment-set-edited :applications-sets first)
                         {:force-modules-reload? true}]]]})))
-
 
 (reg-event-db
   ::enable-form-validation

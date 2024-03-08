@@ -1451,10 +1451,10 @@
     [uix/Accordion
      (tt/with-tooltip
        [:div [module-plugin/Files
-              {:db-path           [::spec/apps-sets i]
-               :href              module-id
-               :change-event      [::events/edit-config]
-               :read-only?        (or (not @can-edit-data?) (not @edit-op-allowed?))}]]
+              {:db-path                  [::spec/apps-sets i]
+               :href                     module-id
+               :change-event             [::events/edit-config]
+               :read-only?               (or (not @can-edit-data?) (not @edit-op-allowed?))}]]
        (edit-not-allowed-msg {:TR                         @tr
                               :can-edit-data?             @can-edit-data?
                               :edit-op-allowed?           @edit-op-allowed?

@@ -646,7 +646,7 @@
            (tt/with-tooltip
              [:a {:href     "#"
                   :on-click reset-env-value}
-              [icons/UndoIcon]]
+              [icons/UndoIcon {:style {:color "black"}}]]
              (@tr [:overridden-value-revert-to-default])))])]
      [EnvVarInput db-path href read-only? error? i env-variable]]))
 
@@ -712,7 +712,7 @@
              (tt/with-tooltip
                [:a {:href     "#"
                     :on-click reset-file-content}
-                [icons/UndoIcon]]
+                [icons/UndoIcon {:style {:color "black"}}]]
                (tr [:overridden-value-revert-to-default])))])]])))
 
 (defn Files

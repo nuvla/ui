@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.edges-detail.events :as events]
             [sixsq.nuvla.ui.edges-detail.subs :as subs]
+            [sixsq.nuvla.ui.utils.datepicker :as datepicker-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]
@@ -217,21 +218,10 @@
   (let [tr                      (subscribe [::i18n-subs/tr])
         locale                  (subscribe [::i18n-subs/locale])]
     [:<>
-     [:div {:style {:display          "flex"
-                    :margin-left      "1em"
-                    :align-items      "center"
-                    :border-radius    "0.5em"
-                    :border-color     "#DADADA"
-                    :border-width     1
-                    :border-style     "solid"
-                    :overflow         "hidden"
-                    :background-color "white"}}
-      [:div {:style {:background-color "#DADADA"
-                     :height           "100%"
-                     :padding          "0.5em"
-                     :border           "none"}} (@tr [:from])]
+     [datepicker-utils/datepickerWithLabel
+      [datepicker-utils/label (@tr [:from])]
       [ui/DatePicker {:show-time-select false
-                      :className        "ts-datepicker"
+                      :className        "datepicker"
                       :start-date       (:from timespan)
                       :end-date         (:to timespan)
                       :selected         (:from timespan)
@@ -244,22 +234,11 @@
                       :locale           (or (time/locale-string->locale-object @locale) @locale)
                       :fixed-height     true
                       :on-change        on-change-fn-from}]]
-     [:div {:style {:display          "flex"
-                    :align-items      "center"
-                    :border-radius    "0.5em"
-                    :border-color     "#DADADA"
-                    :border-style     "solid"
-                    :border-width     1
-                    :overflow         "hidden"
-                    :margin-left      "1em"
-                    :background-color "white"}}
-      [:div {:style {:height           "100%"
-                     :background-color "#DADADA"
-                     :padding          "0.5em"
-                     :border           "none"}} (str/capitalize (@tr [:to]))]
+     [datepicker-utils/datepickerWithLabel
+      [datepicker-utils/label (str/capitalize (@tr [:to]))]
       [ui/DatePicker {:selects-end      true
                       :show-time-select false
-                      :className        "ts-datepicker"
+                      :className        "datepicker"
                       :start-date       (:from timespan)
                       :end-date         (:to timespan)
                       :max-date         (time/now)

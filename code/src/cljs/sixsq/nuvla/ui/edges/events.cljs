@@ -173,7 +173,6 @@
 (reg-event-fx
   ::set-nuvlaboxes
   (fn [{{:keys [::spec/fleet-timespan] :as db} :db} [_ nuvlaboxes]]
-    (js/console.log fleet-timespan)
     (let [{:keys [from to]} fleet-timespan]
       (if (instance? js/Error nuvlaboxes)
         (dispatch [::messages-events/add
@@ -555,7 +554,6 @@
 (reg-event-fx
   ::fetch-fleet-stats
   (fn [{{:keys [::spec/nuvlaboxes] :as db} :db} [_ {:keys [from to granularity dataset]}]]
-    (js/console.log :from from :to to)
     (let [filter-str (if (seq (:resources nuvlaboxes))
                        (->> nuvlaboxes
                             (:resources)

@@ -12,7 +12,7 @@ test('Logout logs me out', async ({ page, context }, { project, config }) => {
 
   // Testing redirect to login page when navigating
   await page.getByRole('link', { name: 'Edges' }).click();
-  await expect(page).toHaveURL(signInPageUrl + '?redirect=edges?view=table');
+  await expect(page).toHaveURL(signInPageUrl + '?view=table');
 
   await page.goto(welcomePageUrl);
   // Testing existence of working login button

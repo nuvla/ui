@@ -65,7 +65,7 @@
 
 (defn LayoutPage []
   [:<>
-   [SessionRedirector]
+   [WatcherRedirectProtectedPage]
    [intercom/Widget]
    [sidebar/Menu]
    [main-views/MainDiv

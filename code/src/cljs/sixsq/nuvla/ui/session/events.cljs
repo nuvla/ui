@@ -46,7 +46,8 @@
   ::logout
   (fn []
     {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
-                                (dispatch [::intercom-events/clear-events]))]}))
+                                (dispatch [::intercom-events/clear-events])
+                                (dispatch [::routing-events/navigate routes/sign-in]))]}))
 
 
 (reg-event-db

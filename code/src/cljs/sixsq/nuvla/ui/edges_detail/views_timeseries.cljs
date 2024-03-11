@@ -14,8 +14,10 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
-(defn graph-options [timespan {:keys [title y-config plugins]}]
-  (let [{:keys [from to]} timespan]
+(defn graph-options [{:keys [timespan-option] :as timespan} {:keys [title y-config plugins]}]
+  (let [[from to] (if-not (= "custom period" timespan-option)
+                    (ts-utils/timespan-to-period (:timespan-option timespan))
+                    [(:from timespan) (:to timespan)])]
     {:plugins  (merge {:title {:display  true
                                :text     title
                                :position "top"}}

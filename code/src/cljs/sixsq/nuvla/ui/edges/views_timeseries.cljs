@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.edges.subs :as subs]
+    [sixsq.nuvla.ui.edges-detail.views-timeseries :as edges-detail.timeseries]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.icons :as icons]
     [sixsq.nuvla.ui.utils.plot :as plot]
@@ -54,13 +55,14 @@
                        (sort-by (comp :value :edge-avg-online))
                        (take n))))]]))
 
-(defn FleetStatusTimeSeries [timespan data]
+(defn FleetStatusTimeSeries [{:keys [timespan-option] :as timespan} data]
   (r/with-let [extra-info-visible? (r/atom false)]
 
     (let [ts-data (ts-utils/data->ts-data data)
-          {:keys[from to]} timespan]
-      [:div #_{:style {:max-width 800
-                       :margin    "0 auto"}}
+          [from to] (if-not (= "custom period" timespan-option)
+                      (ts-utils/timespan-to-period (:timespan-option timespan))
+                      [(:from timespan) (:to timespan)])]
+      [:div
        {:style {:max-width   800
                 :display     "flex"
                 :align-items "center"}}
@@ -164,16 +166,17 @@
                               :visibility  (if (= "custom period" @currently-selected-option)
                                              "visible"
                                              "hidden")}}
-                [sixsq.nuvla.ui.edges-detail.views-timeseries/CustomPeriodSelector @custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
-                                                                                (when (:to @custom-timespan)
-                                                                                  (dispatch [::events/set-selected-fleet-timespan {:from %
-                                                                                                                                   :to (:to @custom-timespan)
-                                                                                                                                   :timespan-option "custom period"}])))
-                                                        :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
-                                                                                (when (:from @custom-timespan)
-                                                                                  (dispatch [::events/set-selected-fleet-timespan {:from (:from @custom-timespan)
-                                                                                                                                   :to %
-                                                                                                                                   :timespan-option "custom period"}])))}]]]]]
+                [edges-detail.timeseries/CustomPeriodSelector @custom-timespan
+                 {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
+                                          (when (:to @custom-timespan)
+                                            (dispatch [::events/set-selected-fleet-timespan {:from %
+                                                                                             :to (:to @custom-timespan)
+                                                                                             :timespan-option "custom period"}])))
+                  :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
+                                          (when (:from @custom-timespan)
+                                            (dispatch [::events/set-selected-fleet-timespan {:from (:from @custom-timespan)
+                                                                                             :to %
+                                                                                             :timespan-option "custom period"}])))}]]]]]
 
 
        [ui/TabPane

@@ -173,7 +173,9 @@
 (reg-event-fx
   ::set-nuvlaboxes
   (fn [{{:keys [::spec/fleet-timespan] :as db} :db} [_ nuvlaboxes]]
-    (let [{:keys [from to]} fleet-timespan]
+    (let [{:keys [timespan-option]} fleet-timespan
+          [from to] (when-not (= "custom period" timespan-option)
+                      (ts-utils/timespan-to-period timespan-option))]
       (if (instance? js/Error nuvlaboxes)
         (dispatch [::messages-events/add
                    (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
@@ -184,10 +186,13 @@
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                        ::main-spec/loading? false)
          :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]
-              [:dispatch [::fetch-fleet-stats {:from        from
-                                               :to          to
-                                               :dataset     fleet-availability-stats
-                                               :granularity (ts-utils/granularity-for-timespan fleet-timespan)}]]]}))))
+              (if-not (= "custom period" timespan-option)
+                [:dispatch [::fetch-fleet-stats          {:from        from
+                                                          :to          to
+                                                          :granularity (ts-utils/granularity-for-timespan fleet-timespan)
+                                                          :dataset    fleet-availability-stats
+                                                          :timespan-option timespan-option}]]
+                [])]}))))
 
 
 (reg-event-fx

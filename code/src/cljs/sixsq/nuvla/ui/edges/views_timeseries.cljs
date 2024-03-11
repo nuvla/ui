@@ -29,31 +29,41 @@
   (let [fleet-stats   (subscribe [::subs/fleet-stats])
         stats-by-edge (:availability-by-edge @fleet-stats)
         ts-data       (ts-utils/data->ts-data stats-by-edge)
-        n             10]
+        n             10
+        least-available-nuvlaedges (->> (first ts-data)
+                                        :aggregations
+                                        :by-edge
+                                        :buckets
+                                        (filter (fn [{:keys [edge-avg-online]}]
+                                                  (< (:value edge-avg-online) 1)))
+                                        (sort-by (comp :value :edge-avg-online))
+                                        (take n))]
+    (js/console.log least-available-nuvlaedges)
     [ui/Card [ui/CardContent
               [ui/CardHeader {:style {:display         "flex"
                                       :align-items     "start"
                                       :justify-content "space-between"}}
-               [:span "NEs with lowest availability"]
+               [:span "Least available NuvlaEdges"]
                [icons/CloseIcon {:link     true
                                  :color    "black"
                                  :on-click on-close}]]
               [ui/CardMeta {:style {:font-size "tiny"}}
                (str "on " (time/time->format (:timestamp (first ts-data))))]]
      [ui/CardContent
-      (into [ui/CardDescription {:style {:display        "flex"
-                                         :flex-direction "column"}}]
-            (mapv (fn [bucket]
-                    (when-let [{:keys [name id avg-online]} (info-edge bucket)]
-                      [values/AsLink (str (general-utils/id->uuid id) "?edges-detail-tab=historical-data") :page "edges" :label (str name " - " (int (* 100 avg-online)) "%")]))
-                  (->> (first ts-data)
-                       :aggregations
-                       :by-edge
-                       :buckets
-                       (filter (fn [{:keys [edge-avg-online]}]
-                                 (< (:value edge-avg-online) 1)))
-                       (sort-by (comp :value :edge-avg-online))
-                       (take n))))]]))
+      [ui/CardDescription
+       (if (seq least-available-nuvlaedges)
+         (into [ui/Table
+                [ui/TableHeader
+                 [ui/TableRow
+                  [ui/TableHeaderCell "Name"]
+                  [ui/TableHeaderCell "Availability (%)"]]]]
+               (mapv (fn [bucket]
+                       (when-let [{:keys [name id avg-online]} (info-edge bucket)]
+                         [ui/TableRow
+                          [ui/TableCell [values/AsLink (str (general-utils/id->uuid id) "?edges-detail-tab=historical-data") :page "edges" :label name]]
+                          [ui/TableCell (str (int (* 100 avg-online)))]]))
+                     least-available-nuvlaedges))
+         [:span "All NEs were available"])]]]))
 
 (defn FleetStatusTimeSeries [{:keys [timespan-option] :as timespan} data]
   (r/with-let [extra-info-visible? (r/atom false)]
@@ -63,55 +73,60 @@
                       (ts-utils/timespan-to-period (:timespan-option timespan))
                       [(:from timespan) (:to timespan)])]
       [:div
-       {:style {:max-width   800
-                :display     "flex"
-                :align-items "center"}}
-       [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
-                                        :label           "available"
-                                        :backgroundColor "#21d32c88"}
-                                       {:data            (timestamp+value ts-data :virtual-edges-offline)
-                                        :label           "unavailable"
-                                        :backgroundColor "#eab81198"}]}
+       {:style {:display     "flex"
+                :width "100%"
+                :align-items "center"
+                :justify-content "space-between"
+                :padding-left "2em"
+                :padding-right "2em"}}
+       [:div
+        {:style {:width 800}}
+        [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
+                                         :label           "available"
+                                         :backgroundColor "#21d32c88"}
+                                        {:data            (timestamp+value ts-data :virtual-edges-offline)
+                                         :label           "unavailable"
+                                         :backgroundColor "#eab81198"}]}
 
-                  :options {:plugins  {:title    {:text    "Fleet availability"
-                                                  :display true}
-                                       :subtitle {:text    "Availability of commissioned NuvlaEdges"
-                                                  :display true}}
-                            :scales   {:x {:type    "time"
-                                           :min     from
-                                           :max     to
-                                           :grid    {:display false}
-                                           :time    {:unit (case (:timespan-option timespan)
-                                                             ("last 15 minutes"
-                                                               "last hour"
-                                                               "last 6 hours") "minute"
-                                                             "last day" "hour"
-                                                             "last year" "month"
-                                                             "day")}
-                                           :title   {:display "true"
-                                                     :text    "Time"}
-                                           :stacked true}
-                                       :y {:max     (get-in data [:dimensions :nuvlaedge-count])
-                                           :min     0
-                                           :title   {:display "true"
-                                                     :text    "Number of NuvlaEdges"}
-                                           :stacked true}}
-                            :elements {:point {:radius 1}}
-                            :onClick  (fn [_evt element _chart]
-                                        (when-let [raw-data (js->clj (.. (first element) -element -$context -raw) :keywordize-keys true)]
-                                          (let [from        (js/Date. (:timestamp raw-data))
-                                                granularity (ts-utils/granularity-for-timespan timespan)
-                                                to          (ts-utils/add-time from granularity)]
-                                            (dispatch [::events/fetch-fleet-stats {:from        from
-                                                                                   :to          to
-                                                                                   :granularity granularity
-                                                                                   :dataset     ["availability-by-edge"]}])
-                                            (reset! extra-info-visible? true))))
-                            :onHover  (fn [evt chartElement]
-                                        (let [cursor (if (first chartElement)
-                                                       "pointer"
-                                                       "default")]
-                                          (set! (.. evt -native -target -style -cursor) cursor)))}}]
+                   :options {:plugins  {:title    {:text    "Fleet availability"
+                                                   :display true}
+                                        :subtitle {:text    "Availability of commissioned NuvlaEdges"
+                                                   :display true}}
+                                  :scales   {:x {:type    "time"
+                                                 :min     from
+                                                 :max     to
+                                                 :grid    {:display false}
+                                                 :time    {:unit (case (:timespan-option timespan)
+                                                                   ("last 15 minutes"
+                                                                     "last hour"
+                                                                     "last 6 hours") "minute"
+                                                                   "last day" "hour"
+                                                                   "last year" "month"
+                                                                   "day")}
+                                                 :title   {:display "true"
+                                                           :text    "Time"}
+                                                 :stacked true}
+                                             :y {:max     (get-in data [:dimensions :nuvlaedge-count])
+                                                 :min     0
+                                                 :title   {:display "true"
+                                                           :text    "Number of NuvlaEdges"}
+                                                 :stacked true}}
+                                  :elements {:point {:radius 1}}
+                                  :onClick  (fn [_evt element _chart]
+                                              (when-let [raw-data (js->clj (.. (first element) -element -$context -raw) :keywordize-keys true)]
+                                                (let [from        (js/Date. (:timestamp raw-data))
+                                                      granularity (ts-utils/granularity-for-timespan timespan)
+                                                      to          (ts-utils/add-time from granularity)]
+                                                  (dispatch [::events/fetch-fleet-stats {:from        from
+                                                                                         :to          to
+                                                                                         :granularity granularity
+                                                                                         :dataset     ["availability-by-edge"]}])
+                                                  (reset! extra-info-visible? true))))
+                                  :onHover  (fn [evt chartElement]
+                                              (let [cursor (if (first chartElement)
+                                                             "pointer"
+                                                             "default")]
+                                                (set! (.. evt -native -target -style -cursor) cursor)))}}]]
 
        [:div {:style {:visibility  (if @extra-info-visible? "visible" "hidden")
                       :height      150

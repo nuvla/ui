@@ -58,7 +58,7 @@
   (r/with-let [extra-info-visible? (r/atom false)]
 
     (let [ts-data (ts-utils/data->ts-data data)
-          [from to] (ts-utils/timespan-to-period timespan)]
+          {:keys[from to]} timespan]
       [:div #_{:style {:max-width 800
                        :margin    "0 auto"}}
        {:style {:max-width   800
@@ -79,7 +79,7 @@
                                            :min     from
                                            :max     to
                                            :grid    {:display false}
-                                           :time    {:unit (case timespan
+                                           :time    {:unit (case (:timespan-option timespan)
                                                              ("last 15 minutes"
                                                                "last hour"
                                                                "last 6 hours") "minute"
@@ -98,7 +98,7 @@
                             :onClick  (fn [_evt element _chart]
                                         (when-let [raw-data (js->clj (.. (first element) -element -$context -raw) :keywordize-keys true)]
                                           (let [from        (js/Date. (:timestamp raw-data))
-                                                granularity (ts-utils/fixed-timespan->granularity timespan)
+                                                granularity (ts-utils/granularity-for-timespan timespan)
                                                 to          (ts-utils/add-time from granularity)]
                                             (dispatch [::events/fetch-fleet-stats {:from        from
                                                                                    :to          to
@@ -117,20 +117,30 @@
         [OnlineStatsByEdge {:on-close #(reset! extra-info-visible? false)}]]])))
 
 (defn FleetTimeSeries []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        loading?         (subscribe [::subs/loading?])
-        fleet-stats      (subscribe [::subs/fleet-stats])
-        current-timespan (subscribe [::subs/fleet-timespan])
-        initial-timespan (first ts-utils/timespan-options)]
-    (dispatch [::events/set-selected-fleet-timespan initial-timespan])
+  (let [tr                        (subscribe [::i18n-subs/tr])
+        loading?                  (subscribe [::subs/loading?])
+        fleet-stats               (subscribe [::subs/fleet-stats])
+        selected-timespan         (subscribe [::subs/fleet-timespan])
+        initial-timespan          (first ts-utils/timespan-options)
+        currently-selected-option (r/atom initial-timespan)
+        custom-timespan           (r/atom {})
+        fetch-fleet-stats         (fn [timespan]
+                                    (let [[from to] (ts-utils/timespan-to-period timespan)]
+                                      (dispatch [::events/set-selected-fleet-timespan
+                                                 {:timespan-option timespan
+                                                  :from            from
+                                                  :to              to}])))]
+    (fetch-fleet-stats initial-timespan)
     (fn []
       [:div [ui/Menu {:width "100%"}
-             [ui/MenuMenu {:position "right"}
-              [ui/MenuItem
+             [ui/MenuMenu {:position "left"}
+              [ui/MenuItem {:style {:padding-top 5
+                                    :padding-bottom 5
+                                    :padding-left 16
+                                    :height 45}}
                [:span {:style {:display      "flex"
                                :align-items  "center"
-                               :margin-right 5
-                               :color        "rgba(40,40,40,.3)"}} (@tr [:showing-data-for])]
+                               :margin-right 5}} (@tr [:showing-data-for])]
                [ui/Dropdown {:inline          true
                              :style           {:min-width       120
                                                :display         "flex"
@@ -141,7 +151,30 @@
                              :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
                              :on-change       (ui-callback/value
                                                 (fn [timespan]
-                                                  (dispatch [::events/set-selected-fleet-timespan timespan])))}]]]]
+                                                  (reset! currently-selected-option timespan)
+                                                  (when-not (= "custom period" timespan)
+                                                    (let [[from to] (ts-utils/timespan-to-period timespan)]
+                                                      (reset! currently-selected-option timespan)
+                                                      (reset! custom-timespan {})
+                                                      (dispatch [::events/set-selected-fleet-timespan {:timespan-option timespan
+                                                                                                       :from from
+                                                                                                       :to to}])))))}]
+               [:div {:style {:display     "flex"
+                              :margin-left 10
+                              :visibility  (if (= "custom period" @currently-selected-option)
+                                             "visible"
+                                             "hidden")}}
+                [sixsq.nuvla.ui.edges-detail.views-timeseries/CustomPeriodSelector @custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
+                                                                                (when (:to @custom-timespan)
+                                                                                  (dispatch [::events/set-selected-fleet-timespan {:from %
+                                                                                                                                   :to (:to @custom-timespan)
+                                                                                                                                   :timespan-option "custom period"}])))
+                                                        :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
+                                                                                (when (:from @custom-timespan)
+                                                                                  (dispatch [::events/set-selected-fleet-timespan {:from (:from @custom-timespan)
+                                                                                                                                   :to %
+                                                                                                                                   :timespan-option "custom period"}])))}]]]]]
+
 
        [ui/TabPane
-        [FleetStatusTimeSeries @current-timespan (:availability-stats @fleet-stats)]]])))
+        [FleetStatusTimeSeries @selected-timespan (:availability-stats @fleet-stats)]]])))

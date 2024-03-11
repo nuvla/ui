@@ -173,7 +173,8 @@
 (reg-event-fx
   ::set-nuvlaboxes
   (fn [{{:keys [::spec/fleet-timespan] :as db} :db} [_ nuvlaboxes]]
-    (let [[from to] (ts-utils/timespan-to-period fleet-timespan)]
+    (js/console.log fleet-timespan)
+    (let [{:keys [from to]} fleet-timespan]
       (if (instance? js/Error nuvlaboxes)
         (dispatch [::messages-events/add
                    (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
@@ -187,7 +188,7 @@
               [:dispatch [::fetch-fleet-stats {:from        from
                                                :to          to
                                                :dataset     fleet-availability-stats
-                                               :granularity (ts-utils/fixed-timespan->granularity fleet-timespan)}]]]}))))
+                                               :granularity (ts-utils/granularity-for-timespan fleet-timespan)}]]]}))))
 
 
 (reg-event-fx
@@ -544,16 +545,17 @@
 (reg-event-fx
   ::set-selected-fleet-timespan
   (fn [{db :db} [_ timespan]]
-    (let [[from to] (ts-utils/timespan-to-period timespan)]
+    (let [{:keys [from to]} timespan]
       {:db (assoc db ::spec/fleet-timespan timespan)
        :fx [[:dispatch [::fetch-fleet-stats {:from        from
                                              :to          to
-                                             :granularity (ts-utils/fixed-timespan->granularity timespan)
+                                             :granularity (ts-utils/granularity-for-timespan timespan)
                                              :dataset     fleet-availability-stats}]]]})))
 
 (reg-event-fx
   ::fetch-fleet-stats
   (fn [{{:keys [::spec/nuvlaboxes] :as db} :db} [_ {:keys [from to granularity dataset]}]]
+    (js/console.log :from from :to to)
     (let [filter-str (if (seq (:resources nuvlaboxes))
                        (->> nuvlaboxes
                             (:resources)

@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.plugins.table :refer [build-ordering] :as table-plugin]))
+            [sixsq.nuvla.ui.plugins.table :refer [build-ordering] :as table-plugin]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (def resource-name "nuvlabox")
 
@@ -100,7 +101,9 @@
    ::additional-filter             nil
    ::external-restriction-filter   nil
    ::select                        (table-plugin/build-bulk-edit-spec)
-   ::fleet-timespan                "last 15 minutes"
+   ::fleet-timespan                {:timespan-option "last 15 minutes"
+                                    :from   (time/subtract-minutes (time/now) 15)
+                                    :to     (time/now)}
    })
 
 (def pagination-default {::pagination (pagination-plugin/build-spec

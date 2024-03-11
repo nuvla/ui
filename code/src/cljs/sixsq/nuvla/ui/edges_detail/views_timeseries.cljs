@@ -428,15 +428,15 @@
                                              "visible"
                                              "hidden")}}
                 [CustomPeriodSelector @custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
-                                                                               (when (:to @custom-timespan)
-                                                                                 (dispatch [::events/set-selected-timespan {:from %
-                                                                                                                            :to (:to @custom-timespan)
-                                                                                                                            :timespan-option "custom period"}])))
-                                                       :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
-                                                                               (when (:from @custom-timespan)
-                                                                                 (dispatch [::events/set-selected-timespan {:from (:from @custom-timespan)
-                                                                                                                            :to %
-                                                                                                                            :timespan-option "custom period"}])))}]]]]
+                                                                                (when (:to @custom-timespan)
+                                                                                  (dispatch [::events/set-selected-timespan {:from %
+                                                                                                                             :to (:to @custom-timespan)
+                                                                                                                             :timespan-option "custom period"}])))
+                                                        :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
+                                                                                (when (:from @custom-timespan)
+                                                                                  (dispatch [::events/set-selected-timespan {:from (:from @custom-timespan)
+                                                                                                                             :to %
+                                                                                                                             :timespan-option "custom period"}])))}]]]]
              [ui/MenuItem {:icon     icons/i-export
                            :position "right"
                            :content  (str (@tr [:export-data]) " (.csv)")

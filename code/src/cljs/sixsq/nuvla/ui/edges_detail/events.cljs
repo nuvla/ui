@@ -154,14 +154,16 @@
                              [:dispatch [::job-events/get-jobs id]]
                              [:dispatch [::get-deployments-for-edge id]]
                              [:dispatch [::get-nuvlabox-playbooks id]]
-                             [:dispatch [::fetch-edge-stats {:nuvlaedge-id id
-                                                             :from         from
-                                                             :to           to
-                                                             :granularity  (ts-utils/granularity-for-timespan timespan)
-                                                             :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"]}]]
                              [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                            (:id nuvlabox-current-playbook)
-                                                                           nil)]]]})))
+                                                                           nil)]]
+                             (if-not (= "custom period" timespan-option)
+                               [:dispatch [::fetch-edge-stats {:nuvlaedge-id id
+                                                               :from         from
+                                                               :to           to
+                                                               :granularity  (ts-utils/granularity-for-timespan timespan)
+                                                               :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"]}]]
+                               [])]})))
 
 (reg-event-fx
   ::get-deployments-for-edge

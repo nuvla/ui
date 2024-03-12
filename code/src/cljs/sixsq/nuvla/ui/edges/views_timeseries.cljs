@@ -52,7 +52,7 @@
      [ui/CardContent
       [ui/CardDescription
        (if (seq least-available-nuvlaedges)
-         (into [ui/Table
+         (into [ui/Table {:basic "very"}
                 [ui/TableHeader
                  [ui/TableRow
                   [ui/TableHeaderCell "Name"]

@@ -38,7 +38,7 @@ test('Edges selection and bulk edits', async ({ page, context }, { project, conf
 
 
   // ASSERTION 1
-  await expect(page.getByText(allNuvlaEdgesCount +' Edges updated with operation: Add tags')).toBeVisible();
+  await expect(page.getByTestId('bulk-edit-success-message')).toHaveText(allNuvlaEdgesCount +' Edges updated with operation: Add tags');
   await expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(allNuvlaEdgesCount);
 
   // Set multiple tags on one edge

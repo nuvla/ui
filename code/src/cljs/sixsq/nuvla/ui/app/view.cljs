@@ -19,7 +19,8 @@
 
 (defn WatcherRedirectProtectedPage
   []
-  (when @(subscribe [::route-subs/protected-page?])
+  (when (and @(subscribe [::route-subs/protected-page?])
+             (not @(subscribe [::session-subs/session])))
     (dispatch [::routing-events/navigate routes/sign-in nil
                {:redirect (-> @(subscribe [::route-subs/current-route])
                               (routing-utils/gen-href nil)

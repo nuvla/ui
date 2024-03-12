@@ -53,7 +53,24 @@ test.afterAll(async ({ page, context }, { project, config }) => {
 
   const { baseURL } = config.projects[0].use;
 
+
+  await page.goto(baseURL + '/ui/welcome');
+  await page.getByRole('link', { name: 'Edges' }).click();
+
+  const edgesPageRegex = /\/ui\/edges/;
+
+  await expect(page).toHaveURL(edgesPageRegex);
+  await page.getByText('25 per page').click();
+  await page.getByRole('option', { name: '100' }).getByText('100').click();
+
   const newEdgeName = 'NE with older release';
+  await page.getByPlaceholder('Search ...').click();
+  page.getByPlaceholder('Search ...').fill(newEdgeName);
+  await page.waitForResponse('/api/nuvlabox');
+  await page.waitForTimeout(1000);
+
+
+
 
   let found = await page.getByRole('link', { name: new RegExp(newEdgeName) }).count();
     while (found > 0) {

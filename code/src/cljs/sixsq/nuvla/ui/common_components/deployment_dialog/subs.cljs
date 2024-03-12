@@ -487,7 +487,7 @@
   :<- [::env-variables]
   (fn [env-variables]
     (->> env-variables
-         (filter #(:required %))
+         (filter :required)
          (every? #(not (str/blank? (:value %)))))))
 
 (reg-sub

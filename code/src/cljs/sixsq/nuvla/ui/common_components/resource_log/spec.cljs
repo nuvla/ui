@@ -4,7 +4,7 @@
 (s/def ::resource-log any?)
 (s/def ::id (s/nilable string?))
 (s/def ::parent (s/nilable string?))
-(s/def ::since (s/nilable #(inst? %)))
+(s/def ::since (s/nilable inst?))
 (s/def ::play? boolean?)
 (s/def ::components any?)
 (s/def ::available-components coll?)

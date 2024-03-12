@@ -5,5 +5,4 @@
 
 (reg-sub
   ::events
-  (fn [db]
-    (::spec/events db)))
+  :-> ::spec/events)

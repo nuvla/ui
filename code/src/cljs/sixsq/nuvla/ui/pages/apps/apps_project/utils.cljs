@@ -4,5 +4,4 @@
 
 (defn module->db
   [db module]
-  (-> db
-      (apps-utils/module->db module)))
+  (apps-utils/module->db db module))

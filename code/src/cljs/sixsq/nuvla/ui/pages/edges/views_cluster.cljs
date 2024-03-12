@@ -149,8 +149,7 @@
     [map/MapBox
      {}
      (doall
-       (for [{:keys [id] :as nuvlabox} (->> selected-nbs
-                                            (filter #(:location %)))]
+       (for [{:keys [id] :as nuvlabox} (filter :location selected-nbs)]
          ^{:key id}
          [NuvlaboxMapPoint nuvlabox]))]))
 

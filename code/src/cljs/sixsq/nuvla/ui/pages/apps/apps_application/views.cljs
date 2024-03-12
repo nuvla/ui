@@ -17,7 +17,6 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.pages.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]

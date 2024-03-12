@@ -38,7 +38,6 @@
                                                   (< (:value edge-avg-online) 1)))
                                         (sort-by (comp :value :edge-avg-online))
                                         (take n))]
-    (js/console.log least-available-nuvlaedges)
     [ui/Card [ui/CardContent
               [ui/CardHeader {:style {:display         "flex"
                                       :align-items     "start"

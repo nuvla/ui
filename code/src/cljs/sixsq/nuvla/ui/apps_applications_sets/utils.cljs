@@ -42,12 +42,14 @@
   [db id {app-id :id :as _app-selected}]
   (let [db-path    [::spec/apps-sets id]
         env-vars   (module-plugin/db-changed-env-vars db db-path app-id)
+        files      (module-plugin/db-changed-files db db-path app-id)
         regs-creds (module-plugin/db-module-registries-credentials
                      db db-path app-id)]
     (cond-> {:id      app-id
              :version (module-plugin/db-selected-version
                         db [::spec/apps-sets id] app-id)}
             (seq env-vars) (assoc :environmental-variables env-vars)
+            (seq files) (assoc :files files)
             (seq regs-creds) (assoc :registries-credentials regs-creds))))
 
 (defn db->applications-set

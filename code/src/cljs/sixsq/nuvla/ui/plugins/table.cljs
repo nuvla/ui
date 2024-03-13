@@ -402,7 +402,8 @@
                              :basic    true
                              :disabled (and (not disabled-tooltip) (not= :none @selection-status))
                              :content  (or disabled-tooltip (@tr [:select-at-least-one-item]))}])))]]
-        [:div {:style {:padding-right "1rem"}}
+        [:div {:style {:padding-right "1rem"}
+               :data-testid "bulk-edit-success-message"}
          @bulk-edit-success-message]])
      [:div
       {:style {:heigh            "2rem"

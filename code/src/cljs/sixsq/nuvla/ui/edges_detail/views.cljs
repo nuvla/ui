@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edges-detail.views
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.acl.views :as acl]
@@ -29,6 +30,7 @@
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
@@ -192,11 +194,11 @@
     (cond
 
       (and (not (subs/security-available? form-release-old))
-           (subs/security-available? new-release))
+           (subs/security-available? (:release new-release)))
       (assoc form-modules :security
                           (get form-modules :security true))
 
-      (and (not (subs/security-available? new-release))
+      (and (not (subs/security-available? (:release new-release)))
            (subs/security-available? form-release-old))
       (if (form-modules :security)
         (dissoc form-modules :security)
@@ -204,6 +206,42 @@
 
       :else form-modules)))
 
+(defn AdditionalModulesTable [compose-files {:keys [on-module-change module-checked?]}]
+  (let [tr                            (subscribe [::i18n-subs/tr])
+        modules                       (set (map :scope compose-files))
+        modules-additional-features   (set/intersection modules #{"security"})
+        modules-peripherals-discovery (set/difference modules modules-additional-features)]
+    [ui/Table style/definition
+     [ui/TableBody
+      (when (seq modules-additional-features)
+        [ui/TableRow
+         [ui/TableCell {:collapsing true} (@tr [:additional-features])]
+         ^{:key (or key name)}
+         [ui/TableCell
+          (doall
+            (for [module modules-additional-features]
+              [ui/Checkbox {:key       module
+                            :label     module
+                            :checked   (module-checked? module)
+                            :style     {:margin "1em"}
+                            :on-change (on-module-change module)}]))]])
+      (when (seq modules-peripherals-discovery)
+        [ui/TableRow
+         [ui/TableCell {:collapsing true} [ui/Popup
+                                           {:trigger        (r/as-element [:span (@tr [:peripherals-discovery])])
+                                            :content        (str (@tr [:additional-modules-popup]))
+                                            :on             "hover"
+                                            :hide-on-scroll true}]]
+         ^{:key (or key name)}
+         [ui/TableCell
+          (doall
+            (for [module modules-peripherals-discovery]
+              (when-not (#{"core" ""} module)
+                [ui/Checkbox {:key       module
+                              :label     module
+                              :checked   (module-checked? module)
+                              :style     {:margin "1em"}
+                              :on-change (on-module-change module)}])))]])]]))
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -216,7 +254,7 @@
         form-data      (r/atom nil)
         nb-version     (get @status :nuvlabox-engine-version nil)
         on-change-fn   (fn [release]
-                         (let [release-new (:release (get @releases-by-id release))
+                         (let [release-new (get @releases-by-id release)
                                new-modules (calc-new-modules-on-release-change @form-data release-new)]
                            (swap! form-data assoc
                                   :modules new-modules
@@ -286,28 +324,15 @@
            [DropdownReleases {:placeholder (@tr [:select-version])
                               :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
-                              :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]
+                              :disabled    (is-old-version? nb-version)}]
            (let [{:keys [compose-files]} selected-release]
-             [ui/Container
-              (when (> (count compose-files) 1)
-                [ui/Popup
-                 {:trigger        (r/as-element [:span (@tr [:additional-modules])])
-                  :content        (str (@tr [:additional-modules-popup]))
-                  :on             "hover"
-                  :hide-on-scroll true}])
-              (doall
-                (for [{:keys [scope]} compose-files]
-                  (when-not (#{"core" ""} scope)
-                    (let [scope-key (keyword scope)]
-                      [ui/Checkbox {:key       scope
-                                    :label     scope
-                                    :checked   (get
-                                                 selected-modules
-                                                 scope-key
-                                                 false)
-                                    :style     {:margin "1em"}
-                                    :on-change (fn []
-                                                 (swap! form-data update-in [:modules scope-key] not))}]))))])]
+             [AdditionalModulesTable compose-files
+              {:on-module-change (fn [scope]
+                                   (let [scope-key (keyword scope)]
+                                     (ui-callback/checked
+                                       (fn [checked]
+                                         (swap! form-data assoc-in [:modules scope-key] checked)))))
+               :module-checked?  (fn [scope] (get selected-modules (keyword scope) false))}])]
           [uix/Accordion
            [:<>
             [ui/Form

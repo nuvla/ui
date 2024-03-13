@@ -130,30 +130,51 @@
               (str apps-set-id "_" version)]])
 
 (defn load-module-configurations
-  [db modules-by-id {:keys [is-controlled-by-apps-set? force-modules-reload?]}
+  [{:keys [::spec/module-applications-sets] :as db}
+   modules-by-id {:keys [is-controlled-by-apps-set? force-modules-reload?]}
    fx [id {:keys [applications]}]]
-  (->> applications
-       (map (fn [{module-id :id :keys [version
-                                       environmental-variables
-                                       registries-credentials]}]
-              (let [loaded-module     (module-plugin/db-module db [::spec/apps-sets id] module-id)
-                    loaded-version-no (when loaded-module (get-version-id (map-indexed vector (:versions loaded-module))
-                                                                          (-> loaded-module :content :id)))]
-                (when (and (get modules-by-id module-id)
-                           (or force-modules-reload?
-                               (if is-controlled-by-apps-set?
-                                 (not= loaded-version-no version)
-                                 (nil? loaded-module))))
-                  [:dispatch [::module-plugin/load-module
-                              [::spec/apps-sets id]
-                              (str module-id "_" version)
-                              {:env                    (when (seq environmental-variables)
-                                                         (->> environmental-variables
-                                                              (map (juxt :name :value))
-                                                              (into {})))
-                               :registries-credentials registries-credentials}
-                              [::init-app-row-data false]]]))))
-       (concat fx)))
+  (let [app-set-overrides (get-in module-applications-sets
+                                  [:content :applications-sets 0 :applications])]
+    (->> applications
+         (map (fn [{module-id :id :keys [version
+                                         environmental-variables
+                                         files
+                                         registries-credentials]}]
+                (let [app-set-module-overrides (->> app-set-overrides
+                                                    (filter #(= module-id (:id %)))
+                                                    first)
+                      app-set-env-vars         (:environmental-variables app-set-module-overrides)
+                      app-set-file-overrides   (:files app-set-module-overrides)
+                      loaded-module            (module-plugin/db-module db [::spec/apps-sets id] module-id)
+                      loaded-version-no        (when loaded-module (get-version-id (map-indexed vector (:versions loaded-module))
+                                                                                   (-> loaded-module :content :id)))]
+                  (when (and (get modules-by-id module-id)
+                             (or force-modules-reload?
+                                 (if is-controlled-by-apps-set?
+                                   (not= loaded-version-no version)
+                                   (nil? loaded-module))))
+                    [:dispatch [::module-plugin/load-module
+                                [::spec/apps-sets id]
+                                (str module-id "_" version)
+                                {:env                    (when (seq environmental-variables)
+                                                           (->> environmental-variables
+                                                                (map (juxt :name :value))
+                                                                (into {})))
+                                 :files                  (when (seq files)
+                                                           (->> files
+                                                                (map (juxt :file-name :file-content))
+                                                                (into {})))
+                                 :registries-credentials registries-credentials}
+                                [::init-app-row-data false]
+                                {:env   (when (seq app-set-env-vars)
+                                          (->> app-set-env-vars
+                                               (map (juxt :name :value))
+                                               (into {})))
+                                 :files (when (seq app-set-file-overrides)
+                                          (->> app-set-file-overrides
+                                               (map (juxt :file-name :file-content))
+                                               (into {})))}]]))))
+         (concat fx))))
 
 (reg-event-fx
   ::load-module-configuration
@@ -166,20 +187,26 @@
                         [::init-app-row-data false]]]]})))
 
 (defn- merge-vector-of-maps
-  [scn prm]
+  [k scn prm]
   (vals (merge
-          (into {} (map (juxt :name identity) scn))
-          (into {} (map (juxt :name identity) prm)))))
+          (into {} (map (juxt k identity) scn))
+          (into {} (map (juxt k identity) prm)))))
 
 (defn- merge-app-overwrites
   [modul-id->app app]
   (let [app-from-depl-set (get modul-id->app (:id app))
         merged-env        (merge-vector-of-maps
+                            :name
                             (:environmental-variables app)
-                            (:environmental-variables app-from-depl-set))]
+                            (:environmental-variables app-from-depl-set))
+        merged-files      (merge-vector-of-maps
+                            :file-name
+                            (:files app)
+                            (:files app-from-depl-set))]
     (assoc
       (merge app app-from-depl-set)
-      :environmental-variables merged-env)))
+      :environmental-variables merged-env
+      :files merged-files)))
 
 (reg-event-fx
   ::load-apps-sets-response
@@ -472,11 +499,13 @@
   (let [db-path         [::spec/apps-sets i]
         version-changed (module-plugin/db-new-version db db-path id)
         env-changed     (module-plugin/db-changed-env-vars db db-path id)
+        files-changed   (module-plugin/db-changed-files db db-path id)
         regs-creds      (module-plugin/db-module-registries-credentials
                           db db-path id)]
     (cond-> {:id      id
              :version (or version-changed (:version current-overwrites) version)}
             (seq env-changed) (assoc :environmental-variables env-changed)
+            (seq files-changed) (assoc :files files-changed)
             (seq regs-creds) (assoc :registries-credentials regs-creds))))
 
 
@@ -588,15 +617,26 @@
        first
        :environmental-variables))
 
+(defn overwritten-app-files
+  [deployment-set app]
+  (->> (get-in deployment-set [:applications-sets 0 :overwrites])
+       first
+       :applications
+       (filter #(= (:id %) (:id app)))
+       first
+       :files))
+
 (defn new-overwrites
   [deployment-set apps]
   (map (fn [app]
-         (let [env-vars (overwritten-app-env-vars deployment-set app)]
+         (let [env-vars (overwritten-app-env-vars deployment-set app)
+               files    (overwritten-app-files deployment-set app)]
            (cond->
              {:id      (:id app)
               :version (or (:version app)
                            (overwritten-app-version deployment-set app))}
-             (seq env-vars) (assoc :environmental-variables env-vars))))
+             (seq env-vars) (assoc :environmental-variables env-vars)
+             (seq files) (assoc :files files))))
        apps))
 
 (defn new-modules
@@ -920,8 +960,8 @@
                                               (assoc :overwrites [{:fleet app-set-fleet}])))]
       {:db (assoc db ::spec/deployment-set-edited deployment-set-edited)
        :fx [[:dispatch [::get-application-sets
-                        (-> deployment-set-edited :applications-sets first)]]]})))
-
+                        (-> deployment-set-edited :applications-sets first)
+                        {:force-modules-reload? true}]]]})))
 
 (reg-event-db
   ::enable-form-validation

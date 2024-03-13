@@ -40,6 +40,7 @@
   (->> applications
        (map (fn [{module-id :id :keys [version
                                        environmental-variables
+                                       files
                                        registries-credentials]}]
               (when (get modules-by-id module-id)
                 [:dispatch [::module-plugin/load-module
@@ -48,6 +49,10 @@
                             {:env                    (when (seq environmental-variables)
                                                        (->> environmental-variables
                                                             (map (juxt :name :value))
+                                                            (into {})))
+                             :files                  (when (seq files)
+                                                       (->> files
+                                                            (map (juxt :file-name :file-content))
                                                             (into {})))
                              :registries-credentials registries-credentials}]])))
        (concat fx)))
@@ -73,17 +78,17 @@
 (reg-event-fx
   ::reload-apps-sets
   (fn [_ [_ module]]
-    (let [apps-urls  (->> module
-                          :content
-                          :applications-sets
-                          (mapcat :applications)
-                          (map :id)
-                          distinct)
-          params     {:filter (general-utils/filter-eq-ids apps-urls)
-                      :last   10000}
-          callback   #(if (instance? js/Error %)
-                        (cimi-api-fx/default-error-message % "load application bouquets failed")
-                        (dispatch [::reload-apps-sets-response module (count apps-urls) %]))]
+    (let [apps-urls (->> module
+                         :content
+                         :applications-sets
+                         (mapcat :applications)
+                         (map :id)
+                         distinct)
+          params    {:filter (general-utils/filter-eq-ids apps-urls)
+                     :last   10000}
+          callback  #(if (instance? js/Error %)
+                       (cimi-api-fx/default-error-message % "load application bouquets failed")
+                       (dispatch [::reload-apps-sets-response module (count apps-urls) %]))]
       (when (seq apps-urls)
         {::cimi-api-fx/search [:module params callback]}))))
 

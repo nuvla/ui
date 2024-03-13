@@ -55,7 +55,7 @@
                 [ui/TableHeader
                  [ui/TableRow
                   [ui/TableHeaderCell "Name"]
-                  [ui/TableHeaderCell "Availability (%)"]]]]
+                  [ui/TableHeaderCell  {:textAlign "right"} "Availability (%)"]]]]
                (mapv (fn [bucket]
                        (when-let [{:keys [name id avg-online]} (info-edge bucket)]
                          [ui/TableRow

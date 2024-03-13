@@ -183,9 +183,8 @@
         latest-release-number (:release (first @releases-by-no))
         version-update        (if-let [nuvla-version (some #(when % %) [engine-version nuvlabox-engine-version])]
                                 (let [{:keys [minor major build] :as version-difference} (utils/version-difference latest-release-number nuvla-version)]
-                                  (js/console.log version-difference)
                                   (cond
-                                    (nil? version-difference) nil
+                                    (not version-difference) nil
                                      major "update needed"
                                     (and minor (< minor 2)) "update available"
                                      build "update available"
@@ -203,8 +202,16 @@
                                :last-online
                                (when last-heartbeat-moment
                                  [uix/TimeAgo last-heartbeat-moment]),
-                               :version          [:div (or engine-version nuvlabox-engine-version (str version ".y.z"))
-                                                  [ui/Label {:size :small} version-update]]}]
+                               :version          [:div
+                                                  [:span {:style {:display "inline-block"
+                                                                  :width 40}} (or engine-version nuvlabox-engine-version (str version ".y.z"))]
+                                                  (when version-update
+                                                    [ui/Label {:size  :mini
+                                                               :style {:margin-left 10}
+                                                               :basic true
+                                                               :color (if (= version-update "update available")
+                                                                        "green"
+                                                                        "yellow")} version-update])]}]
     (field-key->table-cell field-key)))
 
 (defn Pagination

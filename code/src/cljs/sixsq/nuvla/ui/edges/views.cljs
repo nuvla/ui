@@ -179,6 +179,18 @@
         engine-version        @(subscribe [::subs/engine-version id])
         creator               (subscribe [::session-subs/resolve-user created-by])
         owner                 (subscribe [::session-subs/resolve-user owner])
+        releases-by-no        (subscribe [::subs/nuvlabox-releases])
+        latest-release-number (:release (first @releases-by-no))
+        version-update        (if-let [nuvla-version (some #(when % %) [engine-version nuvlabox-engine-version])]
+                                (let [{:keys [minor major build] :as version-difference} (utils/version-difference latest-release-number nuvla-version)]
+                                  (js/console.log version-difference)
+                                  (cond
+                                    (nil? version-difference) nil
+                                     major "update needed"
+                                    (and minor (< minor 2)) "update available"
+                                     build "update available"
+                                    :else "update needed"))
+                                "update needed")
         field-key->table-cell {:description      description,
                                :tags             [uix/Tags tags],
                                :refresh-interval (str refresh-interval "s"),
@@ -191,7 +203,8 @@
                                :last-online
                                (when last-heartbeat-moment
                                  [uix/TimeAgo last-heartbeat-moment]),
-                               :version          (or engine-version nuvlabox-engine-version (str version ".y.z"))}]
+                               :version          [:div (or engine-version nuvlabox-engine-version (str version ".y.z"))
+                                                  [ui/Label {:size :small} version-update]]}]
     (field-key->table-cell field-key)))
 
 (defn Pagination

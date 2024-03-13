@@ -280,6 +280,15 @@
       (not= m_3 n_3) (compare n_3 m_3)
       :else 0)))
 
+(defn version-difference [version1 version2]
+  (let [[m_1 m_2 m_3] (parse-version-number version1)
+        [n_1 n_2 n_3] (parse-version-number version2)]
+    (cond
+      (not= m_1 n_1) {:major      (- m_1 n_1)}
+      (not= m_2 n_2) {:minor      (- m_2 n_2)}
+      (not= m_3 n_3) {:build      (- m_3 n_3)}
+      :else nil)))
+
 (defn sort-by-version [e]
   (sort-by :release compare-versions e))
 

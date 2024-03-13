@@ -14,7 +14,7 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
-(defn graph-options [{:keys [timespan-option] :as timespan} {:keys [title y-config plugins]}]
+(defn graph-options [tr {:keys [timespan-option] :as timespan} {:keys [title y-config plugins]}]
   (let [[from to] (if-not (= "custom period" timespan-option)
                     (ts-utils/timespan-to-period (:timespan-option timespan))
                     [(:from timespan) (:to timespan)])]
@@ -35,7 +35,7 @@
                                     "last year" "month"
                                     "day")}
                     :title {:display "true"
-                            :text    "Time"}}
+                            :text    (@tr [:time])}}
                 :y y-config}}))
 
 (defn timestamp+percentage [ts-data load-key capacity-key]
@@ -69,11 +69,11 @@
                                           :borderColor     (nth plot/default-colors-palette 2)
                                           :borderWidth     1}]}
 
-                 :options    (graph-options selected-timespan {:title    (str (@tr [:average-cpu-load]) " (%)")
+                 :options    (graph-options tr selected-timespan {:title    (str (@tr [:average-cpu-load]) " (%)")
                                                                :y-config {:max   200
                                                                           :min   0
                                                                           :title {:display "true"
-                                                                                  :text    "Percentage (%)"}}})}]]))
+                                                                                  :text    (str (@tr [:percentage]) " (%)")}}})}]]))
 
 (defn RamUsageTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -84,12 +84,12 @@
                                           :backgroundColor (first plot/default-colors-palette)
                                           :borderColor     (first plot/default-colors-palette)
                                           :borderWidth     1}]}
-                 :options    (graph-options selected-timespan {:title    (str (@tr [:average-ram-usage]) " (%)")
-                                                               :plugins  {:legend {:display false}}
-                                                               :y-config {:max   100
-                                                                          :min   0
-                                                                          :title {:display "true"
-                                                                                  :text    "Percentage (%)"}}})}]]))
+                 :options    (graph-options tr selected-timespan {:title    (str (@tr [:average-ram-usage]) " (%)")
+                                                                  :plugins  {:legend {:display false}}
+                                                                  :y-config {:max   100
+                                                                             :min   0
+                                                                             :title {:display "true"
+                                                                                     :text    (str (@tr [:percentage]) " (%)")}}})}]]))
 
 (defn DiskUsageTimeSeries [selected-timespan data]
   (let [tr                  (subscribe [::i18n-subs/tr])
@@ -110,7 +110,7 @@
     [:div
      [plot/Line {:updateMode "none"
                  :data       {:datasets datasets-to-display}
-                 :options    (graph-options selected-timespan {:title    (str (@tr [:average-disk-usage]) " (%)")
+                 :options    (graph-options tr selected-timespan {:title    (str (@tr [:average-disk-usage]) " (%)")
                                                                :y-config {:max   100
                                                                           :min   0
                                                                           :title {:display "true"
@@ -148,7 +148,7 @@
                                            :borderWidth        1}]
                                          [])}
 
-                :options    (graph-options selected-timespan {:title (@tr [:nuvlaedge-availability])
+                :options    (graph-options tr selected-timespan {:title (@tr [:nuvlaedge-availability])
                                                               :plugins {:tooltip {:callbacks {:label (fn [tooltipItems _data]
                                                                                                        (when-let [status (.. ^Map tooltipItems -raw -status)]
                                                                                                          (str "available: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
@@ -212,7 +212,7 @@
                                               #(reset! selected-intefaces %))}])
            [plot/Line {:updateMode "none"
                        :data       {:datasets datasets-to-display}
-                       :options    (graph-options selected-timespan {:title    (str (@tr [:network-traffic]) " (" (@tr [:megabytes]) ")")
+                       :options    (graph-options tr selected-timespan {:title    (str (@tr [:network-traffic]) " (" (@tr [:megabytes]) ")")
                                                                      :y-config {:title {:display "true"
                                                                                         :text    (@tr [:megabytes])}}})}]])))))
 

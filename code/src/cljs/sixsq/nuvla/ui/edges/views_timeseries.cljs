@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edges.views-timeseries
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.edges.subs :as subs]
@@ -27,6 +28,7 @@
      :avg-online (-> bucket :edge-avg-online :value)}))
 (defn OnlineStatsByEdge [{:keys [on-close]}]
   (let [fleet-stats   (subscribe [::subs/fleet-stats])
+        tr            (subscribe [::i18n-subs/tr])
         stats-by-edge (:availability-by-edge @fleet-stats)
         ts-data       (ts-utils/data->ts-data stats-by-edge)
         n             10
@@ -42,7 +44,7 @@
               [ui/CardHeader {:style {:display         "flex"
                                       :align-items     "start"
                                       :justify-content "space-between"}}
-               [:span "Least available NuvlaEdges"]
+               [:span (@tr [:least-available-nuvlaedges])]
                [icons/CloseIcon {:link     true
                                  :color    "black"
                                  :on-click on-close}]]
@@ -54,20 +56,20 @@
          (into [ui/Table {:basic "very"}
                 [ui/TableHeader
                  [ui/TableRow
-                  [ui/TableHeaderCell "Name"]
-                  [ui/TableHeaderCell  {:textAlign "right"} "Availability (%)"]]]]
+                  [ui/TableHeaderCell (str/capitalize (@tr [:name]))]
+                  [ui/TableHeaderCell  {:textAlign "right"} (str (@tr [:availability]) " (%)")]]]]
                (mapv (fn [bucket]
                        (when-let [{:keys [name id avg-online]} (info-edge bucket)]
                          [ui/TableRow
                           [ui/TableCell [values/AsLink (str (general-utils/id->uuid id) "?edges-detail-tab=historical-data") :page "edges" :label name]]
                           [ui/TableCell {:textAlign "right"} (int (* 100 avg-online))]]))
                      least-available-nuvlaedges))
-         [:span "No data to show"])]]]))
+         [:span (@tr [:no-data-to-show])])]]]))
 
 (defn FleetStatusTimeSeries [{:keys [timespan-option] :as timespan} data]
   (r/with-let [extra-info-visible? (r/atom false)]
-
-    (let [ts-data (ts-utils/data->ts-data data)
+    (let [tr      (subscribe [::i18n-subs/tr])
+          ts-data (ts-utils/data->ts-data data)
           [from to] (if-not (= "custom period" timespan-option)
                       (ts-utils/timespan-to-period (:timespan-option timespan))
                       [(:from timespan) (:to timespan)])]
@@ -76,15 +78,15 @@
        [ui/GridRow {:centered true}
         [ui/GridColumn {:width 10}
          [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
-                                          :label           "available"
+                                          :label           (@tr [:available])
                                           :backgroundColor "#21d32c88"}
                                          {:data            (timestamp+value ts-data :virtual-edges-offline)
-                                          :label           "unavailable"
+                                          :label           (@tr [:unavailable])
                                           :backgroundColor "#eab81198"}]}
 
-                    :options {:plugins  {:title    {:text    "Fleet availability"
+                    :options {:plugins  {:title    {:text     (@tr [:fleet-availability])
                                                     :display true}
-                                         :subtitle {:text    "Availability of commissioned NuvlaEdges"
+                                         :subtitle {:text    (@tr [:availability-commissioned-nuvlaedges])
                                                     :display true}}
                               :scales   {:x {:type    "time"
                                              :min     from
@@ -98,12 +100,12 @@
                                                                "last year" "month"
                                                                "day")}
                                              :title   {:display "true"
-                                                       :text    "Time"}
+                                                       :text    (@tr [:time])}
                                              :stacked true}
                                          :y {:max     (get-in data [:dimensions :nuvlaedge-count])
                                              :min     0
                                              :title   {:display "true"
-                                                       :text    "Number of NuvlaEdges"}
+                                                       :text    (@tr [:number-of-nuvlaedges])}
                                              :stacked true}}
                               :elements {:point {:radius 1}}
                               :onClick  (fn [_evt element _chart]

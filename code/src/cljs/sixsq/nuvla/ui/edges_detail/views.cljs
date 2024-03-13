@@ -1287,7 +1287,8 @@
           :hide-on-scroll true}]]])))
 
 (defn AvailabilityWidget []
-  (let [edge-stats (subscribe [::subs/edge-stats])
+  (let [edge-stats         (subscribe [::subs/edge-stats])
+        tr                 (subscribe [::i18n-subs/tr])
         availability-stats (:availability-stats @edge-stats)
         ts-data            (-> availability-stats first :ts-data)
         no-of-measurements (-> ts-data count)
@@ -1306,18 +1307,18 @@
                               (> avg-percentage 75) "yellow"
                               :else "red")
                  :basic true
-                 :size  :large}
-       (str avg-percentage "% available")]
+                 :size  :medium}
+       (str avg-percentage "% " (@tr [:available]))]
       [:span {:style {:font-size   "small"
                       :color       "grey"
                       :font-weight 300
-                      :margin-left 10}} "last 15 minutes"]
+                      :margin-left 10}} (@tr [:last-15-minutes])]
       [:a {:style    {:cursor    "pointer"
                       :font-size "small"
                       :margin-left 10}
            :on-click #(do (dispatch [::tab-plugin/change-tab {:db-path [::spec/tab]
                                                               :tab-key :historical-data}])
-                          (.scrollIntoView (.getElementById js/document "nuvlaedge-status")))} [:span "Show me" [ui/Icon {:class icons/i-arrow-right}]]]]]))
+                          (.scrollIntoView (.getElementById js/document "nuvlaedge-status")))} [:span (@tr [:show-me]) [ui/Icon {:class icons/i-arrow-right}]]]]]))
 
 (defn StatusInfo
   [nb-status]

@@ -321,16 +321,15 @@
            [DropdownReleases {:placeholder (@tr [:select-version])
                               :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
-                              :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]
+                              :disabled    (is-old-version? nb-version)}]
            (let [{:keys [compose-files]} selected-release]
-             [AdditionalModulesTable compose-files {:on-module-change (fn [scope]
-                                                                        (let [scope-key (keyword scope)]
-                                                                          (ui-callback/checked
-                                                                            (fn [checked]
-                                                                              (swap! form-data assoc-in [:modules scope-key] checked)))))
-                                                    :module-checked?  (fn [scope] (get selected-modules
-                                                                                       (keyword scope)
-                                                                                       false))}])]
+             [AdditionalModulesTable compose-files
+              {:on-module-change (fn [scope]
+                                   (let [scope-key (keyword scope)]
+                                     (ui-callback/checked
+                                       (fn [checked]
+                                         (swap! form-data assoc-in [:modules scope-key] checked)))))
+               :module-checked?  (fn [scope] (get selected-modules (keyword scope) false))}])]
           [uix/Accordion
            [:<>
             [ui/Form

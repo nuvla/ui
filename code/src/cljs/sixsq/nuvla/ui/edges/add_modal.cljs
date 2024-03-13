@@ -428,9 +428,12 @@
           [:a {:href   usb-doc-url
                :target "_blank"}
            (@tr [:nuvlabox-modal-more-info])]]
-         [:a {:href     ""
-              :on-click (fn [] (do (reset! install-strategy nil)
-                                   (reset! playbooks-toggle nil)))} [icons/ArrowLeftIcon] (@tr [:back-to-selection])]]))))
+         (when @k8s-enabled?
+           [:a {:href     ""
+               :on-click (fn []
+                           (reset! install-strategy nil)
+                           (reset! playbooks-toggle nil))}
+           [icons/ArrowLeftIcon] (@tr [:back-to-selection])])]))))
 (defn AddModal
   []
   (let [modal-id                   spec/modal-add-id
@@ -650,15 +653,11 @@
                      {:on-module-change (fn [scope]
                                           (ui-callback/checked
                                             (fn [checked]
-                                              (if checked
-                                                (swap! nuvlabox-release-data assoc
-                                                       :nb-assets
-                                                       (conj nb-assets scope))
-                                                (swap! nuvlabox-release-data assoc
-                                                       :nb-assets
-                                                       (-> @nuvlabox-release-data
-                                                           :nb-assets
-                                                           (disj scope)))))))
+                                              (swap! nuvlabox-release-data assoc
+                                                     :nb-assets
+                                                     (if checked
+                                                       (conj nb-assets scope)
+                                                       (disj nb-assets scope))))))
                       :module-checked?  (fn [scope] (contains? (:nb-assets @nuvlabox-release-data) scope))}]
 
                     [ui/Divider {:horizontal true :as "h3"}

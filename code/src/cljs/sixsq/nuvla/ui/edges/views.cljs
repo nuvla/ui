@@ -213,7 +213,9 @@
                                                                           "green"
                                                                           "yellow")}]
                                                     [ui/Popup
-                                                     {:trigger  (r/as-element [ui/Icon {:class icons/i-info-full
+                                                     {:trigger  (r/as-element [ui/Icon {:class (if (= version-update "update available")
+                                                                                                 icons/i-info-full
+                                                                                                 icons/i-triangle-exclamation-full)
                                                                                         :color (if (= version-update "update available")
                                                                                                  "green"
                                                                                                  "yellow")}])

@@ -202,8 +202,7 @@
                                (when last-heartbeat-moment
                                  [uix/TimeAgo last-heartbeat-moment]),
                                :version          [:div
-                                                  [:span {:style {:display "inline-block"
-                                                                  :width 40}} (or engine-version nuvlabox-engine-version (str version ".y.z"))]
+                                                  [:span (or engine-version nuvlabox-engine-version (str version ".y.z"))]
                                                   (when version-update
                                                     #_[ui/Label {:size    :small
                                                                :style   {:margin-left 10}

@@ -185,7 +185,7 @@
                                 (let [{:keys [minor major build] :as version-difference} (utils/version-difference latest-release-number nuvla-version)]
                                   (cond
                                     (not version-difference) nil
-                                     major "update needed"
+                                     major "update recommended"
                                     (and minor (< minor 2)) "update available"
                                      build "update available"
                                     :else "update recommended")))

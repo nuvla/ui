@@ -181,14 +181,13 @@
         owner                 (subscribe [::session-subs/resolve-user owner])
         releases-by-no        (subscribe [::subs/nuvlabox-releases])
         latest-release-number (:release (first @releases-by-no))
-        version-update        (when-let [nuvla-version (some #(when % %) [engine-version nuvlabox-engine-version])]
-                                (let [{:keys [minor major build] :as version-difference} (utils/version-difference latest-release-number nuvla-version)]
+        version-warning       (when-let [nuvla-version (some #(when % %) [engine-version nuvlabox-engine-version])]
+                                (let [{:keys [minor major patch] :as version-difference} (utils/version-difference latest-release-number nuvla-version)]
                                   (cond
                                     (not version-difference) nil
-                                     major "update recommended"
-                                    (and minor (< minor 2)) "update available"
-                                     build "update available"
-                                    :else "update recommended")))
+                                    major "update recommended"
+                                    (or minor patch) "update available"
+                                    :else nil)))
         field-key->table-cell {:description      description,
                                :tags             [uix/Tags tags],
                                :refresh-interval (str refresh-interval "s"),
@@ -202,27 +201,17 @@
                                (when last-heartbeat-moment
                                  [uix/TimeAgo last-heartbeat-moment]),
                                :version          [:div
-                                                  [:span (or engine-version nuvlabox-engine-version (str version ".y.z"))]
-                                                  (when version-update
-                                                    #_[ui/Label {:size    :small
-                                                               :style   {:margin-left 10}
-                                                               :content version-update
-                                                               :basic   true
-                                                               :color   (if (= version-update "update available")
-                                                                          "green"
-                                                                          "yellow")}]
+                                                  [:span {:style {:display "inline-block"
+                                                                  :width 40}} (or engine-version nuvlabox-engine-version (str version ".y.z"))]
+                                                  (when version-warning
                                                     [ui/Popup
-                                                     {:trigger  (r/as-element [ui/Icon {:class (if (= version-update "update available")
-                                                                                                 icons/i-info-full
-                                                                                                 icons/i-triangle-exclamation-full)
-                                                                                        :color (if (= version-update "update available")
-                                                                                                 "green"
-                                                                                                 "yellow")}])
-                                                      :content  version-update
+                                                     {:trigger  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
+                                                                                        :color (if (= version-warning "update available")
+                                                                                                 "yellow"
+                                                                                                 "red")}])
+                                                      :content  version-warning
                                                       :position "right center"
-                                                      :size     "small"}])
-
-                                                  ]}]
+                                                      :size     "small"}])]}]
     (field-key->table-cell field-key)))
 
 (defn Pagination

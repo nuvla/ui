@@ -286,7 +286,7 @@
     (cond
       (not= m_1 n_1) {:major      (- m_1 n_1)}
       (not= m_2 n_2) {:minor      (- m_2 n_2)}
-      (not= m_3 n_3) {:build      (- m_3 n_3)}
+      (not= m_3 n_3) {:patch      (- m_3 n_3)}
       :else nil)))
 
 (defn sort-by-version [e]

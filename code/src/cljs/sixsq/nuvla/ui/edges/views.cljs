@@ -188,7 +188,7 @@
                                      major "update needed"
                                     (and minor (< minor 2)) "update available"
                                      build "update available"
-                                    :else "update needed")))
+                                    :else "update recommended")))
         field-key->table-cell {:description      description,
                                :tags             [uix/Tags tags],
                                :refresh-interval (str refresh-interval "s"),

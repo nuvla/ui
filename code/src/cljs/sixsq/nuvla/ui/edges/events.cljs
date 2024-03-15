@@ -23,10 +23,12 @@
             [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]
-            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
+(def refresh-id-history :nuvlabox-get-availability-history)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
 (def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
@@ -75,6 +77,9 @@
           [:dispatch [::main-events/action-interval-start {:id        refresh-id-locations
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-locations]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-id-history
+                                                           :frequency 10000
+                                                           :event     [::fetch-fleet-stats]}]]
           [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
                                                            :frequency 10000
                                                            :event     [::get-nuvlaboxes-summary]}]]
@@ -166,33 +171,24 @@
      :fx [[:dispatch [::get-nuvlaboxes]]
           [:dispatch [::get-nuvlaboxes-summary]]
           [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]
-          [:dispatch [::get-nuvlabox-locations]]]}))
+          [:dispatch [::get-nuvlabox-locations]]
+          [:dispatch [::fetch-fleet-stats]]]}))
 
 (def fleet-availability-stats ["availability-stats"])
 
 (reg-event-fx
   ::set-nuvlaboxes
-  (fn [{{:keys [::spec/fleet-timespan] :as db} :db} [_ nuvlaboxes]]
-    (let [{:keys [timespan-option]} fleet-timespan
-          [from to] (when-not (= "custom period" timespan-option)
-                      (ts-utils/timespan-to-period timespan-option))]
-      (if (instance? js/Error nuvlaboxes)
-        (dispatch [::messages-events/add
-                   (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                     {:header  (cond-> (str "failure getting nuvlaedges")
-                                       status (str " (" status ")"))
-                      :content message
-                      :type    :error})])
-        {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                       ::main-spec/loading? false)
-         :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]
-              (if-not (= "custom period" timespan-option)
-                [:dispatch [::fetch-fleet-stats          {:from        from
-                                                          :to          to
-                                                          :granularity (ts-utils/granularity-for-timespan fleet-timespan)
-                                                          :dataset    fleet-availability-stats
-                                                          :timespan-option timespan-option}]]
-                [])]}))))
+  (fn [{db :db} [_ nuvlaboxes]]
+    (if (instance? js/Error nuvlaboxes)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                   {:header  (cond-> (str "failure getting nuvlaedges")
+                                     status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
+                     ::main-spec/loading? false)
+       :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
 
 
 (reg-event-fx
@@ -319,7 +315,8 @@
             [:dispatch [::get-nuvlabox-locations]]
             [:dispatch [::routing-events/store-in-query-param {:db-path [db-path]
                                                                :value   state-selector}]]
-            [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]]})))
+            [:dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]]
+            [:dispatch [::fetch-fleet-stats]]]})))
 
 
 (reg-event-fx
@@ -549,34 +546,41 @@
 (reg-event-fx
   ::set-selected-fleet-timespan
   (fn [{db :db} [_ timespan]]
-    (let [{:keys [from to]} timespan]
-      {:db (assoc db ::spec/fleet-timespan timespan)
-       :fx [[:dispatch [::fetch-fleet-stats {:from        from
-                                             :to          to
-                                             :granularity (ts-utils/granularity-for-timespan timespan)
-                                             :dataset     fleet-availability-stats}]]]})))
+    {:db (assoc db ::spec/fleet-timespan timespan)
+     :fx [[:dispatch [::fetch-fleet-stats]]]}))
 
 (reg-event-fx
   ::fetch-fleet-stats
-  (fn [{{:keys [::spec/nuvlaboxes] :as db} :db} [_ {:keys [from to granularity dataset]}]]
-    (let [filter-str (if (seq (:resources nuvlaboxes))
-                       (->> nuvlaboxes
-                            (:resources)
-                            (mapv :id)
-                            (map (fn [ne-id]
-                                   (str "id='" ne-id "'")))
-                            (str/join " or "))
-                       ;; FIXME: shortcut to avoid sending filter=()
-                       "id='nuvlabox/not_existent'")]
+  (fn [{{:keys [::spec/fleet-timespan] :as db} :db}]
+    (let [{:keys [from to]} fleet-timespan
+          filter-str (get-full-filter-string db)]
       {:db (assoc db ::spec/loading? true)
        :http-xhrio {:method          :patch
                     :headers         {:bulk true}
                     :uri             "/api/nuvlabox/data"
                     :format          (ajax/json-request-format)
-                    :params          {:filter      (str "(" filter-str ")")
-                                      :dataset     dataset
-                                      :from        (.toISOString from)
-                                      :to          (.toISOString to)
+                    :params          {:filter      filter-str
+                                      :dataset     fleet-availability-stats
+                                      :from        (time/time->utc-str from)
+                                      :to          (time/time->utc-str to)
+                                      :granularity (ts-utils/granularity-for-timespan fleet-timespan)}
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-fleet-stats-success]
+                    :on-failure      [::fetch-fleet-stats-failure]}})))
+
+(reg-event-fx
+  ::fetch-fleet-stats-by-edge
+  (fn [{db :db} [_ {:keys [from to granularity]}]]
+    (let [filter-str (get-full-filter-string db)]
+      {:db (assoc db ::spec/loading? true)
+       :http-xhrio {:method          :patch
+                    :headers         {:bulk true}
+                    :uri             "/api/nuvlabox/data"
+                    :format          (ajax/json-request-format)
+                    :params          {:filter      filter-str
+                                      :dataset     ["availability-by-edge"]
+                                      :from        (time/time->utc-str from)
+                                      :to          (time/time->utc-str to)
                                       :granularity granularity}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-fleet-stats-success]
@@ -585,10 +589,9 @@
 (reg-event-fx
   ::fetch-fleet-stats-success
   (fn [{db :db} [_ {:keys [availability-stats availability-by-edge] :as _response}]]
-    {:db (cond-> db
+    {:db (cond-> (assoc db ::spec/loading? false)
                  availability-stats (assoc-in [::spec/fleet-stats :availability-stats] availability-stats)
-                 availability-by-edge (assoc-in [::spec/fleet-stats :availability-by-edge] availability-by-edge)
-                 true (assoc ::spec/loading? false))}))
+                 availability-by-edge (assoc-in [::spec/fleet-stats :availability-by-edge] availability-by-edge))}))
 
 (reg-event-fx
   ::fetch-fleet-stats-failure

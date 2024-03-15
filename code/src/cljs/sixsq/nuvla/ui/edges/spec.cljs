@@ -3,7 +3,7 @@
             [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.plugins.table :refer [build-ordering] :as table-plugin]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (def resource-name "nuvlabox")
 
@@ -50,7 +50,7 @@
    :created-by :refresh-interval :last-online :version :tags :manager])
 
 (s/def ::ordering
- (s/coll-of (s/cat :field (set columns) :order #{"desc" "asc" :desc :asc})))
+  (s/coll-of (s/cat :field (set columns) :order #{"desc" "asc" :desc :asc})))
 
 (def default-ordering [[:created :desc]])
 
@@ -101,10 +101,10 @@
    ::additional-filter             nil
    ::external-restriction-filter   nil
    ::select                        (table-plugin/build-bulk-edit-spec)
-   ::fleet-timespan                {:timespan-option "last 15 minutes"
-                                    :from   (time/subtract-minutes (time/now) 15)
-                                    :to     (time/now)}
-   })
+   ::fleet-timespan                (let [[from to] (ts-utils/timespan-to-period ts-utils/timespan-last-15m)]
+                                     {:timespan-option ts-utils/timespan-last-15m
+                                      :from            from
+                                      :to              to})})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 25)})

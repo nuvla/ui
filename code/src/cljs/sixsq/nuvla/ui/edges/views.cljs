@@ -207,7 +207,7 @@
                               (+ (count (:nuvlabox-managers @current-cluster))
                                  (count (:nuvlabox-managers @current-cluster)))
                               (:count @nuvlaboxes)))]
-    (when-not (= view-type spec/map-view)
+    (when-not (#{spec/map-view spec/history-view} view-type)
       [pagination-plugin/Pagination
        {:db-path                [::spec/pagination]
         :change-event           [::events/refresh-root]

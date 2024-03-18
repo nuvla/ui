@@ -169,6 +169,10 @@
   (let [nb-release (subscribe [::subs/nuvlabox-releases])]
     ^{:key (count @nb-release)} [add-modal/AddModal]))
 
+(def outdated-major-version "This version is no longer supported, please update your NuvlaEdge!")
+
+(def outdated-minor-version "An update is available with new features and/or bug fixes")
+
 (defn NuvlaboxRow
   [{{:keys [id name description created state tags online
             refresh-interval version created-by owner nuvlabox-engine-version] :as nuvlabox} :row-data
@@ -185,8 +189,8 @@
                                 (let [{:keys [minor major patch] :as version-difference} (utils/version-difference latest-release-number nuvla-version)]
                                   (cond
                                     (not version-difference) nil
-                                    major "update recommended"
-                                    (or minor patch) "update available"
+                                    (or major (> minor 3)) outdated-major-version
+                                    (or minor patch) outdated-minor-version
                                     :else nil)))
         field-key->table-cell {:description      description,
                                :tags             [uix/Tags tags],
@@ -206,7 +210,7 @@
                                                   (when version-warning
                                                     [ui/Popup
                                                      {:trigger  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
-                                                                                        :color (if (= version-warning "update available")
+                                                                                        :color (if (= outdated-minor-version version-warning)
                                                                                                  "yellow"
                                                                                                  "red")}])
                                                       :content  version-warning

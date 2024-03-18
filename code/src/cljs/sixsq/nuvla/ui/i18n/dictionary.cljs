@@ -731,6 +731,8 @@
         :order                                         "order"
         :origin                                        "origin"
         :out-of                                        " out of "
+        :outdated-major-version                        "This version is no longer supported, please update your NuvlaEdge!"
+        :outdated-minor-version                        "An update is available with new features and/or bug fixes"
         :overall-summary                               "Overall summary"
         :overridden-value                              "This value is overridden."
         :overridden-value-revert-to-default            "Click to revert to the default value."

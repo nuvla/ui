@@ -169,10 +169,6 @@
   (let [nb-release (subscribe [::subs/nuvlabox-releases])]
     ^{:key (count @nb-release)} [add-modal/AddModal]))
 
-(def outdated-major-version "This version is no longer supported, please update your NuvlaEdge!")
-
-(def outdated-minor-version "An update is available with new features and/or bug fixes")
-
 (defn NuvlaboxRow
   [{{:keys [id name description created state tags online
             refresh-interval version created-by owner nuvlabox-engine-version] :as nuvlabox} :row-data
@@ -181,6 +177,7 @@
         locale                @(subscribe [::i18n-subs/locale])
         last-heartbeat-moment @(subscribe [::subs/last-online nuvlabox])
         engine-version        @(subscribe [::subs/engine-version id])
+        tr                    (subscribe [::i18n-subs/tr])
         creator               (subscribe [::session-subs/resolve-user created-by])
         owner                 (subscribe [::session-subs/resolve-user owner])
         releases-by-no        (subscribe [::subs/nuvlabox-releases])
@@ -189,8 +186,8 @@
                                 (let [{:keys [minor major patch] :as version-difference} (utils/version-difference latest-release-number nuvla-version)]
                                   (cond
                                     (not version-difference) nil
-                                    (or major (> minor 3)) outdated-major-version
-                                    (or minor patch) outdated-minor-version
+                                    (or major (> minor 3))   :outdated-major-version
+                                    (or minor patch)         :outdated-minor-version
                                     :else nil)))
         field-key->table-cell {:description      description,
                                :tags             [uix/Tags tags],
@@ -210,10 +207,10 @@
                                                   (when version-warning
                                                     [ui/Popup
                                                      {:trigger  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
-                                                                                        :color (if (= outdated-minor-version version-warning)
+                                                                                        :color (if (= :outdated-minor-version version-warning)
                                                                                                  "yellow"
                                                                                                  "red")}])
-                                                      :content  version-warning
+                                                      :content  (@tr [version-warning])
                                                       :position "right center"
                                                       :size     "small"}])]}]
     (field-key->table-cell field-key)))

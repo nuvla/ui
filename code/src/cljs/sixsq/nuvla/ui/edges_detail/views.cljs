@@ -240,8 +240,9 @@
                               :style     {:margin "1em"}
                               :on-change (on-module-change module)}])))]])]]))
 (defn UpdateButton
-  [{:keys [id] :as _resource} operation show?]
-  (let [tr             (subscribe [::i18n-subs/tr])
+  [{:keys [id] :as _resource}]
+  (let [show?          (r/atom false)
+        tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
         modules        (subscribe [::subs/nuvlabox-modules])
         releases       (subscribe [::edges-subs/nuvlabox-releases-options])
@@ -258,7 +259,7 @@
                                   :nuvlabox-release (@releases-by-id release))))
         on-success-fn  close-fn
         on-error-fn    close-fn
-        on-click-fn    #(dispatch [::events/operation id operation
+        on-click-fn    #(dispatch [::events/operation id "update-nuvlabox"
                                    (utils/format-update-data @form-data)
                                    on-success-fn on-error-fn])
         current-config {:project-name     (-> @status :installation-parameters :project-name)
@@ -271,7 +272,7 @@
     (reset! form-data current-config)
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
-    (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
+    (fn [{:keys [id] :as _resource}]
       (let [correct-nb?      (= (:parent @status) id)
             target-version   (->> @releases
                                   (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
@@ -289,10 +290,11 @@
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
-                        [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:class icon}]
-                         title])}
-         [uix/ModalHeader {:header title}]
+                        [ui/MenuItem {:on-click #(reset! show? true)
+                                      :color "green"}
+                         [ui/Icon {:class "icon download"}]
+                         "Update NuvlaEdge"])}
+         [uix/ModalHeader {:header "Update NuvlaEdge"}]
          [ui/ModalContent
           (when correct-nb?
             [:<>
@@ -368,7 +370,7 @@
            :default-open false]]
          [ui/ModalActions
           [uix/Button
-           {:text     button-text
+           {:text     (@tr [:update])
             :primary  true
             :on-click on-click-fn}]]]))))
 
@@ -647,16 +649,6 @@
       ^{:key (str "revoke-ssh-button" @show?)}
       [AddRevokeSSHButton resource operation show? "Revoke ssh key" icons/i-minus "revoke"])))
 
-
-(defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
-  [_resource _operation]
-  (let [tr    (subscribe [::i18n-subs/tr])
-        show? (r/atom false)]
-    (fn [resource operation]
-      ^{:key (str "update-nuvlabox" @show?)}
-      [UpdateButton resource operation show? "Update NuvlaEdge" "download" (@tr [:update])])))
-
-
 (defmethod cimi-detail-views/other-button ["nuvlabox" "enable-emergency-playbooks"]
   [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
@@ -699,13 +691,15 @@
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
                         @nuvlabox
-                        #{"edit" "delete" "activate" "decommission"
+                        #{"edit" "delete" "activate" "decommission" "update-nuvlabox"
                           "generate-new-api-key" "commission" "check-api"
                           "create-log" "set-offline" "heartbeat"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj
             MenuItems
+            ^{:key "update-nb"}
+            [UpdateButton @nuvlabox "update-nuvlabox"]
             (when @can-decommission?
               ^{:key "decomission-nb"}
               [DecommissionButton @nuvlabox])
@@ -715,7 +709,8 @@
           [components/RefreshMenu
            {:action-id  refresh-action-id
             :loading?   @loading?
-            :on-refresh #(refresh uuid)}]]]))))
+            :on-refresh #(refresh uuid)}]
+          {:max-items-to-show 3}]]))))
 
 
 (defn get-available-actions

@@ -293,7 +293,7 @@
                         [ui/MenuItem {:on-click #(reset! show? true)
                                       :color "green"}
                          [ui/Icon {:class "icon download"}]
-                         "Update NuvlaEdge"])}
+                         (str/capitalize (@tr [:update]))])}
          [uix/ModalHeader {:header "Update NuvlaEdge"}]
          [ui/ModalContent
           (when correct-nb?

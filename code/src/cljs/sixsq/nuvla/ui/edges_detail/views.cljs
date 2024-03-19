@@ -698,7 +698,7 @@
          [components/ResponsiveMenuBar
           (conj
             MenuItems
-            ^{:key "update-nb"}
+            ^{:key "update-ne"}
             [UpdateButton @nuvlabox "update-nuvlabox"]
             (when @can-decommission?
               ^{:key "decomission-nb"}

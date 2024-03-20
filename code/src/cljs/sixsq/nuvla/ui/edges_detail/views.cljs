@@ -39,6 +39,7 @@
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
+(def tab-historical-data-key :historical-data)
 
 
 (defn refresh-nuvlaedge-data
@@ -1343,7 +1344,7 @@
                       :margin-left 10}
            :on-click #(dispatch [::tab-plugin/change-tab
                                  {:db-path [::spec/tab]
-                                  :tab-key :historical-data}])}
+                                  :tab-key tab-historical-data-key}])}
        [:span (@tr [:show-me]) [ui/Icon {:class icons/i-arrow-right}]]]]]))
 
 (defn StatusInfo
@@ -2076,7 +2077,7 @@
                    :icon    icons/i-usb-drive}
         :render   #(r/as-element [TabPeripherals])}
        {:menuItem {:content (r/as-element [:span (str/capitalize "history")])
-                   :key     :historical-data
+                   :key     tab-historical-data-key
                    :icon    icons/i-file-code}
         :render   #(r/as-element [timeseries/TimeSeries])}
 
@@ -2148,20 +2149,21 @@
 
 (defn EdgeDetails
   [uuid]
-  (refresh-nuvlaedge-data uuid)
   (let [nb-status @(subscribe [::subs/nuvlabox-status])]
-    [components/LoadingPage {:dimmable? true}
-     [:<>
-      [components/NotFoundPortal
-       ::subs/nuvlabox-not-found?
-       :no-nuvlabox-message-header
-       :no-nuvlabox-message-content]
-      [ui/Container {:fluid true}
-       [PageHeader]
-       [MenuBar uuid]
-       [components/ErrorJobsMessage ::job-subs/jobs nil nil
-        #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
-       [job-views/ProgressJobAction nb-status]
-       [TelemetryOutdatedMessage nb-status]]
-      [TabsNuvlaBox]
-      [AddPlaybookModal]]]))
+    (refresh-nuvlaedge-data uuid)
+    (fn []
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/nuvlabox-not-found?
+         :no-nuvlabox-message-header
+         :no-nuvlabox-message-content]
+        [ui/Container {:fluid true}
+         [PageHeader]
+         [MenuBar uuid]
+         [components/ErrorJobsMessage ::job-subs/jobs nil nil
+          #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
+         [job-views/ProgressJobAction nb-status]
+         [TelemetryOutdatedMessage nb-status]]
+        [TabsNuvlaBox]
+        [AddPlaybookModal]]])))

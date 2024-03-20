@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.utils.plot
-  (:require ["react-chartjs-2" :rename {Bar BarChart Doughnut DoughnutChart Line LineChart Scatter ScatterChart}]
+  (:require ["chartjs-adapter-date-fns"]
+            ["react-chartjs-2" :rename {Bar BarChart Doughnut DoughnutChart Line LineChart Scatter ScatterChart}]
             [clojure.string :as str]
-            [reagent.core :as reagent]
-            ["chartjs-adapter-date-fns"]))
+            [reagent.core :as reagent]))
 
 
 (def Bar (reagent/adapt-react-class BarChart))

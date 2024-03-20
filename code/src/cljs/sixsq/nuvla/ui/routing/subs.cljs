@@ -3,8 +3,8 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.spec :as spec]
-            [sixsq.nuvla.ui.routing.utils :refer [get-query-param
-                                                  ->canonical-route]]))
+            [sixsq.nuvla.ui.routing.utils :refer [->canonical-route
+                                                  get-query-param]]))
 
 (reg-sub
   ::nav-path

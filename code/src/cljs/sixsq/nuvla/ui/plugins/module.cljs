@@ -134,10 +134,6 @@
   [env-vars index value]
   (assoc-in env-vars [index ::new-value] value))
 
-(defn- reset-env-value-by-index
-  [env-vars index]
-  (update env-vars index dissoc ::new-value))
-
 (defn- update-file-content-by-index
   [files index file-content]
   (assoc-in files [index ::new-file-content] file-content))

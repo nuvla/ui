@@ -173,7 +173,7 @@
        [:div (ops-status-overview-string @tr ops-status)]])))
 
 (defn DeploymentSetCard
-  [{:keys [id updated name state description tags operational-status] :as  deployment-set}]
+  [{:keys [id updated name state description tags operational-status] :as  _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
         href   (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid id)})]

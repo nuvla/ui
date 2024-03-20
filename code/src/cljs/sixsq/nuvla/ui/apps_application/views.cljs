@@ -17,7 +17,6 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.profile.subs :as profile-subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -249,7 +248,7 @@
         module-content-id    (subscribe [::apps-subs/module-content-id])
         version-index        (apps-utils/find-current-version @versions-map @module-content-id)
         is-module-published? (subscribe [::apps-subs/is-module-published?])
-        {:keys [id created updated name parent-path price path]} @module]
+        {:keys [id created updated name parent-path price]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}

@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.deployment-sets.events
   (:require [re-frame.core :refer [dispatch reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.deployment-sets.spec :as spec]
-            [sixsq.nuvla.ui.deployment-sets.subs :as subs]
             [sixsq.nuvla.ui.deployment-sets-detail.events :as depl-group-events]
             [sixsq.nuvla.ui.deployment-sets-detail.subs :as depl-group-subs]
+            [sixsq.nuvla.ui.deployment-sets.spec :as spec]
+            [sixsq.nuvla.ui.deployment-sets.subs :as subs]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]

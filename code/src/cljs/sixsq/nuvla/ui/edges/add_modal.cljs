@@ -339,7 +339,7 @@
 
 (defn- InstallMethod
   [_]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr           (subscribe [::i18n-subs/tr])
         k8s-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-edge-on-k8s])]
     (fn [{:keys [install-strategy-error install-strategy playbooks-toggle default-ttl usb-trigger-key-ttl]}]
       (if
@@ -348,8 +348,8 @@
          [ui/CardGroup {:centered    true
                         :itemsPerRow 2}
           [ui/Card
-           {:on-click (fn [] (do (reset! install-strategy docker-based)
-                                 (reset! playbooks-toggle nil)))}
+           {:on-click #(do (reset! install-strategy docker-based)
+                           (reset! playbooks-toggle nil))}
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker"]
             [icons/DockerIcon {:size :massive}]]]
@@ -430,10 +430,10 @@
            (@tr [:nuvlabox-modal-more-info])]]
          (when @k8s-enabled?
            [:a {:href     ""
-               :on-click (fn []
-                           (reset! install-strategy nil)
-                           (reset! playbooks-toggle nil))}
-           [icons/ArrowLeftIcon] (@tr [:back-to-selection])])]))))
+                :on-click (fn []
+                            (reset! install-strategy nil)
+                            (reset! playbooks-toggle nil))}
+            [icons/ArrowLeftIcon] (@tr [:back-to-selection])])]))))
 (defn AddModal
   []
   (let [modal-id                   spec/modal-add-id
@@ -453,7 +453,7 @@
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
-                                    :nb-assets #{""}}
+                                    :nb-assets   #{""}}
         nuvlabox-release-data      (r/atom default-release-data)
         advanced?                  (r/atom false)
         install-strategy-default   nil

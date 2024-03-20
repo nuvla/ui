@@ -1,30 +1,29 @@
 (ns sixsq.nuvla.ui.utils.time
-  (:require ["date-fns" :refer [addMilliseconds
-                                addMinutes
+  (:require ["date-fns" :refer [addDays
                                 addHours
-                                addDays
+                                addMilliseconds
+                                addMinutes
                                 differenceInMilliseconds
                                 differenceInMinutes
-                                endOfDay
-                                startOfDay
-                                isToday
-                                format
-                                formatDistance
-                                intlFormatDistance
-                                isAfter
-                                isBefore
-                                parseISO
-                                startOfDay
-                                subDays
-                                subMonths
-                                subYears
-                                subMilliseconds
-                                subMinutes
-                                subHours
                                 eachDayOfInterval
                                 eachHourOfInterval
                                 eachMinuteOfInterval
-                                getHours]]
+                                endOfDay
+                                format
+                                formatDistance
+                                getHours
+                                intlFormatDistance
+                                isAfter
+                                isBefore
+                                isToday
+                                parseISO
+                                startOfDay
+                                subDays
+                                subHours
+                                subMilliseconds
+                                subMinutes
+                                subMonths
+                                subYears]]
             ["date-fns/locale/fr$default" :as fr]))
 
 (def ^:const default-locale "en")

@@ -1351,8 +1351,8 @@
    [ui/Table {:basic "very"}
     [OperationalStatus nb-status]
     [AvailabilityWidget]
-    [NextTelemetryStatus nb-status]
-    [StatusNotes nb-status]]])
+    [NextTelemetryStatus nb-status]]
+   [StatusNotes nb-status]])
 
 (defn TabOverviewStatus
   [{:keys [online] :as nb-status}]

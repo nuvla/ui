@@ -21,6 +21,14 @@
                        timespan-last-3-month
                        timespan-last-year
                        timespan-custom])
+
+(def timespan-options-master [timespan-last-6h
+                              timespan-last-day
+                              timespan-last-week
+                              timespan-last-month
+                              timespan-last-3-month
+                              timespan-last-year
+                              timespan-custom])
 (defn custom-timespan? [timespan-option]
   (= timespan-custom timespan-option))
 

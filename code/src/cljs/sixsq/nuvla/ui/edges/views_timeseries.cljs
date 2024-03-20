@@ -144,7 +144,7 @@
         loading?                  (subscribe [::subs/loading?])
         fleet-stats               (subscribe [::subs/fleet-stats])
         selected-timespan         (subscribe [::subs/fleet-timespan])
-        initial-timespan          (first ts-utils/timespan-options)
+        initial-timespan          (first ts-utils/timespan-options-master)
         currently-selected-option (r/atom initial-timespan)
         custom-timespan           (r/atom {})
         fetch-fleet-stats         (fn [timespan]
@@ -173,7 +173,7 @@
                         :close-on-change true
                         :default-value   initial-timespan
                         :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o})
-                                               ts-utils/timespan-options)
+                                               ts-utils/timespan-options-master)
                         :on-change       (ui-callback/value
                                            (fn [timespan]
                                              (reset! currently-selected-option timespan)

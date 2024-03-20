@@ -28,7 +28,6 @@
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
-(def refresh-id-history :nuvlabox-get-availability-history)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
 (def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
@@ -77,9 +76,6 @@
           [:dispatch [::main-events/action-interval-start {:id        refresh-id-locations
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-locations]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-id-history
-                                                           :frequency 10000
-                                                           :event     [::fetch-fleet-stats]}]]
           [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
                                                            :frequency 10000
                                                            :event     [::get-nuvlaboxes-summary]}]]

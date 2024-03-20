@@ -1,17 +1,22 @@
 (ns sixsq.nuvla.ui.edges-detail.events
-  (:require [clojure.string :as str]
+  (:require [ajax.core :as ajax]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.job.events :as job-events]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.messages.events :as messages-events]
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (reg-event-fx
   ::set-nuvlabox-status
@@ -131,25 +136,38 @@
 
 (reg-event-fx
   ::get-nuvlabox
-  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook] :as db} :db} [_ id]]
-    {:db                  (cond-> db
-                                  (not= (:id nuvlabox) id)
-                                  (merge spec/defaults))
-     ::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
-                           :on-error #(dispatch [::set-nuvlabox nil])]
-     ::cimi-api-fx/search [:nuvlabox-peripheral
-                           {:filter  (str "parent='" id "'")
-                            :last    10000
-                            :orderby "id"}
-                           #(dispatch [::set-nuvlabox-peripherals %])]
-     :fx                  [[:dispatch [::events-plugin/load-events
-                                       [::spec/events] id false]]
-                           [:dispatch [::job-events/get-jobs id]]
-                           [:dispatch [::get-deployments-for-edge id]]
-                           [:dispatch [::get-nuvlabox-playbooks id]]
-                           [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
-                                                                         (:id nuvlabox-current-playbook)
-                                                                         nil)]]]}))
+  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook ::spec/timespan] :as db} :db} [_ id]]
+    (let [id (or id (:id nuvlabox))
+          {:keys [timespan-option]} timespan
+          [from to] (if (= "custom period" timespan-option)
+                      [(:from timespan) (:to timespan)]
+                      (ts-utils/timespan-to-period timespan-option))]
+      {:db                  (cond-> db
+                                    (not= (:id nuvlabox) id)
+                                    (merge spec/defaults))
+       ::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
+                             :on-error #(dispatch [::set-nuvlabox nil])]
+       ::cimi-api-fx/search [:nuvlabox-peripheral
+                             {:filter  (str "parent='" id "'")
+                              :last    10000
+                              :orderby "id"}
+                             #(dispatch [::set-nuvlabox-peripherals %])]
+       :fx                  [[:dispatch [::events-plugin/load-events
+                                         [::spec/events] id false]]
+                             [:dispatch [::job-events/get-jobs id]]
+                             [:dispatch [::get-deployments-for-edge id]]
+                             [:dispatch [::get-nuvlabox-playbooks id]]
+                             [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
+                                                                           (:id nuvlabox-current-playbook)
+                                                                           nil)]]
+                             [:dispatch [::fetch-edge-availibity-last-15min id]]
+                             [:dispatch [::fetch-edge-stats
+                                         {:nuvlaedge-id id
+                                          :from         from
+                                          :to           to
+                                          :granularity  (ts-utils/granularity-for-timespan timespan)
+                                          :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats"
+                                                         "power-consumption-stats" "availability-stats"]}]]]})))
 
 (reg-event-fx
   ::get-deployments-for-edge
@@ -157,9 +175,9 @@
     (let [resource-id (or id (:id nuvlabox))]
       (when resource-id
         {:fx [[:dispatch [::deployments-events/get-deployments
-                          {:filter-external-arg (str "nuvlabox='" (or id (:id nuvlabox)) "'")
+                          {:filter-external-arg   (str "nuvlabox='" (or id (:id nuvlabox)) "'")
                            :external-filter-only? true
-                           :pagination-db-path  ::spec/deployment-pagination}]]]}))))
+                           :pagination-db-path    ::spec/deployment-pagination}]]]}))))
 
 (reg-event-fx
   ::decommission
@@ -271,7 +289,7 @@
      [:nuvlabox
       {:filter (general-utils/filter-eq-ids (mapv :parent statuses))
        :select "id, name, nuvlabox-status"
-       :last 100}
+       :last   100}
       #(dispatch [::set-nuvlabox-managers
                   (into {}
                         (for [status statuses]
@@ -389,7 +407,7 @@
   ::get-nuvlaedge-release
   (fn [{{:keys [::spec/nuvlaedge-release] :as db} :db} [_ {:keys [nuvlabox-engine-version]}]]
     (when (and nuvlabox-engine-version
-            (not= (:release nuvlaedge-release) nuvlabox-engine-version))
+               (not= (:release nuvlaedge-release) nuvlabox-engine-version))
       (-> {:db (assoc db ::spec/nuvlaedge-release nil)}
           (assoc ::cimi-api-fx/search [:nuvlabox-release
                                        {:filter  (str "release='" nuvlabox-engine-version "'")
@@ -397,3 +415,104 @@
                                         :orderby "release-date:desc"
                                         :last    10000}
                                        #(dispatch [::set-nuvlaedge-release (first (:resources %))])])))))
+
+(defn build-data-uri
+  [id datasets from to granularity]
+  (str "/api/" id "/data?"
+       (->> datasets
+            (map #(str "dataset=" %))
+            (str/join "&"))
+       "&from=" (time/time->utc-str from) "&to=" (time/time->utc-str to) "&granularity=" granularity))
+
+(reg-event-fx
+  ::fetch-edge-stats
+  (fn [{{:keys [::spec/nuvlabox current-route] :as db} :db} [_ {:keys [granularity from to datasets nuvlaedge-id]}]]
+    (when (= (get-query-param current-route :edges-detail-tab) "historical-data")
+      (let [uri (build-data-uri (or nuvlaedge-id (:id nuvlabox))
+                                datasets
+                                from to granularity)]
+        {:db         (assoc db ::spec/loading? true)
+         :http-xhrio {:method          :get
+                      :uri             uri
+                      :response-format (ajax/json-response-format {:keywords? true})
+                      :on-success      [::fetch-edge-stats-success]
+                      :on-failure      [::fetch-edge-stats-failure]}}))))
+(reg-event-fx
+  ::fetch-edge-availibity-last-15min-success
+  (fn [{db :db} [_ response]]
+    (let [ts-data            (get-in response [:availability-stats 0 :ts-data])
+          no-of-measurements (count ts-data)
+          avg-online-values  (map (comp :value :avg-online :aggregations) ts-data)
+          avg-percentage     (general-utils/percentage
+                               (apply + avg-online-values)
+                               no-of-measurements)]
+      {:db (assoc db ::spec/availability-15-min avg-percentage)})))
+
+(reg-event-fx
+  ::fetch-edge-availibity-last-15min-failure
+  (fn [_ [_ response]]
+    (let [{:keys [message]} (response/parse response)]
+      {:fx [[:dispatch [::messages-events/add
+                        {:header  "Could not fetch NuvlaEdge availability"
+                         :content message
+                         :type    :error}]]]})))
+(reg-event-fx
+  ::fetch-edge-availibity-last-15min
+  (fn [_ [_ id]]
+    (let [to   (time/now)
+          from (time/subtract-minutes to 15)
+          uri  (build-data-uri id ["availability-stats"] from to "1-minutes")]
+      {:http-xhrio {:method          :get
+                    :uri             uri
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-edge-availibity-last-15min-success]
+                    :on-failure      [::fetch-edge-availibity-last-15min-failure]}})))
+
+(reg-event-fx
+  ::fetch-edge-stats-csv
+  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity dataset]}]]
+    (let [uri (build-data-uri (:id nuvlabox) [dataset] from to granularity)]
+      {:db         (assoc db ::spec/loading? true)
+       :http-xhrio {:method          :get
+                    :uri             uri
+                    :response-format (ajax/text-response-format)
+                    :headers         {"Accept" "text/csv"}
+                    :on-success      [::fetch-edge-stats-csv-success]
+                    :on-failure      [::fetch-edge-stats-failure]}})))
+
+(def edge-stats-datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"])
+
+(reg-event-fx
+  ::set-selected-timespan
+  (fn [{db :db} [_ timespan]]
+    (let [{:keys [from to]} timespan]
+      {:db (assoc db ::spec/timespan timespan)
+       :fx [[:dispatch [::fetch-edge-stats {:from        from
+                                            :to          to
+                                            :granularity (ts-utils/granularity-for-timespan timespan)
+                                            :datasets    edge-stats-datasets}]]]})))
+
+(reg-event-fx
+  ::fetch-edge-stats-csv-success
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false)
+     :fx [[:dispatch [::main-events/open-link (str "data:text/csv," response)]]]}))
+
+
+(reg-event-fx
+  ::fetch-edge-stats-success
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/edge-stats response
+                   ::spec/loading? false)}))
+
+(reg-event-fx
+  ::fetch-edge-stats-failure
+  (fn [{db :db} [_ response]]
+    (let [{:keys [message]} (response/parse response)]
+      {:db (assoc db ::spec/loading? false)
+       :fx [[:dispatch [::messages-events/add
+                        {:header  "Could not fetch NuvlaEdge statistics"
+                         :content message
+                         :type    :error}]]]})))
+
+

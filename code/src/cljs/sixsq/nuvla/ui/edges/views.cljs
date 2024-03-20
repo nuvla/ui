@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.edges.utils :as utils]
             [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
             [sixsq.nuvla.ui.edges.views-utils :as views-utils]
+            [sixsq.nuvla.ui.edges.views-timeseries :as views-timeseries]
             [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as components]
@@ -142,7 +143,8 @@
   {spec/cards-view   icons/i-grid-layout
    spec/table-view   icons/i-table
    spec/map-view     icons/i-map
-   spec/cluster-view icons/i-chart-network})
+   spec/cluster-view icons/i-chart-network
+   spec/history-view icons/i-history})
 
 (defn MenuBar []
   (let [loading?  (subscribe [::subs/loading?])
@@ -205,7 +207,7 @@
                               (+ (count (:nuvlabox-managers @current-cluster))
                                  (count (:nuvlabox-managers @current-cluster)))
                               (:count @nuvlaboxes)))]
-    (when-not (= view-type spec/map-view)
+    (when-not (#{spec/map-view spec/history-view} view-type)
       [pagination-plugin/Pagination
        {:db-path                [::spec/pagination]
         :change-event           [::events/refresh-root]
@@ -440,6 +442,7 @@
           spec/table-view [NuvlaboxTable]
           spec/map-view [NuvlaboxMap]
           spec/cluster-view [views-clusters/NuvlaboxClusters]
+          spec/history-view [views-timeseries/FleetTimeSeries]
           [NuvlaboxTable])
         [Pagination @view-type]]])))
 

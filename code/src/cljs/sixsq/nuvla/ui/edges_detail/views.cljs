@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.edges-detail.events :as events]
             [sixsq.nuvla.ui.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.edges-detail.subs :as subs]
+            [sixsq.nuvla.ui.edges-detail.views-timeseries :as timeseries]
             [sixsq.nuvla.ui.edges.events :as edges-events]
             [sixsq.nuvla.ui.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.edges.utils :as utils]
@@ -37,14 +38,17 @@
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
+(def tab-historical-data-key :historical-data)
 
 
-(defn refresh
+(defn refresh-nuvlaedge-data
   [uuid]
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
               :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
+
+
 
 (defn DecommissionButton
   [nuvlabox]
@@ -712,10 +716,12 @@
             (when @can-delete?
               ^{:key "delete-nb"}
               [DeleteButton @nuvlabox]))
+
           [components/RefreshMenu
            {:action-id  refresh-action-id
             :loading?   @loading?
-            :on-refresh #(refresh uuid)}]]]))))
+            :on-refresh (fn [_]
+                          (refresh-nuvlaedge-data uuid))}]]]))))
 
 
 (defn get-available-actions
@@ -917,8 +923,6 @@
            [ui/TableCell blk-in-out]
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
-
-
 (defn Load
   [resources]
   (let [load-stats      (utils/load-statistics resources)
@@ -1244,29 +1248,30 @@
 (defn TelemetryLastTime
   [last-telemetry]
   (when last-telemetry
-    [:div
-     "Last telemetry report was "
-     [uix/TimeAgo last-telemetry]]))
+    [ui/TableRow
+     [ui/TableCell "Last telemetry report"]
+     [ui/TableCell [uix/TimeAgo last-telemetry]]]))
 
 (defn TelemetryNextTime
   [next-telemetry]
   (let [locale                (subscribe [::i18n-subs/locale])
         next-telemetry-moment (some-> next-telemetry time/parse-iso8601)]
+
     [uix/ForceRerenderComponentByDelay
      (fn []
        (when next-telemetry-moment
-         [:p
-          (if (time/before-now? next-telemetry-moment)
-            [:<> "Missing telemetry report for "]
-            [:<> "Next telemetry report is expected in "])
-          (time/format-distance next-telemetry-moment @locale)]))
+         [ui/TableRow
+          [ui/TableCell (if (time/before-now? next-telemetry-moment)
+                          [:<> "Missing telemetry report for "]
+                          [:<> "Next telemetry report in"])]
+          [ui/TableCell (time/format-distance next-telemetry-moment @locale)]]))
      5000]))
 
 (defn NextTelemetryStatus
   [{:keys [next-telemetry last-telemetry next-heartbeat] :as _nb-status}]
   (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])]
-    [:div
-     ; next-heartbeat was equivalent to next-telemetry in api-server before v.6.2.0
+
+    [:<>                                                    ; next-heartbeat was equivalent to next-telemetry in api-server before v.6.2.0
      [TelemetryNextTime (or next-telemetry next-heartbeat)]
      [TelemetryLastTime (or last-telemetry
                             (utils/parse-compute-last-from-next
@@ -1287,28 +1292,60 @@
   (let [tr        @(subscribe [::i18n-subs/tr])
         outdated? (utils/telemetry-outdated? nb-status)]
     (when status
-      [:div {:style {:margin "0.5em 0 1em 0"}}
-       (if outdated?
-         (tr [:nuvlaedge-operational-status-was])
-         (tr [:nuvlaedge-operational-status]))
-       [ui/Popup
-        {:trigger        (r/as-element
-                           [ui/Label
-                            {:style {:cursor "help"}
-                             :size  :small
-                             :basic true
-                             :color (utils/operational-status->color status)}
-                            status])
-         :content        (tr [:nuvlabox-operational-status-popup])
-         :position       "bottom center"
-         :on             "hover"
-         :hide-on-scroll true}]])))
+      [ui/TableRow
+
+       [ui/TableCell (if outdated?
+                       (tr [:nuvlaedge-operational-status-was])
+                       (tr [:nuvlaedge-operational-status]))]
+       [ui/TableCell
+        [ui/Popup
+         {:trigger        (r/as-element
+                            [ui/Label
+                             {:style {:cursor "help"}
+                              :size  :small
+                              :basic true
+                              :color (utils/operational-status->color status)}
+                             status])
+          :content        (tr [:nuvlabox-operational-status-popup])
+          :position       "bottom center"
+          :on             "hover"
+          :hide-on-scroll true}]]])))
+
+(defn AvailabilityWidget []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        avg-percentage (subscribe [::subs/availability-15-min])]
+    [ui/TableRow
+     [ui/TableCell "Availability"]
+     [ui/TableCell {:style {:display         "flex"
+                            :align-items     "center"
+                            :justify-content "space-between"
+                            :white-space     "nowrap"}}
+      [ui/Label {:color (cond (> @avg-percentage 95) "green"
+                              (> @avg-percentage 75) "yellow"
+                              :else "red")
+                 :basic true
+                 :size  :medium}
+       (str (general-utils/round-up @avg-percentage) "% " (@tr [:available]))]
+      [:span {:style {:font-size   "small"
+                      :color       "grey"
+                      :font-weight 300
+                      :margin-left 10}} (@tr [:last-15-minutes])]
+      [:a {:style    {:cursor      "pointer"
+                      :font-size   "small"
+                      :margin-left 10}
+           :on-click #(dispatch [::tab-plugin/change-tab
+                                 {:db-path [::spec/tab]
+                                  :tab-key tab-historical-data-key}])}
+       [:span (@tr [:show-me]) [ui/Icon {:class icons/i-arrow-right}]]]]]))
 
 (defn StatusInfo
   [nb-status]
   [:<>
-   [OperationalStatus nb-status]
-   [NextTelemetryStatus nb-status]
+   [ui/Table {:basic "very"}
+    [ui/TableBody
+     [OperationalStatus nb-status]
+     [AvailabilityWidget]
+     [NextTelemetryStatus nb-status]]]
    [StatusNotes nb-status]])
 
 (defn TabOverviewStatus
@@ -1325,6 +1362,7 @@
         :position       "bottom center"
         :on             "hover"
         :hide-on-scroll true}]]
+
      [StatusOrNotAvailable nb-status [StatusInfo nb-status]]]))
 
 (defn TabOverviewTags
@@ -1961,7 +1999,7 @@
                                                         (cond-> {}
                                                                 @enabled-changed? (assoc :enabled (not (:enabled @selected-playbook)))
                                                                 (and @run-changed? (not-empty @run)) (assoc :run @run))])
-                                             (refresh (general-utils/id->uuid (:id @nuvlabox)))
+                                             (refresh-nuvlaedge-data (general-utils/id->uuid (:id @nuvlabox)))
                                              (reset! run-changed? false)
                                              (reset! enabled-changed? false)
                                              (reset! run nil))}]]
@@ -2029,6 +2067,11 @@
                    :key     :peripherals
                    :icon    icons/i-usb-drive}
         :render   #(r/as-element [TabPeripherals])}
+       {:menuItem {:content (r/as-element [:span (str/capitalize "history")])
+                   :key     tab-historical-data-key
+                   :icon    icons/i-file-code}
+        :render   #(r/as-element [timeseries/TimeSeries])}
+
        (when id
          (events-plugin/events-section
            {:db-path [::spec/events]
@@ -2097,20 +2140,21 @@
 
 (defn EdgeDetails
   [uuid]
-  (refresh uuid)
   (let [nb-status @(subscribe [::subs/nuvlabox-status])]
-    [components/LoadingPage {:dimmable? true}
-     [:<>
-      [components/NotFoundPortal
-       ::subs/nuvlabox-not-found?
-       :no-nuvlabox-message-header
-       :no-nuvlabox-message-content]
-      [ui/Container {:fluid true}
-       [PageHeader]
-       [MenuBar uuid]
-       [components/ErrorJobsMessage ::job-subs/jobs nil nil
-        #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
-       [job-views/ProgressJobAction nb-status]
-       [TelemetryOutdatedMessage nb-status]]
-      [TabsNuvlaBox]
-      [AddPlaybookModal]]]))
+    (refresh-nuvlaedge-data uuid)
+    (fn []
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/nuvlabox-not-found?
+         :no-nuvlabox-message-header
+         :no-nuvlabox-message-content]
+        [ui/Container {:fluid true}
+         [PageHeader]
+         [MenuBar uuid]
+         [components/ErrorJobsMessage ::job-subs/jobs nil nil
+          #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
+         [job-views/ProgressJobAction nb-status]
+         [TelemetryOutdatedMessage nb-status]]
+        [TabsNuvlaBox]
+        [AddPlaybookModal]]])))

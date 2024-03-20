@@ -2,7 +2,6 @@
   (:require [ajax.core :as ajax]
             [clojure.edn :as edn]
             [clojure.set :as set]
-            [clojure.string :as str]
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -592,7 +591,7 @@
 
 (reg-event-fx
   ::fetch-fleet-stats-failure
-  (fn [{db :db} response]
+  (fn [{db :db} [_ response]]
     (let [{:keys [message]} (response/parse response)]
       {:db (assoc db ::spec/loading? false)
        :fx [[:dispatch [::messages-events/add

@@ -16,13 +16,11 @@
                                 parseISO
                                 startOfDay
                                 subDays
-                                subWeeks
                                 subMonths
                                 subYears
                                 subMilliseconds
                                 subMinutes
                                 subHours
-                                interval
                                 eachDayOfInterval
                                 eachHourOfInterval
                                 eachMinuteOfInterval
@@ -258,10 +256,3 @@
   (isToday date))
 
 (getHours #inst"2023-08-31T12:00:00.000-00:00")
-
-(def date1 #inst"2024-02-17T23:00:00.000-00:00")
-
-(def date2 #inst"2024-03-03T23:00:00.000-00:00")
-
-
-

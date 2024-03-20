@@ -20,12 +20,3 @@
                  :padding          "0.5em"
                  :border           "1px solid #DADADA"}}
    label])
-
-
-
-
-
-
-
-
-

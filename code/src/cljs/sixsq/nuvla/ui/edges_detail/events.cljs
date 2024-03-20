@@ -450,10 +450,10 @@
 
 (reg-event-fx
   ::fetch-edge-availibity-last-15min-failure
-  (fn [{db :db} response]
+  (fn [_ [_ response]]
     (let [{:keys [message]} (response/parse response)]
       {:fx [[:dispatch [::messages-events/add
-                        {:header  "Could not fetch NuvlaEdge availibity"
+                        {:header  "Could not fetch NuvlaEdge availability"
                          :content message
                          :type    :error}]]]})))
 (reg-event-fx
@@ -507,7 +507,7 @@
 
 (reg-event-fx
   ::fetch-edge-stats-failure
-  (fn [{db :db} response]
+  (fn [{db :db} [_ response]]
     (let [{:keys [message]} (response/parse response)]
       {:db (assoc db ::spec/loading? false)
        :fx [[:dispatch [::messages-events/add

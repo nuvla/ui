@@ -15,6 +15,7 @@
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (reg-event-fx
@@ -135,8 +136,7 @@
 
 (reg-event-fx
   ::get-nuvlabox
-  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook ::spec/timespan
-                current-route] :as db} :db} [_ id]]
+  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook ::spec/timespan] :as db} :db} [_ id]]
     (let [id (or id (:id nuvlabox))
           {:keys [timespan-option]} timespan
           [from to] (if (= "custom period" timespan-option)
@@ -160,14 +160,14 @@
                              [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                            (:id nuvlabox-current-playbook)
                                                                            nil)]]
-                             (when (= (get-query-param current-route :edges-detail-tab) "historical-data")
-                               [:dispatch [::fetch-edge-stats
-                                           {:nuvlaedge-id id
-                                            :from         from
-                                            :to           to
-                                            :granularity  (ts-utils/granularity-for-timespan timespan)
-                                            :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats"
-                                                           "power-consumption-stats" "availability-stats"]}]])]})))
+                             [:dispatch [::fetch-edge-availibity-last-15min id]]
+                             [:dispatch [::fetch-edge-stats
+                                         {:nuvlaedge-id id
+                                          :from         from
+                                          :to           to
+                                          :granularity  (ts-utils/granularity-for-timespan timespan)
+                                          :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats"
+                                                         "power-consumption-stats" "availability-stats"]}]]]})))
 
 (reg-event-fx
   ::get-deployments-for-edge
@@ -416,24 +416,62 @@
                                         :last    10000}
                                        #(dispatch [::set-nuvlaedge-release (first (:resources %))])])))))
 
+(defn build-data-uri
+  [id datasets from to granularity]
+  (str "/api/" id "/data?"
+       (->> datasets
+            (map #(str "dataset=" %))
+            (str/join "&"))
+       "&from=" (time/time->utc-str from) "&to=" (time/time->utc-str to) "&granularity=" granularity))
+
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [granularity from to datasets nuvlaedge-id]}]]
-    (let [datasets-to-query (->> datasets
-                                 (map #(str "dataset=" %))
-                                 (str/join "&"))
-          uri               (str "/api/" (or nuvlaedge-id (:id nuvlabox)) "/data?" datasets-to-query "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
-      {:db         (assoc db ::spec/loading? true)
-       :http-xhrio {:method          :get
+  (fn [{{:keys [::spec/nuvlabox current-route] :as db} :db} [_ {:keys [granularity from to datasets nuvlaedge-id]}]]
+    (when (= (get-query-param current-route :edges-detail-tab) "historical-data")
+      (let [uri (build-data-uri (or nuvlaedge-id (:id nuvlabox))
+                                datasets
+                                from to granularity)]
+        {:db         (assoc db ::spec/loading? true)
+         :http-xhrio {:method          :get
+                      :uri             uri
+                      :response-format (ajax/json-response-format {:keywords? true})
+                      :on-success      [::fetch-edge-stats-success]
+                      :on-failure      [::fetch-edge-stats-failure]}}))))
+(reg-event-fx
+  ::fetch-edge-availibity-last-15min-success
+  (fn [{db :db} [_ response]]
+    (let [ts-data            (get-in response [:availability-stats 0 :ts-data])
+          no-of-measurements (count ts-data)
+          avg-online-values  (map (comp :value :avg-online :aggregations) ts-data)
+          avg-percentage     (general-utils/percentage
+                               (apply + avg-online-values)
+                               no-of-measurements)]
+      {:db (assoc db ::spec/availability-15-min avg-percentage)})))
+
+(reg-event-fx
+  ::fetch-edge-availibity-last-15min-failure
+  (fn [{db :db} response]
+    (let [{:keys [message]} (response/parse response)]
+      {:fx [[:dispatch [::messages-events/add
+                        {:header  "Could not fetch NuvlaEdge availibity"
+                         :content message
+                         :type    :error}]]]})))
+(reg-event-fx
+  ::fetch-edge-availibity-last-15min
+  (fn [_ [_ id]]
+    (let [to   (time/now)
+          from (time/subtract-minutes to 15)
+          uri  (build-data-uri id ["availability-stats"] from to "1-minutes")]
+      {:http-xhrio {:method          :get
                     :uri             uri
                     :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::fetch-edge-stats-success]
-                    :on-failure      [::fetch-edge-stats-failure]}})))
+                    :on-success      [::fetch-edge-availibity-last-15min-success]
+                    :on-failure      [::fetch-edge-availibity-last-15min-failure]}})))
 
 (reg-event-fx
   ::fetch-edge-stats-csv
   (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity dataset]}]]
-    (let [uri (str "/api/" (:id nuvlabox) "/data?dataset=" dataset "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
+    (let [uri (build-data-uri (:id nuvlabox) [dataset] from to granularity)]
       {:db         (assoc db ::spec/loading? true)
        :http-xhrio {:method          :get
                     :uri             uri

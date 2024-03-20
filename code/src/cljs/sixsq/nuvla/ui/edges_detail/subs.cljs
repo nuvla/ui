@@ -162,3 +162,7 @@
 (reg-sub
   ::timespan
   :-> ::spec/timespan)
+
+(reg-sub
+  ::availability-15-min
+  :-> ::spec/availability-15-min)

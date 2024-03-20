@@ -5,6 +5,9 @@
                                 addDays
                                 differenceInMilliseconds
                                 differenceInMinutes
+                                endOfDay
+                                startOfDay
+                                isToday
                                 format
                                 formatDistance
                                 intlFormatDistance
@@ -241,6 +244,18 @@
 
 (defn distance-between [date1 date2]
   (formatDistance date1 date2))
+
+(defn end-of-day
+  [date]
+  (endOfDay date))
+
+(defn start-of-day
+  [date]
+  (startOfDay date))
+
+(defn is-today?
+  [date]
+  (isToday date))
 
 (getHours #inst"2023-08-31T12:00:00.000-00:00")
 

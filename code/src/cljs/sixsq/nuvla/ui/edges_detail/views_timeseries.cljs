@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.edges-detail.events :as events]
             [sixsq.nuvla.ui.edges-detail.subs :as subs]
             [sixsq.nuvla.ui.utils.datepicker :as datepicker-utils]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]
@@ -252,14 +253,16 @@
                       :time-intervals   1
                       :locale           (or (time/locale-string->locale-object @locale) @locale)
                       :fixed-height     true
-                      :on-change        on-change-fn-to}]]]))
+                      :on-change        #(on-change-fn-to
+                                           (if (time/is-today? %) (time/now)
+                                             (time/end-of-day %)))}]]]))
 
 (defn ExportDataModal [{:keys [on-close]}]
-  (r/with-let [state (r/atom {:form-data {}
+  (r/with-let [state (r/atom {:form-data               {}
                               :custom-period-selected? false})]
     (fn []
       (let [tr      (subscribe [::i18n-subs/tr])
-            metrics [{:label   (@tr [:average-cpu-load])
+            metrics [{:label (@tr [:average-cpu-load])
                       :value "cpu-stats"}
                      {:label (@tr [:average-disk-usage])
                       :value "disk-stats"}

@@ -551,7 +551,6 @@
     (let [{:keys [from to]} fleet-timespan
           filter-str (get-full-filter-string db)]
       (when (= (get-query-param current-route :view) (name spec/history-view))
-        (js/console.info "get data fleet")
         {:db         (assoc db ::spec/loading? true)
         :http-xhrio {:method          :patch
                      :headers         {:bulk true}

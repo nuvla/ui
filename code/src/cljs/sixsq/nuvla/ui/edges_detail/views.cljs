@@ -1313,28 +1313,20 @@
           :hide-on-scroll true}]]])))
 
 (defn AvailabilityWidget []
-  (let [edge-stats         (subscribe [::subs/edge-stats])
-        tr                 (subscribe [::i18n-subs/tr])
-        availability-stats (:availability-stats @edge-stats)
-        ts-data            (-> availability-stats first :ts-data)
-        no-of-measurements (count ts-data)
-        avg-online-values  (map (comp :value :avg-online :aggregations) ts-data)
-        avg-percentage     (general-utils/percentage (apply + avg-online-values) no-of-measurements)]
-    (dispatch [::events/set-selected-timespan {:timespan-option "last 15 minutes"
-                                               :from            (time/subtract-minutes (time/now) 15)
-                                               :to              (time/now)}])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        avg-percentage (subscribe [::subs/availability-15-min])]
     [ui/TableRow
      [ui/TableCell "Availability"]
      [ui/TableCell {:style {:display         "flex"
                             :align-items     "center"
                             :justify-content "space-between"
                             :white-space     "nowrap"}}
-      [ui/Label {:color (cond (> avg-percentage 95) "green"
-                              (> avg-percentage 75) "yellow"
+      [ui/Label {:color (cond (> @avg-percentage 95) "green"
+                              (> @avg-percentage 75) "yellow"
                               :else "red")
                  :basic true
                  :size  :medium}
-       (str avg-percentage "% " (@tr [:available]))]
+       (str (general-utils/round-up @avg-percentage) "% " (@tr [:available]))]
       [:span {:style {:font-size   "small"
                       :color       "grey"
                       :font-weight 300

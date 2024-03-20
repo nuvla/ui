@@ -31,6 +31,7 @@
 (s/def ::edge-stats (s/nilable any?))
 
 (s/def ::timespan (s/nilable any?))
+(s/def ::availability-15-min nil)
 
 (def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
@@ -54,8 +55,9 @@
                ::edge-stats                   nil
                ::stats-loading?               nil
                ::timespan                     {:timespan-option "last 15 minutes"
-                                               :from   (time/subtract-minutes (time/now) 15)
-                                               :to     (time/now)}})
+                                               :from            (time/subtract-minutes (time/now) 15)
+                                               :to              (time/now)}
+               ::availability-15-min          nil})
 
 (s/def ::deployment-pagination any?)
 

@@ -6,7 +6,6 @@
             [sixsq.nuvla.ui.edges-detail.events :as events]
             [sixsq.nuvla.ui.edges-detail.subs :as subs]
             [sixsq.nuvla.ui.utils.datepicker :as datepicker-utils]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]

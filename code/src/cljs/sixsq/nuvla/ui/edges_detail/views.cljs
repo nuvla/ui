@@ -1271,7 +1271,7 @@
   [{:keys [next-telemetry last-telemetry next-heartbeat] :as _nb-status}]
   (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])]
 
-    [:<>                                                ; next-heartbeat was equivalent to next-telemetry in api-server before v.6.2.0
+    [:<>                                                    ; next-heartbeat was equivalent to next-telemetry in api-server before v.6.2.0
      [TelemetryNextTime (or next-telemetry next-heartbeat)]
      [TelemetryLastTime (or last-telemetry
                             (utils/parse-compute-last-from-next
@@ -1316,18 +1316,18 @@
         tr                 (subscribe [::i18n-subs/tr])
         availability-stats (:availability-stats @edge-stats)
         ts-data            (-> availability-stats first :ts-data)
-        no-of-measurements (-> ts-data count)
+        no-of-measurements (count ts-data)
         avg-online-values  (map (comp :value :avg-online :aggregations) ts-data)
         avg-percentage     (general-utils/percentage (apply + avg-online-values) no-of-measurements)]
     (dispatch [::events/set-selected-timespan {:timespan-option "last 15 minutes"
-                                               :from (time/subtract-minutes (time/now) 15)
-                                               :to   (time/now)}])
+                                               :from            (time/subtract-minutes (time/now) 15)
+                                               :to              (time/now)}])
     [ui/TableRow
      [ui/TableCell "Availability"]
-     [ui/TableCell {:style {:display "flex"
-                            :align-items "center"
+     [ui/TableCell {:style {:display         "flex"
+                            :align-items     "center"
                             :justify-content "space-between"
-                            :white-space "nowrap"}}
+                            :white-space     "nowrap"}}
       [ui/Label {:color (cond (> avg-percentage 95) "green"
                               (> avg-percentage 75) "yellow"
                               :else "red")
@@ -1338,20 +1338,22 @@
                       :color       "grey"
                       :font-weight 300
                       :margin-left 10}} (@tr [:last-15-minutes])]
-      [:a {:style    {:cursor    "pointer"
-                      :font-size "small"
+      [:a {:style    {:cursor      "pointer"
+                      :font-size   "small"
                       :margin-left 10}
-           :on-click #(do (dispatch [::tab-plugin/change-tab {:db-path [::spec/tab]
-                                                              :tab-key :historical-data}])
-                          (.scrollIntoView (.getElementById js/document "nuvlaedge-status")))} [:span (@tr [:show-me]) [ui/Icon {:class icons/i-arrow-right}]]]]]))
+           :on-click #(dispatch [::tab-plugin/change-tab
+                                 {:db-path [::spec/tab]
+                                  :tab-key :historical-data}])}
+       [:span (@tr [:show-me]) [ui/Icon {:class icons/i-arrow-right}]]]]]))
 
 (defn StatusInfo
   [nb-status]
   [:<>
    [ui/Table {:basic "very"}
-    [OperationalStatus nb-status]
-    [AvailabilityWidget]
-    [NextTelemetryStatus nb-status]]
+    [ui/TableBody
+     [OperationalStatus nb-status]
+     [AvailabilityWidget]
+     [NextTelemetryStatus nb-status]]]
    [StatusNotes nb-status]])
 
 (defn TabOverviewStatus

@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
@@ -134,8 +135,10 @@
 
 (reg-event-fx
   ::get-nuvlabox
-  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook ::spec/timespan] :as db} :db} [_ id]]
-    (let [{:keys [timespan-option]} timespan
+  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook ::spec/timespan
+                current-route] :as db} :db} [_ id]]
+    (let [id (or id (:id nuvlabox))
+          {:keys [timespan-option]} timespan
           [from to] (if (= "custom period" timespan-option)
                       [(:from timespan) (:to timespan)]
                       (ts-utils/timespan-to-period timespan-option))]
@@ -157,13 +160,14 @@
                              [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                            (:id nuvlabox-current-playbook)
                                                                            nil)]]
-                             (if-not (= "custom period" timespan-option)
-                               [:dispatch [::fetch-edge-stats {:nuvlaedge-id id
-                                                               :from         from
-                                                               :to           to
-                                                               :granularity  (ts-utils/granularity-for-timespan timespan)
-                                                               :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"]}]]
-                               [])]})))
+                             (when (= (get-query-param current-route :edges-detail-tab) "historical-data")
+                               [:dispatch [::fetch-edge-stats
+                                           {:nuvlaedge-id id
+                                            :from         from
+                                            :to           to
+                                            :granularity  (ts-utils/granularity-for-timespan timespan)
+                                            :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats"
+                                                           "power-consumption-stats" "availability-stats"]}]])]})))
 
 (reg-event-fx
   ::get-deployments-for-edge
@@ -418,8 +422,8 @@
     (let [datasets-to-query (->> datasets
                                  (map #(str "dataset=" %))
                                  (str/join "&"))
-          uri (str "/api/" (or nuvlaedge-id (:id nuvlabox)) "/data?" datasets-to-query "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
-      {:db (assoc db ::spec/loading? true)
+          uri               (str "/api/" (or nuvlaedge-id (:id nuvlabox)) "/data?" datasets-to-query "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
+      {:db         (assoc db ::spec/loading? true)
        :http-xhrio {:method          :get
                     :uri             uri
                     :response-format (ajax/json-response-format {:keywords? true})
@@ -430,7 +434,7 @@
   ::fetch-edge-stats-csv
   (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ {:keys [from to granularity dataset]}]]
     (let [uri (str "/api/" (:id nuvlabox) "/data?dataset=" dataset "&from=" (.toISOString from) "&to=" (.toISOString to) "&granularity=" granularity)]
-      {:db (assoc db ::spec/loading? true)
+      {:db         (assoc db ::spec/loading? true)
        :http-xhrio {:method          :get
                     :uri             uri
                     :response-format (ajax/text-response-format)
@@ -445,8 +449,8 @@
   (fn [{db :db} [_ timespan]]
     (let [{:keys [from to]} timespan]
       {:db (assoc db ::spec/timespan timespan)
-       :fx [[:dispatch [::fetch-edge-stats {:from from
-                                            :to to
+       :fx [[:dispatch [::fetch-edge-stats {:from        from
+                                            :to          to
                                             :granularity (ts-utils/granularity-for-timespan timespan)
                                             :datasets    edge-stats-datasets}]]]})))
 

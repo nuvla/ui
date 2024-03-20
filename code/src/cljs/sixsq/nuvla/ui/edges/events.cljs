@@ -547,22 +547,24 @@
 
 (reg-event-fx
   ::fetch-fleet-stats
-  (fn [{{:keys [::spec/fleet-timespan] :as db} :db}]
+  (fn [{{:keys [::spec/fleet-timespan current-route] :as db} :db}]
     (let [{:keys [from to]} fleet-timespan
           filter-str (get-full-filter-string db)]
-      {:db (assoc db ::spec/loading? true)
-       :http-xhrio {:method          :patch
-                    :headers         {:bulk true}
-                    :uri             "/api/nuvlabox/data"
-                    :format          (ajax/json-request-format)
-                    :params          {:filter      filter-str
-                                      :dataset     fleet-availability-stats
-                                      :from        (time/time->utc-str from)
-                                      :to          (time/time->utc-str to)
-                                      :granularity (ts-utils/granularity-for-timespan fleet-timespan)}
-                    :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::fetch-fleet-stats-success]
-                    :on-failure      [::fetch-fleet-stats-failure]}})))
+      (when (= (get-query-param current-route :view) (name spec/history-view))
+        (js/console.info "get data fleet")
+        {:db         (assoc db ::spec/loading? true)
+        :http-xhrio {:method          :patch
+                     :headers         {:bulk true}
+                     :uri             "/api/nuvlabox/data"
+                     :format          (ajax/json-request-format)
+                     :params          {:filter      filter-str
+                                       :dataset     fleet-availability-stats
+                                       :from        (time/time->utc-str from)
+                                       :to          (time/time->utc-str to)
+                                       :granularity (ts-utils/granularity-for-timespan fleet-timespan)}
+                     :response-format (ajax/json-response-format {:keywords? true})
+                     :on-success      [::fetch-fleet-stats-success]
+                     :on-failure      [::fetch-fleet-stats-failure]}}))))
 
 (reg-event-fx
   ::fetch-fleet-stats-by-edge

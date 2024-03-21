@@ -22,7 +22,6 @@ if (isValidHttpUrl(baseURL)) {
  * See https://playwright.dev/docs/test-configuration.
  */
 const config: PlaywrightTestConfig = {
-  globalSetup: require.resolve('./global-setup'),
   testDir: './test/e2e',
   grepInvert: [/apps/],
   /* Maximum time one test can run for. */
@@ -62,9 +61,16 @@ const config: PlaywrightTestConfig = {
   /* Configure projects for major browsers */
   projects: [
     {
+      name: 'global setup',
+      testMatch: [ 'global-setup.ts']
+    },
+    {
       name: 'chromium',
+      dependencies: ['global setup'],
       use: {
         ...devices['Desktop Chrome'],
+        storageState: '../.auth/user.json',
+
 //         launchOptions: {
 //               slowMo: 500,
 //             },

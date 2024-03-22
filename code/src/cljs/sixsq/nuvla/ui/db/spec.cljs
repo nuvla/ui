@@ -1,11 +1,11 @@
 (ns sixsq.nuvla.ui.db.spec
   (:require [sixsq.nuvla.ui.common-components.deployment-dialog.spec :as deployment-dialog]
             [sixsq.nuvla.ui.common-components.i18n.spec :as i18n]
+            [sixsq.nuvla.ui.common-components.intercom.spec :as intercom]
             [sixsq.nuvla.ui.common-components.job.spec :as job]
             [sixsq.nuvla.ui.common-components.messages.spec :as messages]
             [sixsq.nuvla.ui.common-components.notifications.spec :as notifications]
             [sixsq.nuvla.ui.common-components.resource-log.spec :as resource-log]
-            [sixsq.nuvla.ui.main.intercom.spec :as intercom]
             [sixsq.nuvla.ui.main.spec :as main]
             [sixsq.nuvla.ui.pages.about.spec :as about]
             [sixsq.nuvla.ui.pages.apps.apps-application.spec :as apps-application]

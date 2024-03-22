@@ -1,6 +1,6 @@
-(ns sixsq.nuvla.ui.main.intercom.subs
+(ns sixsq.nuvla.ui.common-components.intercom.subs
   (:require [re-frame.core :refer [reg-sub]]
-            [sixsq.nuvla.ui.main.intercom.spec :as spec]))
+            [sixsq.nuvla.ui.common-components.intercom.spec :as spec]))
 
 
 (reg-sub

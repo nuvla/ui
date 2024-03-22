@@ -248,7 +248,7 @@
         module-content-id    (subscribe [::apps-subs/module-content-id])
         version-index        (apps-utils/find-current-version @versions-map @module-content-id)
         is-module-published? (subscribe [::apps-subs/is-module-published?])
-        {:keys [id created updated name parent-path price path]} @module]
+        {:keys [id created updated name parent-path price]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}

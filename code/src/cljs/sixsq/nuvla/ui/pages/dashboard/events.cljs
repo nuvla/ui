@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.pages.dashboard.events
   (:require [re-frame.core :refer [reg-event-fx]]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.apps.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.pages.credentials.events :as credentials-events]
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
-            [sixsq.nuvla.ui.pages.edges.events :as edges-events]
-            [sixsq.nuvla.ui.main.events :as main-events]))
+            [sixsq.nuvla.ui.pages.edges.events :as edges-events]))
 
 
 (def refresh-action-deployments-id :dashboard-get-deployments-summary)

@@ -1,16 +1,16 @@
 (ns sixsq.nuvla.ui.pages.data.events
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.pages.data-set.spec :as data-set-spec]
-            [sixsq.nuvla.ui.pages.data-set.utils :as data-set-utils]
-            [sixsq.nuvla.ui.pages.data.spec :as spec]
             [sixsq.nuvla.ui.common-components.deployment-dialog.events :as dialog-events]
             [sixsq.nuvla.ui.common-components.deployment-dialog.spec :as dialog-spec]
-            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.pages.data-set.spec :as data-set-spec]
+            [sixsq.nuvla.ui.pages.data-set.utils :as data-set-utils]
+            [sixsq.nuvla.ui.pages.data.spec :as spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-fx

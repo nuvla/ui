@@ -1,13 +1,13 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-store.events
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.apps.apps-store.spec :as spec]
             [sixsq.nuvla.ui.pages.apps.events :as apps-events]
             [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
-            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.main.spec :as main-spec]
-            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 

@@ -1,11 +1,11 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-applications-sets.utils
   (:require
     [clojure.string :as str]
+    [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
+    [sixsq.nuvla.ui.common-components.plugins.module-selector :as module-selector]
     [sixsq.nuvla.ui.pages.apps.apps-applications-sets.events :as events]
     [sixsq.nuvla.ui.pages.apps.apps-applications-sets.spec :as spec]
-    [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
-    [sixsq.nuvla.ui.common-components.plugins.module-selector :as module-selector]))
+    [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]))
 
 (def app-set-app-subtypes
   {spec/app-set-docker-subtype #{apps-utils/subtype-component apps-utils/subtype-application}

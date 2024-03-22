@@ -2,14 +2,14 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.views :as detail]
             [sixsq.nuvla.ui.pages.deployment-sets.events :as events]
             [sixsq.nuvla.ui.pages.deployment-sets.spec :as spec]
             [sixsq.nuvla.ui.pages.deployment-sets.subs :as subs]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as routing-subs]
@@ -173,7 +173,7 @@
        [:div (ops-status-overview-string @tr ops-status)]])))
 
 (defn DeploymentSetCard
-  [{:keys [id updated name state description tags operational-status] :as  deployment-set}]
+  [{:keys [id updated name state description tags operational-status] :as  _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
         href   (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid id)})]

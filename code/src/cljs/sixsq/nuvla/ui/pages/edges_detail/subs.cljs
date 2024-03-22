@@ -154,3 +154,15 @@
   ::nuvlabox-current-playbook
   (fn [db]
     (::spec/nuvlabox-current-playbook db)))
+
+(reg-sub
+  ::edge-stats
+  :-> ::spec/edge-stats)
+
+(reg-sub
+  ::timespan
+  :-> ::spec/timespan)
+
+(reg-sub
+  ::availability-15-min
+  :-> ::spec/availability-15-min)

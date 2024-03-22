@@ -5,13 +5,14 @@
             [reitit.frontend :as rf]
             [reitit.frontend.easy :as rfe]
             [reitit.frontend.history :as rfh]
-            [sixsq.nuvla.ui.app.view :refer [LayoutPage
-                                             LayoutAuthentication]]
+            [sixsq.nuvla.ui.app.view :refer [LayoutAuthentication
+                                             LayoutPage]]
+            [sixsq.nuvla.ui.common-components.notifications.views :refer [notifications-view]]
+            [sixsq.nuvla.ui.config :refer [base-path]]
             [sixsq.nuvla.ui.pages.about.views :refer [About]]
             [sixsq.nuvla.ui.pages.apps.views :as app-views]
             [sixsq.nuvla.ui.pages.cimi.views :refer [ApiView]]
             [sixsq.nuvla.ui.pages.clouds.views :refer [clouds-view]]
-            [sixsq.nuvla.ui.config :refer [base-path]]
             [sixsq.nuvla.ui.pages.credentials.views :refer [credentials-view]]
             [sixsq.nuvla.ui.pages.dashboard.views :refer [dashboard-view]]
             [sixsq.nuvla.ui.pages.data-set.views :as data-set-views]
@@ -22,8 +23,9 @@
             [sixsq.nuvla.ui.pages.docs.views :refer [documentation]]
             [sixsq.nuvla.ui.pages.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
-            [sixsq.nuvla.ui.common-components.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.pages.profile.views :refer [profile]]
+            [sixsq.nuvla.ui.pages.ui-demo.views :refer [UiDemo]]
+            [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]
             [sixsq.nuvla.ui.routing.events :as events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as utils]
@@ -31,9 +33,7 @@
             [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
             [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
             [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
-            [sixsq.nuvla.ui.pages.ui-demo.views :refer [UiDemo]]
-            [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]
-            [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]))
+            [sixsq.nuvla.ui.unknown-resource :refer [UnknownResource]]))
 
 (defn- create-route-name
   ([page-alias]

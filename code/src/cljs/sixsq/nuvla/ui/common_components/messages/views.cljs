@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.common-components.messages.views
   (:require [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.pages.cimi-detail.events :as cimi-detail-events]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.messages.events :as events]
             [sixsq.nuvla.ui.common-components.messages.subs :as subs]
+            [sixsq.nuvla.ui.pages.cimi-detail.events :as cimi-detail-events]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]

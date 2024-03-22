@@ -1,20 +1,20 @@
 (ns sixsq.nuvla.ui.app.view
-  (:require [re-frame.core :refer [subscribe dispatch]]
+  (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.components :as main-components]
             [sixsq.nuvla.ui.main.intercom.views :as intercom]
+            [sixsq.nuvla.ui.main.subs :as subs]
             [sixsq.nuvla.ui.main.views :as main-views]
             [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
             [sixsq.nuvla.ui.pages.apps.apps-applications-sets.views]
             [sixsq.nuvla.ui.pages.cimi.subs :as api-subs]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.subs :as subs]
-            [sixsq.nuvla.ui.session.views :as session-views]
+            [sixsq.nuvla.ui.routing.events :as routing-events]
+            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.routing.subs :as route-subs]
+            [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.session.events :as session-events]
             [sixsq.nuvla.ui.session.subs :as session-subs]
-            [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.routing.events :as routing-events]
-            [sixsq.nuvla.ui.routing.utils :as routing-utils]
-            [sixsq.nuvla.ui.routing.routes :as routes]
+            [sixsq.nuvla.ui.session.views :as session-views]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn WatcherRedirectProtectedPage

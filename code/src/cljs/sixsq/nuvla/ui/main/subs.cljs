@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.main.subs
   (:require [re-frame.core :refer [reg-sub]]
-            [sixsq.nuvla.ui.pages.cimi.subs :as api-subs]
             [sixsq.nuvla.ui.main.spec :as spec]
+            [sixsq.nuvla.ui.pages.cimi.subs :as api-subs]
             [sixsq.nuvla.ui.session.subs :as session-subs]))
 
 (reg-sub

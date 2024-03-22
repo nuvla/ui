@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.pages.cimi-detail.events
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.pages.cimi-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.cimi.events :as cimi-events]
             [sixsq.nuvla.ui.pages.cimi.spec :as cimi-spec]
-            [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]

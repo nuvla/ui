@@ -2,9 +2,9 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.common-components.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.pages.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.pages.cimi.views :refer [MenuBar]]
-            [sixsq.nuvla.ui.common-components.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 

@@ -1,13 +1,13 @@
 (ns sixsq.nuvla.ui.pages.deployments-detail.events
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.common-components.job.events :as job-events]
+            [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
+            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.credentials.events :as creds-events]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
-            [sixsq.nuvla.ui.common-components.job.events :as job-events]
-            [sixsq.nuvla.ui.main.spec :as main-spec]
-            [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.response :as response]))

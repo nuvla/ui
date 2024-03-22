@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.pages.data-set.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.pages.data-set.utils :as utils]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.pages.data-set.utils :as utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 
 

@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.pages.docs.events
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.pages.docs.spec :as spec]
-            [sixsq.nuvla.ui.main.spec :as main-spec]))
+            [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.pages.docs.spec :as spec]))
 
 
 (reg-event-fx

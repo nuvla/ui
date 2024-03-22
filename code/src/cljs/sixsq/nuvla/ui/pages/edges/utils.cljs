@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.pages.edges.utils
   (:require [clojure.string :as str]
-            [sixsq.nuvla.ui.pages.edges.spec :as spec]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
+            [sixsq.nuvla.ui.pages.edges.spec :as spec]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]

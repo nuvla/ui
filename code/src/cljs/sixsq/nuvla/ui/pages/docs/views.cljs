@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.pages.docs.views
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.docs-detail.views :as docs-details-view]
             [sixsq.nuvla.ui.pages.docs.events :as events]
             [sixsq.nuvla.ui.pages.docs.subs :as subs]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.general :as general-utils]

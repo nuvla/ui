@@ -3,12 +3,14 @@
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.pages.about.subs :as about-subs]
+            [sixsq.nuvla.ui.pages.about.utils :as about-utils]
             [sixsq.nuvla.ui.pages.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.pages.edges.events :as events]
             [sixsq.nuvla.ui.pages.edges.spec :as spec]
             [sixsq.nuvla.ui.pages.edges.subs :as subs]
             [sixsq.nuvla.ui.pages.edges.utils :as utils]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -337,20 +339,20 @@
 
 (defn- InstallMethod
   [_]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        k8s-enabled? (subscribe [::about-subs/feature-flag-enabled? about-utils/feature-edge-on-k8s])]
     (fn [{:keys [install-strategy-error install-strategy playbooks-toggle default-ttl usb-trigger-key-ttl]}]
       (if
-        (nil? (#{docker-based compose-install usb-install} @install-strategy))
+        (and (nil? (#{docker-based compose-install usb-install} @install-strategy)) @k8s-enabled?)
         [:div {:display :flex}
          [ui/CardGroup {:centered    true
                         :itemsPerRow 2}
           [ui/Card
-           {:on-click (fn [] (do (reset! install-strategy docker-based)
-                                 (reset! playbooks-toggle nil)))}
+           {:on-click #(do (reset! install-strategy docker-based)
+                           (reset! playbooks-toggle nil))}
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker"]
             [icons/DockerIcon {:size :massive}]]]
-
           [ui/Card
            {:on-click (fn [] (reset! install-strategy k8s-based))
             :raised   true
@@ -426,11 +428,12 @@
           [:a {:href   usb-doc-url
                :target "_blank"}
            (@tr [:nuvlabox-modal-more-info])]]
-         [:a {:href     ""
-              :on-click (fn [] (do (reset! install-strategy nil)
-                                   (reset! playbooks-toggle nil)))} [icons/ArrowLeftIcon] (@tr [:back-to-selection])]]))))
-
-
+         (when @k8s-enabled?
+           [:a {:href     ""
+                :on-click (fn []
+                            (reset! install-strategy nil)
+                            (reset! playbooks-toggle nil))}
+            [icons/ArrowLeftIcon] (@tr [:back-to-selection])])]))))
 (defn AddModal
   []
   (let [modal-id                   spec/modal-add-id
@@ -450,10 +453,7 @@
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
-                                    :nb-assets   (->> first-nb-release
-                                                      :compose-files
-                                                      (map :scope)
-                                                      set)}
+                                    :nb-assets   #{""}}
         nuvlabox-release-data      (r/atom default-release-data)
         advanced?                  (r/atom false)
         install-strategy-default   nil
@@ -643,39 +643,22 @@
                                        (swap! nuvlabox-release-data
                                               assoc :nb-selected nb-selected)
                                        (swap! nuvlabox-release-data assoc :nb-assets
-                                              (set (map :scope (:compose-files nb-selected)))))))}]
+                                              #{""}))))}]
 
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}
                      (@tr [:nuvlabox-release-notes])]
-                    [ui/Container
-                     (when (> (count compose-files) 1)
-                       [ui/Popup
-                        {:trigger        (r/as-element [:span (@tr [:additional-modules])])
-                         :content        (str (@tr [:additional-modules-popup]))
-                         :on             "hover"
-                         :hide-on-scroll true}])
-                     (doall
-                       (for [{:keys [scope]} compose-files]
-                         (when-not (#{"core" ""} scope)
-                           [ui/Checkbox {:key       scope
-                                         :label     scope
-                                         :checked   (contains?
-                                                      (:nb-assets @nuvlabox-release-data)
-                                                      scope)
-                                         :style     {:margin "1em"}
-                                         :on-change (ui-callback/checked
-                                                      (fn [checked]
-                                                        (if checked
-                                                          (swap! nuvlabox-release-data assoc
-                                                                 :nb-assets
-                                                                 (conj nb-assets scope))
-                                                          (swap! nuvlabox-release-data assoc
-                                                                 :nb-assets
-                                                                 (-> @nuvlabox-release-data
-                                                                     :nb-assets
-                                                                     (disj scope))))))}])))]
+                    [edges-detail/AdditionalModulesTable compose-files
+                     {:on-module-change (fn [scope]
+                                          (ui-callback/checked
+                                            (fn [checked]
+                                              (swap! nuvlabox-release-data assoc
+                                                     :nb-assets
+                                                     (if checked
+                                                       (conj nb-assets scope)
+                                                       (disj nb-assets scope))))))
+                      :module-checked?  (fn [scope] (contains? (:nb-assets @nuvlabox-release-data) scope))}]
 
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:nuvlabox-modal-install-method])]

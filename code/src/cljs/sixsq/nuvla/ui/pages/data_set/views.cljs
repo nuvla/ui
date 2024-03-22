@@ -2,6 +2,13 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.common-components.filter-comp.views :as filter-comp]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.apps.utils :as application-utils]
             [sixsq.nuvla.ui.pages.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.pages.data-set.events :as events]
@@ -11,14 +18,8 @@
             [sixsq.nuvla.ui.pages.data.events :as data-events]
             [sixsq.nuvla.ui.pages.data.spec :as data-spec]
             [sixsq.nuvla.ui.pages.data.subs :as data-subs]
-            [sixsq.nuvla.ui.common-components.filter-comp.views :as filter-comp]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.session.subs :as session-subs]
+            [sixsq.nuvla.ui.utils.datepicker :as datepicker-utils]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.map :as map]
@@ -222,49 +223,44 @@
         [ui/Form
          [ui/FormGroup {:widths (if extra 3 2)}
           [ui/FormField
-           ;; FIXME: Find a better way to set the field width.
-           [ui/DatePicker
-            {:custom-input     (r/as-element
-                                 [ui/Input {:label (str/capitalize
-                                                     (@tr [:from]))
-                                            :style {:min-width "20em"}}])
-             :selected         time-start
-             :start-date       time-start
-             :end-date         time-end
-             :max-date         time-end
-             :selects-start    true
-             :show-time-select true
-             :time-format      time-format
-             :time-intervals   1
-             :locale           (or (time/locale-string->locale-object @locale) @locale)
-             :fixed-height     true
-             :date-format      date-format
-             :on-change        #(do (dispatch [::events/set-time-period
-                                               [% time-end]])
-                                    (refresh-fn))}]]
-          ;; FIXME: Find a better way to set the field width.
+           [datepicker-utils/datepickerWithLabel
+            [datepicker-utils/label (@tr [:from])]
+            [ui/DatePicker
+             {:selected         time-start
+              :start-date       time-start
+              :end-date         time-end
+              :max-date         time-end
+              :selects-start    true
+              :show-time-select true
+              :time-format      time-format
+              :time-intervals   1
+              :locale           (or (time/locale-string->locale-object @locale) @locale)
+              :fixed-height     true
+              :className        "datepicker"
+              :date-format      date-format
+              :on-change        #(do (dispatch [::events/set-time-period
+                                                [% time-end]])
+                                     (refresh-fn))}]]]
           [ui/FormField
-           [ui/DatePicker {:custom-input     (r/as-element
-                                               [ui/Input
-                                                {:label (str/capitalize
-                                                          (@tr [:to]))
-                                                 :style {:min-width "20em"}}])
-                           :selected         time-end
-                           :start-date       time-start
-                           :end-date         time-end
-                           :min-date         time-start
-                           :max-date         (time/days-before -1)
-                           :selects-end      true
-                           :show-time-select true
-                           :time-format      time-format
-                           :time-intervals   1
-                           :locale           (or (time/locale-string->locale-object @locale) @locale)
-                           :fixed-height     true
-                           :date-format      date-format
-                           :on-change        #(do (dispatch
-                                                    [::events/set-time-period
-                                                     [time-start %]])
-                                                  (refresh-fn))}]]
+           [datepicker-utils/datepickerWithLabel
+            [datepicker-utils/label (str/capitalize (@tr [:to]))]
+            [ui/DatePicker {:className        "datepicker"
+                            :selected         time-end
+                            :start-date       time-start
+                            :end-date         time-end
+                            :min-date         time-start
+                            :max-date         (time/days-before -1)
+                            :selects-end      true
+                            :show-time-select true
+                            :time-format      time-format
+                            :time-intervals   1
+                            :locale           (or (time/locale-string->locale-object @locale) @locale)
+                            :fixed-height     true
+                            :date-format      date-format
+                            :on-change        #(do (dispatch
+                                                     [::events/set-time-period
+                                                      [time-start %]])
+                                                   (refresh-fn))}]]]
           (when extra
             [ui/FormField extra])]]))))
 

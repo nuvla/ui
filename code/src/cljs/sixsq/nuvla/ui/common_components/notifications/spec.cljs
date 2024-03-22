@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.common-components.notifications.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.utils.spec :as utils-spec]
-            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]))
+            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 (s/def ::name utils-spec/nonblank-string)
 (s/def ::description utils-spec/nonblank-string)

@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.common-components.deployment-dialog.views-infra-services
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.pages.clouds-detail.views :as clouds-detail]
             [sixsq.nuvla.ui.common-components.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.common-components.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.common-components.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.pages.clouds-detail.views :as clouds-detail]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]

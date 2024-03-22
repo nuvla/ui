@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-applications-sets.subs
   (:require
     [re-frame.core :refer [reg-sub]]
+    [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.pages.apps.apps-applications-sets.spec :as spec]
-    [sixsq.nuvla.ui.pages.apps.subs :as apps-subs]
-    [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]))
+    [sixsq.nuvla.ui.pages.apps.subs :as apps-subs]))
 
 (reg-sub ::db identity)
 

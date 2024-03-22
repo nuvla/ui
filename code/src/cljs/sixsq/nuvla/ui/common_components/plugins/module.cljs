@@ -3,10 +3,10 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href str-pathify]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -133,10 +133,6 @@
 (defn- update-env-value-by-index
   [env-vars index value]
   (assoc-in env-vars [index ::new-value] value))
-
-(defn- reset-env-value-by-index
-  [env-vars index]
-  (update env-vars index dissoc ::new-value))
 
 (defn- update-file-content-by-index
   [files index file-content]

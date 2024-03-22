@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.common-components.resource-log.events
   (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.common-components.resource-log.spec :as spec]))
+            [sixsq.nuvla.ui.common-components.resource-log.spec :as spec]
+            [sixsq.nuvla.ui.main.events :as main-events]))
 
 (reg-event-fx
   ::reset

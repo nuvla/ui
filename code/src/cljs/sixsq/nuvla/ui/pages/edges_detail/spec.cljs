@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]))
+            [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (s/def ::nuvlabox (s/nilable any?))
 (s/def ::nuvlabox-status (s/nilable any?))
@@ -27,6 +28,10 @@
 (s/def ::nuvlaedge-release (s/nilable (s/keys :req-un [::id
                                                        ::pre-release])))
 
+(s/def ::edge-stats (s/nilable any?))
+
+(s/def ::timespan (s/nilable any?))
+(s/def ::availability-15-min nil)
 
 (def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
@@ -46,7 +51,13 @@
                ::events                       (events-plugin/build-spec
                                                 :default-items-per-page 15)
                ::tab                          (tab-plugin/build-spec)
-               ::nuvlaedge-release            nil})
+               ::nuvlaedge-release            nil
+               ::edge-stats                   nil
+               ::stats-loading?               nil
+               ::timespan                     {:timespan-option "last 15 minutes"
+                                               :from            (time/subtract-minutes (time/now) 15)
+                                               :to              (time/now)}
+               ::availability-15-min          nil})
 
 (s/def ::deployment-pagination any?)
 

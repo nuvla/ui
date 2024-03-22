@@ -1,11 +1,11 @@
 (ns sixsq.nuvla.ui.pages.apps.subs
   (:require [clojure.set :as set]
             [re-frame.core :refer [reg-sub subscribe]]
+            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.apps.spec :as spec]
             [sixsq.nuvla.ui.pages.apps.utils :as utils]
             [sixsq.nuvla.ui.pages.apps.utils-detail :as utils-detail]
-            [sixsq.nuvla.ui.main.subs :as main-subs]
-            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 

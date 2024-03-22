@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.pages.docs-detail.views
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.docs.events :as docs-events]
             [sixsq.nuvla.ui.pages.docs.subs :as docs-subs]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.collapsible-card :as cc]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]

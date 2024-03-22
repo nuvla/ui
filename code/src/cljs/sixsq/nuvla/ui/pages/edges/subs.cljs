@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.pages.edges.subs
   (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.pages.edges.spec :as spec]
             [sixsq.nuvla.ui.pages.edges.utils :as utils]
-            [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
@@ -226,3 +226,11 @@
 (reg-sub
   ::selection
   :-> ::spec/select)
+
+(reg-sub
+  ::fleet-stats
+  :-> ::spec/fleet-stats)
+
+(reg-sub
+  ::fleet-timespan
+  :-> ::spec/fleet-timespan)

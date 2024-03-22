@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.pages.cimi.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch reg-sub subscribe]]
+            [sixsq.nuvla.ui.common-components.filter-comp.utils :as utils]
             [sixsq.nuvla.ui.pages.cimi.events :as events]
             [sixsq.nuvla.ui.pages.cimi.spec :as spec]
-            [sixsq.nuvla.ui.common-components.filter-comp.utils :as utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub

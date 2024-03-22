@@ -1,12 +1,12 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-applications-sets.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.pages.apps.apps-applications-sets.spec :as spec]
-    [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
-    [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
     [sixsq.nuvla.ui.common-components.plugins.module-selector :as module-selector]
+    [sixsq.nuvla.ui.pages.apps.apps-applications-sets.spec :as spec]
+    [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
+    [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-db

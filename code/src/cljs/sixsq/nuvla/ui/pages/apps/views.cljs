@@ -1,5 +1,8 @@
 (ns sixsq.nuvla.ui.pages.apps.views
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.common-components.deployment-dialog.views :as deployment-dialog-views]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.apps.apps-application.events :as apps-application-events]
             [sixsq.nuvla.ui.pages.apps.apps-application.views :as apps-application-views]
             [sixsq.nuvla.ui.pages.apps.apps-applications-sets.events :as apps-applications-sets-events]
@@ -13,9 +16,6 @@
             [sixsq.nuvla.ui.pages.apps.subs :as subs]
             [sixsq.nuvla.ui.pages.apps.utils :as utils]
             [sixsq.nuvla.ui.pages.apps.views-detail :as views-detail]
-            [sixsq.nuvla.ui.common-components.deployment-dialog.views :as deployment-dialog-views]
-            [sixsq.nuvla.ui.main.components :as components]
-            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 

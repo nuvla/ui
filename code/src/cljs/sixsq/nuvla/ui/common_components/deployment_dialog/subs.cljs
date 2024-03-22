@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.common-components.deployment-dialog.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub subscribe]]
-            [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.common-components.deployment-dialog.spec :as spec]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 

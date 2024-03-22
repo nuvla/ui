@@ -1,5 +1,7 @@
 (ns sixsq.nuvla.ui.pages.dashboard.views
   (:require [re-frame.core :refer [dispatch subscribe]]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.apps.apps-store.subs :as apps-store-subs]
             [sixsq.nuvla.ui.pages.credentials.subs :as credentials-subs]
             [sixsq.nuvla.ui.pages.dashboard.events :as events]
@@ -8,8 +10,6 @@
             [sixsq.nuvla.ui.pages.deployments.views :as deployments-views]
             [sixsq.nuvla.ui.pages.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.utils.icons :as icons]

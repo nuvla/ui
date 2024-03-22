@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.pages.deployment-sets-detail.utils
-  (:require [sixsq.nuvla.ui.pages.apps.apps-store.spec :as spec]
-            [sixsq.nuvla.ui.common-components.plugins.module :refer [get-version-id]]))
+  (:require [sixsq.nuvla.ui.common-components.plugins.module :refer [get-version-id]]
+            [sixsq.nuvla.ui.pages.apps.apps-store.spec :as spec]))
 
 (def state-new "NEW")
 (def state-starting "STARTING")

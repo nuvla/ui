@@ -6,9 +6,9 @@
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.pages.cimi.views :refer [SelectFieldsView]]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.pages.cimi.views :refer [SelectFieldsView]]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -402,7 +402,8 @@
                              :basic    true
                              :disabled (and (not disabled-tooltip) (not= :none @selection-status))
                              :content  (or disabled-tooltip (@tr [:select-at-least-one-item]))}])))]]
-        [:div {:style {:padding-right "1rem"}}
+        [:div {:style {:padding-right "1rem"}
+               :data-testid "bulk-edit-success-message"}
          @bulk-edit-success-message]])
      [:div
       {:style {:heigh            "2rem"

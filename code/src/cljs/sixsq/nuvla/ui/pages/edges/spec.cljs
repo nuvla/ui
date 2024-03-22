@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.table :refer [build-ordering] :as table-plugin]))
+            [sixsq.nuvla.ui.common-components.plugins.table :refer [build-ordering] :as table-plugin]
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (def resource-name "nuvlabox")
 
@@ -30,6 +31,9 @@
 (s/def ::edges-tags (s/nilable (s/* string?)))
 (s/def ::edges-without-edit-rights any?)
 
+(s/def ::fleet-stats (s/nilable any?))
+
+(s/def ::fleet-timespan (s/nilable any?))
 ; ssh key association
 (s/def ::ssh-keys-available any?)
 (s/def ::nuvlabox-clusters any?)
@@ -46,7 +50,7 @@
    :created-by :refresh-interval :last-online :version :tags :manager])
 
 (s/def ::ordering
- (s/coll-of (s/cat :field (set columns) :order #{"desc" "asc" :desc :asc})))
+  (s/coll-of (s/cat :field (set columns) :order #{"desc" "asc" :desc :asc})))
 
 (def default-ordering [[:created :desc]])
 
@@ -58,8 +62,9 @@
 (def table-view :table)
 (def map-view :map)
 (def cluster-view :cluster)
+(def history-view :history)
 
-(def view-types [cards-view table-view map-view cluster-view])
+(def view-types [cards-view table-view map-view cluster-view history-view])
 
 
 (def modal-add-id ::add)
@@ -96,7 +101,10 @@
    ::additional-filter             nil
    ::external-restriction-filter   nil
    ::select                        (table-plugin/build-bulk-edit-spec)
-   })
+   ::fleet-timespan                (let [[from to] (ts-utils/timespan-to-period ts-utils/timespan-last-15m)]
+                                     {:timespan-option ts-utils/timespan-last-15m
+                                      :from            from
+                                      :to              to})})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 25)})

@@ -4,8 +4,8 @@
             [clojure.string :as str]
             [re-frame.core :refer [reg-fx]]
             [sixsq.nuvla.client.api :as api]
-            [sixsq.nuvla.ui.pages.apps.utils :as utils]
-            [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]))
+            [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
+            [sixsq.nuvla.ui.pages.apps.utils :as utils]))
 
 
 (reg-fx

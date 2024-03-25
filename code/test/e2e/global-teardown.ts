@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-test('Logout logs me out', async ({ page, context }, { project, config }) => {
-  const { baseURL } = config.projects[0].use;
-  const welcomePageUrl = baseURL + '/ui/welcome';
-  const signInPageUrl = baseURL + '/ui/sign-in';
+test('teardown', async ({ page}) => {
+
+  const welcomePageUrl = process.env.UI_BASE_URL + '/ui/welcome';
+  const signInPageUrl = process.env.UI_BASE_URL + '/ui/sign-in';
 
   await page.goto(welcomePageUrl);
   await page.getByText(/^logout$/i).click();

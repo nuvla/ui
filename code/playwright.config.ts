@@ -62,7 +62,13 @@ const config: PlaywrightTestConfig = {
   projects: [
     {
       name: 'global setup',
-      testMatch: [ 'global-setup.ts']
+      testMatch:  'global-setup.ts',
+      teardown: 'global teardown',
+
+    },
+    {
+      name: 'global teardown',
+      testMatch: 'global-teardown.ts'
     },
     {
       name: 'chromium',

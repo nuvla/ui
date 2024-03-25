@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch dispatch-sync subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
             [sixsq.nuvla.ui.utils.form-fields :as ff]

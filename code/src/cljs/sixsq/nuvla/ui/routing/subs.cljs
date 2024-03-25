@@ -37,9 +37,29 @@
   :-> :current-route)
 
 (reg-sub
-  ::route-name
+  ::current-route-data
   :<- [::current-route]
-  :-> (comp :name :data))
+  :-> :data)
+
+(reg-sub
+  ::route-name
+  :<- [::current-route-data]
+  :-> :name)
+
+(reg-sub
+  ::current-layout
+  :<- [::current-route-data]
+  :-> :layout)
+
+(reg-sub
+  ::protected-page?
+  :<- [::current-route-data]
+  :-> :protected?)
+
+(reg-sub
+  ::current-view
+  :<- [::current-route-data]
+  :-> :view)
 
 (reg-sub
   ::canonical-route-name

@@ -2,17 +2,12 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
-            [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.events :as events]
-            [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
-            [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
-            [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
-            [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
             [sixsq.nuvla.ui.session.subs :as subs]
             [sixsq.nuvla.ui.session.utils :as utils]
             [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -268,43 +263,3 @@
      [:div {:style {:position "absolute"
                     :bottom   40}}
       [follow-us]]]))
-
-
-(defn RightPanel
-  []
-  (let [first-path (subscribe [::route-subs/nav-path-first])]
-    (case @first-path
-      "sign-in" [sign-in-views/Form]
-      "sign-up" [sign-up-views/Form]
-      "reset-password" [reset-password-views/Form]
-      "set-password" [set-password-views/Form]
-      "sign-in-token" [sign-in-views/FormTokenValidation]
-      [sign-in-views/Form])))
-
-
-(defn SessionPage
-  [navigate?]
-  (let [session      (subscribe [::subs/session])
-        query-params (subscribe [::route-subs/nav-query-params])
-        tr           (subscribe [::i18n-subs/tr])]
-    (when (and navigate? @session)
-      (dispatch [::routing-events/navigate (or (some->
-                                                 (:redirect @query-params)
-                                                 js/decodeURIComponent)
-                                               (name->href routes/home))]))
-    (when-let [error (:error @query-params)]
-      (dispatch [::events/set-error-message
-                 (or (@tr [(keyword error)]) error)]))
-    (when-let [message (:message @query-params)]
-      (dispatch [::events/set-success-message
-                 (or (@tr [(keyword message)]) message)]))
-    [ui/Grid {:stackable true
-              :columns   2
-              :style     {:margin           0
-                          :background-color "white"
-                          :padding          0}}
-
-     [ui/GridColumn {:class "login-left"}
-      [LeftPanel]]
-     [ui/GridColumn
-      [RightPanel]]]))

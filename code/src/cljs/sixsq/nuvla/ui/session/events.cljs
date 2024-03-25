@@ -4,10 +4,11 @@
             [day8.re-frame.http-fx]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.cimi.events :as cimi-events]
+            [sixsq.nuvla.ui.common-components.i18n.spec :as i18n-spec]
+            [sixsq.nuvla.ui.common-components.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.config :as config]
-            [sixsq.nuvla.ui.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
+            [sixsq.nuvla.ui.pages.cimi.events :as cimi-events]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.effects :as fx]
@@ -25,36 +26,28 @@
 
 (reg-event-fx
   ::set-session
-  (fn [{{:keys [::spec/session
-                ::main-spec/nav-path
-                ::main-spec/pages] :as db} :db} [_ new-session]]
-    (let [query-str (.-search (.-location js/window))
-          redirect  (when (and (nil? new-session)
-                               (->> nav-path first (get pages) :protected?))
-                      (str (str/join "/" nav-path) query-str))]
-      (cond-> {:db (assoc db ::spec/session new-session
-                             ::spec/session-loading? false)}
-              new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])
-
-              redirect (update :fx conj [:dispatch [::routing-events/navigate routes/sign-in nil (when redirect {:redirect redirect})]])
-              ;; force refresh templates collection cache when not the same user (different session)
-              (not= session new-session) (assoc :fx
-                                                [[:dispatch [::cimi-events/get-cloud-entry-point]]
-                                                 [:dispatch [:sixsq.nuvla.ui.main.events/force-refresh-content]]
-                                                 [:dispatch [::get-session-groups]]
-                                                 [:dispatch [:sixsq.nuvla.ui.main.events/notifications-polling]]
-                                                 [:dispatch [:sixsq.nuvla.ui.profile.events/search-existing-customer]]
-                                                 [:dispatch [:sixsq.nuvla.ui.profile.events/search-existing-vendor]]
-                                                 [:dispatch [::search-groups]]
-                                                 [:dispatch [::get-peers]]])))))
+  (fn [{{:keys [::spec/session] :as db} :db} [_ new-session]]
+    (cond-> {:db (assoc db ::spec/session new-session
+                           ::spec/session-loading? false)}
+            new-session (assoc ::fx/automatic-logout-at-session-expiry [new-session])
+            ;; force refresh templates collection cache when not the same user (different session)
+            (not= session new-session) (assoc :fx
+                                              [[:dispatch [::cimi-events/get-cloud-entry-point]]
+                                               [:dispatch [:sixsq.nuvla.ui.main.events/force-refresh-content]]
+                                               [:dispatch [::get-session-groups]]
+                                               [:dispatch [:sixsq.nuvla.ui.main.events/notifications-polling]]
+                                               [:dispatch [:sixsq.nuvla.ui.pages.profile.events/search-existing-customer]]
+                                               [:dispatch [:sixsq.nuvla.ui.pages.profile.events/search-existing-vendor]]
+                                               [:dispatch [::search-groups]]
+                                               [:dispatch [::get-peers]]]))))
 
 
 (reg-event-fx
   ::logout
   (fn []
-    {::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
-                                (dispatch [::intercom-events/clear-events])
-                                (dispatch [::routing-events/navigate routes/sign-in]))]}))
+    {::cimi-api-fx/logout [#(do
+                              (dispatch [::intercom-events/clear-events])
+                              (dispatch [::set-session nil]))]}))
 
 
 (reg-event-db
@@ -247,3 +240,15 @@
                                    :orderby "name:asc,id:asc"}
                            #(dispatch [::set-groups %])]
      :fx                  [[:dispatch [::get-session-groups]]]}))
+
+(reg-event-fx
+  ::init
+  (fn [{{:keys [::i18n-spec/tr
+                ::main-spec/nav-query-params]} :db}]
+    (let [{:keys [error message]} nav-query-params]
+      {:fx [(when error
+              [:dispatch [::set-error-message
+                          (or (tr [(keyword error)]) error)]])
+            (when message
+              [:dispatch [::set-success-message
+                          (or (tr [(keyword message)]) message)]])]})))

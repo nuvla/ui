@@ -130,7 +130,6 @@
                               :status (-> d :aggregations :avg-online :value)})))]
     [:div#nuvlaedge-status
      [plot/Bar {:updateMode "none"
-                :responsive false
                 :height     100
                 :data       {:datasets (if (seq ts-data)
                                          [{:data               dataset

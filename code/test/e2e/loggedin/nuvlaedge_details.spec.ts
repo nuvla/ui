@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
-  const { baseURL } = config.projects[0].use;
+      const baseURL = process.env.UI_BASE_URL;
   await page.goto(baseURL + '/ui/welcome');
   await page.waitForResponse((resp) => resp.url().includes('get-subscription'));
 
@@ -26,7 +26,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
       }
     }
   );
-  await page.route('api/nuvlabox-status/**', (route) => {
+  await page.route(baseURL+'/api/nuvlabox-status/**', (route) => {
     route.fulfill({
       status: 200,
       body: JSON.stringify(nuvlaboxStatusMock),

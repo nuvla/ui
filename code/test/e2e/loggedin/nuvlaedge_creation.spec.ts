@@ -2,13 +2,20 @@ import { test, expect } from '@playwright/test';
 
 test('Creating an Edge with an older version',  async ({ page, context }, { project, config })  => {
 
-  const { baseURL } = config.projects[0].use;
+      const baseURL = process.env.UI_BASE_URL;
 
   await page.goto(baseURL + '/ui/welcome');
 
-  await page.route('api/nuvlabox-release', async (route) => {
-        route.fulfill({ status: 200, body: JSON.stringify(NuvlaEdgeRelease())});
-      });
+  await page.pause();
+
+  await page.route( baseURL+'/api/nuvlabox-release', async route => {
+   console.log("inside route");
+          await route.fulfill({ status: 200, body: JSON.stringify(NuvlaEdgeRelease())});
+        });
+
+
+
+
   await page.getByRole('link', { name: 'Edges' }).click();
 
   const newEdgeName = 'NE with older release';
@@ -49,9 +56,9 @@ test('Creating an Edge with an older version',  async ({ page, context }, { proj
 
 });
 
-test.afterAll(async ({ page, context }, { project, config }) => {
+test('delete older NE', async ({ page, context }, { project, config }) => {
 
-  const { baseURL } = config.projects[0].use;
+      const baseURL = process.env.UI_BASE_URL;
 
 
   await page.goto(baseURL + '/ui/welcome');
@@ -66,7 +73,7 @@ test.afterAll(async ({ page, context }, { project, config }) => {
   const newEdgeName = 'NE with older release';
   await page.getByPlaceholder('Search ...').click();
   page.getByPlaceholder('Search ...').fill(newEdgeName);
-  await page.waitForResponse('/api/nuvlabox');
+  await page.waitForResponse(baseURL+'/api/nuvlabox');
   await page.waitForTimeout(1000);
 
 
@@ -84,7 +91,7 @@ test.afterAll(async ({ page, context }, { project, config }) => {
       await page.waitForURL(`${baseURL}/ui/edges?view=table`);
       await page.getByPlaceholder('Search ...').click();
       page.getByPlaceholder('Search ...').fill(newEdgeName);
-      await page.waitForResponse('/api/nuvlabox');
+      await page.waitForResponse(baseURL+'/api/nuvlabox');
       await page.waitForTimeout(500);
       found = await page.getByRole('link', { name: new RegExp(newEdgeName) }).count();
   }

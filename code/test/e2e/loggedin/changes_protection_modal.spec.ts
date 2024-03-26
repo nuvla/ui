@@ -3,7 +3,7 @@ import { test, expect, Page } from '@playwright/test';
 test.use({ actionTimeout: 10000, navigationTimeout: 10000 });
 
 test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page }, { config }) => {
-  const { baseURL } = config.projects[0].use;
+  const baseURL = process.env.UI_BASE_URL;
   await page.goto(baseURL + '/ui/welcome');
 
   await setUp(page, baseURL);

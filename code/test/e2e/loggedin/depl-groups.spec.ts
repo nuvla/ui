@@ -1,19 +1,22 @@
 import { test, expect } from '@playwright/test';
 
 test('test', async ({ page }, { config }) => {
-  const { baseURL } = config.projects[0].use;
+  const baseURL = process.env.UI_BASE_URL;
 
   const testDeplGroupName = 'Depl Group ' + Math.random().toString().substr(2, 5) + ' - Test should delete me!'
 
   await page.goto(baseURL + '/ui/welcome');
 
   await page.getByRole('link', { name: 'deployments' }).click();
+
   await expect(page).toHaveURL(baseURL + '/ui/deployments');
 
   await page.getByRole('link', { name: 'Deployment Groups' }).click();
+
   await expect(page).toHaveURL(baseURL + '/ui/deployment-groups');
 
   await page.getByText('Add').first().click();
+
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-groups/create`));
 
   await page.getByRole('row', { name: 'Name' }).locator('i').click();
@@ -23,11 +26,13 @@ test('test', async ({ page }, { config }) => {
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill(testDeplGroupName);
 
   await page.getByRole('row', { name: 'Name' }).getByRole('button').click();
+
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-groups/create`));
 
   await page.locator('.nuvla-apps button.add-button').first().click();
 
-  await page.getByRole('link', { name: 'BlackBox This app allows users to trigger the creation of an airplane… Project: sixsq Vendor: Vendorgroup/sixsq-vendor Price: free trial and then €0.33/day blackbox ready Add to selection' }).getByRole('button', { name: 'Add to selection' }).click();
+  await page.getByRole('link', { name: 'BlackBox This app allows users to trigger the creation of an airplane… Project: sixsq Vendor: Vendorgroup/sixsq-vendor Price: free trial and then EUR 0.33/day blackbox ready Add to selection' }).click();
+
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-groups/create`));
 
   await page.locator('.nuvla-edges button.add-button').click();
@@ -62,6 +67,7 @@ test('test', async ({ page }, { config }) => {
   await page.locator('table tbody').getByRole('link').first().click();
 
   await page.getByRole('link', { name: 'Deployments' }).first().click();
+
   await expect(page).toHaveURL(baseURL + '/ui/deployments');
 
   await page.getByRole('link', { name: 'Deployment Groups' }).click();

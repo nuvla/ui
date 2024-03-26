@@ -10,7 +10,7 @@
     "release": "./node_modules/.bin/shadow-cljs release nuvla-ui",
     "clean": "rm -rf resources/public/js/* && rm -rf target",
     "test:e2e:gen": "playwright codegen",
-    "test:e2e": "playwright test --config=playwright.config.ts --project=chromium",
+    "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:watch": "chokidar 'test/**/*.{spec,test}.{js,ts}' -c 'npm run test:e2e -- --retries=0 {path}'",
     "test:e2e:headed": "playwright test --config=playwright.config.ts --project=chromium --headed",
     "test:e2e:headed:watch": "chokidar 'test/**/*.{spec,test}.{js,ts}' -c 'npm run test:e2e:headed -- --retries=0 {path}'",
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/nuvla/ui",
   "devDependencies": {
-    "@playwright/test": "^1.27.1",
+    "@playwright/test": "^1.42.1",
     "@types/node": "^18.16.12",
     "chokidar-cli": "^3.0.0",
     "dotenv": "^16.0.3",

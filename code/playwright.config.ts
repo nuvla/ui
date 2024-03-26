@@ -50,9 +50,9 @@ const config: PlaywrightTestConfig = {
     storageState: 'storageState.json',
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL,
     timezoneId: 'Europe/Zurich',
+    locale: 'de-CH',
+
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
@@ -68,7 +68,10 @@ const config: PlaywrightTestConfig = {
     },
     {
       name: 'global teardown',
-      testMatch: 'global-teardown.ts'
+      testMatch: 'global-teardown.ts',
+      use: {
+        storageState: '../.auth/user.json'
+           }
     },
     {
       name: 'chromium',
@@ -80,7 +83,7 @@ const config: PlaywrightTestConfig = {
 //         launchOptions: {
 //               slowMo: 500,
 //             },
-      },
+      }
     },
   ],
 };

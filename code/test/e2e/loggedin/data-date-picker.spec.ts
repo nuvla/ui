@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('Datepicker test', async ({ page }, { project, config }) => {
-  const { baseURL } = config.projects[0].use;
+  const baseURL = process.env.UI_BASE_URL;
   const dataURL = baseURL + '/ui/data';
   await page.goto(baseURL + '/ui/welcome');
   await page.getByRole('link', { name: 'data' }).click();
@@ -16,7 +16,6 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   date.setHours(8);
 
   await page.locator('input[type="text"]').first().click();
-
   await page.route('/api/data-record', (route) => {
     const payload = route.request().postDataJSON();
     const matches = payload.filter.match(/\d{4}-\d{2}-(\d{2})/);
@@ -26,10 +25,11 @@ test('Datepicker test', async ({ page }, { project, config }) => {
     route.fulfill({ status: 200 });
   });
 
+
   await Promise.all([
     // Format of updated react-datepicker
     page.getByRole('option', { name: new RegExp(format(date)) }).click(),
-    page.waitForResponse('/api/data-record'),
+    page.waitForResponse(baseURL+'/api/data-record'),
   ]);
 
   const isoDateString = dateStringRemoveMS(date.toISOString());
@@ -44,7 +44,7 @@ test('Datepicker test', async ({ page }, { project, config }) => {
 
   const newTime = `0${date.getHours()}:${date.getMinutes()}`;
 
-  await Promise.all([page.getByText(newTime).click(), page.waitForResponse('/api/data-record')]);
+  await Promise.all([page.getByText(newTime).click(), page.waitForResponse(baseURL+'/api/data-record')]);
 });
 
 const format = new Intl.DateTimeFormat('en-US', {

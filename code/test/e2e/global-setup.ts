@@ -5,7 +5,7 @@ const authFile = '../.auth/user.json';
 
 test('authenticate', async ({page}) => {
 
-await  page.setExtraHTTPHeaders({
+  await  page.setExtraHTTPHeaders({
     'CF-Access-Client-Secret': process.env.CF_CLIENT_SECRET,
     'CF-Access-Client-Id': process.env.CF_CLIENT_ID,
   });
@@ -32,5 +32,6 @@ await  page.setExtraHTTPHeaders({
   await page.waitForURL(/ui\/welcome/);
   // Save signed-in state to 'storageState.json'.
   await page.context().storageState( { path: authFile});
+
 
   });

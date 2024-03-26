@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('Navigate from projects to apps', async ({ page }, { config }) => {
-  const { baseURL } = config.projects[0].use;
+      const baseURL = process.env.UI_BASE_URL;
   await page.goto(baseURL + '/ui/welcome');
 
   await page.getByRole('link', { name: 'Apps' }).nth(0).click();

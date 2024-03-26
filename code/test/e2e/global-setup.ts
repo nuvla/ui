@@ -1,7 +1,7 @@
 const { chromium, expect, test } = require('@playwright/test');
 
 
-const authFile = '../.auth/user.json';
+const authFile = 'storageState.json';
 
 test('authenticate', async ({page}) => {
 

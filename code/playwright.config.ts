@@ -69,7 +69,7 @@ const config: PlaywrightTestConfig = {
       name: 'global teardown',
       testMatch: 'global-teardown.ts',
       use: {
-        storageState: '../.auth/user.json'
+        storageState: 'storageState.json'
            }
     },
     {
@@ -77,7 +77,7 @@ const config: PlaywrightTestConfig = {
       dependencies: ['global setup'],
       use: {
         ...devices['Desktop Chrome'],
-        storageState: '../.auth/user.json',
+        storageState: 'storageState.json',
 
 //         launchOptions: {
 //               slowMo: 500,

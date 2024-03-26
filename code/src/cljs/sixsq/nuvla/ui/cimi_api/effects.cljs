@@ -8,7 +8,7 @@
             [sixsq.nuvla.client.api :as api]
             [sixsq.nuvla.client.async :as async-client]
             [sixsq.nuvla.client.authn :as authn]
-            [sixsq.nuvla.ui.messages.events :as messages-events]
+            [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.routing.effects :refer [host-url]]
             [sixsq.nuvla.ui.utils.defines :as defines]
             [sixsq.nuvla.ui.utils.general :as general-utils]

@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
+            [sixsq.nuvla.ui.pages.cimi.subs :as cimi-subs]
             [sixsq.nuvla.ui.session.spec :as spec]
             [sixsq.nuvla.ui.session.utils :as utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]

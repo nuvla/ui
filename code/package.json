@@ -46,6 +46,7 @@
     "@uiw/react-codemirror": "^4.19.9",
     "bluebird": "^3.7.2",
     "chart.js": "^3.9.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
     "codemirror": "^6.0.1",
     "date-fns": "^2.30.0",
     "diff": "^5.0.0",

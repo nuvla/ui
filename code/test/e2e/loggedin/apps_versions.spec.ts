@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('Changing apps version does not affect other app', async ({ page }, { project, config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   const marketplaceUrl = baseURL + '/ui/apps';
   await page.goto(baseURL + '/ui/welcome');
   await page.getByRole('link', { name: 'Apps' }).click();

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('test', async ({ page }, { config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
 
   const testDeplGroupName = 'Depl Group ' + Math.random().toString().substr(2, 5) + ' - Test should delete me!'
 

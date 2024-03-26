@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('test', async ({ page, context }, { project, config }) => {
-      const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
 
   await page.getByText('We enable your edge, as a ServiceDeploy any containerised app, to the edge, Kube').click();

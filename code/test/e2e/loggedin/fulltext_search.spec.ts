@@ -11,7 +11,7 @@ test.describe('Full text search', () => {
     // 'data'
   ]) {
     test('on page ' + pageName, async ({ page }, { config }) => {
-      const baseURL = process.env.UI_BASE_URL;
+      const { baseURL } = config.projects[0].use;
       await page.goto(baseURL + '/ui/welcome');
       await page.getByRole('link', { name: pageName }).click();
       const search = page.getByPlaceholder(/Search/);

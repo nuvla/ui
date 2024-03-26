@@ -6,7 +6,7 @@ test.use({
 });
 
 test.beforeAll(({}, { config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   let mockedNetwork = fs.readFileSync('./test/e2e/loggedin/logger_base.har', { encoding: 'utf-8' });
   const expiryDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 7).toISOString();
 
@@ -35,7 +35,7 @@ test.beforeAll(({}, { config }) => {
 });
 
 test('testing logger component', async ({ page }, { config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
 
   await page.routeFromHAR('./test/e2e/loggedin/logger_test.har', { url: '**/api/**' });
   await page.goto(baseURL + '/ui/welcome');
@@ -52,9 +52,7 @@ test('testing logger component', async ({ page }, { config }) => {
 
   await page.getByRole('option', { name: 'web' }).click();
   // set up creating resource log
-  await page.route(baseURL+'/api/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18/create-log', async route => {
-
-    console.log(route);
+  await page.route('api/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18/create-log', async route => {
     await route.fulfill({
       status: 200,
       body: '{\n  "status" : 201,\n  "message" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743 created",\n  "resource-id" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743"\n}',
@@ -62,7 +60,7 @@ test('testing logger component', async ({ page }, { config }) => {
   });
 
 
-  await page.route(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743/fetch', async route => {
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743/fetch', async route => {
     await route.fulfill({
       status: 200,
       body: '{\n  "status" : 202,\n  "message" : "starting resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743 with async job/c6bab054-f92a-4747-b6fe-07681e6c1fd0",\n  "resource-id" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743",\n  "location" : "job/c6bab054-f92a-4747-b6fe-07681e6c1fd0"\n}',
@@ -70,7 +68,7 @@ test('testing logger component', async ({ page }, { config }) => {
   });
 
   // set up first resource-log request
-  await page.route(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
     route.fulfill({
       status: 200,
       body: resourceLogResponses[0].content.text,
@@ -78,7 +76,7 @@ test('testing logger component', async ({ page }, { config }) => {
   });
   await page.locator('a[aria-label=play]').click();
 
-  await waitForLogger(page, baseURL);
+  await waitForLogger(page);
 
   // First log line should be hidden, because auto scrolled to bottom
   expect(
@@ -90,56 +88,56 @@ test('testing logger component', async ({ page }, { config }) => {
   // disable auto scroll
   await page.getByText('Go Live').click();
 
-  await page.route(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
     route.fulfill({
       status: 200,
       body: resourceLogResponses[1].content.text,
     });
   });
 
-  await waitForLogger(page, baseURL);
+  await waitForLogger(page);
 
-  await page.route(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
     route.fulfill({
       status: 200,
       body: resourceLogResponses[2].content.text,
     });
   });
-  await waitForLogger(page, baseURL);
+  await waitForLogger(page);
 
-  await page.route(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
     route.fulfill({
       status: 200,
       body: resourceLogResponses[3].content.text,
     });
   });
-  await waitForLogger(page, baseURL);
+  await waitForLogger(page);
 
-  await page.route(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
     route.fulfill({
       status: 200,
       body: resourceLogResponses[4].content.text,
     });
   });
 
-  await waitForLogger(page, baseURL);
+  await waitForLogger(page);
 
-  await page.route(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
     route.fulfill({
       status: 200,
       body: resourceLogResponses[5].content.text,
     });
   });
 
-  await waitForLogger(page, baseURL);
+  await waitForLogger(page);
 
-  await page.route(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', (route) => {
     route.fulfill({
       status: 200,
       body: resourceLogResponses[6].content.text,
     });
   });
-  await waitForLogger(page, baseURL);
+  await waitForLogger(page);
 
   expect(
     page.getByText(
@@ -156,7 +154,7 @@ test('testing logger component', async ({ page }, { config }) => {
 });
 
 function waitForLogger(page: Page, baseURL) {
-  return page.waitForResponse(baseURL+'/api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', { timeout: 10200 });
+  return page.waitForResponse('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', { timeout: 10200 });
 }
 
 const resourceLogResponses = [

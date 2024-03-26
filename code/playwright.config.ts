@@ -47,11 +47,10 @@ const config: PlaywrightTestConfig = {
   use: {
     screenshot: 'only-on-failure',
     video: process.env.CI ? 'retain-on-failure' : 'on',
-    storageState: 'storageState.json',
-    /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     timezoneId: 'Europe/Zurich',
     locale: 'de-CH',
+    baseURL,
 
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */

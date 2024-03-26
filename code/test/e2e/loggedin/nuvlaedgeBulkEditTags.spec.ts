@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('Edges selection and bulk edits', async ({ page, context }, { project, config }) => {
-      const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.waitForResponse((resp) => resp.url().includes('get-subscription'));
   await page.getByRole('link', { name: 'Edges' }).click();

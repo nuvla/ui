@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
-      const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.waitForResponse((resp) => resp.url().includes('get-subscription'));
   await page.getByRole('link', { name: 'Edges' }).click();
@@ -51,7 +51,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 
   await page.getByPlaceholder('Search ...').click();
   page.getByPlaceholder('Search ...').fill(newEdgeNameStart);
-  await page.waitForResponse(baseURL+'/api/nuvlabox');
+  await page.waitForResponse('/api/nuvlabox');
   await page.waitForTimeout(200);
   expect(await page.getByRole('link', { name: new RegExp(newEdgeNameStart) }).count()).toBe(0);
 

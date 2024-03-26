@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('Navigation api pages and title check', async ({ page }, { project, config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   const apiUrl = baseURL + '/ui/api';
 

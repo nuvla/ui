@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.skip('Creates and deletes api key credentials', async ({ page }, { project, config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   const credentialsUrl = baseURL + '/ui/credentials';
   await page.goto(baseURL + '/ui/welcome');
   await page.getByRole('link', { name: 'Credentials' }).click();

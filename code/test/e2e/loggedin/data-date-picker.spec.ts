@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('Datepicker test', async ({ page }, { project, config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   const dataURL = baseURL + '/ui/data';
   await page.goto(baseURL + '/ui/welcome');
   await page.getByRole('link', { name: 'data' }).click();

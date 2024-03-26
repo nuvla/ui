@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.use({ navigationTimeout: 5000, actionTimeout: 5000 });
 
 test('Creating a new project', async ({ page }, { config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
 
   await page.getByRole('link', { name: 'Apps' }).nth(0).click();

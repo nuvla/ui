@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.use({ navigationTimeout: 5000, actionTimeout: 5000 });
 
 test('Creating a new app', async ({ page }, { config }) => {
-  const baseURL = process.env.UI_BASE_URL;
+  const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
 
   await page.getByRole('link', { name: 'Apps' }).nth(0).click();
@@ -85,6 +85,6 @@ test('Creating a new app', async ({ page }, { config }) => {
   await page.getByPlaceholder('Search...').click();
   await page.getByPlaceholder('Search...').fill('creation');
 
-  await page.waitForResponse(baseURL+'api/module');
+  await page.waitForResponse('api/module');
   expect(await page.getByRole('link', { name: new RegExp('-creation') }).count()).toBe(0);
 });

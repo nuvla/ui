@@ -14,7 +14,7 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
-(defn graph-options [tr {:keys [timespan-option] :as timespan} {:keys [title y-config plugins]}]
+(defn graph-options [tr {:keys [timespan-option] :as timespan} {:keys [title y-config plugins x-config]}]
   (let [[from to] (if-not (= "custom period" timespan-option)
                     (ts-utils/timespan-to-period (:timespan-option timespan))
                     [(:from timespan) (:to timespan)])]
@@ -24,18 +24,19 @@
                       plugins)
      :elements {:point {:radius 1}}
 
-     :scales   {:x {:type  "time"
-                    :min   from
-                    :max   to
-                    :time  {:unit (case (:timespan-option timespan)
-                                    ("last 15 minutes"
-                                      "last hour"
-                                      "last 6 hours") "minute"
-                                    "last day" "hour"
-                                    "last year" "month"
-                                    "day")}
-                    :title {:display "true"
-                            :text    (@tr [:time])}}
+     :scales   {:x (merge {:type  "time"
+                           :min   from
+                           :max   to
+                           :time  {:unit (case (:timespan-option timespan)
+                                           ("last 15 minutes"
+                                             "last hour"
+                                             "last 6 hours") "minute"
+                                           "last day" "hour"
+                                           "last year" "month"
+                                           "day")}
+                           :title {:display "true"
+                                   :text    (@tr [:time])}}
+                          x-config)
                 :y y-config}}))
 
 (defn timestamp+percentage [ts-data load-key capacity-key]
@@ -129,6 +130,7 @@
                               :status (-> d :aggregations :avg-online :value)})))]
     [:div#nuvlaedge-status
      [plot/Bar {:updateMode "none"
+                :responsive false
                 :height     100
                 :data       {:datasets (if (seq ts-data)
                                          [{:data               dataset
@@ -149,15 +151,16 @@
                                          [])}
 
                 :options    (graph-options tr selected-timespan {:title (@tr [:nuvlaedge-availability])
-                                                              :plugins {:tooltip {:callbacks {:label (fn [tooltipItems _data]
-                                                                                                       (when-let [status (.. ^Map tooltipItems -raw -status)]
-                                                                                                         (str "available: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
-                                                                        :legend  {:display false}}
-                                                              :y-config {:max   1
-                                                                         :min   0
-                                                                         :grid  {:display false}
-                                                                         :ticks {:display false}
-                                                                         :title {:display false}}})}]]))
+                                                                 :plugins {:tooltip {:callbacks {:label (fn [tooltipItems _data]
+                                                                                                          (when-let [status (.. ^Map tooltipItems -raw -status)]
+                                                                                                            (str "available: " (* (general-utils/round-up status :n-decimal 2) 100) "%")))}}
+                                                                           :legend  {:display false}}
+                                                                 :y-config {:max   1
+                                                                            :min   0
+                                                                            :grid  {:display false}
+                                                                            :ticks {:display false}
+                                                                            :title {:display false}}
+                                                                 :x-config {:ticks {:source "data"}}})}]]))
 (defn NetworkDataTimeSeries [_selected-timespan data]
   (when data
     (let [interfaces         (mapv #(get-in % [:dimensions :network.interface]) data)

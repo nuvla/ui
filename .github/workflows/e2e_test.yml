@@ -46,6 +46,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
       - name: Await CF Pages
@@ -59,7 +61,7 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           commitHash: ${{ github.event.pull_request.head.sha }}
       - name: Run Playwright logged in tests
-        run: npx playwright test loggedin
+        run: npx playwright test
         env:
           UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
           UI_E2E_TEST_USERNAME: ${{ secrets.UI_E2E_TEST_USERNAME }}
@@ -72,14 +74,6 @@ jobs:
           name: playwright
           path: code/playwright-report/
           retention-days: 30
-      - name: Run Playwright logout tests
-        run: npx playwright test logout
-        env:
-          UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
-          UI_E2E_TEST_USERNAME: ${{ secrets.UI_E2E_TEST_USERNAME }}
-          UI_E2E_TEST_PASSWORD: ${{ secrets.UI_E2E_TEST_PASSWORD }}
-          CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
-          CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
       - uses: actions/upload-artifact@v3
         if: always()
         with:

@@ -281,13 +281,24 @@
       :else 0)))
 
 (defn version-difference [version1 version2]
-  (let [[m_1 m_2 m_3] (parse-version-number version1)
-        [n_1 n_2 n_3] (parse-version-number version2)]
+  (let [[m_1 m_2 m_3 :as m] (parse-version-number version1)
+        [n_1 n_2 n_3 :as n] (parse-version-number version2)]
     (cond
-      (not= m_1 n_1) {:major      (- m_1 n_1)}
-      (not= m_2 n_2) {:minor      (- m_2 n_2)}
-      (not= m_3 n_3) {:patch      (- m_3 n_3)}
+      (or (empty? m) (empty? n)) nil
+      (not= m_1 n_1) {:major (- m_1 n_1)}
+      (not= m_2 n_2) {:minor (- m_2 n_2)}
+      (not= m_3 n_3) {:patch (- m_3 n_3)}
       :else nil)))
+
+(defn ne-version-outdated
+  [latest-version version]
+  (when (and latest-version version)
+    (let [{:keys [major minor patch] :as res} (version-difference latest-version version)]
+     (cond
+       (or (nil? res) (neg? (or major minor patch))) nil
+       (or major (> minor 3)) :outdated-major-version
+       (or minor patch) :outdated-minor-version
+       :else nil))))
 
 (defn sort-by-version [e]
   (sort-by :release compare-versions e))

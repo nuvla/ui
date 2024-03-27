@@ -29,7 +29,7 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   await Promise.all([
     // Format of updated react-datepicker
     page.getByRole('option', { name: new RegExp(format(date)) }).click(),
-    page.waitForResponse(baseURL+'/api/data-record'),
+    page.waitForResponse('/api/data-record'),
   ]);
 
   const isoDateString = dateStringRemoveMS(date.toISOString());
@@ -44,7 +44,7 @@ test('Datepicker test', async ({ page }, { project, config }) => {
 
   const newTime = `0${date.getHours()}:${date.getMinutes()}`;
 
-  await Promise.all([page.getByText(newTime).click(), page.waitForResponse(baseURL+'/api/data-record')]);
+  await Promise.all([page.getByText(newTime).click(), page.waitForResponse('/api/data-record')]);
 });
 
 const format = new Intl.DateTimeFormat('en-US', {

@@ -15,7 +15,7 @@ test('Deletes all nuvlaedges created through e2e tests', async ({ page, context 
   const newEdgeName = `e2e Testing: Edge creation and deletion in`;
   await page.getByPlaceholder('Search ...').click();
   page.getByPlaceholder('Search ...').fill(newEdgeName);
-  await page.waitForResponse(baseURL+'/api/nuvlabox');
+  await page.waitForResponse('/api/nuvlabox');
   await page.waitForTimeout(1000);
 
   let found = await page.getByRole('link', { name: new RegExp(newEdgeName) }).count();

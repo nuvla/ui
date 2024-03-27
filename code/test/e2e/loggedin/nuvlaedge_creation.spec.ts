@@ -84,7 +84,7 @@ test('delete older NE', async ({ page, context }, { project, config }) => {
       await page.waitForURL(`${baseURL}/ui/edges?view=table`);
       await page.getByPlaceholder('Search ...').click();
       page.getByPlaceholder('Search ...').fill(newEdgeName);
-      await page.waitForResponse(baseURL+'/api/nuvlabox');
+      await page.waitForResponse('/api/nuvlabox');
       await page.waitForTimeout(500);
       found = await page.getByRole('link', { name: new RegExp(newEdgeName) }).count();
   }

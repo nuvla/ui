@@ -52,16 +52,16 @@ test('testing logger component', async ({ page }, { config }) => {
 
   await page.getByRole('option', { name: 'web' }).click();
   // set up creating resource log
-  await page.route('api/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18/create-log', async route => {
-    await route.fulfill({
+  await page.route('api/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18/create-log', (route) => {
+    route.fulfill({
       status: 200,
       body: '{\n  "status" : 201,\n  "message" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743 created",\n  "resource-id" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743"\n}',
     });
   });
 
 
-  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743/fetch', async route => {
-    await route.fulfill({
+  await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743/fetch', (route) => {
+    route.fulfill({
       status: 200,
       body: '{\n  "status" : 202,\n  "message" : "starting resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743 with async job/c6bab054-f92a-4747-b6fe-07681e6c1fd0",\n  "resource-id" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743",\n  "location" : "job/c6bab054-f92a-4747-b6fe-07681e6c1fd0"\n}',
     });
@@ -153,7 +153,7 @@ test('testing logger component', async ({ page }, { config }) => {
   expect(page.locator('.cm-line')).toHaveText('');
 });
 
-function waitForLogger(page: Page, baseURL) {
+function waitForLogger(page: Page) {
   return page.waitForResponse('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743', { timeout: 10200 });
 }
 

@@ -73,7 +73,7 @@ const config: PlaywrightTestConfig = {
            }
     },
     {
-      name: 'chromium',
+      name: 'logged-in-tests',
       dependencies: ['global setup'],
       use: {
         ...devices['Desktop Chrome'],

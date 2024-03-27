@@ -43,13 +43,11 @@ test('logout', async ({ page}) => {
 
   await page.goto(welcomePageUrl);
   await page.getByText(/^logout$/i).click();
-  // await expect(page).toHaveURL(signInPageUrl);
+  await expect(page).toHaveURL(welcomePageUrl);
 
-  await page.goto(welcomePageUrl);
-
-  // Testing redirect to login page when navigating
+    // Testing redirect to login page when navigating
   await page.getByRole('link', { name: 'Edges' }).click();
-  await expect(page).toHaveURL(signInPageUrl);
+  await expect(page).toHaveURL(signInPageUrl + '?redirect=edges?view=table');
 
   await page.goto(welcomePageUrl);
   // Testing existence of working login button

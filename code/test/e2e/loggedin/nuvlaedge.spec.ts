@@ -40,7 +40,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
     .locator('span:has-text("Enabled and ready to be used. Please copy this cronjob and add it to your system") i')
     .click();
 
-  await page.locator('.close').click();
+  await page.getByRole('button', { name: 'close' }).click();
 
   await page.getByRole('link', { name: new RegExp(newEdgeName) }).click();
 

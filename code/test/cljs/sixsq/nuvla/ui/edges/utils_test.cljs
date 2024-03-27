@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.edges.utils-test
   (:require [clojure.test :refer [are deftest is]]
-            [sixsq.nuvla.ui.edges.utils :as t]))
+            [sixsq.nuvla.ui.pages.edges.utils :as t]))
 
 (deftest score-vulnerability-test
   (are [result input]

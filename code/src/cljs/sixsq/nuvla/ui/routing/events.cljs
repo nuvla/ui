@@ -59,7 +59,6 @@
                        [:dispatch [::reset-ignore-changes-protection]]]}
           revert {:fx [[:dispatch [::navigate-back]]
                        [:dispatch [::reset-ignore-changes-protection]]]}]
-
       (if (and changes-protection? (not ignore-changes-protection))
         {:db (assoc db
                ::main-spec/ignore-changes-modal event
@@ -112,7 +111,7 @@
     (let [{:keys [route-name
                   path-params
                   query-params]} (utils/new-route-data current-route new-partial-route-data)
-          push-state?            (:push-state? new-partial-route-data)]
+          push-state? (:push-state? new-partial-route-data)]
       {:db (assoc db ::ignore-changes-protection true)
        :fx [[(if push-state? ::fx/push-state ::fx/replace-state)
              (utils/name->href

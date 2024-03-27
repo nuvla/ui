@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.session.components
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.i18n.views :as i18n-views]
+            [sixsq.nuvla.ui.common-components.i18n.views :as i18n-views]
             [sixsq.nuvla.ui.session.events :as events]
             [sixsq.nuvla.ui.session.subs :as subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]

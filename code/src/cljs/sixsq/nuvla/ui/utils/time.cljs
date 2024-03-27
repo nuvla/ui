@@ -1,16 +1,29 @@
 (ns sixsq.nuvla.ui.utils.time
-  (:require ["date-fns" :refer [addMilliseconds
+  (:require ["date-fns" :refer [addDays
+                                addHours
+                                addMilliseconds
+                                addMinutes
                                 differenceInMilliseconds
                                 differenceInMinutes
+                                eachDayOfInterval
+                                eachHourOfInterval
+                                eachMinuteOfInterval
+                                endOfDay
                                 format
                                 formatDistance
+                                getHours
                                 intlFormatDistance
                                 isAfter
                                 isBefore
+                                isToday
                                 parseISO
                                 startOfDay
                                 subDays
-                                subMilliseconds]]
+                                subHours
+                                subMilliseconds
+                                subMinutes
+                                subMonths
+                                subYears]]
             ["date-fns/locale/fr$default" :as fr]))
 
 (def ^:const default-locale "en")
@@ -37,11 +50,41 @@
   [date milliseconds]
   (addMilliseconds date milliseconds))
 
+(defn add-minutes
+  [date minutes]
+  (addMinutes date minutes))
+
+(defn add-hours
+  [date hours]
+  (addHours date hours))
+
+(defn add-days
+  [date days]
+  (addDays date days))
+
 
 (defn subtract-milliseconds
   [date milliseconds]
   (subMilliseconds date milliseconds))
 
+(defn subtract-minutes
+  [date minutes]
+  (subMinutes date minutes))
+
+(defn subtract-hours
+  [date minutes]
+  (subHours date minutes))
+(defn subtract-days
+  [date days]
+  (subDays date days))
+
+(defn subtract-months
+  [date months]
+  (subMonths date months))
+
+(defn subtract-years
+  [date years]
+  (subYears date years))
 
 (defn parse-iso8601
   ([iso8601]
@@ -134,6 +177,13 @@
    (-> (now locale) (startOfDay) (subDays n))))
 
 
+(defn months-before
+  ([n]
+   (months-before n default-locale))
+  ([n locale]
+   (-> (now locale) (startOfDay) (subMonths n))))
+
+
 (defn time-value
   [iso8601]
   (str (-> iso8601 parse-iso8601 ago) " (" iso8601 ")"))
@@ -173,3 +223,35 @@
    (some-> time-str parse-iso8601 ago))
   ([time-str locale]
    (some-> time-str parse-iso8601 (ago locale))))
+
+(defn hours-between [{:keys [start-date end-date]}]
+  (eachHourOfInterval (clj->js {:start start-date
+                                :end   end-date})))
+
+(defn days-between [{:keys [start-date end-date]}]
+  (eachDayOfInterval (clj->js {:start start-date
+                                :end   end-date})))
+
+(defn minutes-between [{:keys [start-date end-date]}]
+  (eachMinuteOfInterval (clj->js {:start start-date
+                                :end   end-date})))
+
+(defn before? [date1 date2]
+  (isBefore date1 date2))
+
+(defn distance-between [date1 date2]
+  (formatDistance date1 date2))
+
+(defn end-of-day
+  [date]
+  (endOfDay date))
+
+(defn start-of-day
+  [date]
+  (startOfDay date))
+
+(defn is-today?
+  [date]
+  (isToday date))
+
+(getHours #inst"2023-08-31T12:00:00.000-00:00")

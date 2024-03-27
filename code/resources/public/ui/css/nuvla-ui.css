@@ -1177,3 +1177,19 @@ i.link.icon.app-details-add-config-param-icon:hover {
 .missing-edges-panel {
   margin-top: 7px;
 }
+
+.datepicker {
+  border: none !important;
+  padding-left: 0.5em;
+  font-family: 'Poppins';
+  font-size: small;
+  min-width: 20em !important;
+}
+
+
+.ts-dropdown {
+  min-width: 120px;
+  display: flex;
+  justify-content: space-between;
+  color: black;
+}

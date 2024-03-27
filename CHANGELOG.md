@@ -2,9 +2,19 @@
 
 ## Unreleased
 
-- Query params based browsing for tabs on Notifications page
-
 ## Released
+
+## [2.36.5] - 2024-03-21
+
+- Deps - Added chartjs-adapter-date-fns to format dates in charts
+- Edges detail page - NuvlaEdge historical view
+- Edges page - NuvlaEdge fleet historical availability view
+- Edges detail page - update NE modal align with add modal
+- Edges page - add NE modal - Do not select additional modules by default at NE creation, and update display
+- Apps page - Add Files section to DGs App configuration page
+- Deployment group page - Add Files section to DGs App configuration page
+- Edges page - Fix race condition in fetching edges when creating DG with dynamic filter
+- Notifications page - Query params based browsing for tabs
 
 ## [2.36.4] - 2024-02-21
 

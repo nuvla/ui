@@ -4,6 +4,18 @@
 
 ## Released
 
+## [2.36.6] - 2024-03-28
+
+- Edges page - Add indicator next to version number in NuvlaEdges view to indicate whether a version is outdated
+- Edges page - Availability history generate x-axis ticks based on data, for NE availability graph
+- UI Refactor
+  - Group pages in a namespace
+  - Group common components into namespace
+  - Add layout notion
+  - protected? page logic moved to the router and layout concept
+  - Fix protected pages redirections and authentication page redirect
+  - Use authentication (and logout) strategy in end-to-end tests
+
 ## [2.36.5] - 2024-03-21
 
 - Deps - Added chartjs-adapter-date-fns to format dates in charts

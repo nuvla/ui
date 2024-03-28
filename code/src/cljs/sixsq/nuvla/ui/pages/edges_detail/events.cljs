@@ -160,7 +160,7 @@
                              [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                            (:id nuvlabox-current-playbook)
                                                                            nil)]]
-                             [:dispatch [::fetch-edge-availibity-last-15min id]]
+                             [:dispatch [::fetch-edge-availability-last-15min id]]
                              [:dispatch [::fetch-edge-stats
                                          {:nuvlaedge-id id
                                           :from         from
@@ -438,7 +438,7 @@
                       :on-success      [::fetch-edge-stats-success]
                       :on-failure      [::fetch-edge-stats-failure]}}))))
 (reg-event-fx
-  ::fetch-edge-availibity-last-15min-success
+  ::fetch-edge-availability-last-15min-success
   (fn [{db :db} [_ response]]
     (let [ts-data            (get-in response [:availability-stats 0 :ts-data])
           no-of-measurements (count ts-data)
@@ -449,7 +449,7 @@
       {:db (assoc db ::spec/availability-15-min avg-percentage)})))
 
 (reg-event-fx
-  ::fetch-edge-availibity-last-15min-failure
+  ::fetch-edge-availability-last-15min-failure
   (fn [_ [_ response]]
     (let [{:keys [message]} (response/parse response)]
       {:fx [[:dispatch [::messages-events/add
@@ -457,7 +457,7 @@
                          :content message
                          :type    :error}]]]})))
 (reg-event-fx
-  ::fetch-edge-availibity-last-15min
+  ::fetch-edge-availability-last-15min
   (fn [_ [_ id]]
     (let [to   (time/now)
           from (time/subtract-minutes to 15)
@@ -465,8 +465,8 @@
       {:http-xhrio {:method          :get
                     :uri             uri
                     :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::fetch-edge-availibity-last-15min-success]
-                    :on-failure      [::fetch-edge-availibity-last-15min-failure]}})))
+                    :on-success      [::fetch-edge-availability-last-15min-success]
+                    :on-failure      [::fetch-edge-availability-last-15min-failure]}})))
 
 (reg-event-fx
   ::fetch-edge-stats-csv

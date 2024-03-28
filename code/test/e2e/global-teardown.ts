@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 // e2e edges deletion script
-test('Deletes all nuvlaedges created through e2e tests', async ({ page, context }, { project, config }) => {
+test('Deletes all nuvlaedges created through e2e tests', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.getByRole('link', { name: 'Edges' }).click();
@@ -25,7 +25,6 @@ test('Deletes all nuvlaedges created through e2e tests', async ({ page, context 
       .nth(0)
       .click({ timeout: 5000 });
     await page.locator('a:has-text("delete")').click();
-    await page.pause();
     await page.getByRole('button', { name: 'Delete NuvlaEdge' }).click();
     await page.getByRole('button', { name: 'Yes: Delete NuvlaEdge' }).click();
     await page.waitForURL(`${baseURL}/ui/edges?view=table`);
@@ -35,4 +34,23 @@ test('Deletes all nuvlaedges created through e2e tests', async ({ page, context 
     await page.waitForTimeout(500);
     found = await page.getByRole('link', { name: new RegExp(newEdgeName) }).count();
   }
+});
+
+test('logout', async ({ page }) => {
+
+  const welcomePageUrl = process.env.UI_BASE_URL + '/ui/welcome';
+  const signInPageUrl = process.env.UI_BASE_URL + '/ui/sign-in';
+
+  await page.goto(welcomePageUrl);
+  await page.getByText(/^logout$/i).click();
+  await expect(page).toHaveURL(welcomePageUrl);
+
+  // Testing redirect to login page when navigating
+  await page.getByRole('link', { name: 'Edges' }).click();
+  await expect(page).toHaveURL(signInPageUrl + '?redirect=edges?view=table');
+
+  await page.goto(welcomePageUrl);
+  // Testing existence of working login button
+  await page.getByText(/^login$/i).click();
+  await expect(page).toHaveURL(signInPageUrl);
 });

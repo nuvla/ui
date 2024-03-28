@@ -12,7 +12,7 @@ test('Creating a new project', async ({ page }, { config }) => {
   await page.getByText('Navigate Projects').nth(0).click();
   await expect(page).toHaveURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
   await page.locator('a:has-text("Add")').click();
-  await page.getByRole('link', { name: 'Project' }).nth(1).click();
+  await page.getByRole('link', { name: 'Project' }).nth(2).click();
   await expect(page).toHaveURL(`${baseURL}/ui/apps/New%20Project?subtype=project&apps-project-tab=details`, {
     timeout: 2000,
   });
@@ -22,7 +22,6 @@ test('Creating a new project', async ({ page }, { config }) => {
   await page
     .getByText('# Project Description PlaceholderThis is a generic placeholder that you should r')
     .fill('TESTING');
-  await page.pause();
   await page.locator('a:has-text("Save")').click();
   await page.getByRole('button', { name: 'save' }).click();
   await expect(page).toHaveURL(`${baseURL}/ui/apps/${newProjectName.toLowerCase()}?apps-project-tab=overview`);

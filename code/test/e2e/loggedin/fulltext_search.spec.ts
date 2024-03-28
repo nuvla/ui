@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-async function delay(ms = 1000) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 test.describe('Full text search', () => {
   for (const pageName of [
     // 'apps', 'deployments',
@@ -16,18 +12,13 @@ test.describe('Full text search', () => {
       await page.getByRole('link', { name: pageName }).click();
       const search = page.getByPlaceholder(/Search/);
 
-      for (const char of 'hello world') {
-        await search.type(char, { delay: 50 });
-      }
+      await search.pressSequentially('hello world', {delay: 50})
       await page.keyboard.press('ArrowLeft', { delay: 50 });
       await page.keyboard.press('ArrowLeft', { delay: 50 });
       await page.keyboard.press('ArrowLeft', { delay: 50 });
       await page.keyboard.press('ArrowLeft', { delay: 50 });
       await page.keyboard.press('ArrowLeft', { delay: 50 });
-      await search.type('t', { delay: 50 });
-      await search.type('e', { delay: 50 });
-      await search.type('s', { delay: 50 });
-      await search.type('t', { delay: 50 });
+      await search.pressSequentially('test', {delay: 50})
 
       await expect(page.getByPlaceholder(/Search/)).toHaveValue('hello testworld', { timeout: 100 });
 

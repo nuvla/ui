@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/nuvla/ui",
   "devDependencies": {
-    "@playwright/test": "^1.27.1",
+    "@playwright/test": "^1.42.1",
     "@types/node": "^18.16.12",
     "chokidar-cli": "^3.0.0",
     "dotenv": "^16.0.3",

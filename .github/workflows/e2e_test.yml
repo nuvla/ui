@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.27.1-jammy
+      image: mcr.microsoft.com/playwright:v1.42.1-jammy
       env:
         TZ: Europe/Zurich
     steps:
@@ -58,8 +58,8 @@ jobs:
           project: 'ui-nuvla-prev'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           commitHash: ${{ github.event.pull_request.head.sha }}
-      - name: Run Playwright logged in tests
-        run: npx playwright test loggedin
+      - name: Run Playwright tests
+        run: npx playwright test
         env:
           UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
           UI_E2E_TEST_USERNAME: ${{ secrets.UI_E2E_TEST_USERNAME }}
@@ -72,14 +72,6 @@ jobs:
           name: playwright
           path: code/playwright-report/
           retention-days: 30
-      - name: Run Playwright logout tests
-        run: npx playwright test logout
-        env:
-          UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
-          UI_E2E_TEST_USERNAME: ${{ secrets.UI_E2E_TEST_USERNAME }}
-          UI_E2E_TEST_PASSWORD: ${{ secrets.UI_E2E_TEST_PASSWORD }}
-          CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
-          CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
       - uses: actions/upload-artifact@v3
         if: always()
         with:

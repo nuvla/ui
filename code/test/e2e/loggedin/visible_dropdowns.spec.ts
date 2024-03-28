@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
-test('Language modal not behind main content', async ({ page, context }, { project, config }) => {
+test('Language modal not behind main content', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
 

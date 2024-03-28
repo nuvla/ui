@@ -1,14 +1,17 @@
 import { test, expect } from '@playwright/test';
 
-test('Creating an Edge with an older version',  async ({ page, context }, { project, config })  => {
+test('Creating an Edge with an older version',  async ({ page }, { config })  => {
 
   const { baseURL } = config.projects[0].use;
 
   await page.goto(baseURL + '/ui/welcome');
 
-  await page.route('api/nuvlabox-release', async (route) => {
-        route.fulfill({ status: 200, body: JSON.stringify(NuvlaEdgeRelease())});
-      });
+  await page.pause();
+
+  await page.route('api/nuvlabox-release', async route => {
+          await route.fulfill({ status: 200, body: JSON.stringify(NuvlaEdgeRelease())});
+        });
+
   await page.getByRole('link', { name: 'Edges' }).click();
 
   const newEdgeName = 'NE with older release';
@@ -49,7 +52,7 @@ test('Creating an Edge with an older version',  async ({ page, context }, { proj
 
 });
 
-test.afterAll(async ({ page, context }, { project, config }) => {
+test('delete older NE', async ({ page }, { config }) => {
 
   const { baseURL } = config.projects[0].use;
 
@@ -68,9 +71,6 @@ test.afterAll(async ({ page, context }, { project, config }) => {
   page.getByPlaceholder('Search ...').fill(newEdgeName);
   await page.waitForResponse('/api/nuvlabox');
   await page.waitForTimeout(1000);
-
-
-
 
   let found = await page.getByRole('link', { name: new RegExp(newEdgeName) }).count();
     while (found > 0) {

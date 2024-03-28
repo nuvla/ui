@@ -22,7 +22,6 @@ if (isValidHttpUrl(baseURL)) {
  * See https://playwright.dev/docs/test-configuration.
  */
 const config: PlaywrightTestConfig = {
-  globalSetup: require.resolve('./global-setup'),
   testDir: './test/e2e',
   grepInvert: [/apps/],
   /* Maximum time one test can run for. */
@@ -48,13 +47,10 @@ const config: PlaywrightTestConfig = {
   use: {
     screenshot: 'only-on-failure',
     video: process.env.CI ? 'retain-on-failure' : 'on',
-    storageState: 'storageState.json',
-    /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL,
     timezoneId: 'Europe/Zurich',
-
+    locale: 'de-CH',
+    baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
   },
@@ -62,13 +58,29 @@ const config: PlaywrightTestConfig = {
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
+      name: 'global setup',
+      testMatch: 'global-setup.ts',
+      teardown: 'global teardown',
+
+    },
+    {
+      name: 'global teardown',
+      testMatch: 'global-teardown.ts',
+      use: {
+        storageState: 'storageState.json'
+      }
+    },
+    {
+      name: 'logged-in-tests',
+      dependencies: ['global setup'],
       use: {
         ...devices['Desktop Chrome'],
-//         launchOptions: {
-//               slowMo: 500,
-//             },
-      },
+        storageState: 'storageState.json',
+
+        //         launchOptions: {
+        //               slowMo: 500,
+        //             },
+      }
     },
   ],
 };
@@ -76,7 +88,7 @@ const config: PlaywrightTestConfig = {
 export default config;
 
 function isValidHttpUrl(s: string) {
-  let url;
+  let url: URL;
   try {
     url = new URL(s);
   } catch (_) {

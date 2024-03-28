@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('Datepicker test', async ({ page }, { project, config }) => {
+test('Datepicker test', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
   const dataURL = baseURL + '/ui/data';
   await page.goto(baseURL + '/ui/welcome');
@@ -16,7 +16,6 @@ test('Datepicker test', async ({ page }, { project, config }) => {
   date.setHours(8);
 
   await page.locator('input[type="text"]').first().click();
-
   await page.route('/api/data-record', (route) => {
     const payload = route.request().postDataJSON();
     const matches = payload.filter.match(/\d{4}-\d{2}-(\d{2})/);
@@ -25,6 +24,7 @@ test('Datepicker test', async ({ page }, { project, config }) => {
     );
     route.fulfill({ status: 200 });
   });
+
 
   await Promise.all([
     // Format of updated react-datepicker
@@ -53,7 +53,7 @@ const format = new Intl.DateTimeFormat('en-US', {
   weekday: 'long',
 }).format;
 
-const dateStringRemoveMS = (dateString) => {
+const dateStringRemoveMS = (dateString: string) => {
   return dateString.replace(/\.\d\d\dZ/, 'Z');
 };
 

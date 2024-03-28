@@ -346,6 +346,9 @@
   [I opts i-circle-stop])
 
 (def i-triangle-exclamation "fal fa-triangle-exclamation")
+
+(def i-triangle-exclamation-full "fa-solid fa-triangle-exclamation")
+
 (defn TriangleExclamationIcon
   [opts]
   [I opts i-triangle-exclamation])

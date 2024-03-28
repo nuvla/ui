@@ -154,6 +154,10 @@
   (fn [nuvlabox-releases]
     (utils/sort-by-version nuvlabox-releases)))
 
+(reg-sub
+  ::latest-ne-release-version
+  :<- [::nuvlabox-releases]
+  :-> first)
 
 (reg-sub
   ::nuvlabox-releases-by-id
@@ -234,3 +238,9 @@
 (reg-sub
   ::fleet-timespan
   :-> ::spec/fleet-timespan)
+
+(reg-sub
+  ::ne-version-outdated
+  :<- [::latest-ne-release-version]
+  (fn [latest-version [_ version]]
+    (utils/ne-version-outdated (:release latest-version) version)))

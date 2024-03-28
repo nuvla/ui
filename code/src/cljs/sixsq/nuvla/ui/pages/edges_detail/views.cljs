@@ -2140,20 +2140,21 @@
 
 (defn EdgeDetails
   [uuid]
-  (refresh-nuvlaedge-data uuid)
-  (let [nb-status @(subscribe [::subs/nuvlabox-status])]
-    [components/LoadingPage {:dimmable? true}
-     [:<>
-      [components/NotFoundPortal
-       ::subs/nuvlabox-not-found?
-       :no-nuvlabox-message-header
-       :no-nuvlabox-message-content]
-      [ui/Container {:fluid true}
-       [PageHeader]
-       [MenuBar uuid]
-       [components/ErrorJobsMessage ::job-subs/jobs nil nil
-        #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
-       [job-views/ProgressJobAction nb-status]
-       [TelemetryOutdatedMessage nb-status]]
-      [TabsNuvlaBox]
-      [AddPlaybookModal]]]))
+  (let [nb-status (subscribe [::subs/nuvlabox-status])]
+    (refresh-nuvlaedge-data uuid)
+    (fn []
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/nuvlabox-not-found?
+         :no-nuvlabox-message-header
+         :no-nuvlabox-message-content]
+        [ui/Container {:fluid true}
+         [PageHeader]
+         [MenuBar uuid]
+         [components/ErrorJobsMessage ::job-subs/jobs nil nil
+          #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
+         [job-views/ProgressJobAction @nb-status]
+         [TelemetryOutdatedMessage @nb-status]]
+        [TabsNuvlaBox]
+        [AddPlaybookModal]]])))

@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.edges.utils-test
   (:require [clojure.test :refer [are deftest is]]
-            [sixsq.nuvla.ui.edges.utils :as t]))
+            [sixsq.nuvla.ui.pages.edges.utils :as t]))
 
 (deftest score-vulnerability-test
   (are [result input]
@@ -39,3 +39,34 @@
         {:release "1.2.3"}
         {:no-version ""})
       (t/sort-by-version test-versions-sort-data)))
+
+(deftest version-difference-test
+  (are [result args]
+    (= result (t/version-difference (first args) (second args)))
+    nil ["2.1.0" "2.1.0"]
+    nil ["something" "2.1.0"]
+    nil ["2.1.0" "something"]
+    nil ["something" "something"]
+    {:major 1} ["3.1.0" "2.1.0"]
+    {:major 2} ["4.1.0" "2.1.0"]
+    {:major -2} ["2.1.0" "4.1.1"]
+    {:patch 4} ["2.1.4" "2.1.0"]
+    {:minor -25} ["0.1.0" "0.26.1"]))
+
+(deftest ne-version-outdated-test
+  (are [result args]
+    (= result (t/ne-version-outdated (first args) (second args)))
+    nil [nil nil]
+    nil [nil "2.1.0"]
+    nil ["2.1.0" "2.1.0"]
+    nil ["something" "2.1.0"]
+    nil ["2.1.0" "something"]
+    nil ["something" "something"]
+    nil ["2.1.0" "2.5.1"]                                   ; case NE version is beyond latest version
+    :outdated-major-version ["3.1.0" "2.1.0"]
+    :outdated-major-version ["4.1.0" "2.1.0"]
+    :outdated-major-version ["0.26.1" "0.1.0"]
+    :outdated-major-version ["4.1.1" "2.1.0"]
+    :outdated-minor-version ["2.1.1" "2.1.0"]
+    :outdated-minor-version ["2.4.1" "2.1.0"]               ; up to 3 minor away it's still minor warning
+    :outdated-major-version ["2.5.1" "2.1.0"]))

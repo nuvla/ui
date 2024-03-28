@@ -2,7 +2,7 @@
   (:require [cljs.spec.alpha :as s]
             [form-validator.core :as fv]
             [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.session.components :as comp]
             [sixsq.nuvla.ui.session.events :as events]

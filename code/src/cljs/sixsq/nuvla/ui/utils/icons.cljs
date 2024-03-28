@@ -285,6 +285,11 @@
   [opts]
   [I opts i-chart-network])
 
+(def i-history "fas fa-history")
+
+(defn HistoryIcon [opts]
+  [I opts i-history])
+
 (def i-check "fal fa-check")
 (defn CheckIcon
   [opts]
@@ -341,6 +346,9 @@
   [I opts i-circle-stop])
 
 (def i-triangle-exclamation "fal fa-triangle-exclamation")
+
+(def i-triangle-exclamation-full "fa-solid fa-triangle-exclamation")
+
 (defn TriangleExclamationIcon
   [opts]
   [I opts i-triangle-exclamation])
@@ -354,6 +362,11 @@
 (defn ArrowLeftIcon
   [opts]
   [I opts i-arrow-left])
+
+(def i-arrow-right "fa-light fa-arrow-right")
+(defn ArrowRightIcon
+  [opts]
+  [I opts i-arrow-right])
 
 (def i-arrow-right-bracket "fa-light fa-arrow-right-from-bracket")
 (defn ArrowRightFromBracketIcon
@@ -669,3 +682,8 @@
 (defn UndoIcon
   [opts]
   [I opts i-undo])
+
+(def i-export "share square outline")
+(defn ExportIcon
+  [opts]
+  [I opts i-export])

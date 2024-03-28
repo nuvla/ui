@@ -51,8 +51,6 @@ const config: PlaywrightTestConfig = {
     timezoneId: 'Europe/Zurich',
     locale: 'de-CH',
     baseURL,
-
-
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
   },
@@ -61,7 +59,7 @@ const config: PlaywrightTestConfig = {
   projects: [
     {
       name: 'global setup',
-      testMatch:  'global-setup.ts',
+      testMatch: 'global-setup.ts',
       teardown: 'global teardown',
 
     },
@@ -70,7 +68,7 @@ const config: PlaywrightTestConfig = {
       testMatch: 'global-teardown.ts',
       use: {
         storageState: 'storageState.json'
-           }
+      }
     },
     {
       name: 'logged-in-tests',
@@ -79,9 +77,9 @@ const config: PlaywrightTestConfig = {
         ...devices['Desktop Chrome'],
         storageState: 'storageState.json',
 
-//         launchOptions: {
-//               slowMo: 500,
-//             },
+        //         launchOptions: {
+        //               slowMo: 500,
+        //             },
       }
     },
   ],
@@ -90,7 +88,7 @@ const config: PlaywrightTestConfig = {
 export default config;
 
 function isValidHttpUrl(s: string) {
-  let url;
+  let url: URL;
   try {
     url = new URL(s);
   } catch (_) {

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('test', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
 
-  const testDeplGroupName = 'Depl Group ' + Math.random().toString().substr(2, 5) + ' - Test should delete me!'
+  const testDeplGroupName = 'Depl Group ' + Math.random().toString().substring(2, 5) + ' - Test should delete me!'
 
   await page.goto(baseURL + '/ui/welcome');
 
@@ -47,10 +47,9 @@ test('test', async ({ page }, { config }) => {
 
   await page.locator('a:has-text("Save")').click();
 
-  const depSetUrlRegExp = new RegExp(`${baseURL}/ui/deployment-groups/([0-9a-f-]{20,})`
-    .replaceAll('/', '\\/').replaceAll('.', '\\.') + '(\\?.+)?');
+  const depSetUrlRegExp = new RegExp(`${baseURL}/ui/deployment-groups/([0-9a-f-]{20,})`.replace(/[/.]/g, '\\$&') + '(\\?.+)?');
   await page.waitForURL(depSetUrlRegExp);
-  const depGroupUuid = page.url().match(depSetUrlRegExp)[1];
+  const depGroupUuid = page.url().match(depSetUrlRegExp)![1];
   await page.getByText('Divergence: 1 deployments to add').click();
 
   await page.getByRole('link', { name: 'BlackBox' }).click();

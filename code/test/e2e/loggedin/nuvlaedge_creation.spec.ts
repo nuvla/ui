@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('Creating an Edge with an older version',  async ({ page, context }, { project, config })  => {
+test('Creating an Edge with an older version',  async ({ page }, { config })  => {
 
   const { baseURL } = config.projects[0].use;
 
@@ -52,7 +52,7 @@ test('Creating an Edge with an older version',  async ({ page, context }, { proj
 
 });
 
-test('delete older NE', async ({ page, context }, { project, config }) => {
+test('delete older NE', async ({ page }, { config }) => {
 
   const { baseURL } = config.projects[0].use;
 

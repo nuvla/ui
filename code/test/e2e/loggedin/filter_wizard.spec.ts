@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-async function delay(ms = 1000) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 test.use({ navigationTimeout: 5000, actionTimeout: 5000 });
 
 test('Additional filter wizard', async ({ page }, { config }) => {

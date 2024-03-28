@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('Datepicker test', async ({ page }, { project, config }) => {
+test('Datepicker test', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
   const dataURL = baseURL + '/ui/data';
   await page.goto(baseURL + '/ui/welcome');
@@ -53,7 +53,7 @@ const format = new Intl.DateTimeFormat('en-US', {
   weekday: 'long',
 }).format;
 
-const dateStringRemoveMS = (dateString) => {
+const dateStringRemoveMS = (dateString: string) => {
   return dateString.replace(/\.\d\d\dZ/, 'Z');
 };
 

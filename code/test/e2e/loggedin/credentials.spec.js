@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.skip('Creates and deletes api key credentials', async ({ page }, { project, config }) => {
+test.skip('Creates and deletes api key credentials', async ({ page }, { config }) => {
   const { baseURL } = config.projects[0].use;
   const credentialsUrl = baseURL + '/ui/credentials';
   await page.goto(baseURL + '/ui/welcome');

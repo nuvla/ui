@@ -2140,7 +2140,7 @@
 
 (defn EdgeDetails
   [uuid]
-  (let [nb-status @(subscribe [::subs/nuvlabox-status])]
+  (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (refresh-nuvlaedge-data uuid)
     (fn []
       [components/LoadingPage {:dimmable? true}
@@ -2154,7 +2154,7 @@
          [MenuBar uuid]
          [components/ErrorJobsMessage ::job-subs/jobs nil nil
           #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
-         [job-views/ProgressJobAction nb-status]
-         [TelemetryOutdatedMessage nb-status]]
+         [job-views/ProgressJobAction @nb-status]
+         [TelemetryOutdatedMessage @nb-status]]
         [TabsNuvlaBox]
         [AddPlaybookModal]]])))

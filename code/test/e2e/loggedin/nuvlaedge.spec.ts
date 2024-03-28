@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
+test('NuvlaEdge creation and deletion', async ({ page }, { project, config }) => {
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.waitForResponse((resp) => resp.url().includes('get-subscription'));
@@ -62,8 +62,8 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page.focus('div');
   await page.keyboard.press(`${modifier}+KeyV`);
   await page.keyboard.press(`${modifier}+KeyV`);
-  const cronjob = await page.evaluate(() => document.querySelector('div').textContent);
-  await expect(cronjob.slice(0, 10)).toBe('0 * * * * ');
+  const cronjob = await page.evaluate(() => document.querySelector('div')!.textContent!);
+  expect(cronjob.slice(0, 10)).toBe('0 * * * * ');
 
   for (const envVar of ['NUVLABOX_API_KEY', 'NUVLABOX_API_SECRET', 'NUVLA_API_ENDPOINT']) {
     const testRegex = new RegExp(` (${envVar})=`);
@@ -76,7 +76,7 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
 /**
  * Used these tests for local verification of update modal changes #959, but they need more work to be run in CI.
  */
-test.skip('NuvlaEdge update to version with security module from unofficial release', async ({ page, context }, {
+test.skip('NuvlaEdge update to version with security module from unofficial release', async ({ page }, {
   project,
   config,
 }) => {
@@ -97,7 +97,7 @@ test.skip('NuvlaEdge update to version with security module from unofficial rele
   // 5. When changing nuvla edge version to 2.4.3 security module should be checked
 });
 
-test.skip('NuvlaEdge update to version with security module from official release', async ({ page, context }, {
+test.skip('NuvlaEdge update to version with security module from official release', async ({ page }, {
   project,
   config,
 }) => {
@@ -118,7 +118,7 @@ test.skip('NuvlaEdge update to version with security module from official releas
   // 5. When changing nuvla edge version to 2.4.3 security module should be checked
 });
 
-test.skip('NuvlaEdge update from version with security module but not installed', async ({ page, context }, {
+test.skip('NuvlaEdge update from version with security module but not installed', async ({ page }, {
   project,
   config,
 }) => {
@@ -138,7 +138,7 @@ test.skip('NuvlaEdge update from version with security module but not installed'
   // 4. When changing nuvla edge version to 2.4.3 security module should NOT be unchecked
 });
 
-test.skip('NuvlaEdge update from version with security module and installed', async ({ page, context }, {
+test.skip('NuvlaEdge update from version with security module and installed', async ({ page }, {
   project,
   config,
 }) => {
@@ -184,10 +184,7 @@ test.skip('NuvlaEdge update from version with security module and installed, but
   // 4. When changing nuvla edge version to 2.4.3 security module should be checked
 });
 
-test.skip('NuvlaEdge update WITH security installed, but non-standard version numbering', async ({ page, context }, {
-  project,
-  config,
-}) => {
+test.skip('NuvlaEdge update WITH security installed, but non-standard version numbering', async ({ page }, { config }) => {
   const releaseVersion = 'test';
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
@@ -207,10 +204,7 @@ test.skip('NuvlaEdge update WITH security installed, but non-standard version nu
   // 4. When changing nuvla edge version to 2.4.3 security module should be checked
 });
 
-test.skip('NuvlaEdge update WITHOUT security installed and not installed, but non-standard version numbering', async ({
-  page,
-  context,
-}, { project, config }) => {
+test.skip('NuvlaEdge update WITHOUT security installed and not installed, but non-standard version numbering', async ({ page }, { config }) => {
   const releaseVersion = 'test';
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');

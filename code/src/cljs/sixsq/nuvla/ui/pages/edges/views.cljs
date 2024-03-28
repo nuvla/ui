@@ -171,26 +171,39 @@
   (let [nb-release (subscribe [::subs/nuvlabox-releases])]
     ^{:key (count @nb-release)} [add-modal/AddModal]))
 
+(defn NEVersionDisplay
+  [version warning]
+  (let [tr    @(subscribe [::i18n-subs/tr])
+        color (case warning
+                :outdated-minor-version "yellow"
+                :outdated-major-version "red"
+                nil)]
+    [:<> version " "
+     (when warning
+       [ui/Popup
+        {:trigger  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
+                                           :color color}])
+         :content  (tr [warning])
+         :position "right center"
+         :size     "small"}])]))
+
+(defn NEVersion
+  [{:keys [id version nuvlabox-engine-version] :as _nuvlabox}]
+  (let [engine-version  @(subscribe [::subs/engine-version id])
+        ne-version      (or engine-version nuvlabox-engine-version)
+        version-warning (when ne-version
+                          @(subscribe [::subs/ne-version-outdated ne-version]))]
+    [NEVersionDisplay (or ne-version (str version ".y.z")) version-warning]))
+
 (defn NuvlaboxRow
   [{{:keys [id name description created state tags online
-            refresh-interval version created-by owner nuvlabox-engine-version] :as nuvlabox} :row-data
-    field-key                                                                                :field-key}]
+            refresh-interval created-by owner] :as nuvlabox} :row-data
+    field-key                                                :field-key}]
   (let [uuid                  (general-utils/id->uuid id)
         locale                @(subscribe [::i18n-subs/locale])
         last-heartbeat-moment @(subscribe [::subs/last-online nuvlabox])
-        engine-version        @(subscribe [::subs/engine-version id])
-        tr                    (subscribe [::i18n-subs/tr])
         creator               (subscribe [::session-subs/resolve-user created-by])
         owner                 (subscribe [::session-subs/resolve-user owner])
-        releases-by-no        (subscribe [::subs/nuvlabox-releases])
-        latest-release-number (:release (first @releases-by-no))
-        version-warning       (when-let [nuvla-version (some #(when % %) [engine-version nuvlabox-engine-version])]
-                                (let [{:keys [minor major patch] :as version-difference} (utils/version-difference latest-release-number nuvla-version)]
-                                  (cond
-                                    (not version-difference) nil
-                                    (or major (> minor 3))   :outdated-major-version
-                                    (or minor patch)         :outdated-minor-version
-                                    :else nil)))
         field-key->table-cell {:description      description,
                                :tags             [uix/Tags tags],
                                :refresh-interval (str refresh-interval "s"),
@@ -203,18 +216,7 @@
                                :last-online
                                (when last-heartbeat-moment
                                  [uix/TimeAgo last-heartbeat-moment]),
-                               :version          [:div
-                                                  [:span {:style {:display "inline-block"
-                                                                  :width 40}} (or engine-version nuvlabox-engine-version (str version ".y.z"))]
-                                                  (when version-warning
-                                                    [ui/Popup
-                                                     {:trigger  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
-                                                                                        :color (if (= :outdated-minor-version version-warning)
-                                                                                                 "yellow"
-                                                                                                 "red")}])
-                                                      :content  (@tr [version-warning])
-                                                      :position "right center"
-                                                      :size     "small"}])]}]
+                               :version          [NEVersion nuvlabox]}]
     (field-key->table-cell field-key)))
 
 (defn Pagination

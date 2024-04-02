@@ -53,13 +53,16 @@
       [ui/CardMeta {:style {:font-size "tiny"}}
        (str "on " (time/time->format (:timestamp (first ts-data))))]]
      [ui/CardContent
-      [ui/CardDescription
+      [ui/CardDescription {:style {:overflow-x "auto"}}
        (if (seq least-available-edge)
-         (into [ui/Table {:basic "very"}
+         (into [ui/Table {:basic "very"
+                          :unstackable true}
                 [ui/TableHeader
                  [ui/TableRow
                   [ui/TableHeaderCell (str/capitalize (@tr [:name]))]
-                  [ui/TableHeaderCell {:textAlign "right"} (str (@tr [:availability]) " (%)")]]]]
+                  [ui/TableHeaderCell {:textAlign "right"
+                                       :style {:white-space "nowrap"}}
+                   (str (@tr [:availability]) " (%)")]]]]
                (mapv (fn [bucket]
                        (when-let [{:keys [name id avg-online]} (info-edge bucket)]
                          [ui/TableRow
@@ -136,7 +139,8 @@
          [edges-detail-timeseries/GraphLabel timespan]]
 
         [ui/GridColumn {:width 4}
-         [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")}}
+         [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")
+                        :min-width 250}}
           [OnlineStatsByEdge {:on-close #(reset! extra-info-visible? false)}]]]]])))
 
 (defn FleetTimeSeries []

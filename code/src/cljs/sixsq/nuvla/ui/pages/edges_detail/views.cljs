@@ -1050,20 +1050,33 @@
     {:attribute attribute
      :label     "seconds"}]])
 
+(defn NEVersion
+  [{:keys [id nuvlabox-engine-version] :as _nuvlabox}]
+  (let [engine-version  @(subscribe [::edges-subs/engine-version id])
+        ne-version      (or engine-version nuvlabox-engine-version)
+        version-warning (when ne-version
+                          @(subscribe [::edges-subs/ne-version-outdated ne-version]))
+        color (get utils/version-warning-colors version-warning "blue")]
+    [ui/Label {:circular true
+               :color color
+               :size "medium"
+               :basic true}
+     (when version-warning [utils/NEVersionWarning version-warning])
+     ne-version]))
+
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated owner created-by state] :as nuvlabox}
-   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
+  [{:keys [id created updated owner created-by state nuvlabox-engine-version] :as nuvlabox}
+   {:keys [nuvlabox-api-endpoint]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
-        {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])]
+        {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])
+        engine-version  @(subscribe [::edges-subs/engine-version id])
+        ne-version      (or engine-version nuvlabox-engine-version)]
     [ui/Segment {:secondary true
                  :raised    true}
      [:h4 "NuvlaEdge "
-      (when nuvlabox-engine-version
-        [:<> [ui/Label {:circular true
-                        :color    "blue"
-                        :size     "tiny"}
-              nuvlabox-engine-version]
+      (when ne-version
+        [:<> [NEVersion nuvlabox]
          (when pre-release
            [:span {:style {:background-color :black :color :white :padding "0.1rem 0.5rem 0.2rem 0.5rem"
                            :font-size        "10px" :border-radius "0.2rem"}} (@tr [:pre-release])])])]

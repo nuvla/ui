@@ -171,29 +171,16 @@
   (let [nb-release (subscribe [::subs/nuvlabox-releases])]
     ^{:key (count @nb-release)} [add-modal/AddModal]))
 
-(defn NEVersionDisplay
-  [version warning]
-  (let [tr    @(subscribe [::i18n-subs/tr])
-        color (case warning
-                :outdated-minor-version "yellow"
-                :outdated-major-version "red"
-                nil)]
-    [:<> version " "
-     (when warning
-       [ui/Popup
-        {:trigger  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
-                                           :color color}])
-         :content  (tr [warning])
-         :position "right center"
-         :size     "small"}])]))
-
 (defn NEVersion
   [{:keys [id version nuvlabox-engine-version] :as _nuvlabox}]
   (let [engine-version  @(subscribe [::subs/engine-version id])
         ne-version      (or engine-version nuvlabox-engine-version)
         version-warning (when ne-version
                           @(subscribe [::subs/ne-version-outdated ne-version]))]
-    [NEVersionDisplay (or ne-version (str version ".y.z")) version-warning]))
+    [:<>
+     (or ne-version (str version ".y.z"))
+     " "
+     (when version-warning [utils/NEVersionWarning version-warning])]))
 
 (defn NuvlaboxRow
   [{{:keys [id name description created state tags online

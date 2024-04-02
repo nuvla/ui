@@ -298,11 +298,11 @@
   [latest-version version]
   (when (and latest-version version)
     (let [{:keys [major minor patch] :as res} (version-difference latest-version version)]
-     (cond
-       (or (nil? res) (neg? (or major minor patch))) nil
-       (or major (> minor 3)) :outdated-major-version
-       (or minor patch) :outdated-minor-version
-       :else nil))))
+      (cond
+        (or (nil? res) (neg? (or major minor patch))) nil
+        (or major (> minor 3)) :outdated-major-version
+        (or minor patch) :outdated-minor-version
+        :else nil))))
 
 (defn sort-by-version [e]
   (sort-by :release compare-versions e))
@@ -352,12 +352,15 @@
 (def version-warning-colors {:outdated-minor-version "yellow"
                              :outdated-major-version "red"})
 
-(defn NEVersionWarning [warning]
-  (let [tr @(subscribe [::i18n-subs/tr])
+(defn NEVersionWarning [warning component]
+  (let [tr    @(subscribe [::i18n-subs/tr])
         color (get version-warning-colors warning)]
-    [ui/Popup
-     {:trigger  (r/as-element [ui/Icon {:class icons/i-triangle-exclamation
-                                        :color color}])
-      :content  (tr [warning])
-      :position "right center"
-      :size     "small"}]))
+    (if warning
+      [ui/Popup
+       {:trigger  (r/as-element
+                    [:span [component [ui/Icon {:class icons/i-triangle-exclamation
+                                          :color color}]]])
+        :content  (tr [warning])
+        :position "right center"
+        :size     "small"}]
+      [component])))

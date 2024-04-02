@@ -295,7 +295,7 @@
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)
-                                      :color "green"}
+                                      :color    "green"}
                          [ui/Icon {:class "icon download"}]
                          (str/capitalize (@tr [:update]))])}
          [uix/ModalHeader {:header "Update NuvlaEdge"}]
@@ -636,7 +636,6 @@
       ^{:key (str "cluster-nuvlabox" @show?)}
       [ClusterButton resource operation show?])))
 
-
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
   [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
@@ -644,7 +643,6 @@
     (fn [resource operation]
       ^{:key (str "add-ssh-button" @show?)}
       [AddRevokeSSHButton resource operation show? "Add ssh key" icons/i-plus (@tr [:add])])))
-
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
   [_resource _operation]
@@ -661,7 +659,6 @@
       ^{:key (str "enable-emergency-playbooks" @show?)}
       [EnableEmergencyPlaybooksButton resource operation show? "Enable emergency playbooks" "ambulance" (@tr [:enable])])))
 
-
 (defmethod cimi-detail-views/other-button ["nuvlabox" "assemble-playbooks"]
   [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
@@ -669,7 +666,6 @@
     (fn [resource operation]
       ^{:key (str "assemble-playbooks" @show?)}
       [TextActionButton resource operation show? "Assemble playbooks" "book" (@tr [:yes])])))
-
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "enable-host-level-management"]
   [_resource _operation]
@@ -686,6 +682,10 @@
     (fn [resource operation]
       ^{:key (str "disable-host-level-management" @show?)}
       [TextActionButton resource operation show? "Disable host level management (disables playbooks)" icons/i-gear (@tr [:disable])])))
+(defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
+  [resource _operation]
+  ^{:key "update-nuvlabox"}
+  [UpdateButton resource])
 
 (defn MenuBar [uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])
@@ -703,7 +703,7 @@
           (conj
             MenuItems
             ^{:key "update-ne"}
-            [UpdateButton @nuvlabox "update-nuvlabox"]
+            [UpdateButton @nuvlabox]
             (when @can-decommission?
               ^{:key "decomission-nb"}
               [DecommissionButton @nuvlabox])
@@ -1056,27 +1056,30 @@
         ne-version      (or engine-version nuvlabox-engine-version)
         version-warning (when ne-version
                           @(subscribe [::edges-subs/ne-version-outdated ne-version]))
-        color (get utils/version-warning-colors version-warning "blue")]
-    [ui/Label {:circular true
-               :color color
-               :size "medium"
-               :basic true}
-     (when version-warning [utils/NEVersionWarning version-warning])
-     ne-version]))
+        color           (get utils/version-warning-colors version-warning "blue")]
+    [utils/NEVersionWarning version-warning
+     (fn [Icon]
+       [ui/Label {:circular true
+                 :color    color
+                 :size     "medium"
+                 :basic    true}
+        Icon
+        ne-version])]))
 
 (defn TabOverviewNuvlaBox
   [{:keys [id created updated owner created-by state nuvlabox-engine-version] :as nuvlabox}
    {:keys [nuvlabox-api-endpoint]}]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        locale (subscribe [::i18n-subs/locale])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        locale         (subscribe [::i18n-subs/locale])
         {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])
-        engine-version  @(subscribe [::edges-subs/engine-version id])
-        ne-version      (or engine-version nuvlabox-engine-version)]
+        engine-version @(subscribe [::edges-subs/engine-version id])
+        ne-version     (or engine-version nuvlabox-engine-version)]
     [ui/Segment {:secondary true
                  :raised    true}
      [:h4 "NuvlaEdge "
       (when ne-version
-        [:<> [NEVersion nuvlabox]
+        [:<>
+         [NEVersion nuvlabox]
          (when pre-release
            [:span {:style {:background-color :black :color :white :padding "0.1rem 0.5rem 0.2rem 0.5rem"
                            :font-size        "10px" :border-radius "0.2rem"}} (@tr [:pre-release])])])]

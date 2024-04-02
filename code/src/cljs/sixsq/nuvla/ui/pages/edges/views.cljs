@@ -177,10 +177,12 @@
         ne-version      (or engine-version nuvlabox-engine-version)
         version-warning (when ne-version
                           @(subscribe [::subs/ne-version-outdated ne-version]))]
-    [:<>
-     (or ne-version (str version ".y.z"))
-     " "
-     (when version-warning [utils/NEVersionWarning version-warning])]))
+    [utils/NEVersionWarning version-warning
+     (fn [Icon]
+       [:span
+        (or ne-version (str version ".y.z"))
+        " "
+        Icon])]))
 
 (defn NuvlaboxRow
   [{{:keys [id name description created state tags online

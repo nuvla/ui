@@ -6,7 +6,7 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
 
-  await setUp(page, baseURL);
+  await setUp(page, baseURL!);
 
   const url = page.url();
 
@@ -20,7 +20,7 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   await page.getByRole('button', { name: 'ignore changes' }).click();
   page.waitForURL(new RegExp(`${baseURL}/ui/deployments`), { timeout: 2000 });
 
-  await setUp(page, baseURL);
+  await setUp(page, baseURL!);
 
   // CLICKS X for closing
   await openModal();
@@ -32,7 +32,7 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   testSameUrl(page, url, 'Same URL after navigating back');
 
   // CLICKS OUTSIDE MODAL for closing
-  await page.locator('body > div.ui.page.modals.dimmer.transition.visible.active').click({position: {x: 10, y: 10}});
+  await page.locator('body > div.ui.page.modals.dimmer.transition.visible.active').click({ position: { x: 10, y: 10 } });
   expect(page.getByRole('button', { name: 'ignore changes' })).toBeHidden();
   expect(page.url()).toBe(url);
 
@@ -51,19 +51,15 @@ test('CHANGES PROTECTION MODAL TEST 1: opens by main navigation', async ({ page 
   await page.waitForURL(`${baseURL}/ui/deployments`);
 });
 
-function testSameUrl(page, url: string, errorMessage = 'Same URL?') {
+function testSameUrl(page: Page, url: string, errorMessage = 'Same URL?') {
   expect(page.url(), errorMessage).toBe(url);
 }
 
-function expectModalVisible(page, errorMessage = 'Modal visible?') {
-  expect(page.getByRole('button', { name: 'ignore changes' }), errorMessage).toBeVisible({ timeout: 2000 });
-}
-
-function expectModalHidden(page, errorMessage = 'Modal hidden?', timeout = 2000) {
+function expectModalHidden(page: Page, errorMessage = 'Modal hidden?', timeout = 2000) {
   expect(page.getByRole('button', { name: 'ignore changes' }), errorMessage).toBeHidden({ timeout });
 }
 
-async function setUp(page: Page, baseURL) {
+async function setUp(page: Page, baseURL: String) {
   await page.getByRole('link', { name: 'apps' }).click();
   await page.waitForURL(`${baseURL}/ui/apps`);
   await page.getByRole('link', { name: 'Navigate Projects' }).click();

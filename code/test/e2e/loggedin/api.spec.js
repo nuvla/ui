@@ -10,8 +10,8 @@ test('Navigation api pages and title check', async ({ page }, { project, config 
   let collections = ['user', 'session', 'user-template'];
   for (const collection of collections) {
     const urlToVisit = apiUrl + '/' + collection;
-    await page.getByRole('combobox', { name: 'resource type' }).locator('i').click();
-    await page.getByRole('option', { name: collection }).click();
+    await page.getByLabel('resource type').getByRole('textbox').click();
+    await page.getByRole('option', { name: collection , exact: true}).click();
     await expect(page).toHaveURL(urlToVisit);
     await expect(page).toHaveTitle('Nuvla api/' + collection);
   }

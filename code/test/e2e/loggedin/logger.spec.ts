@@ -49,8 +49,8 @@ test('testing logger component', async ({ page }, { config }) => {
     baseURL + '/ui/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18?deployments-detail-tab=logs'
   );
   await page.getByText('Select components').click();
-  await page.getByRole('option', { name: 'web' }).click();
 
+  await page.getByRole('option', { name: 'web' }).click();
   // set up creating resource log
   await page.route('api/deployment/19b97ba0-d7c1-4532-aa84-59db8d76bc18/create-log', (route) => {
     route.fulfill({
@@ -58,6 +58,7 @@ test('testing logger component', async ({ page }, { config }) => {
       body: '{\n  "status" : 201,\n  "message" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743 created",\n  "resource-id" : "resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743"\n}',
     });
   });
+
 
   await page.route('api/resource-log/756d6e6b-fc1e-48c2-a0fc-c47537201743/fetch', (route) => {
     route.fulfill({

@@ -91,7 +91,8 @@
                       (ts-utils/timespan-to-period (:timespan-option timespan))
                       [(:from timespan) (:to timespan)])]
       [ui/Grid {:padded  true
-                :columns 2}
+                :columns 2
+                :stackable true}
        [ui/GridRow {:centered true}
         [ui/GridColumn {:width     10
                         :textAlign "center"}

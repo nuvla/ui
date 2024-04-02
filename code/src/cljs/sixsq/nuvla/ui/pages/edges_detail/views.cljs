@@ -244,8 +244,9 @@
                               :style     {:margin "1em"}
                               :on-change (on-module-change module)}])))]])]]))
 (defn UpdateButton
-  [{:keys [id] :as _resource} operation show?]
-  (let [tr             (subscribe [::i18n-subs/tr])
+  [{:keys [id] :as _resource}]
+  (let [show?          (r/atom false)
+        tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
         modules        (subscribe [::subs/nuvlabox-modules])
         releases       (subscribe [::edges-subs/nuvlabox-releases-options])
@@ -262,7 +263,7 @@
                                   :nuvlabox-release (@releases-by-id release))))
         on-success-fn  close-fn
         on-error-fn    close-fn
-        on-click-fn    #(dispatch [::events/operation id operation
+        on-click-fn    #(dispatch [::events/operation id "update-nuvlabox"
                                    (utils/format-update-data @form-data)
                                    on-success-fn on-error-fn])
         current-config {:project-name     (-> @status :installation-parameters :project-name)
@@ -275,7 +276,7 @@
     (reset! form-data current-config)
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
-    (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
+    (fn [{:keys [id] :as _resource}]
       (let [correct-nb?      (= (:parent @status) id)
             target-version   (->> @releases
                                   (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
@@ -293,10 +294,11 @@
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
-                        [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:class icon}]
-                         title])}
-         [uix/ModalHeader {:header title}]
+                        [ui/MenuItem {:on-click #(reset! show? true)
+                                      :color    "green"}
+                         [ui/Icon {:class "icon download"}]
+                         (str/capitalize (@tr [:update]))])}
+         [uix/ModalHeader {:header "Update NuvlaEdge"}]
          [ui/ModalContent
           (when correct-nb?
             [:<>
@@ -372,7 +374,7 @@
            :default-open false]]
          [ui/ModalActions
           [uix/Button
-           {:text     button-text
+           {:text     (@tr [:update])
             :primary  true
             :on-click on-click-fn}]]]))))
 
@@ -634,7 +636,6 @@
       ^{:key (str "cluster-nuvlabox" @show?)}
       [ClusterButton resource operation show?])))
 
-
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
   [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
@@ -643,23 +644,12 @@
       ^{:key (str "add-ssh-button" @show?)}
       [AddRevokeSSHButton resource operation show? "Add ssh key" icons/i-plus (@tr [:add])])))
 
-
 (defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
   [_resource _operation]
   (let [show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "revoke-ssh-button" @show?)}
       [AddRevokeSSHButton resource operation show? "Revoke ssh key" icons/i-minus "revoke"])))
-
-
-(defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
-  [_resource _operation]
-  (let [tr    (subscribe [::i18n-subs/tr])
-        show? (r/atom false)]
-    (fn [resource operation]
-      ^{:key (str "update-nuvlabox" @show?)}
-      [UpdateButton resource operation show? "Update NuvlaEdge" "download" (@tr [:update])])))
-
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "enable-emergency-playbooks"]
   [_resource _operation]
@@ -669,7 +659,6 @@
       ^{:key (str "enable-emergency-playbooks" @show?)}
       [EnableEmergencyPlaybooksButton resource operation show? "Enable emergency playbooks" "ambulance" (@tr [:enable])])))
 
-
 (defmethod cimi-detail-views/other-button ["nuvlabox" "assemble-playbooks"]
   [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
@@ -677,7 +666,6 @@
     (fn [resource operation]
       ^{:key (str "assemble-playbooks" @show?)}
       [TextActionButton resource operation show? "Assemble playbooks" "book" (@tr [:yes])])))
-
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "enable-host-level-management"]
   [_resource _operation]
@@ -694,6 +682,10 @@
     (fn [resource operation]
       ^{:key (str "disable-host-level-management" @show?)}
       [TextActionButton resource operation show? "Disable host level management (disables playbooks)" icons/i-gear (@tr [:disable])])))
+(defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
+  [resource _operation]
+  ^{:key "update-nuvlabox"}
+  [UpdateButton resource])
 
 (defn MenuBar [uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])
@@ -703,13 +695,15 @@
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
                         @nuvlabox
-                        #{"edit" "delete" "activate" "decommission"
+                        #{"edit" "delete" "activate" "decommission" "update-nuvlabox"
                           "generate-new-api-key" "commission" "check-api"
                           "create-log" "set-offline" "heartbeat"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj
             MenuItems
+            ^{:key "update-ne"}
+            [UpdateButton @nuvlabox]
             (when @can-decommission?
               ^{:key "decomission-nb"}
               [DecommissionButton @nuvlabox])
@@ -721,7 +715,8 @@
            {:action-id  refresh-action-id
             :loading?   @loading?
             :on-refresh (fn [_]
-                          (refresh-nuvlaedge-data uuid))}]]]))))
+                          (refresh-nuvlaedge-data uuid))}
+           {:max-items-to-show 3}]]]))))
 
 
 (defn get-available-actions
@@ -1055,20 +1050,37 @@
     {:attribute attribute
      :label     "seconds"}]])
 
+(defn NEVersion
+  [{:keys [id nuvlabox-engine-version] :as _nuvlabox}]
+  (let [engine-version  @(subscribe [::edges-subs/engine-version id])
+        ne-version      (or engine-version nuvlabox-engine-version)
+        version-warning (when ne-version
+                          @(subscribe [::edges-subs/ne-version-outdated ne-version]))
+        color           (get utils/version-warning-colors version-warning "blue")]
+    [utils/NEVersionWarning version-warning
+     (fn [Icon]
+       [ui/Label {:circular true
+                  :color    color
+                  :size     "medium"
+                  :basic    true
+                  :style {:margin-right 5}}
+        Icon
+        ne-version])]))
+
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated owner created-by state] :as nuvlabox}
-   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        locale (subscribe [::i18n-subs/locale])
-        {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])]
+  [{:keys [id created updated owner created-by state nuvlabox-engine-version] :as nuvlabox}
+   {:keys [nuvlabox-api-endpoint]}]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        locale         (subscribe [::i18n-subs/locale])
+        {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])
+        engine-version @(subscribe [::edges-subs/engine-version id])
+        ne-version     (or engine-version nuvlabox-engine-version)]
     [ui/Segment {:secondary true
                  :raised    true}
      [:h4 "NuvlaEdge "
-      (when nuvlabox-engine-version
-        [:<> [ui/Label {:circular true
-                        :color    "blue"
-                        :size     "tiny"}
-              nuvlabox-engine-version]
+      (when ne-version
+        [:<>
+         [NEVersion nuvlabox]
          (when pre-release
            [:span {:style {:background-color :black :color :white :padding "0.1rem 0.5rem 0.2rem 0.5rem"
                            :font-size        "10px" :border-radius "0.2rem"}} (@tr [:pre-release])])])]

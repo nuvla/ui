@@ -1,5 +1,8 @@
 (ns sixsq.nuvla.ui.pages.edges.utils
   (:require [clojure.string :as str]
+            [reagent.core :as r]
+            [re-frame.core :refer [subscribe]]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.pages.edges.spec :as spec]
@@ -7,6 +10,7 @@
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
@@ -294,11 +298,11 @@
   [latest-version version]
   (when (and latest-version version)
     (let [{:keys [major minor patch] :as res} (version-difference latest-version version)]
-     (cond
-       (or (nil? res) (neg? (or major minor patch))) nil
-       (or major (> minor 3)) :outdated-major-version
-       (or minor patch) :outdated-minor-version
-       :else nil))))
+      (cond
+        (or (nil? res) (neg? (or major minor patch))) nil
+        (or major (> minor 3)) :outdated-major-version
+        (or minor patch) :outdated-minor-version
+        :else nil))))
 
 (defn sort-by-version [e]
   (sort-by :release compare-versions e))
@@ -344,3 +348,19 @@
    {:keys [next-heartbeat last-heartbeat] :as _nuvlabox-status}]
   (or last-heartbeat
       (parse-compute-last-from-next next-heartbeat refresh-interval)))
+
+(def version-warning-colors {:outdated-minor-version "yellow"
+                             :outdated-major-version "red"})
+
+(defn NEVersionWarning [warning component]
+  (let [tr    @(subscribe [::i18n-subs/tr])
+        color (get version-warning-colors warning)]
+    (if warning
+      [ui/Popup
+       {:trigger  (r/as-element
+                    [:span [component [ui/Icon {:class icons/i-triangle-exclamation
+                                          :color color}]]])
+        :content  (tr [warning])
+        :position "right center"
+        :size     "small"}]
+      [component])))

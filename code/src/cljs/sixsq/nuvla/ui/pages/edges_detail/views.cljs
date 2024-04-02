@@ -1060,9 +1060,10 @@
     [utils/NEVersionWarning version-warning
      (fn [Icon]
        [ui/Label {:circular true
-                 :color    color
-                 :size     "medium"
-                 :basic    true}
+                  :color    color
+                  :size     "medium"
+                  :basic    true
+                  :style {:margin-right 5}}
         Icon
         ne-version])]))
 

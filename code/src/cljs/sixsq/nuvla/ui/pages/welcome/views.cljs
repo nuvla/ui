@@ -50,6 +50,7 @@
         [:a {:class [:ui :secondary :button] :href "#video-at-the-edge"} (@tr [:welcome-process-video-at-edge])]]]
       [ui/GridColumn {:width 6}
        [ui/Embed {:id          "yqly8M_l2Cs"
+                  :iframe      {:allow-full-screen true}
                   :placeholder "/ui/images/welcome-video.png"
                   :source      "youtube"}]]]
 

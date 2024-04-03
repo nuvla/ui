@@ -55,22 +55,23 @@
      [ui/CardContent
       [ui/CardDescription {:style {:overflow-x "auto"}}
        (if (seq least-available-edge)
-         (into [ui/Table {:basic "very"
-                          :unstackable true}
-                [ui/TableHeader
-                 [ui/TableRow
-                  [ui/TableHeaderCell (str/capitalize (@tr [:name]))]
-                  [ui/TableHeaderCell {:textAlign "right"
-                                       :style {:white-space "nowrap"}}
-                   (str (@tr [:availability]) " (%)")]]]]
-               (mapv (fn [bucket]
-                       (when-let [{:keys [name id avg-online]} (info-edge bucket)]
-                         [ui/TableRow
-                          [ui/TableCell
-                           [values/AsLink (str (general-utils/id->uuid id)
-                                               "?edges-detail-tab=historical-data") :page "edges" :label name]]
-                          [ui/TableCell {:textAlign "right"} (int (* 100 avg-online))]]))
-                     least-available-edge))
+         [ui/Table {:basic       "very"
+                    :unstackable true}
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell (str/capitalize (@tr [:name]))]
+            [ui/TableHeaderCell {:textAlign "right"
+                                 :style     {:white-space "nowrap"}}
+             (str (@tr [:availability]) " (%)")]]]
+          [ui/TableBody
+           (for [bucket least-available-edge]
+             (when-let [{:keys [name id avg-online]} (info-edge bucket)]
+               ^{:key (str "least-available-" id)}
+               [ui/TableRow
+                [ui/TableCell
+                 [values/AsLink (str (general-utils/id->uuid id)
+                                     "?edges-detail-tab=historical-data") :page "edges" :label name]]
+                [ui/TableCell {:textAlign "right"} (int (* 100 avg-online))]]))]]
          [:span (@tr [:no-data-to-show])])]]]))
 
 (defn timespan->unit
@@ -90,8 +91,8 @@
           [from to] (if-not (= ts-utils/timespan-custom timespan-option)
                       (ts-utils/timespan-to-period (:timespan-option timespan))
                       [(:from timespan) (:to timespan)])]
-      [ui/Grid {:padded  true
-                :columns 2
+      [ui/Grid {:padded    true
+                :columns   2
                 :stackable true}
        [ui/GridRow {:centered true}
         [ui/GridColumn {:width     10
@@ -141,7 +142,7 @@
 
         [ui/GridColumn {:width 4}
          [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")
-                        :min-width 250}}
+                        :min-width  250}}
           [OnlineStatsByEdge {:on-close #(reset! extra-info-visible? false)}]]]]])))
 
 (defn FleetTimeSeries []

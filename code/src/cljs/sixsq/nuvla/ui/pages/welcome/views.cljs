@@ -49,8 +49,8 @@
         [:a {:class [:ui :primary :button] :href "#deploy-app"} (@tr [:welcome-deploy-app])]
         [:a {:class [:ui :secondary :button] :href "#video-at-the-edge"} (@tr [:welcome-process-video-at-edge])]]]
       [ui/GridColumn {:width 6}
-       [ui/Embed {:id          "yYJ6laT_6M4"
-                  :placeholder "/ui/images/Cover-video-edge.png"
+       [ui/Embed {:id          "yqly8M_l2Cs"
+                  :placeholder "/ui/images/welcome-video.png"
                   :source      "youtube"}]]]
 
      [:div.ui.section

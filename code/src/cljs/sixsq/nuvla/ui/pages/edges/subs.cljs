@@ -157,7 +157,8 @@
 (reg-sub
   ::latest-ne-release-version
   :<- [::nuvlabox-releases]
-  :-> first)
+  (fn [ne-releases]
+    (some #(when-not (:pre-release %) %) ne-releases)))
 
 (reg-sub
   ::nuvlabox-releases-by-id

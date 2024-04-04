@@ -20,6 +20,7 @@
             [sixsq.nuvla.ui.pages.deployment-sets-detail.subs :as subs :refer [get-target-fleet-ids]]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
+            [sixsq.nuvla.ui.pages.deployment-sets.spec :as deployments-spec]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.pages.edges.spec :as edges-spec]
             [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
@@ -94,11 +95,18 @@
           [:dispatch [::main-events/action-interval-delete
                       {:id refresh-action-depl-set-id}]]]}))
 
+
+(defn untitled-deployments [resources]
+  (->> resources
+       (filter (fn [depl-group]
+                 (re-matches #"Untitled deployment group \d+" (:name depl-group))))))
 (reg-event-fx
   ::init-create
-  (fn []
-    {:fx [[:dispatch [::reset-create]]
-          [:dispatch [::set-changes-protection false]]]}))
+  (fn [{{:keys [::deployments-spec/deployment-sets]} :db}]
+    (let [no-untitled-deployments (count (untitled-deployments (:resources deployment-sets)))]
+      {:fx [[:dispatch [::reset-create]]
+            [:dispatch [::set-deployment-set-edited {:name (str "Untitled deployment group " (inc no-untitled-deployments))}]]
+            [:dispatch [::set-changes-protection false]]]})))
 
 (reg-event-fx
   ::set-changes-protection

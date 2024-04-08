@@ -104,7 +104,6 @@
 (reg-event-fx
   ::set-default-name-and-description
   (fn [{{:keys [::deployments-spec/deployment-sets ::spec/module-applications-sets ::spec/listed-apps-by-id ] :as db} :db} [_ description]]
-    (js/console.log ::apps-sets module-applications-sets ::defaults defaults)
     (let [no-untitled-deployments (count (untitled-deployments (:resources deployment-sets)))]
       {:fx [[:dispatch [::set-deployment-set-edited (cond-> {:name (str "Untitled deployment group " (inc no-untitled-deployments))}
                                                             description (assoc :description description))]]]})))

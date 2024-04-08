@@ -1217,7 +1217,10 @@
   (dispatch [::events/get-deployments-for-deployment-sets uuid])
   (let [deployment-set             (subscribe [::subs/deployment-set])
         edges-stats                (subscribe [::subs/edges-summary-stats])
-        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
+        is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
+        default-description        (subscribe [::subs/default-description])]
+    (when creating?
+      (dispatch [::events/set-default-name-and-description @default-description]))
     (fn []
       (let [tr (subscribe [::i18n-subs/tr])]
         [ui/TabPane

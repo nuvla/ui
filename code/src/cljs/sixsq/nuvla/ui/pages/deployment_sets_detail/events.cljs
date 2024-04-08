@@ -100,13 +100,20 @@
   (->> resources
        (filter (fn [depl-group]
                  (re-matches #"Untitled deployment group \d+" (:name depl-group))))))
+
+(reg-event-fx
+  ::set-default-name-and-description
+  (fn [{{:keys [::deployments-spec/deployment-sets ::spec/module-applications-sets ::spec/listed-apps-by-id ] :as db} :db} [_ description]]
+    (js/console.log ::apps-sets module-applications-sets ::defaults defaults)
+    (let [no-untitled-deployments (count (untitled-deployments (:resources deployment-sets)))]
+      {:fx [[:dispatch [::set-deployment-set-edited (cond-> {:name (str "Untitled deployment group " (inc no-untitled-deployments))}
+                                                            description (assoc :description description))]]]})))
+
 (reg-event-fx
   ::init-create
-  (fn [{{:keys [::deployments-spec/deployment-sets]} :db}]
-    (let [no-untitled-deployments (count (untitled-deployments (:resources deployment-sets)))]
-      {:fx [[:dispatch [::reset-create]]
-            [:dispatch [::set-deployment-set-edited {:name (str "Untitled deployment group " (inc no-untitled-deployments))}]]
-            [:dispatch [::set-changes-protection false]]]})))
+  (fn []
+    {:fx [[:dispatch [::reset-create]]
+          [:dispatch [::set-changes-protection false]]]}))
 
 (reg-event-fx
   ::set-changes-protection

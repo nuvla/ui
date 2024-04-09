@@ -153,11 +153,12 @@
 
 (reg-sub
   ::default-description
-  :<- [::apps-row-data]
+  :<- [::apps-set]
   :<- [::is-controlled-by-apps-set?]
-  (fn [[apps-row-data is-controlled-by-apps-set?]]
+  (fn [[apps-set is-controlled-by-apps-set?]]
     (when is-controlled-by-apps-set?
-      (str/join ", " (mapv :app apps-row-data)))))
+      (:name apps-set)
+      #_(str/join ", " (mapv :name applications)))))
 
 (reg-sub
   ::applications
@@ -166,8 +167,7 @@
          (map-indexed
            (fn [i {:keys [applications]}]
              (map (fn [{:keys [id]}]
-                    (module-plugin/db-module db [::spec/apps-sets i] id)
-                    ) applications)))
+                    (module-plugin/db-module db [::spec/apps-sets i] id)) applications)))
          (apply concat))))
 
 (reg-sub

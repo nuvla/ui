@@ -1219,9 +1219,10 @@
         edges-stats                (subscribe [::subs/edges-summary-stats])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])
         default-description        (subscribe [::subs/default-description])]
-    (when creating?
-      (dispatch [::events/set-default-name-and-description @default-description]))
     (fn []
+      (when creating?
+        (dispatch [::events/set-default-name])
+        (dispatch [::events/set-default-description @default-description]))
       (let [tr (subscribe [::i18n-subs/tr])]
         [ui/TabPane
          [ui/Grid {:columns   2

@@ -102,11 +102,19 @@
                  (re-matches #"Untitled deployment group \d+" (:name depl-group))))))
 
 (reg-event-fx
-  ::set-default-name-and-description
-  (fn [{{:keys [::deployments-spec/deployment-sets ::spec/module-applications-sets ::spec/listed-apps-by-id ] :as db} :db} [_ description]]
-    (let [no-untitled-deployments (count (untitled-deployments (:resources deployment-sets)))]
-      {:fx [[:dispatch [::set-deployment-set-edited (cond-> {:name (str "Untitled deployment group " (inc no-untitled-deployments))}
-                                                            description (assoc :description description))]]]})))
+  ::set-default-name
+  (fn [{{:keys [::deployments-spec/deployment-sets ::spec/default-name-set?] :as db} :db}]
+    (when-not default-name-set?
+      (let [no-untitled-deployments (count (untitled-deployments (:resources deployment-sets)))]
+        {:db (assoc db ::spec/default-name-set? true)
+         :fx [[:dispatch [::edit :name (str "Untitled deployment group " (inc no-untitled-deployments))]]]}))))
+
+(reg-event-fx
+  ::set-default-description
+  (fn [{{:keys [::deployments-spec/deployment-sets ::spec/default-description-set?] :as db} :db} [_ description]]
+    (when (and description (not default-description-set?))
+      {:db (assoc db ::spec/default-description-set? true)
+       :fx [[:dispatch [::edit :description description]]]})))
 
 (reg-event-fx
   ::init-create
@@ -405,17 +413,25 @@
   (fn [db [_ deployment-set-edited]]
     (assoc db ::spec/deployment-set-edited deployment-set-edited)))
 
+(reg-event-db
+  ::set-default-description-true
+  (fn [db]
+    (assoc db ::spec/default-description-set? true)))
+
 (reg-event-fx
   ::edit
   (fn [{{:keys [::spec/deployment-set
-                ::spec/deployment-set-edited]} :db} [_ key value]]
+                ::spec/deployment-set-edited
+                ::spec/default-description-set?]} :db} [_ key value]]
     (let [updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc key value))]
       {:fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
             [:dispatch [::set-changes-protection
                         (utils/unsaved-changes?
-                          deployment-set updated-deployment-set)]]]})))
+                          deployment-set updated-deployment-set)]]
+            (when (and (= :description key) (not default-description-set?))
+              [:dispatch [::set-default-description-true]])]})))
 
 (reg-event-fx
   ::persist!

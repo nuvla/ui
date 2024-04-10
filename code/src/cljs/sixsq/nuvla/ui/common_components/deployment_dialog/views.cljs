@@ -90,7 +90,8 @@
         button-color     (subscribe [::subs/modal-action-button-color])
         button-disabled? (subscribe [::subs/modal-action-button-disabled?])
         operation        (subscribe [::subs/modal-operation])
-        submit-loading?  (subscribe [::subs/submit-loading?])]
+        submit-loading?  (subscribe [::subs/submit-loading?])
+        tr               (subscribe [::i18n-subs/tr])]
     (fn [show-data?]
       (let [hide-fn   #(do
                          (when (= (:state @deployment) "CREATED")
@@ -106,8 +107,11 @@
          [ui/ModalContent
           [ui/Message {:info true
                        :size "small"}
-           [:p "You can now deploy your app at once to multiple NuvlaEdges and/or together with more apps with " [:b "Deployment Groups"] "." [:br]
-            [ui/Button {:on-click #(dispatch [::events/create-deployment-group-from-modal @deployment ])} [:b "Try it here!"]]]]
+           [:p (@tr [:create-deployment-group-with-app-message])  [:br]
+            [:a {:style {:cursor "pointer"
+                         :font-weight "bold"}
+                 :on-click #(dispatch [::events/create-deployment-group-from-modal @deployment ])}
+             (@tr [:check-it-out])]]]
           (when @error
             [ui/Message {:error true}
              [ui/MessageHeader (:title @error)]
@@ -126,8 +130,7 @@
                           :style   {:padding 0
                                     :height  "25em"}}
               (when-not @loading?
-                [step-content-segment @active-step])]
-             ]]]]
+                [step-content-segment @active-step])]]]]]
          [ui/ModalActions
           [ui/Button {:color    @button-color
                       :disabled @button-disabled?

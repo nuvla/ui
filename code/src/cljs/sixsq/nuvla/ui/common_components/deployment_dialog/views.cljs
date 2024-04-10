@@ -104,6 +104,10 @@
 
          [uix/ModalHeader {:header @header-text :icon @button-icon}]
          [ui/ModalContent
+          [ui/Message {:info true
+                       :size "small"}
+           [:p "You can now deploy your app at once to multiple NuvlaEdges and/or together with more apps with " [:b "Deployment Groups"] "." [:br]
+            [ui/Button {:on-click #(dispatch [::events/create-deployment-group-from-modal @deployment ])} [:b "Try it here!"]]]]
           (when @error
             [ui/Message {:error true}
              [ui/MessageHeader (:title @error)]

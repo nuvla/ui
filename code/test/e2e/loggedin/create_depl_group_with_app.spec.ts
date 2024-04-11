@@ -17,11 +17,11 @@ import { test, expect } from '@playwright/test';
 
   await page.getByRole('link', { name: 'Nginx Nginx (pronounced "engine-x") is an open source reverse proxy server for HTTP, HTTPS, SMTP, POP3, and IMAP protocols, as well as a load balancer, HTTP cache, and a web server (origin server). deploy' }).getByRole('button', { name: 'deploy' }).click();
 
-  await page.waitForTimeout(5000);
+  await page.waitForTimeout(1000);
 
   await page.getByText('Check it out!').click();
 
-  await page.waitForTimeout(5000);
+  await page.waitForTimeout(1000);
 
   await page.getByRole('cell', { name: 'Nginx' }).click();
 

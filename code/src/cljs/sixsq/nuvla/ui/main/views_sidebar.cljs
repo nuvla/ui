@@ -65,14 +65,15 @@
                  :inverted true
                  :style    {:z-index 999}
                  :on-click #(dispatch [::events/close-sidebar])}]
-     [ui/Menu {:id         "nuvla-ui-sidebar"
-               :style      {:transition "0.5s"
-                            :width      (if show? sidebar-width "0")}
-               :vertical   true
-               :icon       "labeled"
-               :borderless true
-               :inverted   true
-               :fixed      "left"}
+     [ui/Menu {:id          "nuvla-ui-sidebar"
+               :data-testid "nuvla-ui-sidebar"
+               :style       {:transition "0.5s"
+                             :width      (if show? sidebar-width "0")}
+               :vertical    true
+               :icon        "labeled"
+               :borderless  true
+               :inverted    true
+               :fixed       "left"}
       (when-not iframe? [logo-item])
       (for [page pages-list]
         ^{:key (:key page)}

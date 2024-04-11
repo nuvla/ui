@@ -407,9 +407,10 @@
      {:on-confirm         #(dispatch [::events/delete {:deletable? deletable?
                                                        :forceable? forceable?}])
       :trigger            (r/as-element [ui/MenuItem
-                                         {:disabled (and
-                                                      (not forceable?)
-                                                      (not deletable?))}
+                                         {:data-testid "deployment-group-delete-button"
+                                          :disabled    (and
+                                                         (not forceable?)
+                                                         (not deletable?))}
                                          [icons/TrashIconFull]
                                          button-text])
       :content            [:h3 content]

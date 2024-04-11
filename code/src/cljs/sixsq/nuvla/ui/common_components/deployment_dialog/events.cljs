@@ -31,7 +31,6 @@
 (reg-event-fx
   ::close-deployment-modal
   (fn [{:keys [db]} [_ deployment]]
-    (js/console.log deployment)
     (cond-> {:db (assoc db ::spec/deploy-modal-visible? false)}
             (= (:state deployment) "CREATED") (assoc :fx [[:dispatch [::delete-deployment (:id deployment)]]]))))
 

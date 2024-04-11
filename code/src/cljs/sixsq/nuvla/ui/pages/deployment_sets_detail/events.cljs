@@ -28,7 +28,8 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (def refresh-action-depl-set-id :deployment-set)
 (def refresh-action-deployments-id :deployment-set-get-deployments)
@@ -96,18 +97,12 @@
                       {:id refresh-action-depl-set-id}]]]}))
 
 
-(defn untitled-deployments [resources]
-  (->> resources
-       (filter (fn [depl-group]
-                 (re-matches #"Untitled deployment group \d+" (:name depl-group))))))
-
 (reg-event-fx
   ::set-default-name
   (fn [{{:keys [::deployments-spec/deployment-sets ::spec/default-name-set?] :as db} :db}]
     (when-not default-name-set?
-      (let [no-untitled-deployments (count (untitled-deployments (:resources deployment-sets)))]
-        {:db (assoc db ::spec/default-name-set? true)
-         :fx [[:dispatch [::edit :name (str "Untitled deployment group " (inc no-untitled-deployments))]]]}))))
+      {:db (assoc db ::spec/default-name-set? true)
+       :fx [[:dispatch [::edit :name (str "Deployment Group " (.toISOString (time/now)))]]]})))
 
 (reg-event-fx
   ::set-default-description

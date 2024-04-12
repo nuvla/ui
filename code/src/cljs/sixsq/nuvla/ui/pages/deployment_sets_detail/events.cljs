@@ -20,7 +20,6 @@
             [sixsq.nuvla.ui.pages.deployment-sets-detail.subs :as subs :refer [get-target-fleet-ids]]
             [sixsq.nuvla.ui.pages.deployment-sets-detail.utils :as utils]
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
-            [sixsq.nuvla.ui.pages.deployment-sets.spec :as deployments-spec]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.pages.edges.spec :as edges-spec]
             [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
@@ -95,27 +94,13 @@
      :fx [[:dispatch [::clear-deployments]]
           [:dispatch [::main-events/action-interval-delete
                       {:id refresh-action-depl-set-id}]]]}))
-
-
-(reg-event-fx
-  ::set-default-name
-  (fn [{{:keys [::deployments-spec/deployment-sets ::spec/default-name-set?] :as db} :db}]
-    (when-not default-name-set?
-      {:db (assoc db ::spec/default-name-set? true)
-       :fx [[:dispatch [::edit :name (str "Deployment Group " (.toISOString (time/now)))]]]})))
-
-(reg-event-fx
-  ::set-default-description
-  (fn [{{:keys [::deployments-spec/deployment-sets ::spec/default-description-set?] :as db} :db} [_ description]]
-    (when (and description (not default-description-set?))
-      {:db (assoc db ::spec/default-description-set? true)
-       :fx [[:dispatch [::edit :description description]]]})))
-
 (reg-event-fx
   ::init-create
   (fn []
-    {:fx [[:dispatch [::reset-create]]
-          [:dispatch [::set-changes-protection false]]]}))
+    (let [current-timestamp (time/time->format (time/now))]
+      {:fx [[:dispatch [::reset-create]]
+            [:dispatch [::set-deployment-set-edited {:name (str "Deployment Group " current-timestamp)}]]
+            [:dispatch [::set-changes-protection false]]]})))
 
 (reg-event-fx
   ::set-changes-protection

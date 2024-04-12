@@ -9,6 +9,8 @@
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.pages.data-set.spec :as data-set-spec]
             [sixsq.nuvla.ui.pages.data.spec :as data-spec]
+            [sixsq.nuvla.ui.pages.deployment-sets-detail.events :as depl-group-events]
+            [sixsq.nuvla.ui.pages.deployment-sets-detail.subs :as depl-group-subs]
             [sixsq.nuvla.ui.pages.deployments-detail.events :as deployments-detail-events]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
@@ -26,6 +28,24 @@
   (fn [_ [_ id]]
     {::cimi-api-fx/delete [id #()]}))
 
+(reg-event-fx
+  ::close-deployment-modal
+  (fn [{:keys [db]} [_ deployment]]
+    (cond-> {:db (assoc db ::spec/deploy-modal-visible? false)}
+            (= (:state deployment) "CREATED") (assoc :fx [[:dispatch [::delete-deployment (:id deployment)]]]))))
+
+
+(reg-event-fx
+  ::create-deployment-group-from-modal
+  (fn [_ [_ deployment]]
+    (let [id (random-uuid)]
+      {
+       :fx [[:dispatch [::close-deployment-modal deployment]]
+            [:dispatch [::routing-events/navigate
+                        routes/deployment-groups-details
+                        {:uuid :create}
+                        {depl-group-subs/creation-temp-id-key id}]]
+            [:dispatch [::depl-group-events/add-app-from-picker (:module deployment)]]]})))
 (reg-event-fx
   ::set-credentials
   (fn [{{:keys [::spec/selected-credential-id

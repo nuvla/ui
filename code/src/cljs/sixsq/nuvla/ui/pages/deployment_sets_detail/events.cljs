@@ -393,25 +393,17 @@
   (fn [db [_ deployment-set-edited]]
     (assoc db ::spec/deployment-set-edited deployment-set-edited)))
 
-(reg-event-db
-  ::set-default-description-true
-  (fn [db]
-    (assoc db ::spec/default-description-set? true)))
-
 (reg-event-fx
   ::edit
   (fn [{{:keys [::spec/deployment-set
-                ::spec/deployment-set-edited
-                ::spec/default-description-set?]} :db} [_ key value]]
+                ::spec/deployment-set-edited]} :db} [_ key value]]
     (let [updated-deployment-set (-> deployment-set
                                      (merge deployment-set-edited)
                                      (assoc key value))]
       {:fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
             [:dispatch [::set-changes-protection
                         (utils/unsaved-changes?
-                          deployment-set updated-deployment-set)]]
-            (when (and (= :description key) (not default-description-set?))
-              [:dispatch [::set-default-description-true]])]})))
+                          deployment-set updated-deployment-set)]]]})))
 
 (reg-event-fx
   ::persist!

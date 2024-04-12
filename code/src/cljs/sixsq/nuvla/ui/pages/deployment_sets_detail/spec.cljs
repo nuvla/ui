@@ -58,17 +58,11 @@
 
 (s/def ::edge-picker-select (s/nilable any?))
 
-(s/def ::default-name-set? boolean?)
-
-(s/def ::default-description-set? boolean?)
-
 (def defaults
   {::module-applications-sets  nil
    ::apps-sets                 nil
    ::deployment-set            nil
    ::deployment-set-edited     nil
-   ::default-description-set?  false
-   ::default-name-set?         false
    ::edges                     nil
    ::edges-documents           nil
    ::validate-form?            false

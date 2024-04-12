@@ -152,15 +152,6 @@
     (utils/is-controlled-by-apps-set apps-set)))
 
 (reg-sub
-  ::default-description
-  :<- [::apps-set]
-  :<- [::is-controlled-by-apps-set?]
-  (fn [[apps-set is-controlled-by-apps-set?]]
-    (when is-controlled-by-apps-set?
-      (:name apps-set)
-      #_(str/join ", " (mapv :name applications)))))
-
-(reg-sub
   ::applications
   (fn [db]
     (->> (applications-sets db)

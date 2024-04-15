@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.common-components.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.pages.deployment-sets.events :as depl-group-events]
             [sixsq.nuvla.ui.pages.deployments-detail.subs :as deployments-detail-subs]
             [sixsq.nuvla.ui.pages.deployments-detail.views :as deployments-detail-views]
             [sixsq.nuvla.ui.pages.deployments.events :as events]
@@ -147,11 +148,16 @@
 
 (defn MenuBar
   []
-  (let [view (subscribe [::subs/view])]
+  (let [view (subscribe [::subs/view])
+        tr   (subscribe [::i18n-subs/tr])]
     (fn []
       [:<>
        [components/StickyBar
         [ui/Menu {:borderless true, :stackable true}
+         [uix/MenuItem
+          {:name     (@tr [:add-deployment-group])
+           :icon     icons/i-plus-large
+           :on-click #(dispatch [::depl-group-events/new-deployment-set])}]
          [ui/MenuItem {:icon     icons/i-grid-layout
                        :active   (= @view "cards")
                        :on-click #(dispatch [::events/set-view "cards"])}]

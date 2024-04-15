@@ -36,6 +36,7 @@
         :add-apps-to-app-bouquet                       "To add apps to your application bouquet, click the plus button below."
         :add-by-user-group-id                          "Add by user/group ID: "
         :add-coupon                                    "Add coupon"
+        :add-deployment-group                          "Add deployment group"
         :add-dropdown                                  "Add:"
         :add-edges                                     "Add NuvlaEdges"
         :add-first-tag                                 "Add your first tag"

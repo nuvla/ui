@@ -1082,7 +1082,8 @@
               {:db-path      [::spec/edge-picker-full-text-search]
                :change-event [::pagination-plugin/change-page [::spec/edge-picker-pagination] 1]}])
            ^{:key @additional-filter}
-           [:div {:style {:margin-top "0.4rem"}}
+           [:div {:style {:margin-top    "0.4rem"
+                          :margin-bottom "0.4rem"}}
             [filter-comp/ButtonFilter
              {:resource-name                    edges-spec/resource-name
               :default-filter                   @additional-filter

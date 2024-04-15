@@ -325,9 +325,10 @@
                     (close-fn))]
     (if view
       [:button
-       {:style {:border :none
-                :z-index 1000
-                :cursor :pointer}
+       {:style {:border       :none
+                :z-index      1000
+                :margin-left  5
+                :cursor       :pointer}
         :on-click clear-fn}
        view]
       [ui/Button

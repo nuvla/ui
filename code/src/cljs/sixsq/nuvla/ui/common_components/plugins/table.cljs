@@ -366,8 +366,7 @@
         nothing-selected?         (= :none @selection-status)
         bulk-edit-success-message (subscribe [::bulk-edit-success-message-sub db-path])]
     [:div
-     {:style {:position :sticky :top "39px" :z-index 998}
-      :class [(if selectable? :visible :invisible)]}
+     {:style {:position :sticky :top "39px" :z-index 998}}
      (when (seq bulk-actions)
        [:div {:style {:display          :flex
                       :border           "1px solid rgb(230 230 230)"
@@ -406,7 +405,7 @@
                :data-testid "bulk-edit-success-message"}
          @bulk-edit-success-message]])
      [:div
-      {:style {:heigh            "2rem"
+      {:style {:height           "2rem"
                :padding-left     "1rem"
                :border           "1px solid rgb(230 230 230)"
                :border-radius    "0.28rem"
@@ -601,26 +600,25 @@
                          (s/valid? ::select-config select-config)
                          (or (not rights-needed)
                              (some (partial general-utils/can-operation? rights-needed) rows)))
-        selected-set   (when selectable? (subscribe [::selected-set-sub select-db-path]))
-        select-all?    (when selectable? (subscribe [::select-all?-sub select-db-path]))
-        page-selected? (when selectable? (subscribe [::is-all-page-selected? select-db-path resources-sub-key]))
+        selected-set   (subscribe [::selected-set-sub select-db-path])
+        select-all?    (subscribe [::select-all?-sub select-db-path])
+        page-selected? (subscribe [::is-all-page-selected? select-db-path resources-sub-key])
         get-row-props  (fn [row]
                          (update (merge row-props {:on-click #(when row-click-handler (row-click-handler row))})
                                  :style
                                  merge (:style (:table-row-prop row))))]
     (dispatch [::init-pre-selection select-all-query-param select-db-path])
     [:div
-     (when selectable?
-       [BulkActionBar {:selectable?         selectable?
-                       :selected-all-sub    select-all?
-                       :selected-set-sub    selected-set
-                       :page-selected?-sub  page-selected?
-                       :total-count-sub-key total-count-sub-key
-                       :rows                rows
-                       :db-path             select-db-path
-                       :bulk-actions        bulk-actions
-                       :resources-sub-key   resources-sub-key
-                       :disabled-tooltip    disabled-tooltip}])
+     [BulkActionBar {:selectable?         selectable?
+                     :selected-all-sub    select-all?
+                     :selected-set-sub    selected-set
+                     :page-selected?-sub  page-selected?
+                     :total-count-sub-key total-count-sub-key
+                     :rows                rows
+                     :db-path             select-db-path
+                     :bulk-actions        bulk-actions
+                     :resources-sub-key   resources-sub-key
+                     :disabled-tooltip    disabled-tooltip}]
      [:div
       [:div {:style {:overflow :auto
                      :padding  0

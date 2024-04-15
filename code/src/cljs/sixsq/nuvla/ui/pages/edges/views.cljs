@@ -316,6 +316,7 @@
         bulk-deploy-menuitem     {:menuitem (let [message         (@tr [:deploy-with-static-edges])
                                                   deploy-menuitem [uix/HighlightableMenuItem
                                                                    {:on-click          bulk-deploy-static
+                                                                    :disabled          (not (seq @selection))
                                                                     :query-param-value :bulk-deploy}
                                                                    [icons/RocketIcon]
                                                                    (@tr [:edges-bulk-deploy-app])]]
@@ -352,9 +353,9 @@
                                                          :trigger (r/as-element [:div deploy-menuitem])}])}]
     [:<>
      (when bulk-edit-modal [bulk-edit-modal])
-     [NuvlaEdgeTableView {:select-config {:bulk-actions [trigger
-                                                         bulk-deploy-menuitem
-                                                         dyn-bulk-deploy-menuitem]
+     [NuvlaEdgeTableView {:select-config {:bulk-actions        [trigger
+                                                                bulk-deploy-menuitem
+                                                                dyn-bulk-deploy-menuitem]
                                           :total-count-sub-key [::subs/nuvlaboxes-count]
                                           :resources-sub-key   [::subs/nuvlaboxes-resources]
                                           :select-db-path      [::spec/select]

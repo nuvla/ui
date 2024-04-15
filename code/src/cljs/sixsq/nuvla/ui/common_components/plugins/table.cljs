@@ -324,100 +324,101 @@
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub disabled-tooltip
            db-path bulk-actions resources-sub-key selectable? resource-type]}]
-  (let [tr                        (subscribe [::i18n-subs/tr])
-        rows                      @(subscribe resources-sub-key)
-        total-count               (subscribe total-count-sub-key)
-        selection-status          (subscribe [::selection-status db-path resources-sub-key @total-count])
-        on-page-selected          (count @(subscribe [::on-page-selected-set db-path resources-sub-key]))
-        off-page-selected         (if @selected-all-sub
-                                    (- @total-count (count rows))
-                                    (count @(subscribe [::off-page-selected-set db-path resources-sub-key])))
-        off-page-selection?       (pos? off-page-selected)
-        off-page-selection-text   (when off-page-selection?
-                                    (str/join " " [off-page-selected
-                                                   (@tr [:on-other-pages])]))
-        selected-all-text         (when (= :all @selection-status)
-                                    (str/join " " [(str/capitalize (@tr [:all]))
-                                                   @total-count
-                                                   (@tr [(or resource-type :items)])
-                                                   (@tr [:are-selected])
-                                                   (when off-page-selection-text
-                                                     (str "(" off-page-selection-text ")"))]))
-        on-page-selection?        (pos? on-page-selected)
-        manual-selection-text     (str/join " " [(when (#{:all :page :page-plus} @selection-status)
-                                                   (str/capitalize (@tr [:all])))
-                                                 (when on-page-selection?
-                                                   (str on-page-selected
-                                                        " "
-                                                        (@tr [(or resource-type :items)])
-                                                        " "
-                                                        (@tr [:on-this-page])
-                                                        " "
-                                                        (@tr [:are-selected])))
-                                                 (when off-page-selection?
-                                                   (if on-page-selection?
-                                                     (str "(" off-page-selection-text ")")
-                                                     (str off-page-selected " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
-        button-text               (if (= @selection-status :all)
-                                    (@tr [:clear-selection])
-                                    (str (@tr [:select-all]) " " @total-count))
-        payload                   {:select-all   @selected-all-sub
-                                   :selected-set @selected-set-sub}
-        nothing-selected?         (= :none @selection-status)
-        bulk-edit-success-message (subscribe [::bulk-edit-success-message-sub db-path])]
-    [:div
-     {:style {:position :sticky :top "39px" :z-index 998}}
-     (when (seq bulk-actions)
-       [:div {:style {:display          :flex
-                      :border           "1px solid rgb(230 230 230)"
-                      :border-radius    "0.28rem"
-                      :background-color "rgb(249 250 251)"
-                      :justify-content  :space-between
-                      :align-items      :center
-                      :height           "40px"
-                      :gap              "1rem"}}
-        [:div
-         [ui/Menu {:style     {:border           :none
-                               :box-shadow       :none
-                               :background-color :transparent}
-                   :stackable true}
-          (doall
-            (for [[idx action] (map-indexed vector bulk-actions)
-                  :let [{:keys [key name event icon menuitem]} action]]
-              (or menuitem
-                  ^{:key key}
-                  [ui/Popup {:trigger
-                             (r/as-element
-                               [:div
-                                [uix/HighlightableMenuItem
-                                 {:disabled          (or nothing-selected? disabled-tooltip)
-                                  :query-param-value key
-                                  :on-click          (fn []
-                                                       (if (fn? event) (event payload)
-                                                                       (dispatch event)))
-                                  :key               idx}
-                                 (when icon [icon])
-                                 name]])
-                             :basic    true
-                             :disabled (and (not disabled-tooltip) (not= :none @selection-status))
-                             :content  (or disabled-tooltip (@tr [:select-at-least-one-item]))}])))]]
-        [:div {:style {:padding-right "1rem"}
-               :data-testid "bulk-edit-success-message"}
-         @bulk-edit-success-message]])
-     [:div
-      {:style {:height           "2rem"
-               :padding-left     "1rem"
-               :border           "1px solid rgb(230 230 230)"
-               :border-radius    "0.28rem"
-               :background-color "#f0eeef"}}
-      [:div {:style {:display         :flex
-                     :justify-content :center
-                     :align-items     :center}}
-       [:span (or selected-all-text manual-selection-text)]
-       [:button {:style    {:width "120px" :text-align :center :border :none}
-                 :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
-                 :class    [:select-all]}
-        button-text]]]]))
+  (when resources-sub-key
+    (let [tr                        (subscribe [::i18n-subs/tr])
+          rows                      @(subscribe resources-sub-key)
+          total-count               (subscribe total-count-sub-key)
+          selection-status          (subscribe [::selection-status db-path resources-sub-key @total-count])
+          on-page-selected          (count @(subscribe [::on-page-selected-set db-path resources-sub-key]))
+          off-page-selected         (if @selected-all-sub
+                                      (- @total-count (count rows))
+                                      (count @(subscribe [::off-page-selected-set db-path resources-sub-key])))
+          off-page-selection?       (pos? off-page-selected)
+          off-page-selection-text   (when off-page-selection?
+                                      (str/join " " [off-page-selected
+                                                     (@tr [:on-other-pages])]))
+          selected-all-text         (when (= :all @selection-status)
+                                      (str/join " " [(str/capitalize (@tr [:all]))
+                                                     @total-count
+                                                     (@tr [(or resource-type :items)])
+                                                     (@tr [:are-selected])
+                                                     (when off-page-selection-text
+                                                       (str "(" off-page-selection-text ")"))]))
+          on-page-selection?        (pos? on-page-selected)
+          manual-selection-text     (str/join " " [(when (#{:all :page :page-plus} @selection-status)
+                                                     (str/capitalize (@tr [:all])))
+                                                   (when on-page-selection?
+                                                     (str on-page-selected
+                                                          " "
+                                                          (@tr [(or resource-type :items)])
+                                                          " "
+                                                          (@tr [:on-this-page])
+                                                          " "
+                                                          (@tr [:are-selected])))
+                                                   (when off-page-selection?
+                                                     (if on-page-selection?
+                                                       (str "(" off-page-selection-text ")")
+                                                       (str off-page-selected " " (@tr [:on-other-pages]) " " (@tr [:are-selected]))))])
+          button-text               (if (= @selection-status :all)
+                                      (@tr [:clear-selection])
+                                      (str (@tr [:select-all]) " " @total-count))
+          payload                   {:select-all   @selected-all-sub
+                                     :selected-set @selected-set-sub}
+          nothing-selected?         (or (= :none @selection-status) (zero? @total-count))
+          bulk-edit-success-message (subscribe [::bulk-edit-success-message-sub db-path])]
+      [:div
+       {:style {:position :sticky :top "39px" :z-index 998}}
+       (when (seq bulk-actions)
+         [:div {:style {:display          :flex
+                        :border           "1px solid rgb(230 230 230)"
+                        :border-radius    "0.28rem"
+                        :background-color "rgb(249 250 251)"
+                        :justify-content  :space-between
+                        :align-items      :center
+                        :height           "40px"
+                        :gap              "1rem"}}
+          [:div
+           [ui/Menu {:style     {:border           :none
+                                 :box-shadow       :none
+                                 :background-color :transparent}
+                     :stackable true}
+            (doall
+              (for [[idx action] (map-indexed vector bulk-actions)
+                    :let [{:keys [key name event icon menuitem]} action]]
+                (or menuitem
+                    ^{:key key}
+                    [ui/Popup {:trigger
+                               (r/as-element
+                                 [:div
+                                  [uix/HighlightableMenuItem
+                                   {:disabled          (or nothing-selected? disabled-tooltip)
+                                    :query-param-value key
+                                    :on-click          (fn []
+                                                         (if (fn? event) (event payload)
+                                                                         (dispatch event)))
+                                    :key               idx}
+                                   (when icon [icon])
+                                   name]])
+                               :basic    true
+                               :disabled (and (not disabled-tooltip) (not= :none @selection-status))
+                               :content  (or disabled-tooltip (@tr [:select-at-least-one-item]))}])))]]
+          [:div {:style       {:padding-right "1rem"}
+                 :data-testid "bulk-edit-success-message"}
+           @bulk-edit-success-message]])
+       [:div
+        {:style {:height           "2rem"
+                 :padding-left     "1rem"
+                 :border           "1px solid rgb(230 230 230)"
+                 :border-radius    "0.28rem"
+                 :background-color "#f0eeef"}}
+        [:div {:style {:display         :flex
+                       :justify-content :center
+                       :align-items     :center}}
+         [:span (or selected-all-text manual-selection-text)]
+         [:button {:style    {:width "120px" :text-align :center :border :none}
+                   :on-click (fn [] (dispatch [::select-all db-path @selection-status]))
+                   :class    [:select-all]}
+          button-text]]]])))
 
 
 (def local-storage-key

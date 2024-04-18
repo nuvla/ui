@@ -13,6 +13,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
+            [sixsq.nuvla.ui.utils.timeseries-components]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 (defn graph-options [tr {:keys [timespan-option] :as timespan} {:keys [title y-config plugins x-config]}]
   (let [[from to] (if-not (= "custom period" timespan-option)
@@ -51,7 +52,7 @@
 
 (defn CpuLoadTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (ts-utils/data->ts-data data)]
+        ts-data (ts-utils/data->timeseries-data data)]
     [:div
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
@@ -78,7 +79,7 @@
 
 (defn RamUsageTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (ts-utils/data->ts-data data)]
+        ts-data (ts-utils/data->timeseries-data data)]
     [:div {:style {:margin-top 35}}
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
@@ -122,7 +123,7 @@
 
 (defn NEStatusTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (ts-utils/data->ts-data data)
+        ts-data (ts-utils/data->timeseries-data data)
         dataset (->> ts-data
                      (mapv (fn [d]
                              {:x      (:timestamp d)
@@ -218,46 +219,6 @@
                                                                      :y-config {:title {:display "true"
                                                                                         :text    (@tr [:megabytes])}}})}]])))))
 
-(defn CustomPeriodSelector [timespan {:keys [on-change-fn-from on-change-fn-to]}]
-  (let [tr                      (subscribe [::i18n-subs/tr])
-        locale                  (subscribe [::i18n-subs/locale])]
-    [:<>
-     [datepicker-utils/datepickerWithLabel
-      [datepicker-utils/label (@tr [:from])]
-      [ui/DatePicker {:show-time-select false
-                      :className        "datepicker"
-                      :start-date       (:from timespan)
-                      :end-date         (:to timespan)
-                      :selected         (:from timespan)
-                      :selects-start    true
-                      :placeholderText  "Select a date"
-                      :date-format      "dd/MM/yyyy"
-                      :time-format      "HH:mm"
-                      :max-date         (time/days-before 1)
-                      :time-intervals   1
-                      :locale           (or (time/locale-string->locale-object @locale) @locale)
-                      :fixed-height     true
-                      :on-change        on-change-fn-from}]]
-     [datepicker-utils/datepickerWithLabel
-      [datepicker-utils/label (str/capitalize (@tr [:to]))]
-      [ui/DatePicker {:selects-end      true
-                      :show-time-select false
-                      :className        "datepicker"
-                      :start-date       (:from timespan)
-                      :end-date         (:to timespan)
-                      :max-date         (time/now)
-                      :min-date         (:from timespan)
-                      :placeholderText  "Select a date"
-                      :selected         (:to timespan)
-                      :date-format      "dd/MM/yyyy"
-                      :time-format      "HH:mm"
-                      :time-intervals   1
-                      :locale           (or (time/locale-string->locale-object @locale) @locale)
-                      :fixed-height     true
-                      :on-change        #(on-change-fn-to
-                                           (if (time/is-today? %) (time/now)
-                                             (time/end-of-day %)))}]]]))
-
 (defn ExportDataModal [{:keys [on-close]}]
   (r/with-let [state (r/atom {:form-data               {}
                               :custom-period-selected? false})]
@@ -336,7 +297,7 @@
                                          :visibility    (if (:custom-period-selected? @state)
                                                           "visible"
                                                           "hidden")}}
-                           [CustomPeriodSelector (:form-data @state)
+                           [sixsq.nuvla.ui.utils.timeseries-components/CustomPeriodSelector (:form-data @state)
                             {:on-change-fn-from #(swap! state assoc-in [:form-data :from] %)
                              :on-change-fn-to   #(swap! state assoc-in [:form-data :to] %)}]]]))]]]]
          [ui/ModalActions
@@ -412,16 +373,16 @@
                               :visibility  (if (= "custom period" @currently-selected-option)
                                              "visible"
                                              "hidden")}}
-                [CustomPeriodSelector @custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
-                                                                                (when (:to @custom-timespan)
-                                                                                  (dispatch [::events/set-selected-timespan {:from %
-                                                                                                                             :to (:to @custom-timespan)
-                                                                                                                             :timespan-option "custom period"}])))
-                                                        :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
-                                                                                (when (:from @custom-timespan)
-                                                                                  (dispatch [::events/set-selected-timespan {:from (:from @custom-timespan)
-                                                                                                                             :to %
-                                                                                                                             :timespan-option "custom period"}])))}]]]]
+                [sixsq.nuvla.ui.utils.timeseries-components/CustomPeriodSelector @custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
+                                                                                                                           (when (:to @custom-timespan)
+                                                                                                                             (dispatch [::events/set-selected-timespan {:from %
+                                                                                                                                                                        :to (:to @custom-timespan)
+                                                                                                                                                                        :timespan-option "custom period"}])))
+                                                                                                   :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
+                                                                                                                           (when (:from @custom-timespan)
+                                                                                                                             (dispatch [::events/set-selected-timespan {:from (:from @custom-timespan)
+                                                                                                                                                                        :to %
+                                                                                                                                                                        :timespan-option "custom period"}])))}]]]]
              [ui/MenuItem {:icon     icons/i-export
                            :position "right"
                            :content  (str (@tr [:export-data]) " (.csv)")

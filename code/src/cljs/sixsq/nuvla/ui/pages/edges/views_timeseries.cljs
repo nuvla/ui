@@ -31,7 +31,7 @@
   (let [fleet-stats          (subscribe [::subs/fleet-stats])
         tr                   (subscribe [::i18n-subs/tr])
         stats-by-edge        (:availability-by-edge @fleet-stats)
-        ts-data              (ts-utils/data->ts-data stats-by-edge)
+        ts-data              (ts-utils/data->timeseries-data stats-by-edge)
         n                    10
         least-available-edge (->> (first ts-data)
                                   :aggregations
@@ -87,7 +87,7 @@
 (defn FleetStatusTimeSeries [{:keys [timespan-option] :as timespan} data]
   (r/with-let [extra-info-visible? (r/atom false)]
     (let [tr      (subscribe [::i18n-subs/tr])
-          ts-data (ts-utils/data->ts-data data)
+          ts-data (ts-utils/data->timeseries-data data)
           [from to] (if-not (= ts-utils/timespan-custom timespan-option)
                       (ts-utils/timespan-to-period (:timespan-option timespan))
                       [(:from timespan) (:to timespan)])]
@@ -196,7 +196,7 @@
                          :visibility  (if (= ts-utils/timespan-custom @currently-selected-option)
                                         "visible"
                                         "hidden")}}
-           [edges-detail-timeseries/CustomPeriodSelector @custom-timespan
+           [sixsq.nuvla.ui.utils.timeseries-components/CustomPeriodSelector @custom-timespan
             {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
                                      (when (:to @custom-timespan)
                                        (dispatch [::events/set-selected-fleet-timespan

@@ -191,7 +191,12 @@
     (fn []
       (if (or (seq @applications) @editable?)
         ^{:key (str "tab-apps-" id "-" @rerender-atom)}
-        [ui/Tab {:panes (cond->
+        [ui/Tab {:menu {:style {:display "flex"
+                                :flex-wrap "wrap"}
+                        :stackable true
+                        :pointing true
+                        :secondary true}
+                 :panes (cond->
                           (mapv
                             (fn [{:keys [name subtype] module-id :id}]
                               {:menuItem

@@ -275,7 +275,7 @@
     (reset! form-data current-config)
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
-    (fn [{:keys [id] :as _resource}]
+    (fn [{:keys [id] :as _resource} status]
       (let [correct-nb?      (= (:parent status) id)
             target-version   (->> @releases
                                   (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))

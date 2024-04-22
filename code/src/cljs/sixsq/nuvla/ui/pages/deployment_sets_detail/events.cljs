@@ -27,7 +27,8 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :as routing-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (def refresh-action-depl-set-id :deployment-set)
 (def refresh-action-deployments-id :deployment-set-get-deployments)
@@ -93,12 +94,13 @@
      :fx [[:dispatch [::clear-deployments]]
           [:dispatch [::main-events/action-interval-delete
                       {:id refresh-action-depl-set-id}]]]}))
-
 (reg-event-fx
   ::init-create
   (fn []
-    {:fx [[:dispatch [::reset-create]]
-          [:dispatch [::set-changes-protection false]]]}))
+    (let [current-timestamp (time/time->format (time/now))]
+      {:fx [[:dispatch [::reset-create]]
+            [:dispatch [::set-deployment-set-edited {:name (str "Deployment Group " current-timestamp)}]]
+            [:dispatch [::set-changes-protection false]]]})))
 
 (reg-event-fx
   ::set-changes-protection

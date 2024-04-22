@@ -158,8 +158,7 @@
          (map-indexed
            (fn [i {:keys [applications]}]
              (map (fn [{:keys [id]}]
-                    (module-plugin/db-module db [::spec/apps-sets i] id)
-                    ) applications)))
+                    (module-plugin/db-module db [::spec/apps-sets i] id)) applications)))
          (apply concat))))
 
 (reg-sub

@@ -244,9 +244,10 @@
                               :style     {:margin "1em"}
                               :on-change (on-module-change module)}])))]])]]))
 (defn UpdateButton
-  [{:keys [id nuvlabox-engine-version] :as _resource} status]
+  [{:keys [id nuvlabox-engine-version] :as _resource}]
   (let [show?          (r/atom false)
         tr             (subscribe [::i18n-subs/tr])
+        status         (subscribe [::subs/nuvlabox-status])
         modules        (subscribe [::subs/nuvlabox-modules])
         releases       (subscribe [::edges-subs/nuvlabox-releases-options])
         releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
@@ -266,17 +267,17 @@
         on-click-fn    #(dispatch [::events/operation id "update-nuvlabox"
                                    (utils/format-update-data @form-data)
                                    on-success-fn on-error-fn])
-        current-config {:project-name     (-> status :installation-parameters :project-name)
-                        :working-dir      (-> status :installation-parameters :working-dir)
+        current-config {:project-name     (-> @status :installation-parameters :project-name)
+                        :working-dir      (-> @status :installation-parameters :working-dir)
                         :modules          @modules
-                        :environment      (str/join "\n" (-> status :installation-parameters :environment))
+                        :environment      (str/join "\n" (-> @status :installation-parameters :environment))
                         :force-restart    false
                         :nuvlabox-release (@releases-by-no nb-version)}]
     (reset! form-data current-config)
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
-    (fn [{:keys [id] :as _resource} status]
-      (let [correct-nb?      (= (:parent status) id)
+    (fn [{:keys [id] :as _resource}]
+      (let [correct-nb?      (= (:parent @status) id)
             target-version   (->> @releases
                                   (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
                                   :key)
@@ -687,12 +688,12 @@
     ^{:key "update-nuvlabox"}
     [UpdateButton resource]))
 
-(defn MenuBar [_uuid status]
+(defn MenuBar [_uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
-    (fn [uuid status]
+    (fn [uuid]
       (let [MenuItems (cimi-detail-views/format-operations
                         @nuvlabox
                         #{"edit" "delete" "activate" "decommission" "update-nuvlabox"
@@ -704,7 +705,7 @@
             MenuItems
             (when @nuvlabox
               ^{:key "update-ne"}
-              [UpdateButton @nuvlabox status])
+              [UpdateButton @nuvlabox])
             (when @can-decommission?
               ^{:key "decomission-nb"}
               [DecommissionButton @nuvlabox])
@@ -2164,7 +2165,7 @@
          :no-nuvlabox-message-content]
         [ui/Container {:fluid true}
          [PageHeader]
-         [MenuBar uuid @nb-status]
+         [MenuBar uuid]
          [components/ErrorJobsMessage ::job-subs/jobs nil nil
           #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
          [job-views/ProgressJobAction @nb-status]

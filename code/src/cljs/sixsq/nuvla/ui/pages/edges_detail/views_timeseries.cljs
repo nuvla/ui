@@ -5,13 +5,11 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.edges-detail.events :as events]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
-            [sixsq.nuvla.ui.utils.datepicker :as datepicker-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.timeseries-components :as ts-components]
             [sixsq.nuvla.ui.utils.timeseries-components]
@@ -338,7 +336,8 @@
                                                                                  :to to}])))]
     (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
-      [:div [ui/Menu {:width "100%"}
+      [:div [ui/Menu {:width "100%"
+                      :borderless true}
              [ui/MenuMenu {:position "left"}
               [ts-components/TimeSeriesDropdown {:loading? @loading?
                                                  :default-value (first ts-utils/timespan-options)

@@ -2079,9 +2079,9 @@
                    :key     :peripherals
                    :icon    icons/i-usb-drive}
         :render   #(r/as-element [TabPeripherals])}
-       {:menuItem {:content (r/as-element [:span (str/capitalize "history")])
+       {:menuItem {:content (r/as-element [:span (str/capitalize "data")])
                    :key     tab-historical-data-key
-                   :icon    icons/i-file-code}
+                   :icon    icons/i-db}
         :render   #(r/as-element [timeseries/TimeSeries])}
 
        (when id

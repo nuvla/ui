@@ -160,7 +160,8 @@
     (fetch-fleet-stats initial-timespan)
     (fn []
       [:div
-       [ui/Menu {:width "100%"}
+       [ui/Menu {:width "100%"
+                 :borderless true}
         [ui/MenuMenu {:position "left"}
          [ts-components/TimeSeriesDropdown {:loading?         @loading?
                                             :default-value    (first ts-utils/timespan-options-master)

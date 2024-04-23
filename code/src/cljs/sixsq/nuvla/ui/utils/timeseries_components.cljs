@@ -76,10 +76,11 @@
                                             (let [[from to] (ts-utils/timespan-to-period timespan)]
                                               (reset! currently-selected-option timespan)
                                               (reset! custom-timespan {})
-                                              (dispatch [on-change-event
-                                                         {:timespan-option timespan
-                                                          :from            from
-                                                          :to              to}])))))}]
+                                              (when on-change-event
+                                                (dispatch [on-change-event
+                                                           {:timespan-option timespan
+                                                            :from            from
+                                                            :to              to}]))))))}]
        [:div {:style {:display     "flex"
                       :margin-left 10
                       :visibility  (if (= ts-utils/timespan-custom @currently-selected-option)
@@ -88,16 +89,18 @@
         [CustomPeriodSelector @custom-timespan
          {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
                                   (when (:to @custom-timespan)
-                                    (dispatch [on-change-event
-                                               {:from            %
-                                                :to              (:to @custom-timespan)
-                                                :timespan-option ts-utils/timespan-custom}])))
+                                    (when on-change-event
+                                      (dispatch [on-change-event
+                                                 {:from            %
+                                                  :to              (:to @custom-timespan)
+                                                  :timespan-option ts-utils/timespan-custom}]))))
           :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
                                   (when (:from @custom-timespan)
-                                    (dispatch [on-change-event
-                                               {:from            (:from @custom-timespan)
-                                                :to              %
-                                                :timespan-option ts-utils/timespan-custom}])))}]]])))
+                                    (when on-change-event
+                                      (dispatch [on-change-event
+                                                 {:from            (:from @custom-timespan)
+                                                  :to              %
+                                                  :timespan-option ts-utils/timespan-custom}]))))}]]])))
 
 
 (defn MenuTimeseries [& content]

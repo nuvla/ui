@@ -1331,7 +1331,8 @@
      [ui/TableCell {:style {:display         "flex"
                             :align-items     "center"
                             :justify-content "space-between"
-                            :white-space     "nowrap"}}
+                            :white-space     "nowrap"
+                            :flex-wrap       "wrap"}}
       [ui/Label {:color (cond (> @avg-percentage 95) "green"
                               (> @avg-percentage 75) "yellow"
                               :else "red")

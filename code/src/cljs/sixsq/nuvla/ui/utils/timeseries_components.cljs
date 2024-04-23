@@ -101,12 +101,3 @@
                                                  {:from            (:from @custom-timespan)
                                                   :to              %
                                                   :timespan-option ts-utils/timespan-custom}]))))}]]])))
-
-
-(defn MenuTimeseries [& content]
-  (let []
-    [ui/Menu {:width "100%"}
-     [ui/MenuMenu {:position "left"}
-      ]]))
-
-

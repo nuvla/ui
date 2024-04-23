@@ -9,64 +9,6 @@
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
-(defn TimeSeriesDropdown [{:keys [loading? default-value timespan-options on-change-fn]}]
-  (let [tr                        (subscribe [::i18n-subs/tr])
-        currently-selected-option (r/atom default-value)]
-    [ui/Dropdown {:inline          true
-                  :style           {:min-width       120
-                                    :display         "flex"
-                                    :justify-content "space-between"}
-                  :loading         loading?
-                  :close-on-change true
-                  :default-value   default-value
-                  :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o})
-                                         timespan-options)
-                  :on-change       (ui-callback/value
-                                     (fn [timespan]
-                                       (reset! currently-selected-option timespan)
-                                       (on-change-fn timespan)
-                                       (when-not (= ts-utils/timespan-custom timespan)
-                                         (let [[from to] (ts-utils/timespan-to-period timespan)]
-                                           (reset! currently-selected-option timespan)
-                                           (reset! custom-timespan {})
-                                           (dispatch [::events/set-selected-fleet-timespan
-                                                      {:timespan-option timespan
-                                                       :from            from
-                                                       :to              to}])))))}]))
-
-
-(defn MenuTimeseries [& content]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu {:width "100%"}
-     [ui/MenuMenu {:position "left"}
-      [ui/MenuItem {:style {:padding-top    5
-                            :padding-bottom 5
-                            :padding-left   16
-                            :height         45}}
-       [:span {:style {:display      "flex"
-                       :align-items  "center"
-                       :margin-right 5}} (@tr [:showing-data-for])]
-
-       [:div {:style {:display     "flex"
-                      :margin-left 10
-                      :visibility  (if (= ts-utils/timespan-custom @currently-selected-option)
-                                     "visible"
-                                     "hidden")}}
-        [sixsq.nuvla.ui.utils.timeseries-components/CustomPeriodSelector @custom-timespan
-         {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
-                                  (when (:to @custom-timespan)
-                                    (dispatch [::events/set-selected-fleet-timespan
-                                               {:from            %
-                                                :to              (:to @custom-timespan)
-                                                :timespan-option ts-utils/timespan-custom}])))
-          :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
-                                  (when (:from @custom-timespan)
-                                    (dispatch [::events/set-selected-fleet-timespan
-                                               {:from            (:from @custom-timespan)
-                                                :to              %
-                                                :timespan-option ts-utils/timespan-custom}])))}]]]]]))
-
-
 (defn CustomPeriodSelector [timespan {:keys [on-change-fn-from on-change-fn-to]}]
   (let [tr                      (subscribe [::i18n-subs/tr])
         locale                  (subscribe [::i18n-subs/locale])]
@@ -106,3 +48,62 @@
                       :on-change        #(on-change-fn-to (if (time/is-today? %)
                                                             (time/now)
                                                             (time/end-of-day %)))}]]]))
+
+(defn TimeSeriesDropdown [{:keys [loading? default-value timespan-options on-change-event]}]
+  (r/with-let [currently-selected-option (r/atom default-value)
+               custom-timespan           (r/atom {})]
+    (let [tr (subscribe [::i18n-subs/tr])]
+      [ui/MenuItem {:style {:padding-top    5
+                            :padding-bottom 5
+                            :padding-left   16
+                            :height         45}}
+       [:span {:style {:display      "flex"
+                       :align-items  "center"
+                       :margin-right 5}} (@tr [:showing-data-for])]
+       [ui/Dropdown {:inline          true
+                     :style           {:min-width       120
+                                       :display         "flex"
+                                       :justify-content "space-between"}
+                     :loading         loading?
+                     :close-on-change true
+                     :default-value   default-value
+                     :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o})
+                                            timespan-options)
+                     :on-change       (ui-callback/value
+                                        (fn [timespan]
+                                          (reset! currently-selected-option timespan)
+                                          (when-not (= ts-utils/timespan-custom timespan)
+                                            (let [[from to] (ts-utils/timespan-to-period timespan)]
+                                              (reset! currently-selected-option timespan)
+                                              (reset! custom-timespan {})
+                                              (dispatch [on-change-event
+                                                         {:timespan-option timespan
+                                                          :from            from
+                                                          :to              to}])))))}]
+       [:div {:style {:display     "flex"
+                      :margin-left 10
+                      :visibility  (if (= ts-utils/timespan-custom @currently-selected-option)
+                                     "visible"
+                                     "hidden")}}
+        [CustomPeriodSelector @custom-timespan
+         {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
+                                  (when (:to @custom-timespan)
+                                    (dispatch [on-change-event
+                                               {:from            %
+                                                :to              (:to @custom-timespan)
+                                                :timespan-option ts-utils/timespan-custom}])))
+          :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
+                                  (when (:from @custom-timespan)
+                                    (dispatch [on-change-event
+                                               {:from            (:from @custom-timespan)
+                                                :to              %
+                                                :timespan-option ts-utils/timespan-custom}])))}]]])))
+
+
+(defn MenuTimeseries [& content]
+  (let []
+    [ui/Menu {:width "100%"}
+     [ui/MenuMenu {:position "left"}
+      ]]))
+
+

@@ -13,8 +13,10 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
+            [sixsq.nuvla.ui.utils.timeseries-components :as ts-components]
             [sixsq.nuvla.ui.utils.timeseries-components]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+
 (defn graph-options [tr {:keys [timespan-option] :as timespan} {:keys [title y-config plugins x-config]}]
   (let [[from to] (if-not (= "custom period" timespan-option)
                     (ts-utils/timespan-to-period (:timespan-option timespan))
@@ -327,62 +329,21 @@
   (let [tr                        (subscribe [::i18n-subs/tr])
         edge-stats                (subscribe [::subs/edge-stats])
         loading?                  (subscribe [::subs/loading?])
-        initial-timespan          (first ts-utils/timespan-options)
-        currently-selected-option (r/atom initial-timespan)
         selected-timespan         (subscribe [::subs/timespan])
         export-modal-visible?     (r/atom false)
         fetch-edge-stats          (fn [timespan]
                                     (let [[from to] (ts-utils/timespan-to-period timespan)]
                                       (dispatch [::events/set-selected-timespan {:timespan-option timespan
                                                                                  :from from
-                                                                                 :to to}])))
-        custom-timespan           (r/atom {})]
+                                                                                 :to to}])))]
     (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"}
              [ui/MenuMenu {:position "left"}
-              [ui/MenuItem {:style {:padding-top 5
-                                    :padding-bottom 5
-                                    :padding-left 16
-                                    :height 45}}
-               [:span {:style {:display      "flex"
-                               :align-items  "center"
-                               :margin-right 5}} (@tr [:showing-data-for])]
-               [ui/Dropdown {:inline          true
-                             :className       "ts-dropdown"
-                             :basic           true
-                             :scrolling      true
-                             :style           {:display         "flex"
-                                               :justify-content "space-between"}
-                             :loading         @loading?
-                             :close-on-change true
-                             :value           @currently-selected-option
-                             :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
-                             :on-change       (ui-callback/value
-                                                (fn [timespan]
-                                                  (reset! currently-selected-option timespan)
-                                                  (when-not (= "custom period" timespan)
-                                                    (let [[from to] (ts-utils/timespan-to-period timespan)]
-                                                      (reset! currently-selected-option timespan)
-                                                      (reset! custom-timespan {})
-                                                      (dispatch [::events/set-selected-timespan {:timespan-option timespan
-                                                                                                 :from from
-                                                                                                 :to to}])))))}]
-               [:div {:style {:display     "flex"
-                              :margin-left 10
-                              :visibility  (if (= "custom period" @currently-selected-option)
-                                             "visible"
-                                             "hidden")}}
-                [sixsq.nuvla.ui.utils.timeseries-components/CustomPeriodSelector @custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
-                                                                                                                           (when (:to @custom-timespan)
-                                                                                                                             (dispatch [::events/set-selected-timespan {:from %
-                                                                                                                                                                        :to (:to @custom-timespan)
-                                                                                                                                                                        :timespan-option "custom period"}])))
-                                                                                                   :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
-                                                                                                                           (when (:from @custom-timespan)
-                                                                                                                             (dispatch [::events/set-selected-timespan {:from (:from @custom-timespan)
-                                                                                                                                                                        :to %
-                                                                                                                                                                        :timespan-option "custom period"}])))}]]]]
+              [ts-components/TimeSeriesDropdown {:loading? @loading?
+                                                 :default-value (first ts-utils/timespan-options)
+                                                 :timespan-options ts-utils/timespan-options
+                                                 :on-change-event ::events/set-selected-timespan}]]
              [ui/MenuItem {:icon     icons/i-export
                            :position "right"
                            :content  (str (@tr [:export-data]) " (.csv)")

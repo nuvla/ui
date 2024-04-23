@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
+    [sixsq.nuvla.ui.utils.timeseries-components :as ts-components]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -146,13 +147,10 @@
           [OnlineStatsByEdge {:on-close #(reset! extra-info-visible? false)}]]]]])))
 
 (defn FleetTimeSeries []
-  (let [tr                        (subscribe [::i18n-subs/tr])
-        loading?                  (subscribe [::subs/loading?])
+  (let [loading?                  (subscribe [::subs/loading?])
         fleet-stats               (subscribe [::subs/fleet-stats])
         selected-timespan         (subscribe [::subs/fleet-timespan])
         initial-timespan          (first ts-utils/timespan-options-master)
-        currently-selected-option (r/atom initial-timespan)
-        custom-timespan           (r/atom {})
         fetch-fleet-stats         (fn [timespan]
                                     (let [[from to] (ts-utils/timespan-to-period timespan)]
                                       (dispatch [::events/set-selected-fleet-timespan
@@ -164,51 +162,10 @@
       [:div
        [ui/Menu {:width "100%"}
         [ui/MenuMenu {:position "left"}
-         [ui/MenuItem {:style {:padding-top    5
-                               :padding-bottom 5
-                               :padding-left   16
-                               :height         45}}
-          [:span {:style {:display      "flex"
-                          :align-items  "center"
-                          :margin-right 5}} (@tr [:showing-data-for])]
-          [ui/Dropdown {:inline          true
-                        :style           {:min-width       120
-                                          :display         "flex"
-                                          :justify-content "space-between"}
-                        :loading         @loading?
-                        :close-on-change true
-                        :default-value   initial-timespan
-                        :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o})
-                                               ts-utils/timespan-options-master)
-                        :on-change       (ui-callback/value
-                                           (fn [timespan]
-                                             (reset! currently-selected-option timespan)
-                                             (when-not (= ts-utils/timespan-custom timespan)
-                                               (let [[from to] (ts-utils/timespan-to-period timespan)]
-                                                 (reset! currently-selected-option timespan)
-                                                 (reset! custom-timespan {})
-                                                 (dispatch [::events/set-selected-fleet-timespan
-                                                            {:timespan-option timespan
-                                                             :from            from
-                                                             :to              to}])))))}]
-          [:div {:style {:display     "flex"
-                         :margin-left 10
-                         :visibility  (if (= ts-utils/timespan-custom @currently-selected-option)
-                                        "visible"
-                                        "hidden")}}
-           [sixsq.nuvla.ui.utils.timeseries-components/CustomPeriodSelector @custom-timespan
-            {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
-                                     (when (:to @custom-timespan)
-                                       (dispatch [::events/set-selected-fleet-timespan
-                                                  {:from            %
-                                                   :to              (:to @custom-timespan)
-                                                   :timespan-option ts-utils/timespan-custom}])))
-             :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
-                                     (when (:from @custom-timespan)
-                                       (dispatch [::events/set-selected-fleet-timespan
-                                                  {:from            (:from @custom-timespan)
-                                                   :to              %
-                                                   :timespan-option ts-utils/timespan-custom}])))}]]]]]
+         [ts-components/TimeSeriesDropdown {:loading?         @loading?
+                                            :default-value    (first ts-utils/timespan-options-master)
+                                            :timespan-options ts-utils/timespan-options-master
+                                            :on-change-event  ::events/set-selected-fleet-timespan}]]]
 
 
        [ui/TabPane

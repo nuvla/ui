@@ -208,7 +208,7 @@
                                :actions        (when show-options?
                                                  (cond
                                                    (general-utils/can-operation? "stop" deployment)
-                                                   [deployments-detail-views/ShutdownButton deployment]
+                                                   [deployments-detail-views/StopButton deployment]
                                                    (general-utils/can-delete? deployment)
                                                    [deployments-detail-views/DeleteButton deployment]))}]
     (field-key->table-cell field-key)))
@@ -343,7 +343,7 @@
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond
                                (general-utils/can-operation? "stop" deployment)
-                               [deployments-detail-views/ShutdownButton deployment :label? true]
+                               [deployments-detail-views/StopButton deployment :label? true]
 
                                (general-utils/can-delete? deployment)
                                [deployments-detail-views/DeleteButton deployment :label? true])

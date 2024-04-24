@@ -273,7 +273,7 @@
       button)))
 
 
-(defn ShutdownButton
+(defn StopButton
   [_deployment & _opts]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -292,8 +292,8 @@
                                      (.preventDefault event))
                       :disabled?   (not (general-utils/can-operation? "stop" deployment))
                       :icon-name   icon-name
-                      :button-text (@tr [:shutdown])
-                      :popup-text  (@tr [:deployment-shutdown-msg])})]
+                      :button-text (@tr [:stop])
+                      :popup-text  (@tr [:deployment-stop-msg])})]
         ^{:key (random-uuid)}
         [uix/ModalDanger
          {:on-close           (fn [event]
@@ -309,9 +309,9 @@
           :control-confirmed? checked?
           :trigger            (r/as-element button)
           :content            [:<> [:h3 text1] [:p text2]]
-          :header             (@tr [:shutdown-deployment])
-          :danger-msg         (@tr [:deployment-shutdown-msg])
-          :button-text        (@tr [:shutdown])}]))))
+          :header             (@tr [:stop-deployment])
+          :danger-msg         (@tr [:deployment-stop-msg])
+          :button-text        (@tr [:stop])}]))))
 
 
 (defn DeleteButton
@@ -531,7 +531,7 @@
 
      (when clickable?
        (cond
-         (general-utils/can-operation? "stop" deployment) [ShutdownButton deployment :label? true]
+         (general-utils/can-operation? "stop" deployment) [StopButton deployment :label? true]
          (general-utils/can-delete? deployment) [DeleteButton deployment :label? true]))
 
      [ui/CardContent
@@ -688,7 +688,7 @@
     [components/StickyBar
      [ui/Menu {:borderless true}
       [StartUpdateButton deployment]
-      [ShutdownButton deployment :menu-item? true]
+      [StopButton deployment :menu-item? true]
       [CloneButton deployment]
       [DeleteButton deployment :menu-item? true]
       [DetachButton deployment]

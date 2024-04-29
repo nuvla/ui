@@ -244,7 +244,7 @@
                               :style     {:margin "1em"}
                               :on-change (on-module-change module)}])))]])]]))
 (defn UpdateButton
-  [{:keys [id] :as _resource}]
+  [{:keys [id nuvlabox-engine-version] :as _resource}]
   (let [show?          (r/atom false)
         tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
@@ -254,7 +254,8 @@
         releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
         close-fn       #(reset! show? false)
         form-data      (r/atom nil)
-        nb-version     (get @status :nuvlabox-engine-version nil)
+        engine-version (subscribe [::edges-subs/engine-version id])
+        nb-version     (or @engine-version nuvlabox-engine-version)
         on-change-fn   (fn [release]
                          (let [release-new (get @releases-by-id release)
                                new-modules (calc-new-modules-on-release-change @form-data release-new)]
@@ -272,7 +273,6 @@
                         :environment      (str/join "\n" (-> @status :installation-parameters :environment))
                         :force-restart    false
                         :nuvlabox-release (@releases-by-no nb-version)}]
-
     (reset! form-data current-config)
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
@@ -684,15 +684,16 @@
       [TextActionButton resource operation show? "Disable host level management (disables playbooks)" icons/i-gear (@tr [:disable])])))
 (defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
   [resource _operation]
-  ^{:key "update-nuvlabox"}
-  [UpdateButton resource])
+  (fn [resource _operation]
+    ^{:key "update-nuvlabox"}
+    [UpdateButton resource]))
 
-(defn MenuBar [uuid]
+(defn MenuBar [_uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
-    (fn []
+    (fn [uuid]
       (let [MenuItems (cimi-detail-views/format-operations
                         @nuvlabox
                         #{"edit" "delete" "activate" "decommission" "update-nuvlabox"
@@ -702,8 +703,9 @@
          [components/ResponsiveMenuBar
           (conj
             MenuItems
-            ^{:key "update-ne"}
-            [UpdateButton @nuvlabox]
+            (when @nuvlabox
+              ^{:key "update-ne"}
+              [UpdateButton @nuvlabox])
             (when @can-decommission?
               ^{:key "decomission-nb"}
               [DecommissionButton @nuvlabox])

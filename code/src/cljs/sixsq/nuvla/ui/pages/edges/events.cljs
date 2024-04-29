@@ -556,7 +556,7 @@
                      :uri             "/api/nuvlabox/data"
                      :format          (ajax/json-request-format)
                      :params          {:filter      filter-str
-                                       :dataset     fleet-availability-stats
+                                       :query       fleet-availability-stats
                                        :from        (time/time->utc-str from)
                                        :to          (time/time->utc-str to)
                                        :granularity (ts-utils/granularity-for-timespan fleet-timespan)}
@@ -574,7 +574,7 @@
                     :uri             "/api/nuvlabox/data"
                     :format          (ajax/json-request-format)
                     :params          {:filter      filter-str
-                                      :dataset     ["availability-by-edge"]
+                                      :query     ["availability-by-edge"]
                                       :from        (time/time->utc-str from)
                                       :to          (time/time->utc-str to)
                                       :granularity granularity}

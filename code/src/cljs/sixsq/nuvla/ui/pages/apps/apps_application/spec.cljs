@@ -12,6 +12,9 @@
 (s/def ::docker-compose-validation-errors set?)
 (s/def ::configuration-validation-errors set?)
 
+(s/def ::loading? boolean?)
+(s/def ::app-data any?)
+
 
 (s/def ::requires-user-rights boolean?)
 
@@ -49,10 +52,12 @@
 (def defaults {::module-application               {::docker-compose       nil
                                                    ::requires-user-rights false
                                                    ::compatibility        "docker-compose"}
+               ::loading?                         false
+               ::app-data                         nil
                ::license-validation-errors        #{}
                ::docker-compose-validation-errors #{}
                ::configuration-validation-errors   #{}
-               ::tab (nav-tab/build-spec :default-tab :overview)})
+               ::tab                              (nav-tab/build-spec :default-tab :overview)})
 
 (s/def ::deployment-pagination any?)
 

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-application.events
-  (:require [re-frame.core :refer [reg-event-db]]
+  (:require [ajax.core :as ajax]
+            [re-frame.core :refer [reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
             [sixsq.nuvla.ui.pages.apps.utils :as utils]))
 
@@ -79,3 +80,42 @@
   ::update-requires-user-rights
   (fn [db [_ value]]
     (assoc-in db [::spec/module-application ::spec/requires-user-rights] value)))
+
+(def ts-id "timeseries/f9f76bdd-56e9-4dde-bbcf-30d1b84625e0")
+
+(def query-name "test-query1")
+
+(def from "2024-04-21T00:00:00.000Z")
+
+(def to "2024-04-24T23:59:59.000Z")
+
+(def granularity "1-days")
+
+(reg-event-fx
+  ::fetch-app-data-success
+  (fn [{db :db} [_ response]]
+    (js/console.log response)
+    {:db (assoc db ::spec/loading? false
+                   ::spec/app-data response)}))
+
+(reg-event-fx
+  ::fetch-app-data-failure
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false)}))
+
+
+(reg-event-fx
+  ::fetch-app-data
+  (fn [{db :db}]
+    (let []
+      {:db         (assoc db ::spec/loading? true)
+       :http-xhrio {:method          :get
+                    :uri             (str "/api/"ts-id"/data")
+                    :params          {:query query-name
+                                      :from from
+                                      :to to
+                                      :granularity granularity}
+                    :request-format  (ajax/json-request-format)
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-app-data-success]
+                    :on-failure      [::fetch-app-data-failure]}})))

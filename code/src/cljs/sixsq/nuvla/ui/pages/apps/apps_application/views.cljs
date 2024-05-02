@@ -16,6 +16,7 @@
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.pages.apps.views-detail :as apps-views-detail]
             [sixsq.nuvla.ui.pages.apps.views-versions :as apps-views-versions]
+            [sixsq.nuvla.ui.pages.apps.views-timeseries :as apps-views-timeseries]
             [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.pages.deployments.views :as deployments-views]
             [sixsq.nuvla.ui.pages.profile.subs :as profile-subs]
@@ -347,6 +348,11 @@
      [apps-views-detail/LicenseTitle]]))
 
 
+(defn DataPane
+  []
+  [:div
+   [apps-views-timeseries/AppData]])
+
 (defn LicensePane
   []
   [:div {:class :uix-apps-details-details}
@@ -446,6 +452,11 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [:span (str/capitalize (@tr [:overview]))]))
 
+(defn TabMenuData
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span (str/capitalize (@tr [:app-data]))]))
+
 
 (defn OverviewPane
   []
@@ -469,7 +480,6 @@
       [ui/GridColumn
        [OverviewModuleSummary]]]]))
 
-
 (defn module-detail-panes
   []
   (let [module    (subscribe [::apps-subs/module])
@@ -492,6 +502,11 @@
                               :key     :license}
                    :pane     {:content (r/as-element [LicensePane])
                               :key     :license-pane}}
+                 {:menuItem {:content (r/as-element [TabMenuData])
+                              :key     :app-data
+                              :icon (r/as-element [icons/DbIcon])}
+                  :pane     {:content (r/as-element [DataPane])
+                             :key     :app-data-pane}}
                   (when @stripe
                     {:menuItem {:content (r/as-element [TabMenuPricing])
                                 :key     :pricing}

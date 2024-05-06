@@ -72,10 +72,10 @@
                                           :borderWidth     1}]}
 
                  :options    (graph-options tr selected-timespan {:title    (str (@tr [:average-cpu-load]) " (%)")
-                                                               :y-config {:max   200
-                                                                          :min   0
-                                                                          :title {:display "true"
-                                                                                  :text    (str (@tr [:percentage]) " (%)")}}})}]]))
+                                                                  :y-config {:max   200
+                                                                             :min   0
+                                                                             :title {:display "true"
+                                                                                     :text    (str (@tr [:percentage]) " (%)")}}})}]]))
 
 (defn RamUsageTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])

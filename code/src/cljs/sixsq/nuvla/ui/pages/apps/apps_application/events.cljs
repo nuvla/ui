@@ -90,20 +90,17 @@
 (reg-event-fx
   ::fetch-app-data-success
   (fn [{db :db} [_ response]]
-    (js/console.log response)
     {:db (assoc db ::spec/loading? false
                    ::spec/app-data response)}))
 
 (reg-event-fx
   ::fetch-app-data-failure
   (fn [{db :db} [_ response]]
-    (js/console.log response)
     {:db (assoc db ::spec/loading? false)}))
 
 (reg-event-fx
   ::fetch-app-data
   (fn [{db :db} [_ {:keys [from to granularity query]}]]
-    (js/console.log :from from :to to)
     (let []
       {:db         (assoc db ::spec/loading? true)
        :http-xhrio {:method          :get

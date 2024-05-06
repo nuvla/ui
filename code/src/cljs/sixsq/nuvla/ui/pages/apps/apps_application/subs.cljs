@@ -62,3 +62,8 @@
   ::loading?
   (fn [db]
     (::spec/loading? db)))
+
+(reg-sub
+  ::timespan
+  (fn [db]
+    (::spec/timespan db)))

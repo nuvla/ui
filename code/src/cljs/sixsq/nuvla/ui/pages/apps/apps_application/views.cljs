@@ -347,12 +347,6 @@
     [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/LicenseTitle]]))
 
-
-(defn DataPane
-  []
-  [:div
-   [apps-views-timeseries/AppData]])
-
 (defn LicensePane
   []
   [:div {:class :uix-apps-details-details}
@@ -505,7 +499,7 @@
                  {:menuItem {:content (r/as-element [TabMenuData])
                               :key     :app-data
                               :icon (r/as-element [icons/DbIcon])}
-                  :pane     {:content (r/as-element [DataPane])
+                  :pane     {:content (r/as-element [apps-views-timeseries/DataPane])
                              :key     :app-data-pane}}
                   (when @stripe
                     {:menuItem {:content (r/as-element [TabMenuPricing])

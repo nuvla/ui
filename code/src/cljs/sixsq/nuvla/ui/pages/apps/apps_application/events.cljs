@@ -2,7 +2,9 @@
   (:require [ajax.core :as ajax]
             [re-frame.core :refer [reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
-            [sixsq.nuvla.ui.pages.apps.utils :as utils]))
+            [sixsq.nuvla.ui.pages.apps.utils :as utils]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 
 (reg-event-db
@@ -85,12 +87,6 @@
 
 (def query-name "test-query1")
 
-(def from "2024-04-21T00:00:00.000Z")
-
-(def to "2024-04-24T23:59:59.000Z")
-
-(def granularity "1-days")
-
 (reg-event-fx
   ::fetch-app-data-success
   (fn [{db :db} [_ response]]
@@ -101,21 +97,32 @@
 (reg-event-fx
   ::fetch-app-data-failure
   (fn [{db :db} [_ response]]
+    (js/console.log response)
     {:db (assoc db ::spec/loading? false)}))
-
 
 (reg-event-fx
   ::fetch-app-data
-  (fn [{db :db}]
+  (fn [{db :db} [_ {:keys [from to granularity query]}]]
+    (js/console.log :from from :to to)
     (let []
       {:db         (assoc db ::spec/loading? true)
        :http-xhrio {:method          :get
                     :uri             (str "/api/"ts-id"/data")
-                    :params          {:query query-name
-                                      :from from
-                                      :to to
+                    :params          {:query query
+                                      :from  (time/time->utc-str from)
+                                      :to    (time/time->utc-str to)
                                       :granularity granularity}
                     :request-format  (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-app-data-success]
                     :on-failure      [::fetch-app-data-failure]}})))
+
+(reg-event-fx
+  ::set-selected-timespan
+  (fn [{db :db} [_ timespan]]
+    (let [{:keys [from to]} timespan]
+      {:db (assoc db ::spec/timespan timespan)
+       :fx [[:dispatch [::fetch-app-data {:from        from
+                                          :to          to
+                                          :granularity (ts-utils/granularity-for-timespan timespan)
+                                          :query query-name }]]]})))

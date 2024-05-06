@@ -14,6 +14,7 @@
 
 (s/def ::loading? boolean?)
 (s/def ::app-data any?)
+(s/def ::timespan any?)
 
 
 (s/def ::requires-user-rights boolean?)

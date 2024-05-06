@@ -57,3 +57,8 @@
   ::app-data
   (fn [db]
     (::spec/app-data db)))
+
+(reg-sub
+  ::loading?
+  (fn [db]
+    (::spec/loading? db)))

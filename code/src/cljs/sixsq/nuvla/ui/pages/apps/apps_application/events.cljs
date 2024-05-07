@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-application.events
   (:require [ajax.core :as ajax]
             [re-frame.core :refer [reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
             [sixsq.nuvla.ui.pages.apps.utils :as utils]
             [sixsq.nuvla.ui.utils.time :as time]
@@ -99,6 +100,28 @@
   ::fetch-app-data-failure
   (fn [{db :db} [_ response]]
     {:db (assoc db ::spec/loading? false)}))
+
+(reg-event-fx
+  ::fetch-app-data-csv-success
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false)
+     :fx [[:dispatch [::main-events/open-link (str "data:text/csv," response)]]]}))
+
+(reg-event-fx
+  ::fetch-app-data-csv
+  (fn [{db :db} [_ {:keys [from to granularity query]}]]
+    {:db         (assoc db ::spec/loading? true)
+     :http-xhrio {:method          :get
+                  :uri             (str "/api/" ts-id "/data")
+                  :params          {:query       query
+                                    :from        (time/time->utc-str from)
+                                    :to          (time/time->utc-str to)
+                                    :granularity granularity}
+                  :headers         {"Accept" "text/csv"}
+                  :request-format  (ajax/json-request-format)
+                  :response-format (ajax/text-response-format)
+                  :on-success      [::fetch-app-data-csv-success]
+                  :on-failure      [::fetch-app-data-failure]}}))
 
 (reg-event-fx
   ::fetch-app-data

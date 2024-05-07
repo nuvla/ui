@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.apps.views-timeseries
-  (:require [re-frame.core :refer [dispatch subscribe]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.apps.apps-application.events :as events]
@@ -7,6 +8,7 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.timeseries-components :as ts-components]))
 
@@ -16,7 +18,77 @@
                                          :aggregation-type "avg"
                                          :field-name "test-metric1"}]}})
 
-(defn timestamp+percentage [ts-data aggregation-name]
+(defn ExportDataModal [{:keys [on-close]}]
+  (r/with-let [state (r/atom {:form-data               {}
+                              :custom-period-selected? false})]
+    (fn []
+      (let [tr      (subscribe [::i18n-subs/tr])]
+        [ui/Modal {:close-icon true
+                   :open       true
+                   :onClose    on-close}
+         [ui/ModalHeader (@tr [:export-data])]
+         [ui/ModalContent
+          [ui/ModalDescription
+           [:p (@tr [:choose-metric-period])]
+           [ui/Form
+            [:div
+             [ui/Header {:as       "h4"
+                         :attached "top"
+                         :style    {:background-color "#00000008"}}
+              (str/capitalize (@tr [:period]))]
+             (into [ui/Segment {:attached true}]
+                   (conj (mapv (fn [option]
+                                 (when-not (= "custom period" option)
+                                   [ui/FormField
+                                    [ui/Radio
+                                     {:label     (@tr [(ts-utils/format-option option)])
+                                      :name      "radioGroupTimespan"
+                                      :value     option
+                                      :checked   (= (get-in @state [:form-data :timespan-option])
+                                                    option)
+                                      :on-change (fn [_e t]
+                                                   (let [[from to] (ts-utils/timespan-to-period (. t -value))]
+                                                     (swap! state assoc :custom-period-selected? false)
+                                                     (swap! state assoc-in [:form-data :timespan-option] (. t -value))
+                                                     (swap! state assoc-in [:form-data :from] from)
+                                                     (swap! state assoc-in [:form-data :to] to)))}]]))
+                               ts-utils/timespan-options)
+                         [:div {:style {:display     "flex"
+                                        :align-items "center"}}
+                          [ui/FormField
+                           [ui/Radio
+                            {:label          (@tr [(ts-utils/format-option "custom period")])
+                             :name           "radioGroupTimespan"
+                             :value          "custom period"
+                             :checked        (= (get-in @state [:form-data :timespan-option])
+                                                "custom period")
+                             :on-change (fn [_e t]
+                                          (swap! state assoc-in [:form-data :timespan-option] (. t -value))
+                                          (swap! state update-in [:form-data] dissoc :from :to)
+                                          (swap! state assoc :custom-period-selected? true))}]]
+                          [:div {:style {:display       "flex"
+                                         :margin-bottom 10
+                                         :visibility    (if (:custom-period-selected? @state)
+                                                          "visible"
+                                                          "hidden")}}
+                           [sixsq.nuvla.ui.utils.timeseries-components/CustomPeriodSelector (:form-data @state)
+                            {:on-change-fn-from #(swap! state assoc-in [:form-data :from] %)
+                             :on-change-fn-to   #(swap! state assoc-in [:form-data :to] %)}]]]))]]]]
+         [ui/ModalActions
+          [uix/Button {:text     (@tr [:export])
+                       :icon     icons/i-export
+                       :positive true
+                       :disabled (or (not (-> @state :form-data :from))
+                                     (not (-> @state :form-data :to)))
+                       :active   true
+                       :on-click #(let [{:keys [from to] :as form-data} (:form-data @state)]
+                                    (dispatch [::events/fetch-app-data-csv
+                                               {:from        from
+                                                :to          to
+                                                :granularity (ts-utils/granularity-for-timespan form-data)
+                                                :query       "test-query1"}]))}]]]))))
+
+(defn timestamp+value [ts-data aggregation-name]
   (mapv (fn [d]
           (let [value     (get-in d [:aggregations aggregation-name :value])]
             (assoc d :x (:timestamp d)
@@ -69,7 +141,7 @@
         selected-timespan     (subscribe [::subs/timespan])]
     (fetch-app-data (first ts-utils/timespan-options))
     (fn []
-      (let [ ts-data               (:ts-data (first (get @app-data :test-query1)))
+      (let [ts-data               (:ts-data (first (get @app-data :test-query1)))
             {:keys [aggregation-name field-name]} (first aggregations)]
         [:div
          [ui/Menu {:width      "100%"
@@ -87,8 +159,10 @@
 
           [ui/Grid {:centered true
                     :padded true}
+           (when @export-modal-visible?
+             [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
            [ui/GridColumn
             [LinePlot @selected-timespan
              (str "Average " field-name)
              field-name
-             (timestamp+percentage ts-data aggregation-name)]]]]]))))
+             (timestamp+value ts-data aggregation-name)]]]]]))))

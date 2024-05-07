@@ -83,7 +83,9 @@
   (fn [db [_ value]]
     (assoc-in db [::spec/module-application ::spec/requires-user-rights] value)))
 
-(def ts-id "timeseries/f9f76bdd-56e9-4dde-bbcf-30d1b84625e0")
+#_(def ts-id "timeseries/f9f76bdd-56e9-4dde-bbcf-30d1b84625e0")
+
+(def ts-id "timeseries/ff01ecae-e1e7-4baa-bab7-6ff1adf72dad")
 
 (def query-name "test-query1")
 

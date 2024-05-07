@@ -51,7 +51,8 @@
                                                                "last year" "month"
                                                                "day")}
                                                 :title {:display "true"
-                                                        :text    "Time"}}}}}]))
+                                                        :text    "Time"}}
+                                        :y     {:min 0}}}}]))
 
 (defn DataPane []
   (let [loading?              (subscribe [::subs/loading?])

@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.pages.deployments-detail.views-app-data
+(ns sixsq.nuvla.ui.pages.deployments-detail.views-deployment-data
   (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
@@ -82,7 +82,7 @@
                                                (not (-> @state :form-data :to)))
                                  :active   true
                                  :on-click #(let [{:keys [from to] :as form-data} (:form-data @state)]
-                                              (dispatch [::events/fetch-app-data-csv
+                                              (dispatch [::events/fetch-deployment-data-csv
                                                          {:from        from
                                                           :to          to
                                                           :granularity (ts-utils/granularity-for-timespan form-data)

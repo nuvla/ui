@@ -250,7 +250,7 @@
                 :key     :app-data
                 :icon    icons/i-db}
      :render   (fn [] (r/as-element
-                        [app-data-views/AppData]))}))
+                        [app-data-views/DeploymentData]))}))
 
 
 (defn action-button

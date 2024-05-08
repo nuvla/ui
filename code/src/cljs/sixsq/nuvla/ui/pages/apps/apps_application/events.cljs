@@ -134,7 +134,6 @@
        :http-xhrio {:method          :get
                     :uri             (str "/api/"ts-id"/data")
                     :params          {:query query
-                                      :dimension-filter (str "deployment-id=" deployment-id-2)
                                       :from (time/time->utc-str from)
                                       :to (time/time->utc-str to)
                                       :granularity granularity}

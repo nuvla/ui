@@ -1,16 +1,20 @@
 (ns sixsq.nuvla.ui.pages.deployments-detail.events
-  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+  (:require [ajax.core :as ajax]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.credentials.events :as creds-events]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
-            [sixsq.nuvla.ui.utils.response :as response]))
+            [sixsq.nuvla.ui.utils.response :as response]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (reg-event-db
   ::set-module-versions
@@ -139,3 +143,78 @@
   (fn [db [_ e]]
     (let [{:keys [_status _message]} (response/parse-ex-info e)]
       (assoc db ::spec/not-found? (instance? js/Error e)))))
+
+(def ts-id "timeseries/f28eda8b-c451-4070-88e4-217d71f0bc37")
+
+(def query-name "test-query1")
+
+#_ (def deployment-id-1 "deployment/cf1bf47f-6525-436d-888a-44eee7416302")
+
+#_ (def deployment-id-2 "deployment/d914b10c-ef27-4029-ba8b-4f7747cd3427")
+#_ (def query-name "test-query1")
+
+(reg-event-fx
+  ::fetch-deployment-data-success
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false
+                   ::spec/deployment-data response)}))
+
+(reg-event-fx
+  ::fetch-deployment-data-failure
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false)}))
+
+(reg-event-fx
+  ::fetch-deployment-data-failure
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false)}))
+
+(reg-event-fx
+  ::fetch-deployment-data-csv-success
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false)
+     :fx [[:dispatch [::main-events/open-link (str "data:text/csv," response)]]]}))
+
+(reg-event-fx
+  ::fetch-deployment-data-csv
+  (fn [{db :db} [_ {:keys [from to granularity query]}]]
+    {:db         (assoc db ::spec/loading? true)
+     :http-xhrio {:method          :get
+                  :uri             (str "/api/" ts-id "/data")
+                  :params          {:query       query
+                                    :from        (time/time->utc-str from)
+                                    :to          (time/time->utc-str to)
+                                    :granularity granularity}
+                  :headers         {"Accept" "text/csv"}
+                  :request-format  (ajax/json-request-format)
+                  :response-format (ajax/text-response-format)
+                  :on-success      [::fetch-deployment-data-csv-success]
+                  :on-failure      [::fetch-deployment-data-failure]}}))
+
+(reg-event-fx
+  ::fetch-deployment-data
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ {:keys [from to granularity query id]}]]
+    (let []
+      (js/console.log deployment)
+      {:db         (assoc db ::spec/loading? true)
+       :http-xhrio {:method          :get
+                    :uri             (str "/api/"ts-id"/data")
+                    :params          {:query query
+                                      :dimension-filter (str "deployment-id=" (:id deployment))
+                                      :from (time/time->utc-str from)
+                                      :to (time/time->utc-str to)
+                                      :granularity granularity}
+                    :request-format  (ajax/json-request-format)
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-deployment-data-success]
+                    :on-failure      [::fetch-deployment-data-failure]}})))
+
+(reg-event-fx
+  ::set-selected-timespan
+  (fn [{db :db} [_ timespan]]
+    (let [{:keys [from to]} timespan]
+      {:db (assoc db ::spec/timespan timespan)
+       :fx [[:dispatch [::fetch-deployment-data {:from        from
+                                                 :to          to
+                                                 :granularity (ts-utils/granularity-for-timespan timespan)
+                                                 :query       query-name}]]]})))

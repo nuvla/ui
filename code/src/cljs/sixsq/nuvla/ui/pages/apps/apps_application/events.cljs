@@ -86,8 +86,11 @@
 
 #_(def ts-id "timeseries/f9f76bdd-56e9-4dde-bbcf-30d1b84625e0")
 
-(def ts-id "timeseries/ff01ecae-e1e7-4baa-bab7-6ff1adf72dad")
+(def ts-id "timeseries/f28eda8b-c451-4070-88e4-217d71f0bc37")
 
+(def deployment-id-1 "deployment/cf1bf47f-6525-436d-888a-44eee7416302")
+
+(def deployment-id-2 "deployment/d914b10c-ef27-4029-ba8b-4f7747cd3427")
 (def query-name "test-query1")
 
 (reg-event-fx
@@ -131,8 +134,9 @@
        :http-xhrio {:method          :get
                     :uri             (str "/api/"ts-id"/data")
                     :params          {:query query
-                                      :from  (time/time->utc-str from)
-                                      :to    (time/time->utc-str to)
+                                      :dimension-filter (str "deployment-id=" deployment-id-2)
+                                      :from (time/time->utc-str from)
+                                      :to (time/time->utc-str to)
                                       :granularity granularity}
                     :request-format  (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})

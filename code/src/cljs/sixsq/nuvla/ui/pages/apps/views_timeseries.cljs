@@ -12,7 +12,7 @@
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.timeseries-components :as ts-components]))
 
-(def test-query {:query-name "test-query1"
+(def test-query {:query-name :test-query1
                  :query-type "standard"
                  :query {:aggregations [{:aggregation-name :test-metric1-avg
                                          :aggregation-type "avg"
@@ -110,7 +110,7 @@
                 :options    {:plugins  {:title {:display  true
                                                 :text     title
                                                 :position "top"}}
-                             :elements {:point {:radius 1}}
+                             :elements {:point {:radius 2}}
 
                              :scales   {:x     {:type "time"
                                                 :min  from
@@ -138,12 +138,21 @@
         tr                    (subscribe [::i18n-subs/tr])
         export-modal-visible? (r/atom false)
         aggregations          (-> test-query :query :aggregations)
-        selected-timespan     (subscribe [::subs/timespan])]
+        selected-timespan     (subscribe [::subs/timespan])
+        query-name            (:query-name test-query)
+        metrics               (mapv :field-name aggregations)]
     (fetch-app-data (first ts-utils/timespan-options))
     (fn []
-      (let [ts-data               (:ts-data (first (get @app-data :test-query1)))
-            {:keys [aggregation-name field-name]} (first aggregations)]
-        [:div
+      (let [ts-data               (-> @app-data
+                                      query-name
+                                      (first)
+                                      :ts-data)]
+        [:div {:class :uix-apps-details-details}
+         [:div {:style {:display "flex"
+                        :align-items "center"}} [:h4 {:class :tab-app-detail} "Data"]
+          (into [:div {:style {:margin-bottom 14
+                               :margin-left 20}}]
+                (mapv (fn [m] [ui/Label  m]) metrics))]
          [ui/Menu {:width      "100%"
                    :borderless true}
           [ui/MenuMenu {:position "left"}
@@ -158,11 +167,14 @@
          [ui/TabPane
 
           [ui/Grid {:centered true
+                    :columns 2
                     :padded true}
            (when @export-modal-visible?
              [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
-           [ui/GridColumn
-            [LinePlot @selected-timespan
-             (str "Average " field-name)
-             field-name
-             (timestamp+value ts-data aggregation-name)]]]]]))))
+           (into [ui/GridColumn]
+                 (mapv (fn [{:keys [aggregation-name field-name]}]
+                         [LinePlot @selected-timespan
+                          (str "Average " field-name)
+                          field-name
+                          (timestamp+value ts-data aggregation-name)])
+                       aggregations))]]]))))

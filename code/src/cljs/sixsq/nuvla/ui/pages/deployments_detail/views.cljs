@@ -18,7 +18,7 @@
             [sixsq.nuvla.ui.pages.deployments-detail.events :as events]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments-detail.subs :as subs]
-            [sixsq.nuvla.ui.pages.deployments-detail.views-app-data :as app-data-views]
+            [sixsq.nuvla.ui.pages.deployments-detail.views-deployment-data :as app-data-views]
             [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.routing.events :as routing-events]

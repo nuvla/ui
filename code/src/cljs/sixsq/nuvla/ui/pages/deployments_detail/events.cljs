@@ -177,11 +177,12 @@
 
 (reg-event-fx
   ::fetch-deployment-data-csv
-  (fn [{db :db} [_ {:keys [from to granularity query]}]]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ {:keys [from to granularity query]}]]
     {:db         (assoc db ::spec/loading? true)
      :http-xhrio {:method          :get
                   :uri             (str "/api/" ts-id "/data")
                   :params          {:query       query
+                                    :dimension-filter (str "deployment-id=" (:id deployment))
                                     :from        (time/time->utc-str from)
                                     :to          (time/time->utc-str to)
                                     :granularity granularity}

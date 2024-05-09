@@ -246,7 +246,7 @@
 (defn app-data-section
   []
   (let [tr         (subscribe [::i18n-subs/tr])]
-    {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:app-data]))])
+    {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:data]))])
                 :key     :app-data
                 :icon    icons/i-db}
      :render   (fn [] (r/as-element

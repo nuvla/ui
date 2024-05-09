@@ -12,30 +12,50 @@
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
             [sixsq.nuvla.ui.utils.timeseries-components :as ts-components]))
 
-(def test-query {:query-name :test-query1
+(def test-query {:query-name "test-query1"
                  :query-type "standard"
-                 :query {:aggregations [{:aggregation-name :test-metric1-avg
+                 :query {:aggregations [{:aggregation-name "test-metric1-avg"
                                          :aggregation-type "avg"
                                          :field-name "test-metric1"}]}})
+
+(def aggregation-types {"avg" "Average"})
 
 (defn ExportDataModal [{:keys [on-close]}]
   (r/with-let [state (r/atom {:form-data               {}
                               :custom-period-selected? false})]
     (fn []
-      (let [tr      (subscribe [::i18n-subs/tr])]
+      (let [tr                    (subscribe [::i18n-subs/tr])
+            aggregations          (-> test-query :query :aggregations)]
         [ui/Modal {:close-icon true
                    :open       true
                    :onClose    on-close}
          [ui/ModalHeader (@tr [:export-data])]
          [ui/ModalContent
           [ui/ModalDescription
-           [:p (@tr [:choose-metric-period])]
+           [:div
+            [ui/Header {:as       "h4"
+                        :attached "top"
+                        :style    {:background-color "#00000008"}}
+             "Metrics to export"]
+            [ui/Segment {:attached true}
+             [ui/Table {:basic       "very"}
+              [ui/TableHeader
+               [ui/TableRow
+                [ui/TableHeaderCell "Name"]
+                [ui/TableHeaderCell {:textAlign "right"}
+                 "Aggregation type"]]]
+              [ui/TableBody
+               (for [{:keys [field-name aggregation-type]} aggregations]
+                 [ui/TableRow
+                  [ui/TableCell field-name]
+                  [ui/TableCell {:textAlign "right"} (get aggregation-types aggregation-type)]])]]]]
            [ui/Form
             [:div
              [ui/Header {:as       "h4"
                          :attached "top"
                          :style    {:background-color "#00000008"}}
-              (str/capitalize (@tr [:period]))]
+              (str/capitalize (@tr [:period]))
+              [ui/HeaderSubheader "Choose a period that you would like to export data (in .csv format) for."]]
              (into [ui/Segment {:attached true}]
                    (conj (mapv (fn [option]
                                  (when-not (= "custom period" option)
@@ -86,11 +106,11 @@
                                                {:from        from
                                                 :to          to
                                                 :granularity (ts-utils/granularity-for-timespan form-data)
-                                                :query       "test-query1"}]))}]]]))))
+                                                :query       (:query-name test-query)}]))}]]]))))
 
 (defn timestamp+value [ts-data aggregation-name]
   (mapv (fn [d]
-          (let [value     (get-in d [:aggregations aggregation-name :value])]
+          (let [value     (get-in d [:aggregations (keyword aggregation-name) :value])]
             (assoc d :x (:timestamp d)
                      :y value)))
         ts-data))
@@ -139,8 +159,7 @@
         export-modal-visible? (r/atom false)
         aggregations          (-> test-query :query :aggregations)
         selected-timespan     (subscribe [::subs/timespan])
-        query-name            (:query-name test-query)
-        metrics               (mapv :field-name aggregations)]
+        query-name            (keyword (:query-name test-query))]
     (fetch-app-data (first ts-utils/timespan-options))
     (fn []
       (let [ts-data               (-> @app-data
@@ -150,11 +169,12 @@
         [:div {:class :uix-apps-details-details}
          [:div {:style {:display "flex"
                         :align-items "center"}} [:h4 {:class :tab-app-detail} "Data"]
-          (into [:div {:style {:margin-bottom 14
+          #_(into [:div {:style {:margin-bottom 14
                                :margin-left 20}}]
                 (mapv (fn [m] [ui/Label  m]) metrics))]
          [ui/Menu {:width      "100%"
-                   :borderless true}
+                   :borderless true
+                   :style {:background-color "#F9FAFB"}}
           [ui/MenuMenu {:position "left"}
            [ts-components/TimeSeriesDropdown {:loading?         @loading?
                                               :default-value    (first ts-utils/timespan-options)
@@ -164,17 +184,18 @@
                         :position "right"
                         :content  (str (@tr [:export-data]) " (.csv)")
                         :on-click #(reset! export-modal-visible? true)}]]
-         [ui/TabPane
+         (when @export-modal-visible?
+           [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
 
-          [ui/Grid {:centered true
-                    :columns 2
-                    :padded true}
-           (when @export-modal-visible?
-             [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
-           (into [ui/GridColumn]
-                 (mapv (fn [{:keys [aggregation-name field-name]}]
+         (into [ui/Grid {:centered true
+                         :columns  2
+                         :padded   true}]
+               (mapv (fn [{:keys [aggregation-name field-name aggregation-type]}]
+                       [ui/GridColumn
+                        [ui/Segment {:raised true
+                                     :style  {:background-color "#F9FAFB"}}
                          [LinePlot @selected-timespan
-                          (str "Average " field-name)
+                          (str (get aggregation-types aggregation-type) " " field-name)
                           field-name
-                          (timestamp+value ts-data aggregation-name)])
-                       aggregations))]]]))))
+                          (timestamp+value ts-data aggregation-name)]]])
+                     aggregations))]))))

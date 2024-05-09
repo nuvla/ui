@@ -449,7 +449,7 @@
 (defn TabMenuData
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [:span (str/capitalize (@tr [:app-data]))]))
+    [:span (str/capitalize (@tr [:data]))]))
 
 
 (defn OverviewPane

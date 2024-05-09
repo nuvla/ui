@@ -337,7 +337,8 @@
     (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
       [:div [ui/Menu {:width "100%"
-                      :borderless true}
+                      :borderless true
+                      :style  {:background-color "#F9FAFB"}}
              [ui/MenuMenu {:position "left"}
               [ts-components/TimeSeriesDropdown {:loading? @loading?
                                                  :default-value (first ts-utils/timespan-options)
@@ -350,29 +351,36 @@
 
        [ui/TabPane
         [ui/Grid {:columns   2
-                  :stackable true
-                  :divided   true
-                  :celled    "internally"}
-
+                  :stackable true}
          (when @export-modal-visible?
            [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
          [ui/GridRow
           [ui/GridColumn {:textAlign "center"}
-           [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]
+           [ui/Segment {:raised true
+                        :style  {:background-color "#F9FAFB"}}
+            [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]
           [ui/GridColumn {:textAlign "center"}
-           [DiskUsageTimeSeries @selected-timespan (:disk-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]]
+           [ui/Segment {:raised true
+                        :style  {:background-color "#F9FAFB"}}
+            [DiskUsageTimeSeries @selected-timespan (:disk-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]]
          [ui/GridRow
           [ui/GridColumn {:textAlign "center"}
-           [NetworkDataTimeSeries @selected-timespan (:network-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]
+           [ui/Segment {:raised true
+                        :style  {:background-color "#F9FAFB"}}
+            [NetworkDataTimeSeries @selected-timespan (:network-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]
           [ui/GridColumn {:textAlign "center"}
-           [RamUsageTimeSeries @selected-timespan (:ram-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]]
+           [ui/Segment {:raised true
+                        :style  {:background-color "#F9FAFB"}}
+            [RamUsageTimeSeries @selected-timespan (:ram-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]]
          [ui/GridRow {:columns 1
                       :centered true}
           [ui/GridColumn {:textAlign "center"
-                          :width 8}
-           [NEStatusTimeSeries @selected-timespan (:availability-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]]]]])))
+                          :width 10}
+           [ui/Segment {:raised true
+                        :style  {:background-color "#F9FAFB"}}
+            [NEStatusTimeSeries @selected-timespan (:availability-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]]]]])))

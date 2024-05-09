@@ -192,8 +192,7 @@
                          :padded   true}]
                (mapv (fn [{:keys [aggregation-name field-name aggregation-type]}]
                        [ui/GridColumn
-                        [ui/Segment {:raised true
-                                     :style  {:background-color "#F9FAFB"}}
+                        [ui/Segment {:style  {:background-color "#F9FAFB"}}
                          [LinePlot @selected-timespan
                           (str (get aggregation-types aggregation-type) " " field-name)
                           field-name

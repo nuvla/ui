@@ -167,14 +167,11 @@
                                       (first)
                                       :ts-data)]
         [:div {:class :uix-apps-details-details}
-         [:div {:style {:display "flex"
-                        :align-items "center"}} [:h4 {:class :tab-app-detail} "Data"]
-          #_(into [:div {:style {:margin-bottom 14
-                               :margin-left 20}}]
-                (mapv (fn [m] [ui/Label  m]) metrics))]
+         [:h4 {:class :tab-app-detail} "Data"]
          [ui/Menu {:width      "100%"
                    :borderless true
-                   :style {:background-color "#F9FAFB"}}
+                   :style {:background-color "#F9FAFB"
+                           :margin-bottom 30}}
           [ui/MenuMenu {:position "left"}
            [ts-components/TimeSeriesDropdown {:loading?         @loading?
                                               :default-value    (first ts-utils/timespan-options)
@@ -188,11 +185,10 @@
            [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
 
          (into [ui/Grid {:centered true
-                         :columns  2
-                         :padded   true}]
+                         :columns  2}]
                (mapv (fn [{:keys [aggregation-name field-name aggregation-type]}]
                        [ui/GridColumn
-                        [ui/Segment {:style  {:background-color "#F9FAFB"}}
+                        [ui/Segment
                          [LinePlot @selected-timespan
                           (str (get aggregation-types aggregation-type) " " field-name)
                           field-name

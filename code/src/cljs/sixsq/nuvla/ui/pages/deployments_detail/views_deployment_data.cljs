@@ -184,11 +184,10 @@
           (when @export-modal-visible?
             [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
           (into [ui/Grid {:centered true
-                          :columns  2
-                          :padded   true}]
+                          :columns  2}]
                 (mapv (fn [{:keys [aggregation-name field-name aggregation-type]}]
                         [ui/GridColumn
-                         [ui/Segment {:style  {:background-color "#F9FAFB"}}
+                         [ui/Segment
                           [LinePlot @selected-timespan
                            (str (get aggregation-types aggregation-type) " " field-name)
                            field-name

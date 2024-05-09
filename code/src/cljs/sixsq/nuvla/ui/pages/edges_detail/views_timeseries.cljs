@@ -356,26 +356,26 @@
            [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
          [ui/GridRow
           [ui/GridColumn {:textAlign "center"}
-           [ui/Segment {:style  {:background-color "#F9FAFB"}}
+           [ui/Segment
             [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]
             [GraphLabel @selected-timespan]]]
           [ui/GridColumn {:textAlign "center"}
-           [ui/Segment {:style  {:background-color "#F9FAFB"}}
+           [ui/Segment
             [DiskUsageTimeSeries @selected-timespan (:disk-stats @edge-stats)]
             [GraphLabel @selected-timespan]]]]
          [ui/GridRow
           [ui/GridColumn {:textAlign "center"}
-           [ui/Segment {:style  {:background-color "#F9FAFB"}}
+           [ui/Segment
             [NetworkDataTimeSeries @selected-timespan (:network-stats @edge-stats)]
             [GraphLabel @selected-timespan]]]
           [ui/GridColumn {:textAlign "center"}
-           [ui/Segment {:style  {:background-color "#F9FAFB"}}
+           [ui/Segment
             [RamUsageTimeSeries @selected-timespan (:ram-stats @edge-stats)]
             [GraphLabel @selected-timespan]]]]
          [ui/GridRow {:columns 1
                       :centered true}
           [ui/GridColumn {:textAlign "center"
                           :width 10}
-           [ui/Segment {:style  {:background-color "#F9FAFB"}}
+           [ui/Segment
             [NEStatusTimeSeries @selected-timespan (:availability-stats @edge-stats)]
             [GraphLabel @selected-timespan]]]]]]])))

@@ -98,7 +98,7 @@
        [ui/GridRow {:centered true}
         [ui/GridColumn {:width     10
                         :textAlign "center"}
-         [ui/Segment {:style  {:background-color "#F9FAFB"}}
+         [ui/Segment
           [plot/Bar {:data    {:datasets [{:data            (timestamp+value ts-data :virtual-edges-online)
                                            :label           (@tr [:available])
                                            :backgroundColor "#21d32c88"}
@@ -139,8 +139,8 @@
                                            (let [cursor (if (first chartElement)
                                                           "pointer"
                                                           "default")]
-                                             (set! (.. evt -native -target -style -cursor) cursor)))}}]]
-         [edges-detail-timeseries/GraphLabel timespan]]
+                                             (set! (.. evt -native -target -style -cursor) cursor)))}}]
+          [edges-detail-timeseries/GraphLabel timespan]]]
 
         [ui/GridColumn {:width 4}
          [:div {:style {:visibility (if @extra-info-visible? "visible" "hidden")

@@ -364,7 +364,7 @@
                          (dispatch [::events/validate-registry-service-form]))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
-            {:keys [name description endpoint]} @service]
+            {:keys [name description endpoint subtype]} @service]
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
@@ -379,7 +379,9 @@
            [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
             :default-value description, :spec ::spec/description,
             :on-change (partial on-change :description), :validate-form? @validate-form?]
-           [uix/TableRowField (@tr [:endpoint]), :placeholder "https://registry.hub.docker.com",
+           [uix/TableRowField (@tr [:endpoint]), :placeholder (if (= subtype "helm-repo")
+                                                                "https://artifacthub.io/packages/search?kind=0"
+                                                                "https://registry.hub.docker.com")
             :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? true,
             :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
 
@@ -420,7 +422,9 @@
    "kubernetes" {:validation-event ::events/validate-coe-service-form
                  :modal-content    service-coe}
    "registry"   {:validation-event ::events/validate-registry-service-form
-                 :modal-content    service-registry}})
+                 :modal-content    service-registry}
+   "helm-repo" {:validation-event ::events/validate-registry-service-form
+                :modal-content    service-registry}})
 
 (defn save-callback
   [form-validation-event]
@@ -432,6 +436,12 @@
       (dispatch [::events/edit-infra-service])
       (dispatch [::intercom-events/set-event "Last create Infrastructure Service" (time/timestamp)]))))
 
+(def service-subtype->name {"swarm"      "Docker Swarm"
+                            "kubernetes" "Kubernetes"
+                            "registry"   "Docker registry"
+                            "s3"         "Object Store"
+                            "helm-repo"  "Helm Repository"})
+
 (defn ServiceModal
   []
   (let [tr          (subscribe [::i18n-subs/tr])
@@ -441,8 +451,10 @@
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [subtype          (:subtype @service "")
-            name             (:name @service subtype)
-            header           (str (if (true? @is-new?) (@tr [:new]) (@tr [:update])) " " name)
+            name             (:name @service (get service-subtype->name subtype))
+            header           (str (if @is-new?
+                                    (@tr [:new])
+                                    (@tr [:update])) " " name)
             validation-item  (get infrastructure-service-validation-map subtype)
             validation-event (:validation-event validation-item)
             modal-content    (:modal-content validation-item)]
@@ -517,7 +529,6 @@
            [ui/IconGroup {:size "massive"}
             [icons/DockerIcon]
             [icons/DbIconFull {:corner "bottom right"}]]]]
-
          [ui/Card
           {:on-click #(do
                         (dispatch [::events/set-validate-form? false])
@@ -528,6 +539,17 @@
           [ui/CardContent {:text-align :center}
            [ui/Header "Object Store"]
            [ui/Image {:src   "/ui/images/s3.png"
+                      :style {:max-width 112}}]]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-service-modal])
+                        (dispatch [::events/open-service-modal
+                                   (assoc @service :subtype "helm-repo") true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Helm Repository"]
+           [ui/Image {:src   "/ui/images/helm.png"
                       :style {:max-width 112}}]]]]]])))
 
 (defn Infrastructures

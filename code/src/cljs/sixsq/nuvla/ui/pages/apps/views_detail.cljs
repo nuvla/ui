@@ -366,7 +366,7 @@
              [ui/Header (@tr [:application-helm])]
              [ui/IconGroup {:size :massive}
               [icons/CubesIcon {:color (when-not parent :grey)}]
-              [ui/Image {:src     (if parent "/ui/images/helm.png" "/ui/images/helm.png")
+              [ui/Image {:src     (if parent "/ui/images/helm.svg" "/ui/images/helm.svg")
                          :floated "right"
                          :style   {:width "50px"}}]]]]
            [ui/Card

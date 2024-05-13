@@ -549,7 +549,7 @@
                                    (assoc @service :subtype "helm-repo") true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Helm Repository"]
-           [ui/Image {:src   "/ui/images/helm.png"
+           [ui/Image {:src   "/ui/images/helm.svg"
                       :style {:max-width 112}}]]]]]])))
 
 (defn Infrastructures

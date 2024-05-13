@@ -38,11 +38,14 @@
     (dispatch [::events/fetch-infrastructure-services-available subtypes additional-filter])
     (fn [subtypes _additional-filter _editable? value-spec on-change]
       (let [value     (:parent @credential)
+            subtype   (:subtype @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
         [ui/TableRow
          [ui/TableCell {:collapsing true}
-          (utils-general/mandatory-name (@tr [:infrastructure]))]
+          (utils-general/mandatory-name (if (= "infrastructure-service-helm-repo" subtype)
+                                          "Helm Repository"
+                                          (@tr [:infrastructure])))]
          [ui/TableCell {:error (and validate? (not valid?))}
           (if (pos-int? (count @infra-services))
             ^{:key value}
@@ -215,7 +218,7 @@
             (partial on-change :parent)]]]]))))
 
 
-(defn credential-registy
+(defn credential-registry
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         is-new?        (subscribe [::subs/is-new?])
@@ -226,7 +229,7 @@
                          (dispatch [::events/validate-credential-form ::spec/registry-credential]))]
     (fn []
       (let [editable? (utils-general/editable? @credential @is-new?)
-            {:keys [name description username password]} @credential]
+            {:keys [name description username password subtype]} @credential]
 
         [:<>
          [acl/AclButton {:default-value (:acl @credential)
@@ -247,7 +250,9 @@
            [uix/TableRowField "password", :editable? editable?, :required? true,
             :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
             :type :password, :on-change (partial on-change :password)]
-           [row-infrastructure-services-selector ["registry"] nil editable? ::spec/parent
+           [row-infrastructure-services-selector (if (= "infrastructure-service-helm-repo" subtype)
+                                                   ["infrastructure-service-helm-repo"]
+                                                   ["registry"])  nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
@@ -632,7 +637,12 @@
 (def infrastructure-service-registry-validation-map
   {"infrastructure-service-registry"
    {:validation-spec ::spec/registry-credential
-    :modal-content   credential-registy}})
+    :modal-content   credential-registry}})
+
+(def infrastructure-service-helm-repository-validation-map
+  {"infrastructure-service-helm-repo"
+   {:validation-spec ::spec/registry-credential
+    :modal-content   credential-registry}})
 
 
 (def registry-service-subtypes
@@ -680,7 +690,8 @@
          infrastructure-service-coe-validation-map
          infrastructure-service-access-keys-validation-map
          infrastructure-service-registry-validation-map
-         api-key-validation-map))
+         api-key-validation-map
+         infrastructure-service-helm-repository-validation-map))
 
 
 (defn subtype->info
@@ -691,6 +702,7 @@
     "infrastructure-service-kubernetes" {:tab-key :coe-services, :icon icons/i-docker, :name "Kubernetes"}
     "infrastructure-service-registry"
     {:tab-key :registry-services, :icon icons/i-docker, :name "Docker Registry"}
+    "infrastructure-service-helm-repo" {:name "Helm Repository"}
     "infrastructure-service-azure" {:tab-key :cloud-services, :icon icons/i-cloud, :name "Microsoft Azure"}
     "infrastructure-service-google" {:tab-key :cloud-services, :icon icons/i-cloud, :name "Google Compute"}
     "infrastructure-service-amazonec2" {:tab-key :cloud-services, :icon icons/i-cloud, :name "AWS EC2"}
@@ -814,6 +826,18 @@
            [ui/IconGroup {:size "massive"}
             [icons/DockerIcon]
             [icons/DbIconFull {:corner "bottom right"}]]]]
+
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "infrastructure-service-helm-repo"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Helm Repository"]
+           [ui/Image {:src   "/ui/images/helm.png"
+                      :style {:max-width 112}}]]]
 
          [ui/Card
           {:on-click #(do

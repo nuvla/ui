@@ -359,6 +359,17 @@
                          :floated "right"
                          :style   {:width "50px"}}]]]]
            [ui/Card
+            {:href     (when parent (pathify [base-path "New Application?subtype=application_helm"]))
+             :on-click (:when parent
+                         #(dispatch [::events/close-add-modal]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header (@tr [:application-helm])]
+             [ui/IconGroup {:size :massive}
+              [icons/CubesIcon {:color (when-not parent :grey)}]
+              [ui/Image {:src     (if parent "/ui/images/helm.png" "/ui/images/helm.png")
+                         :floated "right"
+                         :style   {:width "50px"}}]]]]
+           [ui/Card
             {:href     (when parent (pathify [base-path (str "New Application Bouquet?subtype=" utils/subtype-applications-sets)]))
              :on-click (when parent
                          #(dispatch [::events/close-add-modal]))}

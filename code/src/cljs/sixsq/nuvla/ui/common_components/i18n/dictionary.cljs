@@ -85,6 +85,7 @@
         :application-bouquet-is-named-group            "Application bouquet is a named group of apps intended to be deployed on a fleet. The fleet is defined at deployment time."
         :application-bouquet-this-is-an                "This is an"
         :application-docker                            "Docker Application"
+        :application-helm                              "Helm Application"
         :application-kubernetes                        "Kubernetes Application"
         :applications                                  "Applications"
         :applications-targets                          "Applications/Targets"

@@ -251,7 +251,7 @@
             :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
             :type :password, :on-change (partial on-change :password)]
            [row-infrastructure-services-selector (if (= "infrastructure-service-helm-repo" subtype)
-                                                   ["infrastructure-service-helm-repo"]
+                                                   ["helm-repo"]
                                                    ["registry"])  nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 

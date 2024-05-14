@@ -496,6 +496,11 @@
   (fn [db [_ {resources :resources}]]
     (assoc db ::spec/registries-infra resources)))
 
+(reg-event-db
+  ::set-helm-infra
+  (fn [db [_ {resources :resources}]]
+    (assoc db ::spec/helm-infra resources)))
+
 
 (reg-event-fx
   ::get-registries-infra
@@ -506,6 +511,16 @@
        :select  "id, name"
        :orderby "name:asc, id:asc"
        :last    10000} #(dispatch [::set-registries-infra %])]}))
+
+(reg-event-fx
+  ::get-helm-infra
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:infrastructure-service
+      {:filter  "subtype='helm-repo'"
+       :select  "id, name"
+       :orderby "name:asc, id:asc"
+       :last    10000} #(dispatch [::set-helm-infra %])]}))
 
 
 (reg-event-db

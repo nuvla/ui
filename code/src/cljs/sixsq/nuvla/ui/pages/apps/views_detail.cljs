@@ -1033,13 +1033,14 @@
 
 (defn helm-repository-chart-section []
   (let [tr         (subscribe [::i18n-subs/tr])
-        registries (subscribe [::subs/registries])
+        helm-infra (subscribe [::subs/helm-infra])
         subtype    (subscribe [::subs/module-subtype])
-        state      (r/atom {:selected-repo        nil
-                            :selected-custom-url  nil
-                            :options              []
+        state      (r/atom {:selected-option      nil
+                            :selected-url?        false
                             :repo-or-url          :repo})]
+    (dispatch [::events/get-helm-infra])
     (fn []
+      (js/console.log @state)
 
       [uix/Accordion
 
@@ -1051,13 +1052,16 @@
            [:b {:style {:margin-right 5}} "Helm repo"]
            [ui/Dropdown {:fluid          true
                          :clearable      true
-                         :inline         true
                          :allowAdditions true
                          :additionLabel  "Add custom URL: "
                          :placeholder    "Choose a Helm repository or provide a URL"
                          :search         true
-                         :options        ["hello"]
+                         :options        (mapv (fn [{:keys [id name]}] {:key id
+                                                                        :value id
+                                                                        :text name})
+                                               @helm-infra)
                          :selection      true
+                         :on-change      #(swap! state assoc :selected-option %)
                          :style          {:max-width 400}}]]
           [:div {:style {:display "flex"
                          :align-items "center"
@@ -1065,11 +1069,10 @@
                          :margin-bottom 20}}
            [:b {:style {:margin-right 5}} "Credential"]
            [ui/Dropdown {:fluid          true
-                         :disabled       (not (:selected-repo @state))
+                         :disabled       (not (:selected-option @state))
                          :clearable      true
-                         :inline         true
                          :placeholder    "Choose credentials for the Helm repository"
-                         :options        ["credential"]
+                         :options        [{:key "1" :value "1" :text "credential"}]
                          :selection      true
                          :style          {:max-width 400}}]]]
 

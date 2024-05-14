@@ -157,6 +157,8 @@
 
 (s/def ::registries-infra any?)
 
+(s/def ::helm-infra any?)
+
 (s/def ::registries-credentials any?)
 
 (s/def ::validate-docker-compose any?)
@@ -191,6 +193,7 @@
    ::commit-message            ""
    ::registries                nil
    ::registries-infra          nil
+   ::helm-infra                nil
    ::registries-credentials    nil
    ::validate-docker-compose   nil
    ::compare-module-left       nil

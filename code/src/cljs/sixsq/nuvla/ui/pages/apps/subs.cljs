@@ -223,6 +223,10 @@
   (fn [db]
     (get-in db [::spec/module-common ::spec/registries])))
 
+(reg-sub
+  ::helm-infra
+  (fn [db]
+    (::spec/helm-infra db)))
 
 (reg-sub
   ::price

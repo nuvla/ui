@@ -1031,6 +1031,52 @@
          :count no-of-registries
          :default-open (pos? no-of-registries)]))))
 
+(defn helm-repository-chart-section []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        registries (subscribe [::subs/registries])
+        subtype    (subscribe [::subs/module-subtype])
+        state      (r/atom {:selected-repo        nil
+                            :selected-custom-url  nil
+                            :options              []
+                            :repo-or-url          :repo})]
+    (fn []
+
+      [uix/Accordion
+
+         [:<>
+          [:div {:style {:display "flex"
+                         :align-items "center"
+                         :margin-top 20
+                         :margin-bottom 20}}
+           [:b {:style {:margin-right 5}} "Helm repo"]
+           [ui/Dropdown {:fluid          true
+                         :clearable      true
+                         :inline         true
+                         :allowAdditions true
+                         :additionLabel  "Add custom URL: "
+                         :placeholder    "Choose a Helm repository or provide a URL"
+                         :search         true
+                         :options        ["hello"]
+                         :selection      true
+                         :style          {:max-width 400}}]]
+          [:div {:style {:display "flex"
+                         :align-items "center"
+                         :margin-top 20
+                         :margin-bottom 20}}
+           [:b {:style {:margin-right 5}} "Credential"]
+           [ui/Dropdown {:fluid          true
+                         :disabled       (not (:selected-repo @state))
+                         :clearable      true
+                         :inline         true
+                         :placeholder    "Choose credentials for the Helm repository"
+                         :options        ["credential"]
+                         :selection      true
+                         :style          {:max-width 400}}]]]
+
+         :label "Helm Repository & Chart"
+
+         :default-open true])))
+
 
 (defn Pricing
   []

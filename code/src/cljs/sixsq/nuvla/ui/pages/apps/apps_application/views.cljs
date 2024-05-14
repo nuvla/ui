@@ -376,6 +376,22 @@
           (when @editable?
             [ui/Message {:info true} (@tr [:become-a-vendor])])])])))
 
+(defn TabMenuHelm
+  []
+  [:span
+   [icons/FileCodeIcon]
+   (str/capitalize "helm")])
+
+(defn HelmPane []
+  (let [active-tab     (sub-apps-tab)
+        module-subtype (subscribe [::apps-subs/module-subtype])]
+    @active-tab
+    [:div {:class :uix-apps-details-details}
+     [:h4 {:class :tab-app-detail} "Helm"]
+     [apps-views-detail/registries-section]
+     [apps-views-detail/helm-repository-chart-section]
+     [:div "hello"]]) )
+
 
 (defn TabMenuDocker
   []
@@ -474,7 +490,9 @@
   []
   (let [module    (subscribe [::apps-subs/module])
         editable? (subscribe [::apps-subs/editable?])
-        stripe    (subscribe [::main-subs/stripe])]
+        stripe    (subscribe [::main-subs/stripe])
+        module-subtype (subscribe [::apps-subs/module-subtype])]
+    (js/console.log @module-subtype)
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
                               :icon    (r/as-element [icons/EyeIcon])}
@@ -497,6 +515,11 @@
                                 :key     :pricing}
                      :pane     {:content (r/as-element [PricingPane])
                                 :key     :pricing-pane}})
+                  (when (= apps-utils/subtype-application-helm @module-subtype)
+                    {:menuItem {:content (r/as-element [TabMenuHelm])
+                                :key     :helm}
+                     :pane     {:content (r/as-element [HelmPane])
+                                :key     :helm-pane}})
                   {:menuItem {:content (r/as-element [TabMenuDocker])
                               :key     :docker}
                    :pane     {:content (r/as-element [DockerPane])

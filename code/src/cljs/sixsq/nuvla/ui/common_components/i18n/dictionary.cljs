@@ -451,6 +451,8 @@
         :groups                                        "groups"
         :heartbeat                                     "Heartbeat"
         :heartbeat-help                                "NuvlaEdge has to contact Nuvla each defined number of seconds to be considered as online."
+        :helm-repo-section-sub-text                    "Credentials used to access Helm repositories"
+        :helm-repositories                             "Helm repositories"
         :here                                          "here"
         :hide                                          "hide"
         :hide-versions                                 "hide versions"

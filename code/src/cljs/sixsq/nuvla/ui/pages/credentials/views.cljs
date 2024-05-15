@@ -644,6 +644,9 @@
    {:validation-spec ::spec/registry-credential
     :modal-content   credential-registry}})
 
+(def helm-subtypes
+  (keys infrastructure-service-helm-repository-validation-map))
+
 
 (def registry-service-subtypes
   (keys infrastructure-service-registry-validation-map))
@@ -702,7 +705,7 @@
     "infrastructure-service-kubernetes" {:tab-key :coe-services, :icon icons/i-docker, :name "Kubernetes"}
     "infrastructure-service-registry"
     {:tab-key :registry-services, :icon icons/i-docker, :name "Docker Registry"}
-    "infrastructure-service-helm-repo" {:name "Helm Repository"}
+    "infrastructure-service-helm-repo" {:tab-key :helm-services :name "Helm Repository"}
     "infrastructure-service-azure" {:tab-key :cloud-services, :icon icons/i-cloud, :name "Microsoft Azure"}
     "infrastructure-service-google" {:tab-key :cloud-services, :icon icons/i-cloud, :name "Google Compute"}
     "infrastructure-service-amazonec2" {:tab-key :cloud-services, :icon icons/i-cloud, :name "AWS EC2"}
@@ -1078,14 +1081,16 @@
         register-service-creds (filter #(in? registry-service-subtypes (:subtype %))
                                        @credentials)
         api-key-creds          (filter #(in? api-key-subtypes (:subtype %))
-                                       @credentials)]
-
+                                       @credentials)
+        helm-creds              (filter #(in? helm-subtypes (:subtype %))
+                                        @credentials)]
     [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text icons/i-docker)
      (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text icons/i-cloud)
      (credential access-key-creds :access-services :credential-ssh-keys-section-sub-text icons/i-key)
      (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text icons/i-hard-drive)
      (credential register-service-creds :registry-services :credential-registry-service-section-sub-text icons/i-docker)
-     (credential api-key-creds :api-keys :api-keys-section-sub-text icons/i-key)]))
+     (credential api-key-creds :api-keys :api-keys-section-sub-text icons/i-key)
+     (credential helm-creds :helm-repositories :helm-repo-section-sub-text icons/i-key)]))
 
 
 (defn TabsCredentials

@@ -110,6 +110,7 @@
                      utils/subtype-component (apps-component-utils/module->db db module)
                      utils/subtype-project (apps-project-utils/module->db db module)
                      utils/subtype-application (apps-application-utils/module->db db module)
+                     utils/subtype-application-helm (apps-application-utils/module->db db module)
                      utils/subtype-application-k8s (apps-application-utils/module->db db module)
                      utils/subtype-applications-sets (apps-applications-sets-utils/module->db db module)
                      db)}
@@ -141,6 +142,7 @@
           (assoc ::spec/module-immutable {})
           (assoc ::spec/module-common {})
           (assoc ::main-spec/loading? false)
+          (assoc ::spec/helm-info nil)
           (assoc-in [::spec/module-common ::spec/name] new-name)
           (assoc-in [::spec/module-common ::spec/description] (or (utils/subtype->descr-template new-subtype)
                                                                   ""))
@@ -518,9 +520,47 @@
     {::cimi-api-fx/search
      [:infrastructure-service
       {:filter  "subtype='helm-repo'"
-       :select  "id, name"
+       :select  "id, name, endpoint"
        :orderby "name:asc, id:asc"
        :last    10000} #(dispatch [::set-helm-infra %])]}))
+
+(reg-event-db
+  ::set-helm-credentials
+  (fn [db [_ {resources :resources}]]
+    (assoc db ::spec/helm-credentials resources)))
+
+(reg-event-db
+  ::set-helm-repo-url
+  (fn [{:keys [::spec/helm-infra] :as db} [_ id]]
+    (let [endpoint (:endpoint (first (filter #(= id (:id %)) helm-infra)))]
+      (-> db
+          (assoc-in [::spec/helm-info :helm-repo-url] endpoint)
+          (update-in [::spec/helm-info] dissoc :helm-absolute-url)))))
+
+(reg-event-db
+  ::set-helm-chart-name
+  (fn [db [_ helm-chart-name]]
+    (js/console.log helm-chart-name)
+    (-> db
+        (assoc-in [::spec/helm-info :helm-chart-name] helm-chart-name)
+        (update-in [::spec/helm-info] dissoc :helm-absolute-url))))
+
+(reg-event-db
+  ::set-helm-absolute-url
+  (fn [db [_ helm-absolute-url]]
+    (-> db
+        (assoc-in [::spec/helm-info :helm-absolute-url]  helm-absolute-url)
+        (update-in [::spec/helm-info] dissoc :helm-absolute-url :helm-chart-name))))
+
+(reg-event-fx
+  ::get-helm-credentials
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:credential
+      {:filter  "subtype='infrastructure-service-helm-repo'"
+       :select  "id, name, parent"
+       :orderby "name:asc, id:asc"
+       :last    10000} #(dispatch [::set-helm-credentials %])]}))
 
 
 (reg-event-db
@@ -595,6 +635,7 @@
     (let [id      (:id module)
           {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)
           is-app? (= subtype utils/subtype-application)]
+      (js/console.log sanitized-module)
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
                             #(do

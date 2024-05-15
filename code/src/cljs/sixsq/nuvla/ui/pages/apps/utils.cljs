@@ -70,6 +70,7 @@ For more information on how to format your app description using Markdown syntax
 (def subtype->descr-template
   {subtype-application       apps-description-template
    subtype-application-k8s   apps-description-template
+   subtype-application-helm  apps-description-template
    subtype-applications-sets apps-sets-description-template
    subtype-project           projects-description-template})
 

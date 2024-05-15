@@ -29,6 +29,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
+            [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as utils-values]))
@@ -537,7 +538,8 @@
         (condp = @module-subtype
           utils/subtype-application "Docker"
           utils/subtype-application-k8s "Kubernetes"
-          utils/subtype-applications-sets "Application bouquets")]])))
+          utils/subtype-applications-sets "Application bouquets"
+          utils/subtype-application-helm "Helm application")]])))
 
 
 (defn Details
@@ -1032,53 +1034,71 @@
          :default-open (pos? no-of-registries)]))))
 
 (defn helm-repository-chart-section []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        helm-infra (subscribe [::subs/helm-infra])
-        subtype    (subscribe [::subs/module-subtype])
+  (let [helm-infra (subscribe [::subs/helm-infra])
+        helm-credentials (subscribe [::subs/helm-credentials])
         state      (r/atom {:selected-option      nil
-                            :selected-url?        false
-                            :repo-or-url          :repo})]
+                            :selected-url         nil
+                            :chart-name           nil
+                            :version              nil})
+        credential->option (fn [{:keys [id name]}]
+                             {:key id
+                              :value id
+                              :text name})]
     (dispatch [::events/get-helm-infra])
+    (dispatch [::events/get-helm-credentials])
     (fn []
-      (js/console.log @state)
-
-      [uix/Accordion
-
+      (let [{:keys [selected-option selected-url chart-name]} @state
+            credential-options (mapv credential->option (get @helm-credentials (:selected-option @state)))
+            infra-options (mapv (fn [{:keys [id name]}] {:key   id
+                                                                  :value id
+                                                                  :text  name})
+                                @helm-infra)]
+        [uix/Accordion
          [:<>
-          [:div {:style {:display "flex"
-                         :align-items "center"
-                         :margin-top 20
-                         :margin-bottom 20}}
-           [:b {:style {:margin-right 5}} "Helm repo"]
-           [ui/Dropdown {:fluid          true
-                         :clearable      true
-                         :allowAdditions true
-                         :additionLabel  "Add custom URL: "
-                         :placeholder    "Choose a Helm repository or provide a URL"
-                         :search         true
-                         :options        (mapv (fn [{:keys [id name]}] {:key id
-                                                                        :value id
-                                                                        :text name})
-                                               @helm-infra)
-                         :selection      true
-                         :on-change      #(swap! state assoc :selected-option %)
-                         :style          {:max-width 400}}]]
-          [:div {:style {:display "flex"
-                         :align-items "center"
-                         :margin-top 20
-                         :margin-bottom 20}}
-           [:b {:style {:margin-right 5}} "Credential"]
-           [ui/Dropdown {:fluid          true
-                         :disabled       (not (:selected-option @state))
-                         :clearable      true
-                         :placeholder    "Choose credentials for the Helm repository"
-                         :options        [{:key "1" :value "1" :text "credential"}]
-                         :selection      true
-                         :style          {:max-width 400}}]]]
+          [ui/Table style/definition
+           [ui/TableBody
+            [ui/TableRow
+             [ui/TableHeaderCell {:style {:width 20}}"Helm repo"]
+             [ui/TableCell {:style {:width 200}} [ui/Dropdown {:fluid          true
+                                         :clearable      true
+                                         :allowAdditions true
+                                         :additionLabel  "Add custom URL: "
+                                         :placeholder    "Choose a Helm repository or provide a URL"
+                                         :search         true
+                                         :options        (cond-> infra-options
+                                                                 selected-url (conj {:key   selected-url
+                                                                                     :value selected-url
+                                                                                     :text  selected-url}))
+                                         :selection      true
+                                         :on-change      (ui-callback/value #(do
+                                                                               (swap! state dissoc :selected-url)
+                                                                               (swap! state assoc :selected-option %)
+                                                                               (dispatch [::events/set-helm-repo-url %])))
+                                         :on-add-item    (ui-callback/value #(do (swap! state dissoc :selected-option)
+                                                                                 (swap! state assoc :selected-url %)
+                                                                                 (dispatch [::events/set-helm-absolute-url %])))
+                                         :style          {:max-width 400}}]]]
+            [ui/TableRow
+             [ui/TableHeaderCell {:style {:width 20}} "Credentials"]
+             [ui/TableCell {:style {:width 200}} [ui/Dropdown {:fluid       true
+                                         :disabled    (or (not (:selected-option @state))
+                                                          (str/blank? (:selected-option @state)))
+                                         :clearable   true
+                                         :placeholder "Choose credentials for the Helm repository"
+                                         :options     credential-options
+                                         :selection   true
+                                         :style       {:max-width 400}}]]]
+            [ui/TableRow
+             [ui/TableHeaderCell "Chart name"]
+             [ui/TableCell [ui/Input {:on-change (ui-callback/value #(do (swap! state assoc :chart-name %)
+                                                                         (dispatch [::events/set-helm-chart-name %])))}]]]
+            [ui/TableRow
+             [ui/TableHeaderCell "Version"]
+             [ui/TableCell [ui/Input {:on-change (ui-callback/value #(swap! state assoc :version %))}]]]]]]
 
          :label "Helm Repository & Chart"
 
-         :default-open true])))
+         :default-open true]))))
 
 
 (defn Pricing

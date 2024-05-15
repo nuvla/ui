@@ -492,7 +492,6 @@
         editable? (subscribe [::apps-subs/editable?])
         stripe    (subscribe [::main-subs/stripe])
         module-subtype (subscribe [::apps-subs/module-subtype])]
-    (js/console.log @module-subtype)
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
                               :icon    (r/as-element [icons/EyeIcon])}
@@ -515,15 +514,15 @@
                                 :key     :pricing}
                      :pane     {:content (r/as-element [PricingPane])
                                 :key     :pricing-pane}})
-                  (when (= apps-utils/subtype-application-helm @module-subtype)
+                  (if (= apps-utils/subtype-application-helm @module-subtype)
                     {:menuItem {:content (r/as-element [TabMenuHelm])
                                 :key     :helm}
                      :pane     {:content (r/as-element [HelmPane])
-                                :key     :helm-pane}})
-                  {:menuItem {:content (r/as-element [TabMenuDocker])
-                              :key     :docker}
-                   :pane     {:content (r/as-element [DockerPane])
-                              :key     :docker-pane}}
+                                :key     :helm-pane}}
+                    {:menuItem {:content (r/as-element [TabMenuDocker])
+                                :key     :docker}
+                     :pane     {:content (r/as-element [DockerPane])
+                                :key     :docker-pane}})
                   {:menuItem {:content (r/as-element [TabMenuConfiguration])
                               :key     :configuration}
                    :pane     {:content (r/as-element [ConfigurationPane])
@@ -545,7 +544,7 @@
         active-tab    (sub-apps-tab)
         is-new?       (subscribe [::apps-subs/is-new?])]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
-    (dispatch [::apps-events/set-form-spec ::spec/module-application])
+    #_(dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name  (get @module-common ::apps-spec/name)

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-application.utils
   (:require [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
+            [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]))
 
 
@@ -42,15 +43,25 @@
 
 (defn db->module
   [{:keys [subtype] :as module} commit-map db]
+  (js/console.log module)
   (let [{:keys [author commit]} commit-map
         docker-compose       (get-in db [::spec/module-application ::spec/docker-compose])
         compatibility        (get-in db [::spec/module-application ::spec/compatibility])
         files                (files->module db)
-        requires-user-rights (get-in db [::spec/module-application ::spec/requires-user-rights])]
+        requires-user-rights (get-in db [::spec/module-application ::spec/requires-user-rights])
+        helm-info            (::apps-spec/helm-info db)]
     (as-> module m
+          (if (= subtype "application_helm")
+            (assoc-in m [:content :helm-repo-url] (:helm-repo-url helm-info))
+            m)
+          (if (= subtype "application_helm")
+            (assoc-in m [:content :helm-chart-name] (:helm-chart-name helm-info))
+            m)
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
-          (assoc-in m [:content :docker-compose] docker-compose)
+          (if docker-compose
+            (assoc-in m [:content :docker-compose] docker-compose)
+            m)
           (assoc-in m [:content :requires-user-rights] requires-user-rights)
           (if (= subtype "application")
             (assoc m :compatibility compatibility)

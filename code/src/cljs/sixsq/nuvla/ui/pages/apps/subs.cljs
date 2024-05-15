@@ -14,6 +14,11 @@
   (fn [db]
     (::spec/module-common db)))
 
+(reg-sub
+  ::helm-info
+  (fn [db]
+    (::spec/helm-info db)))
+
 
 (reg-sub
   ::description
@@ -82,6 +87,7 @@
   :<- [::module]
   (fn [module [_ op]]
     (general-utils/can-operation? op module)))
+
 (reg-sub
   ::is-published?
   :<- [::module]
@@ -108,12 +114,19 @@
     (and is-app? unpublish-op is-published?)))
 
 (reg-sub
+  ::helm-info-incomplete?
+  :<- [::helm-info]
+  (fn [ {:keys [helm-repo-url helm-chart-name]}]
+    (or (nil? helm-repo-url) (nil? helm-chart-name))))
+
+(reg-sub
   ::save-btn-disabled?
   :<- [::form-valid?]
   :<- [::main-subs/changes-protection?]
   :<- [::is-description-template?]
-  (fn [[form-valid? page-changed? is-description-template?]]
-    (or (not page-changed?) (not form-valid?) is-description-template?)))
+  :<- [::helm-info-incomplete?]
+  (fn [[form-valid? page-changed? is-description-template? helm-info-complete?]]
+    (or (not page-changed?) (not form-valid?) is-description-template? helm-info-complete?)))
 
 (reg-sub
   ::module-license
@@ -227,6 +240,11 @@
   ::helm-infra
   (fn [db]
     (::spec/helm-infra db)))
+
+(reg-sub
+  ::helm-credentials
+  (fn [db]
+    (group-by :parent (::spec/helm-credentials db))))
 
 (reg-sub
   ::price
@@ -383,3 +401,5 @@
 (reg-sub
   ::module-not-found?
   :-> ::spec/module-not-found?)
+
+

@@ -161,6 +161,8 @@
 
 (s/def ::registries-credentials any?)
 
+(s/def ::helm-credentials any?)
+
 (s/def ::validate-docker-compose any?)
 
 (s/def ::compare-module-left any?)
@@ -174,6 +176,8 @@
 (s/def ::active-tab keyword?)
 
 (s/def ::module-not-found? boolean?)
+
+(s/def ::helm-info any?)
 
 (s/def ::tab any?)
 
@@ -194,6 +198,8 @@
    ::registries                nil
    ::registries-infra          nil
    ::helm-infra                nil
+   ::helm-info                 nil
+   ::helm-credentials          nil
    ::registries-credentials    nil
    ::validate-docker-compose   nil
    ::compare-module-left       nil

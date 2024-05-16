@@ -1132,7 +1132,7 @@
                                                 :style   {:width 600}})
               [ui/TableBody
                [ui/TableRow
-                [ui/TableCell "Chart name"]
+                [ui/TableCell "Chart Absolute URL"]
                 [ui/TableCell [ui/Input {:disabled  (when (= :repo (:repo-or-url? @state))
                                                       true)
                                          :on-change (ui-callback/value #(do (swap! state assoc :chart-absolute-url %)

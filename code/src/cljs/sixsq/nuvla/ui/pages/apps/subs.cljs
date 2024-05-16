@@ -116,8 +116,9 @@
 (reg-sub
   ::helm-info-incomplete?
   :<- [::helm-info]
-  (fn [ {:keys [helm-repo-url helm-chart-name]}]
-    (or (nil? helm-repo-url) (nil? helm-chart-name))))
+  (fn [ {:keys [helm-repo-url helm-chart-name helm-absolute-url]}]
+    (and (nil? helm-absolute-url)
+         (or (nil? helm-repo-url) (nil? helm-chart-name)))))
 
 (reg-sub
   ::save-btn-disabled?

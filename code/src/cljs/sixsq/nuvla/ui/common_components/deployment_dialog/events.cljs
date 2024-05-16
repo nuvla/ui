@@ -261,9 +261,11 @@
     {:db               (assoc db ::spec/deployment {:id id})
      ::cimi-api-fx/get [id #(let [{:keys [content subtype href]} (:module %)
                                   is-kubernetes? (= subtype "application_kubernetes")
-                                  filter         (if is-kubernetes?
-                                                   "subtype='kubernetes'"
-                                                   "subtype='swarm'")]
+                                  is-helm?       (= subtype "application_helm")
+                                  filter         (cond
+                                                   is-helm? "subtype='kubernetes'"
+                                                   is-kubernetes? "subtype='kubernetes'"
+                                                   :else "subtype='swarm'")]
                               (dispatch [::get-infra-services filter])
                               (dispatch [::set-deployment %])
                               (dispatch [::check-dct %])

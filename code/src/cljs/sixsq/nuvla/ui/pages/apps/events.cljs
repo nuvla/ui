@@ -641,7 +641,6 @@
     (let [id      (:id module)
           {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)
           is-app? (= subtype utils/subtype-application)]
-      (js/console.log sanitized-module)
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
                             #(do

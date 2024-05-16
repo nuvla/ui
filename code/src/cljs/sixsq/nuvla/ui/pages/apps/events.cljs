@@ -538,9 +538,15 @@
           (update-in [::spec/helm-info] dissoc :helm-absolute-url)))))
 
 (reg-event-db
+  ::set-helm-custom-url
+  (fn [{:keys [::spec/helm-infra] :as db} [_ url]]
+    (-> db
+        (assoc-in [::spec/helm-info :helm-repo-url] url)
+        (update-in [::spec/helm-info] dissoc :helm-absolute-url))))
+
+(reg-event-db
   ::set-helm-chart-name
   (fn [db [_ helm-chart-name]]
-    (js/console.log helm-chart-name)
     (-> db
         (assoc-in [::spec/helm-info :helm-chart-name] helm-chart-name)
         (update-in [::spec/helm-info] dissoc :helm-absolute-url))))
@@ -550,7 +556,7 @@
   (fn [db [_ helm-absolute-url]]
     (-> db
         (assoc-in [::spec/helm-info :helm-absolute-url]  helm-absolute-url)
-        (update-in [::spec/helm-info] dissoc :helm-absolute-url :helm-chart-name))))
+        (update-in [::spec/helm-info] dissoc :helm-repo-url :helm-chart-name))))
 
 (reg-event-fx
   ::get-helm-credentials

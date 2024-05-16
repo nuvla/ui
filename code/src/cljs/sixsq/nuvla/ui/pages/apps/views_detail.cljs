@@ -1132,7 +1132,7 @@
             [ui/Segment {:compact  true
                          :attached true}
              [ui/Table (merge style/definition {:compact "very"
-                                                :style   {:width 500}})
+                                                :style   {:width 600}})
               [ui/TableBody
                [ui/TableRow
                 [ui/TableCell "Chart name"]

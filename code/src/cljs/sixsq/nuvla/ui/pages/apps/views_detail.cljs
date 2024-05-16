@@ -1059,7 +1059,7 @@
          [:<>
           [ui/Form
            [:div {:style {:opacity (if (= :url (:repo-or-url? @state))
-                                     "60%"
+                                     "50%"
                                      "100%")}}
             [ui/Header {:as    "h4" :attached "top"
                         :style {:background-color "#00000008"}}
@@ -1120,10 +1120,7 @@
                                      "50%"
                                      "100%")}}
             [ui/Header {:as    "h4" :attached "top"
-                        :style {:background-color "#00000008"
-                                :opacity (if (= :repo (:repo-or-url? @state))
-                                           "50%"
-                                           "100%")}}
+                        :style {:background-color "#00000008"}}
              [ui/FormField [ui/Radio {:label     "Provide Chart Absolute URL"
                                       :value     :url
                                       :name      "radioGroup"

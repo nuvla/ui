@@ -1117,7 +1117,7 @@
                 [ui/TableCell [ui/Input {:disabled (= :url (:repo-or-url? @state))
                                          :on-change (ui-callback/value #(swap! state assoc :version %))}]]]]]]]
            [:div {:style {:opacity (if (= :repo (:repo-or-url? @state))
-                                     "60%"
+                                     "50%"
                                      "100%")}}
             [ui/Header {:as    "h4" :attached "top"
                         :style {:background-color "#00000008"

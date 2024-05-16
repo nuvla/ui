@@ -4,6 +4,30 @@
 
 ## Released
 
+## [2.36.7] - 2024-05-16
+
+- Welcome page - Update welcome video and allow full screen
+- Application page - Make App list and button wrap inside container so that it doesn't fall off the screen
+- Deployment group page - Set default name and description when creating
+- Deployments page
+  - Add button to create deployment group
+  - Shutdown->stop
+- Deployments detail page - Shutdown->stop
+- Deployment modal - Encourage users to check out deployment group feature
+- Edges page
+  - Release warning sign bugfix. Latest version should exclude pre-release
+  - Always show bulk actions in NE table view, enable/disable buttons when applicable
+  - Make bulk actions bar always visible
+    - Fix deploying with dynamic edges
+    - Only enable bulk deploy when there are selected edges
+    - Minor stylistic improvements for filter display component
+- Edges detail page - Always display 'Update' button
+  - Extract version warning display to its own component, move it to utils
+  - Enable update of a NE without refreshing/switching views
+  - Improve styling of edge availability pop-up
+    - Fix minimum width for NE availability card, make table not overflow parent div
+    - Make chart and NE-card stack on small screens
+
 ## [2.36.6] - 2024-03-28
 
 - Edges page - Add indicator next to version number in NuvlaEdges view to indicate whether a version is outdated

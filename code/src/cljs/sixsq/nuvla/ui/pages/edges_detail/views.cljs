@@ -114,8 +114,6 @@
         tr       (subscribe [::i18n-subs/tr])]
     (fn [opts]
       (let [selected-release (subscribe [::edges-subs/nuvlabox-releases-from-id (:value opts)])]
-        (when (empty? @releases)
-          (dispatch [::edges-events/get-nuvlabox-releases]))
         [:<> [ui/Dropdown
               (merge {:selection true
                       :loading   (empty? @releases)
@@ -267,29 +265,31 @@
         on-click-fn    #(dispatch [::events/operation id "update-nuvlabox"
                                    (utils/format-update-data @form-data)
                                    on-success-fn on-error-fn])
-        current-config {:project-name     (-> @status :installation-parameters :project-name)
-                        :working-dir      (-> @status :installation-parameters :working-dir)
+        install-params (:installation-parameters @status)
+        current-config {:project-name     (:project-name install-params)
+                        :working-dir      (:working-dir install-params)
                         :modules          @modules
-                        :environment      (str/join "\n" (-> @status :installation-parameters :environment))
+                        :environment      (str/join "\n" (:environment install-params))
                         :force-restart    false
                         :nuvlabox-release (@releases-by-no nb-version)}]
     (reset! form-data current-config)
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
     (fn [{:keys [id] :as _resource}]
-      (let [correct-nb?      (= (:parent @status) id)
-            target-version   (->> @releases
-                                  (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
-                                  :key)
-            selected-release (:nuvlabox-release @form-data)
-            release-id       (get selected-release :id)
-            selected-modules (:modules @form-data)
-            force-restart    (:force-restart @form-data)]
+      (let [correct-nb?         (= (:parent @status) id)
+            target-version      (->> @releases
+                                     (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
+                                     :key)
+            selected-release    (:nuvlabox-release @form-data)
+            release-id          (get selected-release :id)
+            selected-modules    (:modules @form-data)
+            force-restart       (:force-restart @form-data)
+            stop-propagation-fn #(.stopPropagation %)]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
         [ui/Modal
-         {:on-click   #(.stopPropagation %)
+         {:on-click   stop-propagation-fn
           :open       @show?
           :close-icon true
           :on-close   close-fn
@@ -340,8 +340,7 @@
            [:<>
             [ui/Form
              [ui/FormField
-              [:label
-               "Force Restart"]
+              [:label "Force Restart"]
               [ui/Radio {:toggle    true
                          :checked   force-restart
                          :label     (if force-restart
@@ -352,21 +351,21 @@
                             :placeholder   "nuvlabox"
                             :required      true
                             :default-value (:project-name @form-data)
-                            :on-key-down   #(-> % .stopPropagation)
+                            :on-key-down   stop-propagation-fn
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
-                            :on-key-down   #(-> % .stopPropagation)
+                            :on-key-down   stop-propagation-fn
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
               [:label (@tr [:env-variables]) " " [uix/HelpPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
-                            :on-key-down   #(-> % .stopPropagation)
+                            :on-key-down   stop-propagation-fn
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
@@ -682,16 +681,12 @@
     (fn [resource operation]
       ^{:key (str "disable-host-level-management" @show?)}
       [TextActionButton resource operation show? "Disable host level management (disables playbooks)" icons/i-gear (@tr [:disable])])))
-(defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
-  [resource _operation]
-  (fn [resource _operation]
-    ^{:key "update-nuvlabox"}
-    [UpdateButton resource]))
 
 (defn MenuBar [_uuid]
-  (let [can-decommission? (subscribe [::subs/can-decommission?])
+  (let [nuvlabox          (subscribe [::subs/nuvlabox])
+        can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
-        nuvlabox          (subscribe [::subs/nuvlabox])
+        update-available? (subscribe [::subs/update-available?])
         loading?          (subscribe [::subs/loading?])]
     (fn [uuid]
       (let [MenuItems (cimi-detail-views/format-operations
@@ -703,7 +698,7 @@
          [components/ResponsiveMenuBar
           (conj
             MenuItems
-            (when @nuvlabox
+            (when @update-available?
               ^{:key "update-ne"}
               [UpdateButton @nuvlabox])
             (when @can-decommission?
@@ -1065,7 +1060,7 @@
                   :color    color
                   :size     "medium"
                   :basic    true
-                  :style {:margin-right 5}}
+                  :style    {:margin-right 5}}
         Icon
         ne-version])]))
 
@@ -2154,9 +2149,12 @@
 
 (defn EdgeDetails
   [uuid]
-  (let [nb-status (subscribe [::subs/nuvlabox-status])]
+  (let [nb-status (subscribe [::subs/nuvlabox-status])
+        releases  (subscribe [::edges-subs/nuvlabox-releases])]
     (refresh-nuvlaedge-data uuid)
-    (fn []
+    (fn [uuid]
+      (when (empty? @releases)
+        (dispatch [::edges-events/get-nuvlabox-releases]))
       [components/LoadingPage {:dimmable? true}
        [:<>
         [components/NotFoundPortal

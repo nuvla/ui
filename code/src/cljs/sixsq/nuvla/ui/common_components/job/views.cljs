@@ -14,9 +14,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.values :as values]))
 
-
-(def message-max-length 200)
-
 (defn JobsMessageCell [{{:keys [state]} :row-data
                         :keys           [cell-data]}]
   [:span {:style (cond-> {:white-space "pre"
@@ -34,6 +31,41 @@
       (if (empty? resources)
         [uix/WarningMsgNoElements]
         [ui/TabPane
+         [ui/Table {:style   {:table-layout :fixed}
+                    :striped true}
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell {:width 5}]
+            [ui/TableHeaderCell {:width 11} "Message"]]]
+          [ui/TableBody
+           (for [resource resources]
+             ^{:key (:id resource)}
+             [ui/TableRow
+              [ui/TableCell {:verticalAlign "top"
+                             :style         {:overflow  :auto
+                                             :max-width "100%"}}
+               [:dl {:style {:display               :grid
+                             :grid-template-columns "repeat(2,auto)"
+                             :width                 "max-content"
+                             :max-width             "100%"}}
+                [:dt [:b "Job: "]]
+                [:dd [values/AsLink (:id resource) :label (general-utils/id->short-uuid (:id resource))]]
+                [:dt [:b "Action: "]]
+                [:dd (:action resource)]
+                [:dt [:b "State: "]]
+                [:dd (:state resource)]
+                [:dt [:b "Timestamp: "]]
+                [:dd (:time-of-status-change resource)]
+                [:dt [:b "Progress: "]]
+                [:dd (:progress resource)]
+                [:dt [:b "Return code: "]]
+                [:dd (:return-code resource)]]]
+              [ui/TableCell {:verticalAlign "top"
+                             :style         {:overflow  :auto
+                                             :max-width "100%"}}
+               [:div {:style (cond-> {:white-space :pre}
+                                     (= (:state resource) "QUEUED") (assoc :display "none"))}
+                [uix/TruncateContent {:content (str/replace (:status-message resource) #"\\n" "\n") :length 300}]]]])]]
          [Table {:columns
                  [{:field-key :jobs
                    :accessor  :id

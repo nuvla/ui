@@ -12,6 +12,7 @@
 (def subtype-component "component")
 (def subtype-application "application")
 (def subtype-application-k8s "application_kubernetes")
+(def subtype-application-helm "application_helm")
 (def subtype-applications-sets "applications_sets")
 
 (def apps-description-template "# App Description Placeholder

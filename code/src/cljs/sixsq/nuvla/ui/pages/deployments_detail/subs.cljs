@@ -57,6 +57,12 @@
   (fn [{:keys [subtype]}]
     (= subtype apps-utils/subtype-application-k8s)))
 
+(reg-sub
+  ::is-deployment-application-helm?
+  :<- [::deployment-module]
+  (fn [{:keys [subtype]}]
+    (= subtype apps-utils/subtype-application-helm)))
+
 
 (defn parse-application-yaml
   [docker-compose]
@@ -65,13 +71,29 @@
                     (catch :default _))]
     (js->clj yaml)))
 
+(def ^:const k8s-workload-object-kinds
+  #{"CronJob"
+    "DaemonSet"
+    "Deployment"
+    "Job"
+    "Pod"
+    "ReplicaSet"
+    "StatefulSet"})
+
+(defn only-k8s-workload-object-kinds
+  [object]
+  (when (contains? k8s-workload-object-kinds (get object "kind"))
+    (let [kind (get object "kind")
+          name (get-in object ["metadata" "name"])]
+      (str kind "/" name))))
 
 (reg-sub
   ::deployment-services-list
   :<- [::is-deployment-application?]
   :<- [::is-deployment-application-kubernetes?]
+  :<- [::is-deployment-application-helm?]
   :<- [::deployment-module-content]
-  (fn [[is-application? is-application-kubernetes? {:keys [docker-compose]}]]
+  (fn [[is-application? is-application-kubernetes? is-application-helm? {:keys [docker-compose]}]]
     (cond
       is-application? (some-> docker-compose
                               parse-application-yaml
@@ -81,11 +103,10 @@
                               sort)
       is-application-kubernetes? (some->> docker-compose
                                           parse-application-yaml
-                                          (map #(let [kind      (get % "kind")
-                                                      meta-name (get-in % ["metadata" "name"])]
-                                                  (str kind "/" meta-name)))
+                                          (map only-k8s-workload-object-kinds)
                                           sort)
-      :else ["machine"])))
+      is-application-helm? []
+      :else [])))
 
 
 (reg-sub

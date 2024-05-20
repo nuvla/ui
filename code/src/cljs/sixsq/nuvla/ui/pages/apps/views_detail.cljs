@@ -1052,8 +1052,8 @@
       (let [{:keys [selected-option selected-custom-url chart-name]} @state
             credential-options (mapv credential->option (get @helm-credentials (:selected-option @state)))
             infra-options (mapv (fn [{:keys [id name]}] {:key   id
-                                                                  :value id
-                                                                  :text  name})
+                                                         :value id
+                                                         :text  name})
                                 @helm-infra)]
         [uix/Accordion
          [:<>
@@ -1102,11 +1102,12 @@
                                                                   :disabled    (or  (= :url (:repo-or-url? @state))
                                                                                     (not (:selected-option @state))
                                                                                     (str/blank? (:selected-option @state)))
-                                                                  :clearable   true
+                                                                  :on-change      (ui-callback/value #(dispatch [::events/set-helm-repo-creds %]))
+                                                                  :clearable true
                                                                   :placeholder "Choose credentials for the Helm repository"
-                                                                  :options     credential-options
-                                                                  :selection   true
-                                                                  :style       {:max-width 400}}]]]
+                                                                  :options credential-options
+                                                                  :selection true
+                                                                  :style {:max-width 400}}]]]
                [ui/TableRow
                 [ui/TableCell "Chart name"]
                 [ui/TableCell [ui/Input {:disabled  (= :url (:repo-or-url? @state))
@@ -1115,7 +1116,7 @@
                [ui/TableRow
                 [ui/TableCell "Version"]
                 [ui/TableCell [ui/Input {:disabled (= :url (:repo-or-url? @state))
-                                         :on-change (ui-callback/value #(swap! state assoc :version %))}]]]]]]]
+                                         :on-change (ui-callback/value #(dispatch [::events/set-helm-chart-version %]))}]]]]]]]
            [:div {:style {:opacity (if (= :repo (:repo-or-url? @state))
                                      "50%"
                                      "100%")}}

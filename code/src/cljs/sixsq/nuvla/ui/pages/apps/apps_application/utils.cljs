@@ -51,9 +51,6 @@
         helm-info                     (::apps-spec/helm-info db)
         helm-absolute-url-provided?   (:helm-absolute-url helm-info)]
     (as-> module m
-          (if (= subtype "application_helm")
-
-            m)
           (if (and (= subtype "application_helm") helm-absolute-url-provided?)
             (assoc-in m [:content :helm-absolute-url] (:helm-absolute-url helm-info))
             m)
@@ -70,6 +67,36 @@
           (assoc-in m [:content :requires-user-rights] requires-user-rights)
           (if (= subtype "application")
             (assoc m :compatibility compatibility)
+            m)
+          (if (empty? files)
+            (update-in m [:content] dissoc :files)
+            (assoc-in m [:content :files] files)))))
+
+(defn db->helm-module
+  [helm-module commit-map db]
+  (let [{:keys [author commit]} commit-map
+        docker-compose                                              (get-in db [::spec/module-application ::spec/docker-compose])
+        files                                                       (files->module db)
+        requires-user-rights                                        (get-in db [::spec/module-application ::spec/requires-user-rights])
+        {:keys [helm-absolute-url helm-repo-url
+                helm-chart-name helm-repo-creds helm-chart-version]} (::apps-spec/helm-info db)]
+    (as-> helm-module m
+          (assoc-in m [:content :author] author)
+          (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
+          (assoc-in m [:content :requires-user-rights] requires-user-rights)
+          (if helm-absolute-url
+            (assoc-in m [:content :helm-absolute-url] helm-absolute-url)
+            (-> m
+                (assoc-in [:content :helm-repo-url] helm-repo-url)
+                (assoc-in [:content :helm-chart-name] helm-chart-name)))
+          (if helm-repo-creds
+            (assoc-in m [:content :helm-repo-creds] helm-repo-creds)
+            m)
+          (if helm-chart-version
+            (assoc-in m [:content :helm-chart-version] helm-chart-version)
+            m)
+          (if docker-compose
+            (assoc-in m [:content :docker-compose] docker-compose)
             m)
           (if (empty? files)
             (update-in m [:content] dissoc :files)

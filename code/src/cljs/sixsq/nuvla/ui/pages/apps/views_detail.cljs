@@ -1034,27 +1034,43 @@
          :default-open (pos? no-of-registries)]))))
 
 (defn helm-repository-chart-section []
-  (let [helm-infra (subscribe [::subs/helm-infra])
-        helm-credentials (subscribe [::subs/helm-credentials])
-        state      (r/atom {:selected-option     nil
-                            :selected-custom-url nil
-                            :absolute-url        nil
-                            :chart-name          nil
-                            :version             nil
-                            :repo-or-url?        :repo})
-        credential->option (fn [{:keys [id name]}]
-                             {:key id
-                              :value id
-                              :text name})]
+  (let [helm-infra            (subscribe [::subs/helm-infra])
+        helm-credentials      (subscribe [::subs/helm-credentials])
+        module-content        (subscribe [::subs/module-helm-content])
+        editable?             (subscribe [::subs/editable?])
+        state                 (r/atom {:repo-url     nil
+                                       :custom-url   nil
+                                       :absolute-url nil
+                                       :chart-name   nil
+                                       :version      nil
+                                       :repo-or-url? :repo})
+        credential->option    (fn [{:keys [id name]}]
+                                {:key id
+                                 :value id
+                                 :text name})]
     (dispatch [::events/get-helm-infra])
     (dispatch [::events/get-helm-credentials])
     (fn []
-      (let [{:keys [selected-option selected-custom-url chart-name]} @state
-            credential-options (mapv credential->option (get @helm-credentials (:selected-option @state)))
-            infra-options (mapv (fn [{:keys [id name]}] {:key   id
-                                                         :value id
-                                                         :text  name})
-                                @helm-infra)]
+      (let [{:keys [helm-absolute-url
+                    helm-chart-name
+                    helm-repo-creds
+                    helm-repo-url
+                    helm-chart-version]} @module-content
+            {:keys [custom-url]} @state
+
+            infra-options (mapv (fn [{:keys [id name endpoint]}] {:key   id
+                                                                  :value id
+                                                                  :endpoint endpoint
+                                                                  :text  name})
+                                @helm-infra)
+            all-options (cond-> infra-options
+                                custom-url (conj {:key   custom-url
+                                                  :value custom-url
+                                                  :text  custom-url}))
+            initial-helm-repo-value      (:value (first (filter #(= helm-repo-url (:endpoint %)) all-options)))
+            credential-options (mapv credential->option (get @helm-credentials (or initial-helm-repo-value (:repo-url @state))))]
+        (js/console.log @module-content)
+
         [uix/Accordion
          [:<>
           [ui/Form
@@ -1076,46 +1092,50 @@
                [ui/TableRow
                 [ui/TableCell {:style      {:width 20}
                                :collapsing true} "Helm repo"]
-                [ui/TableCell {:style {:width 200}} [ui/Dropdown {:fluid          true
-                                                                  :clearable      true
-                                                                  :allowAdditions true
-                                                                  :additionLabel  "Add custom URL: "
-                                                                  :placeholder    "Choose a Helm repository or provide a URL"
-                                                                  :search         true
-                                                                  :options        (cond-> infra-options
-                                                                                          selected-custom-url (conj {:key selected-custom-url
-                                                                                                              :value      selected-custom-url
-                                                                                                              :text       selected-custom-url}))
-                                                                  :disabled       (= :url (:repo-or-url? @state))
-                                                                  :selection      true
-                                                                  :on-change      (ui-callback/value #(do
-                                                                                                        (swap! state dissoc :selected-custom-url :absolute-url)
-                                                                                                        (swap! state assoc :selected-option %)
-                                                                                                        (dispatch [::events/set-helm-repo-url %])))
-                                                                  :on-add-item    (ui-callback/value #(do (swap! state dissoc :selected-option :absolute-url)
-                                                                                                          (swap! state assoc :selected-custom-url %)
-                                                                                                          (dispatch [::events/set-helm-custom-url %])))
-                                                                  :style          {:max-width 400}}]]]
+                [ui/TableCell {:style {:width 200}}
+                 [ui/Dropdown {:fluid          true
+                               :clearable      true
+                               :allowAdditions true
+                               :defaultValue   initial-helm-repo-value
+                               :additionLabel  "Add custom URL: "
+                               :placeholder    "Choose a Helm repository or provide a URL"
+                               :search         true
+                               :options        all-options
+                               :disabled       (= :url (:repo-or-url? @state))
+                               :selection      true
+                               :on-change      (ui-callback/value #(do
+                                                                     (swap! state dissoc :custom-url :absolute-url)
+                                                                     (swap! state assoc :repo-url %)
+                                                                     (dispatch [::events/set-helm-repo-url %])))
+                               :on-add-item    (ui-callback/value #(do (swap! state dissoc :repo-url :absolute-url)
+                                                                       (swap! state assoc :custom-url %)
+                                                                       (dispatch [::events/set-helm-repo-url %])))
+                               :style          {:max-width 400}}]]]
                [ui/TableRow
                 [ui/TableCell {:style {:width 20}} "Credentials"]
-                [ui/TableCell {:style {:width 200}} [ui/Dropdown {:fluid       true
-                                                                  :disabled    (or  (= :url (:repo-or-url? @state))
-                                                                                    (not (:selected-option @state))
-                                                                                    (str/blank? (:selected-option @state)))
-                                                                  :on-change      (ui-callback/value #(dispatch [::events/set-helm-repo-creds %]))
-                                                                  :clearable true
-                                                                  :placeholder "Choose credentials for the Helm repository"
-                                                                  :options credential-options
-                                                                  :selection true
-                                                                  :style {:max-width 400}}]]]
+                [ui/TableCell {:style {:width 200}}
+                 [ui/Dropdown {:fluid       true
+                               :defaultValue helm-repo-creds
+                               :disabled    (or (= :url (:repo-or-url? @state))
+                                                (not (seq (:repo-url @state))))
+                               :on-change   (ui-callback/value #(dispatch [::events/set-helm-repo-creds %]))
+                               :clearable   true
+                               :placeholder "Choose credentials for the Helm repository"
+                               :options     credential-options
+                               :selection   true
+                               :style       {:max-width 400}}]]]
                [ui/TableRow
                 [ui/TableCell "Chart name"]
                 [ui/TableCell [ui/Input {:disabled  (= :url (:repo-or-url? @state))
+                                         :defaultValue helm-chart-name
+                                         :read-only (when-not @editable?)
                                          :on-change (ui-callback/value #(do (swap! state assoc :chart-name %)
                                                                             (dispatch [::events/set-helm-chart-name %])))}]]]
                [ui/TableRow
                 [ui/TableCell "Version"]
                 [ui/TableCell [ui/Input {:disabled (= :url (:repo-or-url? @state))
+                                         :defaultValue helm-chart-version
+                                         :read-only (when-not @editable?)
                                          :on-change (ui-callback/value #(dispatch [::events/set-helm-chart-version %]))}]]]]]]]
            [:div {:style {:opacity (if (= :repo (:repo-or-url? @state))
                                      "50%"
@@ -1134,8 +1154,10 @@
               [ui/TableBody
                [ui/TableRow
                 [ui/TableCell "Chart Absolute URL"]
-                [ui/TableCell [ui/Input {:disabled  (when (= :repo (:repo-or-url? @state))
-                                                      true)
+                [ui/TableCell [ui/Input {:disabled   (when (= :repo (:repo-or-url? @state))
+                                                       true)
+                                         :default-value helm-absolute-url
+                                         :read-only (when-not @editable?)
                                          :on-change (ui-callback/value #(do (swap! state assoc :chart-absolute-url %)
                                                                             (dispatch [::events/set-helm-absolute-url %])))}]]]]]]]]]
 

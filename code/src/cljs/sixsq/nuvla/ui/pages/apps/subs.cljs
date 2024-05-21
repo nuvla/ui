@@ -317,6 +317,12 @@
   (fn [{{:keys [id]} :content}]
     id))
 
+(reg-sub
+  ::module-helm-content
+  :<- [::module]
+  (fn [module]
+    (:content module)))
+
 
 (reg-sub
   ::compare-module-left

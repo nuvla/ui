@@ -41,10 +41,9 @@
            (for [resource resources]
              ^{:key (:id resource)}
              [ui/TableRow
-              [ui/TableCell {:verticalAlign "top"
-                             :style         {:overflow  :auto
-                                             :max-width "100%"}}
-               [:dl {:style {:display               :grid
+              [ui/TableCell {:verticalAlign "top"}
+               [:dl {:style {:overflow              :auto
+                             :display               :grid
                              :grid-template-columns "repeat(2,auto)"
                              :width                 "max-content"
                              :max-width             "100%"}}
@@ -60,10 +59,9 @@
                 [:dd (:progress resource)]
                 [:dt [:b "Return code: "]]
                 [:dd (:return-code resource)]]]
-              [ui/TableCell {:verticalAlign "top"
-                             :style         {:overflow  :auto
-                                             :max-width "100%"}}
-               [:div {:style (cond-> {:white-space :pre}
+              [ui/TableCell {:verticalAlign "top"}
+               [:div {:style (cond-> {:white-space :pre
+                                      :overflow    :auto}
                                      (= (:state resource) "QUEUED") (assoc :display "none"))}
                 [uix/TruncateContent {:content (str/replace (:status-message resource) #"\\n" "\n") :length 300}]]]])]]
          [Table {:columns

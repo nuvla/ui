@@ -389,7 +389,8 @@
     [:div {:class :uix-apps-details-details}
      [:h4 {:class :tab-app-detail} "Helm"]
      [apps-views-detail/registries-section]
-     [apps-views-detail/helm-repository-chart-section]]) )
+     [apps-views-detail/HelmRepoChartSection]
+     [apps-views-detail/HelmChartValuesSection]]) )
 
 
 (defn TabMenuDocker

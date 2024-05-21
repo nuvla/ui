@@ -78,7 +78,7 @@
         docker-compose                                              (get-in db [::spec/module-application ::spec/docker-compose])
         files                                                       (files->module db)
         requires-user-rights                                        (get-in db [::spec/module-application ::spec/requires-user-rights])
-        {:keys [helm-absolute-url helm-repo-url
+        {:keys [helm-absolute-url helm-repo-url helm-chart-values
                 helm-chart-name helm-repo-creds helm-chart-version]} (::apps-spec/helm-info db)]
     (as-> helm-module m
           (assoc-in m [:content :author] author)
@@ -97,6 +97,9 @@
             m)
           (if docker-compose
             (assoc-in m [:content :docker-compose] docker-compose)
+            m)
+          (if helm-chart-values
+            (assoc-in m [:content :helm-chart-values] helm-chart-values)
             m)
           (if (empty? files)
             (update-in m [:content] dissoc :files)

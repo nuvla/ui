@@ -1033,7 +1033,7 @@
          :count no-of-registries
          :default-open (pos? no-of-registries)]))))
 
-(defn helm-repository-chart-section []
+(defn HelmRepoChartSection []
   (let [helm-infra            (subscribe [::subs/helm-infra])
         helm-credentials      (subscribe [::subs/helm-credentials])
         module-content        (subscribe [::subs/module-helm-content])
@@ -1069,7 +1069,6 @@
                                                   :text  custom-url}))
             initial-helm-repo-value      (:value (first (filter #(= helm-repo-url (:endpoint %)) all-options)))
             credential-options (mapv credential->option (get @helm-credentials (or initial-helm-repo-value (:repo-url @state))))]
-        (js/console.log @module-content)
 
         [uix/Accordion
          [:<>
@@ -1164,6 +1163,24 @@
          :label "Helm Repository & Chart"
 
          :default-open true]))))
+
+(defn HelmChartValuesSection []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        helm-info      (subscribe [::subs/helm-info])
+        editable?      (subscribe [::subs/editable?])]
+    (fn []
+      (let [chart-values (:helm-chart-values @helm-info)]
+        [uix/Accordion
+         [:<>
+          [:div {:style {:margin-bottom "10px"}} (@tr [:env-substitution])
+           [uix/HelpPopup (@tr [:module-docker-compose-help])]]
+          [uix/EditorYaml {:value     chart-values
+                           :placeholder "Place your values.yaml here"
+                           :on-change (fn [value]
+                                        (dispatch [::events/update-helm-chart-values value])
+                                        (dispatch [::main-events/changes-protection? true]))
+                           :read-only (not @editable?)}]]
+         :label "Values.yaml"]))))
 
 
 (defn Pricing

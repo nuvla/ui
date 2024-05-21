@@ -570,6 +570,13 @@
         (assoc-in [::spec/helm-info :helm-absolute-url]  helm-absolute-url)
         (update-in [::spec/helm-info] dissoc :helm-repo-url :helm-chart-name))))
 
+(reg-event-db
+  ::update-helm-chart-values
+  (fn [db [_ yaml-text]]
+    (-> db
+        (assoc-in [::spec/helm-info :helm-chart-values] yaml-text))))
+
+
 (reg-event-fx
   ::get-helm-credentials
   (fn [_ _]

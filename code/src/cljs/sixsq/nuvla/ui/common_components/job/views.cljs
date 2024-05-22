@@ -7,22 +7,40 @@
             [sixsq.nuvla.ui.common-components.job.spec :as spec]
             [sixsq.nuvla.ui.common-components.job.subs :as subs]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.values :as values]))
 
-(defn JobsMessageCell [{{:keys [state]} :row-data
-                        :keys           [cell-data]}]
-  [:span {:style (cond-> {:white-space "pre"
-                          :max-width   :unset
-                          :overflow    :auto
-                          :display     :block}
-                         (= state "QUEUED")
-                         (assoc :display "none"))}
-   [uix/TruncateContent {:content cell-data :length 300}]])
+(defn JobRow
+  [resource]
+  [ui/TableRow
+   [ui/TableCell {:verticalAlign "top"
+                  :style         {:width "max-content"}}
+    [:dl {:style {:overflow              :auto
+                  :display               :grid
+                  :grid-template-columns "repeat(2,auto)"
+                  :width                 "max-content"
+                  :max-width             "100%"}}
+     (for [[k v] [[:id [values/AsLink (:id resource)
+                        :label (general-utils/id->short-uuid (:id resource))]]
+                  [:action (:action resource)]
+                  [:state (:state resource)]
+                  [:timestamp (:time-of-status-change resource)]
+                  [:progress (:progress resource)]
+                  [:return-code (:return-code resource)]]]
+       ^{:key (str (:id resource) "_" k)}
+       [:<>
+        [:dt [:b [uix/TR k str/capitalize] ":"]]
+        [:dd v]])]]
+   [ui/TableCell {:verticalAlign "top"}
+    [:div {:style (cond-> {:white-space :pre
+                           :overflow    :auto}
+                          (= (:state resource) "QUEUED") (assoc :display "none"))}
+     [uix/TruncateContent
+      {:content (some-> resource :status-message
+                        (str/replace #"\\n" "\n")) :length 300}]]]])
 
 (defn JobsTable
   [_jobs]
@@ -35,49 +53,12 @@
                     :striped true}
           [ui/TableHeader
            [ui/TableRow
-            [ui/TableHeaderCell {:width 5}]
-            [ui/TableHeaderCell {:width 11} "Message"]]]
+            [ui/TableHeaderCell {:width 4} [uix/TR :job str/capitalize]]
+            [ui/TableHeaderCell {:width 12} [uix/TR :message str/capitalize]]]]
           [ui/TableBody
            (for [resource resources]
              ^{:key (:id resource)}
-             [ui/TableRow
-              [ui/TableCell {:verticalAlign "top"}
-               [:dl {:style {:overflow              :auto
-                             :display               :grid
-                             :grid-template-columns "repeat(2,auto)"
-                             :width                 "max-content"
-                             :max-width             "100%"}}
-                [:dt [:b "Job: "]]
-                [:dd [values/AsLink (:id resource) :label (general-utils/id->short-uuid (:id resource))]]
-                [:dt [:b "Action: "]]
-                [:dd (:action resource)]
-                [:dt [:b "State: "]]
-                [:dd (:state resource)]
-                [:dt [:b "Timestamp: "]]
-                [:dd (:time-of-status-change resource)]
-                [:dt [:b "Progress: "]]
-                [:dd (:progress resource)]
-                [:dt [:b "Return code: "]]
-                [:dd (:return-code resource)]]]
-              [ui/TableCell {:verticalAlign "top"}
-               [:div {:style (cond-> {:white-space :pre
-                                      :overflow    :auto}
-                                     (= (:state resource) "QUEUED") (assoc :display "none"))}
-                [uix/TruncateContent {:content (str/replace (:status-message resource) #"\\n" "\n") :length 300}]]]])]]
-         [Table {:columns
-                 [{:field-key :jobs
-                   :accessor  :id
-                   :cell      (fn [{id :cell-data}] [values/AsLink id :label (general-utils/id->short-uuid id)])}
-                  {:field-key :action}
-                  {:field-key :timestamp
-                   :accessor  :time-of-status-change}
-                  {:field-key :state}
-                  {:field-key :progress}
-                  {:field-key :return-code}
-                  {:field-key :message
-                   :accessor  :status-message
-                   :cell      (fn [cell-data] [JobsMessageCell cell-data])}]
-                 :rows resources}]
+             [JobRow resource])]]
          [pagination-plugin/Pagination
           {:db-path      [::spec/pagination]
            :change-event [::events/get-jobs]

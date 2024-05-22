@@ -16,8 +16,7 @@
 (defn JobRow
   [resource]
   [ui/TableRow
-   [ui/TableCell {:verticalAlign "top"
-                  :style         {:width "max-content"}}
+   [ui/TableCell {:verticalAlign "top"}
     [:dl {:style {:overflow              :auto
                   :display               :grid
                   :grid-template-columns "repeat(2,auto)"
@@ -27,7 +26,8 @@
                         :label (general-utils/id->short-uuid (:id resource))]]
                   [:action (:action resource)]
                   [:state (:state resource)]
-                  [:timestamp (:time-of-status-change resource)]
+                  [:timestamp (or (:time-of-status-change resource)
+                                  (:updated resource))]
                   [:progress (:progress resource)]
                   [:return-code (:return-code resource)]]]
        ^{:key (str (:id resource) "_" k)}
@@ -49,12 +49,12 @@
       (if (empty? resources)
         [uix/WarningMsgNoElements]
         [ui/TabPane
-         [ui/Table {:style   {:table-layout :fixed}
-                    :striped true}
+         [ui/Table {:striped true
+                    :fixed   true}
           [ui/TableHeader
            [ui/TableRow
-            [ui/TableHeaderCell {:width 4} [uix/TR :job str/capitalize]]
-            [ui/TableHeaderCell {:width 12} [uix/TR :message str/capitalize]]]]
+            [ui/TableHeaderCell {:style {:width "26em"}} [uix/TR :job str/capitalize]]
+            [ui/TableHeaderCell [uix/TR :message str/capitalize]]]]
           [ui/TableBody
            (for [resource resources]
              ^{:key (:id resource)}

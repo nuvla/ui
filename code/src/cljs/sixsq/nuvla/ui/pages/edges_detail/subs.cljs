@@ -98,6 +98,14 @@
     (::spec/nuvlabox db)))
 
 (reg-sub
+  ::ne-version
+  :<- [::nuvlabox]
+  :<- [::nuvlabox-status]
+  (fn [[{nb-engine-version :nuvlabox-engine-version}
+        {nb-status-engine-version :nuvlabox-engine-version}]]
+    (or nb-status-engine-version nb-engine-version)))
+
+(reg-sub
   ::can-decommission?
   :<- [::nuvlabox]
   (fn [nuvlabox]

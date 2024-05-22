@@ -110,6 +110,19 @@
     (general-utils/can-edit? nuvlabox)))
 
 (reg-sub
+  ::can-update?
+  :<- [::nuvlabox]
+  (fn [nuvlabox]
+    (general-utils/can-operation? "update-nuvlabox" nuvlabox)))
+
+(reg-sub
+  ::update-available?
+  :<- [::can-update?]
+  :<- [::nuvlabox-status]
+  (fn [[can-update? nb-status]]
+    (and can-update? nb-status)))
+
+(reg-sub
   ::can-delete?
   :<- [::nuvlabox]
   (fn [nuvlabox]

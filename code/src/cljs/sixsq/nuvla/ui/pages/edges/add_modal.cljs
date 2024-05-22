@@ -434,6 +434,7 @@
                             (reset! install-strategy nil)
                             (reset! playbooks-toggle nil))}
             [icons/ArrowLeftIcon] (@tr [:back-to-selection])])]))))
+
 (defn AddModal
   []
   (let [modal-id                   spec/modal-add-id

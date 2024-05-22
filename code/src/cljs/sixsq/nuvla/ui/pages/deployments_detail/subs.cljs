@@ -104,6 +104,7 @@
       is-application-kubernetes? (some->> docker-compose
                                           parse-application-yaml
                                           (map only-k8s-workload-object-kinds)
+                                          (remove nil?)
                                           sort)
       is-application-helm? []
       :else [])))

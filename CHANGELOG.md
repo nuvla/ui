@@ -4,6 +4,14 @@
 
 ## Released
 
+## [2.36.8] - 2024-05-23
+
+- Resource log component - List of components show only workload object kinds
+- Edges detail page
+  - Form fields are not prefilled with install params bugfix
+  - NE version not refreshing when changed in resource bugfix
+- Job component - Improve the job message display available in the table
+
 ## [2.36.7] - 2024-05-16
 
 - Welcome page - Update welcome video and allow full screen

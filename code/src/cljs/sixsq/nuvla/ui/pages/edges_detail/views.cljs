@@ -242,7 +242,7 @@
                               :style     {:margin "1em"}
                               :on-change (on-module-change module)}])))]])]]))
 (defn UpdateButton
-  [{:keys [id nuvlabox-engine-version] :as _resource}]
+  [{:keys [id] :as _resource}]
   (let [show?          (r/atom false)
         tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
@@ -252,8 +252,7 @@
         releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
         close-fn       #(reset! show? false)
         form-data      (r/atom nil)
-        engine-version (subscribe [::edges-subs/engine-version id])
-        nb-version     (or @engine-version nuvlabox-engine-version)
+        nb-version     (subscribe [::subs/ne-version])
         on-change-fn   (fn [release]
                          (let [release-new (get @releases-by-id release)
                                new-modules (calc-new-modules-on-release-change @form-data release-new)]
@@ -271,7 +270,7 @@
                         :modules          @modules
                         :environment      (str/join "\n" (:environment install-params))
                         :force-restart    false
-                        :nuvlabox-release (@releases-by-no nb-version)}]
+                        :nuvlabox-release (@releases-by-no @nb-version)}]
     (reset! form-data current-config)
     (when nb-version
       (swap! form-data assoc :current-version nb-version))
@@ -1048,10 +1047,8 @@
      :label     "seconds"}]])
 
 (defn NEVersion
-  [{:keys [id nuvlabox-engine-version] :as _nuvlabox}]
-  (let [engine-version  @(subscribe [::edges-subs/engine-version id])
-        ne-version      (or engine-version nuvlabox-engine-version)
-        version-warning (when ne-version
+  [ne-version]
+  (let [version-warning (when ne-version
                           @(subscribe [::edges-subs/ne-version-outdated ne-version]))
         color           (get utils/version-warning-colors version-warning "blue")]
     [utils/NEVersionWarning version-warning
@@ -1064,23 +1061,27 @@
         Icon
         ne-version])]))
 
+(defn NeHeader
+  []
+  (let [tr         @(subscribe [::i18n-subs/tr])
+        ne-version @(subscribe [::subs/ne-version])
+        {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])]
+    [:h4 "NuvlaEdge "
+     (when ne-version
+       [:<>
+        [NEVersion ne-version]
+        (when pre-release
+          [:span {:style {:background-color :black :color :white :padding "0.1rem 0.5rem 0.2rem 0.5rem"
+                          :font-size        "10px" :border-radius "0.2rem"}} (tr [:pre-release])])])]))
+
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated owner created-by state nuvlabox-engine-version] :as nuvlabox}
+  [{:keys [id created updated owner created-by state] :as nuvlabox}
    {:keys [nuvlabox-api-endpoint]}]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        locale         (subscribe [::i18n-subs/locale])
-        {:keys [pre-release]} @(subscribe [::subs/nuvlaedge-release])
-        engine-version @(subscribe [::edges-subs/engine-version id])
-        ne-version     (or engine-version nuvlabox-engine-version)]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
                  :raised    true}
-     [:h4 "NuvlaEdge "
-      (when ne-version
-        [:<>
-         [NEVersion nuvlabox]
-         (when pre-release
-           [:span {:style {:background-color :black :color :white :padding "0.1rem 0.5rem 0.2rem 0.5rem"
-                           :font-size        "10px" :border-radius "0.2rem"}} (@tr [:pre-release])])])]
+     [NeHeader]
      [ui/Table {:basic "very"}
       [ui/TableBody
        [ui/TableRow

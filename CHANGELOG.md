@@ -4,6 +4,10 @@
 
 ## Released
 
+## [2.36.9] - 2024-05-24
+
+- Edges detail page - NE version regression bugfix
+
 ## [2.36.8] - 2024-05-23
 
 - Resource log component - List of components show only workload object kinds

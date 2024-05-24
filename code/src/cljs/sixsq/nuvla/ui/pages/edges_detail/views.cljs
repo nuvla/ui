@@ -252,7 +252,7 @@
         releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
         close-fn       #(reset! show? false)
         form-data      (r/atom nil)
-        nb-version     (subscribe [::subs/ne-version])
+        ne-version     (subscribe [::subs/ne-version])
         on-change-fn   (fn [release]
                          (let [release-new (get @releases-by-id release)
                                new-modules (calc-new-modules-on-release-change @form-data release-new)]
@@ -270,10 +270,10 @@
                         :modules          @modules
                         :environment      (str/join "\n" (:environment install-params))
                         :force-restart    false
-                        :nuvlabox-release (@releases-by-no @nb-version)}]
+                        :nuvlabox-release (@releases-by-no @ne-version)}]
     (reset! form-data current-config)
-    (when nb-version
-      (swap! form-data assoc :current-version nb-version))
+    (when @ne-version
+      (swap! form-data assoc :current-version @ne-version))
     (fn [{:keys [id] :as _resource}]
       (let [correct-nb?         (= (:parent @status) id)
             target-version      (->> @releases
@@ -301,7 +301,7 @@
          [ui/ModalContent
           (when correct-nb?
             [:<>
-             (when (is-old-version? nb-version)
+             (when (is-old-version? @ne-version)
                [ui/Message
                 {:error   true
                  :icon    {:name icons/i-warning, :size "large"}
@@ -320,13 +320,13 @@
                             [:span (@tr [:nuvlabox-update-warning-content])])}])
              [ui/Segment
               [:b (@tr [:current-version])]
-              [:i nb-version]]])
+              [:i @ne-version]]])
           [ui/Segment
            [:b (@tr [:update-to])]
            [DropdownReleases {:placeholder (@tr [:select-version])
                               :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
-                              :disabled    (is-old-version? nb-version)}]
+                              :disabled    (is-old-version? @ne-version)}]
            (let [{:keys [compose-files]} selected-release]
              [AdditionalModulesTable compose-files
               {:on-module-change (fn [scope]

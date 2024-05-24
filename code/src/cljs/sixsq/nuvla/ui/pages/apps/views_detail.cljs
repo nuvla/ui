@@ -1051,24 +1051,29 @@
                     helm-repo-creds
                     helm-repo-url
                     helm-chart-version]} @helm-info
-            {:keys [custom-url]} @state
+            {:keys [new-custom-url]} @state
 
             infra-options (mapv (fn [{:keys [id name endpoint]}] {:key   id
                                                                   :value id
                                                                   :endpoint endpoint
                                                                   :text  name})
                                 @helm-infra)
+            stored-custom-url? (and helm-repo-url
+                                    (empty? (filterv #(= helm-repo-url (:endpoint %)) infra-options)))
             all-options (cond-> infra-options
-                                custom-url (conj {:key      custom-url
-                                                  :value    custom-url
-                                                  :text     custom-url
-                                                  :endpoint custom-url}))
+                                new-custom-url (conj {:key  new-custom-url
+                                                      :value    new-custom-url
+                                                      :text     new-custom-url
+                                                      :endpoint new-custom-url})
+                                stored-custom-url? (conj {:key  helm-repo-url
+                                                          :value    helm-repo-url
+                                                          :text     helm-repo-url
+                                                          :endpoint helm-repo-url}))
             helm-repo-value       (->> all-options
-                                      (filterv #(= helm-repo-url (:endpoint %)))
-                                      (first)
-                                      :value)
+                                       (filterv #(= helm-repo-url (:endpoint %)))
+                                       (first)
+                                       :value)
             credential-options (mapv credential->option (get @helm-credentials helm-repo-value))]
-        (js/console.log @helm-info)
         [uix/Accordion
          [:<>
           [ui/Form

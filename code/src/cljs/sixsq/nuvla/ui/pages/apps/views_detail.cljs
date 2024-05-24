@@ -1088,7 +1088,17 @@
                                       :checked   (= :repo (:repo-or-url? @helm-info))
                                       :on-change #(dispatch [::events/set-repo-or-url :repo])}]]]
             [ui/Segment {:compact  true
-                         :attached true}
+                         :attached true
+                         :style    {:display "block"
+                                    :transition "all 0.5s ease 0s"
+                                    :overflow "hidden"
+                                    :margin-bottom (if (= :repo (:repo-or-url? @helm-info)) 14 0)
+                                    :padding-bottom (if (= :repo (:repo-or-url? @helm-info)) 14 0)
+                                    :height (if (= :repo (:repo-or-url? @helm-info)) "auto" 0)
+                                    :opacity (if (= :repo (:repo-or-url? @helm-info)) 1 0)
+                                    #_#_ :transition " all 2s ease 0s"
+                                    }}
+
              [ui/Table (merge style/definition {:compact "very"
                                                 :style   {:width 600}})
               [ui/TableBody
@@ -1096,62 +1106,62 @@
                 [ui/TableCell {:style      {:width 20}
                                :collapsing true} "Helm repository"]
                 [ui/TableCell {:style {:width 200}}
-                 [ui/Dropdown {:fluid          true
-                               :clearable      true
-                               :allowAdditions true
-                               :value          helm-repo-value
-                               :additionLabel  "Add custom URL: "
-                               :placeholder    "Choose a Helm repository or provide a URL"
-                               :search         true
-                               :options        all-options
-                               :disabled       (= :url (:repo-or-url? @state))
-                               :selection      true
-                               :on-change      (ui-callback/value #(do
-                                                                     (dispatch [::main-events/changes-protection? true])
-                                                                     (if (str/blank? %)
-                                                                       (dispatch [::events/clear-helm-key :helm-repo-url])
-                                                                       (dispatch [::events/set-helm-repo-url %]))
-                                                                     #_(dispatch [::events/validate-helm-app-form])))
-                               :on-add-item    (ui-callback/value #(do
-                                                                     (dispatch [::main-events/changes-protection? true])
-                                                                     (swap! state assoc :custom-url %)
-                                                                     (dispatch [::events/set-helm-custom-url %])
-                                                                     #_(dispatch [::events/validate-helm-app-form])))
-                               :style          {:max-width 400}}]]]
-               [ui/TableRow
-                [ui/TableCell {:style {:width 20}} "Credentials"]
-                [ui/TableCell {:style {:width 200}}
-                 [ui/Dropdown {:fluid        true
-                               :value        helm-repo-creds
-                               :disabled     (or (= :url (:repo-or-url? @helm-info))
-                                                 (str/blank? helm-repo-url))
-                               :on-change    (ui-callback/value #(do
-                                                                   (dispatch [::main-events/changes-protection? true])
-                                                                   (dispatch [::events/set-helm-repo-creds %])))
-                               :clearable    true
-                               :placeholder  "Choose credentials for the Helm repository"
-                               :options      credential-options
-                               :selection    true
-                               :style        {:max-width 400}}]]]
-               [ui/TableRow
-                [ui/TableCell "Chart name"]
-                [ui/TableCell [ui/Input {:disabled  (= :url (:repo-or-url? @helm-info))
-                                         :value     (or helm-chart-name "")
-                                         :read-only (when-not @editable?)
-                                         :on-change (ui-callback/value #(do
-                                                                          (dispatch [::main-events/changes-protection? true])
-                                                                          (if (str/blank? %)
-                                                                            (dispatch [::events/clear-helm-key :helm-chart-name])
-                                                                            (dispatch [::events/set-helm-chart-name %]))
-                                                                          #_(dispatch [::events/validate-helm-app-form])))}]]]
-               [ui/TableRow
-                [ui/TableCell "Version"]
-                [ui/TableCell [ui/Input {:disabled     (= :url (:repo-or-url? @helm-info))
-                                         :value        (or helm-chart-version "")
-                                         :read-only    (when-not @editable?)
-                                         :on-change    (ui-callback/value #(do
-                                                                             (dispatch [::main-events/changes-protection? true])
-                                                                             (dispatch [::events/set-helm-chart-version %])))}]]]]]]]
+                                        [ui/Dropdown {:fluid          true
+                                                      :clearable      true
+                                                      :allowAdditions true
+                                                      :value          helm-repo-value
+                                                      :additionLabel  "Add custom URL: "
+                                                      :placeholder    "Choose a Helm repository or provide a URL"
+                                                      :search         true
+                                                      :options        all-options
+                                                      :disabled       (= :url (:repo-or-url? @state))
+                                                      :selection      true
+                                                      :on-change      (ui-callback/value #(do
+                                                                                            (dispatch [::main-events/changes-protection? true])
+                                                                                            (if (str/blank? %)
+                                                                                              (dispatch [::events/clear-helm-key :helm-repo-url])
+                                                                                              (dispatch [::events/set-helm-repo-url %]))
+                                                                                            #_(dispatch [::events/validate-helm-app-form])))
+                                                      :on-add-item    (ui-callback/value #(do
+                                                                                            (dispatch [::main-events/changes-protection? true])
+                                                                                            (swap! state assoc :custom-url %)
+                                                                                            (dispatch [::events/set-helm-custom-url %])
+                                                                                            #_(dispatch [::events/validate-helm-app-form])))
+                                                      :style          {:max-width 400}}]]]
+                                      [ui/TableRow
+                                       [ui/TableCell {:style {:width 20}} "Credentials"]
+                                       [ui/TableCell {:style {:width 200}}
+                                        [ui/Dropdown {:fluid       true
+                                                      :value       helm-repo-creds
+                                                      :disabled    (or (= :url (:repo-or-url? @helm-info))
+                                                                       (str/blank? helm-repo-url))
+                                                      :on-change   (ui-callback/value #(do
+                                                                                         (dispatch [::main-events/changes-protection? true])
+                                                                                         (dispatch [::events/set-helm-repo-creds %])))
+                                                      :clearable   true
+                                                      :placeholder "Choose credentials for the Helm repository"
+                                                      :options     credential-options
+                                                      :selection   true
+                                                      :style       {:max-width 400}}]]]
+                                      [ui/TableRow
+                                       [ui/TableCell "Chart name"]
+                                       [ui/TableCell [ui/Input {:disabled  (= :url (:repo-or-url? @helm-info))
+                                                                :value     (or helm-chart-name "")
+                                                                :read-only (when-not @editable?)
+                                                                :on-change (ui-callback/value #(do
+                                                                                                 (dispatch [::main-events/changes-protection? true])
+                                                                                                 (if (str/blank? %)
+                                                                                                   (dispatch [::events/clear-helm-key :helm-chart-name])
+                                                                                                   (dispatch [::events/set-helm-chart-name %]))
+                                                                                                 #_(dispatch [::events/validate-helm-app-form])))}]]]
+                                      [ui/TableRow
+                                       [ui/TableCell "Version"]
+                                       [ui/TableCell [ui/Input {:disabled  (= :url (:repo-or-url? @helm-info))
+                                                                :value     (or helm-chart-version "")
+                                                                :read-only (when-not @editable?)
+                                                                :on-change (ui-callback/value #(do
+                                                                                                 (dispatch [::main-events/changes-protection? true])
+                                                                                                 (dispatch [::events/set-helm-chart-version %])))}]]]]]]]
            [:div {:style {:opacity (if (= :repo (:repo-or-url? @helm-info))
                                      "50%"
                                      "100%")}}
@@ -1163,7 +1173,16 @@
                                       :checked   (= :url (:repo-or-url? @helm-info))
                                       :on-change #(dispatch [::events/set-repo-or-url :url])}]]]
             [ui/Segment {:compact  true
-                         :attached true}
+                         :attached true
+                         :style    {:display "block"
+                                    :transition "all 0.5s ease 0s"
+                                    :overflow "hidden"
+                                    :margin-bottom (if (= :url (:repo-or-url? @helm-info)) 14 0)
+                                    :padding-bottom (if (= :url (:repo-or-url? @helm-info)) 14 0)
+                                    :height (if (= :url (:repo-or-url? @helm-info)) "auto" 0)
+                                    :opacity (if (= :url (:repo-or-url? @helm-info)) 1 0)
+                                    #_#_ :transition " all 2s ease 0s"
+                                    }}
              [ui/Table (merge style/definition {:compact "very"
                                                 :style   {:width 600}})
               [ui/TableBody

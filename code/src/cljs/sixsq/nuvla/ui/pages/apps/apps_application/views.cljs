@@ -541,10 +541,13 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
+        module-subtype (subscribe [::apps-subs/module-subtype])
         active-tab    (sub-apps-tab)
         is-new?       (subscribe [::apps-subs/is-new?])]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
-    #_(dispatch [::apps-events/set-form-spec ::spec/module-application])
+    (when-not (= @module-subtype
+                 "application_helm")
+      (dispatch [::apps-events/set-form-spec ::spec/module-application]))
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name  (get @module-common ::apps-spec/name)

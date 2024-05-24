@@ -142,7 +142,7 @@
           (assoc ::spec/module-immutable {})
           (assoc ::spec/module-common {})
           (assoc ::main-spec/loading? false)
-          (assoc ::spec/helm-info nil)
+          (assoc ::spec/helm-info {:repo-or-url? :repo})
           (assoc-in [::spec/module-common ::spec/name] new-name)
           (assoc-in [::spec/module-common ::spec/description] (or (utils/subtype->descr-template new-subtype)
                                                                   ""))
@@ -534,15 +534,14 @@
   (fn [{:keys [::spec/helm-infra] :as db} [_ id]]
     (let [endpoint (:endpoint (first (filter #(= id (:id %)) helm-infra)))]
       (-> db
-          (assoc-in [::spec/helm-info :helm-repo-url] endpoint)
-          (update-in [::spec/helm-info] dissoc :helm-absolute-url)))))
+          (assoc-in [::spec/helm-info :helm-repo-url] endpoint)))))
 
 (reg-event-db
   ::set-helm-custom-url
   (fn [db [_ url]]
     (-> db
         (assoc-in [::spec/helm-info :helm-repo-url] url)
-        (update-in [::spec/helm-info] dissoc :helm-absolute-url))))
+        (update-in [::spec/helm-info] dissoc :helm-repo-creds))))
 
 (reg-event-db
   ::set-helm-repo-creds
@@ -554,8 +553,7 @@
   ::set-helm-chart-name
   (fn [db [_ helm-chart-name]]
     (-> db
-        (assoc-in [::spec/helm-info :helm-chart-name] helm-chart-name)
-        (update-in [::spec/helm-info] dissoc :helm-absolute-url))))
+        (assoc-in [::spec/helm-info :helm-chart-name] helm-chart-name))))
 
 (reg-event-db
   ::set-helm-chart-version
@@ -567,14 +565,37 @@
   ::set-helm-absolute-url
   (fn [db [_ helm-absolute-url]]
     (-> db
-        (assoc-in [::spec/helm-info :helm-absolute-url]  helm-absolute-url)
-        (update-in [::spec/helm-info] dissoc :helm-repo-url :helm-chart-name))))
+        (assoc-in [::spec/helm-info :helm-absolute-url]  helm-absolute-url))))
 
 (reg-event-db
   ::update-helm-chart-values
   (fn [db [_ yaml-text]]
     (-> db
         (assoc-in [::spec/helm-info :helm-chart-values] yaml-text))))
+
+(reg-event-db
+  ::clear-helm-key
+  (fn [db [_ keyword]]
+    (update-in db [::spec/helm-info] dissoc keyword)))
+
+(reg-event-db
+  ::set-repo-or-url
+  (fn [db [_ repo-or-url]]
+    (assoc-in db [::spec/helm-info :repo-or-url?] repo-or-url)))
+
+(reg-event-db
+  ::validate-helm-app-form
+  (fn [db]
+    (let [form-spec      ::spec/helm-info
+          helm-info      (::spec/helm-info db)
+          validate-form? (get db ::spec/validate-form?)
+          valid?         (if validate-form?
+                           (if (nil? form-spec)
+                             true
+                             (s/valid? form-spec helm-info))
+                           true)]
+      (s/explain form-spec helm-info)
+      (assoc db ::spec/form-valid? valid?))))
 
 
 (reg-event-fx

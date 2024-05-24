@@ -177,9 +177,14 @@
 
 (s/def ::module-not-found? boolean?)
 
-(s/def ::helm-info any?)
-
 (s/def ::tab any?)
+
+(s/def ::helm-info (s/keys :req-un [(or (and ::helm-absolute-url
+                                             (not ::helm-repo-url)
+                                             (not ::helm-chart-name))
+                                        (and (not ::helm-absolute-url)
+                                             ::helm-repo-url
+                                             ::helm-chart-name))]))
 
 (def default-tab :overview)
 
@@ -198,7 +203,7 @@
    ::registries                nil
    ::registries-infra          nil
    ::helm-infra                nil
-   ::helm-info                 nil
+   ::helm-info                 {:repo-or-url? :repo}
    ::helm-credentials          nil
    ::registries-credentials    nil
    ::validate-docker-compose   nil

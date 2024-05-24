@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-application.utils
-  (:require [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
+  (:require [clojure.string :as str]
+            [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
             [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]))
 
@@ -78,23 +79,24 @@
         docker-compose                                              (get-in db [::spec/module-application ::spec/docker-compose])
         files                                                       (files->module db)
         requires-user-rights                                        (get-in db [::spec/module-application ::spec/requires-user-rights])
-        {:keys [helm-absolute-url helm-repo-url helm-chart-values
-                helm-chart-name helm-repo-creds helm-chart-version]} (::apps-spec/helm-info db)]
+        helm-info                                                   (::apps-spec/helm-info db)
+        {:keys [repo-or-url? helm-chart-values]}                    helm-info
+        helm-info-to-submit                                         (if (= :url repo-or-url?)
+                                                                      (select-keys helm-info [:helm-absolute-url])
+                                                                      (select-keys helm-info [:helm-repo-url
+                                                                                              :helm-chart-name
+                                                                                              :helm-repo-creds
+                                                                                              :helm-chart-version]))]
     (as-> helm-module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :requires-user-rights] requires-user-rights)
-          (if helm-absolute-url
-            (assoc-in m [:content :helm-absolute-url] helm-absolute-url)
-            (-> m
-                (assoc-in [:content :helm-repo-url] helm-repo-url)
-                (assoc-in [:content :helm-chart-name] helm-chart-name)))
-          (if helm-repo-creds
-            (assoc-in m [:content :helm-repo-creds] helm-repo-creds)
-            m)
-          (if helm-chart-version
-            (assoc-in m [:content :helm-chart-version] helm-chart-version)
-            m)
+          (update-in m [:content] dissoc :helm-repo-url
+                     :helm-chart-name
+                     :helm-repo-creds
+                     :helm-chart-version
+                     :helm-absolute-url)
+          (update-in m [:content] #(merge % helm-info-to-submit))
           (if docker-compose
             (assoc-in m [:content :docker-compose] docker-compose)
             m)

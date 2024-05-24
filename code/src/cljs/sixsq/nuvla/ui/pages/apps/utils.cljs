@@ -373,35 +373,42 @@ For more information on how to format your app description using Markdown syntax
       [id {:id              id
            ::spec/data-type dt}])))
 
-
 (defn module->db
   [db {:keys [name description parent-path content data-accept-content-types
               path logo-url subtype acl price license] :as _module}]
-  (-> db
-      (assoc-in [::spec/module-common ::spec/name] name)
-      (assoc-in [::spec/module-common ::spec/description] description)
-      (assoc-in [::spec/module-common ::spec/parent-path] parent-path)
-      (assoc-in [::spec/module-common ::spec/path] path)
-      (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
-      (assoc-in [::spec/module-common ::spec/subtype] subtype)
-      (assoc-in [::spec/module-common ::spec/acl] acl)
-      (assoc-in [::spec/module-common ::spec/env-variables]
-                (env-variables->db (:environmental-variables content)))
-      (assoc-in [::spec/module-common ::spec/urls] (urls->db (:urls content)))
-      (assoc-in [::spec/module-common ::spec/output-parameters]
-                (output-parameters->db (:output-parameters content)))
-      (assoc-in [::spec/module-common ::spec/data-types]
-                (data-types->db data-accept-content-types))
-      (assoc-in [::spec/module-common ::spec/registries]
-                (registries->db (:private-registries content)
-                                (:registries-credentials content)))
-      (assoc-in [::spec/module-common ::spec/price]
-                price)
-      (assoc-in [::spec/module-common ::spec/license]
-                (when (some? license)
-                  {:license-name        (:name license)
-                   :license-description (:description license)
-                   :license-url         (:url license)}))))
+  (let [helm-info (select-keys content [:helm-repo-url
+                                        :helm-chart-name
+                                        :helm-absolute-url
+                                        :helm-repo-creds
+                                        :helm-chart-version
+                                        :helm-chart-values])
+        repo-or-url?  (if (:helm-absolute-url helm-info) :url :repo)]
+    (-> db
+        (assoc-in [::spec/module-common ::spec/name] name)
+        (assoc-in [::spec/module-common ::spec/description] description)
+        (assoc-in [::spec/module-common ::spec/parent-path] parent-path)
+        (assoc-in [::spec/module-common ::spec/path] path)
+        (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
+        (assoc-in [::spec/module-common ::spec/subtype] subtype)
+        (assoc-in [::spec/module-common ::spec/acl] acl)
+        (assoc-in [::spec/module-common ::spec/env-variables]
+                  (env-variables->db (:environmental-variables content)))
+        (assoc-in [::spec/module-common ::spec/urls] (urls->db (:urls content)))
+        (assoc-in [::spec/module-common ::spec/output-parameters]
+                  (output-parameters->db (:output-parameters content)))
+        (assoc-in [::spec/module-common ::spec/data-types]
+                  (data-types->db data-accept-content-types))
+        (assoc-in [::spec/module-common ::spec/registries]
+                  (registries->db (:private-registries content)
+                                  (:registries-credentials content)))
+        (assoc-in [::spec/module-common ::spec/price]
+                  price)
+        (assoc-in [::spec/module-common ::spec/license]
+                  (when (some? license)
+                    {:license-name        (:name license)
+                     :license-description (:description license)
+                     :license-url         (:url license)}))
+        (assoc    ::spec/helm-info (merge {:repo-or-url? repo-or-url?} helm-info )))))
 
 
 (defn mandatory-name

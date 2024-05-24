@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.apps.subs
   (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -114,20 +115,22 @@
     (and is-app? unpublish-op is-published?)))
 
 (reg-sub
-  ::helm-info-incomplete?
+  ::helm-info-correct?
   :<- [::helm-info]
-  (fn [ {:keys [helm-repo-url helm-chart-name helm-absolute-url]}]
-    (and (nil? helm-absolute-url)
-         (or (nil? helm-repo-url) (nil? helm-chart-name)))))
+  (fn [{:keys [repo-or-url? helm-repo-url helm-chart-name helm-absolute-url]}]
+    (if (= :repo repo-or-url?)
+      (and helm-chart-name helm-repo-url)
+      helm-absolute-url)))
 
 (reg-sub
   ::save-btn-disabled?
   :<- [::form-valid?]
   :<- [::main-subs/changes-protection?]
   :<- [::is-description-template?]
-  :<- [::helm-info-incomplete?]
-  (fn [[form-valid? page-changed? is-description-template? helm-info-complete?]]
-    (or (not page-changed?) (not form-valid?) is-description-template? helm-info-complete?)))
+  :<- [::helm-info-correct?]
+  (fn [[form-valid? page-changed? is-description-template? helm-info-correct?]]
+    (js/console.log :form-valid? form-valid? :page-changed? page-changed? ::is-description-template? is-description-template?)
+    (or (not page-changed?) (not form-valid?) is-description-template? (not helm-info-correct?))))
 
 (reg-sub
   ::module-license

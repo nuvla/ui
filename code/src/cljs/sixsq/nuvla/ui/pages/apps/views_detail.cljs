@@ -1080,12 +1080,16 @@
                                      "100%")}}
             [ui/Header {:as    "h4" :attached "top"
                         :style {:background-color "#00000008"}}
-             [ui/FormField [ui/Radio {:label     "Helm Repository"
-                                      :value     :repo
-                                      :name      "radioGroup"
-                                      :checked   (= :repo repo-or-url?)
-                                      :on-change #(dispatch [::events/set-helm-option :repo])}]]
-             [ui/HeaderSubheader "Provide at least a Helm Repository name or URL, and a Chart name"]]
+             [ui/FormField {:style {:display "flex"
+                                    :align-items "center"
+                                    :justify-content "space-between"}}
+              [ui/Radio {:label     "Helm Repository"
+                         :value     :repo
+                         :name      "radioGroup"
+                         :checked   repo-option-selected?
+                         :on-change #(dispatch [::events/set-helm-option :repo])}]
+              [ui/Icon {:class (if repo-option-selected? icons/i-angle-down icons/i-angle-up)}]]
+             [ui/HeaderSubheader "Provide at least a Helm Repository or custom URL, and a Chart name"]]
 
             [ui/Segment {:compact  true
                          :attached true
@@ -1170,12 +1174,16 @@
                                      "100%")}}
             [ui/Header {:as    "h4" :attached "top"
                         :style {:background-color "#00000008"}}
-             [ui/FormField [ui/Radio {:label     "Chart Absolute URL"
+             [ui/FormField {:style {:display "flex"
+                                    :align-items "center"
+                                    :justify-content "space-between"}}
+              [ui/Radio {:label     "Chart Absolute URL"
                                       :value     :url
                                       :name      "radioGroup"
                                       :checked   (not repo-option-selected?)
-                                      :on-change #(dispatch [::events/set-helm-option :url])}]]
-             [ui/HeaderSubheader "Provide only the absolute URL"]]
+                                      :on-change #(dispatch [::events/set-helm-option :url])}]
+              [ui/Icon {:class (if-not repo-option-selected? icons/i-angle-down icons/i-angle-up)}]]
+             [ui/HeaderSubheader "Provide the absolute URL"]]
             [ui/Segment {:compact  true
                          :attached true
                          :style    {:display        "block"
@@ -1194,6 +1202,7 @@
                  [ui/Input {:disabled  (= :repo repo-or-url?)
                             :value     (or helm-absolute-url "")
                             :read-only (when-not @editable?)
+                            :style {:width "100%"}
                             :on-change (ui-callback/value
                                          #(do
                                             (dispatch [::main-events/changes-protection? true])

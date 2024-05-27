@@ -1074,6 +1074,8 @@
                                              :text name})))]
         [uix/Accordion
          [:<>
+          [ui/Message {:info true}
+           [:span "You can define your Helm application either through a Helm Repository, " [:b "or"] " through a Chart absolute URL." ]]
           [ui/Form
            [:div {:style {:opacity (if-not repo-option-selected?
                                      "50%"
@@ -1089,7 +1091,7 @@
                          :checked   repo-option-selected?
                          :on-change #(dispatch [::events/set-helm-option :repo])}]
               [ui/Icon {:class (if repo-option-selected? icons/i-angle-down icons/i-angle-up)}]]
-             [ui/HeaderSubheader "Provide at least a Helm Repository or custom URL, and a Chart name"]]
+             [ui/HeaderSubheader [:span "Provide at least a Helm Repository or custom URL, " [:b "and"] " a Chart name"]]]
 
             [ui/Segment {:compact  true
                          :attached true

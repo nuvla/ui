@@ -129,7 +129,6 @@
   :<- [::is-description-template?]
   :<- [::helm-info-correct?]
   (fn [[form-valid? page-changed? is-description-template? helm-info-correct?]]
-    (js/console.log :form-valid? form-valid? :page-changed? page-changed? ::is-description-template? is-description-template?)
     (or (not page-changed?) (not form-valid?) is-description-template? (not helm-info-correct?))))
 
 (reg-sub

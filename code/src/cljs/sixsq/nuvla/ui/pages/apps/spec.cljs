@@ -179,12 +179,7 @@
 
 (s/def ::tab any?)
 
-(s/def ::helm-info (s/keys :req-un [(or (and ::helm-absolute-url
-                                             (not ::helm-repo-url)
-                                             (not ::helm-chart-name))
-                                        (and (not ::helm-absolute-url)
-                                             ::helm-repo-url
-                                             ::helm-chart-name))]))
+(s/def ::helm-info any?)
 
 (def default-tab :overview)
 

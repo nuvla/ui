@@ -1096,10 +1096,10 @@
                          :style    {:display        "block"
                                     :transition     "all 0.5s ease 0s"
                                     :overflow       "hidden"
-                                    :margin-bottom  (if (= :repo repo-or-url?) 14 0)
-                                    :padding-top (if (= :repo repo-or-url?) 14 0)
-                                    :padding-bottom (if (= :repo repo-or-url?) 14 0)
-                                    :height         (if (= :repo repo-or-url?) "auto" 0)}}
+                                    :margin-bottom  (if repo-option-selected? 14 0)
+                                    :padding-top    (if repo-option-selected? 14 0)
+                                    :padding-bottom (if repo-option-selected? 14 0)
+                                    :height         (if repo-option-selected? "auto" 0)}}
 
 
              [ui/Table (merge style/definition {:compact "very"

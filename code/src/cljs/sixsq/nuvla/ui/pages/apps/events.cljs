@@ -530,48 +530,15 @@
     (assoc db ::spec/helm-credentials resources)))
 
 (reg-event-db
-  ::set-helm-repo-url
-  (fn [{:keys [::spec/helm-infra] :as db} [_ id]]
-    (let [endpoint (:endpoint (first (filter #(= id (:id %)) helm-infra)))]
-      (-> db
-          (assoc-in [::spec/helm-info :helm-repo-url] endpoint)))))
-
-(reg-event-db
-  ::set-helm-custom-url
-  (fn [db [_ url]]
-    (-> db
-        (assoc-in [::spec/helm-info :helm-repo-url] url)
-        (update-in [::spec/helm-info] dissoc :helm-repo-creds))))
-
-(reg-event-db
-  ::set-helm-repo-creds
-  (fn [db [_ helm-repo-creds-id]]
-    (-> db
-        (assoc-in [::spec/helm-info :helm-repo-creds] helm-repo-creds-id))))
-
-(reg-event-db
-  ::set-helm-chart-name
-  (fn [db [_ helm-chart-name]]
-    (-> db
-        (assoc-in [::spec/helm-info :helm-chart-name] helm-chart-name))))
-
-(reg-event-db
-  ::set-helm-chart-version
-  (fn [db [_ helm-chart-version]]
-    (-> db
-        (assoc-in [::spec/helm-info :helm-chart-version] helm-chart-version))))
-
-(reg-event-db
-  ::set-helm-absolute-url
-  (fn [db [_ helm-absolute-url]]
-    (-> db
-        (assoc-in [::spec/helm-info :helm-absolute-url]  helm-absolute-url))))
-
-(reg-event-db
   ::update-helm-chart-values
   (fn [db [_ yaml-text]]
     (-> db
         (assoc-in [::spec/helm-info :helm-chart-values] yaml-text))))
+
+(reg-event-db
+  ::set-helm-key
+  (fn [db [_ key val]]
+    (assoc-in db [::spec/helm-info key] val)))
 
 (reg-event-db
   ::clear-helm-key
@@ -579,24 +546,9 @@
     (update-in db [::spec/helm-info] dissoc keyword)))
 
 (reg-event-db
-  ::set-repo-or-url
+  ::set-helm-option
   (fn [db [_ repo-or-url]]
     (assoc-in db [::spec/helm-info :repo-or-url?] repo-or-url)))
-
-(reg-event-db
-  ::validate-helm-app-form
-  (fn [db]
-    (let [form-spec      ::spec/helm-info
-          helm-info      (::spec/helm-info db)
-          validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form?
-                           (if (nil? form-spec)
-                             true
-                             (s/valid? form-spec helm-info))
-                           true)]
-      (s/explain form-spec helm-info)
-      (assoc db ::spec/form-valid? valid?))))
-
 
 (reg-event-fx
   ::get-helm-credentials

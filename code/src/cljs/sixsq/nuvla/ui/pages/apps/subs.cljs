@@ -116,11 +116,13 @@
 
 (reg-sub
   ::helm-info-correct?
+  :<- [::module-subtype]
   :<- [::helm-info]
-  (fn [{:keys [repo-or-url? helm-repo-url helm-chart-name helm-absolute-url]}]
-    (if (= :repo repo-or-url?)
-      (and helm-chart-name helm-repo-url)
-      helm-absolute-url)))
+  (fn [[module-subtype {:keys [repo-or-url? helm-repo-url helm-chart-name helm-absolute-url]}]]
+    (cond (not= "application_helm" module-subtype) true
+          (= :repo repo-or-url?)                   (and helm-repo-url helm-chart-name)
+          (= :url repo-or-url?)                     helm-absolute-url
+          :else                                     false)))
 
 (reg-sub
   ::save-btn-disabled?

@@ -456,6 +456,7 @@
         :groups                                        "groups"
         :heartbeat                                     "Heartbeat"
         :heartbeat-help                                "NuvlaEdge has to contact Nuvla each defined number of seconds to be considered as online."
+        :helm-repo-and-chart                           "Helm Repository and Chart"
         :helm-options-message                          "You can define your Helm application either through a Helm Repository, or through a Chart absolute URL."
         :helm-repo-section-sub-text                    "Credentials used to access Helm repositories"
         :helm-repositories                             "Helm repositories"

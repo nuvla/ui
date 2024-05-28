@@ -1206,7 +1206,7 @@
                             :on-change (ui-callback/value
                                          #(update-helm-value :helm-absolute-url %))}]]]]]]]]]
 
-         :label "Helm Repository and Chart"
+         :label (@tr[:helm-repo-and-chart])
 
          :default-open true]))))
 

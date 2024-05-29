@@ -87,10 +87,11 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         files         (subscribe [::subs/files])
         editable?     (subscribe [::apps-subs/editable?])
-        compatibility (subscribe [::subs/compatibility])]
+        compatibility (subscribe [::subs/compatibility])
+        subtype       (subscribe [::apps-subs/module-subtype])]
     (fn []
       [uix/Accordion
-       (if (not= @compatibility "docker-compose")
+       (if (or (not= @compatibility "docker-compose") (= @subtype "application_helm"))
          [:<>
           [:div (@tr [:module-files])
            [uix/HelpPopup (@tr [:module-files-help])]]

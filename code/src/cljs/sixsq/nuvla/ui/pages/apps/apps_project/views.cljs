@@ -32,9 +32,7 @@
           icon-name (apps-utils/subtype-icon subtype)
           summary   (values/markdown->summary description)]
       [ui/ListItem {:on-click on-click}
-       [ui/ListIcon {:class          icon-name
-                     :size           "large"
-                     :vertical-align "middle"}]
+       [apps-utils/ModuleSubtypeIcon subtype]
        [ui/ListContent
         [ui/ListHeader [:a {:on-click on-click} name]]
         [ui/ListDescription

@@ -179,6 +179,12 @@ For more information on how to format your app description using Markdown syntax
                      :margin  "0 .25rem 0 0"
                      :display :inline-block}}])
 
+(defn IconHelm []
+  [ui/Image {:src "/ui/images/helm.svg"
+             :style {:width   "1.18em"
+                     :margin  "0 .25rem 0 0"
+                     :display :inline-block}}])
+
 (defn subtype-icon
   [subtype]
   (condp = subtype
@@ -188,6 +194,13 @@ For more information on how to format your app description using Markdown syntax
     subtype-application-k8s icons/i-cubes
     subtype-applications-sets icons/i-table-cells
     icons/i-circle-question))
+
+(defn ModuleSubtypeIcon [subtype]
+  (if (= subtype-application-helm subtype)
+    [IconHelm]
+    [ui/ListIcon {:name (subtype-icon subtype)
+                  :size "large"
+                  :align "middle"}]))
 
 (defn SubtypeIconInfra
   [subtype selected]

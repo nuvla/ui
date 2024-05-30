@@ -88,7 +88,8 @@
           [:div (@tr [:apps-file-config-warning])
            [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]]
           (= "helm" compatibility)
-          [:div (@tr [:apps-file-config-helm-warning])])))
+          [:div (@tr [:apps-file-config-helm-warning])]
+          :else nil)))
 
 
 (defn FilesSection []
@@ -390,8 +391,7 @@
    (str/capitalize "helm")])
 
 (defn HelmPane []
-  (let [active-tab     (sub-apps-tab)
-        module-subtype (subscribe [::apps-subs/module-subtype])]
+  (let [active-tab     (sub-apps-tab)]
     @active-tab
     [:div {:class :uix-apps-details-details}
      [:h4 {:class :tab-app-detail} "Helm"]
@@ -495,9 +495,9 @@
 
 (defn module-detail-panes
   []
-  (let [module    (subscribe [::apps-subs/module])
-        editable? (subscribe [::apps-subs/editable?])
-        stripe    (subscribe [::main-subs/stripe])
+  (let [module         (subscribe [::apps-subs/module])
+        editable?      (subscribe [::apps-subs/editable?])
+        stripe         (subscribe [::main-subs/stripe])
         module-subtype (subscribe [::apps-subs/module-subtype])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
@@ -551,7 +551,7 @@
         module-subtype (subscribe [::apps-subs/module-subtype])
         active-tab     (sub-apps-tab)
         is-new?        (subscribe [::apps-subs/is-new?])
-        helm-app?      (= "application_helm" @module-subtype)]
+        helm-app?      (= apps-utils/subtype-application-helm @module-subtype)]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
     (dispatch [::events/update-compatibility (if helm-app? "helm" "docker-compose")])
     (when-not helm-app? (dispatch [::apps-events/set-form-spec ::spec/module-application]))

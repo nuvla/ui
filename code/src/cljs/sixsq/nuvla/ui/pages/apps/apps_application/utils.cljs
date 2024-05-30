@@ -45,16 +45,14 @@
 (defn db->module
   [{:keys [subtype] :as module} commit-map db]
   (let [{:keys [author commit]} commit-map
-        docker-compose                (get-in db [::spec/module-application ::spec/docker-compose])
-        compatibility                 (get-in db [::spec/module-application ::spec/compatibility])
-        files                         (files->module db)
-        requires-user-rights          (get-in db [::spec/module-application ::spec/requires-user-rights])]
+        docker-compose       (get-in db [::spec/module-application ::spec/docker-compose])
+        compatibility        (get-in db [::spec/module-application ::spec/compatibility])
+        files                (files->module db)
+        requires-user-rights (get-in db [::spec/module-application ::spec/requires-user-rights])]
     (as-> module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
-          (if docker-compose
-            (assoc-in m [:content :docker-compose] docker-compose)
-            m)
+          (assoc-in m [:content :docker-compose] docker-compose)
           (assoc-in m [:content :requires-user-rights] requires-user-rights)
           (if (= subtype "application")
             (assoc m :compatibility compatibility)
@@ -82,10 +80,10 @@
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :requires-user-rights] requires-user-rights)
           (update-in m [:content] dissoc :helm-repo-url
-                     :helm-chart-name
-                     :helm-repo-creds
-                     :helm-chart-version
-                     :helm-absolute-url)
+                                         :helm-chart-name
+                                         :helm-repo-creds
+                                         :helm-chart-version
+                                         :helm-absolute-url)
           (update-in m [:content] #(merge % helm-info-to-submit))
           (if helm-chart-values
             (assoc-in m [:content :helm-chart-values] helm-chart-values)

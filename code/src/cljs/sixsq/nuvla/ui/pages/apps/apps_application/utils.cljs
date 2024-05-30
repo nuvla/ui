@@ -87,9 +87,6 @@
                      :helm-chart-version
                      :helm-absolute-url)
           (update-in m [:content] #(merge % helm-info-to-submit))
-          (if docker-compose
-            (assoc-in m [:content :docker-compose] docker-compose)
-            m)
           (if helm-chart-values
             (assoc-in m [:content :helm-chart-values] helm-chart-values)
             m)

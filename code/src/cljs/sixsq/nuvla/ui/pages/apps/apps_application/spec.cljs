@@ -48,7 +48,7 @@
 
 (def defaults {::module-application               {::docker-compose       nil
                                                    ::requires-user-rights false
-                                                   ::compatibility        "docker-compose"}
+                                                   ::compatibility        nil}
                ::license-validation-errors        #{}
                ::docker-compose-validation-errors #{}
                ::configuration-validation-errors   #{}

@@ -82,16 +82,23 @@
                           :align   :right}
             [apps-views-detail/trash id ::events/remove-file]])]))))
 
+(defn FilesNotSupported [compatibility]
+  (let [tr             (subscribe [::i18n-subs/tr])]
+    (cond (= "docker-compose" compatibility)
+          [:div (@tr [:apps-file-config-warning])
+           [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]]
+          (= "helm" compatibility)
+          [:div (@tr [:apps-file-config-helm-warning])])))
+
 
 (defn FilesSection []
   (let [tr            (subscribe [::i18n-subs/tr])
         files         (subscribe [::subs/files])
         editable?     (subscribe [::apps-subs/editable?])
-        compatibility (subscribe [::subs/compatibility])
-        subtype       (subscribe [::apps-subs/module-subtype])]
+        compatibility (subscribe [::subs/compatibility])]
     (fn []
       [uix/Accordion
-       (if (or (not= @compatibility "docker-compose") (= @subtype "application_helm"))
+       (if-not (contains? #{"docker-compose" "helm"} @compatibility)
          [:<>
           [:div (@tr [:module-files])
            [uix/HelpPopup (@tr [:module-files-help])]]
@@ -113,8 +120,7 @@
           (when @editable?
             [:div {:style {:padding-top 10}}
              [apps-views-detail/plus ::events/add-file]])]
-         [:div (@tr [:apps-file-config-warning])
-          [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]])
+         [FilesNotSupported @compatibility])
        :label (@tr [:module-files])
        :count (count @files)
        :default-open true])))
@@ -541,14 +547,14 @@
 
 (defn ViewEdit
   []
-  (let [module-common (subscribe [::apps-subs/module-common])
+  (let [module-common  (subscribe [::apps-subs/module-common])
         module-subtype (subscribe [::apps-subs/module-subtype])
-        active-tab    (sub-apps-tab)
-        is-new?       (subscribe [::apps-subs/is-new?])]
+        active-tab     (sub-apps-tab)
+        is-new?        (subscribe [::apps-subs/is-new?])
+        helm-app?      (= "application_helm" @module-subtype)]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
-    (when-not (= @module-subtype
-                 "application_helm")
-      (dispatch [::apps-events/set-form-spec ::spec/module-application]))
+    (dispatch [::events/update-compatibility (if helm-app? "helm" "docker-compose")])
+    (when-not helm-app? (dispatch [::apps-events/set-form-spec ::spec/module-application]))
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name  (get @module-common ::apps-spec/name)

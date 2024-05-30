@@ -85,10 +85,10 @@
 (defn FilesNotSupported [compatibility]
   (let [tr             (subscribe [::i18n-subs/tr])]
     (cond (= "docker-compose" compatibility)
-          [:div (@tr [:apps-file-config-warning])
+          [ui/Message {:warning true} (@tr [:apps-file-config-warning])
            [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]]
           (= "helm" compatibility)
-          [:div (@tr [:apps-file-config-helm-warning])]
+          [ui/Message {:warning true} (@tr [:apps-file-config-helm-warning])]
           :else nil)))
 
 

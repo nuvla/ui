@@ -260,8 +260,7 @@
   (fn [{:keys [db]} [_ id]]
     {:db               (assoc db ::spec/deployment {:id id})
      ::cimi-api-fx/get [id #(let [{:keys [content subtype href]} (:module %)
-                                  kubernetes-or-helm-app? (or (= subtype "application_kubernetes")
-                                                              (= subtype "application_helm"))
+                                  kubernetes-or-helm-app? (contains? #{"application_kubernetes" "application_helm"} subtype)
                                   filter                  (if kubernetes-or-helm-app?
                                                             "subtype='kubernetes'"
                                                             "subtype='swarm'")]

@@ -532,8 +532,7 @@
 (reg-event-db
   ::update-helm-chart-values
   (fn [db [_ yaml-text]]
-    (-> db
-        (assoc-in [::spec/helm-info :helm-chart-values] yaml-text))))
+    (assoc-in db [::spec/helm-info :helm-chart-values] yaml-text)))
 
 (reg-event-db
   ::set-helm-key

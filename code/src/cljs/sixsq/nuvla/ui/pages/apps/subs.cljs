@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.pages.apps.subs
   (:require [clojure.set :as set]
-            [clojure.string :as str]
             [re-frame.core :refer [reg-sub subscribe]]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.main.subs :as main-subs]

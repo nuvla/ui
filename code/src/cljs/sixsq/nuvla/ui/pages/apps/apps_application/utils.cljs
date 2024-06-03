@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-application.utils
-  (:require [clojure.string :as str]
-            [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
+  (:require [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
             [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]))
 

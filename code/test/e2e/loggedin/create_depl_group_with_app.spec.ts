@@ -27,13 +27,17 @@ import { test, expect } from '@playwright/test';
 
   await page.getByRole('row', { name: 'Name' }).locator('i').click();
 
-  await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
+  await page.getByRole('cell', { name: /Deployment Group/ }).locator('i').click();
+
+   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click({
+      clickCount: 3
+    });
 
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill('nginx test');
 
   await page.getByRole('row', { name: 'Name' }).getByRole('button').click();
 
-  await page.locator('main:has-text("Oops can\'t find deployment groupDeployment group does not exist or you do not ha") button').nth(2).click();
+  await page.getByTestId('add-edges-button').click();
 
   await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW endtoend@sixsq.com' }).click();
 

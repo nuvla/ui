@@ -330,7 +330,8 @@
 
            [ui/Card
             {:href     (pathify [base-path "New Project?subtype=project"])
-             :on-click #(dispatch [::events/close-add-modal])}
+             :on-click #(dispatch [::events/close-add-modal])
+             :data-testid "project-card"}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [icons/FolderIconFull {:size :massive}]]]

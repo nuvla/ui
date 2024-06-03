@@ -12,7 +12,7 @@ test('Creating a new project', async ({ page }, { config }) => {
   await page.getByText('Navigate Projects').nth(0).click();
   await expect(page).toHaveURL(`${baseURL}/ui/apps?apps-store-tab=navigate`);
   await page.locator('a:has-text("Add")').click();
-  await page.getByRole('link', { name: 'Project' }).nth(1).click();
+  await page.getByTestId('project-card').nth(1).click();
   await expect(page).toHaveURL(`${baseURL}/ui/apps/New%20Project?subtype=project&apps-project-tab=details`, {
     timeout: 2000,
   });

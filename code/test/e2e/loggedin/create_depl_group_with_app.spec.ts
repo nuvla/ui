@@ -25,8 +25,6 @@ import { test, expect } from '@playwright/test';
 
   await page.getByRole('cell', { name: 'Nginx' }).click();
 
-  await page.getByRole('row', { name: 'Name' }).locator('i').click();
-
   await page.getByRole('cell', { name: /Deployment Group/ }).locator('i').click();
 
    await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click({

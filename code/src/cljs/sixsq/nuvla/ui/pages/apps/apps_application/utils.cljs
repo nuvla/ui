@@ -76,12 +76,8 @@
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :requires-user-rights] requires-user-rights)
-          (update-in m [:content] dissoc :helm-repo-url
-                                         :helm-chart-name
-                                         :helm-repo-creds
-                                         :helm-chart-version
-                                         :helm-absolute-url)
-          (update-in m [:content] #(merge % helm-info-to-submit))
+          (update-in m [:content] dissoc :helm-repo-url :helm-chart-name :helm-repo-creds :helm-chart-version :helm-absolute-url)
+          (update m :content #(merge % helm-info-to-submit))
           (if helm-chart-values
             (assoc-in m [:content :helm-chart-values] helm-chart-values)
             m)

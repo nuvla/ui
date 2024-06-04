@@ -345,15 +345,13 @@
 (defn TruncateContent
   [{:keys [content length] :as _options
     :or   {content "" length 200}}]
-  (r/with-let [show-more?    (r/atom true)
-               on-click      #(swap! show-more? not)
-               get-content   #(if @show-more? (general-utils/truncate content length) content)
-               get-btn-label #(if @show-more? :show-more :show-less)]
-    [:div
-     [:p (get-content)]
+  (r/with-let [show-more? (r/atom true)
+               on-click   #(swap! show-more? not)]
+    [:<>
+     [:p (if @show-more? (general-utils/truncate content length) content)]
      (when (> (count content) length)
        [ui/Label {:as :a :on-click on-click}
-        [TR (get-btn-label)]])]))
+        [TR (if @show-more? :show-more :show-less)]])]))
 
 
 (defn LinkIcon

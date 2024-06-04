@@ -36,7 +36,8 @@
         [:dd v]])]]
    [ui/TableCell {:verticalAlign "top"}
     [:div {:style (cond-> {:white-space :pre
-                           :overflow    :auto}
+                           :overflow    :auto
+                           :min-height  "10em"}
                           (= (:state resource) "QUEUED") (assoc :display "none"))}
      [uix/TruncateContent
       {:content (some-> resource :status-message

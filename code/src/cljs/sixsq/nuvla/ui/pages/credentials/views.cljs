@@ -979,13 +979,17 @@
 
 
 (defn SingleCredential
-  [{:keys [subtype name description] :as credential}]
+  [{:keys [subtype name description id] :as credential}]
   [ui/TableRow
    [ui/TableCell {:floated :left
-                  :width   2}
-    [:span name]]
+                  :width   6}
+    name [:br]
+    [ui/Popup {:trigger (r/as-element [ui/CopyToClipboard {:text id} [:div {:class "credential-id-container"} id]])
+               :size    "mini"
+               :position "right center"
+               :content "Copy to clipboard"}]]
    [ui/TableCell {:floated :left
-                  :width   9}
+                  :width   7}
     [:span description]]
    [ui/TableCell {:floated :left
                   :width   4}
@@ -1015,7 +1019,9 @@
        [:div [ui/Table {:style {:margin-top 10}}
               [ui/TableHeader
                [ui/TableRow
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                [ui/TableHeaderCell [:span (str/capitalize (@tr [:name]))
+                                     [:span {:style {:color "rgba(0, 0, 0, 0.30)"
+                                                     :margin-left 5}}  " ID"]]]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:actions]))}]]]

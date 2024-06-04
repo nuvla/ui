@@ -169,6 +169,7 @@ For more information on how to format your app description using Markdown syntax
 (def application? (subtype? subtype-application))
 (def application-k8s? (subtype? subtype-application-k8s))
 (def applications-sets? (subtype? subtype-applications-sets))
+(def application-helm? (subtype? subtype-application-helm))
 
 (defn IconK8s
   [selected]

@@ -52,6 +52,12 @@
     (utils/applications-sets? subtype)))
 
 (reg-sub
+  ::is-application-helm?
+  :<- [::module-subtype]
+  (fn [subtype]
+    (utils/application-helm? subtype)))
+
+(reg-sub
   ::is-app?
   :<- [::is-project?]
   :-> not)

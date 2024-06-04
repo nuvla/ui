@@ -84,12 +84,11 @@
 
 (defn FilesNotSupported [compatibility]
   (let [tr             (subscribe [::i18n-subs/tr])]
-    (cond (= "docker-compose" compatibility)
-          [ui/Message {:warning true} (@tr [:apps-file-config-warning])
-           [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]]
-          (= "helm" compatibility)
-          [ui/Message {:warning true} (@tr [:apps-file-config-helm-warning])]
-          :else nil)))
+    (case compatibility
+          "docker-compose" [ui/Message {:warning true} (@tr [:apps-file-config-warning])
+                            [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]]
+          "helm"           [ui/Message {:warning true} (@tr [:apps-file-config-helm-warning])]
+          nil)))
 
 
 (defn FilesSection []
@@ -103,7 +102,6 @@
          [:<>
           [:div (@tr [:module-files])
            [uix/HelpPopup (@tr [:module-files-help])]]
-
           (if (empty? @files)
             [ui/Message
              (str/capitalize (str (@tr [:no-files]) "."))]
@@ -498,7 +496,7 @@
   (let [module         (subscribe [::apps-subs/module])
         editable?      (subscribe [::apps-subs/editable?])
         stripe         (subscribe [::main-subs/stripe])
-        module-subtype (subscribe [::apps-subs/module-subtype])]
+        helm-app?      (subscribe [::apps-subs/is-application-helm?])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
                               :icon    (r/as-element [icons/EyeIcon])}
@@ -521,7 +519,7 @@
                                 :key     :pricing}
                      :pane     {:content (r/as-element [PricingPane])
                                 :key     :pricing-pane}})
-                  (if (= apps-utils/subtype-application-helm @module-subtype)
+                  (if @helm-app?
                     {:menuItem {:content (r/as-element [TabMenuHelm])
                                 :key     :helm}
                      :pane     {:content (r/as-element [HelmPane])
@@ -548,12 +546,11 @@
 (defn ViewEdit
   []
   (let [module-common  (subscribe [::apps-subs/module-common])
-        module-subtype (subscribe [::apps-subs/module-subtype])
         active-tab     (sub-apps-tab)
         is-new?        (subscribe [::apps-subs/is-new?])
-        helm-app?      (= apps-utils/subtype-application-helm @module-subtype)]
+        helm-app?      (subscribe [::apps-subs/is-application-helm?])]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
-    (dispatch [::events/update-compatibility (if helm-app? "helm" "docker-compose")])
+    (dispatch [::events/update-compatibility (if @helm-app? "helm" "docker-compose")])
     (when-not helm-app? (dispatch [::apps-events/set-form-spec ::spec/module-application]))
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))

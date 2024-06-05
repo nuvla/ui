@@ -718,16 +718,6 @@
                    :edit-event ::events/edit})]))
 
 
-(defn StatusIcon
-  [status & {:keys [corner] :or {corner "bottom center"} :as _position}]
-  [ui/Popup
-   {:position corner
-    :content  status
-    :trigger  (r/as-element
-                [ui/Icon {:class icons/i-power
-                          :color (values/status->color status)}])}])
-
-
 (defn PageHeader
   []
   (let [deployment (subscribe [::subs/deployment])]

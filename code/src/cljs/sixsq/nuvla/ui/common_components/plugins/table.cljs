@@ -323,7 +323,7 @@
 
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub disabled-tooltip
-           db-path bulk-actions resources-sub-key selectable? resource-type]}]
+           db-path bulk-actions resources-sub-key resource-type]}]
   (when resources-sub-key
     (let [tr                        (subscribe [::i18n-subs/tr])
           rows                      @(subscribe resources-sub-key)

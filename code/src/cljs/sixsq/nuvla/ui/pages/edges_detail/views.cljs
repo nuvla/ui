@@ -683,7 +683,7 @@
       ^{:key (str "disable-host-level-management" @show?)}
       [TextActionButton resource operation show? "Disable host level management (disables playbooks)" icons/i-gear (@tr [:disable])])))
 (defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
-  [resource _operation]
+  [_resource _operation]
   (fn [resource _operation]
     ^{:key "update-nuvlabox"}
     [UpdateButton resource]))

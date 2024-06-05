@@ -134,6 +134,7 @@
 (defn MenuBar [uuid]
   (let [can-delete?    (subscribe [::subs/can-delete?])
         can-start?     (subscribe [::subs/can-start?])
+        can-stop?      (subscribe [::subs/can-stop?])
         infra-service  (subscribe [::subs/infrastructure-service])]
     [main-components/StickyBar
      [ui/Menu {:borderless true}
@@ -142,7 +143,8 @@
 
       [TerminateButton infra-service]
 
-      [StopButton infra-service]
+      (when @can-stop?
+        [StopButton infra-service])
 
       (when @can-start?
         [StartButton infra-service])

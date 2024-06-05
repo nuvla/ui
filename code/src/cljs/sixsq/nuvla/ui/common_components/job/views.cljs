@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.common-components.job.views
   (:require [clojure.string :as str]
-            [re-frame.core :refer [subscribe]]
+            [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.job.events :as events]
@@ -44,6 +44,7 @@
 
 (defn JobsTable
   [_jobs]
+  (dispatch [::pagination-plugin/change-page [::spec/pagination] 1])
   (fn [{:keys [resources] :as jobs-data}]
     (let [{jobs-count :count} jobs-data]
       (if (empty? resources)

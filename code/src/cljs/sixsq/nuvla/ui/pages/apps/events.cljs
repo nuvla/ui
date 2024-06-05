@@ -110,6 +110,7 @@
                      utils/subtype-component (apps-component-utils/module->db db module)
                      utils/subtype-project (apps-project-utils/module->db db module)
                      utils/subtype-application (apps-application-utils/module->db db module)
+                     utils/subtype-application-helm (apps-application-utils/module->db db module)
                      utils/subtype-application-k8s (apps-application-utils/module->db db module)
                      utils/subtype-applications-sets (apps-applications-sets-utils/module->db db module)
                      db)}
@@ -141,6 +142,7 @@
           (assoc ::spec/module-immutable {})
           (assoc ::spec/module-common {})
           (assoc ::main-spec/loading? false)
+          (assoc ::spec/helm-info {:repo-or-url? :repo})
           (assoc-in [::spec/module-common ::spec/name] new-name)
           (assoc-in [::spec/module-common ::spec/description] (or (utils/subtype->descr-template new-subtype)
                                                                   ""))
@@ -496,6 +498,11 @@
   (fn [db [_ {resources :resources}]]
     (assoc db ::spec/registries-infra resources)))
 
+(reg-event-db
+  ::set-helm-infra
+  (fn [db [_ {resources :resources}]]
+    (assoc db ::spec/helm-infra resources)))
+
 
 (reg-event-fx
   ::get-registries-infra
@@ -506,6 +513,51 @@
        :select  "id, name"
        :orderby "name:asc, id:asc"
        :last    10000} #(dispatch [::set-registries-infra %])]}))
+
+(reg-event-fx
+  ::get-helm-infra
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:infrastructure-service
+      {:filter  "subtype='helm-repo'"
+       :select  "id, name, endpoint"
+       :orderby "name:asc, id:asc"
+       :last    10000} #(dispatch [::set-helm-infra %])]}))
+
+(reg-event-db
+  ::set-helm-credentials
+  (fn [db [_ {resources :resources}]]
+    (assoc db ::spec/helm-credentials resources)))
+
+(reg-event-db
+  ::update-helm-chart-values
+  (fn [db [_ yaml-text]]
+    (assoc-in db [::spec/helm-info :helm-chart-values] yaml-text)))
+
+(reg-event-db
+  ::set-helm-key
+  (fn [db [_ key val]]
+    (assoc-in db [::spec/helm-info key] val)))
+
+(reg-event-db
+  ::clear-helm-key
+  (fn [db [_ keyword]]
+    (update-in db [::spec/helm-info] dissoc keyword)))
+
+(reg-event-db
+  ::set-helm-option
+  (fn [db [_ repo-or-url]]
+    (assoc-in db [::spec/helm-info :repo-or-url?] repo-or-url)))
+
+(reg-event-fx
+  ::get-helm-credentials
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:credential
+      {:filter  "subtype='infrastructure-service-helm-repo'"
+       :select  "id, name, parent"
+       :orderby "name:asc, id:asc"
+       :last    10000} #(dispatch [::set-helm-credentials %])]}))
 
 
 (reg-event-db

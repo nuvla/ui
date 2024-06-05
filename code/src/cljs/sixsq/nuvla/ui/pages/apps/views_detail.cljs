@@ -29,6 +29,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
+            [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as utils-values]))
@@ -329,7 +330,8 @@
 
            [ui/Card
             {:href     (pathify [base-path "New Project?subtype=project"])
-             :on-click #(dispatch [::events/close-add-modal])}
+             :on-click #(dispatch [::events/close-add-modal])
+             :data-testid "project-card"}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [icons/FolderIconFull {:size :massive}]]]
@@ -356,6 +358,17 @@
              [ui/IconGroup {:size :massive}
               [icons/CubesIcon {:color (when-not parent :grey)}]
               [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
+                         :floated "right"
+                         :style   {:width "50px"}}]]]]
+           [ui/Card
+            {:href     (when parent (pathify [base-path "New Application?subtype=application_helm"]))
+             :on-click (when parent
+                         #(dispatch [::events/close-add-modal]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header (@tr [:application-helm])]
+             [ui/IconGroup {:size :massive}
+              [icons/CubesIcon {:color (when-not parent :grey)}]
+              [ui/Image {:src     (if parent "/ui/images/helm.svg" "/ui/images/helm-grey.svg")
                          :floated "right"
                          :style   {:width "50px"}}]]]]
            [ui/Card
@@ -526,7 +539,8 @@
         (condp = @module-subtype
           utils/subtype-application "Docker"
           utils/subtype-application-k8s "Kubernetes"
-          utils/subtype-applications-sets "Application bouquets")]])))
+          utils/subtype-applications-sets "Application bouquets"
+          utils/subtype-application-helm "Helm application")]])))
 
 
 (defn Details
@@ -1020,6 +1034,201 @@
          :count no-of-registries
          :default-open (pos? no-of-registries)]))))
 
+(defn HelmRepoChartSection []
+  (let [tr                      (subscribe [::i18n-subs/tr])
+        infrastructure-services (subscribe [::subs/helm-infra])
+        credentials             (subscribe [::subs/helm-credentials])
+        helm-info               (subscribe [::subs/helm-info])
+        editable?               (subscribe [::subs/editable?])]
+    (dispatch [::events/get-helm-infra])
+    (dispatch [::events/get-helm-credentials])
+    (fn []
+      (let [{:keys [helm-absolute-url
+                    helm-chart-name
+                    helm-repo-creds
+                    helm-repo-url
+                    helm-chart-version
+                    repo-or-url?]} @helm-info
+            repo-option-selected?  (= :repo repo-or-url?)
+            infra-options          (mapv (fn [{:keys [id name endpoint]}]
+                                           {:key      id
+                                            :value    id
+                                            :endpoint endpoint
+                                            :text     name})
+                                         @infrastructure-services)
+            stored-custom-url?     (and helm-repo-url
+                                        (empty? (filterv #(= helm-repo-url (:endpoint %)) infra-options)))
+            all-infra-options      (cond-> infra-options
+                                           stored-custom-url?  (conj {:key      helm-repo-url
+                                                                      :value    helm-repo-url
+                                                                      :text     helm-repo-url
+                                                                      :endpoint helm-repo-url}))
+            selected-helm-repo-id  (->> all-infra-options
+                                        (filterv #(= helm-repo-url (:endpoint %)))
+                                        (first)
+                                        :value)
+
+            credential-options     (->> selected-helm-repo-id
+                                        (get @credentials)
+                                        (mapv (fn [{:keys [id name]}]
+                                                {:key id
+                                                 :value id
+                                                 :text name})))
+            update-helm-value   (fn [key value]
+                                  (do (dispatch [::main-events/changes-protection? true])
+                                      (if (str/blank? value)
+                                        (dispatch [::events/clear-helm-key key])
+                                        (dispatch [::events/set-helm-key key value]))))]
+        [uix/Accordion
+         [:<>
+          [ui/Message {:info true}
+           [:span (@tr [:helm-options-message])]]
+          [ui/Form
+           [:div {:style {:opacity (if-not repo-option-selected?
+                                     "50%"
+                                     "100%")}}
+            [ui/Header {:as    "h4" :attached "top"
+                        :style {:background-color "#00000008"}}
+             [ui/FormField {:style {:display "flex"
+                                    :align-items "center"
+                                    :justify-content "space-between"}}
+              [ui/Radio {:label     (@tr [:helm-repository])
+                         :value     :repo
+                         :name      "radioGroup"
+                         :checked   repo-option-selected?
+                         :on-change #(dispatch [::events/set-helm-option :repo])}]
+              [ui/Icon {:class (if repo-option-selected? icons/i-angle-down icons/i-angle-up)}]]
+             [ui/HeaderSubheader [:span (@tr [:provide-helm-repo-and-chart-name])]]]
+
+            [ui/Segment {:compact  true
+                         :attached true
+                         :style    {:display        "block"
+                                    :transition     "all 0.5s ease 0s"
+                                    :overflow       "hidden"
+                                    :margin-bottom  (if repo-option-selected? 14 0)
+                                    :padding-top    (if repo-option-selected? 14 0)
+                                    :padding-bottom (if repo-option-selected? 14 0)
+                                    :height         (if repo-option-selected? "auto" 0)}}
+
+
+             [ui/Table (merge style/definition {:compact "very"
+                                                :style   {:width 600}})
+              [ui/TableBody
+               [ui/TableRow
+                [ui/TableCell {:style            {:width 20}
+                               :collapsing true} (@tr [:helm-repository])]
+                [ui/TableCell {:style         {:width 300}}
+                 [ui/Dropdown {:fluid          true
+                               :clearable      true
+                               :allowAdditions true
+                               :value          selected-helm-repo-id
+                               :additionLabel  (@tr [:add-custom-url])
+                               :placeholder    (@tr [:choose-helm-repo-or-custom-url])
+                               :search         true
+                               :options        all-infra-options
+                               :disabled       (not repo-option-selected?)
+                               :selection      true
+                               :on-change      (ui-callback/value (fn [value]
+                                                                    (do
+                                                                      (dispatch [::main-events/changes-protection? true])
+                                                                      (if (str/blank? value)
+                                                                        (dispatch [::events/clear-helm-key :helm-repo-url])
+                                                                        (let [endpoint (->> @infrastructure-services
+                                                                                            (filter #(= value (:id %)))
+                                                                                            (first)
+                                                                                            (:endpoint))]
+                                                                          (dispatch [::events/set-helm-key :helm-repo-url endpoint]))))))
+                               :on-add-item    (ui-callback/value #(do
+                                                                     (update-helm-value :helm-repo-url %)
+                                                                     (dispatch [::events/clear-helm-key :helm-repo-creds])))
+                               :style          {:max-width 400}}]]]
+               [ui/TableRow
+                [ui/TableCell {:style {:width 20}} (@tr [:credentials])]
+                [ui/TableCell {:style {:width 200}}
+                 [ui/Dropdown {:fluid       true
+                               :value       helm-repo-creds
+                               :disabled    (or (not repo-option-selected?)
+                                                (str/blank? helm-repo-url))
+                               :on-change   (ui-callback/value
+                                              #(update-helm-value :helm-repo-creds %))
+                               :clearable   true
+                               :placeholder (@tr [:choose-credentials-helm-repo])
+                               :options     credential-options
+                               :selection   true
+                               :style       {:max-width 400}}]]]
+               [ui/TableRow
+                [ui/TableCell (@tr [:chart-name])]
+                [ui/TableCell [ui/Input {:disabled  (not repo-option-selected?)
+                                         :value     (or helm-chart-name "")
+                                         :read-only (when-not @editable?)
+                                         :on-change (ui-callback/value
+                                                      #(update-helm-value :helm-chart-name %))}]]]
+               [ui/TableRow
+                [ui/TableCell (str/capitalize (@tr [:version]))]
+                [ui/TableCell [ui/Input {:disabled  (not repo-option-selected?)
+                                         :value     (or helm-chart-version "")
+                                         :read-only (when-not @editable?)
+                                         :on-change (ui-callback/value
+                                                      #(update-helm-value :helm-chart-version %))}]]]]]]]
+           [:div {:style {:opacity (if (= :repo repo-or-url?)
+                                     "50%"
+                                     "100%")}}
+            [ui/Header {:as    "h4" :attached "top"
+                        :style {:background-color "#00000008"}}
+             [ui/FormField {:style {:display         "flex"
+                                    :align-items     "center"
+                                    :justify-content "space-between"}}
+              [ui/Radio {:label     (@tr[:chart-absolute-url])
+                         :value     :url
+                         :name      "radioGroup"
+                         :checked   (not repo-option-selected?)
+                         :on-change #(dispatch [::events/set-helm-option :url])}]
+              [ui/Icon {:class (if-not repo-option-selected? icons/i-angle-down icons/i-angle-up)}]]
+             [ui/HeaderSubheader (@tr [:provide-absolute-url])]]
+            [ui/Segment {:compact  true
+                         :attached true
+                         :style    {:display        "block"
+                                    :transition     "all 0.5s ease 0s"
+                                    :overflow       "hidden"
+                                    :margin-bottom  (if-not repo-option-selected? 14 0)
+                                    :padding-top    (if-not repo-option-selected? 14 0)
+                                    :padding-bottom (if-not repo-option-selected? 14 0)
+                                    :height         (if-not repo-option-selected? "auto" 0)}}
+             [ui/Table (merge style/definition {:compact "very"
+                                                :style   {:width 600}})
+              [ui/TableBody
+               [ui/TableRow
+                [ui/TableCell "URL"]
+                [ui/TableCell
+                 [ui/Input {:disabled  (= :repo repo-or-url?)
+                            :value     (or helm-absolute-url "")
+                            :read-only (when-not @editable?)
+                            :style {:width "100%"}
+                            :on-change (ui-callback/value
+                                         #(update-helm-value :helm-absolute-url %))}]]]]]]]]]
+
+         :label (@tr[:helm-repo-and-chart])
+
+         :default-open true]))))
+
+(defn HelmChartValuesSection []
+  (let [tr        (subscribe [::i18n-subs/tr])
+        helm-info (subscribe [::subs/helm-info])
+        editable? (subscribe [::subs/editable?])]
+    (fn []
+      (let [chart-values (:helm-chart-values @helm-info)]
+        [uix/Accordion
+         [:<>
+          [:div {:style {:margin-bottom "10px"}} (@tr [:env-substitution])
+           [uix/HelpPopup (@tr [:module-docker-compose-help])]]
+          [uix/EditorYaml {:value     chart-values
+                           :placeholder "Place your values.yaml here"
+                           :on-change (fn [value]
+                                        (dispatch [::events/set-helm-key :helm-chart-values value])
+                                        (dispatch [::main-events/changes-protection? true]))
+                           :read-only (not @editable?)}]]
+         :label "Values.yaml"]))))
+
 
 (defn Pricing
   []
@@ -1216,7 +1425,7 @@
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
                        :only      "mobile"}
-        [ui/Image {:src   (or logo-url "")
+          [ui/Image {:src   (or logo-url "")
                    :style {:max-width "100%"}}]]
        [ui/GridColumn {:class ["markdown"]}
         [ui/Image {:floated "right"

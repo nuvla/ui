@@ -42,6 +42,7 @@
           utils/subtype-component [apps-component-views/view-edit]
           utils/subtype-application [apps-application-views/ViewEdit]
           utils/subtype-application-k8s [apps-application-views/ViewEdit]
+          utils/subtype-application-helm [apps-application-views/ViewEdit]
           utils/subtype-applications-sets [apps-applications-sets-views/ViewEdit]
           ^{:key subtype}
           [apps-project-views/ViewEdit])))))

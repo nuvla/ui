@@ -2149,10 +2149,9 @@
 
 
 (defn EdgeDetails
-  [uuid]
+  []
   (let [nb-status (subscribe [::subs/nuvlabox-status])
         releases  (subscribe [::edges-subs/nuvlabox-releases])]
-    (refresh-nuvlaedge-data uuid)
     (fn [uuid]
       (when (empty? @releases)
         (dispatch [::edges-events/get-nuvlabox-releases]))

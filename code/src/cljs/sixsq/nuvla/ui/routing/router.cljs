@@ -9,6 +9,7 @@
                                              LayoutPage]]
             [sixsq.nuvla.ui.common-components.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.config :refer [base-path]]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.about.views :refer [About]]
             [sixsq.nuvla.ui.pages.apps.views :as app-views]
             [sixsq.nuvla.ui.pages.cimi.views :refer [ApiView]]
@@ -21,8 +22,10 @@
             [sixsq.nuvla.ui.pages.deployments.routes
              :refer [deployment-sets-details-view deployment-sets-view deployments-view]]
             [sixsq.nuvla.ui.pages.docs.views :refer [documentation]]
+            [sixsq.nuvla.ui.pages.edges.events :as edges-events]
             [sixsq.nuvla.ui.pages.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
+            [sixsq.nuvla.ui.pages.edges-detail.events :as edges-detail-events]
             [sixsq.nuvla.ui.pages.profile.views :refer [profile]]
             [sixsq.nuvla.ui.pages.ui-demo.views :refer [UiDemo]]
             [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]
@@ -48,13 +51,24 @@
              :layout     #'LayoutPage
              :view       #'edges-view
              :protected? true
-             :dict-key   :edges}
+             :dict-key   :edges
+             :controllers [{:start (fn [_]
+                                     (js/console.log "loading edges")
+                                     (dispatch [::edges-events/init])
+                                     (dispatch [::edges-events/set-nuvlabox-cluster nil]))}]}
             [""]
             ["/" (create-route-name page-alias "-slashed")]]
            [(str page-alias "/:uuid")
             {:name   (create-route-name page-alias "-details")
              :layout #'LayoutPage
-             :view   #'DetailedViewPage}]
+             :view   #'DetailedViewPage
+             :controllers [{:parameters {:path [:uuid]}
+                            :start (fn [{:keys [path]}]
+                                     (when-not (= "nuvlabox-cluster" (:uuid path))
+                                       (dispatch [::main-events/action-interval-start
+                                                  {:id        :nuvlabox-get-nuvlabox
+                                                   :frequency 10000
+                                                   :event     [::edges-detail-events/get-nuvlabox (str "nuvlabox/" (:uuid path))]}])))}]}]
            [(str page-alias "/nuvlabox-cluster/:uuid")
             {:name   (create-route-name page-alias "-cluster-details")
              :layout #'LayoutPage

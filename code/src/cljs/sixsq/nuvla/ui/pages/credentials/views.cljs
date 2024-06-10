@@ -983,10 +983,13 @@
   [ui/TableRow
    [ui/TableCell {:floated :left
                   :width   6}
-    name [:br]
-    [uix/CopyToClipboard {:content   [:div {:class "credential-id-container"} id]
-                          :value     id
-                          :on-hover? true}]]
+    [:div
+     name
+     [:div
+      [uix/CopyToClipboard
+       {:content   [:span {:style {:color "rgba(0, 0, 0, 0.30)"}} id]
+        :value     id
+        :on-hover? true}]]]]
    [ui/TableCell {:floated :left
                   :width   7}
     [:span description]]

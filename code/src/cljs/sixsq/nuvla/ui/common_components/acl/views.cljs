@@ -8,7 +8,6 @@
             [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -97,9 +96,9 @@
      [ui/ListContent
       [ui/ListHeader
        [PrincipalIcon principal]
-       ff/nbsp
+       general-utils/nbsp
        @principal-name
-       ff/nbsp
+       general-utils/nbsp
        (when removable?
          [icons/CloseIcon {:link     true
                            :size     "small"
@@ -139,7 +138,7 @@
 
      [ui/TableCell {:text-align "left"}
       [PrincipalIcon principal]
-      ff/nbsp
+      general-utils/nbsp
       (if @principal-name
         [ui/Popup {:content  principal
                    :position "right center"

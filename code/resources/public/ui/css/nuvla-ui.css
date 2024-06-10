@@ -1193,14 +1193,3 @@ i.link.icon.app-details-add-config-param-icon:hover {
   justify-content: space-between;
   color: black;
 }
-
-.credential-id-container {
-  font-size: small;
-  color: rgba(0, 0, 0, 0.30);
-  cursor: pointer;
-  width: fit-content;
-}
-
-.credential-id-container:hover {
-  color: rgba(0, 0, 0, 0.60);
-}

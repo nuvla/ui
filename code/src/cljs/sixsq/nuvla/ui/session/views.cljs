@@ -10,7 +10,6 @@
             [sixsq.nuvla.ui.session.events :as events]
             [sixsq.nuvla.ui.session.subs :as subs]
             [sixsq.nuvla.ui.session.utils :as utils]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -96,7 +95,7 @@
                      ^{:key value}
                      [ui/DropdownItem {:on-click #(on-click value)
                                        :selected (= i @cursor)}
-                      [:span (str/join (repeat (* level 5) ff/nbsp))]
+                      [:span (str/join (repeat (* level 5) general-utils/nbsp))]
                       [ui/Icon {:class icon}]
                       (if (= @active-claim value)
                         [:b {:style {:color "#c10e12"}} text]

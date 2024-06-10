@@ -137,15 +137,14 @@
 (defn CopyToClipboard
   [{:keys [content value popup-text on-hover?] :as _opts}]
   [ui/CopyToClipboard {:text value}
-   [:div
+   [:span
     [ui/Popup
      {:content (r/as-element [:p [TR (or popup-text :copy-to-clipboard)]])
       :trigger (r/as-element
-                 [:span (cond-> {:style {:cursor  :pointer
-                                         :display :inline-flex}}
+                 [:span (cond-> {:style {:cursor :pointer}}
                                 on-hover? (assoc :class ["show-on-hover-value"]))
                   (or content value)
-                  " "
+                  general-utils/nbsp
                   [ui/Icon
                    {:class [(when on-hover? "hide")]
                     :name  "clone outline"

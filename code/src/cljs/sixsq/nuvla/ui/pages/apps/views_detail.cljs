@@ -1039,7 +1039,9 @@
         infrastructure-services (subscribe [::subs/helm-infra])
         credentials             (subscribe [::subs/helm-credentials])
         helm-info               (subscribe [::subs/helm-info])
-        editable?               (subscribe [::subs/editable?])]
+        editable?               (subscribe [::subs/editable?])
+        selected-helm-repo      (r/atom nil)
+        custom-url              (r/atom nil)]
     (dispatch [::events/get-helm-infra])
     (dispatch [::events/get-helm-credentials])
     (fn []
@@ -1056,19 +1058,12 @@
                                            :endpoint endpoint
                                            :text     name})
                                         @infrastructure-services)
-            stored-custom-url?    (and helm-repo-url
-                                       (empty? (filterv #(= helm-repo-url (:endpoint %)) infra-options)))
             all-infra-options     (cond-> infra-options
-                                          stored-custom-url? (conj {:key      helm-repo-url
-                                                                    :value    helm-repo-url
-                                                                    :text     helm-repo-url
-                                                                    :endpoint helm-repo-url}))
-            selected-helm-repo-id (->> all-infra-options
-                                       (filterv #(= helm-repo-url (:endpoint %)))
-                                       (first)
-                                       :value)
-
-            credential-options    (->> selected-helm-repo-id
+                                          @custom-url (conj {:key      @custom-url
+                                                             :value    @custom-url
+                                                             :text     @custom-url
+                                                             :endpoint @custom-url}))
+            credential-options    (->> @selected-helm-repo
                                        (get @credentials)
                                        (mapv (fn [{:keys [id name]}]
                                                {:key   id
@@ -1116,13 +1111,16 @@
                                                 :style   {:width 600}})
               [ui/TableBody
                [ui/TableRow
-                [ui/TableCell {:style      {:width 20}
+                [ui/TableCell {:style      {:max-width 300}
                                :collapsing true} (@tr [:helm-repository])]
-                [ui/TableCell {:style {:width 300}}
+                [ui/TableCell {:style {:width 400}}
+                 [:div {:style {:font-size "small"
+                                :margin-bottom 10
+                                :margin-top 10}} [:b "Current URL"] [:br] [:p helm-repo-url]]
                  [ui/Dropdown {:fluid          true
                                :clearable      true
                                :allowAdditions true
-                               :value          selected-helm-repo-id
+                               :value          @selected-helm-repo
                                :additionLabel  (@tr [:add-custom-url])
                                :placeholder    (@tr [:choose-helm-repo-or-custom-url])
                                :search         true
@@ -1131,6 +1129,8 @@
                                :selection      true
                                :on-change      (ui-callback/value
                                                  (fn [value]
+                                                   (reset! custom-url nil)
+                                                   (reset! selected-helm-repo value)
                                                    (dispatch [::main-events/changes-protection? true])
                                                    (if (str/blank? value)
                                                      (dispatch [::events/clear-helm-key :helm-repo-url])
@@ -1141,6 +1141,7 @@
                                                        (dispatch [::events/set-helm-key :helm-repo-url endpoint])))))
                                :on-add-item    (ui-callback/value
                                                  #(do
+                                                    (reset! custom-url %)
                                                     (update-helm-value :helm-repo-url %)
                                                     (dispatch [::events/clear-helm-key :helm-repo-creds])))
                                :style          {:max-width 400}}]]]
@@ -1161,14 +1162,14 @@
                [ui/TableRow
                 [ui/TableCell (@tr [:chart-name])]
                 [ui/TableCell [ui/Input {:disabled  (not repo-option-selected?)
-                                         :value     (or helm-chart-name "")
+                                         :default-value     (or helm-chart-name "")
                                          :read-only read-only?
                                          :on-change (ui-callback/value
                                                       #(update-helm-value :helm-chart-name %))}]]]
                [ui/TableRow
                 [ui/TableCell (str/capitalize (@tr [:version]))]
                 [ui/TableCell [ui/Input {:disabled  (not repo-option-selected?)
-                                         :value     (or helm-chart-version "")
+                                         :default-value     (or helm-chart-version "")
                                          :read-only read-only?
                                          :on-change (ui-callback/value
                                                       #(update-helm-value :helm-chart-version %))}]]]]]]]
@@ -1203,7 +1204,7 @@
                 [ui/TableCell "URL"]
                 [ui/TableCell
                  [ui/Input {:disabled  (= :repo repo-or-url?)
-                            :value     (or helm-absolute-url "")
+                            :default-value     (or helm-absolute-url "")
                             :read-only read-only?
                             :style     {:width "100%"}
                             :on-change (ui-callback/value

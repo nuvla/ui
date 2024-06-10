@@ -9,7 +9,7 @@
 
 (def app-set-app-subtypes
   {spec/app-set-docker-subtype #{apps-utils/subtype-component apps-utils/subtype-application}
-   spec/app-set-k8s-subtype    #{apps-utils/subtype-application-k8s}})
+   spec/app-set-k8s-subtype    #{apps-utils/subtype-application-k8s apps-utils/subtype-application-helm}})
 
 ;; Deserialization functions: module->db
 

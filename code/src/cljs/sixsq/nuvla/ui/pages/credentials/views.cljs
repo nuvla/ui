@@ -984,10 +984,9 @@
    [ui/TableCell {:floated :left
                   :width   6}
     name [:br]
-    [ui/Popup {:trigger (r/as-element [ui/CopyToClipboard {:text id} [:div {:class "credential-id-container"} id]])
-               :size    "mini"
-               :position "right center"
-               :content "Copy to clipboard"}]]
+    [uix/CopyToClipboard {:content   [:div {:class "credential-id-container"} id]
+                          :value     id
+                          :on-hover? true}]]
    [ui/TableCell {:floated :left
                   :width   7}
     [:span description]]
@@ -1020,8 +1019,8 @@
               [ui/TableHeader
                [ui/TableRow
                 [ui/TableHeaderCell [:span (str/capitalize (@tr [:name]))
-                                     [:span {:style {:color "rgba(0, 0, 0, 0.30)"
-                                                     :margin-left 5}}  " ID"]]]
+                                     [:span {:style {:color       "rgba(0, 0, 0, 0.30)"
+                                                     :margin-left 5}} " ID"]]]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:actions]))}]]]

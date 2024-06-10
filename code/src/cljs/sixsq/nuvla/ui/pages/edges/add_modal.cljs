@@ -18,7 +18,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.zip :as zip]))
 
 (def usb-doc-url "https://docs.nuvla.io/nuvlaedge/installation/install-with-usb-stick/")
@@ -129,8 +128,9 @@
                 (if @playbooks-cronjob
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
                               " ")
-                   (values/copy-value-to-clipboard
-                     "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
+                   [uix/CopyToClipboard
+                    {:content ""
+                     :value (@playbooks-cronjob :cronjob)}]]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
 
             (when @new-private-ssh-key
@@ -165,7 +165,10 @@
                            :color    "green"} "1"]
                 [:h5 {:style {:margin "0.5em 0 1em 0"}}
                  (str/capitalize (@tr [:clone-helm-repo]))
-                 (values/copy-value-to-clipboard "" clone-command (@tr [:copy-command-to-clipboard]))]
+                 [uix/CopyToClipboard
+                  {:content ""
+                   :value clone-command
+                   :popup-text :copy-command-to-clipboard}]]
                 [:div {:style {:font "1em Inconsolata, monospace"}} clone-command]]
 
                [ui/Segment {:text-align :center}
@@ -173,7 +176,10 @@
                            :color    "green"} "2"]
                 [:h5 {:style {:margin "0.5em 0 1em 0"}}
                  (@tr [:install])
-                 (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
+                 [uix/CopyToClipboard
+                  {:content ""
+                   :value execute-command
+                   :popup-text :copy-command-to-clipboard}]]
                 [:div {:style {:font       "1em Inconsolata, monospace"
                                :margin-top "1rem"}} execute-command
                  [uix/HelpPopup (@tr [:target-node-name-hint])]]]]
@@ -194,7 +200,10 @@
                            :color    "green"} "2"]
                 [:h5 {:style {:margin "0.5em 0 1em 0"}}
                  (@tr [:nuvlabox-unzip-execute])
-                 (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
+                 [uix/CopyToClipboard
+                  {:content ""
+                   :value execute-command
+                   :popup-text :copy-command-to-clipboard}]]
                 [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]])]
 
            [:div {:style {:margin "20px 0px 0px 0px"}}

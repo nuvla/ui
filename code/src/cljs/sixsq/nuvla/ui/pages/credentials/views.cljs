@@ -977,6 +977,7 @@
       :danger-msg  (@tr [:credential-delete-warning])
       :button-text (@tr [:delete])}]))
 
+(def color-silver "silver")
 
 (defn SingleCredential
   [{:keys [subtype name description id] :as credential}]
@@ -987,11 +988,11 @@
      name
      [:div
       [uix/CopyToClipboard
-       {:content   [:span {:style {:color "rgba(0, 0, 0, 0.30)"}} id]
+       {:content   [:span {:style {:color color-silver}} id]
         :value     id
         :on-hover? true}]]]]
    [ui/TableCell {:floated :left
-                  :width   7}
+                  :width   5}
     [:span description]]
    [ui/TableCell {:floated :left
                   :width   4}
@@ -1022,7 +1023,7 @@
               [ui/TableHeader
                [ui/TableRow
                 [ui/TableHeaderCell [:span (str/capitalize (@tr [:name]))
-                                     [:span {:style {:color       "rgba(0, 0, 0, 0.30)"
+                                     [:span {:style {:color       color-silver
                                                      :margin-left 5}} " ID"]]]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]

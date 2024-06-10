@@ -33,7 +33,8 @@
                                [apps-utils/subtype-component
                                 apps-utils/subtype-application
                                 apps-utils/subtype-application-k8s
-                                apps-utils/subtype-applications-sets]))
+                                apps-utils/subtype-applications-sets
+                                apps-utils/subtype-application-helm]))
 
 (reg-event-fx
   ::get-modules

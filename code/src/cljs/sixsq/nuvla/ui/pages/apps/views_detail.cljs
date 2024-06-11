@@ -1113,10 +1113,10 @@
                [ui/TableRow
                 [ui/TableCell {:style      {:max-width 300}
                                :collapsing true} "Repository URL"]
-                [ui/TableCell {:style {:width 400}}
+                [ui/TableCell {:style {:width 600}}
                  [:div {:style {:font-size "small"
                                 :margin-bottom 10
-                                :margin-top 10}} [:b "Current URL"] [:br] [:p helm-repo-url]]
+                                :margin-top 10}} [:b "Current URL"] [:br] [:p (or helm-repo-url " - ")]]
                  [ui/Dropdown {:fluid          true
                                :clearable      true
                                :allowAdditions true

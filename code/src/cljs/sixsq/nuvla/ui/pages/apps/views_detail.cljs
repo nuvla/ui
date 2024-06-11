@@ -1100,7 +1100,7 @@
                          :attached true
                          :style    {:display        "block"
                                     :transition     "all 0.5s ease 0s"
-                                    :overflow       "hidden"
+                                    :overflow       (if repo-option-selected? "visible" "hidden")
                                     :margin-bottom  (if repo-option-selected? 14 0)
                                     :padding-top    (if repo-option-selected? 14 0)
                                     :padding-bottom (if repo-option-selected? 14 0)

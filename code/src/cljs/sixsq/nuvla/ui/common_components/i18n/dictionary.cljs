@@ -829,7 +829,7 @@
         :profile-page                                  "Profile page"
         :progress                                      "progress"
         :project                                       "project"
-        :provide-absolute-url                          "Provide the absolute URL"
+        :provide-absolute-url                          "Provide the absolute URL (authentication is not supported)"
         :provide-custom-one                            "Or provide a custom one"
         :provide-helm-repo-and-chart-name              "Provide at least a Helm Repository or custom URL, and a Chart name"
         :public-key                                    "public key"

@@ -1112,7 +1112,7 @@
               [ui/TableBody
                [ui/TableRow
                 [ui/TableCell {:style      {:max-width 300}
-                               :collapsing true} (@tr [:helm-repository])]
+                               :collapsing true} "Repository URL"]
                 [ui/TableCell {:style {:width 400}}
                  [:div {:style {:font-size "small"
                                 :margin-bottom 10

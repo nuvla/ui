@@ -1124,6 +1124,7 @@
                                :additionLabel  (@tr [:add-custom-url])
                                :placeholder    (@tr [:choose-helm-repo-or-custom-url])
                                :search         true
+                               :scrollable     true
                                :options        all-infra-options
                                :disabled       (not repo-option-selected?)
                                :selection      true

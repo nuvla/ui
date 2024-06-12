@@ -983,16 +983,14 @@
   [{:keys [subtype name description id] :as credential}]
   [ui/TableRow
    [ui/TableCell {:floated :left
-                  :width   6}
-    [:div
-     name
-     [:div
-      [uix/CopyToClipboard
-       {:content   [:span {:style {:color color-silver}} id]
-        :value     id
-        :on-hover? true}]]]]
+                  :width   4}
+    [uix/CopyToClipboard
+     {:content    [:span name]
+      :value      id
+      :popup-text "Copy credential ID"
+      :on-hover?  true}]]
    [ui/TableCell {:floated :left
-                  :width   5}
+                  :width   7}
     [:span description]]
    [ui/TableCell {:floated :left
                   :width   4}
@@ -1022,9 +1020,7 @@
        [:div [ui/Table {:style {:margin-top 10}}
               [ui/TableHeader
                [ui/TableRow
-                [ui/TableHeaderCell [:span (str/capitalize (@tr [:name]))
-                                     [:span {:style {:color       color-silver
-                                                     :margin-left 5}} " ID"]]]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:actions]))}]]]

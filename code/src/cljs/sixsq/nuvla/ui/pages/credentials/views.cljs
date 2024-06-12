@@ -977,15 +977,20 @@
       :danger-msg  (@tr [:credential-delete-warning])
       :button-text (@tr [:delete])}]))
 
+(def color-silver "silver")
 
 (defn SingleCredential
-  [{:keys [subtype name description] :as credential}]
+  [{:keys [subtype name description id] :as credential}]
   [ui/TableRow
    [ui/TableCell {:floated :left
-                  :width   2}
-    [:span name]]
+                  :width   4}
+    [uix/CopyToClipboard
+     {:content    [:span name]
+      :value      id
+      :popup-text "Copy credential ID"
+      :on-hover?  true}]]
    [ui/TableCell {:floated :left
-                  :width   9}
+                  :width   7}
     [:span description]]
    [ui/TableCell {:floated :left
                   :width   4}

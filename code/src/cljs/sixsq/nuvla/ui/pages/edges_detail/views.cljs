@@ -1160,92 +1160,92 @@
                  operating-system architecture last-boot docker-plugins]
           :as   _nb-status}
          ssh-creds]
-      (let [copy-to-clipboard (@tr [:copy-to-clipboard])]
-        [ui/Table {:basic "very"}
-         [ui/TableBody
-          (when hostname
-            [ui/TableRow
-             [ui/TableCell (str/capitalize (@tr [:hostname]))]
-             [ui/TableCell hostname]])
-          (when operating-system
-            [ui/TableRow
-             [ui/TableCell (str/capitalize (@tr [:operating-system]))]
-             [ui/TableCell operating-system]])
-          (when architecture
-            [ui/TableRow
-             [ui/TableCell (str/capitalize (@tr [:architecture]))]
-             [ui/TableCell architecture]])
-          (let [ips           (:ips network)
-                ips-available (some #(seq (second %)) ips)]
-            [:<>
-             (when (and (not ips-available) ip)
-               [ui/TableRow
-                [ui/TableCell "IP"]
-                [ui/TableCell (values/copy-value-to-clipboard
-                                ip ip copy-to-clipboard true)]])
-             (when ips-available
-               [IpsRow {:title "IPs"
-                        :ips   (map (fn [[name ip]]
-                                      {:name name
-                                       :ip   (values/copy-value-to-clipboard
-                                               ip ip copy-to-clipboard true)}) (:ips network))}])])
-          (when (pos? (count @ssh-creds))
-            [ui/TableRow
-             [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
-             [ui/TableCell
-              [ui/Popup
-               {:hoverable true
-                :flowing   true
-                :position  "bottom center"
-                :content   (r/as-element
-                             [ui/ListSA {:divided true
-                                         :relaxed true}
-                              (for [sshkey @ssh-creds]
-                                ^{:key (:id sshkey)}
-                                [ui/ListItem
-                                 [ui/ListContent
-                                  [ui/ListHeader
-                                   [:a {:href   (str @config/path-prefix
-                                                     "/api/" (:id sshkey))
-                                        :target "_blank"}
-                                    (or (:name sshkey) (:id sshkey))]]
-                                  [ui/ListDescription
-                                   (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                :trigger   (r/as-element [:div [ui/Icon {:class  icons/i-key
-                                                         :fitted true}]
-                                          (@tr [:nuvlabox-detail-ssh-enabled])
-                                          [ui/Icon {:class  icons/i-angle-down
-                                                    :fitted true}]])}]]])
-          (when docker-server-version
-            [ui/TableRow
-             [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
-             [ui/TableCell docker-server-version]])
-          (when (seq docker-plugins)
-            [ui/TableRow
-             [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
-             [ui/TableCell (str/join ", " docker-plugins)]])
-          (when last-boot
-            [ui/TableRow
-             [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-             [ui/TableCell (time/parse-ago last-boot @locale)]])
-          (let [interfaces   (:interfaces network)
-                n-interfaces (count interfaces)
-                n-ips        (reduce + (map (comp count :ips) interfaces))]
-            [:<>
-             (when (pos? n-ips)
-               [ui/TableRow
-                {:on-click #(swap! show-ips not)
-                 :style    {:cursor :pointer}}
-                [ui/TableCell (str (@tr [:nuvlaedge-network-interfaces-ips]) ":")]
-                [ui/TableCell
-                 [:div {:style {:display         :flex
-                                :justify-content :space-between}}
-                  [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs")]
-                  [ui/Icon {:class (if @show-ips icons/i-angle-up icons/i-angle-down)}]]]])
-             (when @show-ips
-               [IpsRow {:ips (map (fn [{:keys [interface ips]}]
-                                    {:name interface
-                                     :ip   (str/join ", " (map :address ips))}) interfaces)}])])]]))))
+      [ui/Table {:basic "very"}
+       [ui/TableBody
+        (when hostname
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:hostname]))]
+           [ui/TableCell hostname]])
+        (when operating-system
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:operating-system]))]
+           [ui/TableCell operating-system]])
+        (when architecture
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:architecture]))]
+           [ui/TableCell architecture]])
+        (let [ips           (:ips network)
+              ips-available (some #(seq (second %)) ips)]
+          [:<>
+           (when (and (not ips-available) ip)
+             [ui/TableRow
+              [ui/TableCell "IP"]
+              [ui/TableCell
+               [uix/CopyToClipboard {:value     ip
+                                        :on-hover? false}]]])
+           (when ips-available
+             [IpsRow {:title "IPs"
+                      :ips   (map (fn [[name ip]]
+                                    {:name name
+                                     :ip   [uix/CopyToClipboard {:value     ip
+                                                                    :on-hover? false}]}) (:ips network))}])])
+        (when (pos? (count @ssh-creds))
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
+           [ui/TableCell
+            [ui/Popup
+             {:hoverable true
+              :flowing   true
+              :position  "bottom center"
+              :content   (r/as-element
+                           [ui/ListSA {:divided true
+                                       :relaxed true}
+                            (for [sshkey @ssh-creds]
+                              ^{:key (:id sshkey)}
+                              [ui/ListItem
+                               [ui/ListContent
+                                [ui/ListHeader
+                                 [:a {:href   (str @config/path-prefix
+                                                   "/api/" (:id sshkey))
+                                      :target "_blank"}
+                                  (or (:name sshkey) (:id sshkey))]]
+                                [ui/ListDescription
+                                 (str (subs (:public-key sshkey) 0 55) " ...")]]])])
+              :trigger   (r/as-element [:div [ui/Icon {:class  icons/i-key
+                                                       :fitted true}]
+                                        (@tr [:nuvlabox-detail-ssh-enabled])
+                                        [ui/Icon {:class  icons/i-angle-down
+                                                  :fitted true}]])}]]])
+        (when docker-server-version
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
+           [ui/TableCell docker-server-version]])
+        (when (seq docker-plugins)
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
+           [ui/TableCell (str/join ", " docker-plugins)]])
+        (when last-boot
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:last-boot]))]
+           [ui/TableCell (time/parse-ago last-boot @locale)]])
+        (let [interfaces   (:interfaces network)
+              n-interfaces (count interfaces)
+              n-ips        (reduce + (map (comp count :ips) interfaces))]
+          [:<>
+           (when (pos? n-ips)
+             [ui/TableRow
+              {:on-click #(swap! show-ips not)
+               :style    {:cursor :pointer}}
+              [ui/TableCell (str (@tr [:nuvlaedge-network-interfaces-ips]) ":")]
+              [ui/TableCell
+               [:div {:style {:display         :flex
+                              :justify-content :space-between}}
+                [:div (str n-interfaces " " (@tr [:interfaces]) ", " n-ips " IPs")]
+                [ui/Icon {:class (if @show-ips icons/i-angle-up icons/i-angle-down)}]]]])
+           (when @show-ips
+             [IpsRow {:ips (map (fn [{:keys [interface ips]}]
+                                  {:name interface
+                                   :ip   (str/join ", " (map :address ips))}) interfaces)}])])]])))
 
 
 (defn TabOverviewHost

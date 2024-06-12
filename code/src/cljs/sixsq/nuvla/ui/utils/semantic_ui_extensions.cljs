@@ -134,6 +134,25 @@
     (when content content)]])
 
 
+(defn CopyToClipboard
+  [{:keys [content value popup-text on-hover?] :as _opts}]
+  [ui/CopyToClipboard {:text value}
+   [:span
+    [ui/Popup
+     {:content (r/as-element [:p [TR (or popup-text :copy-to-clipboard)]])
+      :trigger (r/as-element
+                 [:span (cond-> {:style {:cursor :pointer}}
+                                on-hover? (assoc :class ["show-on-hover-value"]))
+                  (or content value)
+                  general-utils/nbsp
+                  [ui/Icon
+                   {:class [(when on-hover? "hide")]
+                    :name  "clone outline"
+                    :color "blue"
+                    :style {:color "black"}}]])
+      :size    "tiny"}]]])
+
+
 (defn CopyToClipboardDownload
   [{:keys [name value copy download filename]
     :or {filename "file.txt"

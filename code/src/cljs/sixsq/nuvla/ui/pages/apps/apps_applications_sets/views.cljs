@@ -21,7 +21,6 @@
     [sixsq.nuvla.ui.pages.apps.views-versions :as apps-views-versions]
     [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.pages.deployments.views :as deployments-views]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.icons :as icons]
@@ -174,7 +173,7 @@
          [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
                                                 :color :orange}]]
          (@tr [:warning-not-latest-app-version])))
-     ff/nbsp
+     general-utils/nbsp
      (when @editable?
        [DeleteApp on-delete])]))
 
@@ -297,7 +296,7 @@
                                  {:menuItem {:content (r/as-element
                                                         [:<>
                                                          (str (inc i) " | " apps-set-name)
-                                                         ff/nbsp
+                                                         general-utils/nbsp
                                                          (when @editable?
                                                            [DeleteAppSet (partial on-delete id)])])
                                              :key     (keyword (str "apps-set-" i))}

@@ -918,7 +918,9 @@
                                         (dispatch [::events/method (str/lower-case %)])
                                         (on-change :method (str/lower-case %))))
                         :options   [{:key "slack", :text "Slack", :value "slack"}
-                                    {:key "email", :text "Email", :value "email"}]}]]]))))
+                                    {:key "email", :text "Email", :value "email"}
+                                    {:key "mqtt", :text "MQTT", :value "mqtt"}
+                                    ]}]]]))))
 
 
 (defn AddNotificationMethodModal
@@ -960,6 +962,7 @@
              :input-help-msg (case (:method @notif-method)
                                "slack" [:a {:href "https://api.slack.com/messaging/webhooks" :target "_blank"} "Slack webhook help page"]
                                "email" "Space separated list of email addresses"
+                               "mqtt" "<IP|HOST>[:PORT]/TOPIC"
                                "")]]]]
 
          [ui/ModalActions

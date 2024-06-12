@@ -99,98 +99,6 @@
         (assoc-in [:template :href] "credential-template/create-credential-vpn-customer")
         (assoc-in [:template :parent] infrastructure-services))))
 
-
-(defn db->new-exoscale-credential
-  [db]
-  (let [name        (get-in db [::spec/credential :name])
-        description (get-in db [::spec/credential :description])
-        subtype     (get-in db [::spec/credential :subtype])
-        secret      (get-in db [::spec/credential :exoscale-api-secret-key])
-        key         (get-in db [::spec/credential :exoscale-api-key])
-        acl         (get-in db [::spec/credential :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/store-" subtype))
-        (assoc-in [:template :exoscale-api-key] key)
-        (assoc-in [:template :exoscale-api-secret-key] secret)
-        (cond-> acl (assoc-in [:template :acl] acl)))))
-
-
-(defn db->new-openstack-credential
-  [db]
-  (let [name        (get-in db [::spec/credential :name])
-        description (get-in db [::spec/credential :description])
-        subtype     (get-in db [::spec/credential :subtype])
-        secret      (get-in db [::spec/credential :openstack-password])
-        key         (get-in db [::spec/credential :openstack-username])
-        acl         (get-in db [::spec/credential :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/store-" subtype))
-        (assoc-in [:template :openstack-username] key)
-        (assoc-in [:template :openstack-password] secret)
-        (cond-> acl (assoc-in [:template :acl] acl)))))
-
-
-(defn db->new-amazonec2-credential
-  [db]
-  (let [name        (get-in db [::spec/credential :name])
-        description (get-in db [::spec/credential :description])
-        subtype     (get-in db [::spec/credential :subtype])
-        key         (get-in db [::spec/credential :amazonec2-access-key])
-        secret      (get-in db [::spec/credential :amazonec2-secret-key])
-        acl         (get-in db [::spec/credential :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/store-" subtype))
-        (assoc-in [:template :amazonec2-access-key] key)
-        (assoc-in [:template :amazonec2-secret-key] secret)
-        (cond-> acl (assoc-in [:template :acl] acl)))))
-
-
-(defn db->new-azure-credential
-  [db]
-  (let [name        (get-in db [::spec/credential :name])
-        description (get-in db [::spec/credential :description])
-        subtype     (get-in db [::spec/credential :subtype])
-        subsciption (get-in db [::spec/credential :azure-subscription-id])
-        id          (get-in db [::spec/credential :azure-client-id])
-        secret      (get-in db [::spec/credential :azure-client-secret])
-        acl         (get-in db [::spec/credential :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/store-" subtype))
-        (assoc-in [:template :azure-subscription-id] subsciption)
-        (assoc-in [:template :azure-client-id] id)
-        (assoc-in [:template :azure-client-secret] secret)
-        (cond-> acl (assoc-in [:template :acl] acl)))))
-
-
-(defn db->new-google-credential
-  [db]
-  (let [name        (get-in db [::spec/credential :name])
-        description (get-in db [::spec/credential :description])
-        subtype     (get-in db [::spec/credential :subtype])
-        username    (get-in db [::spec/credential :google-username])
-        id          (get-in db [::spec/credential :client-id])
-        secret      (get-in db [::spec/credential :client-secret])
-        token       (get-in db [::spec/credential :refresh-token])
-        acl         (get-in db [::spec/credential :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/store-" subtype))
-        (assoc-in [:template :google-username] username)
-        (assoc-in [:template :client-id] id)
-        (assoc-in [:template :client-secret] secret)
-        (assoc-in [:template :refresh-token] token)
-        (cond-> acl (assoc-in [:template :acl] acl)))))
-
-
 (defn db->new-api-key
   [db]
   (let [name        (get-in db [::spec/credential :name])
@@ -212,11 +120,6 @@
       "infrastructure-service-kubernetes" (db->new-coe-credential db)
       "infrastructure-service-minio" (db->new-minio-credential db)
       "infrastructure-service-vpn" (db->new-vpn-credential db)
-      "infrastructure-service-exoscale" (db->new-exoscale-credential db)
-      "infrastructure-service-openstack" (db->new-openstack-credential db)
-      "infrastructure-service-amazonec2" (db->new-amazonec2-credential db)
-      "infrastructure-service-azure" (db->new-azure-credential db)
-      "infrastructure-service-google" (db->new-google-credential db)
       "infrastructure-service-registry" (db->new-registry-credential db)
       "generate-ssh-key" (db->new-ssh-credential db)
       "generate-api-key" (db->new-api-key db)

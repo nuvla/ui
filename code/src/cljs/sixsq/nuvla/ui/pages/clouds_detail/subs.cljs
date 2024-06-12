@@ -31,14 +31,6 @@
 
 
 (reg-sub
-  ::can-terminate?
-  :<- [::infrastructure-service]
-  (fn [infrastructure-service _]
-    (general-utils/can-terminate? infrastructure-service)))
-
-
-
-(reg-sub
   ::can-stop?
   :<- [::infrastructure-service]
   (fn [infrastructure-service _]

@@ -41,32 +41,6 @@
 
 (s/def ::parent utils-spec/nonblank-string)
 (s/def ::endpoint utils-spec/nonblank-string)
-(s/def ::multiplicity int?)
-(s/def ::cloud-vm-image utils-spec/nonblank-string)
-(s/def ::cloud-vm-size utils-spec/nonblank-string)
-(s/def ::cloud-vm-disk-size int?)
-(s/def ::cloud-region utils-spec/nonblank-string)
-(s/def ::cloud-security-group utils-spec/nonblank-string)
-(s/def ::cloud-project utils-spec/nonblank-string)
-(s/def ::cloud-domain utils-spec/nonblank-string)
-(s/def ::cloud-api-endpoint utils-spec/nonblank-string)
-(s/def ::cloud-floating-ip utils-spec/nonblank-string)
-(s/def ::cloud-user utils-spec/nonblank-string)
-(s/def ::cloud-network utils-spec/nonblank-string)
-(s/def ::coe-manager-install boolean?)
-(s/def ::management-credential utils-spec/nonblank-string)
-
-(s/def ::coe-service (s/keys :req-un [::name
-                                      ::description
-                                      ::management-credential]
-                             :opt-un [::parent
-                                      ::multiplicity
-                                      ::cloud-vm-image
-                                      ::cloud-vm-size
-                                      ::cloud-vm-disk-size
-                                      ::cloud-region
-                                      ::cloud-project
-                                      ::cloud-security-group]))
 
 (s/def ::generic-service (s/keys :req-un [::name
                                           ::description
@@ -79,14 +53,6 @@
                                            ::endpoint]
                                   :opt-un [::parent]))
 
-
-; SSH keys
-
-(s/def ::ssh-keys-infra any?)
-
-(s/def ::ssh-keys (s/nilable (s/coll-of string?)))
-
-
 ; MinIO
 
 (s/def ::minio-service (s/keys :req-un [::name
@@ -94,17 +60,13 @@
                                         ::endpoint]
                                :opt-un [::parent]))
 
-(s/def ::management-credentials-available any?)
-
 (def defaults
   {::infra-service-groups             nil
    ::infra-services                   {}
    ::service-modal-visible?           false
    ::add-service-modal-visible?       false
    ::is-new?                          false
-   ::infra-service                    nil
-   ::multiplicity                     1
-   ::management-credentials-available nil})
+   ::infra-service                    nil})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 8)})

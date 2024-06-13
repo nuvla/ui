@@ -166,7 +166,7 @@
                                           :from         from
                                           :to           to
                                           :granularity  (ts-utils/granularity-for-timespan timespan)
-                                          :datasets     ["cpu-stats" "disk-stats" "network-stats" "ram-stats"
+                                          :query        ["cpu-stats" "disk-stats" "network-stats" "ram-stats"
                                                          "power-consumption-stats" "availability-stats"]}]]]})))
 
 (reg-event-fx
@@ -420,16 +420,16 @@
   [id datasets from to granularity]
   (str "/api/" id "/data?"
        (->> datasets
-            (map #(str "dataset=" %))
+            (map #(str "query=" %))
             (str/join "&"))
        "&from=" (time/time->utc-str from) "&to=" (time/time->utc-str to) "&granularity=" granularity))
 
 (reg-event-fx
   ::fetch-edge-stats
-  (fn [{{:keys [::spec/nuvlabox current-route] :as db} :db} [_ {:keys [granularity from to datasets nuvlaedge-id]}]]
+  (fn [{{:keys [::spec/nuvlabox current-route] :as db} :db} [_ {:keys [granularity from to query nuvlaedge-id]}]]
     (when (= (get-query-param current-route :edges-detail-tab) "historical-data")
       (let [uri (build-data-uri (or nuvlaedge-id (:id nuvlabox))
-                                datasets
+                                query
                                 from to granularity)]
         {:db         (assoc db ::spec/loading? true)
          :http-xhrio {:method          :get
@@ -480,7 +480,7 @@
                     :on-success      [::fetch-edge-stats-csv-success]
                     :on-failure      [::fetch-edge-stats-failure]}})))
 
-(def edge-stats-datasets ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"])
+(def edge-stats-queries ["cpu-stats" "disk-stats" "network-stats" "ram-stats" "power-consumption-stats" "availability-stats"])
 
 (reg-event-fx
   ::set-selected-timespan
@@ -490,7 +490,7 @@
        :fx [[:dispatch [::fetch-edge-stats {:from        from
                                             :to          to
                                             :granularity (ts-utils/granularity-for-timespan timespan)
-                                            :datasets    edge-stats-datasets}]]]})))
+                                            :query       edge-stats-queries}]]]})))
 
 (reg-event-fx
   ::fetch-edge-stats-csv-success

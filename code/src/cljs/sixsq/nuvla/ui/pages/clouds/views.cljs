@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.clouds-detail.views :as clouds-detail]
             [sixsq.nuvla.ui.pages.clouds.events :as events]
@@ -106,23 +107,21 @@
 
 (defn service-coe
   []
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        is-new?              (subscribe [::subs/is-new?])
-        service              (subscribe [::subs/infra-service])
-        validate-form?       (subscribe [::subs/validate-form?])
-        subtype              (:subtype @service "swarm")
-        on-change            (fn [name-kw value]
-                               (dispatch [::events/update-infra-service name-kw value])
-                               (dispatch [::events/validate-coe-service-form]))]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        service        (subscribe [::subs/infra-service])
+        validate-form? (subscribe [::subs/validate-form?])
+        subtype        (:subtype @service "swarm")
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-infra-service name-kw value])
+                         (dispatch [::events/validate-coe-service-form]))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
             {:keys [name description endpoint]} @service]
         [:<>
-
          [acl/AclButton {:default-value (:acl @service)
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
-
          [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
@@ -214,6 +213,17 @@
       (dispatch [::events/edit-infra-service])
       (dispatch [::intercom-events/set-event "Last create Infrastructure Service" (time/timestamp)]))))
 
+(defn CredentialPageLink
+  []
+  [uix/Message {:type    "info"
+                :icon    "info circle"
+                :size    :tiny
+                :content [:p
+                          [uix/TR :link-cred-infra-service]
+                          [:a {:href   (str @config/path-prefix "/credentials")
+                               :target "_blank"}
+                           [uix/TR :creds-page]]]}])
+
 (defn ServiceModal
   []
   (let [tr          (subscribe [::i18n-subs/tr])
@@ -239,7 +249,8 @@
 
            [ui/ModalContent {:scrolling false}
             [utils-validation/validation-error-message ::subs/form-valid?]
-            [modal-content]]
+            [modal-content]
+            [CredentialPageLink]]
            [ui/ModalActions
             [uix/Button {:text     (if @is-new? (@tr [:create]) (@tr [:update]))
                          :positive true

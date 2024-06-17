@@ -122,9 +122,10 @@
 
 
 (defn Message
-  [{:keys [icon content header type] :as _ops}]
+  [{:keys [icon content header type size] :as _ops}]
   [ui/Message
    (cond-> {}
+           size (assoc :size size)
            type (assoc type true)
            icon (assoc :icon true))
    (when icon [icons/Icon {:name icon}])

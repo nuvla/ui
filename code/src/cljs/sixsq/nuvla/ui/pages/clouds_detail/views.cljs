@@ -83,22 +83,6 @@
       :content     [:h3 content]}]))
 
 
-(defn TerminateButton
-  [infra-service]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        {:keys [id name description]} @infra-service
-        content (str (or name id) (when description " - ") description)]
-    [uix/ModalDanger
-     {:button-text (@tr [:terminate])
-      :on-confirm  #(dispatch [::events/operation "terminate"])
-      :danger-msg  (@tr [:infrastructure-terminate-warning])
-      :trigger     (r/as-element [ui/MenuItem
-                                  [icons/DeleteIcon]
-                                  (str/capitalize (@tr [:terminate]))])
-      :header      (@tr [:terminate-infrastructure])
-      :content     [:h3 content]}]))
-
-
 (defn StopButton
   [infra-service]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -140,8 +124,6 @@
      [ui/Menu {:borderless true}
       (when @can-delete?
         [DeleteButton infra-service])
-
-      [TerminateButton infra-service]
 
       (when @can-stop?
         [StopButton infra-service])
@@ -197,16 +179,9 @@
             :on-change (partial on-change :description)]
 
            [uix/TableRowField (@tr [:endpoint]), :key (str id "-subtype"),
-            :editable? (not (= "coe" (:method @infra-service))), :spec ::spec/endpoint, :validate-form? @validate-form?,
+            :editable? @can-edit?, :spec ::spec/endpoint, :validate-form? @validate-form?,
             :required? true, :default-value endpoint,
-            :on-change (partial on-change :endpoint)]
-
-           (when (-> @infra-service :cluster-params :coe-manager-endpoint)
-             [uix/TableRowField "COE manager", :key (str id "-subtype"),
-              :editable? false, :spec ::spec/endpoint, :validate-form? @validate-form?,
-              :required? true, :default-value [:a {:href   (-> @infra-service :cluster-params :coe-manager-endpoint)
-                                                   :target "_blank"}
-                                               (-> @infra-service :cluster-params :coe-manager-endpoint)]])]]
+            :on-change (partial on-change :endpoint)]]]
          (when @can-edit?
            [uix/Button {:text     (@tr [:save])
                         :primary  true

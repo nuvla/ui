@@ -282,10 +282,6 @@
   (can-operation? :delete data))
 
 
-(defn can-terminate? [data]
-  (can-operation? :terminate data))
-
-
 (defn can-stop? [data]
   (can-operation? :stop data))
 

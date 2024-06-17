@@ -72,7 +72,10 @@
            [(str page-alias "/nuvlabox-cluster/:uuid")
             {:name   (create-route-name page-alias "-cluster-details")
              :layout #'LayoutPage
-             :view   #'views-cluster/ClusterViewPage}]])
+             :view   #'views-cluster/ClusterViewPage
+             :controllers [{:parameters {:path [:uuid]}
+                            :start      (fn [{:keys [path]}]
+                                          (dispatch [::events/refresh-cluster (:uuid path)]))}]}]])
         (utils/canonical->all-page-names "edges")))
 
 (def cloud-routes

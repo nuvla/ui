@@ -6,6 +6,22 @@
 
 ## Released
 
+## [2.37.0] - 2024-06-18
+
+- Notification page - Add mqtt notif method
+- Remove the feature of the creation of clusters with COE
+  - Clouds page
+    - Remove coe provioning section
+    - Add link to credentials page in add modal
+  - Credentials page - Remove cloud service credentials support
+  - Clouds details page - Remove terminate button and logic around editable endpoint
+- Credential page - Display credential ID and provide possibility to copy it
+- Clouds page - Show stop action only when available through operations attribute
+- Job component
+  - Message not displayed to the user when user is already on job tab while job display message is being
+  set fix
+  - Change page to 1 on mount navigation to avoid sideffect on remount for another deployment or edge bugfix
+
 ## [2.36.9] - 2024-05-24
 
 - Edges detail page - NE version regression bugfix

@@ -175,7 +175,6 @@
 
 (defn RootView
   []
-  (dispatch [::events/init])
   (fn []
     [ui/Container {:fluid true}
      [tab-plugin/Tab

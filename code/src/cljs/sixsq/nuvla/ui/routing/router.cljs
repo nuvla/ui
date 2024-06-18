@@ -16,6 +16,7 @@
             [sixsq.nuvla.ui.pages.apps.apps-component.events :as apps-component-events]
             [sixsq.nuvla.ui.pages.apps.apps-project.events :as apps-project-events]
             [sixsq.nuvla.ui.pages.apps.apps-application.events :as apps-application-events]
+            [sixsq.nuvla.ui.pages.apps.apps-store.events :as apps-store-events]
 
             [sixsq.nuvla.ui.pages.apps.views :as app-views]
             [sixsq.nuvla.ui.pages.cimi.views :refer [ApiView]]
@@ -193,15 +194,16 @@
      {:name       ::routes/apps
       :layout     #'LayoutPage
       :view       #'app-views/AppsOverview
+      :controllers [{:start (fn [] (dispatch [::apps-store-events/init]))}]
       :protected? true
       :link-text  "Apps"}
      [""]
      ["/" ::routes/apps-slashed]
      ["/*sub-path"
-      {:name   ::routes/apps-details
-       :layout #'LayoutPage
+      {:name        ::routes/apps-details
+       :layout      #'LayoutPage
        :view   #'app-views/AppDetailsRoute
-       :controllers [{:identity (fn [match] (js/console.log match) {:query-params (get-in match [:query-params])
+       :controllers [{:identity (fn [match] (js/console.log match (get-in match [:query-params])) {:query-params (get-in match [:query-params])
                                              :path-params  (get-in match [:path-params])})
                       :start    (fn [{:keys [query-params path-params]}]
                                   (let [{:keys [version subtype]} query-params

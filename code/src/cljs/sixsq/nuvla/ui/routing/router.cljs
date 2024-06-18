@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.routing.router
-  (:require [re-frame.core :refer [dispatch]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch]]
             [reitit.coercion.spec :as rss]
             [reitit.core :as r]
             [reitit.frontend :as rf]
@@ -9,20 +10,35 @@
                                              LayoutPage]]
             [sixsq.nuvla.ui.common-components.notifications.views :refer [notifications-view]]
             [sixsq.nuvla.ui.config :refer [base-path]]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.about.views :refer [About]]
+            [sixsq.nuvla.ui.pages.apps.apps-applications-sets.events :as apps-applications-sets-events]
+            [sixsq.nuvla.ui.pages.apps.apps-component.events :as apps-component-events]
+            [sixsq.nuvla.ui.pages.apps.apps-project.events :as apps-project-events]
+            [sixsq.nuvla.ui.pages.apps.apps-application.events :as apps-application-events]
+            [sixsq.nuvla.ui.pages.apps.apps-store.events :as apps-store-events]
             [sixsq.nuvla.ui.pages.apps.views :as app-views]
             [sixsq.nuvla.ui.pages.cimi.views :refer [ApiView]]
             [sixsq.nuvla.ui.pages.clouds.views :refer [clouds-view]]
+            [sixsq.nuvla.ui.pages.credentials.events :as credentials-events]
             [sixsq.nuvla.ui.pages.credentials.views :refer [credentials-view]]
             [sixsq.nuvla.ui.pages.dashboard.views :refer [dashboard-view]]
             [sixsq.nuvla.ui.pages.data-set.views :as data-set-views]
             [sixsq.nuvla.ui.pages.data.views :refer [data-view]]
+            [sixsq.nuvla.ui.pages.deployment-sets.events :as deployment-sets-events]
+            [sixsq.nuvla.ui.pages.deployment-sets-detail.events :as dsd-events]
+            [sixsq.nuvla.ui.pages.deployments-detail.events :as deployments-detail-events]
             [sixsq.nuvla.ui.pages.deployments-detail.views :refer [DeploymentDetails]]
+            [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.pages.deployments.routes
              :refer [deployment-sets-details-view deployment-sets-view deployments-view]]
             [sixsq.nuvla.ui.pages.docs.views :refer [documentation]]
+            [sixsq.nuvla.ui.pages.apps.events :as apps-events]
+            [sixsq.nuvla.ui.pages.apps.views :as apps-views]
+            [sixsq.nuvla.ui.pages.edges.events :as edges-events]
             [sixsq.nuvla.ui.pages.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
+            [sixsq.nuvla.ui.pages.edges-detail.events :as edges-detail-events]
             [sixsq.nuvla.ui.pages.profile.views :refer [profile]]
             [sixsq.nuvla.ui.pages.ui-demo.views :refer [UiDemo]]
             [sixsq.nuvla.ui.pages.welcome.views :refer [home-view]]
@@ -48,17 +64,31 @@
              :layout     #'LayoutPage
              :view       #'edges-view
              :protected? true
-             :dict-key   :edges}
+             :dict-key   :edges
+             :controllers [{:start (fn [_]
+                                     (js/console.log "loading edges")
+                                     (dispatch [::edges-events/init])
+                                     (dispatch [::edges-events/set-nuvlabox-cluster nil]))}]}
             [""]
             ["/" (create-route-name page-alias "-slashed")]]
            [(str page-alias "/:uuid")
             {:name   (create-route-name page-alias "-details")
              :layout #'LayoutPage
-             :view   #'DetailedViewPage}]
+             :view   #'DetailedViewPage
+             :controllers [{:parameters {:path [:uuid]}
+                            :start (fn [{:keys [path]}]
+                                     (when-not (= "nuvlabox-cluster" (:uuid path))
+                                       (dispatch [::main-events/action-interval-start
+                                                  {:id        :nuvlabox-get-nuvlabox
+                                                   :frequency 10000
+                                                   :event     [::edges-detail-events/get-nuvlabox (str "nuvlabox/" (:uuid path))]}])))}]}]
            [(str page-alias "/nuvlabox-cluster/:uuid")
             {:name   (create-route-name page-alias "-cluster-details")
              :layout #'LayoutPage
-             :view   #'views-cluster/ClusterViewPage}]])
+             :view   #'views-cluster/ClusterViewPage
+             :controllers [{:parameters {:path [:uuid]}
+                            :start      (fn [{:keys [path]}]
+                                          (dispatch [::events/refresh-cluster (:uuid path)]))}]}]])
         (utils/canonical->all-page-names "edges")))
 
 (def cloud-routes
@@ -83,6 +113,8 @@
            {:name       (create-route-name page-alias)
             :layout     #'LayoutPage
             :view       #'deployments-view
+            :controllers [{:start (fn []
+                                    (dispatch [::deployments-events/init]))}]
             :protected? true
             :dict-key   :deployments}
            [""]
@@ -90,7 +122,13 @@
            ["/:uuid"
             {:name   (create-route-name page-alias "-details")
              :layout #'LayoutPage
-             :view   #'DeploymentDetails}]])
+             :view   #'DeploymentDetails
+             :controllers [{:parameters {:path [:uuid]}
+                            :start (fn [{:keys [path]}]
+                                     (dispatch [::main-events/action-interval-start
+                                                {:id        :deployment-get-deployment
+                                                 :frequency 10000
+                                                 :event     [::deployments-detail-events/get-deployment (str "deployment/" (:uuid path))]}]))}]}]])
         (utils/canonical->all-page-names "deployments")))
 
 (def deployment-group-routes
@@ -99,20 +137,26 @@
            {:name     (create-route-name page-alias)
             :layout   #'LayoutPage
             :view     #'deployment-sets-view
+            :controllers [{:parameters {:path [:uuid]}
+                           :start (fn [] (dispatch [::deployment-sets-events/refresh]))}]
             :dict-key :deployment-groups}
            [""]
            ["/" (create-route-name page-alias "-slashed")]
            ["/:uuid"
             {:name   (create-route-name page-alias "-details")
              :layout #'LayoutPage
-             :view   #'deployment-sets-details-view}]])
+             :controllers [{:start (fn [{:keys [path]}]
+                                     (if (= (:uuid path) "create")
+                                       (dispatch [::dsd-events/init-create])
+                                       (dispatch [::dsd-events/init])))}]
+             :view #'deployment-sets-details-view}]])
         (utils/canonical->all-page-names "deployment-groups")))
 
 (def r-routes
   [""
-   {:name        ::routes/root
-    :layout      #'LayoutPage
-    :view        #'home-view}
+   {:name   ::routes/root
+    :layout #'LayoutPage
+    :view   #'home-view}
    ["/"]
    [(str base-path "/")                                     ;; sixsq.nuvla.ui.config/base-path = "/ui" on nuvla.io
     [""
@@ -168,18 +212,37 @@
      {:name       ::routes/apps
       :layout     #'LayoutPage
       :view       #'app-views/AppsOverview
+      :controllers [{:start (fn [] (dispatch [::apps-store-events/init]))}]
       :protected? true
       :link-text  "Apps"}
      [""]
      ["/" ::routes/apps-slashed]
      ["/*sub-path"
-      {:name   ::routes/apps-details
-       :layout #'LayoutPage
-       :view   #'app-views/AppDetailsRoute}]]
+      {:name        ::routes/apps-details
+       :layout      #'LayoutPage
+       :view   #'app-views/AppDetailsRoute
+       :controllers [{:identity (fn [match] (js/console.log match (get-in match [:query-params])) {:query-params (get-in match [:query-params])
+                                             :path-params  (get-in match [:path-params])})
+                      :start    (fn [{:keys [query-params path-params]}]
+                                  (let [{:keys [version subtype]} query-params
+                                        {:keys [sub-path]} path-params]
+                                    (dispatch [::apps-events/reset-version])
+                                    (let [is-new? (boolean (seq subtype))]
+                                      (dispatch [::apps-events/is-new? is-new?])
+                                      (if is-new?
+                                        (do
+                                          (let [[new-parent new-name] (str/split sub-path #"/")]
+                                            (dispatch [::apps-events/clear-module new-name new-parent subtype])
+                                            (dispatch [::apps-component-events/clear-apps-component])
+                                            (dispatch [::apps-application-events/clear-apps-application])
+                                            (dispatch [::apps-project-events/clear-apps-project])
+                                            (dispatch [::apps-applications-sets-events/clear-apps-applications-sets])))
+                                        (dispatch [::apps-events/get-module version])))))}]}]]
     ["credentials"
      {:name       ::routes/credentials
       :layout     #'LayoutPage
       :view       #'credentials-view
+      :controllers [{:start (fn [] (dispatch [::credentials-events/get-credentials]))}]
       :protected? true
       :link-text  "credentials"}
      [""]

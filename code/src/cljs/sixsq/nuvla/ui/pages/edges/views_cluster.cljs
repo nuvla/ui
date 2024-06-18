@@ -259,7 +259,6 @@
   [cluster-id]
   (let [tr      (subscribe [::i18n-subs/tr])
         cluster (subscribe [::subs/nuvlabox-cluster cluster-id])]
-    (dispatch [::events/refresh-cluster cluster-id])
     (fn [cluster-id]
       [components/LoadingPage {:dimmable? true}
        [:<>

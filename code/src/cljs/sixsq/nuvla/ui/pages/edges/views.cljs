@@ -431,9 +431,7 @@
 
 
 (defn NuvlaBoxesOrClusters
-  [external-restriction-filter]
-  (dispatch [::events/init external-restriction-filter])
-  (dispatch [::events/set-nuvlabox-cluster nil])
+  []
   (let [view-type (subscribe [::subs/view-type])]
     (fn []
       [components/LoadingPage {}

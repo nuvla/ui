@@ -50,20 +50,8 @@
 
 (defn DeploymentsMainContent
   []
-  (let [route-name (subscribe [::routing-subs/canonical-route-name])
-        uuid       (subscribe [::routing-subs/path-param :uuid])]
+  (let [route-name (subscribe [::routing-subs/canonical-route-name])]
     (fn []
-      (case @route-name
-        ::routes/deployments (dispatch [::events/init])
-
-        ::routes/deployment-groups (dispatch [::deployment-sets-events/refresh])
-
-        ::routes/deployment-groups-details
-        (if (= @uuid "create")
-          (dispatch [::dsd-events/init-create])
-          (dispatch [::dsd-events/init]))
-
-        nil)
       [:<>
        (when-not (= @route-name routes/deployment-groups-details)
          [DeploymentsTabs])

@@ -1066,7 +1066,6 @@
 
 (defn TabsCredentials
   []
-  (dispatch [::events/get-credentials])
   (fn []
     [components/LoadingPage {}
      [tab-plugin/Tab

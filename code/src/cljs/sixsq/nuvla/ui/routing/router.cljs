@@ -17,10 +17,10 @@
             [sixsq.nuvla.ui.pages.apps.apps-project.events :as apps-project-events]
             [sixsq.nuvla.ui.pages.apps.apps-application.events :as apps-application-events]
             [sixsq.nuvla.ui.pages.apps.apps-store.events :as apps-store-events]
-
             [sixsq.nuvla.ui.pages.apps.views :as app-views]
             [sixsq.nuvla.ui.pages.cimi.views :refer [ApiView]]
             [sixsq.nuvla.ui.pages.clouds.views :refer [clouds-view]]
+            [sixsq.nuvla.ui.pages.credentials.events :as credentials-events]
             [sixsq.nuvla.ui.pages.credentials.views :refer [credentials-view]]
             [sixsq.nuvla.ui.pages.dashboard.views :refer [dashboard-view]]
             [sixsq.nuvla.ui.pages.data-set.views :as data-set-views]
@@ -224,6 +224,7 @@
      {:name       ::routes/credentials
       :layout     #'LayoutPage
       :view       #'credentials-view
+      :controllers [{:start (fn [] (dispatch [::credentials-events/get-credentials]))}]
       :protected? true
       :link-text  "credentials"}
      [""]

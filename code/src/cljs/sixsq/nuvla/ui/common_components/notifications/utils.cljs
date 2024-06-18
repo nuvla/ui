@@ -68,29 +68,28 @@
      :destination destination
      :acl         acl}))
 
-(defn data-record-content-type
+(defn data-record-content-type?
   [m]
-  (and (= "data-record" (:resource-kind m)) (= content-type (get-in m [:criteria :metric]))))
+  (and (= "data-record" (:resource-kind m))
+       (= content-type (get-in m [:criteria :metric]))))
 
 (defn view->model
   [v]
   (cond
-    (data-record-content-type v) (-> v
-                                     (assoc :resource-kind "event")
-                                     (assoc-in [:criteria :metric] "tag")
-                                     (assoc :resource-filter (str "tag='" (get-in v [:criteria :value]) "'")))
+    (data-record-content-type? v) (-> v
+                                      (assoc :resource-kind "event"))
     :else v))
 
-(defn event-tag
+(defn event-content-type?
   [m]
-  (and (= "event" (:resource-kind m)) (= "tag" (get-in m [:criteria :metric]))))
+  (and (= "event" (:resource-kind m))
+       (= content-type (get-in m [:criteria :metric]))))
 
 (defn model->view
   [m]
   (cond
-    (event-tag m) (-> m
-                      (assoc :resource-kind "data-record")
-                      (assoc-in [:criteria :metric] content-type))
+    (event-content-type? m) (-> m
+                                (assoc :resource-kind "data-record"))
     :else m))
 
 (def metrics-with-reset-windows #{network-rx network-tx})

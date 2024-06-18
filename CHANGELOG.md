@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Notifications - improve notification configuration for data records creation
+
 ## Released
 
 ## [2.37.0] - 2024-06-18

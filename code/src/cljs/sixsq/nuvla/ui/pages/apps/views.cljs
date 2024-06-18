@@ -3,13 +3,9 @@
             [sixsq.nuvla.ui.common-components.deployment-dialog.views :as deployment-dialog-views]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.pages.apps.apps-application.events :as apps-application-events]
             [sixsq.nuvla.ui.pages.apps.apps-application.views :as apps-application-views]
-            [sixsq.nuvla.ui.pages.apps.apps-applications-sets.events :as apps-applications-sets-events]
             [sixsq.nuvla.ui.pages.apps.apps-applications-sets.views :as apps-applications-sets-views]
-            [sixsq.nuvla.ui.pages.apps.apps-component.events :as apps-component-events]
             [sixsq.nuvla.ui.pages.apps.apps-component.views :as apps-component-views]
-            [sixsq.nuvla.ui.pages.apps.apps-project.events :as apps-project-events]
             [sixsq.nuvla.ui.pages.apps.apps-project.views :as apps-project-views]
             [sixsq.nuvla.ui.pages.apps.apps-store.views :as apps-store-views]
             [sixsq.nuvla.ui.pages.apps.events :as events]
@@ -18,18 +14,6 @@
             [sixsq.nuvla.ui.pages.apps.views-detail :as views-detail]
             [sixsq.nuvla.ui.routing.subs :as route-subs]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]))
-
-
-(defn dispatch-clear-events
-  [new-subtype]
-  (let [nav-path   (subscribe [::route-subs/nav-path])
-        new-parent (utils/nav-path->parent-path @nav-path)
-        new-name   (utils/nav-path->module-name @nav-path)]
-    (dispatch [::events/clear-module new-name new-parent new-subtype])
-    (dispatch [::apps-component-events/clear-apps-component])
-    (dispatch [::apps-application-events/clear-apps-application])
-    (dispatch [::apps-project-events/clear-apps-project])
-    (dispatch [::apps-applications-sets-events/clear-apps-applications-sets])))
 
 
 (defn ModuleDetails
@@ -72,18 +56,9 @@
 
 (defn AppDetails
   []
-  (let [version      (subscribe [::route-subs/query-param :version])
-        sub-type     (subscribe [::route-subs/query-param :subtype])]
-    (fn []
-      (dispatch [::events/reset-version])
-      (let [is-new?  (boolean (seq @sub-type))]
-        (dispatch [::events/is-new? is-new?])
-        (if is-new?
-          (dispatch-clear-events @sub-type)
-          (dispatch [::events/get-module @version]))
-        [:<>
-         [CommonComponents]
-         [Module]]))))
+  [:<>
+   [CommonComponents]
+   [Module]])
 
 (defn AppDetailsRoute
   [{:keys [path-params]}]

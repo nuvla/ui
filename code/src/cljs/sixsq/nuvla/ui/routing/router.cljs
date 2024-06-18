@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.routing.router
-  (:require [re-frame.core :refer [dispatch]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch]]
             [reitit.coercion.spec :as rss]
             [reitit.core :as r]
             [reitit.frontend :as rf]
@@ -11,6 +12,11 @@
             [sixsq.nuvla.ui.config :refer [base-path]]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.about.views :refer [About]]
+            [sixsq.nuvla.ui.pages.apps.apps-applications-sets.events :as apps-applications-sets-events]
+            [sixsq.nuvla.ui.pages.apps.apps-component.events :as apps-component-events]
+            [sixsq.nuvla.ui.pages.apps.apps-project.events :as apps-project-events]
+            [sixsq.nuvla.ui.pages.apps.apps-application.events :as apps-application-events]
+
             [sixsq.nuvla.ui.pages.apps.views :as app-views]
             [sixsq.nuvla.ui.pages.cimi.views :refer [ApiView]]
             [sixsq.nuvla.ui.pages.clouds.views :refer [clouds-view]]
@@ -22,6 +28,8 @@
             [sixsq.nuvla.ui.pages.deployments.routes
              :refer [deployment-sets-details-view deployment-sets-view deployments-view]]
             [sixsq.nuvla.ui.pages.docs.views :refer [documentation]]
+            [sixsq.nuvla.ui.pages.apps.events :as apps-events]
+            [sixsq.nuvla.ui.pages.apps.views :as apps-views]
             [sixsq.nuvla.ui.pages.edges.events :as edges-events]
             [sixsq.nuvla.ui.pages.edges.views :refer [DetailedViewPage edges-view]]
             [sixsq.nuvla.ui.pages.edges.views-cluster :as views-cluster]
@@ -192,7 +200,24 @@
      ["/*sub-path"
       {:name   ::routes/apps-details
        :layout #'LayoutPage
-       :view   #'app-views/AppDetailsRoute}]]
+       :view   #'app-views/AppDetailsRoute
+       :controllers [{:identity (fn [match] (js/console.log match) {:query-params (get-in match [:query-params])
+                                             :path-params  (get-in match [:path-params])})
+                      :start    (fn [{:keys [query-params path-params]}]
+                                  (let [{:keys [version subtype]} query-params
+                                        {:keys [sub-path]} path-params]
+                                    (dispatch [::apps-events/reset-version])
+                                    (let [is-new? (boolean (seq subtype))]
+                                      (dispatch [::apps-events/is-new? is-new?])
+                                      (if is-new?
+                                        (do
+                                          (let [[new-parent new-name] (str/split sub-path #"/")]
+                                            (dispatch [::apps-events/clear-module new-name new-parent subtype])
+                                            (dispatch [::apps-component-events/clear-apps-component])
+                                            (dispatch [::apps-application-events/clear-apps-application])
+                                            (dispatch [::apps-project-events/clear-apps-project])
+                                            (dispatch [::apps-applications-sets-events/clear-apps-applications-sets])))
+                                        (dispatch [::apps-events/get-module version])))))}]}]]
     ["credentials"
      {:name       ::routes/credentials
       :layout     #'LayoutPage

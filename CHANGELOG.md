@@ -6,6 +6,10 @@
 
 ## Released
 
+## [2.37.1] - 2024-06-18
+
+- Notifications - Use content-type for data-records instead of tag
+
 ## [2.37.0] - 2024-06-18
 
 - Notification page - Add mqtt notif method

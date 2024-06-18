@@ -37,15 +37,6 @@
 
 (def refresh-action-id :deployment-get-deployment)
 
-
-(defn refresh
-  [resource-id]
-  (dispatch [::main-events/action-interval-start
-             {:id        refresh-action-id
-              :frequency 10000
-              :event     [::events/get-deployment resource-id]}]))
-
-
 (defn sum-replicas
   [parameters ends-with]
   (->> (vals parameters)
@@ -740,9 +731,8 @@
 
 
 (defn DeploymentDetails
-  [{{uuid :uuid} :path-params}]
+  []
   (let [deployment (subscribe [::subs/deployment])]
-    (refresh (str "deployment/" uuid))
     (fn [_]
       (let [panes (deployment-detail-panes)]
         [components/LoadingPage {:dimmable? true}

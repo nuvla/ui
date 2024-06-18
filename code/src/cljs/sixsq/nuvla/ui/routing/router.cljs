@@ -25,7 +25,11 @@
             [sixsq.nuvla.ui.pages.dashboard.views :refer [dashboard-view]]
             [sixsq.nuvla.ui.pages.data-set.views :as data-set-views]
             [sixsq.nuvla.ui.pages.data.views :refer [data-view]]
+            [sixsq.nuvla.ui.pages.deployment-sets.events :as deployment-sets-events]
+            [sixsq.nuvla.ui.pages.deployment-sets-detail.events :as dsd-events]
+            [sixsq.nuvla.ui.pages.deployments-detail.events :as deployments-detail-events]
             [sixsq.nuvla.ui.pages.deployments-detail.views :refer [DeploymentDetails]]
+            [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
             [sixsq.nuvla.ui.pages.deployments.routes
              :refer [deployment-sets-details-view deployment-sets-view deployments-view]]
             [sixsq.nuvla.ui.pages.docs.views :refer [documentation]]
@@ -109,6 +113,8 @@
            {:name       (create-route-name page-alias)
             :layout     #'LayoutPage
             :view       #'deployments-view
+            :controllers [{:start (fn []
+                                    (dispatch [::deployments-events/init]))}]
             :protected? true
             :dict-key   :deployments}
            [""]
@@ -116,7 +122,13 @@
            ["/:uuid"
             {:name   (create-route-name page-alias "-details")
              :layout #'LayoutPage
-             :view   #'DeploymentDetails}]])
+             :view   #'DeploymentDetails
+             :controllers [{:parameters {:path [:uuid]}
+                            :start (fn [{:keys [path]}]
+                                     (dispatch [::main-events/action-interval-start
+                                                {:id        :deployment-get-deployment
+                                                 :frequency 10000
+                                                 :event     [::deployments-detail-events/get-deployment (str "deployment/" (:uuid path))]}]))}]}]])
         (utils/canonical->all-page-names "deployments")))
 
 (def deployment-group-routes
@@ -125,20 +137,26 @@
            {:name     (create-route-name page-alias)
             :layout   #'LayoutPage
             :view     #'deployment-sets-view
+            :controllers [{:parameters {:path [:uuid]}
+                           :start (fn [] (dispatch [::deployment-sets-events/refresh]))}]
             :dict-key :deployment-groups}
            [""]
            ["/" (create-route-name page-alias "-slashed")]
            ["/:uuid"
             {:name   (create-route-name page-alias "-details")
              :layout #'LayoutPage
-             :view   #'deployment-sets-details-view}]])
+             :controllers [{:start (fn [{:keys [path]}]
+                                     (if (= (:uuid path) "create")
+                                       (dispatch [::dsd-events/init-create])
+                                       (dispatch [::dsd-events/init])))}]
+             :view #'deployment-sets-details-view}]])
         (utils/canonical->all-page-names "deployment-groups")))
 
 (def r-routes
   [""
-   {:name        ::routes/root
-    :layout      #'LayoutPage
-    :view        #'home-view}
+   {:name   ::routes/root
+    :layout #'LayoutPage
+    :view   #'home-view}
    ["/"]
    [(str base-path "/")                                     ;; sixsq.nuvla.ui.config/base-path = "/ui" on nuvla.io
     [""

@@ -24,15 +24,12 @@
 
 (reg-event-fx
   ::init
-  (fn [{{:keys [::session-spec/session] :as db} :db}]
-    (let [session-id (:id session)
-          user-id    (:user session)]
-      {:db (merge db spec/defaults)
-       :fx [[:dispatch [::get-user]]
-            [:dispatch [::search-existing-customer]]
-            (when session-id
-              [:dispatch [::audit-log-plugin/load-events
-                          [::spec/events] {:event-name event-names} false]])]})))
+  (fn [{db :db}]
+    {:db (merge db spec/defaults)
+     :fx [[:dispatch [::get-user]]
+          [:dispatch [::search-existing-customer]]
+          [:dispatch [::audit-log-plugin/load-events
+                      [::spec/events] {:event-name event-names} false]]]}))
 
 (reg-event-db
   ::add-group-member

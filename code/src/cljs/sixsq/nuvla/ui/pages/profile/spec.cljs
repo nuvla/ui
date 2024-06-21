@@ -29,6 +29,8 @@
 (s/def ::two-factor-callback (s/nilable string?))
 (s/def ::two-factor-secret (s/nilable string?))
 
+(s/def ::events any?)
+
 (def defaults {::user                nil
                ::customer            nil
                ::payment-methods     nil

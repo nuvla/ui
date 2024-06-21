@@ -1889,6 +1889,7 @@
         :terms-and-conditions                          "Conditions générales"
         :the-plural                                    "les"
         :they-are                                      "sont"
+        :time                                          "Temps"
         :timestamp                                     "horodatage"
         :to                                            "à"
         :to-reactivate-your-subscription               "Pour réactiver votre inscription "

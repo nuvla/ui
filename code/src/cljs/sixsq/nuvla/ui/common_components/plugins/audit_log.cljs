@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -58,7 +59,8 @@
 
 (defn EventsTable
   [{:keys [db-path filters] :as _opts}]
-  (let [events    @(subscribe [::helpers/retrieve db-path ::events])
+  (let [tr        @(subscribe [::i18n-subs/tr])
+        events    @(subscribe [::helpers/retrieve db-path ::events])
         resources (:resources events)]
     [:<>
      [Table {:columns
@@ -69,7 +71,10 @@
                              :label (general-utils/id->short-uuid id)])}
               {:field-key :name}
               {:field-key :description}
-              {:field-key :timestamp}
+              {:field-key      :timestamp
+               :header-content (constantly (str/lower-case (tr [:time])))
+               :cell           (fn [{timestamp :cell-data}]
+                                 [uix/TimeAgo timestamp])}
               {:field-key  :state
                :accessor   #(get-in % [:content :state])
                :cell-props {:style {:white-space "pre"}}}]
@@ -87,9 +92,9 @@
 
 (defn- EventsTabPane
   [{:keys [db-path] :as _opts}]
-  (let [loading? @(subscribe [::helpers/retrieve db-path ::loading?])]
+  (let [loading? (subscribe [::helpers/retrieve db-path ::loading?])]
     (fn [opts]
-      [ui/TabPane {:loading loading?}
+      [ui/TabPane {:loading @loading?}
        [EventsTable opts]])))
 
 (defn events-section

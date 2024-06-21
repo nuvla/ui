@@ -73,7 +73,7 @@
   (-> option-str
       (str/replace #" " "-")
       (keyword)))
-(defn data->ts-data [data]
+(defn data->timeseries-data [data]
   (-> data first :ts-data))
 
 (defn add-time [timestamp granularity]

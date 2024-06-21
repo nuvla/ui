@@ -18,6 +18,7 @@
             [sixsq.nuvla.ui.pages.deployments-detail.events :as events]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments-detail.subs :as subs]
+            [sixsq.nuvla.ui.pages.deployments-detail.views-deployment-data :as app-data-views]
             [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
             [sixsq.nuvla.ui.routing.events :as routing-events]
@@ -237,6 +238,14 @@
                          #(subscribe [::subs/deployment-services-list])
                          true]))}))
 
+(defn app-data-section
+  []
+  (let [tr         (subscribe [::i18n-subs/tr])]
+    {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:data]))])
+                :key     :app-data
+                :icon    icons/i-db}
+     :render   (fn [] (r/as-element
+                        [app-data-views/DeploymentData]))}))
 
 
 (defn action-button
@@ -701,6 +710,7 @@
      (urls-section)
      (module-version-section)
      (logs-section)
+     (app-data-section)
      (when @deployment
        (events-plugin/events-section
          {:db-path [::spec/events]

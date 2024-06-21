@@ -52,3 +52,18 @@
   ::module-requires-user-rights
   (fn [db]
     (get-in db [::spec/module-application ::spec/requires-user-rights])))
+
+(reg-sub
+  ::app-data
+  (fn [db]
+    (::spec/app-data db)))
+
+(reg-sub
+  ::loading?
+  (fn [db]
+    (::spec/loading? db)))
+
+(reg-sub
+  ::timespan
+  (fn [db]
+    (::spec/timespan db)))

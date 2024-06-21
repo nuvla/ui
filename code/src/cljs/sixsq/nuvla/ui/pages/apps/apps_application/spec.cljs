@@ -3,7 +3,8 @@
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.spec :as spec-utils]))
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 
 ; Validation
@@ -11,6 +12,10 @@
 (s/def ::license-validation-errors set?)
 (s/def ::docker-compose-validation-errors set?)
 (s/def ::configuration-validation-errors set?)
+
+(s/def ::loading? boolean?)
+(s/def ::app-data any?)
+(s/def ::timespan any?)
 
 
 (s/def ::requires-user-rights boolean?)
@@ -49,10 +54,15 @@
 (def defaults {::module-application               {::docker-compose       nil
                                                    ::requires-user-rights false
                                                    ::compatibility        "docker-compose"}
+               ::loading?                         false
+               ::app-data                         nil
                ::license-validation-errors        #{}
                ::docker-compose-validation-errors #{}
                ::configuration-validation-errors   #{}
-               ::tab (nav-tab/build-spec :default-tab :overview)})
+               ::tab                              (nav-tab/build-spec :default-tab :overview)
+               ::timespan                         {:timespan-option "last 15 minutes"
+                                                   :from            (time/subtract-minutes (time/now) 15)
+                                                   :to              (time/now)}})
 
 (s/def ::deployment-pagination any?)
 

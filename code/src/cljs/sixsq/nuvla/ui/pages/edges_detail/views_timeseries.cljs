@@ -5,15 +5,16 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.edges-detail.events :as events]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
-            [sixsq.nuvla.ui.utils.datepicker :as datepicker-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.plot :as plot]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]
+            [sixsq.nuvla.ui.utils.timeseries-components :as ts-components]
+            [sixsq.nuvla.ui.utils.timeseries-components]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+
 (defn graph-options [tr {:keys [timespan-option] :as timespan} {:keys [title y-config plugins x-config]}]
   (let [[from to] (if-not (= "custom period" timespan-option)
                     (ts-utils/timespan-to-period (:timespan-option timespan))
@@ -51,7 +52,7 @@
 
 (defn CpuLoadTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (ts-utils/data->ts-data data)]
+        ts-data (ts-utils/data->timeseries-data data)]
     [:div
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-cpu-load :avg-cpu-capacity)
@@ -71,14 +72,14 @@
                                           :borderWidth     1}]}
 
                  :options    (graph-options tr selected-timespan {:title    (str (@tr [:average-cpu-load]) " (%)")
-                                                               :y-config {:max   200
-                                                                          :min   0
-                                                                          :title {:display "true"
-                                                                                  :text    (str (@tr [:percentage]) " (%)")}}})}]]))
+                                                                  :y-config {:max   200
+                                                                             :min   0
+                                                                             :title {:display "true"
+                                                                                     :text    (str (@tr [:percentage]) " (%)")}}})}]]))
 
 (defn RamUsageTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (ts-utils/data->ts-data data)]
+        ts-data (ts-utils/data->timeseries-data data)]
     [:div {:style {:margin-top 35}}
      [plot/Line {:updateMode "none"
                  :data       {:datasets [{:data            (timestamp+percentage ts-data :avg-ram-used :avg-ram-capacity)
@@ -122,7 +123,7 @@
 
 (defn NEStatusTimeSeries [selected-timespan data]
   (let [tr      (subscribe [::i18n-subs/tr])
-        ts-data (ts-utils/data->ts-data data)
+        ts-data (ts-utils/data->timeseries-data data)
         dataset (->> ts-data
                      (mapv (fn [d]
                              {:x      (:timestamp d)
@@ -218,46 +219,6 @@
                                                                      :y-config {:title {:display "true"
                                                                                         :text    (@tr [:megabytes])}}})}]])))))
 
-(defn CustomPeriodSelector [timespan {:keys [on-change-fn-from on-change-fn-to]}]
-  (let [tr                      (subscribe [::i18n-subs/tr])
-        locale                  (subscribe [::i18n-subs/locale])]
-    [:<>
-     [datepicker-utils/datepickerWithLabel
-      [datepicker-utils/label (@tr [:from])]
-      [ui/DatePicker {:show-time-select false
-                      :className        "datepicker"
-                      :start-date       (:from timespan)
-                      :end-date         (:to timespan)
-                      :selected         (:from timespan)
-                      :selects-start    true
-                      :placeholderText  "Select a date"
-                      :date-format      "dd/MM/yyyy"
-                      :time-format      "HH:mm"
-                      :max-date         (time/days-before 1)
-                      :time-intervals   1
-                      :locale           (or (time/locale-string->locale-object @locale) @locale)
-                      :fixed-height     true
-                      :on-change        on-change-fn-from}]]
-     [datepicker-utils/datepickerWithLabel
-      [datepicker-utils/label (str/capitalize (@tr [:to]))]
-      [ui/DatePicker {:selects-end      true
-                      :show-time-select false
-                      :className        "datepicker"
-                      :start-date       (:from timespan)
-                      :end-date         (:to timespan)
-                      :max-date         (time/now)
-                      :min-date         (:from timespan)
-                      :placeholderText  "Select a date"
-                      :selected         (:to timespan)
-                      :date-format      "dd/MM/yyyy"
-                      :time-format      "HH:mm"
-                      :time-intervals   1
-                      :locale           (or (time/locale-string->locale-object @locale) @locale)
-                      :fixed-height     true
-                      :on-change        #(on-change-fn-to
-                                           (if (time/is-today? %) (time/now)
-                                             (time/end-of-day %)))}]]]))
-
 (defn ExportDataModal [{:keys [on-close]}]
   (r/with-let [state (r/atom {:form-data               {}
                               :custom-period-selected? false})]
@@ -336,7 +297,7 @@
                                          :visibility    (if (:custom-period-selected? @state)
                                                           "visible"
                                                           "hidden")}}
-                           [CustomPeriodSelector (:form-data @state)
+                           [sixsq.nuvla.ui.utils.timeseries-components/CustomPeriodSelector (:form-data @state)
                             {:on-change-fn-from #(swap! state assoc-in [:form-data :from] %)
                              :on-change-fn-to   #(swap! state assoc-in [:form-data :to] %)}]]]))]]]]
          [ui/ModalActions
@@ -366,62 +327,23 @@
   (let [tr                        (subscribe [::i18n-subs/tr])
         edge-stats                (subscribe [::subs/edge-stats])
         loading?                  (subscribe [::subs/loading?])
-        initial-timespan          (first ts-utils/timespan-options)
-        currently-selected-option (r/atom initial-timespan)
         selected-timespan         (subscribe [::subs/timespan])
         export-modal-visible?     (r/atom false)
         fetch-edge-stats          (fn [timespan]
                                     (let [[from to] (ts-utils/timespan-to-period timespan)]
                                       (dispatch [::events/set-selected-timespan {:timespan-option timespan
                                                                                  :from from
-                                                                                 :to to}])))
-        custom-timespan           (r/atom {})]
+                                                                                 :to to}])))]
     (fetch-edge-stats (first ts-utils/timespan-options))
     (fn []
-      [:div [ui/Menu {:width "100%"}
+      [:div [ui/Menu {:width "100%"
+                      :borderless true
+                      :style  {:background-color "#F9FAFB"}}
              [ui/MenuMenu {:position "left"}
-              [ui/MenuItem {:style {:padding-top 5
-                                    :padding-bottom 5
-                                    :padding-left 16
-                                    :height 45}}
-               [:span {:style {:display      "flex"
-                               :align-items  "center"
-                               :margin-right 5}} (@tr [:showing-data-for])]
-               [ui/Dropdown {:inline          true
-                             :className       "ts-dropdown"
-                             :basic           true
-                             :scrolling      true
-                             :style           {:display         "flex"
-                                               :justify-content "space-between"}
-                             :loading         @loading?
-                             :close-on-change true
-                             :value           @currently-selected-option
-                             :options         (mapv (fn [o] {:key o :text (@tr [(ts-utils/format-option o)]) :value o}) ts-utils/timespan-options)
-                             :on-change       (ui-callback/value
-                                                (fn [timespan]
-                                                  (reset! currently-selected-option timespan)
-                                                  (when-not (= "custom period" timespan)
-                                                    (let [[from to] (ts-utils/timespan-to-period timespan)]
-                                                      (reset! currently-selected-option timespan)
-                                                      (reset! custom-timespan {})
-                                                      (dispatch [::events/set-selected-timespan {:timespan-option timespan
-                                                                                                 :from from
-                                                                                                 :to to}])))))}]
-               [:div {:style {:display     "flex"
-                              :margin-left 10
-                              :visibility  (if (= "custom period" @currently-selected-option)
-                                             "visible"
-                                             "hidden")}}
-                [CustomPeriodSelector @custom-timespan {:on-change-fn-from #(do (swap! custom-timespan assoc :from %)
-                                                                                (when (:to @custom-timespan)
-                                                                                  (dispatch [::events/set-selected-timespan {:from %
-                                                                                                                             :to (:to @custom-timespan)
-                                                                                                                             :timespan-option "custom period"}])))
-                                                        :on-change-fn-to   #(do (swap! custom-timespan assoc :to %)
-                                                                                (when (:from @custom-timespan)
-                                                                                  (dispatch [::events/set-selected-timespan {:from (:from @custom-timespan)
-                                                                                                                             :to %
-                                                                                                                             :timespan-option "custom period"}])))}]]]]
+              [ts-components/TimeSeriesDropdown {:loading? @loading?
+                                                 :default-value (first ts-utils/timespan-options)
+                                                 :timespan-options ts-utils/timespan-options
+                                                 :on-change-event ::events/set-selected-timespan}]]
              [ui/MenuItem {:icon     icons/i-export
                            :position "right"
                            :content  (str (@tr [:export-data]) " (.csv)")
@@ -429,29 +351,31 @@
 
        [ui/TabPane
         [ui/Grid {:columns   2
-                  :stackable true
-                  :divided   true
-                  :celled    "internally"}
-
+                  :stackable true}
          (when @export-modal-visible?
            [ExportDataModal {:on-close #(reset! export-modal-visible? false)}])
          [ui/GridRow
           [ui/GridColumn {:textAlign "center"}
-           [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]
+           [ui/Segment
+            [CpuLoadTimeSeries @selected-timespan (:cpu-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]
           [ui/GridColumn {:textAlign "center"}
-           [DiskUsageTimeSeries @selected-timespan (:disk-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]]
+           [ui/Segment
+            [DiskUsageTimeSeries @selected-timespan (:disk-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]]
          [ui/GridRow
           [ui/GridColumn {:textAlign "center"}
-           [NetworkDataTimeSeries @selected-timespan (:network-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]
+           [ui/Segment
+            [NetworkDataTimeSeries @selected-timespan (:network-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]
           [ui/GridColumn {:textAlign "center"}
-           [RamUsageTimeSeries @selected-timespan (:ram-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]]
+           [ui/Segment
+            [RamUsageTimeSeries @selected-timespan (:ram-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]]
          [ui/GridRow {:columns 1
                       :centered true}
           [ui/GridColumn {:textAlign "center"
-                          :width 8}
-           [NEStatusTimeSeries @selected-timespan (:availability-stats @edge-stats)]
-           [GraphLabel @selected-timespan]]]]]])))
+                          :width 10}
+           [ui/Segment
+            [NEStatusTimeSeries @selected-timespan (:availability-stats @edge-stats)]
+            [GraphLabel @selected-timespan]]]]]]])))

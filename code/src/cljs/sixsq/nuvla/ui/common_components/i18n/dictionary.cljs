@@ -76,6 +76,7 @@
         :app                                           "app"
         :app-bouquet-has-no-apps                       "Application Bouquet does not include any apps."
         :app-bouquet-includes-apps                     "Application Bouquet includes following apps:"
+        :app-data                                      "app data"
         :app-details                                   "App details"
         :app-name                                      "Name"
         :app-version                                   "App version"

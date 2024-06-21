@@ -1,7 +1,11 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-application.events
-  (:require [re-frame.core :refer [reg-event-db]]
+  (:require [ajax.core :as ajax]
+            [re-frame.core :refer [reg-event-db reg-event-fx]]
+            [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
-            [sixsq.nuvla.ui.pages.apps.utils :as utils]))
+            [sixsq.nuvla.ui.pages.apps.utils :as utils]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 
 (reg-event-db
@@ -79,3 +83,71 @@
   ::update-requires-user-rights
   (fn [db [_ value]]
     (assoc-in db [::spec/module-application ::spec/requires-user-rights] value)))
+
+#_(def ts-id "timeseries/f9f76bdd-56e9-4dde-bbcf-30d1b84625e0")
+
+(def ts-id "timeseries/f28eda8b-c451-4070-88e4-217d71f0bc37")
+
+(def deployment-id-1 "deployment/cf1bf47f-6525-436d-888a-44eee7416302")
+
+(def deployment-id-2 "deployment/d914b10c-ef27-4029-ba8b-4f7747cd3427")
+(def query-name "test-query1")
+
+(reg-event-fx
+  ::fetch-app-data-success
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false
+                   ::spec/app-data response)}))
+
+(reg-event-fx
+  ::fetch-app-data-failure
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false)}))
+
+(reg-event-fx
+  ::fetch-app-data-csv-success
+  (fn [{db :db} [_ response]]
+    {:db (assoc db ::spec/loading? false)
+     :fx [[:dispatch [::main-events/open-link (str "data:text/csv," response)]]]}))
+
+(reg-event-fx
+  ::fetch-app-data-csv
+  (fn [{db :db} [_ {:keys [from to granularity query]}]]
+    {:db         (assoc db ::spec/loading? true)
+     :http-xhrio {:method          :get
+                  :uri             (str "/api/" ts-id "/data")
+                  :params          {:query       query
+                                    :from        (time/time->utc-str from)
+                                    :to          (time/time->utc-str to)
+                                    :granularity granularity}
+                  :headers         {"Accept" "text/csv"}
+                  :request-format  (ajax/json-request-format)
+                  :response-format (ajax/text-response-format)
+                  :on-success      [::fetch-app-data-csv-success]
+                  :on-failure      [::fetch-app-data-failure]}}))
+
+(reg-event-fx
+  ::fetch-app-data
+  (fn [{db :db} [_ {:keys [from to granularity query]}]]
+    (let []
+      {:db         (assoc db ::spec/loading? true)
+       :http-xhrio {:method          :get
+                    :uri             (str "/api/"ts-id"/data")
+                    :params          {:query query
+                                      :from (time/time->utc-str from)
+                                      :to (time/time->utc-str to)
+                                      :granularity granularity}
+                    :request-format  (ajax/json-request-format)
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-app-data-success]
+                    :on-failure      [::fetch-app-data-failure]}})))
+
+(reg-event-fx
+  ::set-selected-timespan
+  (fn [{db :db} [_ timespan]]
+    (let [{:keys [from to]} timespan]
+      {:db (assoc db ::spec/timespan timespan)
+       :fx [[:dispatch [::fetch-app-data {:from        from
+                                          :to          to
+                                          :granularity (ts-utils/granularity-for-timespan timespan)
+                                          :query query-name }]]]})))

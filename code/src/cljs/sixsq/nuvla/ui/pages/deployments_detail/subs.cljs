@@ -163,3 +163,14 @@
   ::not-found?
   (fn [db]
     (::spec/not-found? db)))
+
+(reg-sub
+  ::deployment-data
+  (fn [db]
+    (::spec/deployment-data db)))
+
+(reg-sub
+  ::timespan
+  (fn [db]
+    (::spec/timespan db)))
+

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.profile.spec
   (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
             [sixsq.nuvla.ui.utils.spec :as us]))
 
@@ -46,4 +47,6 @@
                ::two-factor-enable?  true
                ::two-factor-method   nil
                ::two-factor-callback nil
-               ::two-factor-secret   nil})
+               ::two-factor-secret   nil
+               ::events              (audit-log-plugin/build-spec
+                                       :default-items-per-page 15)})

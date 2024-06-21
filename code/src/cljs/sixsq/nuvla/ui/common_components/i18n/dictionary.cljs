@@ -102,6 +102,7 @@
         :are-you-sure-you-want-to-continue?            "Are you sure you want to continue?"
         :are-you-sure?                                 "Are you sure?"
         :attributes                                    "attributes"
+        :audit-log                                     "Audit Log"
         :author                                        "author"
         :automatic-refresh-in                          "automatic refresh in"
         :availability                                  "Availability"

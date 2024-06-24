@@ -12,7 +12,6 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]))
 
 (s/def ::events (s/nilable coll?))
@@ -57,6 +56,13 @@
                                          ::loading? false])]})))
 
 
+(defn LinkedIdentifiers
+  [linked-identifiers]
+  [:<>
+   (for [linked-identifier linked-identifiers]
+     [:div [values/AsLink linked-identifier
+            :label (general-utils/id->resource-name linked-identifier)]])])
+
 (defn EventsTable
   [{:keys [db-path filters] :as _opts}]
   (let [tr        @(subscribe [::i18n-subs/tr])
@@ -77,6 +83,16 @@
                                  [uix/TimeAgo timestamp])}
               {:field-key  :state
                :accessor   #(get-in % [:content :state])
+               :cell-props {:style {:white-space "pre"}}}
+              {:field-key  :details
+               :accessor   #(get-in % [:content :state])
+               :cell       (fn [{{{:keys [linked-identifiers]} :content} :row-data}]
+                             [ui/Popup {:position  "top center"
+                                        :trigger   (r/as-element
+                                                     [ui/Icon {:class icons/i-info
+                                                               :link  true}])
+                                        :hoverable true}
+                              [LinkedIdentifiers linked-identifiers]])
                :cell-props {:style {:white-space "pre"}}}]
              :rows resources}]
      [pagination-plugin/Pagination

@@ -29,12 +29,7 @@
     (assoc db ::spec/modules modules
               ::main-spec/loading? false)))
 
-(def subtypes-apps-or-filter (general-utils/filter-eq-subtypes
-                               [apps-utils/subtype-component
-                                apps-utils/subtype-application
-                                apps-utils/subtype-application-k8s
-                                apps-utils/subtype-applications-sets
-                                apps-utils/subtype-application-helm]))
+(def not-project-filter (str "subtype!='" apps-utils/subtype-project "'"))
 
 (reg-event-fx
   ::get-modules
@@ -52,7 +47,7 @@
                 :filter  (general-utils/join-and
                            (str "parent-path!='" spec/virtual-apps-set-parent-path "'")
                            external-filter
-                           subtypes-apps-or-filter
+                           not-project-filter
                            (case active-tab
                              :appstore (general-utils/published-query-string)
                              :myapps (general-utils/owner-like-query-string
@@ -78,7 +73,7 @@
        :orderby     "created:desc"
        :aggregation "terms:subtype"
        :filter      (general-utils/join-and
-                      subtypes-apps-or-filter
+                      not-project-filter
                       (general-utils/fulltext-query-string
                         full-text-search))}
       #(dispatch [::set-modules %])]}))

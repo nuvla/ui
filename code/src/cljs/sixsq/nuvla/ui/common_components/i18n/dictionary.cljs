@@ -829,7 +829,8 @@
         :profile-page                                  "Profile page"
         :progress                                      "progress"
         :project                                       "project"
-        :provide-absolute-url                          "Provide the absolute URL (authentication is not supported)"
+        :provide-absolute-url                          "Provide the absolute URL"
+        :helm-absolute-url-info                        "Authentication is not available with this option"
         :provide-custom-one                            "Or provide a custom one"
         :provide-helm-repo-and-chart-name              "Provide at least a Helm Repository or custom URL, and a Chart name"
         :public-key                                    "public key"
@@ -1159,6 +1160,14 @@
         }
 
    :fr {
+        :helm-absolute-url-info                        "L'authentification n'est pas disponible avec cette option"
+        :helm-repo-and-chart                           "Helm Repository et Chart"
+        :helm-options-message                          "Vous pouvez définir votre application Helm soit via un Helm Repository, soit via une URL absolue vers un Chart."
+        :helm-repo-section-sub-text                    "Identifiants utilisés pour accéder au Helm Repository"
+        :helm-repositories                             "Helm repositories"
+        :helm-repository                               "Helm Repository"
+        :provide-absolute-url                          "Entrer l'URL absolue"
+        :provide-helm-repo-and-chart-name              "Entrer au moins un Helm Repository et le nom du Chart ou une URL personnalisée"
         :about                                         "à propos"
         :about-starting-these-updates                  "Vous êtes sur le point de démarrer ces mises à jour"
         :about-subtitle                                "Ce logiciel vous est fournit par"

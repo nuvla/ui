@@ -1198,6 +1198,8 @@
                                     :padding-top    (if-not repo-option-selected? 14 0)
                                     :padding-bottom (if-not repo-option-selected? 14 0)
                                     :height         (if-not repo-option-selected? "auto" 0)}}
+             [ui/Message {:info true}
+              [:span (@tr [:helm-absolute-url-info])]]
              [ui/Table (merge style/definition {:compact "very"
                                                 :style   {:width 600}})
               [ui/TableBody

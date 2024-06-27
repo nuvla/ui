@@ -1065,7 +1065,7 @@
                   :color    color
                   :size     "medium"
                   :basic    true
-                  :style {:margin-right 5}}
+                  :style    {:margin-right 5}}
         Icon
         ne-version])]))
 
@@ -1394,6 +1394,7 @@
   (let [[kind path] (get {:swarm      [:icon icons/i-docker]
                           :s3         [:image "/ui/images/s3.png"]
                           :kubernetes [:image "/ui/images/kubernetes.svg"]
+                          :helm-repo  [:image "/ui/images/helm.svg"]
                           :registry   [:icon icons/i-db-full]}
                          (keyword subtype)
                          [:icon "question circle"])]

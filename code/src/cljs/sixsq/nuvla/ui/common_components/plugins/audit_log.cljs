@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.common-components.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.utils.general :as u]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -60,7 +61,7 @@
   [linked-identifiers]
   [:<>
    (for [linked-identifier linked-identifiers]
-     [:div [values/AsLink linked-identifier
+     [:div [values/AsPageLink linked-identifier
             :label (general-utils/id->resource-name linked-identifier)]])])
 
 (defn EventsTable
@@ -70,12 +71,13 @@
         resources (:resources events)]
     [:<>
      [Table {:columns
-             [{:field-key :events
-               :accessor  :id
-               :cell      (fn [{id :cell-data}]
-                            [values/AsLink id
-                             :label (general-utils/id->short-uuid id)])}
-              {:field-key :name}
+             [{:field-key :event
+               :cell      (fn [{{event-id :id event-name :name} :row-data}]
+                            [values/AsLink event-id :label event-name])}
+              {:field-key :resource
+               :cell      (fn [{{{{:keys [href]} :resource} :content} :row-data}]
+                            (let [resource-name (u/id->resource-name href)]
+                              [values/AsPageLink href :label resource-name]))}
               {:field-key :description}
               {:field-key      :timestamp
                :header-content (constantly (str/lower-case (tr [:time])))

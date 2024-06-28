@@ -134,7 +134,7 @@
        [icons/BoltIcon]
        (tr [:audit-log])]
 
-      [audit-log-plugin/EventsTable {:db-path [::spec/events]}]]]))
+      [audit-log-plugin/EventsTableWithFilters {:db-path [::spec/events]}]]]))
 
 
 (defn Statistics

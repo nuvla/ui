@@ -1,18 +1,19 @@
 (ns sixsq.nuvla.ui.common-components.plugins.audit-log
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-event-fx subscribe]]
+            [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as u]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]))
 
 (s/def ::events (s/nilable coll?))
@@ -21,16 +22,19 @@
 (defn build-spec
   [& {:keys [default-items-per-page]
       :or   {default-items-per-page 10}}]
-  {::loading?   true
-   ::pagination (pagination-plugin/build-spec
-                  :default-items-per-page default-items-per-page)})
+  {::loading?         true
+   ::pagination       (pagination-plugin/build-spec
+                        :default-items-per-page default-items-per-page)
+   ::show-all-events? false})
 
 (defn build-filter
-  [{:keys [href event-name]}]
+  [{:keys [active-claim] :as _session} {:keys [href event-name all-events?]}]
   (str/join " and "
             (remove
               nil?
-              [(when href
+              [(when-not all-events?
+                 (str "authn-info/active-claim='" active-claim "'"))
+               (when href
                  (if (coll? href)
                    (str "content/resource/href=" href)
                    (str "content/resource/href='" href "'")))
@@ -41,9 +45,9 @@
 
 (reg-event-fx
   ::load-events
-  (fn [{db :db} [_ db-path filters loading?]]
+  (fn [{{:keys [::session-spec/session] :as db} :db} [_ db-path filters loading?]]
     (let [params (->>
-                   {:filter  (build-filter filters)
+                   {:filter  (build-filter session filters)
                     :orderby "created:desc"
                     :select  "id, name, description, content, severity, timestamp, category"}
                    (pagination-plugin/first-last-params
@@ -57,12 +61,32 @@
                                          ::loading? false])]})))
 
 
+(reg-event-fx
+  ::show-all-events
+  (fn [{db :db} [_ {:keys [db-path filters] :as _opts}]]
+    {:db (assoc-in db (conj db-path ::show-all-events?) true)
+     :fx [[:dispatch [::load-events db-path (assoc filters :all-events? true) true]]]}))
+
+
+(reg-event-fx
+  ::show-current-user-events
+  (fn [{db :db} [_ {:keys [db-path filters] :as _opts}]]
+    {:db (assoc-in db (conj db-path ::show-all-events?) false)
+     :fx [[:dispatch [::load-events db-path (assoc filters :all-events? false) true]]]}))
+
+
+(reg-sub
+  ::show-all-events?
+  (fn [db [_ db-path]]
+    (get-in db (conj db-path ::show-all-events?))))
+
+
 (defn LinkedIdentifiers
   [linked-identifiers]
   [:<>
    (for [linked-identifier linked-identifiers]
      [:div [values/AsPageLink linked-identifier
-            :label (general-utils/id->resource-name linked-identifier)]])])
+            :label (u/id->resource-name linked-identifier)]])])
 
 (defn EventsTable
   [{:keys [db-path filters] :as _opts}]
@@ -104,16 +128,42 @@
 
 (s/def ::href string?)
 
+(s/def ::filters (s/nilable map?))
+
 (s/fdef EventsTable
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
-                                            ::href])))
+                                            ::href]
+                                   :opt-un [::filters])))
+
+(defn EventsFilters
+  [{:keys [db-path] :as opts}]
+  (let [tr               @(subscribe [::i18n-subs/tr])
+        show-all-events? @(subscribe [::show-all-events? db-path])]
+    [ui/Checkbox {:name      "show-all-events"
+                  :label     (tr [:show-all-events])
+                  :checked   show-all-events?
+                  :on-change (ui-callback/checked
+                               (fn [checked]
+                                 (if checked
+                                   (dispatch [::show-all-events opts])
+                                   (dispatch [::show-current-user-events opts]))))
+                  :align     :middle
+                  :style     {:padding 5}}]))
+
+(defn EventsTableWithFilters
+  [{:keys [db-path] :as opts}]
+  (let [show-all-events? @(subscribe [::show-all-events? db-path])]
+    [ui/Grid
+     [ui/GridColumn
+      [EventsFilters opts]
+      [EventsTable (assoc-in opts [:filters :all-events?] show-all-events?)]]]))
 
 (defn- EventsTabPane
   [{:keys [db-path] :as _opts}]
   (let [loading? (subscribe [::helpers/retrieve db-path ::loading?])]
     (fn [opts]
       [ui/TabPane {:loading @loading?}
-       [EventsTable opts]])))
+       [EventsTableWithFilters opts]])))
 
 (defn events-section
   [{:keys [db-path] :as opts}]

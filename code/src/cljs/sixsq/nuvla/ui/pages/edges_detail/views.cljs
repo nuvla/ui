@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
             [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.common-components.resource-log.views :as log-views]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.components :as components]
@@ -880,7 +881,26 @@
                  nil)]))))
 
 
-(defn- StatsTable [container-stats]
+(defn- NewStatsTable [container-stats]
+   [TableColsEditable
+     {:columns [{:field-key :name
+                 :header-content "Container Name"}
+                {:field-key :image
+                 :header-content "Container Image"}
+                {:field-key :cpu-usage
+                 :header-content "CPU %"}
+                {:field-key :status
+                 :header-content "Status"}
+                {:field-key :restart-count
+                 :header-content "Restart Count"}]
+      :default-columns #{:name :image :cpu-usage :status :restart-count}
+      :table-props     (merge style/single-line {:stackable true :selectable true})
+      :cell-props      {:header {:single-line true}}
+      :rows            container-stats}
+     ::table-cols-config])
+
+
+(defn- OldStatsTable [container-stats]
   [ui/GridRow {:centered true
                :columns  1}
    [ui/GridColumn
@@ -914,6 +934,12 @@
            [ui/TableCell blk-in-out]
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
+
+(defn- StatsTable [container-stats]
+   (if (:cpu-usage (first container-stats))
+    [NewStatsTable container-stats]
+    [OldStatsTable container-stats]))
+
 (defn Load
   [resources]
   (let [load-stats      (utils/load-statistics resources)

@@ -1080,9 +1080,7 @@
           [ui/Message {:info true}
            [:span (@tr [:helm-options-message])]]
           [ui/Form
-           [:div {:style {:opacity (if-not repo-option-selected?
-                                     "50%"
-                                     "100%")}}
+           [:div {:style {:opacity (if repo-option-selected? "100%" "50%")}}
             [ui/Header {:as    "h4" :attached "top"
                         :style {:background-color "#00000008"}}
              [ui/FormField {:style {:display         "flex"
@@ -1092,6 +1090,7 @@
                          :value     :repo
                          :name      "radioGroup"
                          :checked   repo-option-selected?
+                         :disabled  read-only?
                          :on-change #(dispatch [::events/set-helm-option :repo])}]
               [ui/Icon {:class (if repo-option-selected? icons/i-angle-down icons/i-angle-up)}]]
              [ui/HeaderSubheader [:span (@tr [:provide-helm-repo-and-chart-name])]]]
@@ -1114,9 +1113,9 @@
                 [ui/TableCell {:style      {:max-width 300}
                                :collapsing true} "Repository URL"]
                 [ui/TableCell {:style {:width 600}}
-                 [:div {:style {:font-size "small"
+                 [:div {:style {:font-size     "small"
                                 :margin-bottom 10
-                                :margin-top 10}} [:b "Current URL"] [:br] [:p (or helm-repo-url " - ")]]
+                                :margin-top    10}} [:b "Current URL"] [:br] [:p (or helm-repo-url " - ")]]
                  [ui/Dropdown {:fluid          true
                                :clearable      true
                                :allowAdditions true
@@ -1126,7 +1125,8 @@
                                :search         true
                                :scrollable     true
                                :options        all-infra-options
-                               :disabled       (not repo-option-selected?)
+                               :disabled       (or (not repo-option-selected?)
+                                                   read-only?)
                                :selection      true
                                :on-change      (ui-callback/value
                                                  (fn [value]
@@ -1152,7 +1152,8 @@
                  [ui/Dropdown {:fluid       true
                                :value       helm-repo-creds
                                :disabled    (or (not repo-option-selected?)
-                                                (str/blank? helm-repo-url))
+                                                (str/blank? helm-repo-url)
+                                                read-only?)
                                :on-change   (ui-callback/value
                                               #(update-helm-value :helm-repo-creds %))
                                :clearable   true
@@ -1162,18 +1163,18 @@
                                :style       {:max-width 400}}]]]
                [ui/TableRow
                 [ui/TableCell (@tr [:chart-name])]
-                [ui/TableCell [ui/Input {:disabled  (not repo-option-selected?)
-                                         :default-value     (or helm-chart-name "")
-                                         :read-only read-only?
-                                         :on-change (ui-callback/value
-                                                      #(update-helm-value :helm-chart-name %))}]]]
+                [ui/TableCell [ui/Input {:disabled      (not repo-option-selected?)
+                                         :default-value (or helm-chart-name "")
+                                         :read-only     read-only?
+                                         :on-change     (ui-callback/value
+                                                          #(update-helm-value :helm-chart-name %))}]]]
                [ui/TableRow
                 [ui/TableCell (str/capitalize (@tr [:version]))]
-                [ui/TableCell [ui/Input {:disabled  (not repo-option-selected?)
-                                         :default-value     (or helm-chart-version "")
-                                         :read-only read-only?
-                                         :on-change (ui-callback/value
-                                                      #(update-helm-value :helm-chart-version %))}]]]]]]]
+                [ui/TableCell [ui/Input {:disabled      (not repo-option-selected?)
+                                         :default-value (or helm-chart-version "")
+                                         :read-only     read-only?
+                                         :on-change     (ui-callback/value
+                                                          #(update-helm-value :helm-chart-version %))}]]]]]]]
            [:div {:style {:opacity (if (= :repo repo-or-url?)
                                      "50%"
                                      "100%")}}
@@ -1186,6 +1187,7 @@
                          :value     :url
                          :name      "radioGroup"
                          :checked   (not repo-option-selected?)
+                         :disabled  read-only?
                          :on-change #(dispatch [::events/set-helm-option :url])}]
               [ui/Icon {:class (if-not repo-option-selected? icons/i-angle-down icons/i-angle-up)}]]
              [ui/HeaderSubheader (@tr [:provide-absolute-url])]]
@@ -1206,12 +1208,12 @@
                [ui/TableRow
                 [ui/TableCell "URL"]
                 [ui/TableCell
-                 [ui/Input {:disabled  (= :repo repo-or-url?)
-                            :default-value     (or helm-absolute-url "")
-                            :read-only read-only?
-                            :style     {:width "100%"}
-                            :on-change (ui-callback/value
-                                         #(update-helm-value :helm-absolute-url %))}]]]]]]]]]
+                 [ui/Input {:disabled      (= :repo repo-or-url?)
+                            :default-value (or helm-absolute-url "")
+                            :read-only     read-only?
+                            :style         {:width "100%"}
+                            :on-change     (ui-callback/value
+                                             #(update-helm-value :helm-absolute-url %))}]]]]]]]]]
 
          :label (@tr [:helm-repo-and-chart])
 

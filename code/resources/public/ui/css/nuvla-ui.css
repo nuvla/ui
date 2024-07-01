@@ -815,6 +815,10 @@ body .divider-red {
   background-color: var(--edges-color);
 }
 
+.nuvla-dashboard .audit-logs .ui-header {
+  background-color: rgba(170, 170, 170, 1);
+}
+
 .nuvla-dashboard .statistic.nuvla-credentials {
   background-color: #c10e12;
 }

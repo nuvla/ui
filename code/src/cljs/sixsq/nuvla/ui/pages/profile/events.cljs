@@ -7,6 +7,7 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.i18n.spec :as i18n-spec]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.profile.effects :as fx]
@@ -19,12 +20,16 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
+(def event-names ["session.add" "session.delete" "session.switch-group"])
+
 (reg-event-fx
   ::init
   (fn [{db :db}]
     {:db (merge db spec/defaults)
      :fx [[:dispatch [::get-user]]
-          [:dispatch [::search-existing-customer]]]}))
+          [:dispatch [::search-existing-customer]]
+          [:dispatch [::audit-log-plugin/load-events
+                      [::spec/events] {:event-name event-names} false]]]}))
 
 (reg-event-db
   ::add-group-member

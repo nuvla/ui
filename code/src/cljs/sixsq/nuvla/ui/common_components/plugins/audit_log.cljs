@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as u]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -49,7 +50,7 @@
     (let [params (->>
                    {:filter  (build-filter session filters)
                     :orderby "created:desc"
-                    :select  "id, name, description, content, severity, timestamp, category"}
+                    :select  "id, name, description, content, severity, timestamp, category, authn-info"}
                    (pagination-plugin/first-last-params
                      db (conj db-path ::pagination)))]
       {:db                  (cond-> db
@@ -85,8 +86,14 @@
   [linked-identifiers]
   [:<>
    (for [linked-identifier linked-identifiers]
+     ^{:key linked-identifier}
      [:div [values/AsPageLink linked-identifier
             :label (u/id->resource-name linked-identifier)]])])
+
+(defn EventUser
+  [user-id]
+  (let [principal-name @(subscribe [::session-subs/resolve-principal user-id])]
+    [:span principal-name]))
 
 (defn EventsTable
   [{:keys [db-path filters] :as _opts}]
@@ -98,6 +105,9 @@
              [{:field-key :event
                :cell      (fn [{{event-id :id event-name :name} :row-data}]
                             [values/AsLink event-id :label event-name])}
+              {:field-key :user
+               :cell (fn [{{{:keys [active-claim]} :authn-info} :row-data}]
+                       [EventUser active-claim])}
               {:field-key :resource
                :cell      (fn [{{{{:keys [href]} :resource} :content} :row-data}]
                             (let [resource-name (u/id->resource-name href)]
@@ -130,7 +140,7 @@
 
 (s/def ::filters (s/nilable map?))
 
-(s/fdef EventsTable
+#_(s/fdef EventsTable
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
                                             ::href]
                                    :opt-un [::filters])))
@@ -183,4 +193,5 @@
 
 (s/fdef events-section
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
-                                            ::href])))
+                                            ::href]
+                                   :opt-un [::filters])))

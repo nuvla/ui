@@ -70,13 +70,13 @@
                                                    (select-keys helm-info [:helm-absolute-url])
                                                    (select-keys helm-info [:helm-repo-url
                                                                            :helm-chart-name
-                                                                           :helm-repo-creds
+                                                                           :helm-repo-cred
                                                                            :helm-chart-version]))]
     (as-> helm-module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :requires-user-rights] requires-user-rights)
-          (update-in m [:content] dissoc :helm-repo-url :helm-chart-name :helm-repo-creds :helm-chart-version :helm-absolute-url)
+          (update m :content dissoc :helm-repo-url :helm-chart-name :helm-repo-cred :helm-chart-version :helm-absolute-url)
           (update m :content #(merge % helm-info-to-submit))
           (if helm-chart-values
             (assoc-in m [:content :helm-chart-values] helm-chart-values)

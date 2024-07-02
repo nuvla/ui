@@ -397,7 +397,7 @@ For more information on how to format your app description using Markdown syntax
   (let [helm-info (select-keys content [:helm-repo-url
                                         :helm-chart-name
                                         :helm-absolute-url
-                                        :helm-repo-creds
+                                        :helm-repo-cred
                                         :helm-chart-version
                                         :helm-chart-values])
         repo-or-url?  (if (:helm-absolute-url helm-info) :url :repo)]

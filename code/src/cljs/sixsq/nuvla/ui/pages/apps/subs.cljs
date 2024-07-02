@@ -252,9 +252,29 @@
     (::spec/helm-infra db)))
 
 (reg-sub
+  ::helm-infra-opts
+  (fn [{:keys [::spec/helm-infra]}]
+    (mapv (fn [{:keys [id name endpoint]}]
+            {:key      id
+             :value    id
+             :endpoint endpoint
+             :text     name})
+          helm-infra)))
+
+(reg-sub
   ::helm-credentials
-  (fn [db]
-    (group-by :parent (::spec/helm-credentials db))))
+  (fn [{:keys [::spec/helm-credentials]}]
+    (group-by :parent helm-credentials)))
+
+(reg-sub
+  ::helm-credentials-opts
+  :<- [::helm-credentials]
+  (fn [helm-credentials [_ helm-repo-url]]
+    (mapv (fn [{:keys [id name]}]
+            {:key   id
+             :value id
+             :text  name})
+          (get helm-credentials helm-repo-url))))
 
 (reg-sub
   ::price

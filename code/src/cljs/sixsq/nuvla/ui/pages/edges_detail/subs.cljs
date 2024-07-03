@@ -16,6 +16,34 @@
     (::spec/nuvlabox-status db)))
 
 (reg-sub
+  ::stats-container-ordering
+  (fn [db]
+    (::spec/stats-container-ordering db)))
+
+(reg-sub
+  ::container-stats
+  :<- [::nuvlabox-status]
+  :-> (comp :container-stats :resources))
+
+(defn mutli-key-direction-sort
+  [orders x y]
+  (loop [rest-orders orders]
+    (if-let [[key direction] (first rest-orders)]
+      (let [c (if (= direction "desc")
+                (compare (key y) (key x))
+                (compare (key x) (key y)))]
+        (if (not= c 0)
+          c
+          (recur (rest rest-orders)))))))
+
+(reg-sub
+  ::container-stats-ordered
+  :<- [::container-stats]
+  :<- [::stats-container-ordering]
+  (fn [[container-stats stats-container-ordering]]
+    (sort (partial mutli-key-direction-sort stats-container-ordering) container-stats)))
+
+(reg-sub
   ::nuvlaedge-release
   :-> ::spec/nuvlaedge-release)
 

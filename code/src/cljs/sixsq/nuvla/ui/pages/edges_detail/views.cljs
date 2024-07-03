@@ -881,23 +881,25 @@
                  nil)]))))
 
 
-(defn- NewStatsTable [container-stats]
-   [TableColsEditable
-     {:columns [{:field-key :name
-                 :header-content "Container Name"}
-                {:field-key :image
-                 :header-content "Container Image"}
-                {:field-key :cpu-usage
-                 :header-content "CPU %"}
-                {:field-key :status
-                 :header-content "Status"}
-                {:field-key :restart-count
-                 :header-content "Restart Count"}]
+(defn- NewStatsTable []
+  (let [container-stats-ordered @(subscribe [::subs/container-stats-ordered])]
+    [TableColsEditable
+     {:columns         [{:field-key      :name
+                         :header-content "Container Name"}
+                        {:field-key      :image
+                         :header-content "Container Image"}
+                        {:field-key      :cpu-usage
+                         :header-content "CPU %"}
+                        {:field-key      :status
+                         :header-content "Status"}
+                        {:field-key      :restart-count
+                         :header-content "Restart Count"}]
+      :sort-config     {:db-path ::spec/stats-container-ordering}
       :default-columns #{:name :image :cpu-usage :status :restart-count}
       :table-props     (merge style/single-line {:stackable true :selectable true})
       :cell-props      {:header {:single-line true}}
-      :rows            container-stats}
-     ::table-cols-config])
+      :rows            container-stats-ordered}
+     ::table-cols-edge-detail-container-config]))
 
 
 (defn- OldStatsTable [container-stats]
@@ -936,7 +938,7 @@
            [ui/TableCell restart-count]]))]]]])
 
 (defn- StatsTable [container-stats]
-   (if (:cpu-usage (first container-stats))
+  (if (:cpu-usage (first container-stats))
     [NewStatsTable container-stats]
     [OldStatsTable container-stats]))
 
@@ -1208,13 +1210,13 @@
               [ui/TableCell "IP"]
               [ui/TableCell
                [uix/CopyToClipboard {:value     ip
-                                        :on-hover? false}]]])
+                                     :on-hover? false}]]])
            (when ips-available
              [IpsRow {:title "IPs"
                       :ips   (map (fn [[name ip]]
                                     {:name name
                                      :ip   [uix/CopyToClipboard {:value     ip
-                                                                    :on-hover? false}]}) (:ips network))}])])
+                                                                 :on-hover? false}]}) (:ips network))}])])
         (when (pos? (count @ssh-creds))
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]

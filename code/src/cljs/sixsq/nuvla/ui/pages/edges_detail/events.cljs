@@ -56,6 +56,13 @@
     (assoc db ::spec/vuln-severity-selector vuln-severity)))
 
 (reg-event-fx
+  ::get-nuvlabox-status
+  (fn [{{:keys [::spec/stats-container-ordering]} :db} [_ nb-status-id]]
+    (js/console.info stats-container-ordering)
+    {::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
+                        :on-error #(dispatch [::set-nuvlabox-status nil])]}))
+
+(reg-event-fx
   ::set-nuvlabox
   (fn [{:keys [db]} [_ {nb-status-id     :nuvlabox-status
                         infra-srv-grp-id :infrastructure-service-group
@@ -63,9 +70,8 @@
     {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
                                  ::spec/nuvlabox nuvlabox
                                  ::main-spec/loading? false)
-     ::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
-                        :on-error #(dispatch [::set-nuvlabox-status nil])]
-     :fx               [(when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
+     :fx               [[:dispatch [::get-nuvlabox-status nb-status-id]]
+                        (when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
 
 (reg-event-fx
   ::get-nuvlabox-associated-ssh-keys

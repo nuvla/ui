@@ -49,4 +49,6 @@
                       {:id        refresh-audit-logs-id
                        :frequency 20000
                        :event     [::audit-log-plugin/load-events
-                                   [::spec/events] nil false]}]]]}))
+                                   [::spec/events]
+                                   nil
+                                   false]}]]]}))

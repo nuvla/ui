@@ -14,6 +14,7 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.tooltip :as tt]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -21,38 +22,43 @@
 (s/def ::loading? (s/nilable boolean?))
 
 (defn build-spec
-  [& {:keys [default-items-per-page]
-      :or   {default-items-per-page 10}}]
+  [& {:keys [default-items-per-page default-show-all-events?]
+      :or   {default-items-per-page   10
+             default-show-all-events? false}}]
   {::loading?         true
    ::pagination       (pagination-plugin/build-spec
                         :default-items-per-page default-items-per-page)
-   ::show-all-events? false})
+   ::show-all-events? default-show-all-events?})
 
 (defn build-filter
-  [{:keys [active-claim] :as _session} {:keys [href event-name all-events?]}]
-  (str/join " and "
-            (remove
-              nil?
-              [(when-not all-events?
-                 (str "authn-info/active-claim='" active-claim "'"))
-               (when href
-                 (if (coll? href)
-                   (str "content/resource/href=" href)
-                   (str "content/resource/href='" href "'")))
-               (when event-name
-                 (if (coll? event-name)
-                   (str "name=" event-name)
-                   (str "name='" event-name "'")))])))
+  [{:keys [active-claim user] :as _session} {:keys [href event-name all-events?]}]
+  (let [current-role (or active-claim user)]
+    (str/join " and "
+              (remove
+                nil?
+                [(when-not all-events?
+                   ;; only show events initiated or somehow related to the current role
+                   (str "(authn-info/active-claim='" current-role "' or"
+                        "content/linked-identifiers='" current-role "')"))
+                 (when href
+                   (if (coll? href)
+                     (str "content/resource/href=" href)
+                     (str "content/resource/href='" href "'")))
+                 (when event-name
+                   (if (coll? event-name)
+                     (str "name=" event-name)
+                     (str "name='" event-name "'")))]))))
 
 (reg-event-fx
   ::load-events
   (fn [{{:keys [::session-spec/session] :as db} :db} [_ db-path filters loading?]]
-    (let [params (->>
-                   {:filter  (build-filter session filters)
-                    :orderby "created:desc"
-                    :select  "id, name, description, content, severity, timestamp, category, authn-info"}
-                   (pagination-plugin/first-last-params
-                     db (conj db-path ::pagination)))]
+    (let [all-events? (get-in db (conj db-path ::show-all-events?))
+          params      (->>
+                        {:filter  (build-filter session (merge filters {:all-events? all-events?}))
+                         :orderby "created:desc"
+                         :select  "id, name, description, content, severity, timestamp, category, authn-info"}
+                        (pagination-plugin/first-last-params
+                          db (conj db-path ::pagination)))]
       {:db                  (cond-> db
                                     loading? (assoc-in
                                                (conj db-path ::loading?) true))
@@ -95,6 +101,10 @@
   (let [principal-name @(subscribe [::session-subs/resolve-principal user-id])]
     [:span principal-name]))
 
+(defn event-name->operation
+  [event-name]
+  (second (re-matches #".*\.(.*)" event-name)))
+
 (defn EventsTable
   [{:keys [db-path filters] :as _opts}]
   (let [tr        @(subscribe [::i18n-subs/tr])
@@ -102,24 +112,27 @@
         resources (:resources events)]
     [:<>
      [Table {:columns
-             [{:field-key :event
-               :cell      (fn [{{event-id :id event-name :name} :row-data}]
-                            [values/AsLink event-id :label event-name])}
-              {:field-key :user
-               :cell (fn [{{{:keys [active-claim]} :authn-info} :row-data}]
-                       [EventUser active-claim])}
-              {:field-key :resource
+             [{:field-key :resource
                :cell      (fn [{{{{:keys [href]} :resource} :content} :row-data}]
                             (let [resource-name (u/id->resource-name href)]
                               [values/AsPageLink href :label resource-name]))}
-              {:field-key :description}
+              {:field-key :event
+               :cell      (fn [{{event-id :id event-name :name} :row-data}]
+                            [values/AsLink event-id :label (if (= "legacy" event-name)
+                                                             "event"
+                                                             (event-name->operation event-name))])}
+              {:field-key :user
+               :cell      (fn [{{{:keys [active-claim]} :authn-info} :row-data}]
+                            [EventUser active-claim])}
               {:field-key      :timestamp
                :header-content (constantly (str/lower-case (tr [:time])))
                :cell           (fn [{timestamp :cell-data}]
-                                 [uix/TimeAgo timestamp])}
-              {:field-key  :state
-               :accessor   #(get-in % [:content :state])
-               :cell-props {:style {:white-space "pre"}}}
+                                 (tt/with-tooltip
+                                   [:span [uix/TimeAgo timestamp]]
+                                   timestamp))}
+              {:field-key :description
+               :cell      (fn [{{:keys [description] {:keys [state]} :content} :row-data}]
+                            (or description state))}
               {:field-key  :details
                :accessor   #(get-in % [:content :state])
                :cell       (fn [{{{:keys [linked-identifiers]} :content} :row-data}]
@@ -136,13 +149,10 @@
        :total-items  (:count events)
        :change-event [::load-events db-path filters true]}]]))
 
-(s/def ::href string?)
-
 (s/def ::filters (s/nilable map?))
 
-#_(s/fdef EventsTable
-        :args (s/cat :opts (s/keys :req-un [::helpers/db-path
-                                            ::href]
+(s/fdef EventsTable
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path]
                                    :opt-un [::filters])))
 
 (defn EventsFilters
@@ -192,6 +202,5 @@
      :render   #(r/as-element [EventsTabPane opts])}))
 
 (s/fdef events-section
-        :args (s/cat :opts (s/keys :req-un [::helpers/db-path
-                                            ::href]
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path]
                                    :opt-un [::filters])))

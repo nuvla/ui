@@ -3,7 +3,7 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.credentials.events :as creds-events]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
@@ -64,8 +64,8 @@
     (let [different-deployment? (not= (:id deployment) id)]
       (cond-> {:db               (assoc db ::spec/loading? true)
                :fx               [[:dispatch [::get-deployment-parameters id]]
-                                  [:dispatch [::events-plugin/load-events
-                                              [::spec/events] id true]]
+                                  [:dispatch [::audit-log-plugin/load-events
+                                              [::spec/events] {:href id} true]]
                                   [:dispatch [::job-events/get-jobs id]]]
                ::cimi-api-fx/get [id #(dispatch [::set-deployment %])
                                   :on-error #(dispatch [::set-deployment nil])]}

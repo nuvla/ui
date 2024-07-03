@@ -33,6 +33,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
@@ -882,7 +883,9 @@
 
 
 (defn- NewStatsTable []
-  (let [container-stats-ordered @(subscribe [::subs/container-stats-ordered])]
+  (let [container-stats-ordered @(subscribe [::subs/container-stats-ordered])
+        cell-bytes (fn [{cell-data :cell-data}]
+                       (data-utils/format-bytes cell-data))]
     [TableColsEditable
      {:columns         [{:field-key      :name
                          :header-content "Container Name"}
@@ -893,7 +896,19 @@
                         {:field-key      :status
                          :header-content "Status"}
                         {:field-key      :restart-count
-                         :header-content "Restart Count"}]
+                         :header-content "Restart Count"}
+                        {:field-key      :mem-usage
+                         :cell      cell-bytes}
+                        {:field-key      :mem-limit
+                         :cell      cell-bytes}
+                        {:field-key      :disk-in
+                         :cell      cell-bytes}
+                        {:field-key      :disk-out
+                         :cell      cell-bytes}
+                        {:field-key      :net-in
+                         :cell      cell-bytes}
+                        {:field-key      :net-out
+                         :cell      cell-bytes}]
       :sort-config     {:db-path ::spec/stats-container-ordering}
       :default-columns #{:name :image :cpu-usage :status :restart-count}
       :table-props     (merge style/single-line {:stackable true :selectable true})

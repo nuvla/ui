@@ -132,7 +132,10 @@
                                    timestamp))}
               {:field-key :description
                :cell      (fn [{{:keys [description] {:keys [state]} :content} :row-data}]
-                            (or description state))}
+                            (let [desc (or description state)]
+                              (tt/with-tooltip
+                                [:span desc]
+                                desc)))}
               {:field-key  :details
                :accessor   #(get-in % [:content :state])
                :cell       (fn [{{{:keys [linked-identifiers]} :content} :row-data}]

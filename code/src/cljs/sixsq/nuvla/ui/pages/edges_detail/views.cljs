@@ -882,6 +882,19 @@
                  nil)]))))
 
 
+(defn BytesUsage
+  [used limit]
+  (let [[unit used limit perc] (data-utils/bytes-usage used limit)]
+    [:div {:style {:display "flex"}}
+     [:div {:style {:width        "28%"
+                    :text-align   "right"
+                    :margin-right "5px"}}
+      (str (general-utils/to-fixed perc :n-decimal 1) "%")]
+     [:div {:style {:width      "70%"
+                    :text-align "left"}}
+      (str "(" (general-utils/to-fixed used :n-decimal 1) "/"
+           (general-utils/to-fixed limit :n-decimal 1) unit ")")]]))
+
 (defn- NewStatsTable []
   (let [container-stats-ordered @(subscribe [::subs/container-stats-ordered])
         cell-bytes              (fn [{cell-data :cell-data}]
@@ -907,6 +920,13 @@
                          :cell      cell-bytes}
                         {:field-key :mem-limit
                          :cell      cell-bytes}
+                        {:field-key     :mem-combined
+                         :cell          (fn [{{:keys [mem-usage mem-limit]} :row-data}]
+                                          [BytesUsage mem-usage mem-limit])
+                         :cell-props    {:style {:text-align "right"}}
+                         :sort-value-fn (fn [{:keys [mem-usage mem-limit]}]
+                                          (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
+                                            (/ (double mem-usage) mem-limit)))}
                         {:field-key :disk-in
                          :cell      cell-bytes}
                         {:field-key :disk-out

@@ -49,6 +49,27 @@
           (str (general-utils/round-up v :n-decimal 1) prefix))))
     "..."))
 
+(defn bytes-usage
+  "Given a used and limit amounts in bytes returns a tuple with:
+   - unit selected
+   - used amount in selected unit
+   - limit amount in selected unit
+   - percentage used
+  "
+  [used limit]
+  (when (and (number? used) (number? limit))
+    (let [scale 1024
+          units ["B" "KiB" "MiB" "GiB" "TiB" "PiB" "EiB"]
+          perc  (* (/ used limit) 100)]
+      (if (and (< used scale) (< limit scale))
+        ["B" used limit perc]
+        (let [exp    (max (int (/ (js/Math.log used) (js/Math.log scale)))
+                          (int (/ (js/Math.log limit) (js/Math.log scale))))
+              suffix (get units exp)
+              v1     (/ used (js/Math.pow scale exp))
+              v2     (/ limit (js/Math.pow scale exp))]
+          [suffix v1 v2 perc])))))
+
 (defn data-record-href
   [id]
   (str-pathify (name->href routes/data) (general-utils/id->uuid id)))

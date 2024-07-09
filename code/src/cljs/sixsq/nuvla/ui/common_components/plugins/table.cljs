@@ -41,6 +41,7 @@
 (s/def ::accessor (s/nilable (s/or :function fn? :keyword keyword?)))
 (s/def ::header-content (s/nilable any?))
 (s/def ::sort-key (s/nilable (s/or :keyword keyword? :string string?)))
+(s/def ::sort-value-fn (s/nilable fn?))
 (s/def ::no-sort (s/nilable boolean?))
 (s/def ::cell (s/nilable fn?))
 
@@ -49,6 +50,7 @@
                                       ::header-content
                                       ::accessor
                                       ::sort-key
+                                      ::sort-value-fn
                                       ::no-sort
                                       ::cell])))
 
@@ -60,20 +62,21 @@
 ;; sorting
 
 
-(defn- calc-new-ordering [{:keys [order sort-key]} ordering]
+(defn- calc-new-ordering [{:keys [order sort-key sort-value-fn]} ordering]
   (let [cleaned-ordering (remove #(= sort-key (first %)) ordering)]
     (case order
       "asc" cleaned-ordering
-      "desc" (cons [sort-key "asc"] cleaned-ordering)
-      (cons [sort-key "desc"] cleaned-ordering))))
+      "desc" (cons [sort-key "asc" sort-value-fn] cleaned-ordering)
+      (cons [sort-key "desc" sort-value-fn] cleaned-ordering))))
 
 (reg-event-fx
   ::sort
   (fn [{db :db} [_ {sort-key       :field
+                    sort-value-fn  :value-fn
                     sort-direction :direction
                     db-path        :db-path
                     fetch-event    :fetch-event}]]
-    {:db (update db db-path (partial calc-new-ordering {:sort-key sort-key :order sort-direction}))
+    {:db (update db db-path (partial calc-new-ordering {:sort-key sort-key :sort-value-fn sort-value-fn :order sort-direction}))
      :fx [(when fetch-event [:dispatch fetch-event])]}))
 
 (reg-sub
@@ -527,7 +530,7 @@
        :fx [[:dispatch [::store-cols cols db-path]]]})))
 
 (defn- HeaderCellContent
-  [{:keys [db-path sort-key no-sort? header-content field-key fetch-event]}]
+  [{:keys [db-path sort-value-fn sort-key no-sort? header-content field-key fetch-event]}]
   (let [tr            @(subscribe [::i18n-subs/tr])
         sort-key      (or sort-key field-key)
         direction     (when db-path @(subscribe [::sort-direction db-path sort-key]))
@@ -536,6 +539,7 @@
                         (or sort-key field-key)
                         (not no-sort?))
         sort-fn       #(dispatch [::sort {:field       sort-key
+                                          :value-fn    sort-value-fn
                                           :direction   direction
                                           :db-path     db-path
                                           :fetch-event fetch-event}])]
@@ -566,7 +570,7 @@
         1. for accessing a documents data to show in a specific column, if no `:accessor` fn is provided,
         2. as column header translation key or label, if no `:header-content` fn or element is provided,
         3. as the document field to sort on, if sort is enabled by providing a `:sort-config` and no
-              `:sort-key` is provided or sort is disabled with `:no-sort?` for this column,
+              `:sort-key` or `:sort-value-fn` is provided or sort is disabled with `:no-sort?` for this column,
     - `:header-content` can be passed in for custom column header, else `:field-key` is used,
     - `:accessor` custom fn to accessing data for this column, else `:field-key` is used,
     - `:cell` custom render fn for row cell, specific row document and cell-data is passed, else raw data is shown,
@@ -645,7 +649,7 @@
                [HeaderCellContent
                 (merge sort-config
                        {:header-content header-content}
-                       (select-keys col [:sort-key :field-key :no-sort?]))]
+                       (select-keys col [:sort-key :sort-value-fn :field-key :no-sort?]))]
                (when-let [remove-fn (-> props :col-config :remove-col-fn)]
                  (when (and (< 1 (count columns))
                             (not (:no-remove-icon? col)))

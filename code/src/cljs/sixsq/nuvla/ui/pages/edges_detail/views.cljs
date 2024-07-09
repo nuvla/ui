@@ -884,30 +884,36 @@
 
 (defn- NewStatsTable []
   (let [container-stats-ordered @(subscribe [::subs/container-stats-ordered])
-        cell-bytes (fn [{cell-data :cell-data}]
-                       (data-utils/format-bytes cell-data))]
+        cell-bytes              (fn [{cell-data :cell-data}]
+                                  (data-utils/format-bytes cell-data))]
     [TableColsEditable
      {:columns         [{:field-key      :name
                          :header-content "Container Name"}
                         {:field-key      :image
                          :header-content "Container Image"}
-                        {:field-key      :cpu-usage
-                         :header-content "CPU %"}
+                        {:field-key         :cpu-usage
+                         :header-content    "CPU %"
+                         :header-cell-props {:style {:text-align "right"}}
+                         :cell              (fn [{value :cell-data}]
+                                              (if value
+                                                (str (general-utils/to-fixed value) " %")
+                                                "-"))
+                         :cell-props        {:style {:text-align "right"}}}
                         {:field-key      :status
                          :header-content "Status"}
                         {:field-key      :restart-count
                          :header-content "Restart Count"}
-                        {:field-key      :mem-usage
+                        {:field-key :mem-usage
                          :cell      cell-bytes}
-                        {:field-key      :mem-limit
+                        {:field-key :mem-limit
                          :cell      cell-bytes}
-                        {:field-key      :disk-in
+                        {:field-key :disk-in
                          :cell      cell-bytes}
-                        {:field-key      :disk-out
+                        {:field-key :disk-out
                          :cell      cell-bytes}
-                        {:field-key      :net-in
+                        {:field-key :net-in
                          :cell      cell-bytes}
-                        {:field-key      :net-out
+                        {:field-key :net-out
                          :cell      cell-bytes}]
       :sort-config     {:db-path ::spec/stats-container-ordering}
       :default-columns #{:name :image :cpu-usage :status :restart-count}

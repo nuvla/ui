@@ -1047,7 +1047,8 @@
                                              :title {:text    "megabytes"
                                                      :display true}}}}}]]]])
      (when container-stats
-       [StatsTable (sort-by :name container-stats)])]))
+       [ui/Container
+        [StatsTable (sort-by :name container-stats)]])]))
 
 
 (defn Editable

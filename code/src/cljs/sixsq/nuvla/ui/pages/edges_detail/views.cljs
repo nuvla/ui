@@ -1067,7 +1067,7 @@
                                              :title {:text    "megabytes"
                                                      :display true}}}}}]]]])
      (when container-stats
-       [ui/Container
+       [ui/Container {:fluid true}
         [StatsTable (sort-by :name container-stats)]])]))
 
 

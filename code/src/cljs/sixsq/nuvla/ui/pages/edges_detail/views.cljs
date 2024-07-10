@@ -916,25 +916,32 @@
                          :header-content "Status"}
                         {:field-key      :restart-count
                          :header-content "Restart Count"}
-                        {:field-key :mem-usage
-                         :cell      cell-bytes}
-                        {:field-key :mem-limit
-                         :cell      cell-bytes}
-                        {:field-key     :mem-combined
-                         :cell          (fn [{{:keys [mem-usage mem-limit]} :row-data}]
-                                          [BytesUsage mem-usage mem-limit])
-                         :cell-props    {:style {:text-align "right"}}
-                         :sort-value-fn (fn [{:keys [mem-usage mem-limit]}]
-                                          (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
-                                            (/ (double mem-usage) mem-limit)))}
-                        {:field-key :disk-in
-                         :cell      cell-bytes}
-                        {:field-key :disk-out
-                         :cell      cell-bytes}
-                        {:field-key :net-in
-                         :cell      cell-bytes}
-                        {:field-key :net-out
-                         :cell      cell-bytes}]
+                        {:field-key      :mem-usage
+                         :header-content "Mem Usage"
+                         :cell           cell-bytes}
+                        {:field-key      :mem-limit
+                         :header-content "Mem Limit"
+                         :cell           cell-bytes}
+                        {:field-key      :mem-usage-perc
+                         :header-content "Mem Usage %"
+                         :cell           (fn [{{:keys [mem-usage mem-limit]} :row-data}]
+                                           [BytesUsage mem-usage mem-limit])
+                         :cell-props     {:style {:text-align "right"}}
+                         :sort-value-fn  (fn [{:keys [mem-usage mem-limit]}]
+                                           (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
+                                             (/ (double mem-usage) mem-limit)))}
+                        {:field-key      :disk-in
+                         :header-content "Disk In"
+                         :cell           cell-bytes}
+                        {:field-key      :disk-out
+                         :header-content "Disk Out"
+                         :cell           cell-bytes}
+                        {:field-key      :net-in
+                         :header-content "Network In"
+                         :cell           cell-bytes}
+                        {:field-key      :net-out
+                         :header-content "Network Out"
+                         :cell           cell-bytes}]
       :sort-config     {:db-path ::spec/stats-container-ordering}
       :default-columns #{:name :image :cpu-usage :status :restart-count}
       :table-props     (merge style/single-line {:stackable true :selectable true})

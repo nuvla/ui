@@ -1002,25 +1002,27 @@
               :divided   true
               :celled    "internally"}
      [ui/GridRow
-      (for [stat load-stats]
-        ^{:key (:title stat)}
-        [ui/GridColumn
-         [:div
-          [plot/Doughnut {:height  250
-                          :data    {:labels   (:label stat)
-                                    :datasets [{:data            [(:percentage stat), (:value stat)]
-                                                :backgroundColor ["rgb(230, 99, 100)",
-                                                                  "rgba(155, 99, 132, 0.1)",
-                                                                  "rgb(230, 99, 100)"]}]}
-                          :options {:legend              {:display true
-                                                          :labels  {:fontColor "grey"}}
-                                    :plugins             {:title {:display  true
-                                                                  :text     (:title stat)
-                                                                  :position "bottom"}}
-                                    :maintainAspectRatio false
-                                    :circumference       236
-                                    :rotation            -118
-                                    :cutout              "60%"}}]]
+      (->> load-stats
+           (map-indexed
+             (fn [idx stat]
+               ^{:key (str "stat-" idx)}
+               [ui/GridColumn
+                [:div
+                 [plot/Doughnut {:height  250
+                                 :data    {:labels   (:label stat)
+                                           :datasets [{:data            [(:percentage stat), (:value stat)]
+                                                       :backgroundColor ["rgb(230, 99, 100)",
+                                                                         "rgba(155, 99, 132, 0.1)",
+                                                                         "rgb(230, 99, 100)"]}]}
+                                 :options {:legend              {:display true
+                                                                 :labels  {:fontColor "grey"}}
+                                           :plugins             {:title {:display  true
+                                                                         :text     (:title stat)
+                                                                         :position "bottom"}}
+                                           :maintainAspectRatio false
+                                           :circumference       236
+                                           :rotation            -118
+                                           :cutout              "60%"}}]]
 
          (when (pos? (count (:data-gateway stat)))
            [ui/Container {:key        (:topic stat)

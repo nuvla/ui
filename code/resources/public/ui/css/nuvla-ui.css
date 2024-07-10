@@ -1155,11 +1155,14 @@ i.link.icons {
   visibility: visible;
 }
 
+.table-fixed-row-height td {
+  max-width: 300px;
+}
+
 .table-fixed-row-height td,
 .table-fixed-row-height td > div {
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 300px;
 }
 
 .table-fixed-row-height td:not(:first-child),

@@ -13,7 +13,8 @@
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.tooltip :as tt]))
 
 (s/def ::pass-through-props (s/nilable map?))
 (s/def ::table-props ::pass-through-props)
@@ -543,9 +544,9 @@
                                           :direction   direction
                                           :db-path     db-path
                                           :fetch-event fetch-event}])]
-    [:span {:on-click (when sort-enabled? sort-fn)
-            :style    (when sort-enabled?
-                        {:cursor :pointer})}
+    [:span {:on-click  (when sort-enabled? sort-fn)
+            :style     (when sort-enabled?
+                         {:cursor :pointer})}
      (cond
        (fn? header-content)
        (header-content)
@@ -696,15 +697,16 @@
                        (update :style merge {:cursor :auto})))
 
                  (cond
-                   cell (if (string? cell) cell
+                   cell (if (string? cell) [tt/with-overflow-tooltip [:div cell] cell]
                                            [cell {:row-data  row
                                                   :cell-data cell-data
                                                   :field-key field-key}])
-                   :else (str (if (or
-                                    (not (coll? cell-data))
-                                    (seq cell-data))
-                                cell-data
-                                "")))])]))]]]]]))
+                   :else (let [s (str (if (or
+                                            (not (coll? cell-data))
+                                            (seq cell-data))
+                                        cell-data
+                                        ""))]
+                           [tt/with-overflow-tooltip [:div s] s]))])]))]]]]]))
 
 
 (defn ConfigureVisibleColumns

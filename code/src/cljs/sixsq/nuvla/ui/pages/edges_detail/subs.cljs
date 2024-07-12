@@ -28,7 +28,7 @@
 (defn multi-key-direction-sort
   [orders x y]
   (loop [rest-orders orders]
-    (if-let [[key direction value-fn] (first rest-orders)]
+    (when-let [[key direction value-fn] (first rest-orders)]
       (let [get-sort-value (or value-fn key)
             c              (if (= direction "desc")
                              (compare (get-sort-value y) (get-sort-value x))

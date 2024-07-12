@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.tooltip :as tt]))
@@ -488,6 +489,16 @@
                      :name     local-storage-key
                      :value    (merge (edn/read-string storage) {db-path new-cols})}})))
 
+(reg-event-fx
+  ::move-col
+  (fn [{{:keys [::current-cols]} :db} [_ col-key dest-col-key db-path]]
+    (let [cur-cols (get current-cols db-path)
+          cols-    (filterv #(not= col-key %) cur-cols)
+          dest-idx (.indexOf cols- dest-col-key)
+          new-cols (let [[l r] (split-at dest-idx cols-)]
+                     (concat l [col-key] r))]
+      {:fx [[:dispatch [::set-current-cols new-cols db-path]]]})))
+
 (reg-event-db
   ::store-cols
   (fn [db [_ cols db-path]]
@@ -544,9 +555,9 @@
                                           :direction   direction
                                           :db-path     db-path
                                           :fetch-event fetch-event}])]
-    [:span {:on-click  (when sort-enabled? sort-fn)
-            :style     (when sort-enabled?
-                         {:cursor :pointer})}
+    [:span {:on-click (when sort-enabled? sort-fn)
+            :style    (when sort-enabled?
+                        {:cursor :pointer})}
      (cond
        (fn? header-content)
        (header-content)
@@ -559,6 +570,19 @@
      (when sort-enabled?
        [SortIcon direction])]))
 
+(defn on-drag-start-fn
+  [event]
+  ;; this is needed to avoid showing a green plus sign on drag in Google Chrome. See https://github.com/react-dnd/react-dnd/issues/414
+  (-> event .-dataTransfer .-effectAllowed (set! "move")))
+
+(defn on-drag-fn [dnd-state key _event]
+  (swap! dnd-state assoc :dragging key))
+
+(defn on-drop-fn [dnd-state key move-fn _event]
+  (let [dragging (:dragging @dnd-state)]
+    (swap! dnd-state dissoc :dragging key)
+    (when-not (= key dragging)
+      (move-fn dragging key))))
 
 (defn Table
   "Expects a single config map with a required `:rows` vector of documents.
@@ -594,119 +618,140 @@
     Everything in the table can be pre-selected via `select=all` query parameter.
     Query param name can be overridden via `select-all-query-param` option in `select-config`.
 "
-  [{:keys [cell-props columns rows
-           row-click-handler row-props
-           sort-config select-config]
-    :as   props}]
-  (let [{:keys [bulk-actions select-db-path total-count-sub-key disabled-tooltip
-                resources-sub-key rights-needed select-label-accessor select-all-query-param]} select-config
-        columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
-        selectable?    (and
-                         select-config
-                         (s/valid? ::select-config select-config)
-                         (or (not rights-needed)
-                             (some (partial general-utils/can-operation? rights-needed) rows)))
-        selected-set   (subscribe [::selected-set-sub select-db-path])
-        select-all?    (subscribe [::select-all?-sub select-db-path])
-        page-selected? (subscribe [::is-all-page-selected? select-db-path resources-sub-key])
-        get-row-props  (fn [row]
-                         (update (merge row-props {:on-click #(when row-click-handler (row-click-handler row))})
-                                 :style
-                                 merge (:style (:table-row-prop row))))]
-    (dispatch [::init-pre-selection select-all-query-param select-db-path])
-    [:div
-     [BulkActionBar {:selectable?         selectable?
-                     :selected-all-sub    select-all?
-                     :selected-set-sub    selected-set
-                     :page-selected?-sub  page-selected?
-                     :total-count-sub-key total-count-sub-key
-                     :rows                rows
-                     :db-path             select-db-path
-                     :bulk-actions        bulk-actions
-                     :resources-sub-key   resources-sub-key
-                     :disabled-tooltip    disabled-tooltip}]
-     [:div
-      [:div {:style {:overflow :auto
-                     :padding  0
-                     :position :relative}
-             :class :table-fixed-row-height}
-       [ui/Table (merge {:stackable false} (:table-props props))
-        [ui/TableHeader (:header-props props)
-         [ui/TableRow
-          (when selectable?
-            [ui/TableHeaderCell
-             {:style {:width "30px"}}
-             [HeaderCellCeckbox {:db-path            select-db-path :resources-sub-key resources-sub-key
-                                 :page-selected?-sub page-selected? :rights-needed rights-needed}]])
-          (for [col columns
-                :when col
-                :let [{:keys [field-key header-content header-cell-props]} col]]
-            ^{:key (or field-key (random-uuid))}
-            [ui/TableHeaderCell
-             (merge (:header cell-props) header-cell-props)
-             [:div {:style {:display :flex}
-                    :class :show-child-on-hover}
-              [:div {:style {:flex-grow 1}}
-               [HeaderCellContent
-                (merge sort-config
-                       {:header-content header-content}
-                       (select-keys col [:sort-key :sort-value-fn :field-key :no-sort?]))]
-               (when-let [remove-fn (-> props :col-config :remove-col-fn)]
-                 (when (and (< 1 (count columns))
-                            (not (:no-remove-icon? col)))
-                   [:span {:style {:margin-left "0.8rem"}}
-                    [uix/LinkIcon {:color    "red"
-                                   :disabled (< (count columns) 2)
-                                   :name     "remove circle"
-                                   :on-click #(remove-fn field-key)
-                                   :class    :toggle-invisible-on-parent-hover}]]))]]])
-          (when-let [col-cong-button (-> props :col-config :col-config-modal)]
-            [ui/TableHeaderCell {:style {:width "30px"}} [:div col-cong-button]])]]
-        [ui/TableBody (:body-props props)
-         (doall
-           (for [[idx row] (map-indexed vector rows)
-                 :let [id (or (:id row) (random-uuid))]]
-             ^{:key (:id row)}
-             [ui/TableRow (get-row-props row)
+  [_props]
+  (let [dnd-state (r/atom
+                    {:drag-hover nil
+                     :dragging   nil})]
+    (fn [{:keys [cell-props columns rows
+                 row-click-handler row-props
+                 sort-config select-config]
+          :as   props}]
+      (let [{:keys [bulk-actions select-db-path total-count-sub-key disabled-tooltip
+                    resources-sub-key rights-needed select-label-accessor select-all-query-param]} select-config
+            columns        (or columns (map (fn [[k _]] {:field-key k}) (first rows)))
+            selectable?    (and
+                             select-config
+                             (s/valid? ::select-config select-config)
+                             (or (not rights-needed)
+                                 (some (partial general-utils/can-operation? rights-needed) rows)))
+            selected-set   (subscribe [::selected-set-sub select-db-path])
+            select-all?    (subscribe [::select-all?-sub select-db-path])
+            page-selected? (subscribe [::is-all-page-selected? select-db-path resources-sub-key])
+            get-row-props  (fn [row]
+                             (update (merge row-props {:on-click #(when row-click-handler (row-click-handler row))})
+                                     :style
+                                     merge (:style (:table-row-prop row))))
+            move-fn        (-> props :col-config :move-col-fn)]
+        (dispatch [::init-pre-selection select-all-query-param select-db-path])
+        [:div
+         [BulkActionBar {:selectable?         selectable?
+                         :selected-all-sub    select-all?
+                         :selected-set-sub    selected-set
+                         :page-selected?-sub  page-selected?
+                         :total-count-sub-key total-count-sub-key
+                         :rows                rows
+                         :db-path             select-db-path
+                         :bulk-actions        bulk-actions
+                         :resources-sub-key   resources-sub-key
+                         :disabled-tooltip    disabled-tooltip}]
+         [:div
+          [:div {:style {:overflow :auto
+                         :padding  0
+                         :position :relative}
+                 :class :table-fixed-row-height}
+           [ui/Table (merge {:stackable false} (:table-props props))
+            [ui/TableHeader (:header-props props)
+             [ui/TableRow
               (when selectable?
-                [CellCheckbox {:id               id :selected-set-sub selected-set :db-path select-db-path
-                               :selected-all-sub select-all? :resources-sub-key resources-sub-key
-                               :rights-needed    rights-needed
-                               :edge-name        (or
-                                                   (and select-label-accessor
-                                                        (select-label-accessor row))
-                                                   (:name row)
-                                                   (:id row))
-                               :idx              idx}])
-              (for [[idx {:keys [field-key stop-event-propagation? accessor cell cell-props]}] (map-indexed vector columns)
-                    :when (or field-key accessor)
-                    :let [cell-data ((or accessor field-key) row)
-                          last?     (= idx (dec (count columns)))]]
-                ^{:key (str id "-" field-key)}
-                [ui/TableCell
-                 (cond->
-                   cell-props
+                [ui/TableHeaderCell
+                 {:style {:width "30px"}}
+                 [HeaderCellCeckbox {:db-path            select-db-path :resources-sub-key resources-sub-key
+                                     :page-selected?-sub page-selected? :rights-needed rights-needed}]])
+              (doall
+                (for [col columns
+                      :when col
+                      :let [{:keys [field-key header-content header-cell-props]} col]]
+                  ^{:key (or field-key (random-uuid))}
+                  [ui/TableHeaderCell
+                   (merge {:draggable     true
+                           :class         (when (and (= field-key (:drag-hover @dnd-state))
+                                                     (not= field-key (:dragging @dnd-state)))
+                                            :drag-hover)
+                           :on-drag-start on-drag-start-fn
+                           :on-drag-end   #(swap! dnd-state assoc
+                                                  :dragging nil
+                                                  :drag-hover nil)
+                           :on-drag       (partial on-drag-fn dnd-state field-key)
+                           :on-drag-over  (fn []
+                                            (js/event.preventDefault)
+                                            (swap! dnd-state assoc :drag-hover field-key))
+                           :on-drag-leave #(swap! dnd-state assoc :drag-hover nil)
+                           :on-drop       (partial on-drop-fn dnd-state field-key move-fn)}
+                          (:header cell-props)
+                          header-cell-props)
+                   [:div {:style {:display :flex}
+                          :class :show-child-on-hover}
+                    [:div {:style {:flex-grow 1}}
+                     [HeaderCellContent
+                      (merge sort-config
+                             {:header-content header-content}
+                             (select-keys col [:sort-key :sort-value-fn :field-key :no-sort?]))]
+                     (when-let [remove-fn (-> props :col-config :remove-col-fn)]
+                       (when (and (< 1 (count columns))
+                                  (not (:no-remove-icon? col)))
+                         [:span {:style {:margin-left "0.8rem"}}
+                          [uix/LinkIcon {:color    "red"
+                                         :disabled (< (count columns) 2)
+                                         :name     "remove circle"
+                                         :on-click #(remove-fn field-key)
+                                         :class    :toggle-invisible-on-parent-hover}]]))]]]))
+              (when-let [col-cong-button (-> props :col-config :col-config-modal)]
+                [ui/TableHeaderCell {:style {:width "30px"}} [:div col-cong-button]])]]
+            [ui/TableBody (:body-props props)
+             (doall
+               (for [[idx row] (map-indexed vector rows)
+                     :let [id (or (:id row) (random-uuid))]]
+                 ^{:key (:id row)}
+                 [ui/TableRow (get-row-props row)
+                  (when selectable?
+                    [CellCheckbox {:id               id :selected-set-sub selected-set :db-path select-db-path
+                                   :selected-all-sub select-all? :resources-sub-key resources-sub-key
+                                   :rights-needed    rights-needed
+                                   :edge-name        (or
+                                                       (and select-label-accessor
+                                                            (select-label-accessor row))
+                                                       (:name row)
+                                                       (:id row))
+                                   :idx              idx}])
+                  (for [[idx {:keys [field-key stop-event-propagation? accessor cell cell-props]}] (map-indexed vector columns)
+                        :when (or field-key accessor)
+                        :let [cell-data ((or accessor field-key) row)
+                              last?     (= idx (dec (count columns)))]]
+                    ^{:key (str id "-" field-key)}
+                    [ui/TableCell
+                     (cond->
+                       cell-props
 
-                   last?
-                   (assoc :colSpan 2)
+                       last?
+                       (assoc :colSpan 2)
 
-                   (and
-                     stop-event-propagation?
-                     (not (:on-click cell-props)))
-                   (-> (assoc :on-click (fn [event] (.stopPropagation event)))
-                       (update :style merge {:cursor :auto})))
+                       (and
+                         stop-event-propagation?
+                         (not (:on-click cell-props)))
+                       (-> (assoc :on-click (fn [event] (.stopPropagation event)))
+                           (update :style merge {:cursor :auto})))
 
-                 (cond
-                   cell (if (string? cell) [tt/with-overflow-tooltip [:div cell] cell]
-                                           [cell {:row-data  row
-                                                  :cell-data cell-data
-                                                  :field-key field-key}])
-                   :else (let [s (str (if (or
-                                            (not (coll? cell-data))
-                                            (seq cell-data))
-                                        cell-data
-                                        ""))]
-                           [tt/with-overflow-tooltip [:div s] s]))])]))]]]]]))
+                     (cond
+                       cell (if (string? cell) [tt/with-overflow-tooltip [:div cell] cell]
+                                               [cell {:row-data  row
+                                                      :cell-data cell-data
+                                                      :field-key field-key}])
+                       :else (let [s (str (if (or
+                                                (not (coll? cell-data))
+                                                (seq cell-data))
+                                            cell-data
+                                            ""))]
+                               [tt/with-overflow-tooltip [:div s] s]))])]))]]]]]))))
 
 
 (defn ConfigureVisibleColumns
@@ -756,7 +801,9 @@
         current-cols  (subscribe [::get-current-cols db-path])
         default-cols  (subscribe [::get-default-cols db-path])
         remove-col-fn (fn [col-key]
-                        (dispatch [::remove-col col-key db-path]))]
+                        (dispatch [::remove-col col-key db-path]))
+        move-col-fn   (fn [col-key dest-col-key]
+                        (dispatch [::move-col col-key dest-col-key db-path]))]
     (fn [{:keys [rows columns] :as props}]
       (let [available-cols (merge
                              (let [ks (set (mapcat keys rows))]
@@ -773,6 +820,7 @@
         [:div
          [Table (assoc props
                   :col-config {:remove-col-fn    remove-col-fn
+                               :move-col-fn      move-col-fn
                                :col-config-modal [ConfigureVisibleColumns db-path available-cols]}
                   :columns (->> (or @current-cols @default-cols)
                                 (mapv (fn [k] (available-cols k)))

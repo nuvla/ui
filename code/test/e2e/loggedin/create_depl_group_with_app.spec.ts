@@ -35,6 +35,9 @@ import { test, expect } from '@playwright/test';
 
   await page.locator('main:has-text("Oops can\'t find deployment groupDeployment group does not exist or you do not ha") button').nth(2).click();
 
+  await page.getByPlaceholder('Search...').click();
+  await page.getByPlaceholder('Search...').fill('e2e test');
+
   await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW endtoend@sixsq.com' }).click();
 
   await page.getByRole('button', { name: 'Add to deployment group' }).click();

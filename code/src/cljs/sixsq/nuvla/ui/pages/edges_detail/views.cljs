@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
             [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.common-components.resource-log.views :as log-views]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.components :as components]
@@ -32,6 +33,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
@@ -880,7 +882,73 @@
                  nil)]))))
 
 
-(defn- StatsTable [container-stats]
+(defn BytesUsage
+  [used limit]
+  (let [[unit used limit perc] (data-utils/bytes-usage used limit)]
+    [:div {:style {:display "flex"}}
+     [:div {:style {:width        "28%"
+                    :text-align   "right"
+                    :margin-right "5px"}}
+      (str (general-utils/to-fixed perc :n-decimal 1) "%")]
+     [:div {:style {:width      "70%"
+                    :text-align "left"}}
+      (str "(" (general-utils/to-fixed used :n-decimal 1) "/"
+           (general-utils/to-fixed limit :n-decimal 1) unit ")")]]))
+
+(defn- NewStatsTable []
+  (let [container-stats-ordered @(subscribe [::subs/container-stats-ordered])
+        cell-bytes              (fn [{cell-data :cell-data}]
+                                  (data-utils/format-bytes cell-data))]
+    [TableColsEditable
+     {:columns         [{:field-key      :name
+                         :header-content "Container Name"}
+                        {:field-key      :image
+                         :header-content "Container Image"}
+                        {:field-key         :cpu-usage
+                         :header-content    "CPU %"
+                         :cell              (fn [{value :cell-data}]
+                                              (if value
+                                                (str (general-utils/to-fixed value) " %")
+                                                "-"))}
+                        {:field-key      :status
+                         :header-content "Status"}
+                        {:field-key      :restart-count
+                         :header-content "Restart Count"}
+                        {:field-key      :mem-usage
+                         :header-content "Mem Usage"
+                         :cell           cell-bytes}
+                        {:field-key      :mem-limit
+                         :header-content "Mem Limit"
+                         :cell           cell-bytes}
+                        {:field-key      :mem-usage-perc
+                         :header-content "Mem Usage %"
+                         :cell           (fn [{{:keys [mem-usage mem-limit]} :row-data}]
+                                           [BytesUsage mem-usage mem-limit])
+                         :cell-props     {:style {:text-align "right"}}
+                         :sort-value-fn  (fn [{:keys [mem-usage mem-limit]}]
+                                           (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
+                                             (/ (double mem-usage) mem-limit)))}
+                        {:field-key      :disk-in
+                         :header-content "Disk In"
+                         :cell           cell-bytes}
+                        {:field-key      :disk-out
+                         :header-content "Disk Out"
+                         :cell           cell-bytes}
+                        {:field-key      :net-in
+                         :header-content "Network In"
+                         :cell           cell-bytes}
+                        {:field-key      :net-out
+                         :header-content "Network Out"
+                         :cell           cell-bytes}]
+      :sort-config     {:db-path ::spec/stats-container-ordering}
+      :default-columns #{:name :image :cpu-usage :status :restart-count}
+      :table-props     (merge style/single-line {:stackable true :selectable true})
+      :cell-props      {:header {:single-line true}}
+      :rows            container-stats-ordered}
+     ::table-cols-edge-detail-container-config]))
+
+
+(defn- OldStatsTable [container-stats]
   [ui/GridRow {:centered true
                :columns  1}
    [ui/GridColumn
@@ -914,6 +982,12 @@
            [ui/TableCell blk-in-out]
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
+
+(defn- StatsTable [container-stats]
+  (if (:cpu-usage (first container-stats))
+    [NewStatsTable container-stats]
+    [OldStatsTable container-stats]))
+
 (defn Load
   [resources]
   (let [load-stats      (utils/load-statistics resources)
@@ -998,7 +1072,8 @@
                                              :title {:text    "megabytes"
                                                      :display true}}}}}]]]])
      (when container-stats
-       [StatsTable (sort-by :name container-stats)])]))
+       [ui/Container {:fluid true}
+        [StatsTable (sort-by :name container-stats)]])]))
 
 
 (defn Editable
@@ -1182,13 +1257,13 @@
               [ui/TableCell "IP"]
               [ui/TableCell
                [uix/CopyToClipboard {:value     ip
-                                        :on-hover? false}]]])
+                                     :on-hover? false}]]])
            (when ips-available
              [IpsRow {:title "IPs"
                       :ips   (map (fn [[name ip]]
                                     {:name name
                                      :ip   [uix/CopyToClipboard {:value     ip
-                                                                    :on-hover? false}]}) (:ips network))}])])
+                                                                 :on-hover? false}]}) (:ips network))}])])
         (when (pos? (count @ssh-creds))
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]

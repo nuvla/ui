@@ -365,6 +365,11 @@
     (/ rounded-value multiplier)))
 
 
+(defn to-fixed
+  [value & {:keys [n-decimal] :or {n-decimal 2}}]
+  (.toFixed value n-decimal))
+
+
 (defn percentage
   [used capacity]
   (-> (/ used capacity)

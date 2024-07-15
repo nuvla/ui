@@ -906,12 +906,10 @@
                          :header-content "Container Image"}
                         {:field-key         :cpu-usage
                          :header-content    "CPU %"
-                         :header-cell-props {:style {:text-align "right"}}
                          :cell              (fn [{value :cell-data}]
                                               (if value
                                                 (str (general-utils/to-fixed value) " %")
-                                                "-"))
-                         :cell-props        {:style {:text-align "right"}}}
+                                                "-"))}
                         {:field-key      :status
                          :header-content "Status"}
                         {:field-key      :restart-count

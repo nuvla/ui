@@ -17,8 +17,7 @@
 
 (reg-sub
   ::stats-container-ordering
-  (fn [db]
-    (::spec/stats-container-ordering db)))
+  :-> ::spec/stats-container-ordering)
 
 (reg-sub
   ::container-stats

@@ -57,7 +57,7 @@
 
 (reg-event-fx
   ::get-nuvlabox-status
-  (fn [{{:keys [::spec/stats-container-ordering]} :db} [_ nb-status-id]]
+  (fn [_ [_ nb-status-id]]
     {::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
                         :on-error #(dispatch [::set-nuvlabox-status nil])]}))
 

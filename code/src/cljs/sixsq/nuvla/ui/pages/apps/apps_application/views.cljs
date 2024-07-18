@@ -550,7 +550,7 @@
         helm-app?      (subscribe [::apps-subs/is-application-helm?])]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
     (dispatch [::events/update-compatibility (if @helm-app? "helm" "docker-compose")])
-    (when-not helm-app? (dispatch [::apps-events/set-form-spec ::spec/module-application]))
+    (when-not @helm-app? (dispatch [::apps-events/set-form-spec ::spec/module-application]))
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name  (get @module-common ::apps-spec/name)

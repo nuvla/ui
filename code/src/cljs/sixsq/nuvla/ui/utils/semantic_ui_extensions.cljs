@@ -122,9 +122,10 @@
 
 
 (defn Message
-  [{:keys [icon content header type] :as _ops}]
+  [{:keys [icon content header type size] :as _ops}]
   [ui/Message
    (cond-> {}
+           size (assoc :size size)
            type (assoc type true)
            icon (assoc :icon true))
    (when icon [icons/Icon {:name icon}])
@@ -132,6 +133,25 @@
     [ui/MessageHeader
      (when header header)]
     (when content content)]])
+
+
+(defn CopyToClipboard
+  [{:keys [content value popup-text on-hover?] :as _opts}]
+  [ui/CopyToClipboard {:text value}
+   [:span
+    [ui/Popup
+     {:content (r/as-element [:p [TR (or popup-text :copy-to-clipboard)]])
+      :trigger (r/as-element
+                 [:span (cond-> {:style {:cursor :pointer}}
+                                on-hover? (assoc :class ["show-on-hover-value"]))
+                  (or content value)
+                  general-utils/nbsp
+                  [ui/Icon
+                   {:class [(when on-hover? "hide")]
+                    :name  "clone outline"
+                    :color "blue"
+                    :style {:color "black"}}]])
+      :size    "tiny"}]]])
 
 
 (defn CopyToClipboardDownload
@@ -345,15 +365,13 @@
 (defn TruncateContent
   [{:keys [content length] :as _options
     :or   {content "" length 200}}]
-  (r/with-let [show-more?    (r/atom true)
-               on-click      #(swap! show-more? not)
-               get-content   #(if @show-more? (general-utils/truncate content length) content)
-               get-btn-label #(if @show-more? :show-more :show-less)]
-    [:div
-     [:p (get-content)]
+  (r/with-let [show-more? (r/atom true)
+               on-click   #(swap! show-more? not)]
+    [:<>
+     [:p (if @show-more? (general-utils/truncate content length) content)]
      (when (> (count content) length)
        [ui/Label {:as :a :on-click on-click}
-        [TR (get-btn-label)]])]))
+        [TR (if @show-more? :show-more :show-less)]])]))
 
 
 (defn LinkIcon

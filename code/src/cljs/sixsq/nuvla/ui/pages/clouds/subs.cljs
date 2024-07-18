@@ -1,9 +1,6 @@
 (ns sixsq.nuvla.ui.pages.clouds.subs
-  (:require [clojure.set :as set]
-            [clojure.string :as str]
-            [re-frame.core :refer [reg-sub]]
-            [sixsq.nuvla.ui.pages.clouds.spec :as spec]
-            [sixsq.nuvla.ui.pages.clouds.utils :as utils]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.pages.clouds.spec :as spec]))
 
 (reg-sub
   ::infra-service-groups
@@ -21,11 +18,6 @@
     (-> services
         :groups
         (get group-id))))
-
-(reg-sub
-  ::management-credentials-available
-  (fn [db]
-    (::spec/management-credentials-available db)))
 
 (reg-sub
   ::is-new?
@@ -66,34 +58,3 @@
   ::add-service-modal-visible?
   (fn [db]
     (::spec/add-service-modal-visible? db)))
-
-(reg-sub
-  ::ssh-keys
-  (fn [db]
-    (::spec/ssh-keys db)))
-
-(reg-sub
-  ::ssh-keys-options
-  (fn [db]
-    (let [ssh-keys-infra        (::spec/ssh-keys-infra db)
-          ssh-keys-set          (-> db
-                                    ::spec/ssh-keys
-                                    set)
-          ssh-keys-infra-set    (set (map :id ssh-keys-infra))
-          not-existing-ssh-keys (set/difference ssh-keys-set ssh-keys-infra-set)]
-      (map (fn [{:keys [id name]}]
-             {:key id, :value id, :text (or name id)})
-           (concat ssh-keys-infra
-                   (map (fn [id] {:id id}) not-existing-ssh-keys))))))
-
-(reg-sub
-  ::mgmt-creds-set?
-  (fn [db]
-    (let [creds (get-in db [::spec/infra-service :management-credential])]
-      (and creds (not (str/blank? creds))))))
-
-(reg-sub
-  ::mgmt-cred-subtype
-  (fn [db]
-    (when-let [mgmt-cred-id (get-in db [::spec/infra-service :management-credential])]
-      (utils/mgmt-cred-subtype-by-id db mgmt-cred-id))))

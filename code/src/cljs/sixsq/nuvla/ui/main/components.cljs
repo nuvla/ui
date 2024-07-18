@@ -6,7 +6,6 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.main.events :as events]
             [sixsq.nuvla.ui.main.subs :as subs]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as forms]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -276,7 +275,7 @@
           [:<>
            value
            Label
-           ff/nbsp
+           utils-general/nbsp
            [Pencil editing?]])))))
 
 (defn TagsDropdown
@@ -343,7 +342,7 @@
            (if editable?
              (@tr [:add-first-tag])
              [ui/Message (@tr [:no-items-to-show])]))
-         ff/nbsp
+         utils-general/nbsp
          (when editable?
            [Pencil editing?])]))))
 

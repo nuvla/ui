@@ -90,18 +90,17 @@
 
 (defn url-to-row
   [url-name url-pattern]
-  (let [tr  (subscribe [::i18n-subs/tr])
-        url (subscribe [::subs/url url-pattern])
+  (let [url (subscribe [::subs/url url-pattern])
         {:keys [state]} @(subscribe [::subs/deployment])]
     [ui/TableRow
      [ui/TableCell url-name]
-     [ui/TableCell {:class ["show-on-hover-value"]}
+     [ui/TableCell
       (cond
         (and @url (deployments-utils/stopped? state)) @url
-        @url (values/copy-value-to-clipboard
-               [:a {:href @url, :target "_blank"} @url false]
-               @url
-               (@tr [:copy-to-clipboard]))
+        @url [uix/CopyToClipboard
+              {:content   [:a {:href @url, :target "_blank"} @url false]
+               :value     @url
+               :on-hover? true}]
         :else url-pattern)]]))
 
 (defn url-to-button
@@ -167,21 +166,17 @@
 
 (defn item-to-row
   [{name :name value :value description :description}]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        table-row [ui/TableRow
-                   [ui/TableCell
-                    (if (some? description)
-                      [ui/Popup
-                       (cond-> {:content (r/as-element [:p description])
-                                :trigger (r/as-element [:p name " " [icons/InfoIconFull]])})]
-                      name)]
-                   [ui/TableCell
-                    {:class ["show-on-hover-value"]}
-                    (when (not-empty value)
-                      (if (> (count value) 1)
-                        (values/copy-value-to-clipboard value value (@tr [:copy-to-clipboard]) false)
-                        value))]]]
-    table-row))
+  [ui/TableRow
+   [ui/TableCell
+    (if (some? description)
+      [ui/Popup
+       (cond-> {:content (r/as-element [:p description])
+                :trigger (r/as-element [:p name " " [icons/InfoIconFull]])})]
+      name)]
+   [ui/TableCell
+    [uix/CopyToClipboard
+     {:value     value
+      :on-hover? true}]]])
 
 
 (defn list-section
@@ -583,9 +578,9 @@
     (let [href (name->href routes/deployment-groups-details
                            {:uuid (general-utils/id->uuid depl-set-id)})]
       [:a {:href     href
-          :on-click (partial uix/link-on-click href)}
-      [ui/Icon {:name "bullseye"}]
-      depl-set-name])))
+           :on-click (partial uix/link-on-click href)}
+       [ui/Icon {:name "bullseye"}]
+       depl-set-name])))
 
 
 (defn TabOverviewSummary
@@ -647,7 +642,7 @@
          [ui/TableCell (str/capitalize (@tr [:app-version]))]
          [ui/TableCell
           [module-plugin/LinkToAppView {:path (:path module) :version-id @version} @version]
-          (up-to-date? @version @versions)] ]
+          (up-to-date? @version @versions)]]
         (when deployment-set
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:deployment-group]))]
@@ -716,16 +711,6 @@
      (acl/TabAcls {:e          deployment
                    :can-edit?  (not @read-only?)
                    :edit-event ::events/edit})]))
-
-
-(defn StatusIcon
-  [status & {:keys [corner] :or {corner "bottom center"} :as _position}]
-  [ui/Popup
-   {:position corner
-    :content  status
-    :trigger  (r/as-element
-                [ui/Icon {:class icons/i-power
-                          :color (values/status->color status)}])}])
 
 
 (defn PageHeader

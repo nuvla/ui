@@ -19,7 +19,6 @@
             [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.pages.deployments.views :as deployments-views]
             [sixsq.nuvla.ui.pages.profile.subs :as profile-subs]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.forms :as utils-forms]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
@@ -163,7 +162,7 @@
                      (dispatch [::events/update-compatibility %]))]
     [:span {:style {:float "right"}}
      (tr [:run-with-docker])
-     ff/nbsp
+     general-utils/nbsp
      (if editable?
        [ui/Dropdown
         {:inline        true
@@ -230,7 +229,7 @@
                  (if (str/blank? error-msg)
                    (@tr [:module-docker-compose-error])
                    error-msg)])))]
-         :label [:span "Compose file" ff/nbsp
+         :label [:span "Compose file" general-utils/nbsp
                  (when @validate-dc
                    [DockerComposeValidationPopup @validate-dc])]
          :default-open true]))))
@@ -455,7 +454,7 @@
                          [ui/TableRow
                           [ui/TableCell {:collapsing true
                                          :style      {:padding-bottom 8}}
-                           (@tr [:grant-nuvla-access]) ff/nbsp
+                           (@tr [:grant-nuvla-access]) general-utils/nbsp
                            [uix/HelpPopup (@tr [:module-requires-user-rights])]]
                           [ui/TableCell (when @editable? {:style {:padding-left apps-views-detail/edit-cell-left-padding}})
                            [RequiresUserRightsCheckbox]]]]

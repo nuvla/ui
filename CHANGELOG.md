@@ -2,7 +2,65 @@
 
 ## Unreleased
 
+- Notifications - improve notification configuration for data records creation
+
 ## Released
+
+## [2.37.1] - 2024-06-18
+
+- Notifications - Use content-type for data-records instead of tag
+
+## [2.37.0] - 2024-06-18
+
+- Notification page - Add mqtt notif method
+- Remove the feature of the creation of clusters with COE
+  - Clouds page
+    - Remove coe provioning section
+    - Add link to credentials page in add modal
+  - Credentials page - Remove cloud service credentials support
+  - Clouds details page - Remove terminate button and logic around editable endpoint
+- Credential page - Display credential ID and provide possibility to copy it
+- Clouds page - Show stop action only when available through operations attribute
+- Job component
+  - Message not displayed to the user when user is already on job tab while job display message is being
+  set fix
+  - Change page to 1 on mount navigation to avoid sideffect on remount for another deployment or edge bugfix
+
+## [2.36.9] - 2024-05-24
+
+- Edges detail page - NE version regression bugfix
+
+## [2.36.8] - 2024-05-23
+
+- Resource log component - List of components show only workload object kinds
+- Edges detail page
+  - Form fields are not prefilled with install params bugfix
+  - NE version not refreshing when changed in resource bugfix
+- Job component - Improve the job message display available in the table
+
+## [2.36.7] - 2024-05-16
+
+- Welcome page - Update welcome video and allow full screen
+- Application page - Make App list and button wrap inside container so that it doesn't fall off the screen
+- Deployment group page - Set default name and description when creating
+- Deployments page
+  - Add button to create deployment group
+  - Shutdown->stop
+- Deployments detail page - Shutdown->stop
+- Deployment modal - Encourage users to check out deployment group feature
+- Edges page
+  - Release warning sign bugfix. Latest version should exclude pre-release
+  - Always show bulk actions in NE table view, enable/disable buttons when applicable
+  - Make bulk actions bar always visible
+    - Fix deploying with dynamic edges
+    - Only enable bulk deploy when there are selected edges
+    - Minor stylistic improvements for filter display component
+- Edges detail page - Always display 'Update' button
+  - Extract version warning display to its own component, move it to utils
+  - Enable update of a NE without refreshing/switching views
+  - Improve styling of edge availability pop-up
+    - Fix minimum width for NE availability card, make table not overflow parent div
+    - Make chart and NE-card stack on small screens
 
 ## [2.36.6] - 2024-03-28
 

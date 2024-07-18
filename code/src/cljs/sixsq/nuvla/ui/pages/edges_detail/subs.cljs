@@ -98,6 +98,14 @@
     (::spec/nuvlabox db)))
 
 (reg-sub
+  ::ne-version
+  :<- [::nuvlabox]
+  :<- [::nuvlabox-status]
+  (fn [[{nb-engine-version :nuvlabox-engine-version}
+        {nb-status-engine-version :nuvlabox-engine-version}]]
+    (or nb-status-engine-version nb-engine-version)))
+
+(reg-sub
   ::can-decommission?
   :<- [::nuvlabox]
   (fn [nuvlabox]
@@ -108,6 +116,19 @@
   :<- [::nuvlabox]
   (fn [nuvlabox]
     (general-utils/can-edit? nuvlabox)))
+
+(reg-sub
+  ::can-update?
+  :<- [::nuvlabox]
+  (fn [nuvlabox]
+    (general-utils/can-operation? "update-nuvlabox" nuvlabox)))
+
+(reg-sub
+  ::update-available?
+  :<- [::can-update?]
+  :<- [::nuvlabox-status]
+  (fn [[can-update? nb-status]]
+    (and can-update? nb-status)))
 
 (reg-sub
   ::can-delete?

@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.common-components.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.clouds-detail.views :as clouds-detail]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.style :as style]))
@@ -110,7 +110,7 @@
         [:<>
          [icons/DockerIcon]
          [clouds-detail/CompatibilityLabel infra-service]])
-      ff/nbsp
+      general-utils/nbsp
       (or name id)]
      [ui/AccordionContent {:active active?}
       description

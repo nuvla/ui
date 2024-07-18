@@ -3,7 +3,6 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.string :as str]
             [markdown-to-hiccup.core :as md]
-            [reagent.core :as r]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -82,20 +81,6 @@
     :offline "red"
     :unknown "yellow"
     nil))
-
-
-(defn copy-value-to-clipboard
-  ([value value-to-copy popup-text] (copy-value-to-clipboard value value-to-copy popup-text true))
-  ([value value-to-copy popup-text show?]
-   [ui/CopyToClipboard {:text value-to-copy}
-    [:span {:style {:cursor :pointer}} value " "
-     [ui/Popup {:content  (r/as-element [:p popup-text])
-                :position "top center"
-                :trigger  (r/as-element [ui/Icon
-                                         {:class [(when (not show?) "hide")]
-                                          :name  "clipboard outline"
-                                          :color "blue"
-                                          :style {:color "black"}}])}]]]))
 
 
 (defn markdown->hiccup

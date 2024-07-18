@@ -1,53 +1,66 @@
 (ns sixsq.nuvla.ui.common-components.job.views
   (:require [clojure.string :as str]
-            [re-frame.core :refer [subscribe]]
+            [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.job.events :as events]
             [sixsq.nuvla.ui.common-components.job.spec :as spec]
             [sixsq.nuvla.ui.common-components.job.subs :as subs]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.table :refer [Table]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.values :as values]))
 
-
-(def message-max-length 200)
-
-(defn JobsMessageCell [{{:keys [state]} :row-data
-                        :keys           [cell-data]}]
-  [:span {:style (cond-> {:white-space "pre"
-                          :max-width   :unset
-                          :overflow    :auto
-                          :display     :block}
-                         (= state "QUEUED")
-                         (assoc :display "none"))}
-   [uix/TruncateContent {:content cell-data :length 300}]])
+(defn JobRow
+  [resource]
+  [ui/TableRow
+   [ui/TableCell {:verticalAlign "top"}
+    [:dl {:style {:overflow              :auto
+                  :display               :grid
+                  :grid-template-columns "repeat(2,auto)"
+                  :width                 "max-content"
+                  :max-width             "100%"}}
+     (for [[k v] [[:id [values/AsLink (:id resource)
+                        :label (general-utils/id->short-uuid (:id resource))]]
+                  [:action (:action resource)]
+                  [:state (:state resource)]
+                  [:timestamp (or (:time-of-status-change resource)
+                                  (:updated resource))]
+                  [:progress (:progress resource)]
+                  [:return-code (:return-code resource)]]]
+       ^{:key (str (:id resource) "_" k)}
+       [:<>
+        [:dt [:b [uix/TR k str/capitalize] ":"]]
+        [:dd v]])]]
+   [ui/TableCell {:verticalAlign "top"}
+    [:div {:style (cond-> {:white-space :pre
+                           :overflow    :auto
+                           :min-height  "10em"}
+                          (= (:state resource) "QUEUED") (assoc :display "none"))}
+     [uix/TruncateContent
+      {:content (some-> resource :status-message
+                        (str/replace #"\\n" "\n")) :length 300}]]]])
 
 (defn JobsTable
   [_jobs]
+  (dispatch [::pagination-plugin/change-page [::spec/pagination] 1])
   (fn [{:keys [resources] :as jobs-data}]
     (let [{jobs-count :count} jobs-data]
       (if (empty? resources)
         [uix/WarningMsgNoElements]
         [ui/TabPane
-         [Table {:columns
-                 [{:field-key :jobs
-                   :accessor  :id
-                   :cell      (fn [{id :cell-data}] [values/AsLink id :label (general-utils/id->short-uuid id)])}
-                  {:field-key :action}
-                  {:field-key :timestamp
-                   :accessor  :time-of-status-change}
-                  {:field-key :state}
-                  {:field-key :progress}
-                  {:field-key :return-code}
-                  {:field-key :message
-                   :accessor  :status-message
-                   :cell      (fn [cell-data] [JobsMessageCell cell-data])}]
-                 :rows resources}]
+         [ui/Table {:striped true
+                    :fixed   true}
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell {:style {:width "26em"}} [uix/TR :job str/capitalize]]
+            [ui/TableHeaderCell [uix/TR :message str/capitalize]]]]
+          [ui/TableBody
+           (for [resource resources]
+             ^{:key (:id resource)}
+             [JobRow resource])]]
          [pagination-plugin/Pagination
           {:db-path      [::spec/pagination]
            :change-event [::events/get-jobs]

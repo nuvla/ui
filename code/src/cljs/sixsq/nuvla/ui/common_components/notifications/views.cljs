@@ -14,7 +14,6 @@
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.cimi.events :as cimi-events]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -631,7 +630,7 @@
              :validate-form? @validate-form?]]]
 
           [ui/Header {:as "h3"} "Components"
-           [:span ff/nbsp ff/nbsp [ui/Label {:circular true} @components-number]]]
+           [:span general-utils/nbsp general-utils/nbsp [ui/Label {:circular true} @components-number]]]
 
           [ui/Table style/definition
            [ui/TableBody
@@ -805,7 +804,7 @@
              :validate-form? false]
             ]]
           [ui/Header {:as "h3"} "Components"
-           [:span ff/nbsp ff/nbsp [ui/Label {:circular true} @components-number]]]
+           [:span general-utils/nbsp general-utils/nbsp [ui/Label {:circular true} @components-number]]]
 
           [ui/Table style/definition
            [ui/TableBody
@@ -919,7 +918,9 @@
                                         (dispatch [::events/method (str/lower-case %)])
                                         (on-change :method (str/lower-case %))))
                         :options   [{:key "slack", :text "Slack", :value "slack"}
-                                    {:key "email", :text "Email", :value "email"}]}]]]))))
+                                    {:key "email", :text "Email", :value "email"}
+                                    {:key "mqtt", :text "MQTT", :value "mqtt"}
+                                    ]}]]]))))
 
 
 (defn AddNotificationMethodModal
@@ -961,6 +962,7 @@
              :input-help-msg (case (:method @notif-method)
                                "slack" [:a {:href "https://api.slack.com/messaging/webhooks" :target "_blank"} "Slack webhook help page"]
                                "email" "Space separated list of email addresses"
+                               "mqtt" "<IP|HOST>[:PORT]/TOPIC"
                                "")]]]]
 
          [ui/ModalActions

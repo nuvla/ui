@@ -19,7 +19,6 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
             [sixsq.nuvla.ui.utils.general :as utils-general]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -1173,7 +1172,7 @@
   [ui/Header {:as :h3, :icon true, :disabled true}
    [ui/Icon {:className icon}]
    header
-   [ui/HeaderSubheader (or subheader ff/nbsp)]])
+   [ui/HeaderSubheader (or subheader utils-general/nbsp)]])
 
 (def icon-envelope-dollar icons/i-envelope-open-dollar)
 
@@ -1289,9 +1288,9 @@
      [ui/ListContent
       [ui/ListHeader
        [acl-views/PrincipalIcon principal]
-       ff/nbsp
+       utils-general/nbsp
        @principal-name
-       ff/nbsp
+       utils-general/nbsp
        (when editable?
          [icons/CloseIcon {:link     true
                            :size     "small"
@@ -1357,7 +1356,7 @@
                 add-user
                 {:placeholder (@tr [:add-group-members])
                  :fluid       true} @members]
-               [:span ff/nbsp]
+               [:span utils-general/nbsp]
                [uix/Button {:text     (@tr [:add])
                             :icon     "add user"
                             :disabled (str/blank? @add-user)
@@ -1366,13 +1365,13 @@
                                          (reset! add-user nil)
                                          (set-group-changed! id)
                                          (dispatch [::main-events/changes-protection? true]))}]
-               [:span ff/nbsp]
-               [:span ff/nbsp]
+               [:span utils-general/nbsp]
+               [:span utils-general/nbsp]
                [ui/Input {:placeholder (@tr [:invite-by-email])
                           :style       {:width "250px"}
                           :value       (or @invite-user "")
                           :on-change   (ui-callback/value #(reset! invite-user %))}]
-               [:span ff/nbsp]
+               [:span utils-general/nbsp]
                [uix/Button {:text     (@tr [:send])
                             :icon     "send"
                             :disabled (str/blank? @invite-user)

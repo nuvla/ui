@@ -7,6 +7,8 @@
             [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]))
 
+(def ^:const nbsp "\u00a0")
+
 
 (defn str->int
   "Converts a string into an integer. Returns input unchanged for any invalid input."
@@ -278,10 +280,6 @@
 
 (defn can-delete? [data]
   (can-operation? :delete data))
-
-
-(defn can-terminate? [data]
-  (can-operation? :terminate data))
 
 
 (defn can-stop? [data]

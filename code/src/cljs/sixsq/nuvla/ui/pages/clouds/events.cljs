@@ -11,32 +11,15 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
-; Perform form validation if validate-form? is true.
-
-(defn map-update-if-empty
-  [coll params]
-  (reduce (fn [ncoll [k v]] (assoc ncoll k (if-not (get coll k nil) v (get coll k))))
-          coll
-          params))
-
 (reg-event-db
   ::validate-coe-service-form
-  (fn [db [_]]
-    (let [coe-form-spec     ::spec/coe-service
-          generic-form-spec ::spec/generic-service
-          mgmt-cred-subtype (utils/mgmt-cred-subtype-by-id db (get-in db [::spec/infra-service :management-credential]))
-          cloud-params      (get utils/cloud-params-defaults mgmt-cred-subtype)
-          service           (map-update-if-empty (get db ::spec/infra-service) cloud-params)
+  (fn [db]
+    (let [generic-form-spec ::spec/generic-service
+          service           (get db ::spec/infra-service)
           validate-form?    (get db ::spec/validate-form?)
           valid?            (if validate-form?
-                              (if (or (nil? coe-form-spec) (nil? generic-form-spec))
-                                true
-                                ; :endpoint distinguishes pre-existing from to be deployed COE
-                                (if (:endpoint service)
-                                  (s/valid? generic-form-spec service)
-                                  (s/valid? coe-form-spec service)))
+                              (s/valid? generic-form-spec service)
                               true)]
-      (s/explain coe-form-spec service)
       (assoc db ::spec/form-valid? valid?))))
 
 (reg-event-db
@@ -84,37 +67,13 @@
 
 (reg-event-db
   ::reset-service-group
-  (fn [db [_]]
+  (fn [db]
     (dissoc db ::spec/service-group)))
 
 (reg-event-db
   ::reset-infra-service
-  (fn [db [_]]
+  (fn [db]
     (assoc db ::spec/infra-service {})))
-
-(reg-event-db
-  ::update-credential
-  (fn [db [_ key value]]
-    (assoc-in db [::spec/management-credential key] value)))
-
-(reg-event-fx
-  ::set-coe-management-credentials-available
-  (fn [{db :db} [_ response]]
-    (let [mgmt-creds (:resources response)]
-      (cond-> {:db (assoc db ::spec/management-credentials-available mgmt-creds)}
-              (= (:count response) 1) (assoc :dispatch
-                                             [::update-credential :parent
-                                              (-> mgmt-creds first :id)])))))
-
-(reg-event-fx
-  ::fetch-coe-management-credentials-available
-  (fn [{:keys [db]} [_ subtypes additional-filter]]
-    {:db                  (assoc db ::spec/management-credentials-available nil)
-     ::cimi-api-fx/search [:credential
-                           {:filter (cond-> (general-utils/filter-eq-subtypes subtypes)
-                                            additional-filter (general-utils/join-and additional-filter))
-                            :last   10000}
-                           #(dispatch [::set-coe-management-credentials-available %])]}))
 
 (reg-event-fx
   ::add-infra-service
@@ -216,36 +175,3 @@
   ::update-infra-service
   (fn [db [_ key value]]
     (assoc-in db [::spec/infra-service key] value)))
-
-(reg-event-db
-  ::update-infra-service-map
-  (fn [db [_ kvs]]
-    (update-in db [::spec/infra-service] merge kvs)))
-
-(reg-event-db
-  ::clear-infra-service-cloud-params
-  (fn [db [_]]
-    (update-in db [::spec/infra-service]
-               (fn [nested] (apply dissoc nested utils/cloud-params-keys)))))
-
-;; SSH keys
-
-(reg-event-db
-  ::ssh-keys
-  (fn [db [_event-type ssh-keys]]
-    (assoc-in db [::spec/infra-service :ssh-keys] ssh-keys)))
-
-(reg-event-db
-  ::set-ssh-keys-infra
-  (fn [db [_ {resources :resources}]]
-    (assoc db ::spec/ssh-keys-infra resources)))
-
-(reg-event-fx
-  ::get-ssh-keys-infra
-  (fn [_ _]
-    {::cimi-api-fx/search
-     [:credential
-      {:filter "subtype='ssh-key'"
-       :select "id, name"
-       :order  "name:asc, id:asc"
-       :last   10000} #(dispatch [::set-ssh-keys-infra %])]}))

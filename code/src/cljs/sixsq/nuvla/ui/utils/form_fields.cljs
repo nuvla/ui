@@ -8,10 +8,6 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
-
-(def nbsp "\u00a0")
-
-
 (defmulti form-field
           (fn [_update-fn _form-id {:keys [type] :as _param}]
             (keyword type)))

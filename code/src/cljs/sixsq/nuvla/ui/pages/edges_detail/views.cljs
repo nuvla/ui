@@ -885,7 +885,8 @@
 (defn BytesUsage
   [used limit]
   (let [[unit used limit perc] (data-utils/bytes-usage used limit)]
-    [:div {:style {:display "flex"}}
+    [:div {:style {:display     "flex"
+                   :align-items "center"}}
      [:div {:style {:width        "28%"
                     :text-align   "right"
                     :margin-right "5px"}}
@@ -904,16 +905,12 @@
                          :header-content "Container Name"}
                         {:field-key      :image
                          :header-content "Container Image"}
-                        {:field-key         :cpu-usage
-                         :header-content    "CPU %"
-                         :cell              (fn [{value :cell-data}]
-                                              (if value
-                                                (str (general-utils/to-fixed value) " %")
-                                                "-"))}
-                        {:field-key      :status
-                         :header-content "Status"}
-                        {:field-key      :restart-count
-                         :header-content "Restart Count"}
+                        {:field-key      :cpu-usage
+                         :header-content "CPU %"
+                         :cell           (fn [{value :cell-data}]
+                                           (if value
+                                             (str (general-utils/to-fixed value) " %")
+                                             "-"))}
                         {:field-key      :mem-usage
                          :header-content "Mem Usage"
                          :cell           cell-bytes}
@@ -928,6 +925,10 @@
                          :sort-value-fn  (fn [{:keys [mem-usage mem-limit]}]
                                            (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
                                              (/ (double mem-usage) mem-limit)))}
+                        {:field-key      :status
+                         :header-content "Status"}
+                        {:field-key      :restart-count
+                         :header-content "Restart Count"}
                         {:field-key      :disk-in
                          :header-content "Disk In"
                          :cell           cell-bytes}
@@ -941,7 +942,7 @@
                          :header-content "Network Out"
                          :cell           cell-bytes}]
       :sort-config     {:db-path ::spec/stats-container-ordering}
-      :default-columns #{:name :image :cpu-usage :status :restart-count}
+      :default-columns #{:name :image :cpu-usage :mem-usage-perc :status :restart-count}
       :table-props     (merge style/single-line {:stackable true :selectable true})
       :cell-props      {:header {:single-line true}}
       :rows            container-stats-ordered}

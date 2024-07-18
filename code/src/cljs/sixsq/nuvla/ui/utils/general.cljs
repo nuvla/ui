@@ -367,7 +367,7 @@
 
 (defn to-fixed
   [value & {:keys [n-decimal] :or {n-decimal 2}}]
-  (.toFixed value n-decimal))
+  (some-> value (.toFixed n-decimal)))
 
 
 (defn percentage

@@ -489,6 +489,16 @@
                      :value    (merge (edn/read-string storage) {db-path new-cols})}})))
 
 (reg-event-fx
+  ::select-fields
+  (fn [{{:keys [::current-cols]} :db} [_ fields db-path]]
+    ;; on fields selection, compute new cols by keeping the ordering of existing cols and by appending
+    ;; remaining cols at the end
+    (let [cur-cols (get current-cols db-path)
+          cols     (into (filterv #(contains? fields %) cur-cols)
+                         (set/difference fields (set cur-cols)))]
+      {:fx [[:dispatch [::set-current-cols cols db-path]]]})))
+
+(reg-event-fx
   ::move-col
   (fn [{{:keys [::current-cols]} :db} [_ col-key dest-col-key db-path]]
     (let [cur-cols (get current-cols db-path)
@@ -741,7 +751,8 @@
                            (update :style merge {:cursor :auto})))
 
                      (cond
-                       cell (if (string? cell) [tt/with-overflow-tooltip [:div cell] cell]
+                       cell (if (string? cell) [tt/with-overflow-tooltip
+                                                [:div.vcenter [:div.ellipsing cell]] cell]
                                                [cell {:row-data  row
                                                       :cell-data cell-data
                                                       :field-key field-key}])
@@ -750,7 +761,8 @@
                                                 (seq cell-data))
                                             cell-data
                                             ""))]
-                               [tt/with-overflow-tooltip [:div s] s]))])]))]]]]]))))
+                               [tt/with-overflow-tooltip
+                                [:div.vcenter [:div.ellipsing s]] s]))])]))]]]]]))))
 
 
 (defn ConfigureVisibleColumns
@@ -772,7 +784,7 @@
         :reset-to-default-fn #(reset! selected-cols (set @default-cols))
         :selected-fields-sub current-cols
         :available-fields    available-col-keys
-        :update-fn           #(dispatch [::set-current-cols % db-path])
+        :update-fn           #(dispatch [::select-fields (set %) db-path])
         :trigger             [uix/Button
                               {:basic    true
                                :icon     :options

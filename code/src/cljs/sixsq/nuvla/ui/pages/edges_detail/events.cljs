@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
@@ -157,8 +157,8 @@
                               :last    10000
                               :orderby "id"}
                              #(dispatch [::set-nuvlabox-peripherals %])]
-       :fx                  [[:dispatch [::events-plugin/load-events
-                                         [::spec/events] id false]]
+       :fx                  [[:dispatch [::audit-log-plugin/load-events
+                                         [::spec/events] {:href id} false]]
                              [:dispatch [::job-events/get-jobs id]]
                              [:dispatch [::get-deployments-for-edge id]]
                              [:dispatch [::get-nuvlabox-playbooks id]]

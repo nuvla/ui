@@ -1,10 +1,12 @@
 (ns sixsq.nuvla.ui.pages.dashboard.views
   (:require [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.main.components :as components]
             [sixsq.nuvla.ui.pages.apps.apps-store.subs :as apps-store-subs]
             [sixsq.nuvla.ui.pages.credentials.subs :as credentials-subs]
             [sixsq.nuvla.ui.pages.dashboard.events :as events]
+            [sixsq.nuvla.ui.pages.dashboard.spec :as spec]
             [sixsq.nuvla.ui.pages.dashboard.utils :as utils]
             [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.pages.deployments.views :as deployments-views]
@@ -16,6 +18,11 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as utils-style]))
+
+
+(defn init
+  [& opts]
+  (dispatch [::events/init opts]))
 
 
 (defn refresh
@@ -111,6 +118,25 @@
                      (dispatch [::routing-events/navigate resource]))}]))
 
 
+(defn TabOverviewAuditLog
+  []
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [ui/Segment {:secondary true
+                 :raised    true
+                 :class     "audit-logs"
+                 :style     {:display         "flex"
+                             :flex-direction  "column"
+                             :justify-content "space-between"
+                             :overflow        :auto}}
+
+     [:div
+      [:h4 {:class "ui-header"}
+       [icons/BoltIcon]
+       (tr [:audit-log])]
+
+      [audit-log-plugin/EventsTableWithFilters {:db-path [::spec/events]}]]]))
+
+
 (defn Statistics
   []
   (let [apps              (subscribe [::apps-store-subs/modules])
@@ -136,6 +162,7 @@
 
 (defn DashboardMain
   []
+  (init)
   (refresh)
   (fn []
     [components/LoadingPage {}
@@ -153,7 +180,11 @@
           [TabOverviewDeployments]]
          [ui/GridColumn {:stretched true
                          :style {:max-height 320}}
-          [TabOverviewNuvlaBox]]]]]]]))
+          [TabOverviewNuvlaBox]]
+         [ui/GridColumn {:stretched true
+                         :class "sixteen wide"
+                         :style {:max-height 500}}
+          [TabOverviewAuditLog]]]]]]]))
 
 
 (defn dashboard-view

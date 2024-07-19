@@ -7,7 +7,7 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.job.subs :as job-subs]
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.common-components.resource-log.views :as log-views]
@@ -2156,11 +2156,10 @@
                    :key     tab-historical-data-key
                    :icon    icons/i-file-code}
         :render   #(r/as-element [timeseries/TimeSeries])}
-
        (when id
-         (events-plugin/events-section
+         (audit-log-plugin/events-section
            {:db-path [::spec/events]
-            :href    id}))
+            :filters {:href id}}))
        {:menuItem {:content (r/as-element [:span "Deployments"
                                            [ui/Label {:circular true
                                                       :size     "mini"

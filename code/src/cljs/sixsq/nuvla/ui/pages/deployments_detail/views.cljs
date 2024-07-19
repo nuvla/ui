@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.job.subs :as job-subs]
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.common-components.resource-log.views :as log-views]
@@ -702,9 +702,9 @@
      (module-version-section)
      (logs-section)
      (when @deployment
-       (events-plugin/events-section
+       (audit-log-plugin/events-section
          {:db-path [::spec/events]
-          :href    (:id @deployment)}))
+          :filters {:href (:id @deployment)}}))
      (parameters-section)
      (env-vars-section)
      (job-views/jobs-section)

@@ -7,6 +7,8 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.common-components.acl.views :as acl-views]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
@@ -364,47 +366,56 @@
        ^{:key @step}
        [ModalTwoFactorContent @step]])))
 
-
-(defn Details
+(defn SessionTable
   []
   (let [tr         (subscribe [::i18n-subs/tr])
         session    (subscribe [::session-subs/session])
         user-id    (:user @session)
         is-group?  (subscribe [::session-subs/is-group?])
-        identifier (:identifier @session)
+        identifier (:identifier @session)]
+    [ui/Table {:basic "very"}
+     [ui/TableBody
+      [ui/TableRow
+       [ui/TableCell {:width 5} [:b "Identifier"]]
+       [ui/TableCell {:width 11} identifier]]
+      [ui/TableRow
+       [ui/TableCell {:width 5} [:b "Logged-in as"]]
+       [ui/TableCell {:width 11} (if @is-group? (:active-claim @session) identifier)]]
+      [ui/TableRow
+       [ui/TableCell [:b (str/capitalize (@tr [:session-expires]))]]
+       [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]
+      [ui/TableRow
+       [ui/TableCell [:b "User id"]]
+       [ui/TableCell [values/AsHref {:href user-id}]]]
+      [ui/TableRow
+       [ui/TableCell [:b "Roles"]]
+       [ui/TableCell [values/FormatCollection (sort (str/split (:roles @session) #"\s+"))]]]]]))
+
+(defn Details
+  []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        session (subscribe [::session-subs/session])
+        user-id (:user @session)
         ;user       (subscribe [::subs/user])
         ;acl        (:acl @user)
         ;ui-acl     (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))
         ]
     (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
     [:<>
-     [ui/Segment {:padded true, :color "teal"}
-      [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:session]))]
-      (if @session
-        [ui/Table {:basic "very"}
-         [ui/TableBody
-          [ui/TableRow
-           [ui/TableCell {:width 5} [:b "Identifier"]]
-           [ui/TableCell {:width 11} identifier]]
-          [ui/TableRow
-           [ui/TableCell {:width 5} [:b "Logged-in as"]]
-           [ui/TableCell {:width 11} (if @is-group? (:active-claim @session) identifier)]]
-          [ui/TableRow
-           [ui/TableCell [:b (str/capitalize (@tr [:session-expires]))]]
-           [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]
-          [ui/TableRow
-           [ui/TableCell [:b "User id"]]
-           [ui/TableCell [values/AsHref {:href user-id}]]]
-          [ui/TableRow
-           [ui/TableCell [:b "Roles"]]
-           [ui/TableCell [values/FormatCollection (sort (str/split (:roles @session) #"\s+"))]]]]]
+     (if @session
+       [:<>
+        [ui/Segment {:padded true, :color "teal"}
+         [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:session]))]
+         [SessionTable]]]
+       [ui/Segment {:padded true, :color "teal"}
+        [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:session]))]
         [ui/Grid {:text-align     "center"
                   :vertical-align "middle"
                   :style          {:height "100%"}}
          [ui/GridColumn
           [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
            [icons/SigninIcon]
-           (@tr [:no-session])]]])]
+           (@tr [:no-session])]]]])
      ;[ui/Segment {:padded true :color "blue"}
      ; [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:access-rights]))]
      ; [acl-views/AclWidget {:default-value acl, :read-only false} ui-acl]]
@@ -1631,7 +1642,10 @@
    {:menuItem {:content (r/as-element [TabMenuDetails])
                :key     :details
                :icon    icons/i-info}
-    :render   #(r/as-element [DetailsPane])}])
+    :render   #(r/as-element [DetailsPane])}
+   (audit-log-plugin/events-section
+     {:db-path [::spec/events]
+      :filters {:event-name events/event-names}})])
 
 
 (defn Tabs

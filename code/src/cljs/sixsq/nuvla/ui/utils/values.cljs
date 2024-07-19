@@ -3,6 +3,7 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.string :as str]
             [markdown-to-hiccup.core :as md]
+            [sixsq.nuvla.ui.utils.general :as u]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -37,6 +38,17 @@
   "Renders a link to the API detail page associated with the href."
   [href & {:keys [label page]}]
   [uix/Link (str (or page "api") "/" href) (or label href)])
+
+(defn AsPageLink
+  "Renders a link to the ui page naturally associated with the href.
+   If there is none, defaults to the api page."
+  [href & {:keys [label]}]
+  (let [resource-name (u/id->resource-name href)
+        resource-uuid (u/id->uuid href)]
+    (case resource-name
+      ("nuvlabox" "deployment" "deployment-set")
+      [AsLink resource-uuid :page resource-name :label label]
+      [AsLink href :label label])))
 
 (defn FormatValue
   [value]

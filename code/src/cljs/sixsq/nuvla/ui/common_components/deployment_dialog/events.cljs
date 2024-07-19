@@ -224,7 +224,9 @@
     (if (= (:href target-resource) (:id deployment))
       (let [result (if-let [dct (general-utils/json->edn status-message :keywordize-keys false)]
                      {:dct dct}
-                     {:error (str "Error: " status-message)})]
+                     (if (str/includes? (str/lower-case status-message)  "not supported")
+                       {:warning status-message}
+                       {:error (str "Error: " status-message)}))]
         (assoc db ::spec/check-dct result))
       db)))
 

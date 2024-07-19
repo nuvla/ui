@@ -90,8 +90,6 @@
         :applications-targets                          "Applications/Targets"
         :apps                                          "apps"
         :apps-config                                   "Apps"
-        :apps-file-config-warning                      "Files are supported as Config or Secret on Docker Swarm only. However, your docker-compose.yml is not compatible with Docker Swarm because"
-        :apps-file-config-warning-options-link         "some configuration options are not supported."
         :apps-header                                   "Marketplace & Workspace"
         :apps-more-info                                "Would you like to enable fast deployment monitoring? If so, please check the "
         :apps-sub-modules                              "sub-modules"

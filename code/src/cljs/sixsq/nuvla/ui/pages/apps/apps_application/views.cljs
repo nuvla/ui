@@ -83,10 +83,9 @@
 
 
 (defn FilesSection []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        files         (subscribe [::subs/files])
-        editable?     (subscribe [::apps-subs/editable?])
-        compatibility (subscribe [::subs/compatibility])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        files     (subscribe [::subs/files])
+        editable? (subscribe [::apps-subs/editable?])]
     (fn []
       [uix/Accordion
        [:<>
@@ -102,14 +101,14 @@
                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
                    (when @editable?
-                         [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                  [ui/TableBody
                   (for [[id file] @files]
-                       ^{:key (str "file_" id)}
-                       [SingleFile file])]]])
+                    ^{:key (str "file_" id)}
+                    [SingleFile file])]]])
         (when @editable?
-              [:div {:style {:padding-top 10}}
-               [apps-views-detail/plus ::events/add-file]])]
+          [:div {:style {:padding-top 10}}
+           [apps-views-detail/plus ::events/add-file]])]
        :label (@tr [:module-files])
        :count (count @files)
        :default-open true])))
@@ -251,7 +250,7 @@
      [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:summary]))]
      [ui/Table {:basic  "very"
                 :padded false
-                :fixed true}
+                :fixed  true}
       [ui/TableBody
        (when name
          [ui/TableRow
@@ -418,9 +417,9 @@
 
 
 (defn DetailsPane []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        active-tab     (sub-apps-tab)
-        editable?   (subscribe [::apps-subs/editable?])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        active-tab (sub-apps-tab)
+        editable?  (subscribe [::apps-subs/editable?])]
     @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details

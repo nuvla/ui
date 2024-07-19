@@ -89,30 +89,27 @@
         compatibility (subscribe [::subs/compatibility])]
     (fn []
       [uix/Accordion
-       (if (not= @compatibility "docker-compose")
-         [:<>
-          [:div (@tr [:module-files])
-           [uix/HelpPopup (@tr [:module-files-help])]]
+       [:<>
+        [:div (@tr [:module-files])
+         [uix/HelpPopup (@tr [:module-files-help])]]
 
-          (if (empty? @files)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-files]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
-                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
-                     (when @editable?
-                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
-                   [ui/TableBody
-                    (for [[id file] @files]
-                      ^{:key (str "file_" id)}
-                      [SingleFile file])]]])
-          (when @editable?
-            [:div {:style {:padding-top 10}}
-             [apps-views-detail/plus ::events/add-file]])]
-         [:div (@tr [:apps-file-config-warning])
-          [:a {:href docker-docu-link} (str " " (@tr [:apps-file-config-warning-options-link]))]])
+        (if (empty? @files)
+          [ui/Message
+           (str/capitalize (str (@tr [:no-files]) "."))]
+          [:div [ui/Table {:style {:margin-top 10}}
+                 [ui/TableHeader
+                  [ui/TableRow
+                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
+                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
+                   (when @editable?
+                         [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                 [ui/TableBody
+                  (for [[id file] @files]
+                       ^{:key (str "file_" id)}
+                       [SingleFile file])]]])
+        (when @editable?
+              [:div {:style {:padding-top 10}}
+               [apps-views-detail/plus ::events/add-file]])]
        :label (@tr [:module-files])
        :count (count @files)
        :default-open true])))

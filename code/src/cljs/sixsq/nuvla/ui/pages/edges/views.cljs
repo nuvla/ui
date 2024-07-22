@@ -28,7 +28,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 (def show-state-statistics (r/atom false))
@@ -189,22 +188,21 @@
             refresh-interval created-by owner] :as nuvlabox} :row-data
     field-key                                                :field-key}]
   (let [uuid                  (general-utils/id->uuid id)
-        locale                @(subscribe [::i18n-subs/locale])
-        last-heartbeat-moment @(subscribe [::subs/last-online nuvlabox])
+        last-online           @(subscribe [::subs/last-online nuvlabox])
         creator               (subscribe [::session-subs/resolve-user created-by])
         owner                 (subscribe [::session-subs/resolve-user owner])
         field-key->table-cell {:description      description,
                                :tags             [uix/Tags tags],
                                :refresh-interval (str refresh-interval "s"),
                                :name             (or name uuid),
-                               :created          (time/parse-ago created locale),
+                               :created          [uix/TimeAgo created]
                                :state            [ui/Icon {:class (utils/state->icon state)}]
                                :online           [OnlineStatusIcon online nil true]
                                :created-by       @creator
                                :owner            @owner
                                :last-online
-                               (when last-heartbeat-moment
-                                 [uix/TimeAgo last-heartbeat-moment]),
+                               (when last-online
+                                 [uix/TimeAgo last-online]),
                                :version          [NEVersion nuvlabox]}]
     (field-key->table-cell field-key)))
 

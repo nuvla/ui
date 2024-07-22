@@ -40,7 +40,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.tooltip :as tt]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
@@ -555,8 +554,7 @@
 
 (defn TabOverviewDeploymentSet
   [{:keys [id created updated created-by state operational-status] :as deployment-set} creating?]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        locale (subscribe [::i18n-subs/locale])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -594,10 +592,10 @@
              [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:created]))]
-           [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+           [ui/TableCell [uix/TimeAgo created]]]
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:updated]))]
-           [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]])]]]))
+           [ui/TableCell [uix/TimeAgo updated]]]])]]]))
 
 (defn AppsInAppsSetsCard
   [ids]
@@ -773,12 +771,11 @@
 
 (defn ModuleVersion
   [label created]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        locale (subscribe [::i18n-subs/locale])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Popup
-     {:content (r/as-element [:p (str (str/capitalize (@tr [:created]))
-                                      " "
-                                      (time/ago (time/parse-iso8601 created) @locale))])
+     {:content (r/as-element [:p (str/capitalize (@tr [:created]))
+                              " "
+                              [uix/TimeAgo created]])
       :trigger (r/as-element [:span label " " [icons/InfoIconFull]])}]))
 
 (defn LinkToAppConfig
@@ -1453,10 +1450,10 @@
     [uix/Accordion
      (tt/with-tooltip
        [:div [module-plugin/Files
-              {:db-path                  [::spec/apps-sets i]
-               :href                     module-id
-               :change-event             [::events/edit-config]
-               :read-only?               (or (not @can-edit-data?) (not @edit-op-allowed?))}]]
+              {:db-path      [::spec/apps-sets i]
+               :href         module-id
+               :change-event [::events/edit-config]
+               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))}]]
        (edit-not-allowed-msg {:TR                         @tr
                               :can-edit-data?             @can-edit-data?
                               :edit-op-allowed?           @edit-op-allowed?

@@ -15,14 +15,12 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
-  (let [locale (subscribe [::i18n-subs/locale])
-        uuid   (general-utils/id->uuid id)]
+  (let [uuid (general-utils/id->uuid id)]
     [ui/TableRow {:on-click #(dispatch [::routing-events/navigate (utils/edges-details-url uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
@@ -31,7 +29,7 @@
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
-     [ui/TableCell (time/parse-ago created @locale)]
+     [ui/TableCell [uix/TimeAgo created]]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
@@ -47,10 +45,6 @@
       :on-click #(dispatch
                    [::main-events/subscription-required-dispatch
                     [::events/open-modal spec/modal-add-id]])}]))
-
-(defn- date-string->time-ago [created]
-  (-> created time/parse-iso8601 time/ago))
-
 
 (defn NuvlaboxCard
   [_nuvlabox _managers]
@@ -68,17 +62,17 @@
                         [ui/IconGroup
                          [icons/BoxIcon]
                          (when (some #{id} managers)
-                           [icons/CrownIcon {:corner    true
-                                             :color     "blue"}])]
+                           [icons/CrownIcon {:corner true
+                                             :color  "blue"}])]
                         (or name id)]
           :meta        [:<>
-                        [:div (str (@tr [:created]) " " (date-string->time-ago created))]
+                        [:div (@tr [:created]) [uix/TimeAgo created]]
                         (when @creator
                           [:div (str (@tr [:by]) " "
                                      @creator)])
                         (when last-heartbeat-moment
                           [:div (str (@tr [:last-online]) " ")
-                                [uix/TimeAgo last-heartbeat-moment]])]
+                           [uix/TimeAgo last-heartbeat-moment]])]
           :state       state
           :description (when-not (str/blank? description) description)
           :tags        tags}]))))

@@ -30,7 +30,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
@@ -454,7 +453,6 @@
   []
   (let [tr         (subscribe [::i18n-subs/tr])
         deployment (subscribe [::subs/deployment])
-        locale     (subscribe [::i18n-subs/locale])
         module     (:module @deployment)
         {:keys [id created updated name description
                 parent-path path logo-url]} module
@@ -485,10 +483,10 @@
           [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+        [ui/TableCell [uix/TimeAgo created]]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:updated]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
+        [ui/TableCell [uix/TimeAgo updated]]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:id]))]
         [ui/TableCell [values/AsLink id :label (general-utils/id->uuid
@@ -542,7 +540,7 @@
                                            :max-width     "20ch"}} module-name]]
                        [uix/Link (str "apps/" module-path) module-name])]
 
-      [ui/CardMeta (str (@tr [:created]) " " (-> deployment :created time/parse-iso8601 time/ago))]
+      [ui/CardMeta (@tr [:created]) " " [uix/TimeAgo (:created deployment)]]
 
       [ui/CardDescription
 
@@ -613,7 +611,7 @@
             [uix/Tags tags]]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:created])))]
-         [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]
+         [ui/TableCell [uix/TimeAgo (:created @deployment)]]]
         [ui/TableRow
          [ui/TableCell "Id"]
          [ui/TableCell (when (some? id) [values/AsLink id :label (general-utils/id->uuid id)])]]

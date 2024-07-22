@@ -113,7 +113,7 @@
 
 
 (defn feed-item
-  [locale {:keys [type header timestamp] :as message}]
+  [{:keys [type header timestamp] :as message}]
   (let [icon-name       (type->icon-name type)
         message-options (type->message-type type)]
     [ui/ListItem {:on-click #(dispatch [::events/show message])}
@@ -122,13 +122,12 @@
        [ui/Icon {:class icon-name}]
        header]
       [ui/MessageContent
-       (time/ago timestamp locale)]]]))
+       [uix/TimeAgo (time/time->utc-str timestamp)]]]]))
 
 
 (defn message-feed
   []
-  (let [locale   (subscribe [::i18n-subs/locale])
-        messages (subscribe [::subs/messages])]
+  (let [messages (subscribe [::subs/messages])]
     (when (seq @messages)
       [ui/ListSA {:selection true
                   :style     {:height     "100%"
@@ -137,7 +136,7 @@
        (doall
          (for [{:keys [uuid] :as message} @messages]
            ^{:key uuid}
-           [feed-item @locale message]))])))
+           [feed-item message]))])))
 
 
 (defn bell-menu

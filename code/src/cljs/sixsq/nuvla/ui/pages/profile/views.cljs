@@ -8,7 +8,6 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
             [sixsq.nuvla.ui.common-components.acl.views :as acl-views]
             [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.intercom.events :as intercom-events]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as nav-tab]
@@ -383,7 +382,7 @@
        [ui/TableCell {:width 11} (if @is-group? (:active-claim @session) identifier)]]
       [ui/TableRow
        [ui/TableCell [:b (str/capitalize (@tr [:session-expires]))]]
-       [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]
+       [ui/TableCell [uix/TimeAgo (:expiry @session)]]]
       [ui/TableRow
        [ui/TableCell [:b "User id"]]
        [ui/TableCell [values/AsHref {:href user-id}]]]

@@ -7,8 +7,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.table :as table]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.table :as table]))
 
 
 (defn more-or-less
@@ -57,7 +56,7 @@
                  (not (str/blank? subtitle)) (str " (" subtitle ")"))]
         [ui/CardMeta
          (when description [:p description])
-         (when updated [:p (-> updated time/parse-iso8601 time/ago)])]
+         (when updated [:p [uix/TimeAgo updated]])]
         [ui/CardDescription
          (when (or (seq rows) (seq properties))
            [more-or-less more?])

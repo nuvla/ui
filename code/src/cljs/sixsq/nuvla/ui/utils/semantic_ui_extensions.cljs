@@ -514,33 +514,46 @@
                    :on-click #(do (reset! clicked? true)
                                   (on-confirm))}]])])))
 
-
-(defn ForceRerenderComponentByDelay
-  [RenderFn delay]
+(defn RerenderOnRecomputeChange
+  [{:keys [Component recompute-fn delay data]
+    :or   {delay 5000}}]
   (r/with-let
-    [refresh     (r/atom 0)
-     interval-id (js/setInterval #(swap! refresh inc) delay)]
-    ^{:key (str "reload-" interval-id "-" @refresh)}
-    [RenderFn]
+    [data!           (atom data)
+     recomputed-data (r/atom (recompute-fn @data!))
+     interval-id     (js/setInterval #(let [result (recompute-fn @data!)]
+                                        (when (not= result @recomputed-data)
+                                          (reset! recomputed-data result))) delay)]
+    (reset! data! data)
+    [Component @recomputed-data]
     (finally
       (js/clearInterval interval-id))))
 
 
 (defn TimeAgo
   [time-str]
-  (let [locale (subscribe [::i18n-subs/locale])]
-    [ForceRerenderComponentByDelay
-     (fn []
-       [:span (some-> time-str (time/parse-ago @locale))])
-     5000]))
+  (r/with-let [locale (subscribe [::i18n-subs/locale])
+               C      (fn [[t ago]]
+                        (when t
+                          [ui/Popup {:trigger           (r/as-element [:span ago])
+                                     :size              "small"
+                                     :mouse-enter-delay 700
+                                     :content           t}]))
+               f      #(when % [% (time/parse-ago % @locale)])]
+    [RerenderOnRecomputeChange
+     {:Component    C
+      :recompute-fn f
+      :data         time-str}]))
 
 (defn CountDown
   [futur-moment]
-  [ForceRerenderComponentByDelay
-   #(let [d (/ (time/delta-milliseconds (time/now) futur-moment) 1000)]
-      [:span
-       (if (neg? d) 0 (js/Math.round d))])
-   1000])
+  (r/with-let [C (fn [d] [:span d])
+               f #(when-let [d (some->> % (time/delta-milliseconds (time/now)))]
+                    (if (neg? d) 0 (int (/ d 1000))))]
+    [RerenderOnRecomputeChange
+     {:Component    C
+      :recompute-fn f
+      :data         futur-moment
+      :delay        1000}]))
 
 
 (defn WarningMsgNoElements

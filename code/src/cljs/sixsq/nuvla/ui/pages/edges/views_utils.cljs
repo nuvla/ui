@@ -50,9 +50,9 @@
   [_nuvlabox _managers]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id name description created state tags online created-by] :as nuvlabox} managers]
-      (let [href                  (name->href routes/edges-details {:uuid (general-utils/id->uuid id)})
-            last-heartbeat-moment @(subscribe [::subs/last-online nuvlabox])
-            creator               (subscribe [::session-subs/resolve-user created-by])]
+      (let [href        (name->href routes/edges-details {:uuid (general-utils/id->uuid id)})
+            last-online @(subscribe [::subs/last-online nuvlabox])
+            creator     (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}
         [uix/Card
          {:href        href
@@ -66,13 +66,13 @@
                                              :color  "blue"}])]
                         (or name id)]
           :meta        [:<>
-                        [:div (@tr [:created]) [uix/TimeAgo created]]
+                        [:div (@tr [:created]) " " [uix/TimeAgo created]]
                         (when @creator
                           [:div (str (@tr [:by]) " "
                                      @creator)])
-                        (when last-heartbeat-moment
+                        (when last-online
                           [:div (str (@tr [:last-online]) " ")
-                           [uix/TimeAgo last-heartbeat-moment]])]
+                           [uix/TimeAgo last-online]])]
           :state       state
           :description (when-not (str/blank? description) description)
           :tags        tags}]))))

@@ -18,9 +18,7 @@
             [sixsq.nuvla.ui.pages.deployments-detail.events :as events]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments-detail.subs :as subs]
-            [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
-            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -491,84 +489,6 @@
         [ui/TableCell (str/capitalize (@tr [:id]))]
         [ui/TableCell [values/AsLink id :label (general-utils/id->uuid
                                                  (or id ""))]]]]]]))
-
-
-(defn DeploymentCard
-  [{:keys [id state module tags parent credential-name] :as deployment} & {:keys [clickable?]
-                                                                           :or   {clickable? true}}]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        {module-logo-url :logo-url
-         module-name     :name
-         module-path     :path
-         module-content  :content} module
-        [primary-url-name
-         primary-url-pattern] (-> module-content (get :urls []) first)
-        primary-url (if clickable?
-                      (subscribe [::deployments-subs/deployment-url id primary-url-pattern])
-                      (subscribe [::subs/url primary-url-pattern]))
-        cred        (or credential-name parent)]
-
-    ^{:key id}
-    [ui/Card (when clickable?
-               {:as       :div
-                :link     true
-                :on-click (fn [event]
-                            (dispatch [::routing-events/navigate (deployments-utils/deployment-href id)])
-                            (.preventDefault event))})
-     [ui/Image {:src      (or module-logo-url "")
-                :bordered true
-                :style    {:width      "auto"
-                           :height     "100px"
-                           :padding    "20px"
-                           :object-fit "contain"}}]
-
-     (when clickable?
-       (cond
-         (general-utils/can-operation? "stop" deployment) [StopButton deployment :label? true]
-         (general-utils/can-delete? deployment) [DeleteButton deployment :label? true]))
-
-     [ui/CardContent
-
-      [ui/Segment (merge style/basic {:floated "right"})
-       [:p {:style {:color "initial"}} state]
-       [ui/Loader {:active        (deployments-utils/deployment-in-transition? state)
-                   :indeterminate true}]]
-
-      [ui/CardHeader (if clickable?
-                       [:span [:p {:style {:overflow      "hidden",
-                                           :text-overflow "ellipsis",
-                                           :max-width     "20ch"}} module-name]]
-                       [uix/Link (str "apps/" module-path) module-name])]
-
-      [ui/CardMeta (@tr [:created]) " " [uix/TimeAgo (:created deployment)]]
-
-      [ui/CardDescription
-
-       (when cred
-         [:div [icons/KeyIcon] cred])]
-
-      [ui/LabelGroup {:size  "tiny"
-                      :color "teal"
-                      :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-       (for [tag tags]
-         ^{:key (str id "-" tag)}
-         [ui/Label {:style {:max-width     "15ch"
-                            :overflow      "hidden"
-                            :text-overflow "ellipsis"
-                            :white-space   "nowrap"}}
-          [icons/TagIcon] tag])]]
-
-     (when (and (deployments-utils/started? state)
-                @primary-url)
-       [ui/Button {:color    "green"
-                   :icon     "external"
-                   :content  primary-url-name
-                   :fluid    true
-                   :href     @primary-url
-                   :on-click (fn [event]
-                               (.stopPropagation event))
-                   :target   "_blank"
-                   :rel      "noreferrer"}])]))
 
 (defn DeplSetLink
   [depl-set-id depl-set-name]

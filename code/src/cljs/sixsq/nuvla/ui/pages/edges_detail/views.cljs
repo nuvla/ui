@@ -1537,7 +1537,7 @@
         [ui/TableCell cluster-node-role
          (when (= cluster-node-role "manager")
            [:<>
-            (str " ")
+            " "
             [icons/CrownIcon {:corner true
                               :color  "blue"}]])]]
        (when cluster-join-address

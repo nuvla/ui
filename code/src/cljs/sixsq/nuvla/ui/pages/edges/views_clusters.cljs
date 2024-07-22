@@ -25,7 +25,6 @@
                                     :icons [icons/i-chart-network],
                                     :label "TOTAL",
                                     :clickable? false,
-                                    :positive-color "",
                                     :set-state-selector-event :sixsq.nuvla.ui.pages.edges.events/set-state-selector,
                                     :state-selector-subs :sixsq.nuvla.ui.pages.edges.subs/state-selector}]])))
 

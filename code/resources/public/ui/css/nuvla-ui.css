@@ -1177,6 +1177,12 @@ i.link.icons {
   margin: 0 2px 0 0 !important;
 }
 
+.table-fixed-row-height .vcenter {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
 .drag-hover {
   border-left: 2px solid var(--accent-color) !important;
 }

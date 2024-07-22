@@ -885,7 +885,8 @@
 (defn BytesUsage
   [used limit]
   (let [[unit used limit perc] (data-utils/bytes-usage used limit)]
-    [:div {:style {:display "flex"}}
+    [:div {:style {:display     "flex"
+                   :align-items "center"}}
      [:div {:style {:width        "28%"
                     :text-align   "right"
                     :margin-right "5px"}}
@@ -904,16 +905,12 @@
                          :header-content "Container Name"}
                         {:field-key      :image
                          :header-content "Container Image"}
-                        {:field-key         :cpu-usage
-                         :header-content    "CPU %"
-                         :cell              (fn [{value :cell-data}]
-                                              (if value
-                                                (str (general-utils/to-fixed value) " %")
-                                                "-"))}
-                        {:field-key      :status
-                         :header-content "Status"}
-                        {:field-key      :restart-count
-                         :header-content "Restart Count"}
+                        {:field-key      :cpu-usage
+                         :header-content "CPU %"
+                         :cell           (fn [{value :cell-data}]
+                                           (if value
+                                             (str (general-utils/to-fixed value) " %")
+                                             "-"))}
                         {:field-key      :mem-usage
                          :header-content "Mem Usage"
                          :cell           cell-bytes}
@@ -928,6 +925,10 @@
                          :sort-value-fn  (fn [{:keys [mem-usage mem-limit]}]
                                            (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
                                              (/ (double mem-usage) mem-limit)))}
+                        {:field-key      :status
+                         :header-content "Status"}
+                        {:field-key      :restart-count
+                         :header-content "Restart Count"}
                         {:field-key      :disk-in
                          :header-content "Disk In"
                          :cell           cell-bytes}
@@ -939,10 +940,20 @@
                          :cell           cell-bytes}
                         {:field-key      :net-out
                          :header-content "Network Out"
-                         :cell           cell-bytes}]
+                         :cell           cell-bytes}
+                        {:field-key      :created-at
+                         :header-content "Created"
+                         :cell           (fn [{{:keys [created-at]} :row-data}]
+                                           [uix/TimeAgo created-at])}
+                        {:field-key      :started-at
+                         :header-content "Started"
+                         :cell           (fn [{{:keys [started-at]} :row-data}]
+                                           [uix/TimeAgo started-at])}
+                        {:field-key      :cpu-capacity
+                         :header-content "CPU capacity"}]
       :sort-config     {:db-path ::spec/stats-container-ordering}
-      :default-columns #{:name :image :cpu-usage :status :restart-count}
-      :table-props     (merge style/single-line {:stackable true :selectable true})
+      :default-columns #{:name :image :cpu-usage :mem-usage-perc :status :restart-count}
+      :table-props     (merge style/single-line {:stackable true})
       :cell-props      {:header {:single-line true}}
       :rows            container-stats-ordered}
      ::table-cols-edge-detail-container-config]))
@@ -1339,18 +1350,21 @@
 
 (defn TelemetryNextTime
   [next-telemetry]
-  (let [locale                (subscribe [::i18n-subs/locale])
-        next-telemetry-moment (some-> next-telemetry time/parse-iso8601)]
-
-    [uix/ForceRerenderComponentByDelay
-     (fn []
-       (when next-telemetry-moment
-         [ui/TableRow
-          [ui/TableCell (if (time/before-now? next-telemetry-moment)
-                          [:<> "Missing telemetry report for "]
-                          [:<> "Next telemetry report in"])]
-          [ui/TableCell (time/format-distance next-telemetry-moment @locale)]]))
-     5000]))
+  (r/with-let [locale (subscribe [::i18n-subs/locale])
+               C      (fn [[text time-distance]]
+                        (when time-distance
+                          [ui/TableRow
+                           [ui/TableCell text]
+                           [ui/TableCell time-distance]]))
+               f      #(when-let [m (some-> % time/parse-iso8601)]
+                         [(if (time/before-now? m)
+                            "Missing telemetry report for "
+                            "Next telemetry report in")
+                          (time/format-distance m @locale)])]
+    [uix/RerenderOnRecomputeChange
+     {:Component    C
+      :recompute-fn f
+      :data         next-telemetry}]))
 
 (defn NextTelemetryStatus
   [{:keys [next-telemetry last-telemetry next-heartbeat] :as _nb-status}]
@@ -2211,15 +2225,17 @@
 
 (defn TelemetryOutdatedMessage
   [nb-status]
-  [uix/ForceRerenderComponentByDelay
-   #(let [outdated? (utils/telemetry-outdated? nb-status)]
-      (when outdated?
-        [ui/Message
-         {:warning true
-          :icon    icons/i-warning
-          :content (r/as-element
-                     [uix/TR :nuvlaedge-outdated-telemetry-warning])}]))
-   5000])
+  (r/with-let [C (fn [outdated?]
+                   (when outdated?
+                     [ui/Message
+                      {:warning true
+                       :icon    icons/i-warning
+                       :content (r/as-element
+                                  [uix/TR :nuvlaedge-outdated-telemetry-warning])}]))]
+    [uix/RerenderOnRecomputeChange
+     {:Component    C
+      :recompute-fn utils/telemetry-outdated?
+      :data         nb-status}]))
 
 
 (defn EdgeDetails

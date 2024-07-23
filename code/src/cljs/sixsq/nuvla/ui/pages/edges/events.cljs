@@ -437,7 +437,7 @@
     (let [session (::session-spec/session db)]
       {:db                  (assoc db ::spec/nuvlabox-releases nil)
        ::cimi-api-fx/search [:nuvlabox-release
-                             {:select  "id, release, pre-release, release-notes, url, compose-files, published"
+                             {:select  "id, implementation, release, pre-release, release-notes, url, compose-files, published"
                               :filter  (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" (get-active-claim session) "'"))
                               :orderby "release:desc"
                               :last    10000}
@@ -598,3 +598,13 @@
                         {:header  "Could not fetch NuvlaEdge fleet statistics"
                          :content message
                          :type    :error}]]]})))
+
+(reg-event-fx
+  ::choose-nuvlaedge-python
+  (fn [{db :db} [_]]
+    {:db (assoc db ::spec/selected-implementation utils/implementation-python)}))
+
+(reg-event-fx
+  ::choose-nuvlaedge-go
+  (fn [{db :db} [_]]
+    {:db (assoc db ::spec/selected-implementation utils/implementation-go)}))

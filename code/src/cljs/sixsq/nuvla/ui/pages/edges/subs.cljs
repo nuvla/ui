@@ -145,6 +145,10 @@
       vpn-infra)))
 
 (reg-sub
+  ::selected-implementation
+  :-> ::spec/selected-implementation)
+
+(reg-sub
   ::nuvlabox-releases-response
   :-> ::spec/nuvlabox-releases)
 
@@ -182,8 +186,10 @@
 (reg-sub
   ::nuvlabox-releases-options
   :<- [::nuvlabox-releases]
-  (fn [nuvlabox-releases]
+  :<- [::selected-implementation]
+  (fn [[nuvlabox-releases selected-implementation]]
     (->> (utils/sort-by-version nuvlabox-releases)
+         (utils/filter-by-implementation selected-implementation)
          (map
            (fn [{:keys [id release pre-release]}]
              {:key   release, :text (str release (when pre-release " - pre-release")),

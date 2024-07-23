@@ -732,6 +732,8 @@
         :nuvlabox-vuln-most-severe                     "Most severe vulnerabilities"
         :nuvlabox-vuln-unavailable                     "Vulnerability scanning is not enabled"
         :nuvlaedge                                     "NuvlaEdge"
+        :nuvlaedge-go                                  "NuvlaEdge Go"
+        :nuvlaedge-python                              "NuvlaEdge Python"
         :nuvlaedge-availability                        "NuvlaEdge availability"
         :nuvlaedge-network-interfaces-ips              "Network interfaces IPs"
         :nuvlaedge-online-icon-help                    "The icon is green when the NuvlaEdge is communicating with Nuvla."

@@ -638,6 +638,9 @@
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
+                    [edges-detail/RadioNuvlaEdgeImplementation
+                     {:on-change (fn [_] (swap! nuvlabox-release-data
+                                                assoc :nb-rel nil))}]
                     [edges-detail/DropdownReleases
                      {:value     nb-rel
                       :on-change (ui-callback/value

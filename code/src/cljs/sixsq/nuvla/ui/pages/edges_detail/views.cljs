@@ -110,6 +110,44 @@
           :selection   true}]))))
 
 
+(defn RadioNuvlaEdgeImplementation
+  [_opts]
+  (let [tr                      (subscribe [::i18n-subs/tr])
+        selected-implementation (subscribe [::edges-subs/selected-implementation])]
+    (fn [{:keys [on-change]}]
+      [:div {:style {:display :flex :align-items :center :margin-top "5px"}}
+       [:div {:on-click (fn [_e]
+                          (when (and on-change (not= "go" @selected-implementation))
+                            (on-change "go"))
+                          (dispatch [::edges-events/choose-nuvlaedge-go]))
+              :style    {:display       :flex
+                         :align-items   :center
+                         :margin-right  "5px"
+                         :margin-bottom "10px"}}
+        [:input {:type      :radio
+                 :name      :reset
+                 :checked   (= "go" @selected-implementation)
+                 :read-only true
+                 :id        :nuvlaedge-go}]
+        [:label {:for   :nuvlaedge-go
+                 :style {:margin-left "0.5rem"}} (@tr [:nuvlaedge-go])]]
+       [:div {:on-click (fn [_e]
+                          (when (and on-change (not= "python" @selected-implementation))
+                            (on-change "python"))
+                          (dispatch [::edges-events/choose-nuvlaedge-python]))
+              :style    {:display       :flex
+                         :align-items   :center
+                         :margin-right  "5px"
+                         :margin-bottom "10px"}}
+        [:input {:type      :radio
+                 :name      :reset
+                 :checked   (= "python" @selected-implementation)
+                 :read-only true
+                 :id        :nuvlaedge-python}]
+        [:label {:for   :nuvlaedge-python
+                 :style {:margin-left "0.5rem"}} (@tr [:nuvlaedge-python])]]])))
+
+
 (defn DropdownReleases
   [_opts]
   (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])
@@ -118,7 +156,7 @@
       (let [selected-release (subscribe [::edges-subs/nuvlabox-releases-from-id (:value opts)])]
         [:<> [ui/Dropdown
               (merge {:selection true
-                      :loading   (empty? @releases)
+                      :loading   (nil? @releases)
                       :options   (map #(dissoc % :pre-release) @releases)}
                      opts)]
          (when (:pre-release @selected-release) [:span {:style {:margin "1em"
@@ -325,6 +363,7 @@
               [:i @ne-version]]])
           [ui/Segment
            [:b (@tr [:update-to])]
+           [RadioNuvlaEdgeImplementation {}]
            [DropdownReleases {:placeholder (@tr [:select-version])
                               :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))

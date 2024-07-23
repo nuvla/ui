@@ -36,6 +36,9 @@
 
 (def capability-heartbeat "NUVLA_HEARTBEAT")
 
+(def implementation-python "python")
+(def implementation-go "go")
+
 (defn score-vulnerability
   [{:keys [vulnerability-score] :as item}]
   (let [set-fn #(assoc item :severity %1 :color %2)]
@@ -306,6 +309,15 @@
 
 (defn sort-by-version [e]
   (sort-by :release compare-versions e))
+
+(defn filter-by-implementation [implementation-filter edges]
+  (filter (fn [{:keys [implementation]}]
+            (or (nil? implementation-filter)
+                (= implementation-filter implementation)
+                (and (= implementation-python implementation-filter)
+                     ;; legacy edges without an implementation filter are implemented in python
+                     (nil? implementation))))
+          edges))
 
 (defn summary-stats [summary]
   (let [total           (:count summary)

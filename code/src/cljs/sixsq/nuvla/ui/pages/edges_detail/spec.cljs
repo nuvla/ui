@@ -52,6 +52,7 @@
                                                 :default-items-per-page 15
                                                 :default-show-all-events? true)
                ::tab                          (tab-plugin/build-spec)
+               ::nuvlaedge-implementation     "go"
                ::nuvlaedge-release            nil
                ::edge-stats                   nil
                ::stats-loading?               nil

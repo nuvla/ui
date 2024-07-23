@@ -17,6 +17,7 @@
 (s/def ::nuvlabox-cluster-summary any?)
 (s/def ::nuvlaboxes-summary any?)
 (s/def ::nuvlaboxes-summary-all any?)
+(s/def ::selected-implementation #{"python" "go"})
 (s/def ::nuvlabox-releases any?)
 (s/def ::state-nuvlaboxes any?)
 (s/def ::open-modal (s/nilable keyword?))
@@ -82,6 +83,7 @@
    ::nuvlabox-cluster-summary      nil
    ::nuvlaboxes-summary            nil
    ::nuvlaboxes-summary-all        nil
+   ::selected-implementation       "go"
    ::nuvlabox-releases             nil
    ::state-nuvlaboxes              nil
    ::state-selector                nil

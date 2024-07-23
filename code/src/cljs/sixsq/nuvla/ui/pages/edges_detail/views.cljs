@@ -724,8 +724,7 @@
 
 (defn Peripheral
   [id]
-  (let [locale       (subscribe [::i18n-subs/locale])
-        tr           (subscribe [::i18n-subs/tr])
+  (let [tr           (subscribe [::i18n-subs/tr])
         last-updated (r/atom "1970-01-01T00:00:00Z")
         button-load? (r/atom false)
         peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
@@ -802,10 +801,10 @@
              [ui/TableCell p-vendor]]
             [ui/TableRow
              [ui/TableCell "Created"]
-             [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
+             [ui/TableCell [uix/TimeAgo p-created]]]
             [ui/TableRow
              [ui/TableCell "Updated"]
-             [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
+             [ui/TableCell [uix/TimeAgo p-updated]]]
             (when p-resources
               [ui/TableRow
                [ui/TableCell "Resources"]
@@ -1163,8 +1162,7 @@
 (defn TabOverviewNuvlaBox
   [{:keys [id created updated owner created-by state] :as nuvlabox}
    {:keys [nuvlabox-api-endpoint]}]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        locale (subscribe [::i18n-subs/locale])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :raised    true}
      [NeHeader]
@@ -1208,10 +1206,10 @@
           [ui/TableCell nuvlabox-api-endpoint]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+        [ui/TableCell [uix/TimeAgo created]]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:updated]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]]]]))
+        [ui/TableCell [uix/TimeAgo updated]]]]]]))
 
 (defn StatusOrNotAvailable
   [nb-status children]
@@ -1240,7 +1238,6 @@
 (defn HostInfo
   [_nb-status _ssh-creds]
   (let [tr       (subscribe [::i18n-subs/tr])
-        locale   (subscribe [::i18n-subs/locale])
         show-ips (r/atom false)]
     (fn [{:keys [hostname ip docker-server-version network
                  operating-system architecture last-boot docker-plugins]
@@ -1313,7 +1310,7 @@
         (when last-boot
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-           [ui/TableCell (time/parse-ago last-boot @locale)]])
+           [ui/TableCell [uix/TimeAgo last-boot]]])
         (let [interfaces   (:interfaces network)
               n-interfaces (count interfaces)
               n-ips        (reduce + (map (comp count :ips) interfaces))]
@@ -1540,7 +1537,7 @@
         [ui/TableCell cluster-node-role
          (when (= cluster-node-role "manager")
            [:<>
-            (str " ")
+            " "
             [icons/CrownIcon {:corner true
                               :color  "blue"}]])]]
        (when cluster-join-address

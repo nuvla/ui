@@ -24,7 +24,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as utils-values]))
 
@@ -114,8 +113,8 @@
       [data-set-views/ProcessButton :menu-item]
       (when (= @active-tab :data-sets) [AddDataSet])
       [uix/MenuItem {:icon     icons/i-grid-layout
-                    :active   (= @view-type :cards)
-                    :on-click #(reset! view-type :cards)}]
+                     :active   (= @view-type :cards)
+                     :on-click #(reset! view-type :cards)}]
       [uix/MenuItem {:icon     icons/i-table
                      :active   (= @view-type :table)
                      :on-click #(reset! view-type :table)}]
@@ -193,8 +192,7 @@
 
 (defn DataSetRow
   [{:keys [id name description tags created module-filter data-record-filter] :as _data-set}]
-  (let [locale    (subscribe [::i18n-subs/locale])
-        data-sets (subscribe [::subs/selected-data-set-ids])]
+  (let [data-sets (subscribe [::subs/selected-data-set-ids])]
     (fn [_data-set]
       ^{:key id}
       (let [uuid      (utils-general/id->uuid id)
@@ -210,7 +208,7 @@
                                     (.stopPropagation event))}]]
          [ui/TableCell name]
          [ui/TableCell description]
-         [ui/TableCell (time/parse-ago created @locale)]
+         [ui/TableCell [uix/TimeAgo created]]
          [ui/TableCell data-record-filter]
          [ui/TableCell module-filter]
          [ui/TableCell [uix/Tags tags]]

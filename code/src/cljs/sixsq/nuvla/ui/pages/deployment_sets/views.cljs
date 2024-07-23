@@ -116,14 +116,13 @@
 
 (defn DeploymentSetRow
   [{:keys [id name description created state tags] :as _deployment-set}]
-  (let [locale @(subscribe [::i18n-subs/locale])
-        uuid   (general-utils/id->uuid id)]
+  (let [uuid (general-utils/id->uuid id)]
     [ui/TableRow {:on-click #(dispatch [::routing-events/navigate routes/deployment-groups-details {:uuid uuid}])
                   :style    {:cursor "pointer"}}
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell state]
-     [ui/TableCell (time/parse-ago created locale)]
+     [ui/TableCell [uix/TimeAgo created]]
      [ui/TableCell [uix/Tags tags]]]))
 
 (defn Pagination
@@ -163,17 +162,17 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (if (= status "OK")
       [:div {:style {:height 35}}
-       [ui/Icon {:name :circle :color (detail/ops-status->color status)
+       [ui/Icon {:name  :circle :color (detail/ops-status->color status)
                  :style {:margin-right 5}}]
-        (@tr [:everything-is-up-to-date])]
+       (@tr [:everything-is-up-to-date])]
       [:div {:style {:display "flex"
-                     :height 35}}
-       [ui/Icon {:name :circle :color (detail/ops-status->color status)
+                     :height  35}}
+       [ui/Icon {:name  :circle :color (detail/ops-status->color status)
                  :style {:margin-right 5}}]
        [:div (ops-status-overview-string @tr ops-status)]])))
 
 (defn DeploymentSetCard
-  [{:keys [id updated name state description tags operational-status] :as  _deployment-set}]
+  [{:keys [id updated name state description tags operational-status] :as _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
         href   (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid id)})]

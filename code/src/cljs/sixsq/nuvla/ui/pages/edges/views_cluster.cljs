@@ -16,8 +16,7 @@
             [sixsq.nuvla.ui.utils.map :as map]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]))
+            [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (def view-type (r/atom :cards))
@@ -180,10 +179,10 @@
          [ui/TableCell id]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:created])))]
-         [ui/TableCell (-> created time/parse-iso8601 time/ago)]]
+         [ui/TableCell [uix/TimeAgo created]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:updated])))]
-         [ui/TableCell (-> updated time/parse-iso8601 time/ago)]]
+         [ui/TableCell [uix/TimeAgo updated]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:version])))]
          [ui/TableCell version]]

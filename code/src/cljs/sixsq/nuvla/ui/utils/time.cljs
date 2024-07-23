@@ -184,21 +184,6 @@
    (-> (now locale) (startOfDay) (subMonths n))))
 
 
-(defn time-value
-  [iso8601]
-  (str (-> iso8601 parse-iso8601 ago) " (" iso8601 ")"))
-
-
-(defn range-equals
-  "Checks whether two date ranges (with the start and end times being javascript
-   Date objects) are the same. If any of the arguments are nil, then false is
-   returned."
-  [[start1 end1] [start2 end2]]
-  (and start1 end1 start2 end2
-       (= start1 start2)
-       (= end1 end2)))
-
-
 (defn time->utc-str
   "Javascript Date to ISO string, milliseconds stripped away"
   [^js date]
@@ -230,11 +215,11 @@
 
 (defn days-between [{:keys [start-date end-date]}]
   (eachDayOfInterval (clj->js {:start start-date
-                                :end   end-date})))
+                               :end   end-date})))
 
 (defn minutes-between [{:keys [start-date end-date]}]
   (eachMinuteOfInterval (clj->js {:start start-date
-                                :end   end-date})))
+                                  :end   end-date})))
 
 (defn before? [date1 date2]
   (isBefore date1 date2))

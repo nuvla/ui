@@ -46,7 +46,7 @@
                          selectable? (assoc :on-click on-click-fn))
      [ui/ListIcon {:name (application-utils/subtype-icon subtype), :size "large"}]
      [ui/ListContent
-      [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
+      [ui/ListHeader (or name id) " (" [uix/TimeAgo created] ")"]
       (or description "")]]))
 
 (defn ApplicationList
@@ -369,8 +369,7 @@
 (defn DataRecordRow
   [{:keys [id name description tags created timestamp bucket content-type
            infrastructure-service resource:deployment] :as _data-record}]
-  (let [locale           (subscribe [::i18n-subs/locale])
-        data-records-set (subscribe [::subs/selected-data-record-ids])]
+  (let [data-records-set (subscribe [::subs/selected-data-record-ids])]
     (fn [_data-record]
       ^{:key id}
       (let [uuid            (utils-general/id->uuid id)
@@ -386,7 +385,7 @@
                         (.stopPropagation event))}]]
          [ui/TableCell name]
          [ui/TableCell description]
-         [ui/TableCell (time/parse-ago created @locale)]
+         [ui/TableCell [uix/TimeAgo created]]
          [ui/TableCell timestamp]
          [ui/TableCell bucket]
          [ui/TableCell content-type]
@@ -456,8 +455,7 @@
                                        :text-overflow "ellipsis",
                                        :max-width     "20ch"}}
                            (or name timestamp)]]
-      :meta        (str (@tr [:created]) " " (-> timestamp
-                                                 time/parse-iso8601 time/ago))
+      :meta        [:<> (@tr [:created]) " " [uix/TimeAgo timestamp]]
       :description (utils-general/truncate description 60)
       :content     [:<>
                     (when resource-deployment-id
@@ -579,13 +577,13 @@
                             (@tr [:updated-successfully])])]]])
            [ui/TableRow
             [ui/TableCell (str/capitalize (str (@tr [:created])))]
-            [ui/TableCell (-> created time/parse-iso8601 time/ago)]]
+            [ui/TableCell [uix/TimeAgo created]]]
            [ui/TableRow
             [ui/TableCell (str/capitalize (str (@tr [:owner])))]
             [ui/TableCell @resolved-owner]]
            [ui/TableRow
             [ui/TableCell (str/capitalize (str (@tr [:updated])))]
-            [ui/TableCell (-> updated time/parse-iso8601 time/ago)]]
+            [ui/TableCell [uix/TimeAgo updated]]]
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:data-record-filter]))]
             [ui/TableCell data-record-filter]]

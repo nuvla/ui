@@ -114,12 +114,6 @@
 ;; TODO ? not used atm
 (deftest delta-humanize)
 
-
-(deftest time-value-test
-  (let [five-days-ago     (time/add-milliseconds (now) (* 1000 60 60 24 5))
-        five-days-ago-iso (.toISOString five-days-ago)]
-    (is (= (str "in 5 days (" five-days-ago-iso ")") (time/time-value five-days-ago-iso)))))
-
 ;; TODO ? not used atm
 (deftest range-equals)
 

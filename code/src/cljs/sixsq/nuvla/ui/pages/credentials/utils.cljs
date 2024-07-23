@@ -158,12 +158,6 @@
          "\n\n#verb 4\n")))
 
 
-
-(defn credential-last-check-ago
-  [{:keys [last-check] :as _credential} locale]
-  (some-> last-check time/parse-iso8601 (time/ago locale)))
-
-
 (defn credential-status-valid
   [{:keys [status] :as _credential}]
   (some-> status (= "VALID")))

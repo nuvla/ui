@@ -6,6 +6,18 @@
 
 ## Released
 
+## [2.37.2](https://github.com/nuvla/ui/compare/v2.37.2-SNAPSHOT...2.37.2) (2024-07-24)
+
+
+### Bug Fixes
+
+* **ci:** commit 1 ([8754b56](https://github.com/nuvla/ui/commit/8754b56e22eff688d46cf50b9ece8c19d0a0e915))
+* **ci:** commit 2 ([f8aeeeb](https://github.com/nuvla/ui/commit/f8aeeeb09d80bb7f4b1b1efcf08abba224be5330))
+* **ci:** commit 3 ([f9b705c](https://github.com/nuvla/ui/commit/f9b705c8e67e0a46723fe670d8d7889a77851197))
+* **ci:** commit 4 ([c57cd04](https://github.com/nuvla/ui/commit/c57cd04aa4bfe775775ea736533e9e36faca7990))
+* **ci:** Copy relevant files and pre-compress them ([5f16e07](https://github.com/nuvla/ui/commit/5f16e075ef414705405931683f525a1d4a565960))
+* **ci:** sign gpg check ([4ff924c](https://github.com/nuvla/ui/commit/4ff924c5d0224c5e10248e2e5379b6e65f6f8be7))
+
 ## [2.37.1] - 2024-06-18
 
 - Notifications - Use content-type for data-records instead of tag

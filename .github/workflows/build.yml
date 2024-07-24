@@ -40,7 +40,7 @@ jobs:
         run: sudo apt-get install -y zopfli
 
       - name: Verify signature NuvlaBox script
-        run: ./.travis/verify_signature.sh
+        run: ./.github/verify_signature.sh
 
       - name: Set up JDK 11
         uses: actions/setup-java@v2

@@ -1,4 +1,4 @@
-name: BUILD
+name: Build
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
@@ -15,21 +15,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting for sonar
           fetch-depth: 0
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
+      - name: Cache local M2 repository
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-lein-${{ hashFiles('**/project.clj') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
-            - name: Cache local Maven repository
+            ${{ runner.os }}-lein-
+            - name: Cache local M2 repository
 
       - name: Cache local NPM repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -42,44 +42,47 @@ jobs:
       - name: Verify signature NuvlaBox script
         run: ./.github/verify_signature.sh
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '11'
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Set PR commit SHA in environment variables useful for build version
         if: github.event_name == 'pull_request'
         run: echo "GITHUB_PR_COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
 
-#      - name: Setup Sonar Scanner
-#        uses: warchant/setup-sonar-scanner@v3
-#        with:
-#          version: 4.6.2.2472
-#
-#      - name: Run Sonar Scanner
-#        env:
-#          # provide GITHUB_TOKEN to get access to secrets.SONARQUBE_TOKEN
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        working-directory: code
-#        run: sonar-scanner
-#          -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }}
-#          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
-#
-#      - name: SonarQube Quality Gate check
-#        uses: sonarsource/sonarqube-quality-gate-action@v1.0.0
-#        # Force to fail step after specific time
-#        timeout-minutes: 5
-#        with:
-#          scanMetadataReportFile: code/.scannerwork/report-task.txt
-#        env:
-#          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-#          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: Setup Sonar Scanner
+        uses: warchant/setup-sonar-scanner@v7
+        with:
+          version: 4.6.2.2472
+
+      - name: Run Sonar Scanner
+        env:
+          # provide GITHUB_TOKEN to get access to secrets.SONARQUBE_TOKEN
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: code
+        run: sonar-scanner
+          -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }}
+          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+
+      - name: SonarQube Quality Gate check
+        uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
+        # Force to fail step after specific time
+        timeout-minutes: 5
+        with:
+          scanMetadataReportFile: code/.scannerwork/report-task.txt
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: Extract branch name and substitute slashes
         shell: bash
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" | tr '/' '-' >> $GITHUB_OUTPUT
         id: extract_branch
+
+      - name: Build time
+        run: echo "BUILD_TIME=$(date --utc +%FT%T.%3NZ)" >> $GITHUB_ENV
 
       - name: Install npm deps
         working-directory: code
@@ -91,27 +94,26 @@ jobs:
 
       - name: Copy relevant files and pre-compress them
         run: |
-          mkdir -p container/target/dependency/
-          cp -r code/resources/public/ui container/target/dependency/
-          unzip code/target/*.jar -d container/target/dependency/ui
-          rm container/target/dependency/ui/js/manifest.edn container/target/dependency/ui/index.html.template
-          find container/target/dependency/ui -type f -not -name version -a -not -name config.json -a -not -name nuvla-logo.png -exec zopfli {} \;
+          mkdir -p container/target/dependency/ui/public
+          cp -r code/resources/public/ container/target/dependency/ui/
+          rm container/target/dependency/ui/public/ui/js/manifest.edn container/target/dependency/ui/public/ui/index.html.template
+          find container/target/dependency/ui/public/ui -type f -not -name version -a -not -name config.json -a -not -name nuvla-logo.png -exec zopfli {} \;
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.SIXSQ_DOCKER_USERNAME }}
           password: ${{ secrets.SIXSQ_DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: ./container
           file: container/Dockerfile
           build-args: |
             GIT_BRANCH=${{ github.head_ref || github.ref_name }}
-            GIT_BUILD_TIME=$(date --utc +%FT%T.%3NZ)
-            GIT_COMMIT_ID=${{ github.sha }}
+            GIT_BUILD_TIME=${{ env.BUILD_TIME }}
+            GIT_COMMIT_ID=${{ env.GITHUB_PR_COMMIT_SHA || github.sha }}
             PACKAGE_TAG=${{ needs.trigger-release.outputs.tag_name }}
             GITHUB_RUN_NUMBER=${{ github.run_number }}
             GITHUB_RUN_ID=${{ github.run_id }}

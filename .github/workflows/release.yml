@@ -1,4 +1,4 @@
-name: "UI Release"
+name: Release
 
 concurrency:
   group: ${{ github.workflow }}
@@ -7,8 +7,7 @@ concurrency:
 on:
   push:
     branches:
-#      - master
-      - issue_tasklist_3234
+      - master
 
 jobs:
   trigger-release:
@@ -28,3 +27,94 @@ jobs:
           target-branch: ${{ github.ref_name }}
           config-file: .github/release-please-config.json
           manifest-file: .github/release-please-manifest.json
+
+  release:
+    name: "Release UI image to DockerHub"
+    needs: [ trigger-release ]
+    if: needs.trigger-release.outputs.release_created
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting for sonar
+          fetch-depth: 0
+
+      - name: Cache local M2 repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-lein-${{ hashFiles('**/project.clj') }}
+          restore-keys: |
+            ${{ runner.os }}-lein-
+            - name: Cache local M2 repository
+
+      - name: Cache local NPM repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install zopfli
+        run: sudo apt-get install -y zopfli
+
+      - name: Verify signature NuvlaBox script
+        run: ./.github/verify_signature.sh
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install npm deps
+        working-directory: code
+        run: npm ci --legacy-peer-deps
+
+      - name: Build with lein
+        working-directory: code
+        run: lein install
+
+      - name: Copy relevant files and pre-compress them
+        run: |
+          mkdir -p container/target/dependency/ui/public
+          cp -r code/resources/public/ container/target/dependency/ui/
+          rm container/target/dependency/ui/public/ui/js/manifest.edn container/target/dependency/ui/public/ui/index.html.template
+          find container/target/dependency/ui/public/ui -type f -not -name version -a -not -name config.json -a -not -name nuvla-logo.png -exec zopfli {} \;
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.SIXSQ_DOCKER_USERNAME }}
+          password: ${{ secrets.SIXSQ_DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./container
+          file: container/Dockerfile
+          build-args: |
+            GIT_BRANCH=${{ github.head_ref || github.ref_name }}
+            GIT_BUILD_TIME=$(date --utc +%FT%T.%3NZ)
+            GIT_COMMIT_ID=${{ github.sha }}
+            PACKAGE_TAG=${{ needs.trigger-release.outputs.tag_name }}
+            GITHUB_RUN_NUMBER=${{ github.run_number }}
+            GITHUB_RUN_ID=${{ github.run_id }}
+            PROJECT_URL=${{ github.server_url }}/${{ github.repository }}
+          push: true
+          tags: >
+            nuvla/job:${{ needs.trigger-release.outputs.tag_name }},
+            nuvla/job:latest
+
+  notify:
+    name: Post Workflow Status To Slack
+    needs: [release]
+    if: needs.trigger-release.outputs.release_created
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Gamesight/slack-workflow-status@master
+        with:
+          repo_token: ${{secrets.GITHUB_TOKEN}}
+          slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}
+          include_commit_message: true

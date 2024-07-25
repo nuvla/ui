@@ -3,7 +3,7 @@
 
 (defproject sixsq.nuvla.ui/code
   ; x-release-please-start-version
-  "2.37.4-SNAPSHOT"
+  "2.38.0"
   ; x-release-please-end
 
   :description "Web Browser User Interface for Nuvla"

@@ -6,6 +6,13 @@
 
 ## Released
 
+## [2.38.0](https://github.com/nuvla/ui/compare/2.37.3...2.38.0) (2024-07-25)
+
+
+### Features
+
+* **Helm Apps:** Support creation and configuration of Helm Apps ([#1572](https://github.com/nuvla/ui/issues/1572)) ([a525241](https://github.com/nuvla/ui/commit/a525241cc9c2653f765142480fe88bb9db6a6c3a))
+
 ## [2.37.3](https://github.com/nuvla/ui/compare/v2.37.2...2.37.3) (2024-07-25)
 
 

@@ -692,9 +692,10 @@
        props])))
 
 (defn AddButton
-  [{:keys [modal-id enabled tooltip] :or {enabled true}}]
+  [{:keys [modal-id enabled tooltip data-testid] :or {enabled true}}]
   (tt/with-tooltip [:div [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal modal-id]))
                                       :disabled (not enabled)
+                                      :data-testid data-testid
                                       :icon     icons/i-plus-large
                                       :class    "add-button"
                                       :style    {:align-self "center"}}]]
@@ -1197,6 +1198,7 @@
         ;; and retrieving deployment-set and deployment-set-edited
         [:<>
          [AddButton {:modal-id events/edges-picker-modal-id
+                     :data-testid "add-edges-button"
                      :enabled  @edit-op-allowed?
                      :tooltip  (edit-not-allowed-msg
                                  {:TR                         @tr

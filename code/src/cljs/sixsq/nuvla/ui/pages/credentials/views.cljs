@@ -38,11 +38,14 @@
     (dispatch [::events/fetch-infrastructure-services-available subtypes additional-filter])
     (fn [subtypes _additional-filter _editable? value-spec on-change]
       (let [value     (:parent @credential)
+            subtype   (:subtype @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
         [ui/TableRow
          [ui/TableCell {:collapsing true}
-          (utils-general/mandatory-name (@tr [:infrastructure]))]
+          (utils-general/mandatory-name (if (= "infrastructure-service-helm-repo" subtype)
+                                          "Helm Repository"
+                                          (@tr [:infrastructure])))]
          [ui/TableCell {:error (and validate? (not valid?))}
           (if (pos-int? (count @infra-services))
             ^{:key value}
@@ -226,7 +229,7 @@
                          (dispatch [::events/validate-credential-form ::spec/registry-credential]))]
     (fn []
       (let [editable? (utils-general/editable? @credential @is-new?)
-            {:keys [name description username password]} @credential]
+            {:keys [name description username password subtype]} @credential]
 
         [:<>
          [acl/AclButton {:default-value (:acl @credential)
@@ -247,7 +250,9 @@
            [uix/TableRowField "password", :editable? editable?, :required? true,
             :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
             :type :password, :on-change (partial on-change :password)]
-           [row-infrastructure-services-selector ["registry"] nil editable? ::spec/parent
+           [row-infrastructure-services-selector (if (= "infrastructure-service-helm-repo" subtype)
+                                                   ["helm-repo"]
+                                                   ["registry"])  nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
@@ -434,6 +439,14 @@
    {:validation-spec ::spec/registry-credential
     :modal-content   credential-registry}})
 
+(def infrastructure-service-helm-repository-validation-map
+  {"infrastructure-service-helm-repo"
+   {:validation-spec ::spec/registry-credential
+    :modal-content   credential-registry}})
+
+(def helm-subtypes
+  (keys infrastructure-service-helm-repository-validation-map))
+
 
 (def registry-service-subtypes
   (keys infrastructure-service-registry-validation-map))
@@ -479,7 +492,8 @@
          infrastructure-service-coe-validation-map
          infrastructure-service-access-keys-validation-map
          infrastructure-service-registry-validation-map
-         api-key-validation-map))
+         api-key-validation-map
+         infrastructure-service-helm-repository-validation-map))
 
 
 (defn subtype->info
@@ -607,6 +621,18 @@
            [ui/IconGroup {:size "massive"}
             [icons/DockerIcon]
             [icons/DbIconFull {:corner "bottom right"}]]]]
+
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "infrastructure-service-helm-repo"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Helm Repository"]
+           [ui/Image {:src   "/ui/images/helm.svg"
+                      :style {:max-width 112}}]]]
 
          [ui/Card
           {:on-click #(do
@@ -789,13 +815,15 @@
         register-service-creds (filter #(in? registry-service-subtypes (:subtype %))
                                        @credentials)
         api-key-creds          (filter #(in? api-key-subtypes (:subtype %))
-                                       @credentials)]
-
+                                       @credentials)
+        helm-creds              (filter #(in? helm-subtypes (:subtype %))
+                                        @credentials)]
     [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text icons/i-docker)
      (credential access-key-creds :access-services :credential-ssh-keys-section-sub-text icons/i-key)
      (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text icons/i-hard-drive)
      (credential register-service-creds :registry-services :credential-registry-service-section-sub-text icons/i-docker)
-     (credential api-key-creds :api-keys :api-keys-section-sub-text icons/i-key)]))
+     (credential api-key-creds :api-keys :api-keys-section-sub-text icons/i-key)
+     (credential helm-creds :helm-repositories :helm-repo-section-sub-text icons/i-key)]))
 
 
 (defn TabsCredentials

@@ -4,7 +4,6 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.time :as time]))
 
-
 (defn db->new-coe-credential
   [db]
   (let [name          (get-in db [::spec/credential :name])
@@ -34,59 +33,45 @@
 
 
 (defn db->new-ssh-credential
-  [db]
-  (let [name        (get-in db [::spec/credential :name])
-        description (get-in db [::spec/credential :description])
-        subtype     (get-in db [::spec/credential :subtype])
-        public-key  (get-in db [::spec/credential :public-key])
-        private-key (get-in db [::spec/credential :private-key])
-        acl         (get-in db [::spec/credential :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/" subtype))
-        (cond-> private-key (assoc-in [:template :private-key] private-key))
-        (cond-> public-key (assoc-in [:template :public-key] public-key))
-        (cond-> acl (assoc-in [:template :acl] acl)))))
+  [{{:keys [name description subtype public-key private-key acl]} ::spec/credential}]
+  (cond-> {:name        name
+           :description description
+           :template    {:href (str "credential-template/" subtype)}}
+          private-key (assoc-in [:template :private-key] private-key)
+          public-key  (assoc-in [:template :public-key] public-key)
+          acl         (assoc-in [:template :acl] acl)))
 
 
 (defn db->new-minio-credential
-  [db]
-  (let [name                    (get-in db [::spec/credential :name])
-        description             (get-in db [::spec/credential :description])
-        subtype                 (get-in db [::spec/credential :subtype])
-        access-key              (get-in db [::spec/credential :access-key])
-        secret-key              (get-in db [::spec/credential :secret-key])
-        infrastructure-services (get-in db [::spec/credential :parent] [])
-        acl                     (get-in db [::spec/credential :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/" subtype))
-        (assoc-in [:template :parent] infrastructure-services)
-        (assoc-in [:template :access-key] access-key)
-        (assoc-in [:template :secret-key] secret-key)
-        (cond-> acl (assoc-in [:template :acl] acl)))))
+  [{{:keys [name description subtype access-key secret-key parent acl]} ::spec/credential}]
+  (cond-> {:name name
+           :description description
+           :template {:href       (str "credential-template/" subtype)
+                      :access-key access-key
+                      :secret-key secret-key
+                      :parent     (or parent [])}}
+          acl (assoc-in [:template :acl] acl)))
 
 
 (defn db->new-registry-credential
-  [db]
-  (let [name                    (get-in db [::spec/credential :name])
-        description             (get-in db [::spec/credential :description])
-        subtype                 (get-in db [::spec/credential :subtype])
-        username                (get-in db [::spec/credential :username])
-        password                (get-in db [::spec/credential :password])
-        infrastructure-services (get-in db [::spec/credential :parent] [])
-        acl                     (get-in db [::spec/credential :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/" subtype))
-        (assoc-in [:template :parent] infrastructure-services)
-        (assoc-in [:template :username] username)
-        (assoc-in [:template :password] password)
-        (cond-> acl (assoc-in [:template :acl] acl)))))
+  [{{:keys [name description subtype username password acl parent]} ::spec/credential}]
+  (cond-> {:name        name
+           :description description
+           :template    {:href     (str "credential-template/" subtype)
+                         :parent   (or parent [])
+                         :username username
+                         :password password}}
+          acl (assoc-in [:template :acl] acl)))
 
+(defn db->new-helm-repo-credential
+  [{{:keys [name description subtype username password acl parent]} ::spec/credential}]
+  (cond-> {:name        name
+           :description description
+           :template    {:href     (str "credential-template/" subtype)
+                         :parent   (or parent [])
+                         :username username
+                         :password password}}
+          acl (assoc-in [:template :acl] acl)))
 
 (defn db->new-vpn-credential
   [db]
@@ -121,6 +106,7 @@
       "infrastructure-service-minio" (db->new-minio-credential db)
       "infrastructure-service-vpn" (db->new-vpn-credential db)
       "infrastructure-service-registry" (db->new-registry-credential db)
+      "infrastructure-service-helm-repo" (db->new-helm-repo-credential db)
       "generate-ssh-key" (db->new-ssh-credential db)
       "generate-api-key" (db->new-api-key db)
       "gpg-key" (db->new-ssh-credential db))))

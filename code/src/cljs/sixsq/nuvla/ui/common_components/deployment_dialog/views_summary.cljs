@@ -39,7 +39,7 @@
 (defn images-dct-row
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [error dct]} @(subscribe [::subs/check-dct])]
+        {:keys [warning error dct]} @(subscribe [::subs/check-dct])]
 
     ^{:key "images-dct-row"}
     [ui/TableRow
@@ -57,6 +57,7 @@
                                      [icons/MedalIcon {:color     "green"}])]
                [:br]])
         error [:p {:style {:color "red"}} error]
+        warning [:p {:style {:color "gray"}} warning]
         :else [ui/Icon {:name "circle notch" :loading true}])]]))
 
 

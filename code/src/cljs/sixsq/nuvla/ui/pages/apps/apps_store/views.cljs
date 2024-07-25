@@ -29,7 +29,7 @@
   [uix/Card
    {:image         logo-url
     :header        [:<>
-                    [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
+                    [apps-utils/ModuleSubtypeIcon subtype]
                     (or name id)]
     :description   desc-summary
     :content       [uix/Tags tags]

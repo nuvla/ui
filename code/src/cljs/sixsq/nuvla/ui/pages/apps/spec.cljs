@@ -157,7 +157,11 @@
 
 (s/def ::registries-infra any?)
 
+(s/def ::helm-infra any?)
+
 (s/def ::registries-credentials any?)
+
+(s/def ::helm-credentials any?)
 
 (s/def ::validate-docker-compose any?)
 
@@ -175,6 +179,8 @@
 
 (s/def ::tab any?)
 
+(s/def ::helm-info any?)
+
 (def default-tab :overview)
 
 (def defaults
@@ -191,6 +197,9 @@
    ::commit-message            ""
    ::registries                nil
    ::registries-infra          nil
+   ::helm-infra                nil
+   ::helm-info                 {:repo-or-url? :repo}
+   ::helm-credentials          nil
    ::registries-credentials    nil
    ::validate-docker-compose   nil
    ::compare-module-left       nil

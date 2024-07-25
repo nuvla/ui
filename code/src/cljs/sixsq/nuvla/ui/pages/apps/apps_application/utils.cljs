@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.apps.apps-application.utils
   (:require [sixsq.nuvla.ui.pages.apps.apps-application.spec :as spec]
+            [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]))
 
 
@@ -39,7 +40,6 @@
           {:file-name file-name}
           {:file-content file-content})))))
 
-
 (defn db->module
   [{:keys [subtype] :as module} commit-map db]
   (let [{:keys [author commit]} commit-map
@@ -50,10 +50,36 @@
     (as-> module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
-          (assoc-in m [:content :docker-compose] docker-compose)
           (assoc-in m [:content :requires-user-rights] requires-user-rights)
+          (assoc-in m [:content :docker-compose] docker-compose)
           (if (= subtype "application")
             (assoc m :compatibility compatibility)
+            m)
+          (if (empty? files)
+            (update-in m [:content] dissoc :files)
+            (assoc-in m [:content :files] files)))))
+
+(defn db->helm-module
+  [helm-module commit-map db]
+  (let [{:keys [author commit]}                  commit-map
+        files                                    (files->module db)
+        requires-user-rights                     (get-in db [::spec/module-application ::spec/requires-user-rights])
+        helm-info                                (::apps-spec/helm-info db)
+        {:keys [repo-or-url? helm-chart-values]} helm-info
+        helm-info-to-submit                      (if (= :url repo-or-url?)
+                                                   (select-keys helm-info [:helm-absolute-url])
+                                                   (select-keys helm-info [:helm-repo-url
+                                                                           :helm-chart-name
+                                                                           :helm-repo-cred
+                                                                           :helm-chart-version]))]
+    (as-> helm-module m
+          (assoc-in m [:content :author] author)
+          (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
+          (assoc-in m [:content :requires-user-rights] requires-user-rights)
+          (update m :content dissoc :helm-repo-url :helm-chart-name :helm-repo-cred :helm-chart-version :helm-absolute-url)
+          (update m :content #(merge % helm-info-to-submit))
+          (if helm-chart-values
+            (assoc-in m [:content :helm-chart-values] helm-chart-values)
             m)
           (if (empty? files)
             (update-in m [:content] dissoc :files)

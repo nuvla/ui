@@ -224,7 +224,9 @@
     (if (= (:href target-resource) (:id deployment))
       (let [result (if-let [dct (general-utils/json->edn status-message :keywordize-keys false)]
                      {:dct dct}
-                     {:error (str "Error: " status-message)})]
+                     (if (str/includes? (str/lower-case status-message)  "not supported")
+                       {:warning status-message}
+                       {:error (str "Error: " status-message)}))]
         (assoc db ::spec/check-dct result))
       db)))
 
@@ -260,10 +262,10 @@
   (fn [{:keys [db]} [_ id]]
     {:db               (assoc db ::spec/deployment {:id id})
      ::cimi-api-fx/get [id #(let [{:keys [content subtype href]} (:module %)
-                                  is-kubernetes? (= subtype "application_kubernetes")
-                                  filter         (if is-kubernetes?
-                                                   "subtype='kubernetes'"
-                                                   "subtype='swarm'")]
+                                  kubernetes-or-helm-app? (contains? #{"application_kubernetes" "application_helm"} subtype)
+                                  filter                  (if kubernetes-or-helm-app?
+                                                            "subtype='kubernetes'"
+                                                            "subtype='swarm'")]
                               (dispatch [::get-infra-services filter])
                               (dispatch [::set-deployment %])
                               (dispatch [::check-dct %])

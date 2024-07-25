@@ -80,34 +80,35 @@
                           :align   :right}
             [apps-views-detail/trash id ::events/remove-file]])]))))
 
-
 (defn FilesSection []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        files     (subscribe [::subs/files])
-        editable? (subscribe [::apps-subs/editable?])]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        files         (subscribe [::subs/files])
+        editable?     (subscribe [::apps-subs/editable?])
+        compatibility (subscribe [::subs/compatibility])]
     (fn []
       [uix/Accordion
-       [:<>
-        [:div (@tr [:module-files])
-         [uix/HelpPopup (@tr [:module-files-help])]]
-
-        (if (empty? @files)
-          [ui/Message
-           (str/capitalize (str (@tr [:no-files]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}}
-                 [ui/TableHeader
-                  [ui/TableRow
-                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
-                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
-                   (when @editable?
-                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
-                 [ui/TableBody
-                  (for [[id file] @files]
-                    ^{:key (str "file_" id)}
-                    [SingleFile file])]]])
-        (when @editable?
-          [:div {:style {:padding-top 10}}
-           [apps-views-detail/plus ::events/add-file]])]
+       (if (contains? #{"helm"} @compatibility)
+         [ui/Message {:warning true} (@tr [:apps-file-config-helm-warning])]
+         [:<>
+          [:div (@tr [:module-files])
+           [uix/HelpPopup (@tr [:module-files-help])]]
+          (if (empty? @files)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-files]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
+                     (when @editable?
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                   [ui/TableBody
+                    (for [[id file] @files]
+                      ^{:key (str "file_" id)}
+                      [SingleFile file])]]])
+          (when @editable?
+            [:div {:style {:padding-top 10}}
+             [apps-views-detail/plus ::events/add-file]])])
        :label (@tr [:module-files])
        :count (count @files)
        :default-open true])))
@@ -236,6 +237,7 @@
 (defn OverviewModuleSummary
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
+        locale               (subscribe [::i18n-subs/locale])
         module               (subscribe [::apps-subs/module])
         versions-map         (subscribe [::apps-subs/versions])
         module-content-id    (subscribe [::apps-subs/module-content-id])
@@ -260,10 +262,10 @@
           [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
-        [ui/TableCell (if created [uix/TimeAgo created] (@tr [:soon]))]]
+        [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:updated]))]
-        [ui/TableCell (if updated [uix/TimeAgo updated] (@tr [:soon]))]]
+        [ui/TableCell (if updated (time/ago (time/parse-iso8601 updated) @locale) (@tr [:soon]))]]
        (when id
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:id]))]
@@ -369,6 +371,21 @@
           (when @editable?
             [ui/Message {:info true} (@tr [:become-a-vendor])])])])))
 
+(defn TabMenuHelm
+  []
+  [:span
+   [icons/FileCodeIcon]
+   (str/capitalize "helm")])
+
+(defn HelmPane []
+  (let [active-tab (sub-apps-tab)]
+    @active-tab
+    [:div {:class :uix-apps-details-details}
+     [:h4 {:class :tab-app-detail} "Helm"]
+     [apps-views-detail/registries-section]
+     [apps-views-detail/HelmRepoChartSection]
+     [apps-views-detail/HelmChartValuesSection]]))
+
 
 (defn TabMenuDocker
   []
@@ -467,7 +484,8 @@
   []
   (let [module    (subscribe [::apps-subs/module])
         editable? (subscribe [::apps-subs/editable?])
-        stripe    (subscribe [::main-subs/stripe])]
+        stripe    (subscribe [::main-subs/stripe])
+        helm-app? (subscribe [::apps-subs/is-application-helm?])]
     (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
                               :key     :overview
                               :icon    (r/as-element [icons/EyeIcon])}
@@ -490,10 +508,15 @@
                                 :key     :pricing}
                      :pane     {:content (r/as-element [PricingPane])
                                 :key     :pricing-pane}})
-                  {:menuItem {:content (r/as-element [TabMenuDocker])
-                              :key     :docker}
-                   :pane     {:content (r/as-element [DockerPane])
-                              :key     :docker-pane}}
+                  (if @helm-app?
+                    {:menuItem {:content (r/as-element [TabMenuHelm])
+                                :key     :helm}
+                     :pane     {:content (r/as-element [HelmPane])
+                                :key     :helm-pane}}
+                    {:menuItem {:content (r/as-element [TabMenuDocker])
+                                :key     :docker}
+                     :pane     {:content (r/as-element [DockerPane])
+                                :key     :docker-pane}})
                   {:menuItem {:content (r/as-element [TabMenuConfiguration])
                               :key     :configuration}
                    :pane     {:content (r/as-element [ConfigurationPane])
@@ -513,9 +536,11 @@
   []
   (let [module-common (subscribe [::apps-subs/module-common])
         active-tab    (sub-apps-tab)
-        is-new?       (subscribe [::apps-subs/is-new?])]
+        is-new?       (subscribe [::apps-subs/is-new?])
+        helm-app?     (subscribe [::apps-subs/is-application-helm?])]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
-    (dispatch [::apps-events/set-form-spec ::spec/module-application])
+    (dispatch [::events/update-compatibility (if @helm-app? "helm" "docker-compose")])
+    (when-not @helm-app? (dispatch [::apps-events/set-form-spec ::spec/module-application]))
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name  (get @module-common ::apps-spec/name)

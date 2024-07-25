@@ -683,6 +683,12 @@
       ^{:key (str "disable-host-level-management" @show?)}
       [TextActionButton resource operation show? "Disable host level management (disables playbooks)" icons/i-gear (@tr [:disable])])))
 
+(defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
+  [_resource _operation]
+  (fn [resource _operation]
+    ^{:key "update-nuvlabox"}
+    [UpdateButton resource]))
+
 (defn MenuBar [_uuid]
   (let [nuvlabox          (subscribe [::subs/nuvlabox])
         can-decommission? (subscribe [::subs/can-decommission?])
@@ -1476,6 +1482,7 @@
   (let [[kind path] (get {:swarm      [:icon icons/i-docker]
                           :s3         [:image "/ui/images/s3.png"]
                           :kubernetes [:image "/ui/images/kubernetes.svg"]
+                          :helm-repo  [:image "/ui/images/helm.svg"]
                           :registry   [:icon icons/i-db-full]}
                          (keyword subtype)
                          [:icon "question circle"])]

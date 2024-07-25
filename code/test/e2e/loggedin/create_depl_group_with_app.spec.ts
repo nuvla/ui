@@ -23,17 +23,15 @@ import { test, expect } from '@playwright/test';
 
   await page.waitForTimeout(1000);
 
-  await page.getByRole('cell', { name: 'Nginx' }).click();
+  await page.getByRole('cell', { name: /Deployment Group/ }).locator('i').click();
 
-  await page.getByRole('row', { name: 'Name' }).locator('i').click();
-
-  await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
+   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
 
   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill('nginx test');
 
   await page.getByRole('row', { name: 'Name' }).getByRole('button').click();
 
-  await page.locator('main:has-text("Oops can\'t find deployment groupDeployment group does not exist or you do not ha") button').nth(2).click();
+  await page.getByTestId('add-edges-button').click();
 
   await page.getByPlaceholder('Search...').click();
   await page.getByPlaceholder('Search...').fill('e2e test');

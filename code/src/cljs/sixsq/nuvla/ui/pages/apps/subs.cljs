@@ -14,6 +14,11 @@
   (fn [db]
     (::spec/module-common db)))
 
+(reg-sub
+  ::helm-info
+  (fn [db]
+    (::spec/helm-info db)))
+
 
 (reg-sub
   ::description
@@ -45,6 +50,12 @@
   :<- [::module-subtype]
   (fn [subtype]
     (utils/applications-sets? subtype)))
+
+(reg-sub
+  ::is-application-helm?
+  :<- [::module-subtype]
+  (fn [subtype]
+    (utils/application-helm? subtype)))
 
 (reg-sub
   ::is-app?
@@ -82,6 +93,7 @@
   :<- [::module]
   (fn [module [_ op]]
     (general-utils/can-operation? op module)))
+
 (reg-sub
   ::is-published?
   :<- [::module]
@@ -108,12 +120,23 @@
     (and is-app? unpublish-op is-published?)))
 
 (reg-sub
+  ::helm-info-correct?
+  :<- [::module-subtype]
+  :<- [::helm-info]
+  (fn [[module-subtype {:keys [repo-or-url? helm-repo-url helm-chart-name helm-absolute-url]}]]
+    (cond (not= utils/subtype-application-helm module-subtype) true
+          (= :repo repo-or-url?)                               (and helm-repo-url helm-chart-name)
+          (= :url repo-or-url?)                                helm-absolute-url
+          :else                                                false)))
+
+(reg-sub
   ::save-btn-disabled?
   :<- [::form-valid?]
   :<- [::main-subs/changes-protection?]
   :<- [::is-description-template?]
-  (fn [[form-valid? page-changed? is-description-template?]]
-    (or (not page-changed?) (not form-valid?) is-description-template?)))
+  :<- [::helm-info-correct?]
+  (fn [[form-valid? page-changed? is-description-template? helm-info-correct?]]
+    (or (not page-changed?) (not form-valid?) is-description-template? (not helm-info-correct?))))
 
 (reg-sub
   ::module-license
@@ -223,6 +246,35 @@
   (fn [db]
     (get-in db [::spec/module-common ::spec/registries])))
 
+(reg-sub
+  ::helm-infra
+  (fn [db]
+    (::spec/helm-infra db)))
+
+(reg-sub
+  ::helm-infra-opts
+  (fn [{:keys [::spec/helm-infra]}]
+    (mapv (fn [{:keys [id name endpoint]}]
+            {:key      id
+             :value    id
+             :endpoint endpoint
+             :text     name})
+          helm-infra)))
+
+(reg-sub
+  ::helm-credentials
+  (fn [{:keys [::spec/helm-credentials]}]
+    (group-by :parent helm-credentials)))
+
+(reg-sub
+  ::helm-credentials-opts
+  :<- [::helm-credentials]
+  (fn [helm-credentials [_ helm-repo-url]]
+    (mapv (fn [{:keys [id name]}]
+            {:key   id
+             :value id
+             :text  name})
+          (get helm-credentials helm-repo-url))))
 
 (reg-sub
   ::price
@@ -293,6 +345,12 @@
   :<- [::module]
   (fn [{{:keys [id]} :content}]
     id))
+
+(reg-sub
+  ::module-helm-content
+  :<- [::module]
+  (fn [module]
+    (:content module)))
 
 
 (reg-sub
@@ -379,3 +437,5 @@
 (reg-sub
   ::module-not-found?
   :-> ::spec/module-not-found?)
+
+

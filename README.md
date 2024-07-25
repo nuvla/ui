@@ -1,6 +1,6 @@
 # Nuvla Web UI
 
-[![Build Status](https://github.com/nuvla/ui/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/nuvla/ui/actions/workflows/main.yml)
+[![Build](https://github.com/nuvla/ui/actions/workflows/build.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/build.yml) [![End to End Tests](https://github.com/nuvla/ui/actions/workflows/e2e_test.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/e2e_test.yml) [![Unit Tests](https://github.com/nuvla/ui/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/unit_tests.yml)
 
 This repository contains the web user interface of the Nuvla solution. It is built as a modern
 single page application.

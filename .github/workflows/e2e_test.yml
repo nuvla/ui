@@ -7,12 +7,10 @@ concurrency:
 on:
   push:
     branches:
-      - master
+      - '*'
+      - '!release-please-*'
     tags:
       - '*'
-  pull_request:
-    branches-ignore:
-      - 'release-please-*'
   workflow_dispatch:
     inputs:
       baseUrl:

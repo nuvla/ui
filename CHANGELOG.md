@@ -6,6 +6,18 @@
 
 ## Released
 
+## [2.37.3](https://github.com/nuvla/ui/compare/v2.37.2...2.37.3) (2024-07-25)
+
+
+### Continuous Integration
+
+* **ci:** e2e test cloudflare fix ([5aaf97f](https://github.com/nuvla/ui/commit/5aaf97f0663db60084fd8757ae1893fc603c8753))
+* **github:** Github orchestrate build of ui docker image ([19350fb](https://github.com/nuvla/ui/commit/19350fb600b6cf2c48ef36c4752f464acb3598b7))
+* **github:** Upgrade plugins ([19350fb](https://github.com/nuvla/ui/commit/19350fb600b6cf2c48ef36c4752f464acb3598b7))
+* **maven:** Retire maven ([#1596](https://github.com/nuvla/ui/issues/1596)) ([19350fb](https://github.com/nuvla/ui/commit/19350fb600b6cf2c48ef36c4752f464acb3598b7))
+* **release-please:** Release please control version based on commit messages ([19350fb](https://github.com/nuvla/ui/commit/19350fb600b6cf2c48ef36c4752f464acb3598b7))
+* **travis:** Remove reference to Travis ([19350fb](https://github.com/nuvla/ui/commit/19350fb600b6cf2c48ef36c4752f464acb3598b7))
+
 ## [2.37.2](https://github.com/nuvla/ui/compare/v2.37.2-SNAPSHOT...2.37.2) (2024-07-25)
 
 

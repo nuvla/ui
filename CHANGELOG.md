@@ -6,6 +6,14 @@
 
 ## Released
 
+## [2.37.3](https://github.com/nuvla/ui/compare/v2.37.2...2.37.3) (2024-07-25)
+
+
+### Continuous Integration
+
+* **ci:** e2e test cloudflare fix ([5aaf97f](https://github.com/nuvla/ui/commit/5aaf97f0663db60084fd8757ae1893fc603c8753))
+* **ci:** update bootstrap-sha ([c551707](https://github.com/nuvla/ui/commit/c55170715aef6d3c1403326d76c4888cc41c14a0))
+
 ## [2.37.2](https://github.com/nuvla/ui/compare/v2.37.2-SNAPSHOT...2.37.2) (2024-07-25)
 
 

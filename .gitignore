@@ -21,11 +21,7 @@ code/.clj-kondo/.cache
 
 *.bck
 
-pom.xml.next
-pom.xml.releaseBackup
-pom.xml.tag
 release.properties
-versions.sh
 
 package-lock.json
 

@@ -104,8 +104,8 @@ jobs:
             PROJECT_URL=${{ github.server_url }}/${{ github.repository }}
           push: true
           tags: >
-            nuvla/job:${{ needs.trigger-release.outputs.tag_name }},
-            nuvla/job:latest
+            nuvla/ui:${{ needs.trigger-release.outputs.tag_name }},
+            nuvla/ui:latest
 
   notify:
     name: Post Workflow Status To Slack

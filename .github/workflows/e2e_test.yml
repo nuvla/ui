@@ -57,7 +57,7 @@ jobs:
           accountId: 'ed40269bd7a426334d38642675bcd393'
           project: 'ui-nuvla-prev'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          commitHash: ${{ github.event.pull_request.head.sha }}
+          commitHash: ${{ github.sha }}
       - name: Run Playwright tests
         run: npx playwright test
         env:

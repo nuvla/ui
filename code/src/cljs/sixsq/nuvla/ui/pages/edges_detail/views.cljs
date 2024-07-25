@@ -7,8 +7,9 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.job.subs :as job-subs]
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.common-components.resource-log.views :as log-views]
             [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.components :as components]
@@ -32,6 +33,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
@@ -728,8 +730,7 @@
 
 (defn Peripheral
   [id]
-  (let [locale       (subscribe [::i18n-subs/locale])
-        tr           (subscribe [::i18n-subs/tr])
+  (let [tr           (subscribe [::i18n-subs/tr])
         last-updated (r/atom "1970-01-01T00:00:00Z")
         button-load? (r/atom false)
         peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
@@ -806,10 +807,10 @@
              [ui/TableCell p-vendor]]
             [ui/TableRow
              [ui/TableCell "Created"]
-             [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
+             [ui/TableCell [uix/TimeAgo p-created]]]
             [ui/TableRow
              [ui/TableCell "Updated"]
-             [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
+             [ui/TableCell [uix/TimeAgo p-updated]]]
             (when p-resources
               [ui/TableRow
                [ui/TableCell "Resources"]
@@ -886,7 +887,84 @@
                  nil)]))))
 
 
-(defn- StatsTable [container-stats]
+(defn BytesUsage
+  [used limit]
+  (let [[unit used limit perc] (data-utils/bytes-usage used limit)]
+    [:div {:style {:display     "flex"
+                   :align-items "center"}}
+     [:div {:style {:width        "28%"
+                    :text-align   "right"
+                    :margin-right "5px"}}
+      (str (general-utils/to-fixed perc :n-decimal 1) "%")]
+     [:div {:style {:width      "70%"
+                    :text-align "left"}}
+      (str "(" (general-utils/to-fixed used :n-decimal 1) "/"
+           (general-utils/to-fixed limit :n-decimal 1) unit ")")]]))
+
+(defn- NewStatsTable []
+  (let [container-stats-ordered @(subscribe [::subs/container-stats-ordered])
+        cell-bytes              (fn [{cell-data :cell-data}]
+                                  (data-utils/format-bytes cell-data))]
+    [TableColsEditable
+     {:columns         [{:field-key      :name
+                         :header-content "Container Name"}
+                        {:field-key      :image
+                         :header-content "Container Image"}
+                        {:field-key      :cpu-usage
+                         :header-content "CPU %"
+                         :cell           (fn [{value :cell-data}]
+                                           (if value
+                                             (str (general-utils/to-fixed value) " %")
+                                             "-"))}
+                        {:field-key      :mem-usage
+                         :header-content "Mem Usage"
+                         :cell           cell-bytes}
+                        {:field-key      :mem-limit
+                         :header-content "Mem Limit"
+                         :cell           cell-bytes}
+                        {:field-key      :mem-usage-perc
+                         :header-content "Mem Usage %"
+                         :cell           (fn [{{:keys [mem-usage mem-limit]} :row-data}]
+                                           [BytesUsage mem-usage mem-limit])
+                         :cell-props     {:style {:text-align "right"}}
+                         :sort-value-fn  (fn [{:keys [mem-usage mem-limit]}]
+                                           (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
+                                             (/ (double mem-usage) mem-limit)))}
+                        {:field-key      :status
+                         :header-content "Status"}
+                        {:field-key      :restart-count
+                         :header-content "Restart Count"}
+                        {:field-key      :disk-in
+                         :header-content "Disk In"
+                         :cell           cell-bytes}
+                        {:field-key      :disk-out
+                         :header-content "Disk Out"
+                         :cell           cell-bytes}
+                        {:field-key      :net-in
+                         :header-content "Network In"
+                         :cell           cell-bytes}
+                        {:field-key      :net-out
+                         :header-content "Network Out"
+                         :cell           cell-bytes}
+                        {:field-key      :created-at
+                         :header-content "Created"
+                         :cell           (fn [{{:keys [created-at]} :row-data}]
+                                           [uix/TimeAgo created-at])}
+                        {:field-key      :started-at
+                         :header-content "Started"
+                         :cell           (fn [{{:keys [started-at]} :row-data}]
+                                           [uix/TimeAgo started-at])}
+                        {:field-key      :cpu-capacity
+                         :header-content "CPU capacity"}]
+      :sort-config     {:db-path ::spec/stats-container-ordering}
+      :default-columns #{:name :image :cpu-usage :mem-usage-perc :status :restart-count}
+      :table-props     (merge style/single-line {:stackable true})
+      :cell-props      {:header {:single-line true}}
+      :rows            container-stats-ordered}
+     ::table-cols-edge-detail-container-config]))
+
+
+(defn- OldStatsTable [container-stats]
   [ui/GridRow {:centered true
                :columns  1}
    [ui/GridColumn
@@ -920,6 +998,12 @@
            [ui/TableCell blk-in-out]
            [ui/TableCell container-status]
            [ui/TableCell restart-count]]))]]]])
+
+(defn- StatsTable [container-stats]
+  (if (:cpu-usage (first container-stats))
+    [NewStatsTable container-stats]
+    [OldStatsTable container-stats]))
+
 (defn Load
   [resources]
   (let [load-stats      (utils/load-statistics resources)
@@ -1004,7 +1088,8 @@
                                              :title {:text    "megabytes"
                                                      :display true}}}}}]]]])
      (when container-stats
-       [StatsTable (sort-by :name container-stats)])]))
+       [ui/Container {:fluid true}
+        [StatsTable (sort-by :name container-stats)]])]))
 
 
 (defn Editable
@@ -1083,8 +1168,7 @@
 (defn TabOverviewNuvlaBox
   [{:keys [id created updated owner created-by state] :as nuvlabox}
    {:keys [nuvlabox-api-endpoint]}]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        locale (subscribe [::i18n-subs/locale])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :raised    true}
      [NeHeader]
@@ -1128,10 +1212,10 @@
           [ui/TableCell nuvlabox-api-endpoint]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+        [ui/TableCell [uix/TimeAgo created]]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:updated]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]]]]))
+        [ui/TableCell [uix/TimeAgo updated]]]]]]))
 
 (defn StatusOrNotAvailable
   [nb-status children]
@@ -1160,7 +1244,6 @@
 (defn HostInfo
   [_nb-status _ssh-creds]
   (let [tr       (subscribe [::i18n-subs/tr])
-        locale   (subscribe [::i18n-subs/locale])
         show-ips (r/atom false)]
     (fn [{:keys [hostname ip docker-server-version network
                  operating-system architecture last-boot docker-plugins]
@@ -1188,13 +1271,13 @@
               [ui/TableCell "IP"]
               [ui/TableCell
                [uix/CopyToClipboard {:value     ip
-                                        :on-hover? false}]]])
+                                     :on-hover? false}]]])
            (when ips-available
              [IpsRow {:title "IPs"
                       :ips   (map (fn [[name ip]]
                                     {:name name
                                      :ip   [uix/CopyToClipboard {:value     ip
-                                                                    :on-hover? false}]}) (:ips network))}])])
+                                                                 :on-hover? false}]}) (:ips network))}])])
         (when (pos? (count @ssh-creds))
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
@@ -1233,7 +1316,7 @@
         (when last-boot
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-           [ui/TableCell (time/parse-ago last-boot @locale)]])
+           [ui/TableCell [uix/TimeAgo last-boot]]])
         (let [interfaces   (:interfaces network)
               n-interfaces (count interfaces)
               n-ips        (reduce + (map (comp count :ips) interfaces))]
@@ -1270,18 +1353,21 @@
 
 (defn TelemetryNextTime
   [next-telemetry]
-  (let [locale                (subscribe [::i18n-subs/locale])
-        next-telemetry-moment (some-> next-telemetry time/parse-iso8601)]
-
-    [uix/ForceRerenderComponentByDelay
-     (fn []
-       (when next-telemetry-moment
-         [ui/TableRow
-          [ui/TableCell (if (time/before-now? next-telemetry-moment)
-                          [:<> "Missing telemetry report for "]
-                          [:<> "Next telemetry report in"])]
-          [ui/TableCell (time/format-distance next-telemetry-moment @locale)]]))
-     5000]))
+  (r/with-let [locale (subscribe [::i18n-subs/locale])
+               C      (fn [[text time-distance]]
+                        (when time-distance
+                          [ui/TableRow
+                           [ui/TableCell text]
+                           [ui/TableCell time-distance]]))
+               f      #(when-let [m (some-> % time/parse-iso8601)]
+                         [(if (time/before-now? m)
+                            "Missing telemetry report for "
+                            "Next telemetry report in")
+                          (time/format-distance m @locale)])]
+    [uix/RerenderOnRecomputeChange
+     {:Component    C
+      :recompute-fn f
+      :data         next-telemetry}]))
 
 (defn NextTelemetryStatus
   [{:keys [next-telemetry last-telemetry next-heartbeat] :as _nb-status}]
@@ -1458,7 +1544,7 @@
         [ui/TableCell cluster-node-role
          (when (= cluster-node-role "manager")
            [:<>
-            (str " ")
+            " "
             [icons/CrownIcon {:corner true
                               :color  "blue"}]])]]
        (when cluster-join-address
@@ -2088,11 +2174,10 @@
                    :key     tab-historical-data-key
                    :icon    icons/i-file-code}
         :render   #(r/as-element [timeseries/TimeSeries])}
-
        (when id
-         (events-plugin/events-section
+         (audit-log-plugin/events-section
            {:db-path [::spec/events]
-            :href    id}))
+            :filters {:href id}}))
        {:menuItem {:content (r/as-element [:span "Deployments"
                                            [ui/Label {:circular true
                                                       :size     "mini"
@@ -2144,15 +2229,17 @@
 
 (defn TelemetryOutdatedMessage
   [nb-status]
-  [uix/ForceRerenderComponentByDelay
-   #(let [outdated? (utils/telemetry-outdated? nb-status)]
-      (when outdated?
-        [ui/Message
-         {:warning true
-          :icon    icons/i-warning
-          :content (r/as-element
-                     [uix/TR :nuvlaedge-outdated-telemetry-warning])}]))
-   5000])
+  (r/with-let [C (fn [outdated?]
+                   (when outdated?
+                     [ui/Message
+                      {:warning true
+                       :icon    icons/i-warning
+                       :content (r/as-element
+                                  [uix/TR :nuvlaedge-outdated-telemetry-warning])}]))]
+    [uix/RerenderOnRecomputeChange
+     {:Component    C
+      :recompute-fn utils/telemetry-outdated?
+      :data         nb-status}]))
 
 
 (defn EdgeDetails

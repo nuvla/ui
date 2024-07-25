@@ -815,6 +815,10 @@ body .divider-red {
   background-color: var(--edges-color);
 }
 
+.nuvla-dashboard .audit-logs .ui-header {
+  background-color: rgba(170, 170, 170, 1);
+}
+
 .nuvla-dashboard .statistic.nuvla-credentials {
   background-color: #c10e12;
 }
@@ -1155,15 +1159,32 @@ i.link.icons {
   visibility: visible;
 }
 
+.table-fixed-row-height td {
+  max-width: 300px;
+}
+
+.table-fixed-row-height td,
+.table-fixed-row-height td > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .table-fixed-row-height td:not(:first-child),
 .table-fixed-row-height td:not(:first-child) > div {
   height: 30px;
   text-wrap: nowrap;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 300px;
   margin: 0 2px 0 0 !important;
+}
+
+.table-fixed-row-height .vcenter {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+.drag-hover {
+  border-left: 2px solid var(--accent-color) !important;
 }
 
 i.link.icon.app-details-add-config-param-icon {

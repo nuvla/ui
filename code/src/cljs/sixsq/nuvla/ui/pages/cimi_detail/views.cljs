@@ -18,7 +18,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.table :as table]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]))
 
 
@@ -211,8 +210,8 @@
              id (conj (metadata-row "id" id))
              name (conj (metadata-row "name" name))
              description (conj (metadata-row "description" description))
-             created (conj (metadata-row "created" (time/time-value created)))
-             updated (conj (metadata-row "updated" (time/time-value updated)))
+             created (conj (metadata-row "created" [uix/TimeAgo created]))
+             updated (conj (metadata-row "updated" [uix/TimeAgo updated]))
              subtype (conj (metadata-row "subtype" subtype))
              method (conj (metadata-row "method" method))
              state (conj (metadata-row "state" state))

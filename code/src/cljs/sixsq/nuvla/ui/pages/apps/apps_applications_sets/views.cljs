@@ -26,7 +26,6 @@
     [sixsq.nuvla.ui.utils.icons :as icons]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.tooltip :as tt]
     [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -330,7 +329,6 @@
 (defn OverviewModuleSummary
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        locale               (subscribe [::i18n-subs/locale])
         module               (subscribe [::apps-subs/module])
         versions-map         (subscribe [::apps-subs/versions])
         module-content-id    (subscribe [::apps-subs/module-content-id])
@@ -354,10 +352,10 @@
           [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
-        [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
+        [ui/TableCell (if created [uix/TimeAgo created] (@tr [:soon]))]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:updated]))]
-        [ui/TableCell (if updated (time/ago (time/parse-iso8601 updated) @locale) (@tr [:soon]))]]
+        [ui/TableCell (if updated [uix/TimeAgo updated] (@tr [:soon]))]]
        (when id
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:id]))]

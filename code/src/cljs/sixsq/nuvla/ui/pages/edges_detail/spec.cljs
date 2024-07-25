@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.spec
   (:require [clojure.spec.alpha :as s]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.utils.time :as time]))
@@ -48,8 +48,9 @@
                ::infra-services               []
                ::nuvlabox-emergency-playbooks nil
                ::nuvlabox-current-playbook    nil
-               ::events                       (events-plugin/build-spec
-                                                :default-items-per-page 15)
+               ::events                       (audit-log-plugin/build-spec
+                                                :default-items-per-page 15
+                                                :default-show-all-events? true)
                ::tab                          (tab-plugin/build-spec)
                ::nuvlaedge-release            nil
                ::edge-stats                   nil

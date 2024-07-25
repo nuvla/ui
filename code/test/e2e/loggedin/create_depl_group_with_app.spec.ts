@@ -33,6 +33,9 @@ import { test, expect } from '@playwright/test';
 
   await page.getByTestId('add-edges-button').click();
 
+  await page.getByPlaceholder('Search...').click();
+  await page.getByPlaceholder('Search...').fill('e2e test');
+
   await page.getByRole('link', { name: 'select row 0 e2e-Test-Do_not_delete NEW endtoend@sixsq.com' }).click();
 
   await page.getByRole('button', { name: 'Add to deployment group' }).click();

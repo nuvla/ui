@@ -7,10 +7,10 @@ concurrency:
 on:
   push:
     branches:
-      - master
+      - '*'
+      - '!release-please-*'
     tags:
       - '*'
-  pull_request:
   workflow_dispatch:
 
 defaults:

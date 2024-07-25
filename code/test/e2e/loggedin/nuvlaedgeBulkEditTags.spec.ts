@@ -15,7 +15,10 @@ test('Edges selection and bulk edits', async ({ page }, { config }) => {
 
   await expect(page).toHaveURL(edgesPageRegex);
 
-   // Remove multiple tags on one edge
+  // Filter all e2e test edges
+  await page.getByPlaceholder('Search ...').fill('e2e test');
+
+  // Remove multiple tags on one edge
   await selectAll();
   await editTagsModal();
 
@@ -102,15 +105,15 @@ test('Edges selection and bulk edits', async ({ page }, { config }) => {
 
   // ---------- TESTING WITH SELECTION BY SELECT ALL AND FILTER TEXT -----------
   // Add one tag on all edges
-  let selectAllEmptySearch = async () => {
-    await page.getByPlaceholder('Search ...').fill('');
+  let selectAllE2eTestEdges = async () => {
+    await page.getByPlaceholder('Search ...').fill('e2e test');
     await page.getByText(/Select all \d*/).click();
   };
   let selectAllSearchDonot = async () => {
     await page.getByPlaceholder('Search ...').fill('Do_not');
     await page.getByText(/Select all \d*/).click();
   };
-  await selectAllEmptySearch();
+  await selectAllE2eTestEdges();
   await editTagsModal();
   await page.waitForTimeout(500);
   await page.locator('div[role="combobox"] input[type="text"]').fill('AddTagTest');
@@ -175,7 +178,7 @@ test('Edges selection and bulk edits', async ({ page }, { config }) => {
   await expect(page.getByRole('link').filter({ hasText: 'AddTagTest' })).toHaveCount(allNuvlaEdgesCount - 1);
 
   // Remove multiple tags on one edge
-  await selectAllEmptySearch();
+  await selectAllE2eTestEdges();
   await editTagsModal();
 
   await page.getByText('Remove all tags').click();

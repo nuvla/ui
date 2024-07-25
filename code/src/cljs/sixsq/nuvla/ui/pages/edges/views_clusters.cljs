@@ -13,7 +13,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
@@ -26,7 +25,6 @@
                                     :icons [icons/i-chart-network],
                                     :label "TOTAL",
                                     :clickable? false,
-                                    :positive-color "",
                                     :set-state-selector-event :sixsq.nuvla.ui.pages.edges.events/set-state-selector,
                                     :state-selector-subs :sixsq.nuvla.ui.pages.edges.subs/state-selector}]])))
 
@@ -48,7 +46,9 @@
                           (str (apply str (take 20 name)) "...")
                           name)]
           :meta        [:<>
-                        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
+                        (@tr [:created])
+                        " "
+                        [uix/TimeAgo created]
                         [:br]
                         (str (str/capitalize (@tr [:orchestrator])) ": " orchestrator " ")
                         [views-utils/orchestrator-icon orchestrator]]
@@ -71,7 +71,10 @@
                                 [ui/ListHeader name
                                  [:div {:style {:float "right"}}
                                   [OnlineStatusIcon online :corner "top right"]]]
-                                [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]])))]
+                                [ui/ListDescription
+                                 (@tr [:updated])
+                                 " "
+                                 [uix/TimeAgo updated]]]])))]
           :extra       [:<>
                         (when (not-empty status-notes)
                           [:div {:style {:float "right"}}

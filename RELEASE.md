@@ -1,30 +1,16 @@
-## Release Process
+# Release Process
 
-**Before** creating the release:
+Release of deployment repository is managed by [Release Please](https://github.com/google-github-actions/release-please-action).
+This tool allow to:
+1. Automate CHANGELOG generation
+2. The creation of GitHub releases
+3. Version bumps for the project
 
- - Decide what semantic version to use for this release and change the
-   version, if necessary, in `code/project.clj` and all the `pom.xml`
-   files.  (It should still have the "-SNAPSHOT" suffix.)
+It does so by parsing the git history, looking for Conventional Commit messages, and creating release PRs.
 
- - Update the `CHANGELOG.md` file.
+On push to master, Release please tool will create a PR that shows to you next version and changelog update.
 
- - Push all changes to GitHub, including the updates to
-   `CHANGELOG.md`.
+To make a release, the maintainer should merge the release PR. He will need to merge without waiting for requirements to be met (bypass branch protections) because these checks will not run for branch starting with release-please-*.
 
-Again, be sure to set the version **before** tagging the release.
-
-Check that everything builds correctly with:
-
-    mvn clean install
-
-To tag the code with the release version and to update the master
-branch to the next snapshot version, run the command:
-
-    ./release.sh true
-
-If you want to test what will happen with the release, leave off the
-"true" argument and the changes will only be made locally.
-
-When the tag is pushed to GitHub, CI will build the repository, create the
-Docker image, and push it to Docker Hub. Check the GitHub Actions build and
-ensure that the new container version appears in the Docker Hub.
+After the merge of the releaese PR, Release please will create another PR with snapshoted version. 
+Maintainer should merge it when the release is done successfully.

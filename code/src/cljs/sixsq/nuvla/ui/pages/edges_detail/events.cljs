@@ -5,7 +5,7 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
@@ -56,6 +56,12 @@
     (assoc db ::spec/vuln-severity-selector vuln-severity)))
 
 (reg-event-fx
+  ::get-nuvlabox-status
+  (fn [_ [_ nb-status-id]]
+    {::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
+                        :on-error #(dispatch [::set-nuvlabox-status nil])]}))
+
+(reg-event-fx
   ::set-nuvlabox
   (fn [{:keys [db]} [_ {nb-status-id     :nuvlabox-status
                         infra-srv-grp-id :infrastructure-service-group
@@ -63,9 +69,8 @@
     {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
                                  ::spec/nuvlabox nuvlabox
                                  ::main-spec/loading? false)
-     ::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
-                        :on-error #(dispatch [::set-nuvlabox-status nil])]
-     :fx               [(when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
+     :fx               [[:dispatch [::get-nuvlabox-status nb-status-id]]
+                        (when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
 
 (reg-event-fx
   ::get-nuvlabox-associated-ssh-keys
@@ -152,8 +157,8 @@
                               :last    10000
                               :orderby "id"}
                              #(dispatch [::set-nuvlabox-peripherals %])]
-       :fx                  [[:dispatch [::events-plugin/load-events
-                                         [::spec/events] id false]]
+       :fx                  [[:dispatch [::audit-log-plugin/load-events
+                                         [::spec/events] {:href id} false]]
                              [:dispatch [::job-events/get-jobs id]]
                              [:dispatch [::get-deployments-for-edge id]]
                              [:dispatch [::get-nuvlabox-playbooks id]]

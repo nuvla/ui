@@ -8,7 +8,7 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.job.subs :as job-subs]
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
-            [sixsq.nuvla.ui.common-components.plugins.events :as events-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.common-components.resource-log.views :as log-views]
@@ -18,9 +18,7 @@
             [sixsq.nuvla.ui.pages.deployments-detail.events :as events]
             [sixsq.nuvla.ui.pages.deployments-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.deployments-detail.subs :as subs]
-            [sixsq.nuvla.ui.pages.deployments.subs :as deployments-subs]
             [sixsq.nuvla.ui.pages.deployments.utils :as deployments-utils]
-            [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -30,7 +28,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.spec :as spec-utils]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
@@ -454,7 +451,6 @@
   []
   (let [tr         (subscribe [::i18n-subs/tr])
         deployment (subscribe [::subs/deployment])
-        locale     (subscribe [::i18n-subs/locale])
         module     (:module @deployment)
         {:keys [id created updated name description
                 parent-path path logo-url]} module
@@ -485,92 +481,14 @@
           [ui/TableCell [values/AsLink parent-path :label parent-path :page "apps"]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+        [ui/TableCell [uix/TimeAgo created]]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:updated]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
+        [ui/TableCell [uix/TimeAgo updated]]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:id]))]
         [ui/TableCell [values/AsLink id :label (general-utils/id->uuid
                                                  (or id ""))]]]]]]))
-
-
-(defn DeploymentCard
-  [{:keys [id state module tags parent credential-name] :as deployment} & {:keys [clickable?]
-                                                                           :or   {clickable? true}}]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        {module-logo-url :logo-url
-         module-name     :name
-         module-path     :path
-         module-content  :content} module
-        [primary-url-name
-         primary-url-pattern] (-> module-content (get :urls []) first)
-        primary-url (if clickable?
-                      (subscribe [::deployments-subs/deployment-url id primary-url-pattern])
-                      (subscribe [::subs/url primary-url-pattern]))
-        cred        (or credential-name parent)]
-
-    ^{:key id}
-    [ui/Card (when clickable?
-               {:as       :div
-                :link     true
-                :on-click (fn [event]
-                            (dispatch [::routing-events/navigate (deployments-utils/deployment-href id)])
-                            (.preventDefault event))})
-     [ui/Image {:src      (or module-logo-url "")
-                :bordered true
-                :style    {:width      "auto"
-                           :height     "100px"
-                           :padding    "20px"
-                           :object-fit "contain"}}]
-
-     (when clickable?
-       (cond
-         (general-utils/can-operation? "stop" deployment) [StopButton deployment :label? true]
-         (general-utils/can-delete? deployment) [DeleteButton deployment :label? true]))
-
-     [ui/CardContent
-
-      [ui/Segment (merge style/basic {:floated "right"})
-       [:p {:style {:color "initial"}} state]
-       [ui/Loader {:active        (deployments-utils/deployment-in-transition? state)
-                   :indeterminate true}]]
-
-      [ui/CardHeader (if clickable?
-                       [:span [:p {:style {:overflow      "hidden",
-                                           :text-overflow "ellipsis",
-                                           :max-width     "20ch"}} module-name]]
-                       [uix/Link (str "apps/" module-path) module-name])]
-
-      [ui/CardMeta (str (@tr [:created]) " " (-> deployment :created time/parse-iso8601 time/ago))]
-
-      [ui/CardDescription
-
-       (when cred
-         [:div [icons/KeyIcon] cred])]
-
-      [ui/LabelGroup {:size  "tiny"
-                      :color "teal"
-                      :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-       (for [tag tags]
-         ^{:key (str id "-" tag)}
-         [ui/Label {:style {:max-width     "15ch"
-                            :overflow      "hidden"
-                            :text-overflow "ellipsis"
-                            :white-space   "nowrap"}}
-          [icons/TagIcon] tag])]]
-
-     (when (and (deployments-utils/started? state)
-                @primary-url)
-       [ui/Button {:color    "green"
-                   :icon     "external"
-                   :content  primary-url-name
-                   :fluid    true
-                   :href     @primary-url
-                   :on-click (fn [event]
-                               (.stopPropagation event))
-                   :target   "_blank"
-                   :rel      "noreferrer"}])]))
 
 (defn DeplSetLink
   [depl-set-id depl-set-name]
@@ -613,7 +531,7 @@
             [uix/Tags tags]]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:created])))]
-         [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]
+         [ui/TableCell [uix/TimeAgo (:created @deployment)]]]
         [ui/TableRow
          [ui/TableCell "Id"]
          [ui/TableCell (when (some? id) [values/AsLink id :label (general-utils/id->uuid id)])]]
@@ -702,9 +620,9 @@
      (module-version-section)
      (logs-section)
      (when @deployment
-       (events-plugin/events-section
+       (audit-log-plugin/events-section
          {:db-path [::spec/events]
-          :href    (:id @deployment)}))
+          :filters {:href (:id @deployment)}}))
      (parameters-section)
      (env-vars-section)
      (job-views/jobs-section)

@@ -28,7 +28,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.view-components :as vc :refer [TitledCard]]))
 
@@ -199,8 +198,8 @@
                                :deployment-set [deployments-detail-views/DeplSetLink
                                                 (deployment :deployment-set)
                                                 (deployment :deployment-set-name)]
-                               :created        (-> deployment :created time/parse-iso8601 time/ago)
-                               :updated        (-> deployment :updated time/parse-iso8601 time/ago)
+                               :created        [uix/TimeAgo (:created deployment)]
+                               :updated        [uix/TimeAgo (:updated deployment)]
                                :created-by     @creator
                                :tags           [uix/Tags tags]
                                :infrastructure [utils/CloudNuvlaEdgeLink deployment
@@ -319,8 +318,7 @@
                                                  :text-overflow "ellipsis",
                                                  :max-width     "20ch"}} module-name]]
               :meta          [:<>
-                              [:div (str (@tr [:created]) " " (-> deployment :created
-                                                                  time/parse-iso8601 time/ago))]
+                              [:div (@tr [:created]) " " [uix/TimeAgo (:created deployment)]]
                               (when @creator [:div (str (@tr [:by]) " " @creator)])]
               :description   [utils/CloudNuvlaEdgeLink deployment :link false]
               :tags          tags
@@ -390,16 +388,16 @@
      :pending  pending}))
 
 (def default-states
-  [{:key            :total
-    :icons          [icons/i-rocket]
-    :label          "TOTAL"}
+  [{:key   :total
+    :icons [icons/i-rocket]
+    :label "TOTAL"}
    {:key            :started,
     :icons          [(utils/state->icon utils/STARTED)],
     :label          utils/STARTED,
     :positive-color "green"}
-   {:key            :starting,
-    :icons          [(utils/state->icon utils/STARTING)],
-    :label          utils/STARTING}
+   {:key   :starting,
+    :icons [(utils/state->icon utils/STARTING)],
+    :label utils/STARTING}
    {:key            :stopped,
     :icons          [(utils/state->icon utils/STOPPED)],
     :label          utils/STOPPED,
@@ -426,7 +424,7 @@
 (defn StatisticStatesExtra
   [clickable? summary]
   (let [states->counts (state-aggs->state->count summary)]
-    (into [ui/StatisticGroup {:size "mini"
+    (into [ui/StatisticGroup {:size  "mini"
                               :style {:margin-top "10px"}}
            (for [state extra-states]
              ^{:key (:key state)}

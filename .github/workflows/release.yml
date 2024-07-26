@@ -59,7 +59,7 @@ jobs:
       - name: Install zopfli
         run: sudo apt-get install -y zopfli
 
-      - name: Verify signature NuvlaBox script
+      - name: Verify signature NuvlaEdge script
         run: ./.github/verify_signature.sh
 
       - name: Set up JDK 21

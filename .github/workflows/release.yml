@@ -68,6 +68,9 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Build time
+        run: echo "BUILD_TIME=$(date --utc +%FT%T.%3NZ)" >> $GITHUB_ENV
+
       - name: Install npm deps
         working-directory: code
         run: npm ci --legacy-peer-deps
@@ -96,7 +99,7 @@ jobs:
           file: container/Dockerfile
           build-args: |
             GIT_BRANCH=${{ github.head_ref || github.ref_name }}
-            GIT_BUILD_TIME=$(date --utc +%FT%T.%3NZ)
+            GIT_BUILD_TIME=${{ env.BUILD_TIME }}
             GIT_COMMIT_ID=${{ github.sha }}
             PACKAGE_TAG=${{ needs.trigger-release.outputs.tag_name }}
             GITHUB_RUN_NUMBER=${{ github.run_number }}

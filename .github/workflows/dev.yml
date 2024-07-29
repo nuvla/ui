@@ -41,7 +41,6 @@ jobs:
     with:
       DOCKER_REPO: nuvladev
       DOCKER_TAG: ${{ needs.prepare.outputs.branch }}
-      PUSH_CLOJARS: ${{ endsWith(needs.prepare.outputs.version, 'SNAPSHOT')}}
     secrets: inherit
 
   notify:

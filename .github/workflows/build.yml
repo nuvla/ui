@@ -9,9 +9,6 @@ on:
       DOCKER_TAG:
         required: true
         type: string
-      PUSH_CLOJARS:
-        required: true
-        type: boolean
 
 jobs:
   build:

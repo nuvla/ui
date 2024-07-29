@@ -65,6 +65,7 @@ jobs:
           # provide GITHUB_TOKEN to get access to secrets.SONARQUBE_TOKEN
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: code
+        shell: bash
         run: sonar-scanner
           -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }}
           -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}

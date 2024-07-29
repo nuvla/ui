@@ -47,6 +47,14 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Project version
+        working-directory: code
+        shell: bash
+        run: |
+          VERSION=$( lein project-version )
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        id: project_version
+
       - name: Setup Sonar Scanner
         uses: warchant/setup-sonar-scanner@v7
         with:
@@ -109,10 +117,11 @@ jobs:
             GIT_BRANCH=${{ github.head_ref || github.ref_name }}
             GIT_BUILD_TIME=${{ env.BUILD_TIME }}
             GIT_COMMIT_ID=${{ github.sha }}
-            PACKAGE_TAG=${{ needs.trigger-release.outputs.tag_name }}
+            PACKAGE_TAG=${{ steps.project_version.outputs.version }}
             GITHUB_RUN_NUMBER=${{ github.run_number }}
             GITHUB_RUN_ID=${{ github.run_id }}
             PROJECT_URL=${{ github.server_url }}/${{ github.repository }}
           push: true
           tags: >
-            nuvladev/ui:${{ steps.extract_branch.outputs.branch }}
+            ${{ inputs.DOCKER_REPO }}/ui:${{ inputs.DOCKER_TAG }},
+            ${{ inputs.DOCKER_REPO }}/ui:latest

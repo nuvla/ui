@@ -19,7 +19,6 @@
   :parent-project {:coords  [sixsq.nuvla/parent ~parent-version]
                    :inherit [:plugins
                              :min-lein-version
-                             :managed-dependencies
                              :repositories
                              :deploy-repositories]}
 
@@ -43,23 +42,23 @@
                  [re-frame "1.3.0" :scope "provided"]
                  [day8.re-frame/http-fx "0.2.4" :scope "provided"]
                  [cljs-ajax "0.8.4" :scope "provided"]
-                 [expound :scope "provided"]
+                 [expound "0.9.0" :scope "provided"]
                  [com.taoensso/timbre "6.1.0" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.5.3" :scope "provided"]
-                 [com.cemerick/url :scope "provided"]
+                 [com.cemerick/url "0.1.1" :scope "provided"]
                  [kwladyka/form-validator-cljs "1.2.1" :scope "provided"]
-                 [instaparse :scope "provided"]
+                 [instaparse "1.4.14" :scope "provided"]
                  [com.degel/re-frame-storage-fx "0.1.1" :scope "provided"]
                  [markdown-to-hiccup "0.6.2" :scope "provided"]
                  [clj-kondo "RELEASE" :scope "provided"]
-                 [metosin/reitit "0.6.0"]]
+                 [metosin/reitit "0.7.1"]]
 
   :source-paths ["src/clj" "src/cljs"]
   :test-paths ["test/cljs"]
 
   :profiles
-  {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]
+  {:dev   {:dependencies [[org.clojure/clojure "1.11.3"]
                           [org.clojure/clojurescript "1.11.4"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded

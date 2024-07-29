@@ -36,9 +36,11 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install zopfli
+        shell: bash
         run: sudo apt-get install -y zopfli
 
       - name: Verify signature NuvlaEdge script
+        shell: bash
         run: ./.github/verify_signature.sh
 
       - name: Set up JDK 21
@@ -81,17 +83,21 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: Build time
+        shell: bash
         run: echo "BUILD_TIME=$(date --utc +%FT%T.%3NZ)" >> $GITHUB_ENV
 
       - name: Install npm deps
         working-directory: code
+        shell: bash
         run: npm ci --legacy-peer-deps
 
       - name: Build with lein
         working-directory: code
+        shell: bash
         run: lein install
 
       - name: Copy relevant files and pre-compress them
+        shell: bash
         run: |
           mkdir -p container/target/dependency/ui/public
           cp -r code/resources/public/ container/target/dependency/ui/

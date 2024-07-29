@@ -1,6 +1,10 @@
 # Nuvla Web UI
 
-[![Build](https://github.com/nuvla/ui/actions/workflows/build.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/build.yml) [![End to End Tests](https://github.com/nuvla/ui/actions/workflows/e2e_test.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/e2e_test.yml) [![Unit Tests](https://github.com/nuvla/ui/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/unit_tests.yml)
+[![Dev](https://github.com/nuvla/ui/actions/workflows/dev.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/dev.yml)
+[![Release](https://github.com/nuvla/ui/actions/workflows/release.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/release.yml)
+[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/nuvla/ui?label=image&sort=semver&style=flat-square)](https://hub.docker.com/repository/docker/nuvla/ui/tags)
+[![End to End Tests](https://github.com/nuvla/ui/actions/workflows/e2e_test.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/e2e_test.yml)
+[![Unit Tests](https://github.com/nuvla/ui/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/nuvla/ui/actions/workflows/unit_tests.yml)
 
 This repository contains the web user interface of the Nuvla solution. It is built as a modern
 single page application.

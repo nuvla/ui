@@ -6,6 +6,20 @@
 
 ## Released
 
+## [2.38.1](https://github.com/nuvla/ui/compare/2.38.0...2.38.1) (2024-07-29)
+
+
+### Continuous Integration
+
+* **ci:** Fix docker image build time for release workflow ([4e015cc](https://github.com/nuvla/ui/commit/4e015ccc0dc1b409c4b12016f95a8324cf4b9fa0))
+* **ci:** fix docker tag ([609abfe](https://github.com/nuvla/ui/commit/609abfe3c43b7f86fed3594a4ed779ddace6d604))
+* **ci:** fix GitHub badges ([88cb7df](https://github.com/nuvla/ui/commit/88cb7df43e4bdf25b0a8e4eb7a07d23f0fe52557))
+* **ci:** make common parts of workflows reusable ([18d69b5](https://github.com/nuvla/ui/commit/18d69b507792f2c1135ba6182d685e6e56820198))
+* **ci:** make common parts of workflows reusable ([741266b](https://github.com/nuvla/ui/commit/741266ba08769ea125f797f73ca6b267ccb32283))
+* **ci:** remove references to PUSH_CLOJARS ([c0b0756](https://github.com/nuvla/ui/commit/c0b0756e6428ab2c0dd61f364d14aab5bad46581))
+* **ci:** remove versions.sh script ([012f951](https://github.com/nuvla/ui/commit/012f9511a0843a1ed045ad3237c02048f7386c5b))
+* **ci:** Rename NuvlaBox to NuvlaEdge ([68607a4](https://github.com/nuvla/ui/commit/68607a49539917e786a8c0ca2108b9d80b7de4be))
+
 ## [2.38.0](https://github.com/nuvla/ui/compare/2.37.3...2.38.0) (2024-07-25)
 
 

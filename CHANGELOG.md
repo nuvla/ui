@@ -6,6 +6,21 @@
 
 ## Released
 
+## [2.38.1](https://github.com/nuvla/ui/compare/2.38.0...2.38.1) (2024-07-30)
+
+
+### Bug Fixes
+
+* add missing import of time from sixsq tools ([09a9785](https://github.com/nuvla/ui/commit/09a978500590abe53d16f4b3d26ae54a049a379b))
+
+
+### Continuous Integration
+
+* **ci:** Fix docker image build time for release workflow ([4e015cc](https://github.com/nuvla/ui/commit/4e015ccc0dc1b409c4b12016f95a8324cf4b9fa0))
+* **ci:** Rename NuvlaBox to NuvlaEdge ([68607a4](https://github.com/nuvla/ui/commit/68607a49539917e786a8c0ca2108b9d80b7de4be))
+* **ci:** Reuse GitHub workflow code between dev and release ([#1610](https://github.com/nuvla/ui/issues/1610)) ([1ccdf75](https://github.com/nuvla/ui/commit/1ccdf7527153aaa66dadd32899cc4fcce9e82003))
+* **ci:** Run unit tests, bundle size check, and e2e tests also in release PRs ([#1612](https://github.com/nuvla/ui/issues/1612)) ([fde04d6](https://github.com/nuvla/ui/commit/fde04d60f414ed8d03b0303863cde93468a98738))
+
 ## [2.38.0](https://github.com/nuvla/ui/compare/2.37.3...2.38.0) (2024-07-25)
 
 

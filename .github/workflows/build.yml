@@ -1,15 +1,14 @@
-name: Build
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: true
+name: Common
 
 on:
-  push:
-    branches:
-      - '*'
-      - '!release-please-*'
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      DOCKER_REPO:
+        required: true
+        type: string
+      DOCKER_TAG:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -37,9 +36,11 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install zopfli
+        shell: bash
         run: sudo apt-get install -y zopfli
 
       - name: Verify signature NuvlaEdge script
+        shell: bash
         run: ./.github/verify_signature.sh
 
       - name: Set up JDK 21
@@ -47,6 +48,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+
+      - name: Project version
+        working-directory: code
+        shell: bash
+        run: |
+          VERSION=$( lein project-version )
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        id: project_version
 
       - name: Setup Sonar Scanner
         uses: warchant/setup-sonar-scanner@v7
@@ -58,6 +67,7 @@ jobs:
           # provide GITHUB_TOKEN to get access to secrets.SONARQUBE_TOKEN
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: code
+        shell: bash
         run: sonar-scanner
           -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }}
           -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
@@ -72,23 +82,22 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      - name: Extract branch name and substitute slashes
-        shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" | tr '/' '-' >> $GITHUB_OUTPUT
-        id: extract_branch
-
       - name: Build time
+        shell: bash
         run: echo "BUILD_TIME=$(date --utc +%FT%T.%3NZ)" >> $GITHUB_ENV
 
       - name: Install npm deps
         working-directory: code
+        shell: bash
         run: npm ci --legacy-peer-deps
 
       - name: Build with lein
         working-directory: code
+        shell: bash
         run: lein install
 
       - name: Copy relevant files and pre-compress them
+        shell: bash
         run: |
           mkdir -p container/target/dependency/ui/public
           cp -r code/resources/public/ container/target/dependency/ui/
@@ -110,22 +119,11 @@ jobs:
             GIT_BRANCH=${{ github.head_ref || github.ref_name }}
             GIT_BUILD_TIME=${{ env.BUILD_TIME }}
             GIT_COMMIT_ID=${{ github.sha }}
-            PACKAGE_TAG=${{ needs.trigger-release.outputs.tag_name }}
+            PACKAGE_TAG=${{ steps.project_version.outputs.version }}
             GITHUB_RUN_NUMBER=${{ github.run_number }}
             GITHUB_RUN_ID=${{ github.run_id }}
             PROJECT_URL=${{ github.server_url }}/${{ github.repository }}
           push: true
           tags: >
-            nuvladev/ui:${{ steps.extract_branch.outputs.branch }}
-
-  notify:
-    if: always()
-    name: Post Workflow Status To Slack
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: Gamesight/slack-workflow-status@master
-        with:
-          repo_token: ${{secrets.GITHUB_TOKEN}}
-          slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}
+            ${{ inputs.DOCKER_REPO }}/ui:${{ inputs.DOCKER_TAG }},
+            ${{ inputs.DOCKER_REPO }}/ui:latest

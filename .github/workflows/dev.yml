@@ -1,0 +1,55 @@
+name: Dev
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!release-please-*'
+  workflow_dispatch:
+
+
+jobs:
+  prepare:
+    name: "Prepare"
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.prepare-step.outputs.branch }}
+      version: ${{ steps.prepare-step.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting for sonar
+          fetch-depth: 0
+      - name: Extract branch name and substitute slashes
+        shell: bash
+        working-directory: code
+        run: |
+          echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" | tr '/' '-' >> $GITHUB_OUTPUT
+          version=$(lein project-version)
+          echo "project version=${version}"
+          echo "version=${version}" >> $GITHUB_OUTPUT
+        id: prepare-step
+
+  build:
+    name: "Build and push"
+    uses: ./.github/workflows/build.yml
+    needs: [prepare]
+    with:
+      DOCKER_REPO: nuvladev
+      DOCKER_TAG: ${{ needs.prepare.outputs.branch }}
+    secrets: inherit
+
+  notify:
+    if: always()
+    name: "Notify Slack"
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Gamesight/slack-workflow-status@master
+        with:
+          repo_token: ${{secrets.GITHUB_TOKEN}}
+          slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}

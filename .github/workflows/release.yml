@@ -25,8 +25,8 @@ jobs:
         id: generate-token
         uses: actions/create-github-app-token@v1
         with:
-          app-id: 957480
-          private-key: ${{ secrets.RELEASE_PLEASE_GITHUB_TOKEN }}
+          app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_PRIVATE_KEY }}
       - id: release
         uses: googleapis/release-please-action@v4
         with:

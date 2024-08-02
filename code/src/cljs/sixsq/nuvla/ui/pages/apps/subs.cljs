@@ -154,6 +154,12 @@
     (not (empty? (::spec/details-validation-errors db)))))
 
 (reg-sub
+  ::requirements-error?
+  (fn [db]
+    #_:clj-kondo/ignore
+    (seq (::spec/requirements-validation-errors db))))
+
+(reg-sub
   ::is-description-valid?
   :<- [::module-subtype]
   :<- [::description]
@@ -208,6 +214,23 @@
   ::output-parameters
   (fn [db]
     (get-in db [::spec/module-common ::spec/output-parameters])))
+
+
+(reg-sub
+  ::architectures
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/architectures])))
+
+(reg-sub
+  ::architecture-options
+  (fn [_ _]
+    (mapv (fn [arch] {:key arch :value arch :text arch}) spec/valid-architectures)))
+
+
+(reg-sub
+  ::minimum-requirements
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/minimum-requirements])))
 
 
 (reg-sub

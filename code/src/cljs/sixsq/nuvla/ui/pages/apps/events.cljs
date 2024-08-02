@@ -152,7 +152,9 @@
           (assoc-in [::spec/module-common ::spec/env-variables] (sorted-map))
           (assoc-in [::spec/module-common ::spec/urls] (sorted-map))
           (assoc-in [::spec/module-common ::spec/output-parameters] (sorted-map))
-          (assoc-in [::spec/module-common ::spec/data-types] (sorted-map))))))
+          (assoc-in [::spec/module-common ::spec/data-types] (sorted-map))
+
+          (assoc-in [::spec/module-common ::spec/minimum-requirements] {})))))
 
 
 (reg-event-fx
@@ -410,6 +412,27 @@
   (fn [db [_ id dt]]
     (assoc-in db [::spec/module-common ::spec/data-types id] {:id id ::spec/data-type dt})))
 
+;; Requirements
+
+(reg-event-db
+  ::set-architectures
+  (fn [db [_ architectures]]
+    (assoc-in db [::spec/module-common ::spec/architectures] architectures)))
+
+(reg-event-db
+  ::set-min-cpu
+  (fn [db [_ min-cpu]]
+    (assoc-in db [::spec/module-common ::spec/minimum-requirements ::spec/min-cpu] min-cpu)))
+
+(reg-event-db
+  ::set-min-ram
+  (fn [db [_ min-ram]]
+    (assoc-in db [::spec/module-common ::spec/minimum-requirements ::spec/min-ram] min-ram)))
+
+(reg-event-db
+  ::set-min-disk
+  (fn [db [_ min-disk]]
+    (assoc-in db [::spec/module-common ::spec/minimum-requirements ::spec/min-disk] min-disk)))
 
 ;; Private registries
 
@@ -755,6 +778,10 @@
   (fn [db [_ key error?]]
     (utils/set-reset-error db key error? ::spec/details-validation-errors)))
 
+(reg-event-db
+  ::set-requirements-validation-error
+  (fn [db [_ key error?]]
+    (utils/set-reset-error db key error? ::spec/requirements-validation-errors)))
 
 (reg-event-db
   ::set-tags

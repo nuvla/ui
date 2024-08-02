@@ -327,13 +327,18 @@
 
 (defn ConfigurationPane
   []
-  [:div {:class :uix-apps-details-details}
-   [:h4 {:class :tab-app-detail} [apps-views-detail/ConfigurationTitle]]
-   [apps-views-detail/EnvVariablesSection]
-   [FilesSection]
-   [apps-views-detail/UrlsSection]
-   [apps-views-detail/OutputParametersSection]
-   [apps-views-detail/DataTypesSection]])
+  (let [module-content-id (subscribe [::apps-subs/module-content-id])]
+    (fn []
+      ;; make sure the configuration is refreshed on version change
+      ^{:key @module-content-id}
+      [:div {:class :uix-apps-details-details}
+       [:h4 {:class :tab-app-detail} [apps-views-detail/ConfigurationTitle]]
+       [apps-views-detail/EnvVariablesSection]
+       [FilesSection]
+       [apps-views-detail/UrlsSection]
+       [apps-views-detail/OutputParametersSection]
+       [apps-views-detail/RequirementsSection]
+       [apps-views-detail/DataTypesSection]])))
 
 
 (defn TabMenuLicense

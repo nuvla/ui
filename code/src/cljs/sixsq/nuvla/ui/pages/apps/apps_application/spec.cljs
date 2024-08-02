@@ -11,6 +11,7 @@
 (s/def ::license-validation-errors set?)
 (s/def ::docker-compose-validation-errors set?)
 (s/def ::configuration-validation-errors set?)
+(s/def ::requirements-validation-errors set?)
 
 
 (s/def ::requires-user-rights boolean?)

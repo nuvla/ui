@@ -78,6 +78,25 @@
 
 (s/def ::data-types (s/map-of any? (s/merge ::data-type-map)))
 
+; Requirements
+
+;; keep aligned with api-server, com.sixsq.nuvla.server.resources.spec.module-component/valid-architectures
+(def valid-architectures #{"386" "amd64" "amd64p32"
+                           "arm" "armbe" "arm64" "arm64/v8" "arm64be"
+                           "arm/v5" "arm/v6" "arm/v7"
+                           "ppc" "ppc64" "ppc64le"
+                           "mips" "mipsle" "mips64" "mips64le" "mips64p32" "mips64p32le"
+                           "s390" "s390x" "sparc" "sparc64"})
+
+(s/def ::architecture (s/and string? valid-architectures))
+(s/def ::architectures (s/nilable (s/coll-of ::architecture :min-count 1)))
+
+(s/def ::min-cpu (s/nilable (s/and number? pos?)))
+(s/def ::min-ram (s/nilable pos-int?))
+(s/def ::min-disk (s/nilable pos-int?))
+
+(s/def ::minimum-requirements (s/keys :opt [::min-cpu ::min-ram ::min-disk]))
+
 (s/def ::registry-id spec-utils/nonblank-string)
 
 (s/def ::registry-cred-id string?)
@@ -121,7 +140,9 @@
                                      ::urls
                                      ::output-parameters
                                      ::data-types
-                                     ::price]))
+                                     ::price
+                                     ::architectures
+                                     ::minimum-requirements]))
 
 
 ;; Validation
@@ -136,6 +157,8 @@
 (s/def ::form-spec any?)
 
 (s/def ::details-validation-errors set?)
+
+(s/def ::requirements-validation-errors set?)
 
 ;; Page
 
@@ -184,29 +207,30 @@
 (def default-tab :overview)
 
 (def defaults
-  {::active-input              nil
-   ::form-spec                 nil
-   ::form-valid?               true
-   ::validate-form?            false
-   ::is-new?                   false
-   ::completed?                true
-   ::add-modal-visible?        false
-   ::logo-url-modal-visible?   false
-   ::save-modal-visible?       false
-   ::default-logo-url          "/ui/images/noimage.png"
-   ::commit-message            ""
-   ::registries                nil
-   ::registries-infra          nil
-   ::helm-infra                nil
-   ::helm-info                 {:repo-or-url? :repo}
-   ::helm-credentials          nil
-   ::registries-credentials    nil
-   ::validate-docker-compose   nil
-   ::compare-module-left       nil
-   ::compare-module-right      nil
-   ::module                    nil
-   ::version                   nil
-   ::copy-module               nil
-   ::paste-modal-visible?      false
-   ::module-not-found?         false
-   ::details-validation-errors #{}})
+  {::active-input                   nil
+   ::form-spec                      nil
+   ::form-valid?                    true
+   ::validate-form?                 false
+   ::is-new?                        false
+   ::completed?                     true
+   ::add-modal-visible?             false
+   ::logo-url-modal-visible?        false
+   ::save-modal-visible?            false
+   ::default-logo-url               "/ui/images/noimage.png"
+   ::commit-message                 ""
+   ::registries                     nil
+   ::registries-infra               nil
+   ::helm-infra                     nil
+   ::helm-info                      {:repo-or-url? :repo}
+   ::helm-credentials               nil
+   ::registries-credentials         nil
+   ::validate-docker-compose        nil
+   ::compare-module-left            nil
+   ::compare-module-right           nil
+   ::module                         nil
+   ::version                        nil
+   ::copy-module                    nil
+   ::paste-modal-visible?           false
+   ::module-not-found?              false
+   ::details-validation-errors      #{}
+   ::requirements-validation-errors #{}})

@@ -158,8 +158,6 @@
 
 (s/def ::details-validation-errors set?)
 
-(s/def ::requirements-validation-errors set?)
-
 ;; Page
 
 (s/def ::default-logo-url (s/nilable string?))
@@ -232,5 +230,4 @@
    ::copy-module                    nil
    ::paste-modal-visible?           false
    ::module-not-found?              false
-   ::details-validation-errors      #{}
-   ::requirements-validation-errors #{}})
+   ::details-validation-errors      #{}})

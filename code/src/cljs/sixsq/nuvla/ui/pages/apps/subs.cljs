@@ -153,11 +153,6 @@
     #_:clj-kondo/ignore
     (not (empty? (::spec/details-validation-errors db)))))
 
-(reg-sub
-  ::requirements-error?
-  (fn [db]
-    #_:clj-kondo/ignore
-    (seq (::spec/requirements-validation-errors db))))
 
 (reg-sub
   ::is-description-valid?

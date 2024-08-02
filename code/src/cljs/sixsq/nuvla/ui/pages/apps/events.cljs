@@ -778,10 +778,6 @@
   (fn [db [_ key error?]]
     (utils/set-reset-error db key error? ::spec/details-validation-errors)))
 
-(reg-event-db
-  ::set-requirements-validation-error
-  (fn [db [_ key error?]]
-    (utils/set-reset-error db key error? ::spec/requirements-validation-errors)))
 
 (reg-event-db
   ::set-tags

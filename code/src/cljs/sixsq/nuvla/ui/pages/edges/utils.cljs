@@ -218,19 +218,6 @@
       (assoc {:nuvlabox-release (:id nuvlabox-release)}
         :payload (general-utils/edn->json payload)))))
 
-
-(defn form-update-data-incomplete?
-  [{:keys [project-name working-dir environment] :as form-data}]
-  (let [payload?            (->> [project-name working-dir environment]
-                                 (some (complement str/blank?))
-                                 boolean)
-        payload-incomplete? (->> [project-name working-dir]
-                                 (some str/blank?)
-                                 boolean)]
-    (or (str/blank? (:nuvlabox-release form-data))
-        (and payload? payload-incomplete?))))
-
-
 (defn form-add-playbook-incomplete?
   [{:keys [name run enabled type parent] :as _form-data}]
   (->> [name run enabled type parent]

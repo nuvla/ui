@@ -1215,3 +1215,11 @@ i.link.icon.app-details-add-config-param-icon:hover {
   justify-content: space-between;
   color: black;
 }
+
+#minimum-requirements .ui.table {
+  width: 50%;
+}
+
+#minimum-requirements .ui.fluid.input {
+  width: 250px;
+}

@@ -181,12 +181,12 @@ For more information on how to format your app description using Markdown syntax
                      :display :inline-block}}])
 
 (defn IconHelm [selected]
-  [ui/Image {:src (if selected
-                    "/ui/images/helm.svg"
-                    "/ui/images/helm-grey.svg")
-             :style {:width   "1.18em"
-                     :margin  "0 .25rem 0 0"
-                     :display :inline-block
+  [ui/Image {:src   (if selected
+                      "/ui/images/helm.svg"
+                      "/ui/images/helm-grey.svg")
+             :style {:width            "1.18em"
+                     :margin           "0 .25rem 0 0"
+                     :display          :inline-block
                      :background-color "transparent"}}])
 
 (defn subtype-icon
@@ -202,8 +202,8 @@ For more information on how to format your app description using Markdown syntax
 (defn ModuleSubtypeIcon [subtype]
   (if (= subtype-application-helm subtype)
     [IconHelm]
-    [icons/Icon {:name (subtype-icon subtype)
-                 :size "large"
+    [icons/Icon {:name  (subtype-icon subtype)
+                 :size  "large"
                  :align "middle"}]))
 
 (defn SubtypeIconInfra
@@ -291,6 +291,15 @@ For more information on how to format your app description using Markdown syntax
         (conj data-type)))))
 
 
+(defn min-requirements->module
+  [db]
+  (let [{::spec/keys [min-cpu min-ram min-disk]} (get-in db [::spec/module-common ::spec/minimum-requirements])]
+    (cond-> {}
+            min-cpu (assoc :min-cpu min-cpu)
+            min-ram (assoc :min-ram min-ram)
+            min-disk (assoc :min-disk min-disk))))
+
+
 (defn db->module
   [module _commit-map db]
   (let [name              (get-in db [::spec/module-common ::spec/name])
@@ -307,7 +316,9 @@ For more information on how to format your app description using Markdown syntax
          registries-credentials] (registries->module db)
         urls              (urls->module db)
         output-parameters (output-parameters->module db)
-        data-bindings     (data-binding->module db)]
+        data-bindings     (data-binding->module db)
+        min-requirements  (min-requirements->module db)
+        architectures     (get-in db [::spec/module-common ::spec/architectures])]
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
@@ -319,6 +330,12 @@ For more information on how to format your app description using Markdown syntax
           (if (empty? env-variables)
             (update-in m [:content] dissoc :environmental-variables)
             (assoc-in m [:content :environmental-variables] env-variables))
+          (if (empty? min-requirements)
+            (update-in m [:content] dissoc :minimum-requirements)
+            (assoc-in m [:content :minimum-requirements] min-requirements))
+          (if (empty? architectures)
+            (update-in m [:content] dissoc :architectures)
+            (assoc-in m [:content :architectures] architectures))
           (if (empty? urls)
             (update-in m [:content] dissoc :urls)
             (assoc-in m [:content :urls] urls))
@@ -391,16 +408,25 @@ For more information on how to format your app description using Markdown syntax
       [id {:id              id
            ::spec/data-type dt}])))
 
+
+(defn minimum-requirements->db
+  [{:keys [min-cpu min-ram min-disk]}]
+  (cond-> {}
+          min-cpu (assoc ::spec/min-cpu min-cpu)
+          min-ram (assoc ::spec/min-ram min-ram)
+          min-disk (assoc ::spec/min-disk min-disk)))
+
+
 (defn module->db
   [db {:keys [name description parent-path content data-accept-content-types
               path logo-url subtype acl price license] :as _module}]
-  (let [helm-info (select-keys content [:helm-repo-url
-                                        :helm-chart-name
-                                        :helm-absolute-url
-                                        :helm-repo-cred
-                                        :helm-chart-version
-                                        :helm-chart-values])
-        repo-or-url?  (if (:helm-absolute-url helm-info) :url :repo)]
+  (let [helm-info    (select-keys content [:helm-repo-url
+                                           :helm-chart-name
+                                           :helm-absolute-url
+                                           :helm-repo-cred
+                                           :helm-chart-version
+                                           :helm-chart-values])
+        repo-or-url? (if (:helm-absolute-url helm-info) :url :repo)]
     (-> db
         (assoc-in [::spec/module-common ::spec/name] name)
         (assoc-in [::spec/module-common ::spec/description] description)
@@ -416,6 +442,10 @@ For more information on how to format your app description using Markdown syntax
                   (output-parameters->db (:output-parameters content)))
         (assoc-in [::spec/module-common ::spec/data-types]
                   (data-types->db data-accept-content-types))
+        (assoc-in [::spec/module-common ::spec/architectures]
+                  (:architectures content))
+        (assoc-in [::spec/module-common ::spec/minimum-requirements]
+                  (minimum-requirements->db (:minimum-requirements content)))
         (assoc-in [::spec/module-common ::spec/registries]
                   (registries->db (:private-registries content)
                                   (:registries-credentials content)))
@@ -426,7 +456,7 @@ For more information on how to format your app description using Markdown syntax
                     {:license-name        (:name license)
                      :license-description (:description license)
                      :license-url         (:url license)}))
-        (assoc    ::spec/helm-info (merge {:repo-or-url? repo-or-url?} helm-info )))))
+        (assoc ::spec/helm-info (merge {:repo-or-url? repo-or-url?} helm-info)))))
 
 
 (defn mandatory-name
@@ -503,7 +533,7 @@ For more information on how to format your app description using Markdown syntax
           last-published-version (latest-published-index versions)]
       (if published?
         (if (= v last-published-version)
-          [:span {:style {:margin-left 5}}[icons/CheckIconFull {:color "green"}] " (" (tr [:up-to-date-published]) ")"]
+          [:span {:style {:margin-left 5}} [icons/CheckIconFull {:color "green"}] " (" (tr [:up-to-date-published]) ")"]
           [:span {:style {:margin-left 5}} [icons/WarningIcon {:color "orange"}]
            (str (tr [:not-up-to-date-published]))])
         (if (= v last-version)

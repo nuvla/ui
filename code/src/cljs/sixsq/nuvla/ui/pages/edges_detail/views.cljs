@@ -177,17 +177,17 @@
           :loading  (true? @loading?)
           :on-click (if @key-data close-fn on-click-fn)}]]])))
 
-
-(defn is-old-version?
+(defn old-version?
   [nb-version]
   (or
     (str/blank? nb-version)
-    (let [p (->> (str/split nb-version #"\.")
-                 (map js/parseInt))]
-      (or (< (first p) 1)
-          (and (= (first p) 1)
-               (< (second p) 16))))))
+    (utils/older-version? nb-version [1 16 0])))
 
+(defn before-v2-14-4?
+  [nb-version]
+  (or
+    (str/blank? nb-version)
+    (utils/older-version? nb-version [2 14 4])))
 
 (defn- calc-new-modules-on-release-change [form-data new-release]
   (let [form-modules     (:modules form-data)
@@ -303,7 +303,7 @@
          [ui/ModalContent
           (when correct-nb?
             [:<>
-             (when (is-old-version? @ne-version)
+             (when (old-version? @ne-version)
                [ui/Message
                 {:error   true
                  :icon    {:name icons/i-warning, :size "large"}
@@ -313,13 +313,23 @@
                              [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
                                   :target "_blank"}
                               (str/capitalize (@tr [:see-more]))]])}])
-             (when (and (some? target-version) (is-old-version? target-version))
+             (when (and (some? target-version) (old-version? target-version))
                [ui/Message
                 {:warning true
                  :icon    {:name icons/i-warning, :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (@tr [:nuvlabox-update-warning-content])])}])
+             (when (before-v2-14-4? @ne-version)
+               [ui/Message
+                {:warning true
+                 :icon    {:name icons/i-warning, :size "large"}
+                 :header  (@tr [:nuvlabox-update-warning])
+                 :content (r/as-element
+                            [:span
+                             "To upgrade from v" @ne-version " or an earlier version, "
+                             [:b "you must first upgrade to v2.14.4"]
+                             ". This will enable your NuvlaEdge to automatically migrate its configuration and volume to the new format."])}])
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i @ne-version]]])
@@ -328,7 +338,7 @@
            [DropdownReleases {:placeholder (@tr [:select-version])
                               :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
-                              :disabled    (is-old-version? @ne-version)}]
+                              :disabled    (old-version? @ne-version)}]
            (let [{:keys [compose-files]} selected-release]
              [AdditionalModulesTable compose-files
               {:on-module-change (fn [scope]

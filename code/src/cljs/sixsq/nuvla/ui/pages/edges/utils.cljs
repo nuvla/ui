@@ -273,16 +273,13 @@
 
 (defn- parse-version-number [v]
   (->> (re-seq #"\d+" (or v ""))
-       (map js/Number)))
+       (mapv js/parseInt)))
 
-(defn compare-versions [m n]
-  (let [[m_1 m_2 m_3] (parse-version-number m)
-        [n_1 n_2 n_3] (parse-version-number n)]
-    (cond
-      (not= m_1 n_1) (compare n_1 m_1)
-      (not= m_2 n_2) (compare n_2 m_2)
-      (not= m_3 n_3) (compare n_3 m_3)
-      :else 0)))
+(defn older-version?
+  [v ref-v]
+  (or
+    (str/blank? v)
+    (neg? (compare (parse-version-number v) ref-v))))
 
 (defn version-difference [version1 version2]
   (let [[m_1 m_2 m_3 :as m] (parse-version-number version1)
@@ -305,7 +302,7 @@
         :else nil))))
 
 (defn sort-by-version [e]
-  (sort-by :release compare-versions e))
+  (sort-by :release compare e))
 
 (defn summary-stats [summary]
   (let [total           (:count summary)

@@ -70,3 +70,15 @@
     :outdated-minor-version ["2.1.1" "2.1.0"]
     :outdated-minor-version ["2.4.1" "2.1.0"]               ; up to 3 minor away it's still minor warning
     :outdated-major-version ["2.5.1" "2.1.0"]))
+
+(deftest older-version?
+  (are [result args]
+    (= result (t/older-version? (first args) (second args)))
+    true [nil nil]
+    true ["" [2 1 0]]
+    true ["2.14.0" [2 14 4]]
+    true ["1.0.0" [2 14 4]]
+    false ["2.14.4" [2 14 4]]
+    false ["2.14.5" [2 14 4]]
+    false ["2.15.5" [2 14 4]]
+    false ["3.0.0" [2 14 4]]))

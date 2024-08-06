@@ -65,22 +65,6 @@
     (get icons-map state)))
 
 
-(defn status->keyword
-  [online]
-  (case online
-    true :online
-    false :offline
-    :unknown))
-
-
-(defn status->color
-  [status]
-  (case status
-    true "green"
-    false "red"
-    "yellow"))
-
-
 (defn operational-status->color
   [status]
   (case status
@@ -262,12 +246,6 @@
   (->> (re-seq #"\d+" (or v ""))
        (mapv js/parseInt)))
 
-(defn older-version?
-  [v ref-v]
-  (or
-    (str/blank? v)
-    (neg? (compare (parse-version-number v) ref-v))))
-
 (defn version-difference [version1 version2]
   (let [[m_1 m_2 m_3 :as m] (parse-version-number version1)
         [n_1 n_2 n_3 :as n] (parse-version-number version2)]
@@ -288,8 +266,14 @@
         (or minor patch) :outdated-minor-version
         :else nil))))
 
+(defn older-version?
+  [v ref-v]
+  (or
+    (str/blank? v)
+    (neg? (compare (parse-version-number v) ref-v))))
+
 (defn sort-by-version [e]
-  (sort-by :release compare e))
+  (sort-by :release > e))
 
 (defn summary-stats [summary]
   (let [total           (:count summary)
@@ -343,7 +327,7 @@
       [ui/Popup
        {:trigger  (r/as-element
                     [:span [component [ui/Icon {:class icons/i-triangle-exclamation
-                                          :color color}]]])
+                                                :color color}]]])
         :content  (tr [warning])
         :position "right center"
         :size     "small"}]

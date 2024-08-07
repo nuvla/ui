@@ -25,6 +25,14 @@
    {:release "2.10.7"}
    {:no-version ""}])
 
+(deftest parse-version-number
+  (are [result arg]
+    (= result (t/parse-version-number arg))
+    [] ""
+    [0 0 0] "0.0.0"
+    [2 1 0] "2.1.0"
+    [2 2 0] "2.2.0-go"))
+
 (deftest version-sort-test
   (is '({:release "3.0.0"}
         {:release "2.11.8"}
@@ -82,3 +90,15 @@
     false ["2.14.5" [2 14 4]]
     false ["2.15.5" [2 14 4]]
     false ["3.0.0" [2 14 4]]))
+
+(deftest newer-version?
+  (are [result args]
+    (= result (t/newer-version? (first args) (second args)))
+    false [nil nil]
+    false ["" [2 1 0]]
+    false ["2.14.0" [2 14 4]]
+    false ["1.0.0" [2 14 4]]
+    false ["2.14.4" [2 14 4]]
+    true ["2.14.5" [2 14 4]]
+    true ["2.15.5" [2 14 4]]
+    true ["3.0.0" [2 14 4]]))

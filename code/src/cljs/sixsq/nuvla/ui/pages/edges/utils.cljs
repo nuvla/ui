@@ -242,7 +242,7 @@
     (some-> text-search general-utils/fulltext-query-string)
     additional-filter))
 
-(defn- parse-version-number [v]
+(defn parse-version-number [v]
   (->> (re-seq #"\d+" (or v ""))
        (mapv js/parseInt)))
 
@@ -271,6 +271,12 @@
   (or
     (str/blank? v)
     (neg? (compare (parse-version-number v) ref-v))))
+
+(defn newer-version?
+  [v ref-v]
+  (and
+    (not (str/blank? v))
+    (pos? (compare (parse-version-number v) ref-v))))
 
 (defn sort-by-version [e]
   (sort-by :release > e))

@@ -185,9 +185,11 @@
 
 (defn before-v2-14-4?
   [nb-version]
-  (or
-    (str/blank? nb-version)
-    (utils/older-version? nb-version [2 14 4])))
+  (utils/older-version? nb-version [2 14 4]))
+
+(defn after-v2-14-4?
+  [version]
+  (utils/newer-version? version [2 14 4]))
 
 (defn- calc-new-modules-on-release-change [form-data new-release]
   (let [form-modules     (:modules form-data)
@@ -243,13 +245,55 @@
                               :checked   (module-checked? module)
                               :style     {:margin "1em"}
                               :on-change (on-module-change module)}])))]])]]))
+
+(defn UpdateVersionWarnings
+  [ne-version target-version]
+  (r/with-let [tr (subscribe [::i18n-subs/tr])]
+    (cond
+      (old-version? ne-version)
+      [ui/Message
+       {:error   true
+        :icon    {:name icons/i-warning, :size "large"}
+        :header  (@tr [:nuvlabox-update-warning])
+        :content (r/as-element
+                   [:span (@tr [:nuvlabox-update-error-content]) " "
+                    [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
+                         :target "_blank"}
+                     (str/capitalize (@tr [:see-more]))]])}]
+
+      (and (some? target-version) (old-version? target-version))
+      [ui/Message
+       {:warning true
+        :icon    {:name icons/i-warning, :size "large"}
+        :header  (@tr [:nuvlabox-update-warning])
+        :content (r/as-element [:span (@tr [:nuvlabox-update-warning-content])])}]
+
+      (some-> target-version (utils/version-difference ne-version) ffirst (= :major))
+      [ui/Message
+       {:error   true
+        :icon    {:name icons/i-warning, :size "large"}
+        :header  (@tr [:nuvlabox-update-warning])
+        :content (r/as-element
+                   [:span
+                    "Upgrade between major versions is not supported. Please contact Nuvla support."])}]
+
+      (and (before-v2-14-4? ne-version) (after-v2-14-4? target-version))
+      [ui/Message
+       {:warning true
+        :icon    {:name icons/i-warning, :size "large"}
+        :header  (@tr [:nuvlabox-update-warning])
+        :content (r/as-element
+                   [:span
+                    "To upgrade from v" ne-version " or an earlier version, "
+                    [:b "you must first upgrade to v2.14.4"]
+                    ". This will enable your NuvlaEdge to automatically migrate its configuration and volume to the new format."])}])))
+
 (defn UpdateButton
   [{:keys [id] :as _resource}]
   (let [show?          (r/atom false)
         tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
         modules        (subscribe [::subs/nuvlabox-modules])
-        releases       (subscribe [::edges-subs/nuvlabox-releases-options])
         releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
         releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
         close-fn       #(reset! show? false)
@@ -278,11 +322,9 @@
       (swap! form-data assoc :current-version @ne-version))
     (fn [{:keys [id] :as _resource}]
       (let [correct-nb?         (= (:parent @status) id)
-            target-version      (->> @releases
-                                     (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
-                                     :key)
             selected-release    (:nuvlabox-release @form-data)
             release-id          (get selected-release :id)
+            target-version      (get-in @releases-by-id [release-id :release])
             selected-modules    (:modules @form-data)
             force-restart       (:force-restart @form-data)
             stop-propagation-fn #(.stopPropagation %)]
@@ -303,33 +345,7 @@
          [ui/ModalContent
           (when correct-nb?
             [:<>
-             (when (old-version? @ne-version)
-               [ui/Message
-                {:error   true
-                 :icon    {:name icons/i-warning, :size "large"}
-                 :header  (@tr [:nuvlabox-update-warning])
-                 :content (r/as-element
-                            [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
-                                  :target "_blank"}
-                              (str/capitalize (@tr [:see-more]))]])}])
-             (when (and (some? target-version) (old-version? target-version))
-               [ui/Message
-                {:warning true
-                 :icon    {:name icons/i-warning, :size "large"}
-                 :header  (@tr [:nuvlabox-update-warning])
-                 :content (r/as-element
-                            [:span (@tr [:nuvlabox-update-warning-content])])}])
-             (when (before-v2-14-4? @ne-version)
-               [ui/Message
-                {:warning true
-                 :icon    {:name icons/i-warning, :size "large"}
-                 :header  (@tr [:nuvlabox-update-warning])
-                 :content (r/as-element
-                            [:span
-                             "To upgrade from v" @ne-version " or an earlier version, "
-                             [:b "you must first upgrade to v2.14.4"]
-                             ". This will enable your NuvlaEdge to automatically migrate its configuration and volume to the new format."])}])
+             [UpdateVersionWarnings @ne-version target-version]
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i @ne-version]]])

@@ -263,6 +263,14 @@
         (or minor patch) :outdated-minor-version
         :else nil))))
 
+(defn ne-go?
+  [v]
+  (= (:pre-release (semver/parse v)) "go"))
+
+(defn ne-dev?
+  [v]
+  (and (not (str/blank? v)) (nil? (semver/parse v))))
+
 (defn newer-version?
   [v ref-v]
   (and
@@ -277,7 +285,8 @@
 
 (defn old-version?
   [v]
-  (older-version? v (semver/Version. 1 16 0 nil nil)))
+  (and (not (ne-dev? v))
+       (older-version? v (semver/Version. 1 16 0 nil nil))))
 
 (defn before-v2-14-4?
   [v]
@@ -286,14 +295,6 @@
 (defn after-v2-14-4?
   [v]
   (newer-version? v (semver/Version. 2 14 4 nil nil)))
-
-(defn ne-go?
-  [v]
-  (= (:pre-release (semver/parse v)) "go"))
-
-(defn ne-dev?
-  [v]
-  (and (not (str/blank? v)) (nil? (semver/parse v))))
 
 (defn summary-stats [summary]
   (let [total           (:count summary)

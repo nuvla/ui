@@ -266,7 +266,8 @@
                        [:span
                         "Upgrade between major versions is not supported. Please contact Nuvla support."])}]
 
-          (and (utils/before-v2-14-4? ne-version) (utils/after-v2-14-4? target-version))
+          (and (utils/before-v2-14-4? ne-version) (or (utils/after-v2-14-4? target-version)
+                                                      (utils/ne-go? target-version)))
           [ui/Message
            {:warning true
             :icon    {:name icons/i-warning, :size "large"}

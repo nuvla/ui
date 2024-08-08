@@ -13,6 +13,11 @@
 
 
 (s/def ::infra-services (s/nilable (s/coll-of any? :kind vector?)))
+(s/def ::infra-service-groups-by-id (s/nilable (s/map-of string? any?)))
+(s/def ::edges-by-id (s/nilable (s/map-of string? any?)))
+(s/def ::edges-status-by-id (s/nilable (s/map-of string? any?)))
+(s/def ::unmet-requirements-accepted boolean?)
+
 (s/def ::infra-services-loading? boolean?)
 (s/def ::selected-infra-service any?)
 
@@ -84,31 +89,35 @@
                                    :icon    "info"}})
 
 
-(def defaults {::deploy-modal-visible?      false
-               ::deployment                 nil
-               ::credentials                nil
-               ::credentials-loading?       false
-               ::infra-services             nil
-               ::infra-services-loading?    false
-               ::infra-registries           nil
-               ::infra-registries-loading?  false
-               ::infra-registries-creds     nil
-               ::registries-creds           {}
-               ::invisible-registries-creds []
-               ::selected-infra-service     nil
-               ::selected-credential-id     nil
-               ::data-clouds                nil
-               ::selected-cloud             nil
-               ::cloud-filter               nil
-               ::cloud-infra-services       nil
-               ::active-step                :data
-               ::data-step-active           true
-               ::license-accepted?          false
-               ::price-accepted?            false
-               ::error-message              nil
-               ::step-states                step-states
-               ::check-dct                  nil
-               ::module-info                nil
-               ::selected-version           nil
-               ::original-module            nil
-               ::submit-loading?            false})
+(def defaults {::deploy-modal-visible?       false
+               ::deployment                  nil
+               ::credentials                 nil
+               ::credentials-loading?        false
+               ::infra-services              nil
+               ::infra-services-loading?     false
+               ::infra-service-groups-by-id  nil
+               ::edges-by-id                 nil
+               ::edges-status-by-id          nil
+               ::unmet-requirements-accepted false
+               ::infra-registries            nil
+               ::infra-registries-loading?   false
+               ::infra-registries-creds      nil
+               ::registries-creds            {}
+               ::invisible-registries-creds  []
+               ::selected-infra-service      nil
+               ::selected-credential-id      nil
+               ::data-clouds                 nil
+               ::selected-cloud              nil
+               ::cloud-filter                nil
+               ::cloud-infra-services        nil
+               ::active-step                 :data
+               ::data-step-active            true
+               ::license-accepted?           false
+               ::price-accepted?             false
+               ::error-message               nil
+               ::step-states                 step-states
+               ::check-dct                   nil
+               ::module-info                 nil
+               ::selected-version            nil
+               ::original-module             nil
+               ::submit-loading?             false})

@@ -1,8 +1,10 @@
 (ns sixsq.nuvla.ui.common-components.deployment-dialog.subs
   (:require [clojure.string :as str]
-            [re-frame.core :refer [reg-sub subscribe]]
+            [reagent.core :refer [reaction]]
+            [re-frame.core :refer [reg-sub reg-sub-raw subscribe]]
             [sixsq.nuvla.ui.common-components.deployment-dialog.spec :as spec]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.deployment-dialog.utils :as utils]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.icons :as icons]))
@@ -269,7 +271,7 @@
   :<- [::module-compatibility]
   :<- [::i18n-subs/tr]
   (fn [[module-subtype module-compatibility tr]
-       [_ {:keys [swarm-enabled swarm-manager] infra-subtype :subtype
+       [_ {:keys [swarm-enabled swarm-manager parent] infra-subtype :subtype
            :as   _infra-service}]]
     (cond
       (= [module-subtype module-compatibility infra-subtype swarm-enabled]
@@ -283,6 +285,39 @@
       (= [module-subtype module-compatibility infra-subtype swarm-enabled]
          ["application" "docker-compose" "swarm" true])
       (tr [:compose-app-deployed-swarm-node]))))
+
+(reg-sub
+  ::app-infra-unmet-requirements
+  (fn [[_ infra-service]]
+    [(subscribe [::architectures])
+     (subscribe [::minimum-requirements])
+     (subscribe [::edge-architecture infra-service])
+     (subscribe [::edge-resources infra-service])])
+  (fn [[architectures minimum-requirements edge-architecture edge-resources]]
+    (utils/infra-app-unmet-requirements architectures minimum-requirements edge-architecture edge-resources)))
+
+(reg-sub
+  ::app-infra-requirements-met?
+  (fn [[_ infra-service]]
+    [(subscribe [::architectures])
+     (subscribe [::minimum-requirements])
+     (subscribe [::edge-architecture infra-service])
+     (subscribe [::edge-resources infra-service])])
+  (fn [[architectures minimum-requirements edge-architecture edge-resources]]
+    (utils/infra-app-min-requirements-met? architectures minimum-requirements edge-architecture edge-resources)))
+
+(reg-sub
+  ::unmet-requirements-accepted
+  :-> ::spec/unmet-requirements-accepted)
+
+(reg-sub-raw
+  ::requirements-met?
+  (fn [_ _]
+    (reaction
+      (let [infra-service               (subscribe [::selected-infra-service])
+            requirements-met?           (subscribe [::app-infra-requirements-met? @infra-service])
+            unmet-requirements-accepted (subscribe [::unmet-requirements-accepted])]
+        (or @requirements-met? @unmet-requirements-accepted)))))
 
 (reg-sub
   ::credentials
@@ -339,6 +374,47 @@
     (if deployment-start?
       infra-services
       (when selected-infra-service [selected-infra-service]))))
+
+(reg-sub
+  ::infra-service-groups-by-id
+  :-> ::spec/infra-service-groups-by-id)
+
+(reg-sub
+  ::edges-by-id
+  :-> ::spec/edges-by-id)
+
+(reg-sub
+  ::edges-status-by-id
+  :-> ::spec/edges-status-by-id)
+
+(reg-sub
+  ::edge-status
+  :<- [::infra-service-groups-by-id]
+  :<- [::edges-by-id]
+  :<- [::edges-status-by-id]
+  (fn [[infra-service-groups-by-id edges-by-id edges-status-by-id]
+       [_ infra-service]]
+    (some->> infra-service
+             :parent
+             (get infra-service-groups-by-id)
+             :parent
+             (get edges-by-id)
+             :nuvlabox-status
+             (get edges-status-by-id))))
+
+(reg-sub
+  ::edge-resources
+  (fn [[_ infra-service]]
+    [(subscribe [::edge-status infra-service])])
+  (fn [[edge-status] _]
+    (:resources edge-status)))
+
+(reg-sub
+  ::edge-architecture
+  (fn [[_ infra-service]]
+    [(subscribe [::edge-status infra-service])])
+  (fn [[edge-status] _]
+    (:architecture edge-status)))
 
 (reg-sub
   ::infra-registries
@@ -479,6 +555,16 @@
   :-> :environmental-variables)
 
 (reg-sub
+  ::architectures
+  :<- [::module-content]
+  :-> :architectures)
+
+(reg-sub
+  ::minimum-requirements
+  :<- [::module-content]
+  :-> :minimum-requirements)
+
+(reg-sub
   ::error-message
   :-> ::spec/error-message)
 
@@ -508,8 +594,9 @@
   :<- [::price]
   :<- [::price-completed?]
   :<- [::version-completed?]
+  :<- [::requirements-met?]
   (fn [[deployment data-completed? data-step-active? credentials-completed? env-variables-completed?
-        registries-completed? license license-completed? price price-completed? version-completed?]]
+        registries-completed? license license-completed? price price-completed? version-completed? requirements-met?]]
     (or (not deployment)
         (and (not data-completed?) data-step-active?)
         (not credentials-completed?)
@@ -518,7 +605,8 @@
         (and price (not price-completed?))
         (and license (not license-completed?))
         (not registries-completed?)
-        (not version-completed?))))
+        (not version-completed?)
+        (not requirements-met?))))
 
 (reg-sub
   ::check-dct

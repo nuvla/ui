@@ -77,3 +77,30 @@
                      (= app-compatibility "swarm")
                      (or (clouds-utils/swarm-disabled? infra-service)
                          (clouds-utils/swarm-worker? infra-service))))))
+
+(defn infra-app-unmet-requirements
+  [architectures
+   {:keys [min-cpu min-ram min-disk] :as _minimum-requirements}
+   edge-architecture
+   {{cpu-capacity :capacity}                                 :cpu, {ram-capacity :capacity} :ram,
+    [{first-disk-capacity :capacity, first-disk-used :used}] :disks :as _edge-resources}]
+  (let [available-disk-space (- (or first-disk-capacity 0) (or first-disk-used 0))]
+
+    (cond-> {}
+            (some-> architectures set (contains? edge-architecture) not)
+            (assoc :architecture {:supported         architectures
+                                  :edge-architecture edge-architecture})
+
+            (and cpu-capacity min-cpu (< cpu-capacity min-cpu))
+            (assoc :cpu {:min min-cpu, :available cpu-capacity})
+
+            (and ram-capacity min-ram (< ram-capacity min-ram))
+            (assoc :ram {:min min-ram, :available ram-capacity})
+
+            (and available-disk-space min-disk (< available-disk-space min-disk))
+            (assoc :disk {:min min-disk, :available available-disk-space}))))
+
+(defn infra-app-min-requirements-met?
+  [architectures minimum-requirements edge-architecture edge-resources]
+  (or (nil? minimum-requirements)
+      (empty? (infra-app-unmet-requirements architectures minimum-requirements edge-architecture edge-resources))))

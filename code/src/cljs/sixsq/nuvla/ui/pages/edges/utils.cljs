@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semver :as semver]
             [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
@@ -242,18 +243,14 @@
     (some-> text-search general-utils/fulltext-query-string)
     additional-filter))
 
-(defn parse-version-number [v]
-  (->> (re-seq #"\d+" (or v ""))
-       (mapv js/parseInt)))
-
-(defn version-difference [version1 version2]
-  (let [[m_1 m_2 m_3 :as m] (parse-version-number version1)
-        [n_1 n_2 n_3 :as n] (parse-version-number version2)]
+(defn version-difference [a b]
+  (let [{m-1 :major m-2 :minor m-3 :patch :as m} (semver/parse a)
+        {n-1 :major n-2 :minor n-3 :patch :as n} (semver/parse b)]
     (cond
-      (or (empty? m) (empty? n)) nil
-      (not= m_1 n_1) {:major (- m_1 n_1)}
-      (not= m_2 n_2) {:minor (- m_2 n_2)}
-      (not= m_3 n_3) {:patch (- m_3 n_3)}
+      (or (nil? m) (nil? n)) nil
+      (not= m-1 n-1) {:major (- m-1 n-1)}
+      (not= m-2 n-2) {:minor (- m-2 n-2)}
+      (not= m-3 n-3) {:patch (- m-3 n-3)}
       :else nil)))
 
 (defn ne-version-outdated
@@ -266,20 +263,37 @@
         (or minor patch) :outdated-minor-version
         :else nil))))
 
-(defn older-version?
-  [v ref-v]
-  (or
-    (str/blank? v)
-    (neg? (compare (parse-version-number v) ref-v))))
-
 (defn newer-version?
   [v ref-v]
   (and
     (not (str/blank? v))
-    (pos? (compare (parse-version-number v) ref-v))))
+    (semver/newer? (semver/parse v) ref-v)))
 
-(defn sort-by-version [e]
-  (sort-by :release > e))
+(defn older-version?
+  [v ref-v]
+  (or
+    (str/blank? v)
+    (semver/older? (semver/parse v) ref-v)))
+
+(defn old-version?
+  [v]
+  (older-version? v (semver/Version. 1 16 0 nil nil)))
+
+(defn before-v2-14-4?
+  [v]
+  (older-version? v (semver/Version. 2 14 4 nil nil)))
+
+(defn after-v2-14-4?
+  [v]
+  (newer-version? v (semver/Version. 2 14 4 nil nil)))
+
+(defn ne-go?
+  [v]
+  (= (:pre-release (semver/parse v)) "go"))
+
+(defn ne-dev?
+  [v]
+  (and (not (str/blank? v)) (nil? (semver/parse v))))
 
 (defn summary-stats [summary]
   (let [total           (:count summary)

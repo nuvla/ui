@@ -119,7 +119,8 @@
         [:<> [ui/Dropdown
               (merge {:selection true
                       :loading   (empty? @releases)
-                      :options   (map #(dissoc % :pre-release) @releases)}
+                      :options   (map #(dissoc % :pre-release) @releases)
+                      :style     {:min-width "16em"}}
                      opts)]
          (when (:pre-release @selected-release) [:span {:style {:margin "1em"
                                                                 :color  "darkorange"}}
@@ -263,8 +264,7 @@
             :icon    {:name icons/i-warning, :size "large"}
             :header  (@tr [:nuvlabox-update-warning])
             :content (r/as-element
-                       [:span
-                        "Upgrade between major versions is not supported. Please contact Nuvla support."])}]
+                       [:span (@tr [:nuvlaedge-update-between-major-not-supported])])}]
 
           (and (utils/before-v2-14-4? ne-version) (or (utils/after-v2-14-4? target-version)
                                                       (utils/ne-go? target-version)))
@@ -274,9 +274,9 @@
             :header  (@tr [:nuvlabox-update-warning])
             :content (r/as-element
                        [:span
-                        "To upgrade from v" ne-version " or an earlier version, "
-                        [:b "you must first upgrade to v2.14.4"]
-                        ". This will enable your NuvlaEdge to automatically migrate its configuration and volume to the new format."])}])))))
+                        (@tr [:nuvlaedge-update-before-2.14.4-to-after-p1] [ne-version])
+                        [:b (@tr [:nuvlaedge-update-before-2.14.4-to-after-p2])]
+                        (@tr [:nuvlaedge-update-before-2.14.4-to-after-p3])])}])))))
 
 (defn UpdateButton
   [{:keys [id] :as _resource}]

@@ -214,7 +214,7 @@
                             :checked   (module-checked? module)
                             :style     {:margin "1em"}
                             :on-change (on-module-change module)}]))]])
-      (when (seq modules-peripherals-discovery)
+      (when (->> modules-peripherals-discovery (remove str/blank?) seq)
         [ui/TableRow
          [ui/TableCell {:collapsing true} [ui/Popup
                                            {:trigger        (r/as-element [:span (@tr [:peripherals-discovery])])

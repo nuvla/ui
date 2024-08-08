@@ -23,8 +23,7 @@ export async function onRequest(context) {
     if (firstPathPart === 'cloud-entry-point') {
       body = { ...body, 'base-uri': url.origin + '/api/' };
     }
-
-    if (body.location && body.status != 202) {
+    if (body.status == 303 && body.location && body.status != 202) {
       let locationUrl = new URL(body.location);
       locationUrl.host = url.host;
       locationUrl.protocol = url.protocol;

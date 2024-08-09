@@ -119,7 +119,8 @@
         [:<> [ui/Dropdown
               (merge {:selection true
                       :loading   (empty? @releases)
-                      :options   (map #(dissoc % :pre-release) @releases)}
+                      :options   (map #(dissoc % :pre-release) @releases)
+                      :style     {:min-width "16em"}}
                      opts)]
          (when (:pre-release @selected-release) [:span {:style {:margin "1em"
                                                                 :color  "darkorange"}}
@@ -177,18 +178,6 @@
           :loading  (true? @loading?)
           :on-click (if @key-data close-fn on-click-fn)}]]])))
 
-
-(defn is-old-version?
-  [nb-version]
-  (or
-    (str/blank? nb-version)
-    (let [p (->> (str/split nb-version #"\.")
-                 (map js/parseInt))]
-      (or (< (first p) 1)
-          (and (= (first p) 1)
-               (< (second p) 16))))))
-
-
 (defn- calc-new-modules-on-release-change [form-data new-release]
   (let [form-modules     (:modules form-data)
         form-release-old (get-in form-data [:nuvlabox-release :release])]
@@ -226,7 +215,7 @@
                             :checked   (module-checked? module)
                             :style     {:margin "1em"}
                             :on-change (on-module-change module)}]))]])
-      (when (seq modules-peripherals-discovery)
+      (when (->> modules-peripherals-discovery (remove str/blank?) seq)
         [ui/TableRow
          [ui/TableCell {:collapsing true} [ui/Popup
                                            {:trigger        (r/as-element [:span (@tr [:peripherals-discovery])])
@@ -243,13 +232,58 @@
                               :checked   (module-checked? module)
                               :style     {:margin "1em"}
                               :on-change (on-module-change module)}])))]])]]))
+
+(defn UpdateVersionWarnings
+  [ne-version target-version]
+  (let [is-ne-go?  (utils/ne-go? ne-version)
+        is-ne-dev? (utils/ne-dev? ne-version)]
+    (when-not (or is-ne-go? is-ne-dev?)
+      (r/with-let [tr (subscribe [::i18n-subs/tr])]
+        (cond
+          (utils/old-version? ne-version)
+          [ui/Message
+           {:error   true
+            :icon    {:name icons/i-warning, :size "large"}
+            :header  (@tr [:nuvlabox-update-warning])
+            :content (r/as-element
+                       [:span (@tr [:nuvlabox-update-error-content]) " "
+                        [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
+                             :target "_blank"}
+                         (str/capitalize (@tr [:see-more]))]])}]
+
+          (and (some? target-version) (utils/old-version? target-version))
+          [ui/Message
+           {:warning true
+            :icon    {:name icons/i-warning, :size "large"}
+            :header  (@tr [:nuvlabox-update-warning])
+            :content (r/as-element [:span (@tr [:nuvlabox-update-warning-content])])}]
+
+          (some-> target-version (utils/version-difference ne-version) ffirst (= :major))
+          [ui/Message
+           {:error   true
+            :icon    {:name icons/i-warning, :size "large"}
+            :header  (@tr [:nuvlabox-update-warning])
+            :content (r/as-element
+                       [:span (@tr [:nuvlaedge-update-between-major-not-supported])])}]
+
+          (and (utils/before-v2-14-4? ne-version) (or (utils/after-v2-14-4? target-version)
+                                                      (utils/ne-go? target-version)))
+          [ui/Message
+           {:warning true
+            :icon    {:name icons/i-warning, :size "large"}
+            :header  (@tr [:nuvlabox-update-warning])
+            :content (r/as-element
+                       [:span
+                        (@tr [:nuvlaedge-update-before-2.14.4-to-after-p1] [ne-version])
+                        [:b (@tr [:nuvlaedge-update-before-2.14.4-to-after-p2])]
+                        (@tr [:nuvlaedge-update-before-2.14.4-to-after-p3])])}])))))
+
 (defn UpdateButton
   [{:keys [id] :as _resource}]
   (let [show?          (r/atom false)
         tr             (subscribe [::i18n-subs/tr])
         status         (subscribe [::subs/nuvlabox-status])
         modules        (subscribe [::subs/nuvlabox-modules])
-        releases       (subscribe [::edges-subs/nuvlabox-releases-options])
         releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
         releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
         close-fn       #(reset! show? false)
@@ -278,11 +312,9 @@
       (swap! form-data assoc :current-version @ne-version))
     (fn [{:keys [id] :as _resource}]
       (let [correct-nb?         (= (:parent @status) id)
-            target-version      (->> @releases
-                                     (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
-                                     :key)
             selected-release    (:nuvlabox-release @form-data)
             release-id          (get selected-release :id)
+            target-version      (get-in @releases-by-id [release-id :release])
             selected-modules    (:modules @form-data)
             force-restart       (:force-restart @form-data)
             stop-propagation-fn #(.stopPropagation %)]
@@ -303,23 +335,7 @@
          [ui/ModalContent
           (when correct-nb?
             [:<>
-             (when (is-old-version? @ne-version)
-               [ui/Message
-                {:error   true
-                 :icon    {:name icons/i-warning, :size "large"}
-                 :header  (@tr [:nuvlabox-update-warning])
-                 :content (r/as-element
-                            [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
-                                  :target "_blank"}
-                              (str/capitalize (@tr [:see-more]))]])}])
-             (when (and (some? target-version) (is-old-version? target-version))
-               [ui/Message
-                {:warning true
-                 :icon    {:name icons/i-warning, :size "large"}
-                 :header  (@tr [:nuvlabox-update-warning])
-                 :content (r/as-element
-                            [:span (@tr [:nuvlabox-update-warning-content])])}])
+             [UpdateVersionWarnings @ne-version target-version]
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i @ne-version]]])
@@ -328,7 +344,7 @@
            [DropdownReleases {:placeholder (@tr [:select-version])
                               :value       release-id
                               :on-change   (ui-callback/value #(on-change-fn %))
-                              :disabled    (is-old-version? @ne-version)}]
+                              :disabled    (utils/old-version? @ne-version)}]
            (let [{:keys [compose-files]} selected-release]
              [AdditionalModulesTable compose-files
               {:on-module-change (fn [scope]

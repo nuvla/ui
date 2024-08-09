@@ -735,8 +735,12 @@
         :nuvlabox-update-error-content                 "Your NuvlaEdge version is older than v1.16. Remote updates are not supported."
         :nuvlabox-update-force-restart                 "The NuvlaEdge will be stopped for the operation, or even fully re-installed if necessary"
         :nuvlabox-update-no-force-restart              "The NuvlaEdge will be live updated"
-        :nuvlabox-update-warning                       "NuvlaEdge update warning"
+        :nuvlabox-update-warning                       "Update warning"
         :nuvlabox-update-warning-content               "Your target NuvlaEdge version is too old and does not support updates. You can continue, but success is not guaranteed, and afterwards you'll no longer be able to do new updates from Nuvla!"
+        :nuvlaedge-update-before-2.14.4-to-after-p1    "To upgrade from v%1 or an earlier version, "
+        :nuvlaedge-update-before-2.14.4-to-after-p2    "you must first upgrade to v2.14.4"
+        :nuvlaedge-update-before-2.14.4-to-after-p3    ". This will enable your NuvlaEdge to automatically migrate its configuration and Docker volume to the new format."
+        :nuvlaedge-update-between-major-not-supported  "Upgrade between major versions is not supported. Please contact Nuvla support."
         :nuvlabox-usb-key                              "Your new NuvlaEdge API key is..."
         :nuvlabox-usb-key-ready                        "ready!"
         :nuvlabox-usb-key-wait                         "being generated"
@@ -1149,6 +1153,10 @@
         }
 
    :fr {
+        :nuvlaedge-update-before-2.14.4-to-after-p1    "Pour effectuer une mise à jour à partir de v%1 ou d'une version antérieure, "
+        :nuvlaedge-update-before-2.14.4-to-after-p2    "vous devez d'abord effectuer la mise à niveau vers la version 2.14.4"
+        :nuvlaedge-update-before-2.14.4-to-after-p3    ". Cela permettra à votre NuvlaEdge de migrer automatiquement sa configuration et son volume Docker vers le nouveau format."
+        :nuvlaedge-update-between-major-not-supported  "La mise à niveau entre des versions majeurs n'est pas prise en charge. Veuillez contacter le support de Nuvla."
         :helm-absolute-url-info                        "L'authentification n'est pas disponible avec cette option"
         :helm-repo-and-chart                           "Helm Repository et Chart"
         :helm-options-message                          "Vous pouvez définir votre application Helm soit via un Helm Repository, soit via une URL absolue vers un Chart."
@@ -1694,7 +1702,7 @@
         :nuvlabox-update-error-content                 "Votre NuvlaEdge a une version plus ancienne que v1.16. La function \"update\" n'est disponible pour cette version."
         :nuvlabox-update-force-restart                 "Le NuvlaEdge sera arrêté pour l'opération, ou même réinstallé si nécessaire"
         :nuvlabox-update-no-force-restart              "Le NuvlaEdge sera mis à jour sans interruptions"
-        :nuvlabox-update-warning                       "NuvlaEdge update warning"
+        :nuvlabox-update-warning                       "Avertissement de mise à jour"
         :nuvlabox-update-warning-content               "La version de la NuvlaEdge sélectionée ne supporte pas des \"updates\". Vous pouvez continuer, mais après vous n'arriverez plus a faire des mise en jour."
         :nuvlabox-usb-key                              "Votre nouvelle clé API NuvlaEdge est..."
         :nuvlabox-usb-key-ready                        "prête!"

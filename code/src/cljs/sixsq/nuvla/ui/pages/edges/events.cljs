@@ -439,7 +439,7 @@
        ::cimi-api-fx/search [:nuvlabox-release
                              {:select  "id, release, pre-release, release-notes, url, compose-files, published"
                               :filter  (general-utils/join-or "published=true" "published=null" (str "acl/view-data='" (get-active-claim session) "'"))
-                              :orderby "release:desc"
+                              :orderby "release-date:desc"
                               :last    10000}
                              #(dispatch [::set-nuvlabox-releases %])]})))
 

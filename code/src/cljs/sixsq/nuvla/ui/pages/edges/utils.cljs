@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semver :as semver]
             [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
@@ -63,22 +64,6 @@
                    state-suspended       icons/i-pause
                    state-error           icons/i-exclamation}]
     (get icons-map state)))
-
-
-(defn status->keyword
-  [online]
-  (case online
-    true :online
-    false :offline
-    :unknown))
-
-
-(defn status->color
-  [status]
-  (case status
-    true "green"
-    false "red"
-    "yellow"))
 
 
 (defn operational-status->color
@@ -218,19 +203,6 @@
       (assoc {:nuvlabox-release (:id nuvlabox-release)}
         :payload (general-utils/edn->json payload)))))
 
-
-(defn form-update-data-incomplete?
-  [{:keys [project-name working-dir environment] :as form-data}]
-  (let [payload?            (->> [project-name working-dir environment]
-                                 (some (complement str/blank?))
-                                 boolean)
-        payload-incomplete? (->> [project-name working-dir]
-                                 (some str/blank?)
-                                 boolean)]
-    (or (str/blank? (:nuvlabox-release form-data))
-        (and payload? payload-incomplete?))))
-
-
 (defn form-add-playbook-incomplete?
   [{:keys [name run enabled type parent] :as _form-data}]
   (->> [name run enabled type parent]
@@ -271,27 +243,14 @@
     (some-> text-search general-utils/fulltext-query-string)
     additional-filter))
 
-(defn- parse-version-number [v]
-  (->> (re-seq #"\d+" (or v ""))
-       (map js/Number)))
-
-(defn compare-versions [m n]
-  (let [[m_1 m_2 m_3] (parse-version-number m)
-        [n_1 n_2 n_3] (parse-version-number n)]
+(defn version-difference [a b]
+  (let [{m-1 :major m-2 :minor m-3 :patch :as m} (semver/parse a)
+        {n-1 :major n-2 :minor n-3 :patch :as n} (semver/parse b)]
     (cond
-      (not= m_1 n_1) (compare n_1 m_1)
-      (not= m_2 n_2) (compare n_2 m_2)
-      (not= m_3 n_3) (compare n_3 m_3)
-      :else 0)))
-
-(defn version-difference [version1 version2]
-  (let [[m_1 m_2 m_3 :as m] (parse-version-number version1)
-        [n_1 n_2 n_3 :as n] (parse-version-number version2)]
-    (cond
-      (or (empty? m) (empty? n)) nil
-      (not= m_1 n_1) {:major (- m_1 n_1)}
-      (not= m_2 n_2) {:minor (- m_2 n_2)}
-      (not= m_3 n_3) {:patch (- m_3 n_3)}
+      (or (nil? m) (nil? n)) nil
+      (not= m-1 n-1) {:major (- m-1 n-1)}
+      (not= m-2 n-2) {:minor (- m-2 n-2)}
+      (not= m-3 n-3) {:patch (- m-3 n-3)}
       :else nil)))
 
 (defn ne-version-outdated
@@ -304,8 +263,38 @@
         (or minor patch) :outdated-minor-version
         :else nil))))
 
-(defn sort-by-version [e]
-  (sort-by :release compare-versions e))
+(defn ne-go?
+  [v]
+  (= (:pre-release (semver/parse v)) "go"))
+
+(defn ne-dev?
+  [v]
+  (and (not (str/blank? v)) (nil? (semver/parse v))))
+
+(defn newer-version?
+  [v ref-v]
+  (and
+    (not (str/blank? v))
+    (semver/newer? (semver/parse v) ref-v)))
+
+(defn older-version?
+  [v ref-v]
+  (or
+    (str/blank? v)
+    (semver/older? (semver/parse v) ref-v)))
+
+(defn old-version?
+  [v]
+  (and (not (ne-dev? v))
+       (older-version? v (semver/Version. 1 16 0 nil nil))))
+
+(defn before-v2-14-4?
+  [v]
+  (older-version? v (semver/Version. 2 14 4 nil nil)))
+
+(defn after-v2-14-4?
+  [v]
+  (newer-version? v (semver/Version. 2 14 4 nil nil)))
 
 (defn summary-stats [summary]
   (let [total           (:count summary)
@@ -359,7 +348,7 @@
       [ui/Popup
        {:trigger  (r/as-element
                     [:span [component [ui/Icon {:class icons/i-triangle-exclamation
-                                          :color color}]]])
+                                                :color color}]]])
         :content  (tr [warning])
         :position "right center"
         :size     "small"}]

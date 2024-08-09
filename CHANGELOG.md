@@ -6,6 +6,36 @@
 
 ## Released
 
+## [2.38.1](https://github.com/nuvla/ui/compare/2.38.0...2.38.1) (2024-08-09)
+
+
+### Bug Fixes
+
+* add missing import of time from sixsq tools ([09a9785](https://github.com/nuvla/ui/commit/09a978500590abe53d16f4b3d26ae54a049a379b))
+* **cloudflare:** NE not accessible when location is in the body ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **Edge detail:** Do not show error message for NE go version or for NE dev versions ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **Edge details:** Show error message when user is trying to upgrade between major versions ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **edge details:** Show message informing users coming from 2.14.3 or earlier to upgrade to v2.14.4 first ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **Edge detail:** Target version is not set bugfix ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **Edge page:** Do not show peripheral section when empty list ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **Edge page:** Make target release dropdown bigger ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **Edge page:** NE release ordered by release-date attribute ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **Edges utils:** Remove unused function ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+* **readme.md:** Add docker image size badge ([88b03e5](https://github.com/nuvla/ui/commit/88b03e57ed9e322c12f4e8b47f01af99ad068b01))
+* **semver:** Extract and refactor semver parsing into an utilities namespace ([3153bbf](https://github.com/nuvla/ui/commit/3153bbfd1a451685f776d626253ebf1e28f91124))
+
+
+### Continuous Integration
+
+* **ci:** Fix docker image build time for release workflow ([4e015cc](https://github.com/nuvla/ui/commit/4e015ccc0dc1b409c4b12016f95a8324cf4b9fa0))
+* **ci:** Rename NuvlaBox to NuvlaEdge ([68607a4](https://github.com/nuvla/ui/commit/68607a49539917e786a8c0ca2108b9d80b7de4be))
+* **ci:** Reuse GitHub workflow code between dev and release ([#1610](https://github.com/nuvla/ui/issues/1610)) ([1ccdf75](https://github.com/nuvla/ui/commit/1ccdf7527153aaa66dadd32899cc4fcce9e82003))
+* **ci:** Run unit tests, bundle size check, and e2e tests also in release PRs ([#1612](https://github.com/nuvla/ui/issues/1612)) ([fde04d6](https://github.com/nuvla/ui/commit/fde04d60f414ed8d03b0303863cde93468a98738))
+* **github:** rename Release Please private key secret to RELEASE_PLEASE_PRIVATE_KEY ([#1618](https://github.com/nuvla/ui/issues/1618)) ([62218f1](https://github.com/nuvla/ui/commit/62218f1095ec324829cb0fa933f1a28497256ec3))
+* **github:** use GitHub App token to run release-please ([#1615](https://github.com/nuvla/ui/issues/1615)) ([68cf15f](https://github.com/nuvla/ui/commit/68cf15ffc8cd94e110e05978136a97c601c80259))
+* **github:** use GitHub App token to run release-please ([#1616](https://github.com/nuvla/ui/issues/1616)) ([3897354](https://github.com/nuvla/ui/commit/3897354a1ff50054650de16836f77008d108e15d))
+* **github:** use GitHub App token to run release-please ([#1617](https://github.com/nuvla/ui/issues/1617)) ([575dc2b](https://github.com/nuvla/ui/commit/575dc2b284579220d6dbe08bcfb4c1e785b9ca3f))
+
 ## [2.38.0](https://github.com/nuvla/ui/compare/2.37.3...2.38.0) (2024-07-25)
 
 

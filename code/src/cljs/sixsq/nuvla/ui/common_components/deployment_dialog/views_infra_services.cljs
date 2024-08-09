@@ -8,7 +8,8 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.style :as style]))
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn summary-row
   []
@@ -88,13 +89,42 @@
        (if compatible? [icons/InfoIcon] [icons/WarningIcon])
        @compatibility-msg])))
 
+(defn RequirementsMessage
+  [min-requirements-met? {:keys [architecture cpu ram disk] :as _unmet-requirements}]
+  (let [tr                          @(subscribe [::i18n-subs/tr])
+        unmet-requirements-accepted (subscribe [::subs/unmet-requirements-accepted])]
+    [ui/Message {:size    "tiny"
+                 :info    min-requirements-met?
+                 :warning (not min-requirements-met?)}
+     [:div {:style {:display :flex, :flex-direction :row}}
+      (if min-requirements-met? [icons/InfoIcon] [icons/WarningIcon])
+      (if min-requirements-met?
+        (tr [:edge-meets-app-minimum-requirements])
+        [:div
+         [:ul {:style {:margin 0, :padding-left "20px"}}
+          (when architecture [:li (tr [:edge-architecture-not-supported] [(:supported architecture)
+                                                                          (:edge-architecture architecture)])])
+          (when cpu [:li (tr [:edge-does-not-meet-min-cpu-requirements] [(:min cpu) (:available cpu)])])
+          (when ram [:li (tr [:edge-does-not-meet-min-ram-requirements] [(:min ram) (:available ram)])])
+          (when disk [:li (tr [:edge-does-not-meet-min-disk-requirements] [(:min disk) (:available disk)])])]
+         [ui/Checkbox {:style     {:margin-top "10px"}
+                       :label     (tr [:deploy-anyway])
+                       :checked   @unmet-requirements-accepted
+                       :on-change (ui-callback/checked #(dispatch [::events/accept-unmet-requirements %]))}]])]]))
+
 (defn InfraServiceItem
   [{:keys [id name subtype description] :as infra-service}]
-  (let [selected-infra (subscribe [::subs/selected-infra-service])
-        active?        (= (:id @selected-infra) id)
-        loading?       (subscribe [::subs/credentials-loading?])
-        module         (subscribe [::subs/module])
-        compatible?    (utils/infra-app-compatible? @module infra-service)]
+  (let [selected-infra        (subscribe [::subs/selected-infra-service])
+        active?               (= (:id @selected-infra) id)
+        loading?              (subscribe [::subs/credentials-loading?])
+        module                (subscribe [::subs/module])
+        compatible?           (utils/infra-app-compatible? @module infra-service)
+        architectures         (subscribe [::subs/architectures])
+        min-requirements      (subscribe [::subs/minimum-requirements])
+        edge-architecture     (subscribe [::subs/edge-architecture infra-service])
+        edge-resources        (subscribe [::subs/edge-resources infra-service])
+        min-requirements-met? (utils/infra-app-min-requirements-met? @architectures @min-requirements @edge-architecture @edge-resources)
+        unmet-requirements    (utils/infra-app-unmet-requirements @architectures @min-requirements @edge-architecture @edge-resources)]
     [:<>
      [ui/AccordionTitle {:active   active?
                          :on-click #(dispatch [::events/set-selected-infra-service
@@ -116,6 +146,8 @@
       description
       [ui/Segment (assoc style/basic :loading @loading?)
        [CompatibilityMessage infra-service compatible?]
+       (when (seq @min-requirements)
+         [RequirementsMessage min-requirements-met? unmet-requirements])
        (when compatible?
          [creds-list])]]]))
 

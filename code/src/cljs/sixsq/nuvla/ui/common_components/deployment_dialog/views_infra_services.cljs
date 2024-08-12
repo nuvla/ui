@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.common-components.deployment-dialog.views-infra-services
-  (:require [re-frame.core :refer [dispatch subscribe]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.common-components.deployment-dialog.events :as events]
             [sixsq.nuvla.ui.common-components.deployment-dialog.subs :as subs]
             [sixsq.nuvla.ui.common-components.deployment-dialog.utils :as utils]
@@ -102,7 +103,7 @@
         (tr [:edge-meets-app-minimum-requirements])
         [:div
          [:ul {:style {:margin 0, :padding-left "20px"}}
-          (when architecture [:li (tr [:edge-architecture-not-supported] [(:supported architecture)
+          (when architecture [:li (tr [:edge-architecture-not-supported] [(str/join ", " (:supported architecture))
                                                                           (:edge-architecture architecture)])])
           (when cpu [:li (tr [:edge-does-not-meet-min-cpu-requirements] [(:min cpu) (:available cpu)])])
           (when ram [:li (tr [:edge-does-not-meet-min-ram-requirements] [(:min ram) (:available ram)])])

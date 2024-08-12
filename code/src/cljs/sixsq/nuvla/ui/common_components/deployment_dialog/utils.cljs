@@ -87,7 +87,7 @@
   (let [available-disk-space (- (or first-disk-capacity 0) (or first-disk-used 0))]
 
     (cond-> {}
-            (some-> architectures set (contains? edge-architecture) not)
+            (and edge-architecture (some-> architectures set (contains? edge-architecture) not))
             (assoc :architecture {:supported         architectures
                                   :edge-architecture edge-architecture})
 

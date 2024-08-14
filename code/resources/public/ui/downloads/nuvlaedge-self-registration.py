@@ -36,23 +36,31 @@ The expected JSON schema is:
 """
 
 import argparse
+import copy
 import datetime
 import json
 import os
 import platform
 import socket
+import ssl
+import sys
 import time
 import traceback
 import uuid
 
+from collections import OrderedDict
 from contextlib import contextmanager
 from subprocess import run, PIPE, STDOUT, TimeoutExpired
 
 import requests
+import urllib3
 
 
-__copyright__ = "Copyright (C) 2020 SixSq"
+__copyright__ = "Copyright (C) 2024 SixSq"
 __email__ = "support@sixsq.com"
+
+
+debug = None
 
 
 def arguments():
@@ -80,6 +88,10 @@ def arguments():
                         '--nuvlabox-old-installation-dir',
                         dest='nuvlaedge_old_workdir', default=workdir_old, metavar='PATH',
                         help="Location on the filesystem where the previous NuvlaEdge installation files were located")
+
+    parser.add_argument('--mac-address', dest='mac_address', default=None, metavar='MAC', help="MAC address")
+
+    parser.add_argument('-d','--debug',dest='debug', action='store_true', help="Debug log level")
 
     return parser.parse_args()
 
@@ -118,11 +130,11 @@ def run_command(cmd, env=os.environ.copy(), timeout=600,
     :param env: environment to be passed
     :param timeout: time after which the command will abruptly be terminated
     :param raise_on_return_code: raise an exception if return code != 0 (default True)
-    :param print_output: if True (the default) print stdout and stderr to stdout
-    :param print_command: if True print the command to stdout (default False)
+    :param print_output: if True (the default) print stdout and stderr to stderr
+    :param print_command: if True print the command to stderr (default False)
     """
-    if print_command:
-        print('Executing: ' + ' '.join(cmd))
+    if print_command or debug:
+        print('Executing: ' + ' '.join(cmd), file=sys.stderr)
 
     try:
         result = run(cmd, stdout=PIPE, stderr=STDOUT, env=env, input=None,
@@ -134,8 +146,8 @@ def run_command(cmd, env=os.environ.copy(), timeout=600,
     if raise_on_return_code and result.returncode != 0:
         raise Exception(result.stdout)
 
-    if print_output:
-        print(result.stdout)
+    if print_output or debug:
+        print(result.stdout, file=sys.stderr)
 
     return result.returncode, result.stdout
 
@@ -145,10 +157,10 @@ def ignore_exception(print_exception=True, print_stacktrace=False):
     try:
         yield
     except Exception as e:
-        if print_exception:
-            print('Ignored exception: {}'.format(e))
-        if print_stacktrace:
-            traceback.print_exc()
+        if print_exception or debug:
+            print('Ignored exception: {}'.format(e), file=sys.stderr)
+        if print_stacktrace or debug:
+            traceback.print_exc(file=sys.stderr)
 
 
 def download_compose_files(version, compose_filenames, workdir, keep_files=[],
@@ -235,12 +247,12 @@ def read_env_file(env_file):
     return env_vars
 
 
-def generate_nuvlaedge_name_description(name_prefix, description_prefix):
+def generate_nuvlaedge_name_description(name_prefix, description_prefix, mac_address=None):
     name_suffix = ''
     name_suffixes = {}
 
     with ignore_exception():
-        name_suffixes['mac'] = get_mac()
+        name_suffixes['mac'] = mac_address or get_mac()
 
     with ignore_exception():
         name_suffixes['time'] = datetime.datetime.now().isoformat(' ')[:19]
@@ -290,18 +302,26 @@ def get_previous_project_name():
     return project_name
 
 
-if __name__ == "__main__":
+def main():
+    global debug
+
     socket.setdefaulttimeout(30)
 
     args = arguments()
 
-    ne_trigger_json = json.loads(args.nuvlaedge_trigger_content)
+    try:
+        ne_trigger_json = json.loads(args.nuvlaedge_trigger_content)
+    except Exception as e:
+        raise Exception('Missing or invalid NuvlaEdge installation trigger content') from e
+
     nuvlaedge_workdir     = args.nuvlaedge_workdir.rstrip('/')
     nuvlaedge_old_workdir = args.nuvlaedge_old_workdir.rstrip('/')
+    mac_address = args.mac_address
+    debug = args.debug
     env_file     = "{}/.env".format(nuvlaedge_workdir)
     old_env_file = "{}/.env".format(nuvlaedge_old_workdir)
 
-    installation_strategy = "OVERWRITE" # default
+    installation_strategy = "UPDATE" # default
     nuvlaedge_id = None
 
     if not os.path.exists(nuvlaedge_workdir):
@@ -353,6 +373,7 @@ if __name__ == "__main__":
                 if state in ["DECOMMISSIONED", 'ERROR']:
                     # this NuvlaEdge has been decommissioned or is in error, just overwrite the local installation
                     print("Previous NuvlaEdge {} is in state {}. Going to OVERWRITE it...".format(previous_uuid, state))
+                    installation_strategy = "OVERWRITE"
                 else:
                     new_conf['NUVLABOX_UUID'] = previous_uuid
                     new_conf['NUVLAEDGE_UUID'] = previous_uuid
@@ -364,17 +385,21 @@ if __name__ == "__main__":
             elif response.status_code == 404:
                 # doesn't exist, so let's just OVERWRITE this local installation
                 print("Previous NuvlaEdge {} doesn't exist anymore...creating new one".format(previous_uuid))
+                installation_strategy = "OVERWRITE"
             else:
                 # something went wrong, either a network issue or we have the wrong credentials to access the
                 # current NuvlaEdge resource...just throw the error and do nothing
                 response.raise_for_status()
         else:
             print("There's a previous NuvlaEdge environment but couldn't find a NuvlaEdge UUID...let's OVERWRITE")
+            installation_strategy = "OVERWRITE"
+    else:
+        installation_strategy = "OVERWRITE"
 
     if installation_strategy == "OVERWRITE":
-        print("Creating new NuvlaEdge resource...")
+        print("Creating NuvlaEdge on Nuvla ...")
 
-        nuvlaedge_name, nuvlaedge_description = generate_nuvlaedge_name_description(nuvlaedge_basename, nuvlaedge_basedescription)
+        nuvlaedge_name, nuvlaedge_description = generate_nuvlaedge_name_description(nuvlaedge_basename, nuvlaedge_basedescription, mac_address)
 
         nuvlaedge = {
             "name": nuvlaedge_name,
@@ -394,13 +419,13 @@ if __name__ == "__main__":
         response.raise_for_status()
 
         nuvlaedge_id = response.json()["resource-id"]
-        print("Created NuvlaEdge resource {} in {}".format(nuvlaedge_id, nuvla_endpoint))
+        print("NuvlaEdge created on Nuvla: {}".format(nuvlaedge_id))
 
         new_conf['NUVLABOX_UUID'] = nuvlaedge_id
         new_conf['NUVLAEDGE_UUID'] = nuvlaedge_id
 
     # update env file
-    print("Setting up environment {} at {}".format(new_conf, env_file))
+    print("Creating compose environment file {}: {}".format(env_file, new_conf), file=sys.stderr)
     with open(env_file, 'w') as f:
         for varname, varvalue in new_conf.items():
             f.write("{}={}\n".format(varname, varvalue))
@@ -448,13 +473,43 @@ if __name__ == "__main__":
         run_command(pull_cmd, raise_on_return_code=False, print_command=True)
 
         print("Installing NuvlaEdge - this can take a few minutes...")
-        up_cmd = docker_compose_base_cmd() + ['up', '-d']
+        up_cmd = docker_compose_base_cmd() + ['up', '-d', '--remove-orphans']
         run_command(up_cmd, print_command=True)
 
     except:
         # On any error, cleanup the resource in Nuvla
         print("NuvlaEdge installation failed")
         if nuvlaedge_id:
-            print("removing {} from Nuvla".format(nuvlaedge_id))
+            print("Removing {} from Nuvla".format(nuvlaedge_id))
             api.delete(nuvla_api_endpoint + "/" + nuvlaedge_id)
         raise
+    else:
+        print("NuvlaEdge installation succeeded")
+
+
+def get_all_exceptions(exception):
+    ex = exception
+    exceptions = OrderedDict({ex.__class__: ex})
+    while True:
+        parent = ex.__cause__ or ex.__context__
+        if not parent:
+            break
+        exceptions[parent.__class__] = parent
+        ex = parent
+    return exceptions
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        exceptions = get_all_exceptions(e)
+        if urllib3.exceptions.NameResolutionError in exceptions:
+            print('Name resolution error')
+        elif ssl.SSLCertVerificationError in exceptions:
+            print('Certificate validation error')
+        elif requests.exceptions.SSLError in exceptions:
+            print('TLS/SSL error')
+        else:
+            print(str(e).splitlines()[-1], file=sys.stdout)
+        traceback.print_exception(e, file=sys.stderr)

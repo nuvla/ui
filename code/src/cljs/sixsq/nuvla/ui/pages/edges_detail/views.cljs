@@ -329,7 +329,7 @@
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)
                                       :color    "green"}
-                         [ui/Icon {:class "icon download"}]
+                         [icons/DownloadIcon]
                          (str/capitalize (@tr [:update]))])}
          [uix/ModalHeader {:header "Update NuvlaEdge"}]
          [ui/ModalContent

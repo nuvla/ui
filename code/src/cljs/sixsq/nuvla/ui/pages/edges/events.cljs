@@ -23,6 +23,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.common-components.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
@@ -598,3 +599,28 @@
                         {:header  "Could not fetch NuvlaEdge fleet statistics"
                          :content message
                          :type    :error}]]]})))
+
+(reg-event-fx
+  ::bulk-operation
+  (fn [{{:keys [::spec/select] :as db} :db} [_ bulk-action data dispatch-vec]]
+    (cond-> {::cimi-api-fx/operation-bulk
+             [:nuvlabox
+              (fn [{:keys [location] :as _response}]
+                (dispatch [::bulk-progress-plugin/monitor
+                           [::spec/bulk-jobs] location])
+                (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]))
+              bulk-action
+              (table-plugin/build-bulk-filter
+                select
+                (get-full-filter-string db))
+              data]}
+            dispatch-vec (assoc :dispatch dispatch-vec))))
+
+(defn bulk-update-modal-set
+  [db k v]
+  (assoc-in db [::spec/bulk-update-modal k] v))
+
+(reg-event-db
+  ::bulk-update-modal-open?
+  (fn [db [_ v]]
+    (bulk-update-modal-set db :open? v)))

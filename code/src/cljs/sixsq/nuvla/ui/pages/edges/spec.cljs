@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.edges.spec
   (:require [clojure.spec.alpha :as s]
+            [sixsq.nuvla.ui.common-components.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :refer [build-ordering] :as table-plugin]
@@ -104,7 +105,9 @@
    ::fleet-timespan                (let [[from to] (ts-utils/timespan-to-period ts-utils/timespan-last-15m)]
                                      {:timespan-option ts-utils/timespan-last-15m
                                       :from            from
-                                      :to              to})})
+                                      :to              to})
+   ::bulk-jobs                     (bulk-progress-plugin/build-spec)
+   ::bulk-update-modal             {:open? false}})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec
                                         :default-items-per-page 25)})

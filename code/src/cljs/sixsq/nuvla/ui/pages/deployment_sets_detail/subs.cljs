@@ -690,3 +690,19 @@
     (->> apps-targets-total-price
          (map (juxt (comp :id :application) (comp :price :application)))
          (into {}))))
+
+(reg-sub
+  ::requirements
+  :-> ::spec/requirements)
+
+(reg-sub
+  ::unmet-requirements-accepted
+  :-> ::spec/unmet-requirements-accepted)
+
+(reg-sub
+  ::requirements-met?
+  :<- [::requirements]
+  :<- [::unmet-requirements-accepted]
+  (fn [[requirements unmet-requirements-accepted]]
+    (or (zero? (-> requirements :unmet-requirements :n-edges))
+        unmet-requirements-accepted)))

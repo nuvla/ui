@@ -43,6 +43,7 @@
             [sixsq.nuvla.ui.utils.tooltip :as tt]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.validation :as utils-validation]
+            [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.values :as utils-values]
             [sixsq.nuvla.ui.utils.view-components :as vc]))
 
@@ -214,6 +215,55 @@
       (str/capitalize (@tr [:total-price]))]
      [Prices]]))
 
+(defn RequirementsMessage
+  [{{:keys [architectures]}            :minimum-requirements
+    {:keys [n-edges first-mismatches]} :unmet-requirements
+    :as                                _requirements}]
+  (let [tr                          @(subscribe [::i18n-subs/tr])
+        unmet-requirements-accepted (subscribe [::subs/unmet-requirements-accepted])
+        min-requirements-met?       (zero? n-edges)
+        no-arch-supported?          (and (some? architectures) (empty? architectures))]
+    [ui/Segment {:attached true}
+     [ui/Message {:size     "tiny"
+                  :info     (and min-requirements-met? (not no-arch-supported?))
+                  :warning  (and (not min-requirements-met?) (not no-arch-supported?))
+                  :negative no-arch-supported?
+                  }
+      [:div {:style {:display :flex, :flex-direction :row}}
+       (if no-arch-supported?
+         (tr [:no-architecture-supported])
+         [:<>
+          (if min-requirements-met? [icons/InfoIcon] [icons/WarningIcon])
+          (if min-requirements-met?
+            (tr [:edge-meets-app-minimum-requirements])
+            [:div
+             (if (> n-edges (count first-mismatches))
+               (tr [:showing-first-mismatches-only] [n-edges (count first-mismatches)])
+               (tr [:edges-do-not-meet-minimum-requirements] [n-edges]))
+             (doall
+               (for [{:keys [edge-id edge-name architecture cpu ram disk]} first-mismatches]
+                 ^{:key edge-id}
+                 [:div (values/AsPageLink edge-id :label edge-name)
+                  [:ul {:style {:margin 0, :padding-left "20px"}}
+                   (when architecture [:li (tr [:edge-architecture-not-supported] [(str/join ", " (:supported architecture))
+                                                                                   (:edge-architecture architecture)])])
+                   (when cpu [:li (tr [:edge-does-not-meet-min-cpu-requirements] [(:min cpu) (:available cpu)])])
+                   (when ram [:li (tr [:edge-does-not-meet-min-ram-requirements] [(:min ram) (:available ram)])])
+                   (when disk [:li (tr [:edge-does-not-meet-min-disk-requirements] [(:min disk) (:available disk)])])]]))
+             [ui/Checkbox {:style     {:margin-top "10px", :font-weight "normal"}
+                           :label     (tr [:deploy-anyway])
+                           :checked   @unmet-requirements-accepted
+                           :on-change (ui-callback/checked #(dispatch [::events/accept-unmet-requirements %]))}]])])]]]))
+
+(defn Requirements
+  []
+  (let [tr           (subscribe [::i18n-subs/tr])
+        requirements (subscribe [::subs/requirements])]
+    [:div
+     [ui/Header {:as :h5 :attached "top"}
+      (@tr [:requirements])]
+     [RequirementsMessage @requirements]]))
+
 (defn StartButton
   [_deployment-set _warn-msg]
   (let [tr                    (subscribe [::i18n-subs/tr])
@@ -221,11 +271,13 @@
         validation            (subscribe [::subs/deployment-set-validation])
         open?                 (subscribe [::subs/modal-open? start-modal-id])
         eula-prices-accepted? (subscribe [::subs/eula-prices-accepted?])
+        requirements-met?     (subscribe [::subs/requirements-met?])
         confirmed?            (r/atom false)
         close-start-modal     (fn []
                                 (close-modal)
                                 (dispatch [::events/set ::spec/licenses-accepted? false])
                                 (dispatch [::events/set ::spec/prices-accepted? false])
+                                (dispatch [::events/set-requirements nil])
                                 (reset! confirmed? false))]
     (fn [{:keys [id] :as deployment-set} warn-msg]
       [uix/ModalDanger
@@ -234,7 +286,9 @@
                                          :operation   "start"}])
         :trigger            (guarded-menu-item
                               {:enabled    @enabled?
-                               :on-click   (fn [] (dispatch [::events/set-opened-modal start-modal-id]))
+                               :on-click   (fn []
+                                             (dispatch [::events/check-requirements])
+                                             (dispatch [::events/set-opened-modal start-modal-id]))
                                :validation @validation}
                               [icons/PlayIcon]
                               (str/capitalize (@tr [:start])))
@@ -243,6 +297,7 @@
         :content            [:div
                              [:h3 (depl-set->modal-content deployment-set)]
                              [EulaPrices]
+                             [Requirements]
                              [ui/Message {:error true}
                               [ui/MessageHeader {:style {:margin-bottom 10}}
                                (@tr [:are-you-sure-you-want-to-continue?])]
@@ -251,7 +306,7 @@
                                                                :fitted    true
                                                                :on-change (ui-callback/checked (partial reset! confirmed?))}]]]]
         :control-confirmed? confirmed?
-        :all-confirmed?     (and @eula-prices-accepted? @confirmed?)
+        :all-confirmed?     (and @eula-prices-accepted? @requirements-met? @confirmed?)
         :header             (@tr [:start-deployment-set])
         :button-text        (@tr [:start])
         :with-confirm-step? true}])))
@@ -291,11 +346,13 @@
         validation            (subscribe [::subs/deployment-set-validation])
         open?                 (subscribe [::subs/modal-open? update-modal-id])
         eula-prices-accepted? (subscribe [::subs/eula-prices-accepted?])
+        requirements-met?     (subscribe [::subs/requirements-met?])
         confirmed?            (r/atom false)
         close-update-modal    (fn []
                                 (close-modal)
                                 (dispatch [::events/set ::spec/licenses-accepted? false])
                                 (dispatch [::events/set ::spec/prices-accepted? false])
+                                (dispatch [::events/set-requirements nil])
                                 (reset! confirmed? false))]
     (fn [{:keys [id] :as deployment-set} warn-msg]
       [uix/ModalDanger
@@ -304,7 +361,9 @@
                                          :operation   "update"}])
         :trigger            (guarded-menu-item
                               {:enabled    @enabled?
-                               :on-click   #(dispatch [::events/set-opened-modal update-modal-id])
+                               :on-click   (fn []
+                                             (dispatch [::events/check-requirements])
+                                             (dispatch [::events/set-opened-modal update-modal-id]))
                                :validation @validation}
                               [icons/RedoIcon]
                               (str/capitalize (@tr [:update])))
@@ -313,6 +372,7 @@
         :content            [:div
                              [:h3 (depl-set->modal-content deployment-set)]
                              [EulaPrices]
+                             [Requirements]
                              [ui/Message {:error true}
                               [ui/MessageHeader {:style {:margin-bottom 10}}
                                (@tr [:are-you-sure-you-want-to-continue?])]
@@ -321,7 +381,7 @@
                                                                :fitted    true
                                                                :on-change (ui-callback/checked (partial reset! confirmed?))}]]]]
         :control-confirmed? confirmed?
-        :all-confirmed?     (and @eula-prices-accepted? @confirmed?)
+        :all-confirmed?     (and @eula-prices-accepted? @requirements-met? @confirmed?)
         :header             (@tr [:update-deployment-set])
         :button-text        (@tr [:update])
         :modal-action       [:p warn-msg]
@@ -692,12 +752,12 @@
 
 (defn AddButton
   [{:keys [modal-id enabled tooltip data-testid] :or {enabled true}}]
-  (tt/with-tooltip [:div [uix/Button {:on-click (fn [] (dispatch [::events/set-opened-modal modal-id]))
-                                      :disabled (not enabled)
+  (tt/with-tooltip [:div [uix/Button {:on-click    (fn [] (dispatch [::events/set-opened-modal modal-id]))
+                                      :disabled    (not enabled)
                                       :data-testid data-testid
-                                      :icon     icons/i-plus-large
-                                      :class    "add-button"
-                                      :style    {:align-self "center"}}]]
+                                      :icon        icons/i-plus-large
+                                      :class       "add-button"
+                                      :style       {:align-self "center"}}]]
                    tooltip))
 
 (defn RemoveButton
@@ -1196,14 +1256,14 @@
         ;; TODO when implementing creation flow from apps page: Always show button and use temp-id for storing
         ;; and retrieving deployment-set and deployment-set-edited
         [:<>
-         [AddButton {:modal-id events/edges-picker-modal-id
+         [AddButton {:modal-id    events/edges-picker-modal-id
                      :data-testid "add-edges-button"
-                     :enabled  @edit-op-allowed?
-                     :tooltip  (edit-not-allowed-msg
-                                 {:TR                         @tr
-                                  :can-edit-data?             @can-edit-data?
-                                  :edit-op-allowed?           @edit-op-allowed?
-                                  :edit-not-allowed-in-state? @edit-not-allowed-in-state?})}]
+                     :enabled     @edit-op-allowed?
+                     :tooltip     (edit-not-allowed-msg
+                                    {:TR                         @tr
+                                     :can-edit-data?             @can-edit-data?
+                                     :edit-op-allowed?           @edit-op-allowed?
+                                     :edit-not-allowed-in-state? @edit-not-allowed-in-state?})}]
          [:div {:style {:margin-top "1rem"}}
           (if (pos? (:total edges-stats))
             (@tr [:add-edges])

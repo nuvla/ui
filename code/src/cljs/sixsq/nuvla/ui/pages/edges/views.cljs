@@ -30,7 +30,6 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 (def show-state-statistics (r/atom false))
@@ -279,7 +278,7 @@
                selection         (subscribe [::table-plugin/selected-set-sub [::spec/select]])
                tr                (subscribe [::i18n-subs/tr])
                all-selected?     (subscribe [::table-plugin/select-all?-sub [::spec/select]])
-               bulk-update-state (r/atom bulk-update-modal/default-state)]
+               bulk-update-state (bulk-update-modal/init-state)]
     (let [state-filter?            (state-filter-selected? @additional-filter @state-selector)
           selected-nbs             (if @current-cluster
                                      (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
@@ -315,6 +314,10 @@
                                       :filter-fn              (partial utils/build-bulk-filter [::spec/select])})
           {bulk-edit-modal         :modal
            bulk-edit-tags-menuitem :trigger-config} bulk-edit
+          bulk-update-menuitem     {:icon  icons/DownloadIcon
+                                    :key   :bulk-update
+                                    :name  "Bulk update" #_(@tr [:edit-tags])
+                                    :event (partial bulk-update-modal/open-modal bulk-update-state)}
           bulk-deploy-menuitem     {:menuitem (let [message         (@tr [:deploy-with-static-edges])
                                                     deploy-menuitem [uix/HighlightableMenuItem
                                                                      {:on-click          bulk-deploy-static
@@ -355,12 +358,13 @@
                                                            :trigger (r/as-element [:div deploy-menuitem])}])}]
       [:<>
        (when bulk-edit-modal [bulk-edit-modal])
+       (when @(bulk-update-modal/open? bulk-update-state)
+         [bulk-update-modal/Modal bulk-update-state])
+
        [NuvlaEdgeTableView {:select-config {:bulk-actions        [bulk-edit-tags-menuitem
+                                                                  bulk-update-menuitem
                                                                   bulk-deploy-menuitem
-                                                                  dyn-bulk-deploy-menuitem
-                                                                  {:menuitem ^{:key "bulk-update"}
-                                                                             [bulk-update-modal/BulkUpdateMenuitem
-                                                                              bulk-update-state]}]
+                                                                  dyn-bulk-deploy-menuitem]
                                             :total-count-sub-key [::subs/nuvlaboxes-count]
                                             :resources-sub-key   [::subs/nuvlaboxes-resources]
                                             :select-db-path      [::spec/select]

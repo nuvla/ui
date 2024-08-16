@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.pages.edges.bulk-update-modal
-  (:require [re-frame.core :refer [dispatch subscribe]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.edges-detail.views :as edges-detail]
@@ -25,6 +26,8 @@
 (defn- state-open? [state] (get @state ::open? false))
 (defn- state-selected-release [state] (::selected-release @state))
 (defn- state-selected-modules [state] (::selected-modules @state))
+(defn- state-force-restart? [state] (get @state ::force-restart? false))
+(defn- state-env-variables [state] (::env-variables @state))
 (defn- state-summary [state] (::summary @state))
 
 (defn- collect-distribution
@@ -44,11 +47,14 @@
   (let [selected-modules (->> (state-selected-modules state)
                               (filter val)
                               (map key)
-                              (remove nil?))]
-    {:nuvlabox-release (-> state state-selected-release :id)
-     :config-files     (concat ["docker-compose.yml"]
-                               (map #(str "docker-compose." (name %) ".yml")
-                                    selected-modules))}))
+                              (remove nil?))
+        env-variables    (state-env-variables state)]
+    (cond-> {:nuvlabox-release (-> state state-selected-release :id)
+             :config-files     (concat ["docker-compose.yml"]
+                                       (map #(str "docker-compose." (name %) ".yml")
+                                            selected-modules))
+             :force-restart    (state-force-restart? state)}
+            (seq env-variables) (assoc :environment env-variables))))
 
 (defn- SummarySegment
   [state]
@@ -73,21 +79,23 @@
             [ui/MessageContent
              "You selected NuvlaEdges that are not eligible to an update. Number of NuvlaEdges that will be updated: "
              [:b count-summary]]])
-         [ui/Segment
-          [:p (str (when (> count-summary (reduce + (vals versions-distribution)))
-                     "Top 10 ")
-                   "Nuvlaedges versions in use:")]
-          [ui/LabelGroup {:color :blue}
-           (for [[version version-count] versions-distribution]
-             ^{:key (str version version-count)}
-             [ui/Label version [ui/LabelDetail version-count]])]]]))))
+         (when (seq versions-distribution)
+           [ui/Segment
+           [:p (str (when (> count-summary (reduce + (vals versions-distribution)))
+                      "Top 10 ")
+                    "Nuvlaedges versions in use:")]
+           [ui/LabelGroup {:color :blue}
+            (for [[version version-count] versions-distribution]
+              ^{:key (str version version-count)}
+              [ui/Label version [ui/LabelDetail version-count]])]])]))))
 
 (defn- Content
   [state]
   (r/with-let [tr               (subscribe [::i18n-subs/tr])
                releases-by-id   (subscribe [::subs/nuvlabox-releases-by-id])
                selected-modules (r/track state-selected-modules state)
-               selected-release (r/track state-selected-release state)]
+               selected-release (r/track state-selected-release state)
+               force-restart    (r/track state-force-restart? state)]
     [:<>
      [SummarySegment state]
      [ui/Segment
@@ -104,8 +112,25 @@
                                     (fn [checked]
                                       (set-state! state [::selected-modules scope-key] checked)))))
             :module-checked?  (fn [scope] (get @selected-modules (keyword scope) false))}]))]
-     [ui/Segment
-      [:p "List env vars to apply on all of them"]]]))
+     [uix/Accordion
+      [:<>
+       [ui/Form
+        [ui/FormField
+         [:label "Force Restart"]
+         [ui/Radio {:toggle    true
+                    :label     (if @force-restart
+                                 (@tr [:nuvlabox-update-force-restart])
+                                 (@tr [:nuvlabox-update-no-force-restart]))
+                    :on-change #(set-state! state [::force-restart?] (not @force-restart))}]]
+
+        [ui/FormField
+         [:label (@tr [:env-variables]) " " [uix/HelpPopup (@tr [:env-variables-info])]]
+         [ui/TextArea {:placeholder "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
+                       :on-change   (ui-callback/input-callback
+                                      #(set-state! state [::env-variables] (str/split-lines %)))}]]]]
+      :label (@tr [:advanced])
+      :title-size :h4
+      :default-open false]]))
 
 (defn init-state [] (r/atom default-state))
 

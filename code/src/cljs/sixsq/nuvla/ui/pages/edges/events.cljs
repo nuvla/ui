@@ -552,24 +552,24 @@
           filter-str (get-full-filter-string db)]
       (when (= (get-query-param current-route :view) (name spec/history-view))
         {:db         (assoc db ::spec/loading? true)
-        :http-xhrio {:method          :patch
-                     :headers         {:bulk true}
-                     :uri             "/api/nuvlabox/data"
-                     :format          (ajax/json-request-format)
-                     :params          {:filter      filter-str
-                                       :dataset     fleet-availability-stats
-                                       :from        (time/time->utc-str from)
-                                       :to          (time/time->utc-str to)
-                                       :granularity (ts-utils/granularity-for-timespan fleet-timespan)}
-                     :response-format (ajax/json-response-format {:keywords? true})
-                     :on-success      [::fetch-fleet-stats-success]
-                     :on-failure      [::fetch-fleet-stats-failure]}}))))
+         :http-xhrio {:method          :patch
+                      :headers         {:bulk true}
+                      :uri             "/api/nuvlabox/data"
+                      :format          (ajax/json-request-format)
+                      :params          {:filter      filter-str
+                                        :dataset     fleet-availability-stats
+                                        :from        (time/time->utc-str from)
+                                        :to          (time/time->utc-str to)
+                                        :granularity (ts-utils/granularity-for-timespan fleet-timespan)}
+                      :response-format (ajax/json-response-format {:keywords? true})
+                      :on-success      [::fetch-fleet-stats-success]
+                      :on-failure      [::fetch-fleet-stats-failure]}}))))
 
 (reg-event-fx
   ::fetch-fleet-stats-by-edge
   (fn [{db :db} [_ {:keys [from to granularity]}]]
     (let [filter-str (get-full-filter-string db)]
-      {:db (assoc db ::spec/loading? true)
+      {:db         (assoc db ::spec/loading? true)
        :http-xhrio {:method          :patch
                     :headers         {:bulk true}
                     :uri             "/api/nuvlabox/data"
@@ -602,7 +602,7 @@
 
 (reg-event-fx
   ::bulk-operation
-  (fn [{{:keys [::spec/select] :as db} :db} [_ bulk-action data dispatch-vec]]
+  (fn [{:keys [db]} [_ bulk-action build-filter-fn data dispatch-vec]]
     (cond-> {::cimi-api-fx/operation-bulk
              [:nuvlabox
               (fn [{:keys [location] :as _response}]
@@ -610,11 +610,21 @@
                            [::spec/bulk-jobs] location])
                 (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]))
               bulk-action
-              (table-plugin/build-bulk-filter
-                select
-                (get-full-filter-string db))
+              (build-filter-fn db)
               data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
+
+(reg-event-fx
+  ::bulk-update-aggregations
+  (fn [{:keys [db]} [_ callback]]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:last        0
+       :aggregation "value_count:id,terms:nuvlabox-engine-version"
+       :filter      (utils/build-bulk-update-filter db)}
+      #(if (instance? js/Error %)
+         (js/console.error %)
+         (callback %))]}))
 
 (defn bulk-update-modal-set
   [db k v]

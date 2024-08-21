@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.pages.edges.spec :as spec]
             [sixsq.nuvla.ui.pages.edges.subs :as subs]
             [sixsq.nuvla.ui.pages.edges.utils :as utils]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
@@ -49,12 +50,13 @@
                               (map key)
                               (remove nil?))
         env-variables    (state-env-variables state)]
-    (cond-> {:nuvlabox-release (-> state state-selected-release :id)
-             :config-files     (concat ["docker-compose.yml"]
-                                       (map #(str "docker-compose." (name %) ".yml")
-                                            selected-modules))
-             :force-restart    (state-force-restart? state)}
-            (seq env-variables) (assoc :environment env-variables))))
+    {:nuvlabox-release (-> state state-selected-release :id)
+     :payload          (general-utils/edn->json
+                         (cond-> {:config-files  (concat ["docker-compose.yml"]
+                                                         (map #(str "docker-compose." (name %) ".yml")
+                                                              selected-modules))
+                                  :force-restart (state-force-restart? state)}
+                                 (seq env-variables) (assoc :environment env-variables)))}))
 
 (defn- SummarySegment
   [state]
@@ -81,13 +83,13 @@
              [:b count-summary]]])
          (when (seq versions-distribution)
            [ui/Segment
-           [:p (str (when (> count-summary (reduce + (vals versions-distribution)))
-                      "Top 10 ")
-                    "Nuvlaedges versions in use:")]
-           [ui/LabelGroup {:color :blue}
-            (for [[version version-count] versions-distribution]
-              ^{:key (str version version-count)}
-              [ui/Label version [ui/LabelDetail version-count]])]])]))))
+            [:p (str (when (> count-summary (reduce + (vals versions-distribution)))
+                       "Top 10 ")
+                     "Nuvlaedges versions in use:")]
+            [ui/LabelGroup {:color :blue}
+             (for [[version version-count] versions-distribution]
+               ^{:key (str version version-count)}
+               [ui/Label version [ui/LabelDetail version-count]])]])]))))
 
 (defn- Content
   [state]

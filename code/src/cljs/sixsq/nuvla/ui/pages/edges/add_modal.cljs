@@ -152,7 +152,7 @@
            [ui/Divider {:horizontal true}
             [ui/Header (@tr [:nuvlabox-quick-install])]]
 
-           [ui/SegmentGroup {:raised true}
+           [ui/SegmentGroup
             (if k8s-install?
               [:<>
                [ui/Segment {:loading    (nil? @zip-url)
@@ -291,10 +291,9 @@
            [ui/Divider {:horizontal true}
             [ui/Header (@tr [:instructions])]]
 
-           [ui/SegmentGroup {:raised true}
+           [ui/SegmentGroup
             [ui/Segment {:loading    (nil? nuvlabox-trigger-file)
-                         :text-align :center
-                         :raised     true}
+                         :text-align :center}
              [ui/Label {:circular true
                         :color    "green"} "1"]
              [:h5 {:style {:margin "0.5em 0 1em 0"}}
@@ -302,16 +301,14 @@
               [ui/Popup {:content (@tr [:nuvlabox-modal-usb-copy-warning])
                          :trigger (r/as-element [ui/Icon {:class icons/i-info}])}]]]
 
-            [ui/Segment {:text-align :center
-                         :raised     true}
+            [ui/Segment {:text-align :center}
              [ui/Label {:circular true
                         :color    "green"} "2"]
              [:h5 {:style {:margin "0.5em 0 1em 0"}}
               (@tr [:nuvlabox-modal-usb-plug])]
              [:span (@tr [:nuvlabox-modal-usb-plug-info])]]
 
-            [ui/Segment {:text-align :center
-                         :raised     true}
+            [ui/Segment {:text-align :center}
              [ui/Label {:circular true
                         :color    "green"} "3"]
              [:h5 {:style {:margin "0.5em 0 1em 0"}}
@@ -364,7 +361,6 @@
             [icons/DockerIcon {:size :massive}]]]
           [ui/Card
            {:on-click (fn [] (reset! install-strategy k8s-based))
-            :raised   true
             :style    (when (= k8s-based @install-strategy)
                         {:outline "5px #21ba45 solid"})}
            [ui/CardContent {:text-align :center}
@@ -376,7 +372,7 @@
               [PlaybooksToggle playbooks-toggle]])]]]
         [ui/Form
          [ui/Header {:style {:text-align "center"}} "Docker"]
-         [ui/Segment {:raised true}
+         [ui/Segment
 
           [ui/FormCheckbox {:label     "Compose file bundle"
                             :radio     true

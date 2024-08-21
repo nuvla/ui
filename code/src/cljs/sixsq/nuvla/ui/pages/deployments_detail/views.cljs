@@ -455,8 +455,7 @@
         {:keys [id created updated name description
                 parent-path path logo-url]} module
         desc-short (values/markdown->summary description)]
-    [ui/Segment {:secondary true
-                 :raised    true}
+    [ui/Segment {:secondary true}
      [ui/Segment (merge style/basic {:floated "right"})
       [ui/Image {:src      (or logo-url "")
                  :bordered true
@@ -515,10 +514,8 @@
         urls            (get-in module [:content :urls])]
 
     [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
-                               :background "#f3f4f5"}
-                      :raised true}
-     [ui/Segment {:secondary true
-                  :raised    true}
+                               :background "#f3f4f5"}}
+     [ui/Segment {:secondary true}
 
       [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:summary]))]
 

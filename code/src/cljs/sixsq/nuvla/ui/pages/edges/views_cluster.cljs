@@ -160,8 +160,7 @@
         {:keys [id name description owners tags created updated version orchestrator status-notes]} @cluster]
     [:<>
      [ui/Segment {:secondary true
-                  :color     "blue"
-                  :raised    true}
+                  :color     "blue"}
       [:h4 (str/capitalize (@tr [:cluster])) " " (@tr [:summary])]
       [ClusterViewHeader]
 

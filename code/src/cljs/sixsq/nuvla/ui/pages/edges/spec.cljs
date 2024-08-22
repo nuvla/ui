@@ -106,7 +106,7 @@
                                      {:timespan-option ts-utils/timespan-last-15m
                                       :from            from
                                       :to              to})
-   ::bulk-jobs                     (bulk-progress-plugin/build-spec)
+   ::bulk-jobs                     (bulk-progress-plugin/build-spec :target-resource "nuvlabox")
    ::bulk-update-modal             {:open? false}})
 
 (def pagination-default {::pagination (pagination-plugin/build-spec

@@ -1251,7 +1251,7 @@
                             :border           "none"}}
      [ui/TableBody {:basic "very"}
       (for [{:keys [name ip]} ips]
-        (when (seq ip)
+        (when ip
           ^{:key (str name ip)}
           [ui/TableRow
            [ui/TableCell name]
@@ -1292,8 +1292,9 @@
              [IpsRow {:title "IPs"
                       :ips   (map (fn [[name ip]]
                                     {:name name
-                                     :ip   [uix/CopyToClipboard {:value     ip
-                                                                 :on-hover? false}]}) (:ips network))}])])
+                                     :ip   (when-not (str/blank? ip)
+                                             [uix/CopyToClipboard {:value     ip
+                                                                   :on-hover? false}])}) (:ips network))}])])
         (when (pos? (count @ssh-creds))
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]

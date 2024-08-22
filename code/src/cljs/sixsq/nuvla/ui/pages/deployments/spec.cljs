@@ -47,7 +47,7 @@
                ::selected-set            #{}
                ::select-all?             false
                ::bulk-jobs-monitored     (sorted-map)
-               ::bulk-jobs               (bulk-progress-plugin/build-spec)
+               ::bulk-jobs               (bulk-progress-plugin/build-spec :target-resource "deployment")
                ::ordering                (build-ordering)
                ::select                  (table-plugin/build-bulk-edit-spec)})
 

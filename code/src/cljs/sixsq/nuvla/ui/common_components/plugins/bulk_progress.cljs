@@ -19,12 +19,13 @@
 (s/def ::jobs map?)
 
 (defn build-spec
-  []
-  {::monitored-ids #{}
-   ::jobs          {}})
+  [& {:keys [target-resource]}]
+  {::monitored-ids   #{}
+   ::jobs            {}
+   ::target-resource target-resource})
 
 (reg-event-db
-  ::dissmiss
+  ::dismiss
   (fn [db [_ db-path job-id]]
     (-> db
         (update-in (conj db-path ::monitored-ids) disj job-id)
@@ -37,33 +38,38 @@
      :fx [[:dispatch [::search-jobs db-path]]]}))
 
 (reg-event-db
+  ::set-target-resource
+  (fn [db [_ db-path target-resource]]
+    (assoc-in db (conj db-path ::target-resource) target-resource)))
+
+(reg-event-db
   ::set-jobs
   (fn [db [_ db-path resources]]
-    (let [monitored-ids-path (conj db-path ::monitored-ids)
-          jobs-path          (conj db-path ::jobs)
-          finished-jobs-ids  (->> resources
-                                  (remove #(-> % :progress (< 100)))
-                                  (map :id))
-          monitored-ids      (get-in db monitored-ids-path)
-          ids-to-monitor     (apply disj monitored-ids finished-jobs-ids)
-          jobs               (-> db
-                                 (get-in (conj db-path ::jobs))
-                                 (merge (->> resources
-                                             (map (juxt :id identity))
-                                             (into {}))))]
-      (-> db
-          (assoc-in jobs-path jobs)
-          (assoc-in monitored-ids-path ids-to-monitor)))))
+    (let [jobs-path (conj db-path ::jobs)
+          jobs      (-> db
+                        (get-in (conj db-path ::jobs))
+                        (merge (->> resources
+                                    (map (juxt :id identity))
+                                    (into {}))))]
+      (assoc-in db jobs-path jobs))))
 
 (reg-event-fx
   ::search-jobs
   (fn [{db :db} [_ db-path]]
-    (let [monitored-ids (get-in db (conj db-path ::monitored-ids))]
-      (when (seq monitored-ids)
+    (let [monitored-ids   (seq (get-in db (conj db-path ::monitored-ids)))
+          target-resource (get-in db (conj db-path ::target-resource))]
+      (when (or monitored-ids target-resource)
         {::cimi-api-fx/search
-         [:job {:last   10000
-                :filter (general-utils/filter-eq-ids
-                          (get-in db (conj db-path ::monitored-ids)))}
+         [:job {:last    10000
+                :orderby "created:desc"
+                :filter  (general-utils/join-and
+                           "action^='bulk'"
+                           "progress<100"
+                            (general-utils/join-or
+                             (when monitored-ids
+                               (general-utils/filter-eq-ids monitored-ids))
+                             (when target-resource
+                               (str "target-resource/href='" target-resource "'"))))}
           #(dispatch [::set-jobs db-path (:resources %)])]}))))
 
 (reg-event-fx
@@ -77,9 +83,7 @@
 (reg-sub
   ::sorted-jobs
   (fn [db [_ db-path]]
-    (->> (get-in db (conj db-path ::jobs))
-         vals
-         (sort-by :created >))))
+    (vals (get-in db (conj db-path ::jobs)))))
 
 (def job-action->header
   {"bulk_stop_deployment"         :bulk-stop-in-progress
@@ -87,13 +91,14 @@
    "bulk_force_delete_deployment" :bulk-force-delete-in-progress
    "bulk_deployment_set_start"    :depl-group-start-in-progress
    "bulk_deployment_set_update"   :depl-group-update-in-progress
-   "bulk_deployment_set_stop"     :depl-group-stop-in-progress})
+   "bulk_deployment_set_stop"     :depl-group-stop-in-progress
+   "bulk_update_nuvlabox"         :bulk-update-in-progress})
 
 (defn- MonitoredJob
   [{:keys [db-path]} {:keys [id state status-message progress action]
                       :as   _job}]
   (let [tr            @(subscribe [::i18n-subs/tr])
-        on-dissmiss   #(dispatch [::dissmiss db-path id])
+        on-dismiss    #(dispatch [::dismiss db-path id])
         {:keys [FAILED SUCCESS]
          :as   status-message} (when (not= state "FAILED")
                                  (general-utils/json->edn status-message))
@@ -120,7 +125,7 @@
                             :size     "small"}
                            label (assoc :label label
                                         :style {:cursor "pointer"}))])]
-    [ui/Message (when completed? {:on-dismiss on-dissmiss})
+    [ui/Message (when completed? {:on-dismiss on-dismiss})
      [ui/MessageHeader Header]
      [ui/MessageContent
       [:br]

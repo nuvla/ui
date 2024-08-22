@@ -129,14 +129,12 @@
 (reg-sub
   ::user-id
   :<- [::session]
-  (fn [session]
-    (:user session)))
+  :-> utils/get-user-id)
 
 (reg-sub
   ::identifier
   :<- [::session]
-  (fn [session]
-    (:identifier session)))
+  :-> utils/get-identifier)
 
 (reg-sub
   ::logged-in?

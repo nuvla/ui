@@ -11,6 +11,8 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [pathify]]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
+            [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
@@ -31,12 +33,6 @@
         (update-in (conj db-path ::monitored-ids) disj job-id)
         (update-in (conj db-path ::jobs) dissoc job-id))))
 
-(reg-event-fx
-  ::monitor
-  (fn [{db :db} [_ db-path job-id]]
-    {:db (update-in db (conj db-path ::monitored-ids) conj job-id)
-     :fx [[:dispatch [::search-jobs db-path]]]}))
-
 (reg-event-db
   ::set-target-resource
   (fn [db [_ db-path target-resource]]
@@ -45,17 +41,18 @@
 (reg-event-db
   ::set-jobs
   (fn [db [_ db-path resources]]
-    (let [jobs-path (conj db-path ::jobs)
-          jobs      (-> db
-                        (get-in (conj db-path ::jobs))
-                        (merge (->> resources
-                                    (map (juxt :id identity))
-                                    (into {}))))]
-      (assoc-in db jobs-path jobs))))
+    (let [jobs-path          (conj db-path ::jobs)
+          monitored-ids-path (conj db-path ::monitored-ids)
+          jobs               (->> resources
+                                  (map (juxt :id identity))
+                                  (into {}))]
+      (-> db
+          (assoc-in jobs-path jobs)
+          (assoc-in monitored-ids-path (set (keys jobs)))))))
 
 (reg-event-fx
   ::search-jobs
-  (fn [{db :db} [_ db-path]]
+  (fn [{{:keys [::session-spec/session] :as db} :db} [_ db-path]]
     (let [monitored-ids   (seq (get-in db (conj db-path ::monitored-ids)))
           target-resource (get-in db (conj db-path ::target-resource))]
       (when (or monitored-ids target-resource)
@@ -64,12 +61,14 @@
                 :orderby "created:desc"
                 :filter  (general-utils/join-and
                            "action^='bulk'"
-                           "progress<100"
-                            (general-utils/join-or
+                           (str "created-by='" (session-utils/get-user-id session) "'")
+                           (general-utils/join-or
                              (when monitored-ids
                                (general-utils/filter-eq-ids monitored-ids))
                              (when target-resource
-                               (str "target-resource/href='" target-resource "'"))))}
+                               (general-utils/join-and
+                                 (str "target-resource/href='" target-resource "'")
+                                 "progress<100"))))}
           #(dispatch [::set-jobs db-path (:resources %)])]}))))
 
 (reg-event-fx

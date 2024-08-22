@@ -155,4 +155,5 @@
       :on-close           close-fn
       :header             "Bulk update edges" #_(@tr [:bulk-deployment-stop])
       :danger-msg         (@tr [:danger-action-cannot-be-undone])
+      :all-confirmed?     (-> state state-selected-release :id some?)
       :button-text        "Update" #_(str/capitalize (@tr [:bulk-deployment-stop]))}]))

@@ -13,10 +13,18 @@
   [account]
   (str/replace-first account #"^group/" ""))
 
+(defn get-user-id
+  [session]
+  (:user session))
+
+(defn get-identifier
+  [session]
+  (:identifier session))
+
 (defn get-active-claim
   [session]
   (or (:active-claim session)
-      (:user session)))
+      (get-user-id session)))
 
 (defn get-roles
   [session]

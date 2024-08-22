@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
@@ -47,8 +48,7 @@
                            :filter  (general-utils/join-and
                                       (full-text-search/filter-text db (conj db-path ::search))
                                       (case active-tab
-                                        :my-apps (str "acl/owners='" (or (:active-claim session)
-                                                                         (:user session)) "'")
+                                        :my-apps (str "acl/owners='" (session-utils/get-active-claim session) "'")
                                         :app-store "published=true"
                                         nil)
                                       (general-utils/filter-eq-subtypes subtypes)

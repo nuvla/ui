@@ -605,9 +605,8 @@
   (fn [{:keys [db]} [_ bulk-action build-filter-fn data dispatch-vec]]
     (cond-> {::cimi-api-fx/operation-bulk
              [:nuvlabox
-              (fn [{:keys [location] :as _response}]
-                (dispatch [::bulk-progress-plugin/monitor
-                           [::spec/bulk-jobs] location])
+              (fn [_response]
+                (dispatch [::bulk-progress-plugin/search-jobs [::spec/bulk-jobs]])
                 (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]))
               bulk-action
               (build-filter-fn db)

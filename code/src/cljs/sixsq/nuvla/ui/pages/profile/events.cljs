@@ -16,7 +16,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.events :as session-events]
             [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.session.utils :as session-utils :refer [get-active-claim]]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -50,8 +50,8 @@
 (reg-event-fx
   ::get-user
   (fn [{{:keys [::session-spec/session] :as db} :db} _]
-    (when-let [user (:user session)]
-      (let [is-group? (-> session :active-claim session-utils/is-group?)]
+    (when-let [user (session-utils/get-user-id session)]
+      (let [is-group? (-> session session-utils/get-active-claim session-utils/is-group?)]
         (cond-> {:fx [(when is-group? [:dispatch [::get-group]])]}
                 (not is-group?) (assoc ::cimi-api-fx/get [user #(do (dispatch [::set-user %]))]
                                        :db (update db ::spec/loading conj :user)))))))
@@ -82,8 +82,8 @@
 
 (reg-event-fx
   ::get-group
-  (fn [{{:keys [::session-spec/session] :as db} :db} _]
-    (when-let [group (:active-claim session)]
+  (fn [{{:keys [::session-spec/session] :as db} :db}]
+    (when-let [group (session-utils/get-active-claim session)]
       {:db               (update db ::spec/loading conj :group)
        ::cimi-api-fx/get [group #(dispatch [::set-group %])]})))
 
@@ -152,7 +152,7 @@
 (reg-event-fx
   ::search-existing-customer
   (fn [{{:keys [::session-spec/session]} :db}]
-    (if (not= (:active-claim session) "group/nuvla-admin")
+    (if (not= (session-utils/get-active-claim session) "group/nuvla-admin")
       {::cimi-api-fx/search [:customer {:select "id"}
                              #(if-let [id (-> % :resources first :id)]
                                 (dispatch [::get-customer id])
@@ -433,7 +433,7 @@
 (reg-event-fx
   ::search-existing-vendor
   (fn [{{:keys [::session-spec/session]} :db}]
-    {::cimi-api-fx/search [:vendor {:filter (str "parent='" (get-active-claim session) "'")}
+    {::cimi-api-fx/search [:vendor {:filter (str "parent='" (session-utils/get-active-claim session) "'")}
                            #(dispatch [::set-vendor (-> % :resources first)])]}))
 
 (reg-event-fx

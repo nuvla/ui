@@ -13,6 +13,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.effects :as fx]
             [sixsq.nuvla.ui.session.spec :as spec]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.response :as response]))
 
 
@@ -199,7 +200,7 @@
 (reg-event-fx
   ::switch-group
   (fn [{{:keys [::spec/session]} :db} [_ claim extended]]
-    (let [claim    (if (= (:identifier session) claim) (:user session) claim)
+    (let [claim    (if (= (session-utils/get-identifier session) claim) (session-utils/get-user-id session) claim)
           data     {:claim    claim
                     :extended extended}
           callback #(dispatch [::initialize])]

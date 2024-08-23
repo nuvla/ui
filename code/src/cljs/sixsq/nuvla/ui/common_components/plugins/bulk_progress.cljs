@@ -7,15 +7,14 @@
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.helpers :as helpers]
-            [sixsq.nuvla.ui.config :as config]
             [sixsq.nuvla.ui.main.events :as main-events]
-            [sixsq.nuvla.ui.routing.events :as routing-events]
-            [sixsq.nuvla.ui.routing.utils :refer [pathify]]
             [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.utils.general :as u]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 (s/def ::monitored-ids set?)
 (s/def ::jobs map?)
@@ -32,6 +31,11 @@
     (-> db
         (update-in (conj db-path ::monitored-ids) disj job-id)
         (update-in (conj db-path ::jobs) dissoc job-id))))
+
+(reg-event-fx
+  ::cancel
+  (fn [_ [_ db-path job-id]]
+    {::cimi-api-fx/operation [job-id "cancel" #(dispatch [::dismiss db-path job-id])]}))
 
 (reg-event-db
   ::set-target-resource
@@ -93,14 +97,58 @@
    "bulk_deployment_set_stop"     :depl-group-stop-in-progress
    "bulk_update_nuvlabox"         :bulk-update-in-progress})
 
+(defn- ProgressLabel
+  [{:keys [ACTIONS_CALLED ACTIONS_COUNT JOBS_DONE JOBS_COUNT SUCCESS FAILED]
+    :as   _status_message}]
+  [:span
+   [:span {:style {:color "gray"}}
+    (when (and ACTIONS_CALLED ACTIONS_COUNT)
+      (str "Actions called " ACTIONS_CALLED "/" ACTIONS_COUNT ". "))]
+   [:span (when (and JOBS_DONE JOBS_COUNT)
+            (str "Jobs done " JOBS_DONE "/" JOBS_COUNT ". "))]])
+
+(defn- GridColumnLinks
+  [label color ids]
+  [ui/GridColumn
+   [:h3 {:style {:color color}} (str label ": " (count ids))]
+   (for [id ids]
+     ^{:key (str "GridColumnLinks-" id)}
+     [values/AsPageLink id
+      :label [ui/Icon {:name  "circle"
+                       :link  true
+                       :color color}]
+      :new-tab true])])
+
+(defn- SuccessFailedLinks
+  [{:keys [QUEUED RUNNING SUCCESS FAILED]
+    :as   _status_message}]
+  (when (or (seq QUEUED)
+            (seq RUNNING)
+            (seq SUCCESS)
+            (seq FAILED))
+    [ui/Grid {:columns 4 :stackable true}
+     [GridColumnLinks "Queued" "black" QUEUED]
+     [GridColumnLinks "Running" "teal" RUNNING]
+     [GridColumnLinks "Successes" "green" SUCCESS]
+     [GridColumnLinks "Failures" "red" FAILED]]))
+
+(defn- BulkFilterHelpPopup
+  [payload]
+  (when-let [f (try
+                 (:filter (general-utils/json->edn payload))
+                 (catch :default _ nil))]
+    [uix/HelpPopup f]))
+
 (defn- MonitoredJob
-  [{:keys [db-path]} {:keys [id state status-message progress action]
-                      :as   _job}]
+  [{:keys [db-path]} {:keys [id state status-message progress action payload]
+                      :as   job}]
   (let [tr            @(subscribe [::i18n-subs/tr])
         on-dismiss    #(dispatch [::dismiss db-path id])
         {:keys [FAILED SUCCESS]
          :as   status-message} (when (not= state "FAILED")
-                                 (general-utils/json->edn status-message))
+                                 (try
+                                   (general-utils/json->edn status-message)
+                                   (catch :default _ nil)))
         some-fail?    (pos? (count FAILED))
         some-success? (pos? (count SUCCESS))
         completed?    (= progress 100)
@@ -114,68 +162,44 @@
                            (some-> action
                                    (str/replace #"_" " ")
                                    (general-utils/capitalize-first-letter)))]
-        ProgressBar   (fn [label]
+        ProgressBar   (fn []
                         [ui/Progress
-                         (cond->
-                           {:active   (not completed?)
-                            :percent  progress
-                            :progress true
-                            :color    color
-                            :size     "small"}
-                           label (assoc :label label
-                                        :style {:cursor "pointer"}))])]
-    [ui/Message (when completed? {:on-dismiss on-dismiss})
-     [ui/MessageHeader Header]
-     [ui/MessageContent
-      [:br]
-      [ui/Modal {:trigger    (r/as-element
-                               [:div [ProgressBar (tr [:click-for-details])]])
-                 :close-icon true}
-       [ui/ModalHeader Header]
-       [ui/ModalContent
-        [:h3 (str (str/capitalize (tr [:progress])) ":")]
-        [ProgressBar]
-        (when state-failed?
-          [:p status-message])
-        (when (seq FAILED)
-          [:<>
-           [:h3 (str (str/capitalize (tr [:failed])) ":")]
-           [ui/ListSA
-            (for [failed-id FAILED]
-              ^{:key failed-id}
-              [ui/ListItem
-               [ui/ListContent
-                [ui/ListHeader
-                 {:as       :a
-                  :href     (pathify [config/base-path failed-id])
-                  :target   "_blank"
-                  :on-click (fn [event]
-                              (dispatch [::routing-events/navigate failed-id])
-                              (.preventDefault event))} failed-id]
-                [ui/ListDescription
-                 (get-in status-message
-                         [:bootstrap-exceptions (keyword failed-id)])]]])]])
-        (when (seq SUCCESS)
-          [:<>
-           [:h3 (str (str/capitalize (tr [:success])) ":")]
-           [ui/ListSA
-            (for [success-id SUCCESS]
-              ^{:key success-id}
-              [ui/ListItem
-               [ui/ListContent
-                [ui/ListHeader [uix/Link success-id success-id]]]])]])
-        ]]]]))
+                         {:active   (not completed?)
+                          :percent  progress
+                          :progress true
+                          :color    color
+                          :size     "small"}
+                         [ProgressLabel status-message]])]
+    [ui/Modal {:trigger    (r/as-element
+                             [ui/Message (cond-> {:style {:cursor "pointer"}}
+                                                 completed? (assoc :on-dismiss on-dismiss))
+                              [ui/MessageHeader Header]
+                              [ui/MessageContent
+                               [ProgressBar]]])
+               :close-icon true}
+     [ui/ModalHeader Header]
+     [ui/ModalContent
+      [:h3 (str/capitalize (tr [:progress])) [BulkFilterHelpPopup payload] ": "]
+      [ProgressBar]
+      (when state-failed?
+        [:p {:style {:color "red"}} status-message])
+      [SuccessFailedLinks status-message]]
+     (when (general-utils/can-operation? "cancel" job)
+       [ui/ModalActions
+        [uix/ButtonAskingForConfirmation
+         {:update-event      [::cancel db-path id]
+          :text              (tr [:cancel])
+          :action-aria-label (tr [:cancel])}]])]))
 
 (defn MonitoredJobs
   [{:keys [db-path] :as _opts}]
   (dispatch [::start-polling db-path])
   (let [jobs (subscribe [::sorted-jobs db-path])]
     (fn [opts]
-      [:<>
-       (doall
-         (for [{:keys [id] :as job} @jobs]
-           ^{:key id}
-           [MonitoredJob opts job]))])))
+      [:div {:style {:margin-bottom "1em"}}
+       (for [{:keys [id] :as job} @jobs]
+         ^{:key id}
+         [MonitoredJob opts job])])))
 
 (s/fdef MonitoredJobs
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path])))

@@ -104,7 +104,7 @@
    [:span {:style {:color "gray"}}
     (when (and ACTIONS_CALLED ACTIONS_COUNT)
       (str "Actions called " ACTIONS_CALLED "/" ACTIONS_COUNT ". "))]
-   [:span (when (and JOBS_DONE JOBS_COUNT)
+   [:span (when (and JOBS_DONE (pos? JOBS_COUNT))
             (str "Jobs done " JOBS_DONE "/" JOBS_COUNT ". "))]])
 
 (defn- GridColumnLinks

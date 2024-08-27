@@ -60,7 +60,8 @@
 
 (defn- SummarySegment
   [state]
-  (let [summary     (r/track state-summary state)
+  (let [tr          (subscribe [::i18n-subs/tr])
+        summary     (r/track state-summary state)
         selection   (subscribe [::table-plugin/selected-set-sub [::spec/select]])
         select-all? (subscribe [::table-plugin/select-all?-sub [::spec/select]])]
     (dispatch [::events/bulk-update-aggregations
@@ -73,19 +74,19 @@
             versions-distribution (:ne-versions-distribution @summary)]
         [ui/Segment
          [:p (if @select-all?
-               "Current number of NuvlaEdges matching the filter: "
-               "Number of selected NuvlaEdges: ")
+               (@tr [:ne-bulk-update-current-matching-filter])
+               (@tr [:ne-bulk-update-number-selected]))
           [:b total-count]]
          (when (> total-count count-summary)
            [ui/Message {:warning true}
             [ui/MessageContent
-             "You selected NuvlaEdges that are not eligible to an update. Number of NuvlaEdges that will be updated: "
+             (@tr [:ne-bulk-update-selected-not-eligible])
              [:b count-summary]]])
          (when (seq versions-distribution)
            [ui/Segment
             [:p (str (when (> count-summary (reduce + (vals versions-distribution)))
-                       "Top 10 ")
-                     "Nuvlaedges versions in use:")]
+                       (@tr [:ne-bulk-update-top-10]))
+                     (@tr [:ne-bulk-update-versions-in-use]))]
             [ui/LabelGroup {:color :blue}
              (for [[version version-count] versions-distribution]
                ^{:key (str version version-count)}
@@ -118,7 +119,7 @@
       [:<>
        [ui/Form
         [ui/FormField
-         [:label "Force Restart"]
+         [:label (@tr [:ne-update-force-restart])]
          [ui/Radio {:toggle    true
                     :label     (if @force-restart
                                  (@tr [:nuvlabox-update-force-restart])
@@ -153,7 +154,7 @@
       :open               @open?
       :content            [Content state]
       :on-close           close-fn
-      :header             "Bulk update edges" #_(@tr [:bulk-deployment-stop])
+      :header             (@tr [:ne-bulk-update])
       :danger-msg         (@tr [:danger-action-cannot-be-undone])
       :all-confirmed?     (-> state state-selected-release :id some?)
-      :button-text        "Update" #_(str/capitalize (@tr [:bulk-deployment-stop]))}]))
+      :button-text        (str/capitalize (@tr [:update]))}]))

@@ -110,7 +110,7 @@
 (defn- GridColumnLinks
   [label color ids]
   [ui/GridColumn
-   [:h3 {:style {:color color}} (str label ": " (count ids))]
+   [:h3 {:style {:color color}} (str (str/capitalize label) ": " (count ids))]
    (for [id ids]
      ^{:key (str "GridColumnLinks-" id)}
      [values/AsPageLink id
@@ -122,15 +122,16 @@
 (defn- SuccessFailedLinks
   [{:keys [QUEUED RUNNING SUCCESS FAILED]
     :as   _status_message}]
-  (when (or (seq QUEUED)
-            (seq RUNNING)
-            (seq SUCCESS)
-            (seq FAILED))
-    [ui/Grid {:columns 4 :stackable true}
-     [GridColumnLinks "Queued" "black" QUEUED]
-     [GridColumnLinks "Running" "teal" RUNNING]
-     [GridColumnLinks "Successes" "green" SUCCESS]
-     [GridColumnLinks "Failures" "red" FAILED]]))
+  (r/with-let [tr (subscribe [::i18n-subs/tr])]
+    (when (or (seq QUEUED)
+              (seq RUNNING)
+              (seq SUCCESS)
+              (seq FAILED))
+      [ui/Grid {:columns 4 :stackable true}
+       [GridColumnLinks (@tr [:queued]) "black" QUEUED]
+       [GridColumnLinks (@tr [:running]) "Running" "teal" RUNNING]
+       [GridColumnLinks (@tr [:successes]) "Successes" "green" SUCCESS]
+       [GridColumnLinks (@tr [:failures]) "Failures" "red" FAILED]])))
 
 (defn- BulkFilterHelpPopup
   [payload]

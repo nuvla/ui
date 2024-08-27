@@ -357,7 +357,7 @@
            [:<>
             [ui/Form
              [ui/FormField
-              [:label "Force Restart"]
+              [:label (@tr [:ne-update-force-restart])]
               [ui/Radio {:toggle    true
                          :checked   force-restart
                          :label     (if force-restart

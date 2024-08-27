@@ -1185,8 +1185,7 @@
   [{:keys [id created updated owner created-by state] :as nuvlabox}
    {:keys [nuvlabox-api-endpoint]}]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :raised    true}
+    [ui/Segment {:secondary true}
      [NeHeader]
      [ui/Table {:basic "very"}
       [ui/TableBody
@@ -1356,8 +1355,7 @@
 
 (defn TabOverviewHost
   [nb-status ssh-creds]
-  [ui/Segment {:secondary true
-               :raised    true}
+  [ui/Segment {:secondary true}
    [:h4 "Host"]
    [StatusOrNotAvailable nb-status [HostInfo nb-status ssh-creds]]])
 
@@ -1470,8 +1468,7 @@
 (defn TabOverviewStatus
   [{:keys [online] :as nb-status}]
   (let [tr @(subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :raised    true}
+    [ui/Segment {:secondary true}
      [:h4 "Status "
       [ui/Popup
        {:trigger        (r/as-element [:span
@@ -1487,8 +1484,7 @@
 (defn TabOverviewTags
   [{:keys [id] :as nuvlabox}]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :raised    true}
+    [ui/Segment {:secondary true}
      [:h4 (str/capitalize (@tr [:tags]))]
      [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
                                                    (@tr [:updated-successfully])])]]))
@@ -1516,8 +1512,7 @@
 (defn BoxInfraServices
   []
   (let [services @(subscribe [::subs/infra-services])]
-    [ui/Segment {:secondary true
-                 :raised    true}
+    [ui/Segment {:secondary true}
      [:h4 [uix/TR :infrastructure-services]]
      [ui/ListSA {:divided true :relaxed true}
       (for [{:keys [id name description subtype]} services]
@@ -1535,8 +1530,7 @@
            cluster-node-role cluster-managers cluster-nodes orchestrator cluster-node-labels]
     :as   _nuvlabox}]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :raised    true}
+    [ui/Segment {:secondary true}
      [:h4 (str/capitalize (@tr [:cluster])) " " (@tr [:status])
       (when orchestrator
         [ui/Label {:circular   true
@@ -1849,8 +1843,7 @@
 
             ; taking too much space at the moment. TBD later, once more plots are added
             ;[ui/Segment {:secondary   true
-            ;             :color       "olive"
-            ;             :raised      true}
+            ;             :color       "olive"}
             ; [plot/Polar {:height  80
             ;              :data    {:labels   (map (fn [[key v]] key) items-severity)
             ;                        :datasets [{:data            (map (fn [[k values]] (count values)) items-severity)
@@ -1862,8 +1855,7 @@
             ;                                 :position "left"}}}]]
 
             [ui/Segment {:secondary true
-                         :color     "brown"
-                         :raised    true}
+                         :color     "brown"}
              [ui/StatisticGroup {:size  "mini"
                                  :style {:display    "inline-block"
                                          :text-align "center"
@@ -2028,8 +2020,7 @@
            [ui/LabelDetail n]]
 
           [ui/Segment {:secondary true
-                       :color     "grey"
-                       :raised    true}
+                       :color     "grey"}
 
            [ui/Container
             [ui/Dropdown

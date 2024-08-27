@@ -55,8 +55,7 @@
         module (subscribe [::apps-subs/module])]
     (fn []
       (let [children (:children @module)]
-        [ui/Segment {:secondary true
-                     :raised    true}
+        [ui/Segment {:secondary true}
          [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:content]))]
          (if (empty? children)
            [ui/Message {:warning true}
@@ -70,8 +69,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         module (subscribe [::apps-subs/module])
         {:keys [id created updated name parent-path path]} @module]
-    [ui/Segment {:secondary true
-                 :raised    true}
+    [ui/Segment {:secondary true}
      [:h4 {:class "tab-app-detail"} (str/capitalize (@tr [:project]))]
      [ui/Grid
       [ui/GridColumn

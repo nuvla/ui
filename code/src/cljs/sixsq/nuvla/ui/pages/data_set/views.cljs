@@ -552,11 +552,9 @@
       [ui/GridColumn
        [ui/SegmentGroup {:style  {:display         "flex"
                                   :justify-content "space-between"
-                                  :background      "#f3f4f5"}
-                         :raised true}
+                                  :background      "#f3f4f5"}}
         [ui/Segment {:secondary true
-                     :color     "green"
-                     :raised    true}
+                     :color     "green"}
 
          [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:summary]))]
 

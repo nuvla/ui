@@ -624,6 +624,10 @@
   [opts]
   [I opts (str i-cloud "-download")])
 
+(defn DownloadIcon
+  [opts]
+  [I opts "fal download"])
+
 (def i-circle-outline "circle outline")
 (defn CircleOutlineIcon
   [opts]

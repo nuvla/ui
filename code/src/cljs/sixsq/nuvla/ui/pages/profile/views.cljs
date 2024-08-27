@@ -367,25 +367,25 @@
 
 (defn SessionTable
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        session    (subscribe [::session-subs/session])
-        user-id    (:user @session)
-        is-group?  (subscribe [::session-subs/is-group?])
-        identifier (:identifier @session)]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        session      (subscribe [::session-subs/session])
+        user-id      (subscribe [::session-subs/user-id])
+        active-claim (subscribe [::session-subs/active-claim])
+        identifier   (subscribe [::session-subs/identifier])]
     [ui/Table {:basic "very"}
      [ui/TableBody
       [ui/TableRow
        [ui/TableCell {:width 5} [:b "Identifier"]]
-       [ui/TableCell {:width 11} identifier]]
+       [ui/TableCell {:width 11} @identifier]]
       [ui/TableRow
        [ui/TableCell {:width 5} [:b "Logged-in as"]]
-       [ui/TableCell {:width 11} (if @is-group? (:active-claim @session) identifier)]]
+       [ui/TableCell {:width 11} @active-claim]]
       [ui/TableRow
        [ui/TableCell [:b (str/capitalize (@tr [:session-expires]))]]
        [ui/TableCell [uix/TimeAgo (:expiry @session)]]]
       [ui/TableRow
        [ui/TableCell [:b "User id"]]
-       [ui/TableCell [values/AsHref {:href user-id}]]]
+       [ui/TableCell [values/AsHref {:href @user-id}]]]
       [ui/TableRow
        [ui/TableCell [:b "Roles"]]
        [ui/TableCell [values/FormatCollection (sort (str/split (:roles @session) #"\s+"))]]]]]))

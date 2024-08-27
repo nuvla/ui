@@ -103,7 +103,7 @@
 
 (defn event-name->operation
   [event-name]
-  (second (re-matches #".*\.(.*)" event-name)))
+  (some->> event-name (re-matches #".*\.(.*)") second))
 
 (defn EventsTable
   [{:keys [db-path filters] :as _opts}]

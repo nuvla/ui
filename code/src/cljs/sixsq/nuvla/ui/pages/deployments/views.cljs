@@ -22,7 +22,7 @@
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.routing.utils :refer [name->href]]
             [sixsq.nuvla.ui.session.subs :as session-subs]
-            [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
+            [sixsq.nuvla.ui.common-components.plugins.bulk-edit-tags-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]

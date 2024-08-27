@@ -1930,6 +1930,7 @@
 (defn- DeploymentSetView
   [uuid]
   (let [depl-set (subscribe [::subs/deployment-set])]
+    (dispatch [::bulk-progress-plugin/set-target-resource [::spec/bulk-jobs] (str "deployment-set/" uuid)])
     (fn []
       (let [{:keys [id name]} @depl-set]
         [:<>

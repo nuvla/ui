@@ -3,6 +3,17 @@
 
 (def dictionary
   {:en {
+        :running                                       "running"
+        :queued                                        "queued"
+        :successes                                     "successes"
+        :failures                                      "failures"
+        :ne-bulk-update-current-matching-filter        "Current number of NuvlaEdges matching the filter: "
+        :ne-bulk-update-number-selected                "Number of selected NuvlaEdges: "
+        :ne-bulk-update-selected-not-eligible          "You selected NuvlaEdges that are not eligible to an update. Number of NuvlaEdges that will be updated: "
+        :ne-bulk-update-top-10                         "Top 10 "
+        :ne-bulk-update-versions-in-use                "NuvlaEdges versions in use:"
+        :ne-update-force-restart                       "Force restart"
+        :ne-bulk-update                                "Bulk update NuvlaEdges"
         :about                                         "about"
         :about-starting-these-updates                  "You're about to start these updates"
         :about-subtitle                                "This software is brought to you by"
@@ -1153,6 +1164,17 @@
         }
 
    :fr {
+        :running                                       "en exécution"
+        :queued                                        "en attente"
+        :successes                                     "succès"
+        :failures                                      "échecs"
+        :ne-bulk-update-current-matching-filter        "Nombre actuel de NuvlaEdges correspondant au filtre : "
+        :ne-bulk-update-number-selected                "Nombre de NuvlaEdges sélectionnés : "
+        :ne-bulk-update-selected-not-eligible          "Vous avez sélectionné des NuvlaEdges qui ne sont pas éligibles à une mise à jour. Nombre de NuvlaEdges qui seront mis à jour : "
+        :ne-bulk-update-top-10                         "Top 10 "
+        :ne-bulk-update-versions-in-use                "des versions de NuvlaEdges utilisées : "
+        :ne-update-force-restart                       "Forcer le redémarrage"
+        :ne-bulk-update                                "Mise à jour en batch de NuvlaEdges"
         :nuvlaedge-update-before-2.14.4-to-after-p1    "Pour effectuer une mise à jour à partir de v%1 ou d'une version antérieure, "
         :nuvlaedge-update-before-2.14.4-to-after-p2    "vous devez d'abord effectuer la mise à niveau vers la version 2.14.4"
         :nuvlaedge-update-before-2.14.4-to-after-p3    ". Cela permettra à votre NuvlaEdge de migrer automatiquement sa configuration et son volume Docker vers le nouveau format."

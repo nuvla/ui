@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.filter-comp.views :as filter-comp]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.common-components.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin :refer [TableColsEditable]]
@@ -11,6 +12,7 @@
             [sixsq.nuvla.ui.pages.deployment-sets-detail.subs :as depl-group-subs]
             [sixsq.nuvla.ui.pages.edges-detail.views :as edges-detail]
             [sixsq.nuvla.ui.pages.edges.add-modal :as add-modal]
+            [sixsq.nuvla.ui.pages.edges.bulk-update-modal :as bulk-update-modal]
             [sixsq.nuvla.ui.pages.edges.events :as events]
             [sixsq.nuvla.ui.pages.edges.spec :as spec]
             [sixsq.nuvla.ui.pages.edges.subs :as subs]
@@ -21,7 +23,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.routes :as routes]
             [sixsq.nuvla.ui.session.subs :as session-subs]
-            [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :as bulk-edit-modal]
+            [sixsq.nuvla.ui.common-components.plugins.bulk-edit-tags-modal :as bulk-edit-modal]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.map :as map]
@@ -268,98 +270,107 @@
 
 (defn NuvlaboxTable
   []
-  (let [search-filter            (subscribe [::subs/search-filter])
-        additional-filter        (subscribe [::subs/additional-filter])
-        state-selector           (subscribe [::subs/state-selector])
-        state-filter?            (state-filter-selected? @additional-filter @state-selector)
-        nuvlaboxes               (subscribe [::subs/nuvlaboxes])
-        current-cluster          (subscribe [::subs/nuvlabox-cluster])
-        selected-nbs             (if @current-cluster
-                                   (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                              (:nuvlabox-workers @current-cluster))]
-                                     (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
-                                   (:resources @nuvlaboxes))
-        selection                (subscribe [::table-plugin/selected-set-sub [::spec/select]])
-        maj-version-only?        (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
-        tr                       (subscribe [::i18n-subs/tr])
-        all-selected?            (subscribe [::table-plugin/select-all?-sub [::spec/select]])
-        columns                  (mapv (fn [col-config]
-                                         (assoc col-config :cell NuvlaboxRow))
-                                       [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
-                                        {:field-key :state :cell-props {:collapsing true}}
-                                        {:field-key :name}
-                                        {:field-key :description}
-                                        {:field-key :created}
-                                        {:field-key :created-by}
-                                        {:field-key :owner}
-                                        {:field-key      :refresh-interval
-                                         :header-content (str/lower-case (@tr [:telemetry]))}
-                                        {:field-key :last-online :no-sort? true}
-                                        {:field-key      :version :no-sort? true
-                                         :header-content [:<> (@tr [:version])
-                                                          (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
-                                        {:field-key :tags :no-sort? true}])
-        bulk-edit                (bulk-edit-modal/create-bulk-edit-modal
-                                   {:db-path                [::spec/select]
-                                    :refetch-event          ::events/get-nuvlaboxes
-                                    :resource-key           :nuvlabox
-                                    :total-count-sub-key    ::subs/nuvlaboxes-count
-                                    :on-open-modal-event    ::events/get-edges-without-edit-rights
-                                    :no-edit-rights-sub-key ::subs/edges-without-edit-rights
-                                    :singular               (@tr [:edge])
-                                    :plural                 (@tr [:edges])
-                                    :filter-fn              (partial utils/build-bulk-filter [::spec/select])})
-        {bulk-edit-modal :modal
-         trigger         :trigger-config} bulk-edit
-        bulk-deploy-menuitem     {:menuitem (let [message         (@tr [:deploy-with-static-edges])
-                                                  deploy-menuitem [uix/HighlightableMenuItem
-                                                                   {:on-click          bulk-deploy-static
-                                                                    :disabled          (not (seq @selection))
-                                                                    :query-param-value :bulk-deploy}
-                                                                   [icons/RocketIcon]
-                                                                   (@tr [:edges-bulk-deploy-app])]]
-                                              ^{:key "bulk-deploy-menuitem"}
-                                              [ui/Popup {:basic   true
-                                                         :content message
-                                                         :trigger (r/as-element [:div deploy-menuitem])}])}
-        dyn-bulk-deploy-menuitem {:menuitem (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
-                                                                                    (not @search-filter)
-                                                                                    (not state-filter?))
-                                                  message                      (str (@tr [:deploy-with-edges-filter])
-                                                                                    "\n"
-                                                                                    (if (or @search-filter @additional-filter)
-                                                                                      (utils/get-deploy-filter-string @search-filter @additional-filter)
-                                                                                      (@tr [:deploy-with-catch-all-edges-filter])))
-                                                  wrong-filter-message         (cond
-                                                                                 (or (seq @selection) @all-selected?)
-                                                                                 (@tr [:deploy-with-edges-clear-selection])
-                                                                                 @search-filter
-                                                                                 (@tr [:deploy-with-edges-fulltext-filter-not-allowed])
-                                                                                 state-filter?
-                                                                                 (@tr [:deploy-with-edges-state-filter-not-allowed]))
-                                                  deploy-menuitem              [uix/HighlightableMenuItem
-                                                                                {:disabled          (not dynamic-bulk-deploy-enabled?)
-                                                                                 :on-click          bulk-deploy-dynamic
-                                                                                 :query-param-value :dynamic-bulk-deploy}
-                                                                                [icons/RocketIcon]
-                                                                                (@tr [:dynamic-bulk-deploy])]]
-                                              ^{:key "dyn-bulk-deploy-menuitem"}
-                                              [ui/Popup {:basic   true
-                                                         :content (if dynamic-bulk-deploy-enabled?
-                                                                    message
-                                                                    wrong-filter-message)
-                                                         :trigger (r/as-element [:div deploy-menuitem])}])}]
-    [:<>
-     (when bulk-edit-modal [bulk-edit-modal])
-     [NuvlaEdgeTableView {:select-config {:bulk-actions        [trigger
-                                                                bulk-deploy-menuitem
-                                                                dyn-bulk-deploy-menuitem]
-                                          :total-count-sub-key [::subs/nuvlaboxes-count]
-                                          :resources-sub-key   [::subs/nuvlaboxes-resources]
-                                          :select-db-path      [::spec/select]
-                                          :rights-needed       :edit}
-                          :columns       columns :edges selected-nbs
-                          :filter-fn     (partial utils/build-bulk-filter [::spec/select])}]]))
+  (r/with-let [search-filter     (subscribe [::subs/search-filter])
+               additional-filter (subscribe [::subs/additional-filter])
+               state-selector    (subscribe [::subs/state-selector])
+               nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+               current-cluster   (subscribe [::subs/nuvlabox-cluster])
+               selection         (subscribe [::table-plugin/selected-set-sub [::spec/select]])
+               tr                (subscribe [::i18n-subs/tr])
+               all-selected?     (subscribe [::table-plugin/select-all?-sub [::spec/select]])
+               bulk-update-state (bulk-update-modal/init-state)]
+    (let [state-filter?            (state-filter-selected? @additional-filter @state-selector)
+          selected-nbs             (if @current-cluster
+                                     (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
+                                                                (:nuvlabox-workers @current-cluster))]
+                                       (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
+                                     (:resources @nuvlaboxes))
+          maj-version-only?        (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
+          columns                  (mapv (fn [col-config]
+                                           (assoc col-config :cell NuvlaboxRow))
+                                         [{:field-key :online :header-content [icons/HeartbeatIcon] :cell-props {:collapsing true}}
+                                          {:field-key :state :cell-props {:collapsing true}}
+                                          {:field-key :name}
+                                          {:field-key :description}
+                                          {:field-key :created}
+                                          {:field-key :created-by}
+                                          {:field-key :owner}
+                                          {:field-key      :refresh-interval
+                                           :header-content (str/lower-case (@tr [:telemetry]))}
+                                          {:field-key :last-online :no-sort? true}
+                                          {:field-key      :version :no-sort? true
+                                           :header-content [:<> (@tr [:version])
+                                                            (when @maj-version-only? [uix/HelpPopup (@tr [:edges-version-info])])]}
+                                          {:field-key :tags :no-sort? true}])
+          bulk-edit                (bulk-edit-modal/create-bulk-edit-modal
+                                     {:db-path                [::spec/select]
+                                      :refetch-event          ::events/get-nuvlaboxes
+                                      :resource-key           :nuvlabox
+                                      :total-count-sub-key    ::subs/nuvlaboxes-count
+                                      :on-open-modal-event    ::events/get-edges-without-edit-rights
+                                      :no-edit-rights-sub-key ::subs/edges-without-edit-rights
+                                      :singular               (@tr [:edge])
+                                      :plural                 (@tr [:edges])
+                                      :filter-fn              (partial utils/build-bulk-filter [::spec/select])})
+          {bulk-edit-modal         :modal
+           bulk-edit-tags-menuitem :trigger-config} bulk-edit
+          bulk-update-menuitem     {:icon  icons/DownloadIcon
+                                    :key   :bulk-update
+                                    :name  "Bulk update" #_(@tr [:edit-tags])
+                                    :event (partial bulk-update-modal/open-modal bulk-update-state)}
+          bulk-deploy-menuitem     {:menuitem (let [message         (@tr [:deploy-with-static-edges])
+                                                    deploy-menuitem [uix/HighlightableMenuItem
+                                                                     {:on-click          bulk-deploy-static
+                                                                      :disabled          (not (seq @selection))
+                                                                      :query-param-value :bulk-deploy}
+                                                                     [icons/RocketIcon]
+                                                                     (@tr [:edges-bulk-deploy-app])]]
+                                                ^{:key "bulk-deploy-menuitem"}
+                                                [ui/Popup {:basic   true
+                                                           :content message
+                                                           :trigger (r/as-element [:div deploy-menuitem])}])}
+          dyn-bulk-deploy-menuitem {:menuitem (let [dynamic-bulk-deploy-enabled? (and (not (seq @selection))
+                                                                                      (not @search-filter)
+                                                                                      (not state-filter?))
+                                                    message                      (str (@tr [:deploy-with-edges-filter])
+                                                                                      "\n"
+                                                                                      (if (or @search-filter @additional-filter)
+                                                                                        (utils/get-deploy-filter-string @search-filter @additional-filter)
+                                                                                        (@tr [:deploy-with-catch-all-edges-filter])))
+                                                    wrong-filter-message         (cond
+                                                                                   (or (seq @selection) @all-selected?)
+                                                                                   (@tr [:deploy-with-edges-clear-selection])
+                                                                                   @search-filter
+                                                                                   (@tr [:deploy-with-edges-fulltext-filter-not-allowed])
+                                                                                   state-filter?
+                                                                                   (@tr [:deploy-with-edges-state-filter-not-allowed]))
+                                                    deploy-menuitem              [uix/HighlightableMenuItem
+                                                                                  {:disabled          (not dynamic-bulk-deploy-enabled?)
+                                                                                   :on-click          bulk-deploy-dynamic
+                                                                                   :query-param-value :dynamic-bulk-deploy}
+                                                                                  [icons/RocketIcon]
+                                                                                  (@tr [:dynamic-bulk-deploy])]]
+                                                ^{:key "dyn-bulk-deploy-menuitem"}
+                                                [ui/Popup {:basic   true
+                                                           :content (if dynamic-bulk-deploy-enabled?
+                                                                      message
+                                                                      wrong-filter-message)
+                                                           :trigger (r/as-element [:div deploy-menuitem])}])}]
+      [:<>
+       (when bulk-edit-modal [bulk-edit-modal])
+       (when @(bulk-update-modal/open? bulk-update-state)
+         [bulk-update-modal/Modal bulk-update-state])
+
+       [NuvlaEdgeTableView {:select-config {:bulk-actions        [bulk-edit-tags-menuitem
+                                                                  bulk-update-menuitem
+                                                                  bulk-deploy-menuitem
+                                                                  dyn-bulk-deploy-menuitem]
+                                            :total-count-sub-key [::subs/nuvlaboxes-count]
+                                            :resources-sub-key   [::subs/nuvlaboxes-resources]
+                                            :select-db-path      [::spec/select]
+                                            :rights-needed       :edit}
+                            :columns       columns :edges selected-nbs
+                            :filter-fn     (partial utils/build-bulk-filter [::spec/select])}]])))
 
 
 (defn NuvlaboxMapPoint
@@ -436,6 +447,8 @@
     (fn []
       [components/LoadingPage {}
        [:<>
+        [bulk-progress-plugin/MonitoredJobs
+         {:db-path [::spec/bulk-jobs]}]
         [MenuBar]
         [ui/Grid {:stackable true
                   :reversed  "mobile"

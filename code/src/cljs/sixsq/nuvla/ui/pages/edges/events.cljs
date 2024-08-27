@@ -19,10 +19,11 @@
                                                   get-stored-db-value-from-query-param]]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.utils :refer [get-active-claim]]
-            [sixsq.nuvla.ui.utils.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
+            [sixsq.nuvla.ui.common-components.plugins.bulk-edit-tags-modal :refer [tags-modal-ids-set]]
             [sixsq.nuvla.ui.utils.general :as general-utils :refer [create-filter-for-read-only-resources]]
             [sixsq.nuvla.ui.utils.response :as response]
             [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.common-components.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
@@ -551,24 +552,24 @@
           filter-str (get-full-filter-string db)]
       (when (= (get-query-param current-route :view) (name spec/history-view))
         {:db         (assoc db ::spec/loading? true)
-        :http-xhrio {:method          :patch
-                     :headers         {:bulk true}
-                     :uri             "/api/nuvlabox/data"
-                     :format          (ajax/json-request-format)
-                     :params          {:filter      filter-str
-                                       :dataset     fleet-availability-stats
-                                       :from        (time/time->utc-str from)
-                                       :to          (time/time->utc-str to)
-                                       :granularity (ts-utils/granularity-for-timespan fleet-timespan)}
-                     :response-format (ajax/json-response-format {:keywords? true})
-                     :on-success      [::fetch-fleet-stats-success]
-                     :on-failure      [::fetch-fleet-stats-failure]}}))))
+         :http-xhrio {:method          :patch
+                      :headers         {:bulk true}
+                      :uri             "/api/nuvlabox/data"
+                      :format          (ajax/json-request-format)
+                      :params          {:filter      filter-str
+                                        :dataset     fleet-availability-stats
+                                        :from        (time/time->utc-str from)
+                                        :to          (time/time->utc-str to)
+                                        :granularity (ts-utils/granularity-for-timespan fleet-timespan)}
+                      :response-format (ajax/json-response-format {:keywords? true})
+                      :on-success      [::fetch-fleet-stats-success]
+                      :on-failure      [::fetch-fleet-stats-failure]}}))))
 
 (reg-event-fx
   ::fetch-fleet-stats-by-edge
   (fn [{db :db} [_ {:keys [from to granularity]}]]
     (let [filter-str (get-full-filter-string db)]
-      {:db (assoc db ::spec/loading? true)
+      {:db         (assoc db ::spec/loading? true)
        :http-xhrio {:method          :patch
                     :headers         {:bulk true}
                     :uri             "/api/nuvlabox/data"
@@ -598,3 +599,37 @@
                         {:header  "Could not fetch NuvlaEdge fleet statistics"
                          :content message
                          :type    :error}]]]})))
+
+(reg-event-fx
+  ::bulk-operation
+  (fn [{:keys [db]} [_ bulk-action build-filter-fn data dispatch-vec]]
+    (cond-> {::cimi-api-fx/operation-bulk
+             [:nuvlabox
+              (fn [_response]
+                (dispatch [::bulk-progress-plugin/search-jobs [::spec/bulk-jobs]])
+                (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]))
+              bulk-action
+              (build-filter-fn db)
+              data]}
+            dispatch-vec (assoc :dispatch dispatch-vec))))
+
+(reg-event-fx
+  ::bulk-update-aggregations
+  (fn [{:keys [db]} [_ callback]]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:last        0
+       :aggregation "value_count:id,terms:nuvlabox-engine-version"
+       :filter      (utils/build-bulk-update-filter db)}
+      #(if (instance? js/Error %)
+         (js/console.error %)
+         (callback %))]}))
+
+(defn bulk-update-modal-set
+  [db k v]
+  (assoc-in db [::spec/bulk-update-modal k] v))
+
+(reg-event-db
+  ::bulk-update-modal-open?
+  (fn [db [_ v]]
+    (bulk-update-modal-set db :open? v)))

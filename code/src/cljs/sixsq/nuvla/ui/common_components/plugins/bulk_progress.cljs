@@ -129,9 +129,9 @@
               (seq FAILED))
       [ui/Grid {:columns 4 :stackable true}
        [GridColumnLinks (@tr [:queued]) "black" QUEUED]
-       [GridColumnLinks (@tr [:running]) "Running" "teal" RUNNING]
-       [GridColumnLinks (@tr [:successes]) "Successes" "green" SUCCESS]
-       [GridColumnLinks (@tr [:failures]) "Failures" "red" FAILED]])))
+       [GridColumnLinks (@tr [:running]) "teal" RUNNING]
+       [GridColumnLinks (@tr [:successes]) "green" SUCCESS]
+       [GridColumnLinks (@tr [:failures]) "red" FAILED]])))
 
 (defn- BulkFilterHelpPopup
   [payload]

@@ -145,6 +145,7 @@
 (defn Modal
   [state]
   (r/with-let [tr       (subscribe [::i18n-subs/tr])
+               summary  (r/track state-summary state)
                close-fn #(reset-state! state)
                open?    (open? state)]
     [uix/ModalDanger
@@ -157,5 +158,6 @@
       :on-close           close-fn
       :header             (@tr [:ne-bulk-update])
       :danger-msg         (@tr [:danger-action-cannot-be-undone])
-      :all-confirmed?     (-> state state-selected-release :id some?)
+      :all-confirmed?     (and (-> state state-selected-release :id some?)
+                               (some-> @summary :count pos?))
       :button-text        (str/capitalize (@tr [:update]))}]))

@@ -72,12 +72,12 @@
                                     (count @selection))
             count-summary         (:count @summary)
             versions-distribution (:ne-versions-distribution @summary)]
-        [ui/Segment
+        [ui/Segment {:loading (nil? @summary)}
          [:p (if @select-all?
                (@tr [:ne-bulk-update-current-matching-filter])
                (@tr [:ne-bulk-update-number-selected]))
           [:b total-count]]
-         (when (> total-count count-summary)
+         (when (some->> count-summary (> total-count))
            [ui/Message {:warning true}
             [ui/MessageContent
              (@tr [:ne-bulk-update-selected-not-eligible])
@@ -103,9 +103,10 @@
      [SummarySegment state]
      [ui/Segment
       [:b (@tr [:update-to])]
-      [edges-detail/DropdownReleases {:placeholder (@tr [:select-version])
-                                      :on-change   (ui-callback/value
-                                                     #(set-state! state [::selected-release] (get @releases-by-id %)))}]
+      [edges-detail/DropdownReleases
+       {:placeholder (@tr [:select-version])
+        :on-change   (ui-callback/value
+                       #(set-state! state [::selected-release] (get @releases-by-id %)))}]
       (let [{:keys [compose-files]} @selected-release]
         (when (seq compose-files)
           [edges-detail/AdditionalModulesTable compose-files

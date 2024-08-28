@@ -9,7 +9,7 @@
         :failures                                      "failures"
         :ne-bulk-update-current-matching-filter        "Current number of NuvlaEdges matching the filter: "
         :ne-bulk-update-number-selected                "Number of selected NuvlaEdges: "
-        :ne-bulk-update-selected-not-eligible          "You selected NuvlaEdges that are not eligible to an update. Number of NuvlaEdges that will be updated: "
+        :ne-bulk-update-selected-not-eligible          "You selected NuvlaEdges that are not eligible for an update. Number of NuvlaEdges that will be updated: "
         :ne-bulk-update-top-10                         "Top 10 "
         :ne-bulk-update-versions-in-use                "NuvlaEdges versions in use:"
         :ne-update-force-restart                       "Force restart"

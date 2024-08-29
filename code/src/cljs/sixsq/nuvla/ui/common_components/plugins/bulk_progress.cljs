@@ -12,6 +12,7 @@
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.utils.general :as u]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.values :as values]))
@@ -75,6 +76,17 @@
                                  "progress<100"))))}
           #(dispatch [::set-jobs db-path (:resources %)])]}))))
 
+
+(reg-event-fx
+  ::get-popup-content
+  (fn [{{:keys [::session-spec/session] :as db} :db} [_ job-id id callback-fn]]
+    {::cimi-api-fx/search
+     [:job {:last   1
+            :filter (general-utils/join-and
+                      (str "parent-job='" job-id "'")
+                      (str "target-resource/href='" id "'"))}
+      #(callback-fn (-> % :resources first))]}))
+
 (reg-event-fx
   ::start-polling
   (fn [_ [_ db-path]]
@@ -107,41 +119,75 @@
    [:span (when (and JOBS_DONE (pos? JOBS_COUNT))
             (str "Jobs done " JOBS_DONE "/" JOBS_COUNT ". "))]])
 
+(defn DotPopup
+  [{:keys [id color msg on-mount]}]
+  [ui/Popup {:on        "click"
+             :hoverable true
+             :on-mount  on-mount
+             :flowing   true
+             :trigger   (r/as-element
+                          [:span [ui/Icon {:name  "circle"
+                                           :link  true
+                                           :color color}]])}
+   [ui/PopupHeader
+    [uix/TR :details str/capitalize]
+    general-utils/nbsp
+    [values/AsPageLink id
+     :label [icons/ArrowRightFromBracketIcon]
+     :new-tab true]]
+   [ui/PopupContent
+    (when msg
+      [:div {:style {:white-space :pre
+                     :overflow    :auto
+                     :min-height  "10em"}}
+       [:p {:style {:overflow   "auto"
+                    :max-width  "60vw"
+                    :max-height "20vw"}}
+        (some-> msg (str/replace #"\n" "\n"))]])]])
+
+(defn DotPopupController
+  [opts]
+  (let [job-child (r/atom nil)]
+    (fn [{:keys [id job-id color status-message]}]
+      (let [bootstrap-exception (get-in status-message [:BOOTSTRAP_EXCEPTIONS (keyword id)])]
+        [DotPopup {:id       id
+                   :color    color
+                   :on-mount (fn []
+                               (when-not bootstrap-exception
+                                 (dispatch [::get-popup-content job-id id #(reset! job-child %)])))
+                   :msg      (or bootstrap-exception
+                                 (some-> @job-child :status-message))}]))))
+
 (defn- GridColumnLinks
-  [label color ids]
-  [ui/GridColumn
-   [:h3 {:style {:color color}} (str (str/capitalize label) ": " (count ids))]
-   (for [id ids]
-     ^{:key (str "GridColumnLinks-" id)}
-     [values/AsPageLink id
-      :label [ui/Icon {:name  "circle"
-                       :link  true
-                       :color color}]
-      :new-tab true])])
+  [label color ids job-id status-message]
+  (r/with-let [tr (subscribe [::i18n-subs/tr])]
+    [ui/GridColumn
+     [:h3 {:style {:color color}} (str (str/capitalize label) ": " (count ids))
+      (when (seq ids)
+        [uix/HelpPopup (@tr [:bulk-progress-help])])]
+     (for [id ids]
+       ^{:key (str "GridColumnLinks-" id)}
+       [DotPopupController {:id             id
+                            :job-id         job-id
+                            :color          color
+                            :status-message status-message}])]))
 
 (defn- SuccessFailedLinks
-  [{:keys [QUEUED RUNNING SUCCESS FAILED]
-    :as   _status_message}]
+  [job-id {:keys [QUEUED RUNNING SUCCESS FAILED]
+           :as   status_message}]
   (r/with-let [tr (subscribe [::i18n-subs/tr])]
     (when (or (seq QUEUED)
               (seq RUNNING)
               (seq SUCCESS)
               (seq FAILED))
-      [ui/Grid {:columns 4 :stackable true}
-       [GridColumnLinks (@tr [:queued]) "black" QUEUED]
-       [GridColumnLinks (@tr [:running]) "teal" RUNNING]
-       [GridColumnLinks (@tr [:successes]) "green" SUCCESS]
-       [GridColumnLinks (@tr [:failures]) "red" FAILED]])))
-
-(defn- BulkFilterHelpPopup
-  [payload]
-  (when-let [f (try
-                 (:filter (general-utils/json->edn payload))
-                 (catch :default _ nil))]
-    [uix/HelpPopup f]))
+      [:<>
+       [GridColumnLinks (@tr [:queued]) "black" QUEUED job-id status_message]
+       [GridColumnLinks (@tr [:running]) "teal" RUNNING job-id status_message]
+       [GridColumnLinks (@tr [:successes]) "green" SUCCESS job-id status_message]
+       [GridColumnLinks (@tr [:failures]) "red" FAILED job-id status_message]])))
 
 (defn- MonitoredJob
-  [{:keys [db-path]} {:keys [id state status-message progress action payload]
+  [{:keys [db-path]} {:keys [id state status-message progress action]
                       :as   job}]
   (let [tr            @(subscribe [::i18n-subs/tr])
         on-dismiss    #(dispatch [::dismiss db-path id])
@@ -180,11 +226,16 @@
                :close-icon true}
      [ui/ModalHeader Header]
      [ui/ModalContent
-      [:h3 (str/capitalize (tr [:progress])) [BulkFilterHelpPopup payload] ": "]
-      [ProgressBar]
-      (when state-failed?
-        [:p {:style {:color "red"}} status-message])
-      [SuccessFailedLinks status-message]]
+      [ui/Grid {:stackable true}
+       [ui/GridRow
+        [ui/GridColumn
+         [:h3 (str/capitalize (tr [:progress])) ": "]
+         [ProgressBar]
+         (when state-failed?
+           [:p {:style {:color "red"}} status-message])]]
+       [ui/GridRow {:columns 4}
+
+        [SuccessFailedLinks id status-message]]]]
      (when (general-utils/can-operation? "cancel" job)
        [ui/ModalActions
         [uix/ButtonAskingForConfirmation

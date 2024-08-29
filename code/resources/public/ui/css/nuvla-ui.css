@@ -618,8 +618,9 @@ body .ui.primary.button:visited,
   background-color: #c10e12;
   border-radius: 50px;
 }
-body .ui.primary.button:hover,
-.ui.primary.buttons .button:hover {
+
+body .ui.primary.button:hover, .ui.primary.button:focus,
+.ui.primary.buttons .button:hover, .button:focus {
   background-color: rgba(237, 43, 43, 1);
 }
 

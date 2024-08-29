@@ -3,6 +3,7 @@
 
 (def dictionary
   {:en {
+        :bulk-progress-help                            "Click on dots below for details."
         :running                                       "running"
         :queued                                        "queued"
         :successes                                     "successes"
@@ -1164,6 +1165,7 @@
         }
 
    :fr {
+        :bulk-progress-help                            "Cliquez sur les points ci-dessous pour plus de détails."
         :running                                       "en exécution"
         :queued                                        "en attente"
         :successes                                     "succès"

@@ -447,8 +447,6 @@
     (fn []
       [components/LoadingPage {}
        [:<>
-        [bulk-progress-plugin/MonitoredJobs
-         {:db-path [::spec/bulk-jobs]}]
         [MenuBar]
         [ui/Grid {:stackable true
                   :reversed  "mobile"
@@ -459,6 +457,8 @@
           (if (= @view-type spec/cluster-view)
             [views-clusters/StatisticStates]
             [StatisticStates])]]
+        [bulk-progress-plugin/MonitoredJobs
+         {:db-path [::spec/bulk-jobs]}]
         (condp = @view-type
           spec/cards-view [NuvlaboxCards]
           spec/table-view [NuvlaboxTable]

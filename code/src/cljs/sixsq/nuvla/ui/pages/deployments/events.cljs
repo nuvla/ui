@@ -228,9 +228,8 @@
   (fn [{db :db} [_ bulk-action data dispatch-vec]]
     (cond-> {::cimi-api-fx/operation-bulk
              [:deployment
-              (fn [{:keys [location] :as _response}]
-                (dispatch [::bulk-progress-plugin/monitor
-                           [::spec/bulk-jobs] location])
+              (fn [_response]
+                (dispatch [::bulk-progress-plugin/search-jobs [::spec/bulk-jobs]])
                 (dispatch [::table-plugin/reset-bulk-edit-selection [::spec/select]]))
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))

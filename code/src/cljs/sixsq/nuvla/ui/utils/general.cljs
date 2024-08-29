@@ -56,15 +56,6 @@
        sort
        vec))
 
-
-(defn parse-resource-path
-  "Utility to split a resource path into a vector of terms. Returns an empty
-   vector for a nil argument. Removes blank or nil terms from the result.
-   The input path will be coerced to a string."
-  [path]
-  (vec (remove str/blank? (str/split path #"/"))))
-
-
 ;;
 ;; manual truncation of strings
 ;;
@@ -179,10 +170,6 @@
 
 (def ^:const common-attrs #{:id, :resource-type, :created, :updated, :name, :description, :tags,
                             :parent, :subtype, :properties, :resource-metadata, :operations, :acl})
-
-(defn select-common-attrs
-  [resource]
-  (select-keys resource common-attrs))
 
 
 (defn remove-common-attrs

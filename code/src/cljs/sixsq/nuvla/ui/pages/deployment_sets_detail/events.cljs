@@ -329,10 +329,8 @@
   ::operation
   (fn [_ [_ {:keys [resource-id operation data on-success-fn on-error-fn]
              :or   {data          {}
-                    on-success-fn (fn [{:keys [location] :as _response}]
-                                    (when location
-                                      (dispatch [::bulk-progress-plugin/monitor
-                                                 [::spec/bulk-jobs] location]))
+                    on-success-fn (fn [_response]
+                                    (dispatch [::bulk-progress-plugin/search-jobs [::spec/bulk-jobs]])
                                     (dispatch [::set-opened-modal nil]))
                     on-error-fn   #()}}]]
     (let [on-success #(do

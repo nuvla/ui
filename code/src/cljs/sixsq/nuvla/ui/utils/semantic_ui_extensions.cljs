@@ -389,13 +389,14 @@
 (defn Link
   "Renders a link that will navigate to the given href when clicked. The href
    value will also be used as the label, unless an explicit label is provided."
-  [href & [label]]
-  [:a {:href     (str @config/path-prefix "/" href)
-       :style    {:overflow      "hidden",
-                  :text-overflow "ellipsis",
-                  :max-width     "20ch"}
-       :target   "_blank"
-       :on-click (partial link-on-click href)}
+  [href & [label new-tab :as x]]
+  [:a (cond-> {:href     (str @config/path-prefix "/" href)
+               :style    {:overflow      "hidden",
+                          :text-overflow "ellipsis",
+                          :max-width     "20ch"}
+               :target   "_blank"
+               :on-click (partial link-on-click href)}
+              new-tab (dissoc :on-click))
    (or label href)])
 
 (defn ButtonAskingForConfirmation

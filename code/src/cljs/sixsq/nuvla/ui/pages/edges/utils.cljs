@@ -237,6 +237,15 @@
   [db-path db]
   (table-plugin/build-bulk-filter (get-in db db-path) (get-full-filter-string db)))
 
+(defn build-bulk-update-filter
+  [{:keys [::spec/select] :as db}]
+  (general-utils/join-and
+    "state='COMMISSIONED'"
+    "nuvlabox-engine-version!=null"
+    (table-plugin/build-bulk-filter
+      select
+      (get-full-filter-string db))))
+
 (defn get-deploy-filter-string
   [text-search additional-filter]
   (general-utils/join-and

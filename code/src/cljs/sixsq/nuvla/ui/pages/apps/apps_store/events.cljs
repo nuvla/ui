@@ -9,6 +9,7 @@
             [sixsq.nuvla.ui.pages.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.pages.apps.utils :as apps-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
+            [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-fx
@@ -51,8 +52,7 @@
                            (case active-tab
                              :appstore (general-utils/published-query-string)
                              :myapps (general-utils/owner-like-query-string
-                                       (or (:active-claim session)
-                                           (:user session)))
+                                       (session-utils/get-active-claim session))
                              nil)
                            (full-text-search-plugin/filter-text
                              db [::spec/modules-search]))}

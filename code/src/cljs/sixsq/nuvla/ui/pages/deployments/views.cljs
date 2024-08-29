@@ -130,7 +130,7 @@
         :danger-msg  (@tr [:danger-action-cannot-be-undone])
         :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}])))
 
-(defn BulkForceDeleteModal
+(defn BulkDeleteModal
   []
   (let [tr    (subscribe [::i18n-subs/tr])
         open? (subscribe [::subs/bulk-delete-modal])]
@@ -138,12 +138,12 @@
       [BulkActionModal
        {:open?       @open?
         :close-event [::events/close-modal-bulk-delete]
-        :on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-force-delete"
+        :on-confirm  (fn [] (dispatch [::events/bulk-operation "bulk-delete"
                                        nil
                                        [::events/close-modal-bulk-delete]]))
-        :header      (@tr [:bulk-deployment-force-delete])
-        :danger-msg  (@tr [:danger-action-deployment-force-delete])
-        :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}])))
+        :header      (@tr [:bulk-delete])
+        :danger-msg  (@tr [:danger-action-cannot-be-undone])
+        :button-text (str/capitalize (@tr [:bulk-delete]))}])))
 
 (defn MenuBar
   []
@@ -365,7 +365,7 @@
       [:div
        [BulkUpdateModal]
        [BulkStopModal]
-       [BulkForceDeleteModal]
+       [BulkDeleteModal]
        (if (= @view "cards")
          [CardsDataTable @deployments]
          [VerticalDataTable @deployments])])))

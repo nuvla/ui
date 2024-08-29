@@ -103,7 +103,7 @@
 (def job-action->header
   {"bulk_stop_deployment"         :bulk-stop-in-progress
    "bulk_update_deployment"       :bulk-update-in-progress
-   "bulk_force_delete_deployment" :bulk-force-delete-in-progress
+   "bulk_delete_deployment"     :bulk-delete-in-progress
    "bulk_deployment_set_start"    :depl-group-start-in-progress
    "bulk_deployment_set_update"   :depl-group-update-in-progress
    "bulk_deployment_set_stop"     :depl-group-stop-in-progress

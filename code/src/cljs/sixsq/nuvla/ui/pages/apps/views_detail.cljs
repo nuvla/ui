@@ -1371,7 +1371,6 @@
         device      (subscribe [::main-subs/device])
         {:keys [logo-url]} @(subscribe [::subs/module])]
     [ui/Segment {:secondary true
-                 :raised    true
                  :padded    true}
      [ui/Grid {:columns   1
                :stackable true}

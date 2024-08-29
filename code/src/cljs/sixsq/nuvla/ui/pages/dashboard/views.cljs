@@ -88,7 +88,6 @@
   (let [tr @(subscribe [::i18n-subs/tr])
         {:keys [resource tab-index tab-index-event]} utils/target-nbs]
     [ui/Segment {:secondary true
-                 :raised    true
                  :class     "nuvla-edges"
                  :style     {:display         "flex"
                              :flex-direction  "column"
@@ -122,7 +121,6 @@
   []
   (let [tr @(subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
-                 :raised    true
                  :class     "audit-logs"
                  :style     {:display         "flex"
                              :flex-direction  "column"

@@ -21,7 +21,6 @@
   [{:keys [class icon label]} & children]
   [ui/Segment {:class     class
                :secondary true
-               :raised    true
                :style {:height          "100%"
                        :display         "flex"
                        :flex-direction  "column"}}

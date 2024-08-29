@@ -336,8 +336,7 @@
         is-module-published? (subscribe [::apps-subs/is-module-published?])
         {:keys [id created updated name parent-path path]} @module]
     [ui/Segment {:secondary true
-                 :color     "blue"
-                 :raised    true}
+                 :color     "blue"}
      [:h4 (str/capitalize (@tr [:summary]))]
      [ui/Table {:basic  "very"
                 :padded false}

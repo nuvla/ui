@@ -556,8 +556,7 @@
   [{:keys [id created updated created-by state operational-status] :as deployment-set} creating?]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
-                 :color     "blue"
-                 :raised    true}
+                 :color     "blue"}
      [:h4 (if creating?
             (str (@tr [:creating-new]) (str/lower-case (@tr [:deployment-group])))
             (@tr [:deployment-group]))]

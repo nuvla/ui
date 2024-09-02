@@ -287,9 +287,10 @@
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)
         show            (r/atom false)]
-    (fn [{:keys [key placeholder default-value spec width on-change on-validation
+    (fn [{:keys [key placeholder default-value spec width on-change on-validation show-pencil?
                  editable? validate-form? type input-help-msg style options input-extra-options]
-          :or   {editable? true, spec any?, type :input}}]
+          :or   {editable?    true, spec any?, type :input
+                 show-pencil? true}}]
       (let [validate?       (boolean (or @local-validate? validate-form?))
             error?          (and validate? (not (s/valid? spec default-value)))
             input-cbk       (ui-callback/input-callback
@@ -310,7 +311,7 @@
                               (= :password type) [icons/Icon {:name     (if @show "eye slash" :eye)
                                                               :link     true
                                                               :on-click #(swap! show not)}]
-                              @active-input? [icons/PencilIcon])]
+                              (and show-pencil? @active-input?) [icons/PencilIcon])]
         (when on-validation
           (dispatch [on-validation key error?]))
 

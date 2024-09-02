@@ -15,7 +15,7 @@ test('Creating a new app', async ({ page }, { config }) => {
   await page.getByText('DO NOT DELETE --- e2e test project').click();
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/apps/do-not-delete--e2e-test-project`));
 
-  await page.locator('a:has-text("Add")').click();
+  await page.locator('a.item:has-text("Add")').click();
   await page.getByRole('link', { name: 'Docker Application' }).click();
   await page.waitForURL(
     `${baseURL}/ui/apps/do-not-delete--e2e-test-project/New%20Application?subtype=application&apps-tab=details`

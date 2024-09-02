@@ -15,7 +15,7 @@ test('test', async ({ page }, { config }) => {
 
   await expect(page).toHaveURL(baseURL + '/ui/deployment-groups');
 
-  await page.getByText('Add').first().click();
+  await page.locator("a[aria-label='add']").first().click();
 
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-groups/create`));
 

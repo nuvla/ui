@@ -103,7 +103,8 @@
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ infra-service]]
     {:db (assoc db ::spec/selected-infra-service infra-service
                    ::spec/credentials nil
-                   ::spec/selected-credential-id nil)
+                   ::spec/selected-credential-id nil
+                   ::spec/unmet-requirements-accepted false)
      :fx [(when (utils/infra-app-compatible?
                   (:module deployment)
                   infra-service) [:dispatch [::get-credentials]])]}))
@@ -111,8 +112,8 @@
 (reg-event-fx
   ::set-infra-services
   (fn [{db :db} [_ {infra-services :resources}]]
-    {:db (assoc db ::spec/infra-services infra-services
-                   ::spec/infra-services-loading? false)}))
+    {:db (assoc db ::spec/infra-services infra-services)
+     :fx [[:dispatch [::get-infra-service-groups]]]}))
 
 (reg-event-fx
   ::get-infra-services
@@ -121,9 +122,71 @@
                                     ::spec/infra-services nil)
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter  filter,
-                            :select  "id, name, description, subtype, capabilities, swarm-enabled, swarm-manager"
+                            :select  "id, name, parent, description, subtype, capabilities, swarm-enabled, swarm-manager"
                             :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-services %])]}))
+
+(reg-event-fx
+  ::set-infra-service-groups
+  (fn [{db :db} [_ {infra-service-groups :resources}]]
+    {:db (assoc db ::spec/infra-service-groups-by-id (->> infra-service-groups
+                                                          (map (juxt :id identity))
+                                                          (into {})))
+     :fx [[:dispatch [::get-edges]]]}))
+
+(reg-event-fx
+  ::get-infra-service-groups
+  (fn [{{:keys [::spec/infra-services] :as db} :db}]
+    {:db                  (assoc db ::spec/infra-service-groups-by-id nil)
+     ::cimi-api-fx/search [:infrastructure-service-group
+                           {:select "id, name, parent, description, infrastructure-services"
+                            :filter (general-utils/filter-eq-ids (map :parent infra-services))}
+                           #(dispatch [::set-infra-service-groups %])]}))
+
+(reg-event-fx
+  ::set-edges
+  (fn [{db :db} [_ {edges :resources}]]
+    {:db (assoc db ::spec/edges-by-id (->> edges
+                                           (map (juxt :id identity))
+                                           (into {})))
+     :fx [[:dispatch [::get-edges-status]]]}))
+
+(reg-event-fx
+  ::get-edges
+  (fn [{{:keys [::spec/infra-service-groups-by-id] :as db} :db}]
+    {:db                  (assoc db ::spec/edges-by-id nil)
+     ::cimi-api-fx/search [:nuvlabox
+                           {:select "id, name, nuvlabox-status"
+                            :filter (general-utils/filter-eq-ids
+                                      (->> (vals infra-service-groups-by-id)
+                                           (map :parent)
+                                           (filter some?)))}
+                           #(dispatch [::set-edges %])]}))
+
+(reg-event-fx
+  ::set-edges-status
+  (fn [{db :db} [_ {edges-status :resources}]]
+    {:db (assoc db ::spec/edges-status-by-id (->> edges-status
+                                                  (map (juxt :id identity))
+                                                  (into {}))
+                   ::spec/infra-services-loading? false)}))
+
+(reg-event-fx
+  ::get-edges-status
+  (fn [{{:keys [::spec/edges-by-id] :as db} :db}]
+    {:db                  (assoc db ::spec/edges-status-by-id nil)
+     ::cimi-api-fx/search [:nuvlabox-status
+                           {:select "id, architecture, resources"
+                            :filter (general-utils/filter-eq-ids
+                                      (->> (vals edges-by-id)
+                                           (map :nuvlabox-status)
+                                           (filter some?)))}
+                           #(dispatch [::set-edges-status %])]}))
+
+(reg-event-fx
+  ::accept-unmet-requirements
+  (fn [{db :db} [_ accept?]]
+    {:db (assoc db ::spec/unmet-requirements-accepted accept?)}))
 
 (defn deployment-update-registries
   [deployment registries-creds-info]
@@ -224,7 +287,7 @@
     (if (= (:href target-resource) (:id deployment))
       (let [result (if-let [dct (general-utils/json->edn status-message :keywordize-keys false)]
                      {:dct dct}
-                     (if (str/includes? (str/lower-case status-message)  "not supported")
+                     (if (str/includes? (str/lower-case status-message) "not supported")
                        {:warning status-message}
                        {:error (str "Error: " status-message)}))]
         (assoc db ::spec/check-dct result))
@@ -488,7 +551,8 @@
 (reg-event-db
   ::set-selected-version
   (fn [db [_ version]]
-    (assoc db ::spec/selected-version version)))
+    (assoc db ::spec/selected-version version
+              ::spec/unmet-requirements-accepted false)))
 
 (reg-event-db
   ::set-original-module

@@ -1228,3 +1228,20 @@
                                            update-entries-fn
                                            listed-apps-by-id
                                            apps)))))
+
+(reg-event-fx
+  ::check-requirements
+  (fn [{{:keys [::spec/deployment-set]} :db}]
+    {::cimi-api-fx/operation [(:id deployment-set) "check-requirements"
+                              #(dispatch [::set-requirements %])
+                              :on-error #(dispatch [::set-requirements nil])]}))
+
+(reg-event-fx
+  ::set-requirements
+  (fn [{db :db} [_ requirements]]
+    {:db (assoc db ::spec/requirements requirements)}))
+
+(reg-event-fx
+  ::accept-unmet-requirements
+  (fn [{db :db} [_ accept?]]
+    {:db (assoc db ::spec/unmet-requirements-accepted accept?)}))

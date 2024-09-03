@@ -287,25 +287,31 @@
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)
         show            (r/atom false)]
-    (fn [{:keys [key placeholder default-value spec width on-change on-validation
-                 editable? validate-form? type input-help-msg style]
-          :or   {editable? true, spec any?, type :input}}]
-      (let [validate?   (boolean (or @local-validate? validate-form?))
-            error?      (and validate? (not (s/valid? spec default-value)))
-            common-opts {:default-value default-value
-                         :placeholder   placeholder
-                         :onMouseEnter  #(reset! active-input? true)
-                         :onMouseLeave  #(reset! active-input? false)
-                         :auto-complete "nope"
-                         :on-change     (ui-callback/input-callback
-                                          #(let [text (when-not (str/blank? %) %)]
-                                             (reset! local-validate? true)
-                                             (on-change text)))}
-            icon        (cond
-                          (= :password type) [icons/Icon {:name     (if @show "eye slash" :eye)
-                                                          :link     true
-                                                          :on-click #(swap! show not)}]
-                          @active-input? [icons/PencilIcon])]
+    (fn [{:keys [key placeholder default-value spec width on-change on-validation show-pencil?
+                 editable? validate-form? type input-help-msg style options input-extra-options]
+          :or   {editable?    true, spec any?, type :input
+                 show-pencil? true}}]
+      (let [validate?       (boolean (or @local-validate? validate-form?))
+            error?          (and validate? (not (s/valid? spec default-value)))
+            input-cbk       (ui-callback/input-callback
+                              #(let [text (when-not (str/blank? %) %)]
+                                 (reset! local-validate? true)
+                                 (on-change text)))
+            multiselect-cbk (ui-callback/value
+                              #(let [values (when-not (empty? %) %)]
+                                 (reset! local-validate? true)
+                                 (on-change values)))
+            common-opts     (merge {:default-value default-value
+                                    :placeholder   placeholder
+                                    :onMouseEnter  #(reset! active-input? true)
+                                    :onMouseLeave  #(reset! active-input? false)
+                                    :auto-complete "nope"}
+                                   input-extra-options)
+            icon            (cond
+                              (= :password type) [icons/Icon {:name     (if @show "eye slash" :eye)
+                                                              :link     true
+                                                              :on-click #(swap! show not)}]
+                              (and show-pencil? @active-input?) [icons/PencilIcon])]
         (when on-validation
           (dispatch [on-validation key error?]))
 
@@ -314,17 +320,31 @@
                              (when style {:style style}))
          input-help-msg
          (if editable?
-           (if (#{:input :password} type)
+           (cond
+             (#{:input :password} type)
              [ui/Input (assoc common-opts
                          :error error?
                          :fluid true
                          :type (if @show :input type)
                          :auto-complete "nope"
-                         :icon (r/as-element icon))]
+                         :icon (r/as-element icon)
+                         :on-change input-cbk)]
+
+             (= :dropdown type)
+             [ui/Dropdown (merge common-opts
+                                 {:selection   true
+                                  :multiple    true
+                                  :compact     true
+                                  :placeholder " "
+                                  :search      true
+                                  :options     options
+                                  :on-change   multiselect-cbk})]
+
+             :else
              [ui/Form
               [ui/FormField {:error error?}
                [:div {:className "ui input icon"}
-                [ui/TextArea common-opts]
+                [ui/TextArea (assoc common-opts :on-change input-cbk)]
                 (when @active-input? [icons/Icon {:name icons/i-pencil}])]]])
            [SpanBlockJustified default-value])]))))
 

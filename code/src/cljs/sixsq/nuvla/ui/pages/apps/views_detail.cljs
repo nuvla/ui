@@ -1422,3 +1422,55 @@
                                                   :on-change     edit-event}
                              ui-acl]])
                 :key     :share-pane}}))
+
+(defn RequirementsSection []
+  (let [tr               (subscribe [::i18n-subs/tr])
+        architectures    (subscribe [::subs/architectures])
+        min-requirements (subscribe [::subs/minimum-requirements])
+        editable?        (subscribe [::subs/editable?])
+        arch-options     (subscribe [::subs/architecture-options])
+        on-change        (fn [update-event-kw value-fn value]
+                           (dispatch [update-event-kw (if value-fn (value-fn value) value)])
+                           (dispatch [::main-events/changes-protection? true])
+                           (dispatch [::events/validate-form]))]
+    (fn []
+      [uix/Accordion
+       [:<>
+        [:div (@tr [:minimum-requirements])
+         [uix/HelpPopup (@tr [:module-requirements-help])]]
+        [ui/Grid {:id :minimum-requirements :stackable true, :reversed :mobile, :style {:margin-top 10}}
+         [ui/GridRow
+          [ui/GridColumn {:width 13}
+           [ui/Table {:compact    true
+                      :definition true}
+            [ui/TableBody
+             [uix/TableRowField (@tr [:architecture]), :key "architecture", :editable? @editable?,
+              :type :dropdown, :options @arch-options
+              :style (when @editable? {:padding-left edit-cell-left-padding})
+              :spec ::spec/architectures, :validate-form? true, :required? false,
+              :default-value @architectures, :show-pencil? false
+              :on-change (partial on-change ::events/set-architectures nil)
+              :on-validation ::apps-application-events/set-configuration-validation-error]
+             [uix/TableRowField (@tr [:cpu]), :key "cpu", :editable? @editable?,
+              :style (when @editable? {:padding-left edit-cell-left-padding})
+              :spec ::spec/min-cpu, :validate-form? true, :required? false,
+              :default-value (::spec/min-cpu @min-requirements), :show-pencil? false
+              :on-change (partial on-change ::events/set-min-cpu general-utils/str->int)
+              :on-validation ::apps-application-events/set-configuration-validation-error
+              :input-extra-options {:label (@tr [:cpu]) :label-position :right}]
+             [uix/TableRowField (@tr [:ram]), :key "ram", :editable? @editable?,
+              :style (when @editable? {:padding-left edit-cell-left-padding})
+              :spec ::spec/min-ram, :validate-form? true, :required? false,
+              :default-value (::spec/min-ram @min-requirements), :show-pencil? false
+              :on-change (partial on-change ::events/set-min-ram general-utils/str->int)
+              :on-validation ::apps-application-events/set-configuration-validation-error
+              :input-extra-options {:label (@tr [:mb]) :label-position :right}]
+             [uix/TableRowField (@tr [:disk]), :key "disk", :editable? @editable?,
+              :style (when @editable? {:padding-left edit-cell-left-padding})
+              :spec ::spec/min-disk, :validate-form? true, :required? false,
+              :default-value (::spec/min-disk @min-requirements), :show-pencil? false
+              :on-change (partial on-change ::events/set-min-disk general-utils/str->int)
+              :on-validation ::apps-application-events/set-configuration-validation-error
+              :input-extra-options {:label (@tr [:gb]) :label-position :right}]]]]]]]
+       :label (@tr [:minimum-requirements])
+       :default-open true])))

@@ -320,6 +320,8 @@
   [opts]
   [I opts i-ban])
 
+(def i-ban-full "fa-ban")
+
 (def i-pause "fal fa-pause")
 (defn PauseIcon
   [opts]

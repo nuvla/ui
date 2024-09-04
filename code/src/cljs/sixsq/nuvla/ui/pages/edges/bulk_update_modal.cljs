@@ -157,7 +157,6 @@
       :content            [Content state]
       :on-close           close-fn
       :header             (@tr [:ne-bulk-update])
-      :danger-msg         (@tr [:danger-action-cannot-be-undone])
       :all-confirmed?     (and (-> state state-selected-release :id some?)
                                (some-> @summary :count pos?))
       :button-text        (str/capitalize (@tr [:update]))}]))

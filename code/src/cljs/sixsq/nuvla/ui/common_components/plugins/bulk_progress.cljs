@@ -10,7 +10,6 @@
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.session.spec :as session-spec]
-            [sixsq.nuvla.ui.utils.general :as u]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -101,13 +100,13 @@
     (vals (get-in db (conj db-path ::jobs)))))
 
 (def job-action->header
-  {"bulk_stop_deployment"         :bulk-stop-in-progress
-   "bulk_update_deployment"       :bulk-update-in-progress
+  {"bulk_stop_deployment"       :bulk-stop-in-progress
+   "bulk_update_deployment"     :bulk-update-in-progress
    "bulk_delete_deployment"     :bulk-delete-in-progress
-   "bulk_deployment_set_start"    :depl-group-start-in-progress
-   "bulk_deployment_set_update"   :depl-group-update-in-progress
-   "bulk_deployment_set_stop"     :depl-group-stop-in-progress
-   "bulk_update_nuvlabox"         :bulk-update-in-progress})
+   "bulk_deployment_set_start"  :depl-group-start-in-progress
+   "bulk_deployment_set_update" :depl-group-update-in-progress
+   "bulk_deployment_set_stop"   :depl-group-stop-in-progress
+   "bulk_update_nuvlabox"       :bulk-update-in-progress})
 
 (defn- ProgressLabel
   [{:keys [ACTIONS_CALLED ACTIONS_COUNT JOBS_DONE JOBS_COUNT SUCCESS FAILED]
@@ -239,8 +238,9 @@
      (when (general-utils/can-operation? "cancel" job)
        [ui/ModalActions
         [uix/ButtonAskingForConfirmation
-         {:update-event      [::cancel db-path id]
-          :text              (tr [:cancel])
+         {:icon              icons/i-ban-full
+          :update-event      [::cancel db-path id]
+          :text              (str/capitalize (tr [:cancel]))
           :action-aria-label (tr [:cancel])}]])]))
 
 (defn MonitoredJobs

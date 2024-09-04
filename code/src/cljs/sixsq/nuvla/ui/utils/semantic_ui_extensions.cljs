@@ -423,29 +423,28 @@
   [_]
   (let [mode (r/atom :idle)
         tr   (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [color text update-event disabled? action-aria-label button-fn]}]
+    (fn [{:keys [color text update-event disabled? action-aria-label button-fn icon]}]
       (let [confirm-prefix (str (str/capitalize (@tr [:yes])) ": ")]
         (if (= :idle @mode)
-          [:div
-           [:span (str text "?")]
-           [ui/Button {:aria-label action-aria-label
-                       :color      (or color :red)
-                       :disabled   disabled?
-                       :active     true
-                       :style      {:margin-left "2rem"}
-                       :on-click   (fn [] (reset! mode :confirming))}
-            [icons/CheckIconFull {:style {:margin 0}}]]]
+          [Button {:text       (str text "?")
+                   :aria-label action-aria-label
+                   :color      (or color :red)
+                   :disabled   disabled?
+                   :active     true
+                   :icon       (or icon icons/i-check-full)
+                   :style      {:margin-left "2rem"}
+                   :on-click   #(reset! mode :confirming)}]
           [:div
            [:span (str (@tr [:are-you-sure?]) " ")]
            (if button-fn
              [button-fn confirm-prefix]
              [Button {:text     (str confirm-prefix text)
                       :disabled disabled?
-                      :color    (or color :red)
-                      :on-click (fn [] (if (fn? update-event)
-                                         (update-event)
-                                         (dispatch update-event)))}])
-           [ui/Button {:on-click (fn [] (reset! mode :idle))}
+                      :color    #(or color :red)
+                      :on-click #(if (fn? update-event)
+                                   (update-event)
+                                   (dispatch update-event))}])
+           [ui/Button {:on-click #(reset! mode :idle)}
             [icons/XMarkIcon {:style {:margin 0}}]]])))))
 
 (defn ModalDanger

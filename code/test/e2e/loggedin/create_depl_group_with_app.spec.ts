@@ -83,7 +83,7 @@ test('delete deployment group', async ({ page }, { config }) => {
 
   await page.getByText(/There are currently no running deployments/i).click();
 
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'Delete?' }).click();
 
   await page.getByRole('button', { name: 'Yes: Delete' }).click();
 

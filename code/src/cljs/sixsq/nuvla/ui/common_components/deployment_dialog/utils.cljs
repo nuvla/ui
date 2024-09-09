@@ -82,9 +82,10 @@
   [architectures
    {:keys [min-cpu min-ram min-disk] :as _minimum-requirements}
    edge-architecture
-   {{cpu-capacity :capacity}                                 :cpu, {ram-capacity :capacity} :ram,
-    [{first-disk-capacity :capacity, first-disk-used :used}] :disks :as _edge-resources}]
-  (let [available-disk-space (- (or first-disk-capacity 0) (or first-disk-used 0))]
+   {{cpu-capacity :capacity} :cpu,
+    {ram-capacity :capacity} :ram,
+    disks                    :disks :as _edge-resources}]
+  (let [available-disk-space (apply max (cons 0 (map #(- (or (:capacity %) 0) (or (:used %) 0)) disks)))]
 
     (cond-> {}
             (and edge-architecture (some-> architectures set (contains? edge-architecture) not))

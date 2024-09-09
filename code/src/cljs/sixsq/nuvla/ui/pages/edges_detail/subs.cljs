@@ -12,8 +12,7 @@
 
 (reg-sub
   ::nuvlabox-status
-  (fn [db]
-    (::spec/nuvlabox-status db)))
+  :-> ::spec/nuvlabox-status)
 
 (reg-sub
   ::stats-container-ordering
@@ -23,6 +22,21 @@
   ::container-stats
   :<- [::nuvlabox-status]
   :-> (comp :container-stats :resources))
+
+(reg-sub
+  ::coe-resources
+  :<- [::nuvlabox-status]
+  :-> :coe-resources)
+
+(reg-sub
+  ::docker
+  :<- [::coe-resources]
+  :-> :docker)
+
+(reg-sub
+  ::docker-images
+  :<- [::docker]
+  :-> :images)
 
 (defn multi-key-direction-sort
   [orders x y]

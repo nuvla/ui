@@ -46,7 +46,7 @@
         (let [exp    (int (/ (js/Math.log bytes) (js/Math.log scale)))
               prefix (get units exp)
               v      (/ bytes (js/Math.pow scale exp))]
-          (str (general-utils/round-up v :n-decimal 1) prefix))))
+          (str (general-utils/round-up v :n-decimal 1) " " prefix))))
     "..."))
 
 (defn bytes-usage

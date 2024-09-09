@@ -633,7 +633,8 @@
                      :dragging   nil})]
     (fn [{:keys [cell-props columns rows
                  row-click-handler row-props
-                 sort-config select-config]
+                 sort-config select-config wrapper-div-class]
+          :or   {wrapper-div-class :table-fixed-row-height}
           :as   props}]
       (let [{:keys [bulk-actions select-db-path total-count-sub-key disabled-tooltip
                     resources-sub-key rights-needed select-label-accessor select-all-query-param]} select-config
@@ -667,7 +668,7 @@
           [:div {:style {:overflow :auto
                          :padding  0
                          :position :relative}
-                 :class :table-fixed-row-height}
+                 :class wrapper-div-class}
            [ui/Table (merge {:stackable false} (:table-props props))
             [ui/TableHeader (:header-props props)
              [ui/TableRow
@@ -720,7 +721,7 @@
              (doall
                (for [[idx row] (map-indexed vector rows)
                      :let [id (or (:id row) (random-uuid))]]
-                 ^{:key (:id row)}
+                 ^{:key (or (:id row) (random-uuid))}
                  [ui/TableRow (get-row-props row)
                   (when selectable?
                     [CellCheckbox {:id               id :selected-set-sub selected-set :db-path select-db-path

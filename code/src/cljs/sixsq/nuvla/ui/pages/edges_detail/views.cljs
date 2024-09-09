@@ -21,6 +21,7 @@
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
             [sixsq.nuvla.ui.pages.edges-detail.views-timeseries :as timeseries]
+            [sixsq.nuvla.ui.pages.edges-detail.views-coe-resources :as coe-resources]
             [sixsq.nuvla.ui.pages.edges.events :as edges-events]
             [sixsq.nuvla.ui.pages.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.pages.edges.utils :as utils]
@@ -2200,6 +2201,10 @@
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
                         :pagination-db-path ::spec/deployment-pagination
                         :fetch-event        [::events/get-deployments-for-edge]}]])}
+       {:menuItem {:content "Docker"
+                   :key     :docker
+                   :icon    icons/i-docker}
+        :render   #(r/as-element [coe-resources/Tab])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    icons/i-shield}

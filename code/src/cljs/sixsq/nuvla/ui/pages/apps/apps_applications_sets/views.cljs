@@ -120,10 +120,10 @@
       :default-open true]
      [uix/Accordion
       [module-plugin/Files
-       {:db-path           db-path
-        :href              module-id
-        :change-event      [::main-events/changes-protection? true]
-        :read-only?        (not @editable?)}]
+       {:db-path      db-path
+        :href         module-id
+        :change-event [::main-events/changes-protection? true]
+        :read-only?   (not @editable?)}]
       :label (@tr [:module-files])
       :default-open true]
      [uix/Accordion
@@ -168,10 +168,10 @@
      [icons/Icon {:name (apps-utils/subtype-icon subtype)}]
      (or name id)
      (when @is-behind-latest-published-version?
-       (tt/with-tooltip
-         [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
-                                                :color :orange}]]
-         (@tr [:warning-not-latest-app-version])))
+       [tt/WithTooltip
+        [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                        :color :orange}]
+        (@tr [:warning-not-latest-app-version])])
      general-utils/nbsp
      (when @editable?
        [DeleteApp on-delete])]))
@@ -189,11 +189,11 @@
     (fn []
       (if (or (seq @applications) @editable?)
         ^{:key (str "tab-apps-" id "-" @rerender-atom)}
-        [ui/Tab {:menu {:style {:display "flex"
-                                :flex-wrap "wrap"}
-                        :stackable true
-                        :pointing true
-                        :secondary true}
+        [ui/Tab {:menu  {:style     {:display   "flex"
+                                     :flex-wrap "wrap"}
+                         :stackable true
+                         :pointing  true
+                         :secondary true}
                  :panes (cond->
                           (mapv
                             (fn [{:keys [name subtype] module-id :id}]
@@ -390,10 +390,10 @@
       [icons/ListIcon]
       "Applications"
       (when @has-outdated-apps?
-        (tt/with-tooltip
-          [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
-                                                 :color :orange}]]
-          (@tr [:warning-has-outdated-apps])))]]))
+        [tt/WithTooltip
+         [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                         :color :orange}]
+         (@tr [:warning-has-outdated-apps])])]]))
 
 (defn WarningVersionBehind
   [content-i18n-key]

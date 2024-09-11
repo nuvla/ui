@@ -440,6 +440,11 @@
 
 (def browser-fav-language (read-fav-language!))
 
+(defn overflowed?
+  [el]
+  (or (< (.-offsetWidth el) (.-scrollWidth el))
+      (< (.-offsetHeight el) (.-scrollHeight el))))
+
 (defn format-number
   ([amount]
    (format-number amount {:locale browser-fav-language}))

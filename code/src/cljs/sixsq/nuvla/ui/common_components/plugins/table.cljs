@@ -720,8 +720,8 @@
             [ui/TableBody (:body-props props)
              (doall
                (for [[idx row] (map-indexed vector rows)
-                     :let [id (or (:id row) (random-uuid))]]
-                 ^{:key (or (:id row) (random-uuid))}
+                     :let [id (or (:id row) (:Id row) (random-uuid))]]
+                 ^{:key id}
                  [ui/TableRow (get-row-props row)
                   (when selectable?
                     [CellCheckbox {:id               id :selected-set-sub selected-set :db-path select-db-path
@@ -740,7 +740,8 @@
                     ^{:key (str id "-" field-key)}
                     [ui/TableCell
                      (cond->
-                       cell-props
+                       (merge {:vertical-align :middle}
+                              cell-props)
 
                        last?
                        (assoc :colSpan 2)
@@ -750,20 +751,17 @@
                          (not (:on-click cell-props)))
                        (-> (assoc :on-click (fn [event] (.stopPropagation event)))
                            (update :style merge {:cursor :auto})))
-
-                     (cond
-                       cell (if (string? cell) [tt/with-overflow-tooltip
-                                                [:div.vcenter [:div.ellipsing cell]] cell]
-                                               [cell {:row-data  row
-                                                      :cell-data cell-data
-                                                      :field-key field-key}])
-                       :else (let [s (str (if (or
-                                                (not (coll? cell-data))
-                                                (seq cell-data))
-                                            cell-data
-                                            ""))]
-                               [tt/with-overflow-tooltip
-                                [:div.vcenter [:div.ellipsing s]] s]))])]))]]]]]))))
+                     (if cell
+                       [:div.vcenter
+                        [cell {:row-data  row
+                               :cell-data cell-data
+                               :field-key field-key}]]
+                       (let [s (str (if (or
+                                          (not (coll? cell-data))
+                                          (seq cell-data))
+                                      cell-data
+                                      ""))]
+                         [tt/WithOverflowTooltip {:content s :tooltip s}]))])]))]]]]]))))
 
 
 (defn ConfigureVisibleColumns

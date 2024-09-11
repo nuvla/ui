@@ -127,24 +127,22 @@
               {:field-key      :timestamp
                :header-content (constantly (str/lower-case (tr [:time])))
                :cell           (fn [{timestamp :cell-data}]
-                                 (tt/with-tooltip
-                                   [:span [uix/TimeAgo timestamp]]
-                                   timestamp))}
+                                 [uix/TimeAgo timestamp])}
               {:field-key :description
                :cell      (fn [{{:keys [description] {:keys [state]} :content} :row-data}]
                             (let [desc (or description state)]
-                              (tt/with-tooltip
-                                [:span desc]
-                                desc)))}
+                              [tt/WithOverflowTooltip {:as      :div.max-width-50ch.ellipsing
+                                                       :content desc :tooltip desc}]))}
               {:field-key  :details
                :accessor   #(get-in % [:content :state])
                :cell       (fn [{{{:keys [linked-identifiers]} :content} :row-data}]
-                             [ui/Popup {:position  "top center"
-                                        :trigger   (r/as-element
-                                                     [ui/Icon {:class icons/i-info
-                                                               :link  true}])
-                                        :hoverable true}
-                              [LinkedIdentifiers linked-identifiers]])
+                             (when (seq linked-identifiers)
+                               [ui/Popup {:position  "top center"
+                                          :trigger   (r/as-element
+                                                       [ui/Icon {:class icons/i-info
+                                                                 :link  true}])
+                                          :hoverable true}
+                                [LinkedIdentifiers linked-identifiers]]))
                :cell-props {:style {:white-space "pre"}}}]
              :rows resources}]
      [pagination-plugin/Pagination

@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.views-coe-resources
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -11,28 +10,11 @@
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
-(defn DockerLabelGroup
-  [{:keys [cell-data row-data]}]
-  [ui/LabelGroup
-   (for [[label-k label-v] cell-data]
-     ^{:key (str (:Id row-data) label-k)}
-     [ui/Label {:content label-k :detail label-v}])])
+(defn CellBytes
+  [{cell-data :cell-data}]
+  (data-utils/format-bytes cell-data))
 
-(defn DockerTagGroup
-  [{:keys [cell-data row-data]}]
-  [ui/LabelGroup {:color :blue}
-   (for [tag cell-data]
-     ^{:key (str (:Id row-data) tag)}
-     [ui/Label {:content tag}])])
-
-(defn DockerRepoDigestsGroup
-  [{:keys [cell-data row-data]}]
-  [ui/LabelGroup
-   (for [digest cell-data]
-     ^{:key (str (:Id row-data) digest)}
-     [ui/Label {:content digest}])])
-
-(defn LabelGroupOverflow
+(defn label-group-overflow-detector
   [Component]
   (r/with-let [ref        (atom nil)
                overflow?  (r/atom false)
@@ -52,38 +34,67 @@
                                              :size     :mini} (if @show-more? "▲" "▼")])])
        :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))
 
-(defn- DockerImagesTable []
-  (let [images-ordered @(subscribe [::subs/docker-images-ordered])
-        cell-bytes     (fn [{cell-data :cell-data}]
-                         (data-utils/format-bytes cell-data))]
+(defn KeyValueLabelGroup
+  [{:keys [cell-data row-data]}]
+  (label-group-overflow-detector
+    (fn []
+      [ui/LabelGroup
+       (for [[k v] cell-data]
+         ^{:key (str (:Id row-data) k)}
+         [ui/Label {:content k :detail (str v)}])])))
+
+(defn PrimaryLabelGroup
+  [{:keys [cell-data row-data]}]
+  (label-group-overflow-detector
+    (fn []
+      [ui/LabelGroup {:color :blue}
+       (for [v cell-data]
+         ^{:key (str (:Id row-data) v)}
+         [ui/Label {:content v}])])))
+
+(defn SecondaryLabelGroup
+  [{:keys [cell-data row-data]}]
+  (label-group-overflow-detector
+    (fn []
+      [ui/LabelGroup
+       (for [v cell-data]
+         ^{:key (str (:Id row-data) v)}
+         [ui/Label {:content v}])])))
+
+
+(def field-id {:field-key      :Id
+               :header-content "Id"})
+(def field-created {:field-key      :Created
+                    :header-content "Created"
+                    :cell           (fn [{:keys [cell-data]}]
+                                      [uix/TimeAgo (some-> cell-data
+                                                           time/parse-unix
+                                                           time/time->utc-str)])})
+(def field-labels {:field-key      :Labels
+                   :header-content "Labels"
+                   :no-sort?       true
+                   :cell           KeyValueLabelGroup})
+
+(defn DockerImagesTable []
+  (let [images-ordered @(subscribe [::subs/docker-images-ordered])]
     [table-plugin/TableColsEditable
-     {:columns           [{:field-key      :Id
-                           :header-content "Id"
-                           :no-sort?       true}
+     {:columns           [field-id
                           {:field-key      :ParentId
                            :header-content "Parent Id"
                            :no-sort?       true}
                           {:field-key      :RepoDigests
                            :header-content "Repo Digests"
                            :no-sort?       true
-                           :cell           (partial LabelGroupOverflow DockerRepoDigestsGroup)}
+                           :cell           SecondaryLabelGroup}
                           {:field-key      :Size
                            :header-content "Size"
-                           :cell           cell-bytes}
-                          {:field-key      :Created
-                           :header-content "Created"
-                           :cell           (fn [{:keys [cell-data]}]
-                                             [uix/TimeAgo (some-> cell-data
-                                                                  time/parse-unix
-                                                                  time/time->utc-str)])}
+                           :cell           CellBytes}
+                          field-created
                           {:field-key      :RepoTags
                            :header-content "Tags"
                            :no-sort?       true
-                           :cell           (partial LabelGroupOverflow DockerTagGroup)}
-                          {:field-key      :Labels
-                           :header-content "Labels"
-                           :no-sort?       true
-                           :cell           (partial LabelGroupOverflow DockerLabelGroup)}]
+                           :cell           PrimaryLabelGroup}
+                          field-labels]
       :sort-config       {:db-path ::spec/docker-images-ordering}
       :default-columns   #{:Id
                            :Size
@@ -96,19 +107,61 @@
       :rows              images-ordered}
      ::table-cols-edge-detail-coe-resource-docker-images]))
 
-(defn ImagesPane
-  []
-  [ui/TabPane
-   [DockerImagesTable]])
+(defn DockerVolumesTable []
+  (let [volumes-ordered @(subscribe [::subs/docker-volumes-ordered])]
+    [table-plugin/TableColsEditable
+     {:columns           [{:field-key      :Name
+                           :header-content "Name"}
+                          {:field-key      :Driver
+                           :header-content "Driver"}
+                          {:field-key      :Scope
+                           :header-content "Scope"}
+                          {:field-key      :Mountpoint
+                           :header-content "Mount point"}
+                          field-labels]
+      :sort-config       {:db-path ::spec/docker-volumes-ordering}
+      :default-columns   #{:Name :Driver :Mountpoint :Labels}
+      :table-props       {:stackable true}
+      :wrapper-div-class nil
+      :cell-props        {:header {:single-line true}}
+      :rows              volumes-ordered}
+     ::table-cols-edge-detail-coe-resource-docker-volumes]))
 
-(defn VolumesPane
-  []
-  [ui/TabPane
-   "Volumes 1 content"
-   ])
+(defn- DockerContainersTable []
+  (let [containers-ordered @(subscribe [::subs/docker-containers-ordered])]
+    [table-plugin/TableColsEditable
+     {:columns           [field-id
+                          {:field-key      :Image
+                           :header-content "Image"}
+                          field-created
+                          {:field-key      :Status
+                           :header-content "Status"}
+                          {:field-key      :SizeRootFs
+                           :header-content "Size RootFs"
+                           :cell           CellBytes}
+                          field-labels
+                          {:field-key      :HostConfig
+                           :header-content "Host config"
+                           :cell           KeyValueLabelGroup}
+                          {:field-key      :Names
+                           :header-content "Names"
+                           :no-sort?       true
+                           :cell           SecondaryLabelGroup}
+                          {:field-key      :SizeRw
+                           :header-content "Size RW"
+                           :cell           CellBytes}]
+      :sort-config       {:db-path ::spec/docker-volumes-ordering}
+      :default-columns   #{:Id :Image :SizeRootFs :Created :Labels :Status}
+      :table-props       {:stackable true}
+      :wrapper-div-class nil
+      :cell-props        {:header {:single-line true}}
+      :rows              containers-ordered}
+     ::table-cols-edge-detail-coe-resource-docker-containers]))
 
 (defn Tab
   []
   [ui/Tab
-   {:panes [{:menuItem "Images", :render #(r/as-element [ImagesPane])}
-            {:menuItem "Volumes", :render #(r/as-element [VolumesPane])}]}])
+   {:panes [{:menuItem "Containers", :render #(r/as-element [ui/TabPane [DockerContainersTable]])}
+            {:menuItem "Images", :render #(r/as-element [ui/TabPane [DockerImagesTable]])}
+            {:menuItem "Volumes", :render #(r/as-element [ui/TabPane [DockerVolumesTable]])}
+            ]}])

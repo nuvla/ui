@@ -39,6 +39,40 @@
   :-> :images)
 
 (reg-sub
+  ::docker-volumes
+  :<- [::docker]
+  :-> :volumes)
+
+(reg-sub
+  ::docker-volumes-ordering
+  :-> ::spec/docker-volumes-ordering)
+
+(reg-sub
+  ::docker-volumes-ordered
+  :<- [::docker-volumes]
+  :<- [::docker-volumes-ordering]
+  (fn [[volumes ordering]]
+    (sort (partial general-utils/multi-key-direction-sort ordering) volumes)))
+
+
+(reg-sub
+  ::docker-containers
+  :<- [::docker]
+  :-> :containers)
+
+(reg-sub
+  ::docker-containers-ordering
+  :-> ::spec/docker-containers-ordering)
+
+(reg-sub
+  ::docker-containers-ordered
+  :<- [::docker-containers]
+  :<- [::docker-containers-ordering]
+  (fn [[containers ordering]]
+    (sort (partial general-utils/multi-key-direction-sort ordering) containers)))
+
+
+(reg-sub
   ::docker-images-ordering
   :-> ::spec/docker-images-ordering)
 

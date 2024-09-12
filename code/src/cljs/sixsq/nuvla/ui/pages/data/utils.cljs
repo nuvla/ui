@@ -47,7 +47,7 @@
               prefix (get units exp)
               v      (/ bytes (js/Math.pow scale exp))]
           (str (general-utils/round-up v :n-decimal 1) " " prefix))))
-    "..."))
+    "-"))
 
 (defn bytes-usage
   "Given a used and limit amounts in bytes returns a tuple with:

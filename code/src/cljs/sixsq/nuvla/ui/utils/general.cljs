@@ -445,14 +445,20 @@
   (or (< (.-offsetWidth el) (.-scrollWidth el))
       (< (.-offsetHeight el) (.-scrollHeight el))))
 
+(defn safe-compare
+  [x y]
+  (try
+    (compare x y)
+    (catch :default _ 0)))
+
 (defn multi-key-direction-sort
   [orders x y]
   (loop [rest-orders orders]
     (when-let [[key direction value-fn] (first rest-orders)]
       (let [get-sort-value (or value-fn key)
             c              (if (= direction "desc")
-                             (compare (get-sort-value y) (get-sort-value x))
-                             (compare (get-sort-value x) (get-sort-value y)))]
+                             (safe-compare (get-sort-value y) (get-sort-value x))
+                             (safe-compare (get-sort-value x) (get-sort-value y)))]
         (if (not= c 0)
           c
           (recur (rest rest-orders)))))))

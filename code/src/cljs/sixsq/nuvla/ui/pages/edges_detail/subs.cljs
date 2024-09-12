@@ -3,7 +3,8 @@
             [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
-            [sixsq.nuvla.ui.utils.general :as general-utils]))
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (reg-sub
   ::loading?
@@ -39,38 +40,14 @@
   :-> :images)
 
 (reg-sub
-  ::docker-volumes
-  :<- [::docker]
-  :-> :volumes)
-
-(reg-sub
-  ::docker-volumes-ordering
-  :-> ::spec/docker-volumes-ordering)
-
-(reg-sub
-  ::docker-volumes-ordered
-  :<- [::docker-volumes]
-  :<- [::docker-volumes-ordering]
-  (fn [[volumes ordering]]
-    (sort (partial general-utils/multi-key-direction-sort ordering) volumes)))
-
-
-(reg-sub
-  ::docker-containers
-  :<- [::docker]
-  :-> :containers)
-
-(reg-sub
-  ::docker-containers-ordering
-  :-> ::spec/docker-containers-ordering)
-
-(reg-sub
-  ::docker-containers-ordered
-  :<- [::docker-containers]
-  :<- [::docker-containers-ordering]
-  (fn [[containers ordering]]
-    (sort (partial general-utils/multi-key-direction-sort ordering) containers)))
-
+  ::docker-images-clean
+  :<- [::docker-images]
+  (fn [images]
+    (map (fn [image]
+           (-> image
+               (assoc :id (str/replace (:Id image) #"^sha256:" ""))
+               (update :Created #(some-> % time/parse-unix time/time->utc-str))
+               (dissoc :Id :SharedSize :Containers))) images)))
 
 (reg-sub
   ::docker-images-ordering
@@ -78,10 +55,113 @@
 
 (reg-sub
   ::docker-images-ordered
-  :<- [::docker-images]
+  :<- [::docker-images-clean]
   :<- [::docker-images-ordering]
   (fn [[images ordering]]
     (sort (partial general-utils/multi-key-direction-sort ordering) images)))
+
+(reg-sub
+  ::docker-volumes
+  :<- [::docker]
+  :-> :volumes)
+
+(reg-sub
+  ::docker-volumes-clean
+  :<- [::docker-volumes]
+  (fn [volumes]
+    (map (fn [volume]
+           (-> volume
+               (assoc :id (:Name volume))
+               (dissoc :Name))) volumes)))
+
+(reg-sub
+  ::docker-volumes-ordering
+  :-> ::spec/docker-volumes-ordering)
+
+(reg-sub
+  ::docker-volumes-ordered
+  :<- [::docker-volumes-clean]
+  :<- [::docker-volumes-ordering]
+  (fn [[volumes ordering]]
+    (sort (partial general-utils/multi-key-direction-sort ordering) volumes)))
+
+(reg-sub
+  ::docker-containers
+  :<- [::docker]
+  :-> :containers)
+
+(reg-sub
+  ::docker-containers-clean
+  :<- [::docker-containers]
+  (fn [containers]
+    (map (fn [container]
+           (-> container
+               (assoc :id (:Id container))
+               (dissoc :Id ))) containers)))
+
+(reg-sub
+  ::docker-containers-ordering
+  :-> ::spec/docker-containers-ordering)
+
+(reg-sub
+  ::docker-containers-ordered
+  :<- [::docker-containers-clean]
+  :<- [::docker-containers-ordering]
+  (fn [[containers ordering]]
+    (sort (partial general-utils/multi-key-direction-sort ordering) containers)))
+
+(reg-sub
+  ::docker-networks
+  :<- [::docker]
+  :-> :networks)
+
+(reg-sub
+  ::docker-networks-clean
+  :<- [::docker-networks]
+  (fn [networks]
+    (map (fn [network]
+           (-> network
+               (assoc :id (:Id network))
+               (dissoc :Id))) networks)))
+
+(reg-sub
+  ::docker-networks-ordering
+  :-> ::spec/docker-networks-ordering)
+
+(reg-sub
+  ::docker-networks-ordered
+  :<- [::docker-networks-clean]
+  :<- [::docker-networks-ordering]
+  (fn [[networks ordering]]
+    (sort (partial general-utils/multi-key-direction-sort ordering) networks)))
+
+(reg-sub
+  ::docker-configs
+  :<- [::docker]
+  :-> :configs)
+
+(reg-sub
+  ::docker-configs-clean
+  :<- [::docker-configs]
+  (fn [configs]
+    (map (fn [config]
+           (-> config
+               (assoc :id (:ID config)
+                      :Name (get-in config [:Spec :Name])
+                      :Data (.atob js/window (get-in config [:Spec :Data]))
+                      :Labels (get-in config [:Spec :Labels]))
+               (dissoc :Spec :ID))) configs)))
+
+(reg-sub
+  ::docker-configs-ordering
+  :-> ::spec/docker-configs-ordering)
+
+(reg-sub
+  ::docker-configs-ordered
+  :<- [::docker-configs-clean]
+  :<- [::docker-configs-ordering]
+  (fn [[configs ordering]]
+    (sort (partial general-utils/multi-key-direction-sort ordering) configs)))
 
 (reg-sub
   ::container-stats-ordered

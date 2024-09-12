@@ -14,6 +14,14 @@
   [{cell-data :cell-data}]
   (data-utils/format-bytes cell-data))
 
+(defn CellTimeAgoUnixTimestamp
+  [{:keys [cell-data]}]
+  [uix/TimeAgo (some-> cell-data time/parse-unix time/time->utc-str)])
+
+(defn CellTimeAgo
+  [{:keys [cell-data]}]
+  [uix/TimeAgo cell-data])
+
 (defn label-group-overflow-detector
   [Component]
   (r/with-let [ref        (atom nil)
@@ -66,10 +74,7 @@
                :header-content "Id"})
 (def field-created {:field-key      :Created
                     :header-content "Created"
-                    :cell           (fn [{:keys [cell-data]}]
-                                      [uix/TimeAgo (some-> cell-data
-                                                           time/parse-unix
-                                                           time/time->utc-str)])})
+                    :cell           CellTimeAgoUnixTimestamp})
 (def field-labels {:field-key      :Labels
                    :header-content "Labels"
                    :no-sort?       true
@@ -118,9 +123,12 @@
                            :header-content "Scope"}
                           {:field-key      :Mountpoint
                            :header-content "Mount point"}
+                          {:field-key    :CreatedAt
+                           :header-content "Created"
+                           :cell           CellTimeAgo}
                           field-labels]
       :sort-config       {:db-path ::spec/docker-volumes-ordering}
-      :default-columns   #{:Name :Driver :Mountpoint :Labels}
+      :default-columns   #{:Name :Driver :Mountpoint :CreatedAt :Labels}
       :table-props       {:stackable true}
       :wrapper-div-class nil
       :cell-props        {:header {:single-line true}}

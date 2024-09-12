@@ -8,6 +8,7 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
+            [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (defn DockerLabelGroup
@@ -52,16 +53,19 @@
        :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))
 
 (defn- DockerImagesTable []
-  (let [images     (subscribe [::subs/docker-images])
-        cell-bytes (fn [{cell-data :cell-data}]
-                     (data-utils/format-bytes cell-data))]
+  (let [images-ordered @(subscribe [::subs/docker-images-ordered])
+        cell-bytes     (fn [{cell-data :cell-data}]
+                         (data-utils/format-bytes cell-data))]
     [table-plugin/TableColsEditable
      {:columns           [{:field-key      :Id
-                           :header-content "Id"}
+                           :header-content "Id"
+                           :no-sort?       true}
                           {:field-key      :ParentId
-                           :header-content "Parent Id"}
+                           :header-content "Parent Id"
+                           :no-sort?       true}
                           {:field-key      :RepoDigests
                            :header-content "Repo Digests"
+                           :no-sort?       true
                            :cell           (partial LabelGroupOverflow DockerRepoDigestsGroup)}
                           {:field-key      :Size
                            :header-content "Size"
@@ -74,77 +78,28 @@
                                                                   time/time->utc-str)])}
                           {:field-key      :RepoTags
                            :header-content "Tags"
+                           :no-sort?       true
                            :cell           (partial LabelGroupOverflow DockerTagGroup)}
                           {:field-key      :Labels
                            :header-content "Labels"
-                           :cell           (partial LabelGroupOverflow DockerLabelGroup)}
-                          ;{:field-key      :cpu-usage
-                          ; :header-content "CPU %"
-                          ; :cell           (fn [{value :cell-data}]
-                          ;                   (if value
-                          ;                     (str (general-utils/to-fixed value) " %")
-                          ;                     "-"))}
-                          ;{:field-key      :mem-usage
-                          ; :header-content "Mem Usage"
-                          ; :cell           cell-bytes}
-                          ;{:field-key      :mem-limit
-                          ; :header-content "Mem Limit"
-                          ; :cell           cell-bytes}
-                          ;{:field-key      :mem-usage-perc
-                          ; :header-content "Mem Usage %"
-                          ; :cell           (fn [{{:keys [mem-usage mem-limit]} :row-data}]
-                          ;                   [BytesUsage mem-usage mem-limit])
-                          ; :cell-props     {:style {:text-align "right"}}
-                          ; :sort-value-fn  (fn [{:keys [mem-usage mem-limit]}]
-                          ;                   (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
-                          ;                     (/ (double mem-usage) mem-limit)))}
-                          ;{:field-key      :status
-                          ; :header-content "Status"}
-                          ;{:field-key      :restart-count
-                          ; :header-content "Restart Count"}
-                          ;{:field-key      :disk-in
-                          ; :header-content "Disk In"
-                          ; :cell           cell-bytes}
-                          ;{:field-key      :disk-out
-                          ; :header-content "Disk Out"
-                          ; :cell           cell-bytes}
-                          ;{:field-key      :net-in
-                          ; :header-content "Network In"
-                          ; :cell           cell-bytes}
-                          ;{:field-key      :net-out
-                          ; :header-content "Network Out"
-                          ; :cell           cell-bytes}
-                          ;{:field-key      :created-at
-                          ; :header-content "Created"
-                          ; :cell           (fn [{{:keys [created-at]} :row-data}]
-                          ;                   [uix/TimeAgo created-at])}
-                          ;{:field-key      :started-at
-                          ; :header-content "Started"
-                          ; :cell           (fn [{{:keys [started-at]} :row-data}]
-                          ;                   [uix/TimeAgo started-at])}
-                          ;{:field-key      :cpu-capacity
-                          ; :header-content "CPU capacity"}
-                          ]
-      ;:sort-config     {:db-path ::spec/stats-container-ordering}
+                           :no-sort?       true
+                           :cell           (partial LabelGroupOverflow DockerLabelGroup)}]
+      :sort-config       {:db-path ::spec/docker-images-ordering}
       :default-columns   #{:Id
-                           :RepoTags
                            :Size
-                           :Created}
+                           :Created
+                           :RepoTags
+                           :Labels}
       :table-props       {:stackable true}
-      ;:table-props       (merge style/single-line {:stackable true})
       :wrapper-div-class nil
       :cell-props        {:header {:single-line true}}
-      :rows              @images}
+      :rows              images-ordered}
      ::table-cols-edge-detail-coe-resource-docker-images]))
 
 (defn ImagesPane
   []
-  (r/with-let [images (subscribe [::subs/docker-images])]
-    [ui/TabPane
-     [DockerImagesTable]
-     "Images 1 content"
-     (str @images)
-     ]))
+  [ui/TabPane
+   [DockerImagesTable]])
 
 (defn VolumesPane
   []
@@ -154,9 +109,6 @@
 
 (defn Tab
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      (let []
-        [ui/Tab
-         {:panes [{:menuItem "Images", :render #(r/as-element [ImagesPane])}
-                  {:menuItem "Volumes", :render #(r/as-element [VolumesPane])}]}]))))
+  [ui/Tab
+   {:panes [{:menuItem "Images", :render #(r/as-element [ImagesPane])}
+            {:menuItem "Volumes", :render #(r/as-element [VolumesPane])}]}])

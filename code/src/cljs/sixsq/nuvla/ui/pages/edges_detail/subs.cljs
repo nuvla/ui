@@ -38,24 +38,23 @@
   :<- [::docker]
   :-> :images)
 
-(defn multi-key-direction-sort
-  [orders x y]
-  (loop [rest-orders orders]
-    (when-let [[key direction value-fn] (first rest-orders)]
-      (let [get-sort-value (or value-fn key)
-            c              (if (= direction "desc")
-                             (compare (get-sort-value y) (get-sort-value x))
-                             (compare (get-sort-value x) (get-sort-value y)))]
-        (if (not= c 0)
-          c
-          (recur (rest rest-orders)))))))
+(reg-sub
+  ::docker-images-ordering
+  :-> ::spec/docker-images-ordering)
+
+(reg-sub
+  ::docker-images-ordered
+  :<- [::docker-images]
+  :<- [::docker-images-ordering]
+  (fn [[images ordering]]
+    (sort (partial general-utils/multi-key-direction-sort ordering) images)))
 
 (reg-sub
   ::container-stats-ordered
   :<- [::container-stats]
   :<- [::stats-container-ordering]
   (fn [[container-stats stats-container-ordering]]
-    (sort (partial multi-key-direction-sort stats-container-ordering) container-stats)))
+    (sort (partial general-utils/multi-key-direction-sort stats-container-ordering) container-stats)))
 
 (reg-sub
   ::nuvlaedge-release

@@ -1,13 +1,17 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.views-coe-resources
-  (:require [re-frame.core :refer [dispatch subscribe]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [reagent.core :as r]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn CellBytes
   [{cell-data :cell-data}]
@@ -20,7 +24,7 @@
 (defn CellModalTextArea
   [{:keys [cell-data]}]
   [ui/Modal {:close-icon true
-             :trigger    (r/as-element [ui/Icon {:name "magnify"
+             :trigger    (r/as-element [ui/Icon {:name  "magnify"
                                                  :style {:cursor :pointer}}])}
    [ui/ModalHeader "Data"]
    [ui/ModalContent
@@ -101,22 +105,21 @@
                    :header-content "Driver"})
 
 (defn DockerTable
-  [{:keys [columns default-columns sort-config-db-path subscribe-key db-path]}]
-  (let [images-ordered @(subscribe [subscribe-key])]
-    [table-plugin/TableColsEditable
-     {:columns           columns
-      :sort-config       {:db-path sort-config-db-path}
-      :default-columns   default-columns
-      :table-props       {:stackable true}
-      :wrapper-div-class nil
-      :cell-props        {:header {:single-line true}}
-      :rows              images-ordered}
-     db-path]))
+  [{:keys [rows columns default-columns sort-config-db-path db-path]}]
+  [table-plugin/TableColsEditable
+   {:columns           columns
+    :sort-config       {:db-path sort-config-db-path}
+    :default-columns   default-columns
+    :table-props       {:stackable true}
+    :wrapper-div-class nil
+    :cell-props        {:header {:single-line true}}
+    :rows              @rows}
+   db-path])
 
-(defn DockerImagesTable []
+(defn DockerImagesTable [control]
   [DockerTable
    {:db-path             ::table-cols-edge-detail-coe-resource-docker-images
-    :subscribe-key       ::subs/docker-images-ordered
+    :rows                (::!docker-images control)
     :columns             [field-id
                           {:field-key      :ParentId
                            :header-content "Parent Id"
@@ -137,10 +140,59 @@
     :sort-config-db-path ::spec/docker-images-ordering
     :default-columns     #{:id :Size :Created :RepoTags}}])
 
-(defn DockerVolumesTable []
+(defn PullImageMenuItem
+  [opts]
+  [ui/MenuItem {:disabled @(::!can-manage? opts)
+                :on-click (::docker-image-pull-modal-open-fn opts)}
+   [icons/DownloadIcon] "Pull"])
+
+(defn PullImageActionButton
+  [control image-value]
+  [uix/Button {:primary  true
+               :disabled @(r/track #(str/blank? @image-value))
+               :icon     icons/i-download
+               :content  "Pull image"
+               :on-click #((::docker-image-pull-action-fn control) @image-value)}])
+
+(defn PullImageModal
+  [control]
+  (r/with-let [image-value           (r/atom "")
+               update-image-value-fn #(reset! image-value %)]
+    [ui/Modal {:open       @(::!docker-image-pull-modal-open? control)
+               :close-icon true
+               :on-close   (::docker-image-pull-modal-close-fn control)
+               :trigger    (r/as-element [PullImageMenuItem control])}
+     [ui/ModalHeader "Pull image"]
+     [ui/ModalContent
+      [ui/Form
+       [ui/FormInput {:label     "Image" :required true :placeholder "e.g. registry:port/image:tag"
+                      :on-change (ui-callback/input-callback update-image-value-fn)}]]]
+     [ui/ModalActions
+      [PullImageActionButton control image-value]]]))
+
+(defn ImageActionBar
+  [control]
+  (r/with-let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Menu
+     [PullImageModal control]
+     [ui/MenuItem {:on-click #()}
+      [icons/TrashIcon] "Remove"]
+     [ui/MenuMenu {:position "right"}
+      [ui/MenuItem
+       [ui/Input {:transparent true
+                  :placeholder (str (@tr [:search]) "...")
+                  :icon        (r/as-element [icons/SearchIcon])}]]]]))
+
+(defn DockerImagePane
+  [control]
+  [ui/TabPane
+   [ImageActionBar control]
+   [DockerImagesTable control]])
+
+(defn DockerVolumesTable [control]
   [DockerTable
    {:db-path             ::table-cols-edge-detail-coe-resource-docker-volumes
-    :subscribe-key       ::subs/docker-volumes-ordered
+    :rows                (::!docker-volumes control)
     :columns             [{:field-key      :id
                            :header-content "Name"}
                           field-driver
@@ -153,10 +205,13 @@
     :sort-config-db-path ::spec/docker-volumes-ordering
     :default-columns     #{:id :Driver :Mountpoint :CreatedAt :Labels}}])
 
-(defn- DockerContainersTable []
+(defn DockerVolumePane [control]
+  [ui/TabPane [DockerVolumesTable control]])
+
+(defn- DockerContainersTable [control]
   [DockerTable
    {:db-path             ::table-cols-edge-detail-coe-resource-docker-containers
-    :subscribe-key       ::subs/docker-containers-ordered
+    :rows                (::!docker-containers control)
     :columns             [field-id
                           {:field-key      :Image
                            :header-content "Image"}
@@ -182,10 +237,13 @@
     :sort-config-db-path ::spec/docker-volumes-ordering
     :default-columns     #{:id :Image :SizeRootFs :Created :Status}}])
 
-(defn- DockerNetworksTable []
+(defn DockerContainerPane [control]
+  [ui/TabPane [DockerContainersTable control]])
+
+(defn- DockerNetworksTable [control]
   [DockerTable
    {:db-path             ::table-cols-edge-detail-coe-resource-docker-networks
-    :subscribe-key       ::subs/docker-networks-ordered
+    :rows                (::!docker-networks control)
     :columns             [field-id
                           field-name
                           field-created-iso
@@ -197,10 +255,13 @@
     :sort-config-db-path ::spec/docker-networks-ordering
     :default-columns     #{:id :Name :Created :Labels :Driver}}])
 
-(defn- DockerConfigsTable []
+(defn DockerNetworkPane [control]
+  [ui/TabPane [DockerNetworksTable control]])
+
+(defn- DockerConfigsTable [control]
   [DockerTable
    {:db-path             ::table-cols-edge-detail-coe-resource-docker-configs
-    :subscribe-key       ::subs/docker-configs-ordered
+    :rows                (::!docker-configs control)
     :columns             [field-id
                           field-name
                           field-created-at
@@ -215,11 +276,26 @@
     :sort-config-db-path ::spec/docker-configs-ordering
     :default-columns     #{:id :Name :CreatedAt :UpdatedAt :Data}}])
 
+(defn DockerConfigPane [control]
+  [ui/TabPane [DockerConfigsTable control]])
+
 (defn Tab
   []
-  [ui/Tab
-   {:panes [{:menuItem "Containers", :render #(r/as-element [ui/TabPane [DockerContainersTable]])}
-            {:menuItem "Images", :render #(r/as-element [ui/TabPane [DockerImagesTable]])}
-            {:menuItem "Volumes", :render #(r/as-element [ui/TabPane [DockerVolumesTable]])}
-            {:menuItem "Networks", :render #(r/as-element [ui/TabPane [DockerNetworksTable]])}
-            {:menuItem "Configs", :render #(r/as-element [ui/TabPane [DockerConfigsTable]])}]}])
+  (r/with-let [!can-manage?      (r/atom false)
+               !pull-modal-open? (r/atom false)
+               control           {::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
+                                  ::docker-image-pull-modal-close-fn #(reset! !pull-modal-open? false)
+                                  ::docker-image-pull-action-fn      #(js/console.info ::docker-image-pull-action-fn %)
+                                  ::!can-manage?                     !can-manage?
+                                  ::!docker-image-pull-modal-open?   !pull-modal-open?
+                                  ::!docker-images                   (subscribe [::subs/docker-images-ordered])
+                                  ::!docker-containers               (subscribe [::subs/docker-containers-ordered])
+                                  ::!docker-networks                 (subscribe [::subs/docker-networks-ordered])
+                                  ::!docker-configs                  (subscribe [::subs/docker-configs-ordered])
+                                  ::!docker-volumes                  (subscribe [::subs/docker-volumes-ordered])}]
+    [ui/Tab
+     {:panes [{:menuItem "Containers", :render #(r/as-element [DockerContainerPane control])}
+              {:menuItem "Images", :render #(r/as-element [DockerImagePane control])}
+              {:menuItem "Volumes", :render #(r/as-element [DockerVolumePane control])}
+              {:menuItem "Networks", :render #(r/as-element [DockerNetworkPane control])}
+              {:menuItem "Configs", :render #(r/as-element [DockerConfigPane control])}]}]))

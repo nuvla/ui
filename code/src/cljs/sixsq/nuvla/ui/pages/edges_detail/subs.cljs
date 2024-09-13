@@ -149,7 +149,8 @@
                (assoc :id (:ID config)
                       :Name (get-in config [:Spec :Name])
                       :Data (.atob js/window (get-in config [:Spec :Data]))
-                      :Labels (get-in config [:Spec :Labels]))
+                      :Labels (get-in config [:Spec :Labels])
+                      :Version (get-in config [:Version :Index]))
                (dissoc :Spec :ID))) configs)))
 
 (reg-sub

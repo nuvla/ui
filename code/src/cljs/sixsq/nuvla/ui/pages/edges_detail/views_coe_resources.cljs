@@ -20,7 +20,8 @@
 (defn CellModalTextArea
   [{:keys [cell-data]}]
   [ui/Modal {:close-icon true
-             :trigger    (r/as-element [ui/Icon {:name "magnify"}])}
+             :trigger    (r/as-element [ui/Icon {:name "magnify"
+                                                 :style {:cursor :pointer}}])}
    [ui/ModalHeader "Data"]
    [ui/ModalContent
     [ui/Form
@@ -205,8 +206,7 @@
                           field-created-at
                           field-updated-at
                           {:field-key      :Version
-                           :header-content "Version"
-                           :cell           KeyValueLabelGroup}
+                           :header-content "Version"}
                           {:field-key      :Data
                            :header-content "Data"
                            :no-sort?       true

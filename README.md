@@ -102,6 +102,23 @@ Run `npm ci --legacy-peer-deps` inside `code` folder of the cloned repository. T
 then whenever dependencies change.
 When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui at https://nui.localhost.
 
+## Storybook
+
+We use [`Storybook`](https://storybook.js.org/) for component showcasing and testing.
+To run Storybook locally, inside the code directory:
+
+1. Compile the CLJS stories to JS with: `lein stories`
+2. Run Storybook: `npm run storybook`
+
+### Storybook test-runner
+
+To execute all Storybook tests (smoke + play tests), run the following command (Storybook needs to be running for this command to work):
+
+`npm run test-storybook -- --url http://127.0.0.1:58399`
+
+or for watch mode:
+
+`npm run test-storybook -- --url http://127.0.0.1:58399 --watch`
 
 ## Testing
 

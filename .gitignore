@@ -29,3 +29,8 @@ package-lock.json
 .eastwood
 code/out
 code/test/e2e/loggedin/local_dev.spec.ts
+
+code/migration-storybook.log
+code/stories-output-js
+code/storybook-static
+

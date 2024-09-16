@@ -74,6 +74,17 @@
                                                                        :optimizations :advanced
                                                                        :pseudo-names  false
                                                                        :pretty-print  false}}}
+
+                     :stories  {:target           :npm-module ; :esm
+                                :output-dir       "stories-output-js"
+                                :js-options       {:js-provider :import}
+                                :ns-regexp        "-stories$"
+                                #_:modules          #_{:stories {:entries [sixsq.nuvla.ui.stories.components.button-stories
+                                                                       sixsq.nuvla.ui.stories.components.table-stories]}}
+                                :compiler-options {:output-feature-set :es2020
+                                                   :output-wrapper     false
+                                                   :warnings           {:fn-deprecated false}}}
+
                      :test     {:target    :karma
                                 :output-to "target/ci.js"
                                 :ns-regexp "-(spec|test)$"}}}

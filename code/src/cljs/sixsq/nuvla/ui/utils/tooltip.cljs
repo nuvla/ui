@@ -6,7 +6,7 @@
   [component tooltip]
   (if tooltip
     [ui/Popup
-     {:content   (r/as-element [:p tooltip])
+     {:content   (r/as-element [:p {:data-testid "tooltip-content"} tooltip])
       :trigger   (r/as-element component)
       :hoverable true}]
     component))
@@ -17,8 +17,11 @@
         ref-fn #(some->> % (reset! ref))]
     (fn [component tooltip]
       (let [overflowed? (when-let [el @ref]
-                          (or (< (.-offsetWidth el) (.-scrollWidth el))
-                              (< (.-offsetHeight el) (.-scrollHeight el))))]
+                          (prn :el el)
+                          (prn :a (.-clientWidth el) (.-scrollWidth el))
+                          (prn :b (.-clientHeight el) (.-scrollHeight el))
+                          (or (< (.-clientWidth el) (.-scrollWidth el))
+                              (< (.-clientHeight el) (.-scrollHeight el))))]
         (if overflowed?
           (with-tooltip component tooltip)
           [:div {:ref ref-fn} component])))))

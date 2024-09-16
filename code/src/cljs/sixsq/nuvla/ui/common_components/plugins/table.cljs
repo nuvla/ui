@@ -313,17 +313,19 @@
                    :on-click   (fn [event]
                                  (select-fn)
                                  (.stopPropagation event))}
-     [ui/Checkbox {:id         idx
-                   :aria-label (str "select " edge-name)
-                   :checked    checked?}]]))
+     [:div.vcenter
+      [ui/Checkbox {:id         idx
+                    :aria-label (str "select " edge-name)
+                    :checked    checked?}]]]))
 
 
-(defn HeaderCellCeckbox
+(defn HeaderCellCheckbox
   [{:keys [db-path resources-sub-key page-selected?-sub]}]
   (let [resources @(subscribe resources-sub-key)]
-    [ui/Checkbox {:aria-label "select all on page"
-                  :checked    @page-selected?-sub
-                  :on-click   #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
+    [:div.vcenter
+     [ui/Checkbox {:aria-label "select all on page"
+                   :checked    @page-selected?-sub
+                   :on-click   #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]]))
 
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub disabled-tooltip
@@ -675,8 +677,8 @@
               (when selectable?
                 [ui/TableHeaderCell
                  {:style {:width "30px"}}
-                 [HeaderCellCeckbox {:db-path            select-db-path :resources-sub-key resources-sub-key
-                                     :page-selected?-sub page-selected? :rights-needed rights-needed}]])
+                 [HeaderCellCheckbox {:db-path            select-db-path :resources-sub-key resources-sub-key
+                                      :page-selected?-sub page-selected? :rights-needed rights-needed}]])
               (doall
                 (for [col columns
                       :when col
@@ -740,8 +742,7 @@
                     ^{:key (str id "-" field-key)}
                     [ui/TableCell
                      (cond->
-                       (merge {:vertical-align :middle}
-                              cell-props)
+                       (merge {} cell-props)
 
                        last?
                        (assoc :colSpan 2)
@@ -752,10 +753,9 @@
                        (-> (assoc :on-click (fn [event] (.stopPropagation event)))
                            (update :style merge {:cursor :auto})))
                      (if cell
-                       [:div.vcenter
-                        [cell {:row-data  row
-                               :cell-data cell-data
-                               :field-key field-key}]]
+                       [cell {:row-data  row
+                              :cell-data cell-data
+                              :field-key field-key}]
                        (let [s (str (if (or
                                           (not (coll? cell-data))
                                           (seq cell-data))

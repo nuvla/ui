@@ -20,6 +20,7 @@
       {:display-name        "with-overflow-tooltip"
        :reagent-render      (fn [{:keys [as content tooltip]
                                   :or   {as :div.max-width-26ch.ellipsing}}]
-                              [WithTooltip [as {:ref ref-fn} content]
+                              [WithTooltip [:div.vcenter
+                                            [as {:ref ref-fn} content]]
                                (when @overflow? tooltip)])
        :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))

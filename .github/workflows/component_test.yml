@@ -26,14 +26,16 @@ jobs:
           node-version: '18.x'
       - name: Install dependencies
         run: npm install
- #     - name: Install Playwright
- #       run: npx playwright install --with-deps
+      - name: Install Playwright
+        run: npx playwright install --with-deps
       - name: Build stories with lein
         run: lein build-stories
       - name: Build Storybook
         run: npm run build-storybook
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      #- name: Setup tmate session
+      #  uses: mxschmitt/action-tmate@v3
+      - name: Install dependencies
+        run: npm i -D @swc/core
       - name: Serve Storybook and run tests
         run: npm run test-storybook:ci
 

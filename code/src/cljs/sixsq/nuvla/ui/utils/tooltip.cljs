@@ -17,11 +17,8 @@
         ref-fn #(some->> % (reset! ref))]
     (fn [component tooltip]
       (let [overflowed? (when-let [el @ref]
-                          (prn :el el)
-                          (prn :a (.-clientWidth el) (.-scrollWidth el))
-                          (prn :b (.-clientHeight el) (.-scrollHeight el))
-                          (or (< (.-clientWidth el) (.-scrollWidth el))
-                              (< (.-clientHeight el) (.-scrollHeight el))))]
+                          (or (< (.-offsetWidth el) (.-scrollWidth el))
+                              (< (.-offsetHeight el) (.-scrollHeight el))))]
         (if overflowed?
           (with-tooltip component tooltip)
           [:div {:ref ref-fn} component])))))

@@ -34,7 +34,7 @@ export const WithOverflow = {
       delay: 100,
     });
 
-    await expect(body.getByTestId('tooltip-content')).not.toBeInTheDocument();
+    await expect(body.queryByTestId('tooltip-content')).toBeNull();
   },
 }
 

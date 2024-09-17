@@ -78,13 +78,15 @@
 
 
 
-  :aliases {"dev"       ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                         "watch" "nuvla-ui"]
-            "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                         "cljs-repl" "nuvla-ui"]
-            "stories"   ["with-profile" "+scljs,+stories" "run" "-m" "shadow.cljs.devtools.cli"
-                         "watch" "stories"]
-            "install"   ["do"
-                         ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                          "release" "nuvla-ui"]
-                         ["install"]]})
+  :aliases {"dev"           ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                             "watch" "nuvla-ui"]
+            "cljs-repl"     ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                             "cljs-repl" "nuvla-ui"]
+            "stories"       ["with-profile" "+scljs,+stories" "run" "-m" "shadow.cljs.devtools.cli"
+                             "watch" "stories"]
+            "build-stories" ["with-profile" "+scljs,+stories" "run" "-m" "shadow.cljs.devtools.cli"
+                             "release" "stories"]
+            "install"       ["do"
+                             ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                              "release" "nuvla-ui"]
+                             ["install"]]})

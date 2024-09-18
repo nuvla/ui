@@ -17,6 +17,22 @@
             [sixsq.nuvla.ui.session.events :as session-events]
             [taoensso.timbre :as log]))
 
+;; Monkey patch kvlt.platform.xhr/req->url which is encoding IPv6 address in server name
+; new goog.Uri().setScheme('https').setDomain('[2a02:1210:5a0a:4200:5054:ff:fe7d:c137]').setPath('/api/cloud-entry-point').toString();
+; Result : "https://%5B2a02%3A1210%3A5a0a%3A4200%3A5054%3Aff%3Afe7d%3Ac137%5D/api/cloud-entry-point"
+(def org-req->url kvlt.platform.xhr/req->url)
+(def pattern-ipv6 #"\[(?:[a-zA-Z0-9]{0,4}:?){1,8}\]|\[(?:[a-zA-Z0-9]{0,4}:?){1,4}(?:[0-9]{1,3}\.){3}[0-9]{1,3}\]")
+(set! kvlt.platform.xhr/req->url (fn [{:keys [scheme server-name server-port uri query-string] :as opts}]
+                                   (if (re-matches pattern-ipv6 server-name)
+                                     (let [placeholder "server-name"
+                                           separator "://"
+                                           scheme-str (name (or scheme :http))
+                                           url-encoded (org-req->url (assoc opts :server-name placeholder))]
+                                       (str/replace url-encoded
+                                                    (re-pattern (str "^" scheme-str separator placeholder))
+                                                    (str scheme-str separator server-name)))
+                                     (org-req->url opts))))
+
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)

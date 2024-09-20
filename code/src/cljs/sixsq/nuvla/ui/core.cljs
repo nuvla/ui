@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.core
   (:require [cljs.spec.test.alpha :as ts]
+            [clojure.string :as str]
             [form-validator.core :as fv]
             [goog.dom :as gdom]
             [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]

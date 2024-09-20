@@ -41,7 +41,7 @@
   []
   (let [req->url kvlt.platform.xhr/req->url
         fix-req->url (fn [{:keys [scheme server-name] :as opts}]
-                       (if (str/starts-with? server-name "[")
+                       (if (some-> server-name (str/starts-with? "["))
                          (let [placeholder "server-name"
                                separator "://"
                                scheme-str (name (or scheme :http))]

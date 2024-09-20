@@ -72,12 +72,15 @@
                           [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
                           [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
                           [com.google.javascript/closure-compiler-unshaded "v20220202"]
-                          [djblue/portal "0.42.1"]]}}
+                          [djblue/portal "0.42.1"]]}
+
+   :portfolio {:dependencies [[no.cjohansen/portfolio "2024.03.18"]]
+               :source-paths ["portfolio/src"]}}
 
 
 
-  :aliases {"dev"       ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                         "watch" "nuvla-ui"]
+  :aliases {"dev"       ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
+                         "watch" "nuvla-ui" "portfolio"]
             "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
                          "cljs-repl" "nuvla-ui"]
             "install"   ["do"

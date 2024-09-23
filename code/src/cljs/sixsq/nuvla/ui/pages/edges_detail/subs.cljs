@@ -39,6 +39,10 @@
   :<- [::docker]
   :-> :images)
 
+(defn update-created
+  [doc]
+  (update doc :Created #(some-> % time/parse-unix time/time->utc-str)))
+
 (reg-sub
   ::docker-images-clean
   :<- [::docker-images]
@@ -46,7 +50,7 @@
     (map (fn [image]
            (-> image
                (assoc :id (str/replace (:Id image) #"^sha256:" ""))
-               (update :Created #(some-> % time/parse-unix time/time->utc-str))
+               update-created
                (dissoc :Id :SharedSize :Containers))) images)))
 
 (reg-sub
@@ -97,7 +101,8 @@
     (map (fn [container]
            (-> container
                (assoc :id (:Id container))
-               (dissoc :Id ))) containers)))
+               update-created
+               (dissoc :Id))) containers)))
 
 (reg-sub
   ::docker-containers-ordering
@@ -108,6 +113,7 @@
   :<- [::docker-containers-clean]
   :<- [::docker-containers-ordering]
   (fn [[containers ordering]]
+    (js/console.info ordering)
     (sort (partial general-utils/multi-key-direction-sort ordering) containers)))
 
 (reg-sub
@@ -135,34 +141,34 @@
   (fn [[networks ordering]]
     (sort (partial general-utils/multi-key-direction-sort ordering) networks)))
 
-(reg-sub
-  ::docker-configs
-  :<- [::docker]
-  :-> :configs)
-
-(reg-sub
-  ::docker-configs-clean
-  :<- [::docker-configs]
-  (fn [configs]
-    (map (fn [config]
-           (-> config
-               (assoc :id (:ID config)
-                      :Name (get-in config [:Spec :Name])
-                      :Data (.atob js/window (get-in config [:Spec :Data]))
-                      :Labels (get-in config [:Spec :Labels])
-                      :Version (get-in config [:Version :Index]))
-               (dissoc :Spec :ID))) configs)))
-
-(reg-sub
-  ::docker-configs-ordering
-  :-> ::spec/docker-configs-ordering)
-
-(reg-sub
-  ::docker-configs-ordered
-  :<- [::docker-configs-clean]
-  :<- [::docker-configs-ordering]
-  (fn [[configs ordering]]
-    (sort (partial general-utils/multi-key-direction-sort ordering) configs)))
+;(reg-sub
+;  ::docker-configs
+;  :<- [::docker]
+;  :-> :configs)
+;
+;(reg-sub
+;  ::docker-configs-clean
+;  :<- [::docker-configs]
+;  (fn [configs]
+;    (map (fn [config]
+;           (-> config
+;               (assoc :id (:ID config)
+;                      :Name (get-in config [:Spec :Name])
+;                      :Data (.atob js/window (get-in config [:Spec :Data]))
+;                      :Labels (get-in config [:Spec :Labels])
+;                      :Version (get-in config [:Version :Index]))
+;               (dissoc :Spec :ID))) configs)))
+;
+;(reg-sub
+;  ::docker-configs-ordering
+;  :-> ::spec/docker-configs-ordering)
+;
+;(reg-sub
+;  ::docker-configs-ordered
+;  :<- [::docker-configs-clean]
+;  :<- [::docker-configs-ordering]
+;  (fn [[configs ordering]]
+;    (sort (partial general-utils/multi-key-direction-sort ordering) configs)))
 
 (reg-sub
   ::container-stats-ordered

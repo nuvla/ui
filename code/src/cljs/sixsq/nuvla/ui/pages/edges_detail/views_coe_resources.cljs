@@ -1,17 +1,17 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.views-coe-resources
-  (:require [clojure.string :as str]
-            [re-frame.core :refer [dispatch subscribe]]
+  (:require [re-frame.core :refer [dispatch subscribe]]
             [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.icons :as icons]
+            ;[clojure.string :as str]
+            ;[sixsq.nuvla.ui.utils.icons :as icons]
+            ;[sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
+            ;[sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [reagent.core :as r]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (defn CellBytes
   [{cell-data :cell-data}]
@@ -21,17 +21,17 @@
   [{:keys [cell-data]}]
   [uix/TimeAgo cell-data])
 
-(defn CellModalTextArea
-  [{:keys [cell-data]}]
-  [ui/Modal {:close-icon true
-             :trigger    (r/as-element [ui/Icon {:name  "magnify"
-                                                 :style {:cursor :pointer}}])}
-   [ui/ModalHeader "Data"]
-   [ui/ModalContent
-    [ui/Form
-     [ui/TextArea {:default-value cell-data
-                   :disabled      true
-                   :rows          10}]]]])
+;(defn CellModalTextArea
+;  [{:keys [cell-data]}]
+;  [ui/Modal {:close-icon true
+;             :trigger    (r/as-element [ui/Icon {:name  "magnify"
+;                                                 :style {:cursor :pointer}}])}
+;   [ui/ModalHeader "Data"]
+;   [ui/ModalContent
+;    [ui/Form
+;     [ui/TextArea {:default-value cell-data
+;                   :disabled      true
+;                   :rows          10}]]]])
 
 (defn label-group-overflow-detector
   [Component]
@@ -92,9 +92,9 @@
 (def field-created-at {:field-key      :CreatedAt
                        :header-content "Created"
                        :cell           CellTimeAgo})
-(def field-updated-at {:field-key      :UpdatedAt
-                       :header-content "Updated"
-                       :cell           CellTimeAgo})
+;(def field-updated-at {:field-key      :UpdatedAt
+;                       :header-content "Updated"
+;                       :cell           CellTimeAgo})
 (def field-labels {:field-key      :Labels
                    :header-content "Labels"
                    :no-sort?       true
@@ -140,53 +140,53 @@
     :sort-config-db-path ::spec/docker-images-ordering
     :default-columns     #{:id :Size :Created :RepoTags}}])
 
-(defn PullImageMenuItem
-  [opts]
-  [ui/MenuItem {:disabled @(::!can-manage? opts)
-                :on-click (::docker-image-pull-modal-open-fn opts)}
-   [icons/DownloadIcon] "Pull"])
+;(defn PullImageMenuItem
+;  [opts]
+;  [ui/MenuItem {:disabled @(::!can-manage? opts)
+;                :on-click (::docker-image-pull-modal-open-fn opts)}
+;   [icons/DownloadIcon] "Pull"])
+;
+;(defn PullImageActionButton
+;  [control image-value]
+;  [uix/Button {:primary  true
+;               :disabled @(r/track #(str/blank? @image-value))
+;               :icon     icons/i-download
+;               :content  "Pull image"
+;               :on-click #((::docker-image-pull-action-fn control) @image-value)}])
 
-(defn PullImageActionButton
-  [control image-value]
-  [uix/Button {:primary  true
-               :disabled @(r/track #(str/blank? @image-value))
-               :icon     icons/i-download
-               :content  "Pull image"
-               :on-click #((::docker-image-pull-action-fn control) @image-value)}])
+;(defn PullImageModal
+;  [control]
+;  (r/with-let [image-value           (r/atom "")
+;               update-image-value-fn #(reset! image-value %)]
+;    [ui/Modal {:open       @(::!docker-image-pull-modal-open? control)
+;               :close-icon true
+;               :on-close   (::docker-image-pull-modal-close-fn control)
+;               :trigger    (r/as-element [PullImageMenuItem control])}
+;     [ui/ModalHeader "Pull image"]
+;     [ui/ModalContent
+;      [ui/Form
+;       [ui/FormInput {:label     "Image" :required true :placeholder "e.g. registry:port/image:tag"
+;                      :on-change (ui-callback/input-callback update-image-value-fn)}]]]
+;     [ui/ModalActions
+;      [PullImageActionButton control image-value]]]))
 
-(defn PullImageModal
-  [control]
-  (r/with-let [image-value           (r/atom "")
-               update-image-value-fn #(reset! image-value %)]
-    [ui/Modal {:open       @(::!docker-image-pull-modal-open? control)
-               :close-icon true
-               :on-close   (::docker-image-pull-modal-close-fn control)
-               :trigger    (r/as-element [PullImageMenuItem control])}
-     [ui/ModalHeader "Pull image"]
-     [ui/ModalContent
-      [ui/Form
-       [ui/FormInput {:label     "Image" :required true :placeholder "e.g. registry:port/image:tag"
-                      :on-change (ui-callback/input-callback update-image-value-fn)}]]]
-     [ui/ModalActions
-      [PullImageActionButton control image-value]]]))
-
-(defn ImageActionBar
-  [control]
-  (r/with-let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu
-     [PullImageModal control]
-     [ui/MenuItem {:on-click #()}
-      [icons/TrashIcon] "Remove"]
-     [ui/MenuMenu {:position "right"}
-      [ui/MenuItem
-       [ui/Input {:transparent true
-                  :placeholder (str (@tr [:search]) "...")
-                  :icon        (r/as-element [icons/SearchIcon])}]]]]))
+;(defn ImageActionBar
+;  [control]
+;  (r/with-let [tr (subscribe [::i18n-subs/tr])]
+;    [ui/Menu
+;     [PullImageModal control]
+;     [ui/MenuItem {:on-click #()}
+;      [icons/TrashIcon] "Remove"]
+;     [ui/MenuMenu {:position "right"}
+;      [ui/MenuItem
+;       [ui/Input {:transparent true
+;                  :placeholder (str (@tr [:search]) "...")
+;                  :icon        (r/as-element [icons/SearchIcon])}]]]]))
 
 (defn DockerImagePane
   [control]
   [ui/TabPane
-   [ImageActionBar control]
+   ;[ImageActionBar control]
    [DockerImagesTable control]])
 
 (defn DockerVolumesTable [control]
@@ -234,7 +234,7 @@
                            :cell           CellBytes}
                           {:field-key      :ImageID
                            :header-content "Image Id"}]
-    :sort-config-db-path ::spec/docker-volumes-ordering
+    :sort-config-db-path ::spec/docker-containers-ordering
     :default-columns     #{:id :Image :SizeRootFs :Created :Status}}])
 
 (defn DockerContainerPane [control]
@@ -258,26 +258,26 @@
 (defn DockerNetworkPane [control]
   [ui/TabPane [DockerNetworksTable control]])
 
-(defn- DockerConfigsTable [control]
-  [DockerTable
-   {:db-path             ::table-cols-edge-detail-coe-resource-docker-configs
-    :rows                (::!docker-configs control)
-    :columns             [field-id
-                          field-name
-                          field-created-at
-                          field-updated-at
-                          {:field-key      :Version
-                           :header-content "Version"}
-                          {:field-key      :Data
-                           :header-content "Data"
-                           :no-sort?       true
-                           :cell           CellModalTextArea}
-                          field-labels]
-    :sort-config-db-path ::spec/docker-configs-ordering
-    :default-columns     #{:id :Name :CreatedAt :UpdatedAt :Data}}])
-
-(defn DockerConfigPane [control]
-  [ui/TabPane [DockerConfigsTable control]])
+;(defn- DockerConfigsTable [control]
+;  [DockerTable
+;   {:db-path             ::table-cols-edge-detail-coe-resource-docker-configs
+;    :rows                (::!docker-configs control)
+;    :columns             [field-id
+;                          field-name
+;                          field-created-at
+;                          field-updated-at
+;                          {:field-key      :Version
+;                           :header-content "Version"}
+;                          {:field-key      :Data
+;                           :header-content "Data"
+;                           :no-sort?       true
+;                           :cell           CellModalTextArea}
+;                          field-labels]
+;    :sort-config-db-path ::spec/docker-configs-ordering
+;    :default-columns     #{:id :Name :CreatedAt :UpdatedAt :Data}}])
+;
+;(defn DockerConfigPane [control]
+;  [ui/TabPane [DockerConfigsTable control]])
 
 (defn Tab
   []
@@ -298,4 +298,5 @@
               {:menuItem "Images", :render #(r/as-element [DockerImagePane control])}
               {:menuItem "Volumes", :render #(r/as-element [DockerVolumePane control])}
               {:menuItem "Networks", :render #(r/as-element [DockerNetworkPane control])}
-              {:menuItem "Configs", :render #(r/as-element [DockerConfigPane control])}]}]))
+              ;{:menuItem "Configs", :render #(r/as-element [DockerConfigPane control])}
+              ]}]))

@@ -28,6 +28,8 @@ jobs:
         run: npm install
       - name: Install Playwright
         run: npx playwright install --with-deps
+      - name: Build Portfolio
+        run: lein build-portfolio
       - name: Serve Portfolio and run tests
         run: npm run test:components:ci
       - uses: actions/upload-artifact@v3

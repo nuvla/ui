@@ -79,13 +79,15 @@
 
 
 
-  :aliases {"dev"       ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
-                         "watch" "nuvla-ui" "portfolio"]
-            "serve"     ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
-                         "server"]
-            "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                         "cljs-repl" "nuvla-ui"]
-            "install"   ["do"
-                         ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                          "release" "nuvla-ui"]
-                         ["install"]]})
+  :aliases {"dev"             ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
+                               "watch" "nuvla-ui" "portfolio"]
+            "serve"           ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
+                               "server"]
+            "cljs-repl"       ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                               "cljs-repl" "nuvla-ui"]
+            "install"         ["do"
+                               ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                                "release" "nuvla-ui"]
+                               ["install"]]
+            "build-portfolio" ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
+                               "release" "portfolio"]})

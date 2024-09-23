@@ -29,4 +29,4 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps
       - name: Serve Portfolio and run tests
-        run: npm run test-storybook:ci
+        run: npm run test:components:ci

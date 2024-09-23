@@ -28,7 +28,5 @@ jobs:
         run: npm install
       - name: Install Playwright
         run: npx playwright install --with-deps
-      - name: Build stories with lein
-        run: lein build-portfolio
       - name: Serve Portfolio and run tests
         run: npm run test-storybook:ci

@@ -54,10 +54,67 @@
 
 (def columnHelper (rt/createColumnHelper))
 (def columns #js [(.accessor columnHelper "pgId" #js {:header        "Id"
-                                                      :cell (fn [info] (reagent.core/as-element [mylink (.getValue info)]))
+                                                      :cell          (fn [info] (reagent.core/as-element [mylink (.getValue info)]))
                                                       :enableSorting false})
                   (.accessor columnHelper "name" #js {:header "Name"
-                                                      :cell (fn [info] (.getValue info))})])
+                                                      :cell   (fn [info] (.getValue info))})])
+
+(defn TableHeaderCell
+  [{:keys [key sortable? placeholder? sorted-direction next-sort-order toggle-sorting-handler] :as opts} content]
+  (js/console.info "Render TableHeaderCell " key opts content)
+  [ui/TableHeaderCell {:key      key
+                       :title    (when sortable?
+                                   (case next-sort-order
+                                     "asc" "Sort ascending"
+                                     "desc" "Sort descending"
+                                     "Clear sort"))
+                       :style    (cond-> {}
+                                         sortable? (assoc :cursor :pointer))
+                       :on-click toggle-sorting-handler}
+   (if placeholder? nil content)
+   (case sorted-direction
+     "asc" [icons/CaretUpIcon]
+     "desc" [icons/CaretDownIcon]
+     nil)])
+
+(defn TableIntern
+  [table]
+  (let [^js headerGroups (.getHeaderGroups table)]
+    [ui/Table {:attached true}
+    [ui/TableHeader
+     (for [^js headerGroup headerGroups]
+       [ui/TableRow {:key (.-id headerGroup)}
+        (for [^js header (.-headers headerGroup)]
+          (let [^js column (.-column header)]
+            [TableHeaderCell {:key                    (.-id header)
+                              :sortable?              (.getCanSort column)
+                              :placeholder?           (.-isPlaceholder header)
+                              :sorted-direction       (.getIsSorted column)
+                              :next-sort-order        (.getNextSortingOrder column)
+                              :toggle-sorting-handler (.getToggleSortingHandler column)}
+             (rt/flexRender (.. column -columnDef -header) (.getContext header))]
+            #_[ui/TableHeaderCell {:key      (.-id header)
+
+                                   :title    (if sortable?
+                                               (case (.getNextSortingOrder column)
+                                                 "asc" "Sort ascending"
+                                                 "desc" "Sort descending"
+                                                 "Clear sort")
+                                               nil)
+                                   :style    (cond-> {}
+                                                     sortable? (assoc :cursor :pointer))
+                                   :on-click (.getToggleSortingHandler column)}
+               (if (.-isPlaceholder header)
+                 nil
+                 (rt/flexRender (.. column -columnDef -header) (.getContext header)))
+               (case (.getIsSorted column)
+                 "asc" [icons/CaretUpIcon]
+                 "desc" [icons/CaretDownIcon]
+                 nil)]))])]
+    [ui/TableBody
+     (for [^js row (.-rows (.getRowModel table))]
+       ^{:key (.-id row)}
+       [TableCellRow row])]]))
 
 (defn product-groups-react-table
   [data]
@@ -71,30 +128,12 @@
                                 ;:debugTable true,
                                 ;:debugHeaders true,
                                 ;:debugColumns true,
-                                :initialState        #js {:globalFilter ""}})
-        ^js headerGroups (.getHeaderGroups table)]
-    (js/console.info "Render product-groups-react-table")
+                                :initialState        #js {:globalFilter ""}})]
+    (js/console.info "Render product-groups-react-table" (.getState table))
     [:div
      [SearchInput table]
      [ColumnsSelector table]
-     [ui/Table {:attached true}
-      [ui/TableHeader
-       (for [^js headerGroup headerGroups]
-         [ui/TableRow {:key (.-id headerGroup)}
-          (for [^js header (.-headers headerGroup)]
-            [ui/TableHeaderCell {:key      (.-id header)
-                                 :on-click (.getToggleSortingHandler (.-column header))}
-             (if (.-isPlaceholder header)
-               nil
-               (rt/flexRender (.. header -column -columnDef -header) (.getContext header)))
-             (case (.getIsSorted (.-column header))
-               "asc" [icons/CaretUpIcon]
-               "desc" [icons/CaretDownIcon]
-               nil)])])]
-      [ui/TableBody
-       (for [^js row (.-rows (.getRowModel table))]
-         ^{:key (.-id row)}
-         [TableCellRow row])]]]))
+     [TableIntern table]]))
 
 
 (defn Table []

@@ -77,45 +77,6 @@
      "desc" [icons/CaretDownIcon]
      nil)])
 
-(defn TableIntern
-  [table]
-  (let [^js headerGroups (.getHeaderGroups table)]
-    [ui/Table {:attached true}
-    [ui/TableHeader
-     (for [^js headerGroup headerGroups]
-       [ui/TableRow {:key (.-id headerGroup)}
-        (for [^js header (.-headers headerGroup)]
-          (let [^js column (.-column header)]
-            [TableHeaderCell {:key                    (.-id header)
-                              :sortable?              (.getCanSort column)
-                              :placeholder?           (.-isPlaceholder header)
-                              :sorted-direction       (.getIsSorted column)
-                              :next-sort-order        (.getNextSortingOrder column)
-                              :toggle-sorting-handler (.getToggleSortingHandler column)}
-             (rt/flexRender (.. column -columnDef -header) (.getContext header))]
-            #_[ui/TableHeaderCell {:key      (.-id header)
-
-                                   :title    (if sortable?
-                                               (case (.getNextSortingOrder column)
-                                                 "asc" "Sort ascending"
-                                                 "desc" "Sort descending"
-                                                 "Clear sort")
-                                               nil)
-                                   :style    (cond-> {}
-                                                     sortable? (assoc :cursor :pointer))
-                                   :on-click (.getToggleSortingHandler column)}
-               (if (.-isPlaceholder header)
-                 nil
-                 (rt/flexRender (.. column -columnDef -header) (.getContext header)))
-               (case (.getIsSorted column)
-                 "asc" [icons/CaretUpIcon]
-                 "desc" [icons/CaretDownIcon]
-                 nil)]))])]
-    [ui/TableBody
-     (for [^js row (.-rows (.getRowModel table))]
-       ^{:key (.-id row)}
-       [TableCellRow row])]]))
-
 (defn product-groups-react-table
   [data]
   (let [table            (rt/useReactTable
@@ -129,11 +90,40 @@
                                 ;:debugHeaders true,
                                 ;:debugColumns true,
                                 :initialState        #js {:globalFilter ""}})]
-    (js/console.info "Render product-groups-react-table" (.getState table))
+    (js/console.info "Render product-groups-react-table" table)
     [:div
      [SearchInput table]
      [ColumnsSelector table]
-     [TableIntern table]]))
+     (let [^js headerGroups (.getHeaderGroups table)]
+       [ui/Table {:attached true}
+        [ui/TableHeader
+         (for [^js headerGroup headerGroups]
+           [ui/TableRow {:key (.-id headerGroup)}
+            (for [^js header (.-headers headerGroup)]
+              (let [^js column (.-column header)]
+                (let [sortable?              (.getCanSort column)]
+                  [ui/TableHeaderCell {:key      (.-id header)
+
+                                      :title    (if sortable?
+                                                  (case (.getNextSortingOrder column)
+                                                    "asc" "Sort ascending"
+                                                    "desc" "Sort descending"
+                                                    "Clear sort")
+                                                  nil)
+                                      :style    (cond-> {}
+                                                        sortable? (assoc :cursor :pointer))
+                                      :on-click (.getToggleSortingHandler column)}
+                  (if (.-isPlaceholder header)
+                    nil
+                    (rt/flexRender (.. column -columnDef -header) (.getContext header)))
+                  (case (.getIsSorted column)
+                    "asc" [icons/CaretUpIcon]
+                    "desc" [icons/CaretDownIcon]
+                    nil)])))])]
+        [ui/TableBody
+         (for [^js row (.-rows (.getRowModel table))]
+           ^{:key (.-id row)}
+           [TableCellRow row])]])]))
 
 
 (defn Table []

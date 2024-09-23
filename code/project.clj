@@ -90,4 +90,4 @@
                                 "release" "nuvla-ui"]
                                ["install"]]
             "build-portfolio" ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
-                               "release" "portfolio"]})
+                               "release" "nuvla-ui" "portfolio"]})

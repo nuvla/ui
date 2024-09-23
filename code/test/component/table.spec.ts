@@ -9,8 +9,6 @@ test('test', async ({ page }, { config }) => {
 
   const table = await iframe.locator('table.ui');
 
-  console.log("table content:" + await table.innerHTML());
-
   expect(table).toHaveCount(1);
 
   expect(table.first().locator('tr')).toHaveCount(2);

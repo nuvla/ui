@@ -50,8 +50,6 @@ jobs:
         run: npx playwright install --with-deps
       - name: Build Portfolio
         run: lein build-portfolio
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
       - name: Serve Portfolio and run tests
         run: npm run test:components:ci
       - uses: actions/upload-artifact@v3

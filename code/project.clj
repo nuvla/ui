@@ -58,26 +58,31 @@
   :test-paths ["test/cljs"]
 
   :profiles
-  {:dev   {:dependencies [[org.clojure/clojure "1.11.3"]
-                          [org.clojure/clojurescript "1.11.4"
-                           :exclusions
-                           [com.google.javascript/closure-compiler-unshaded
-                            org.clojure/google-closure-library
-                            org.clojure/google-closure-library-third-party]]
-                          [binaryage/devtools "1.0.7" :scope "test"]
-                          [day8.re-frame/re-frame-10x "1.6.0"]
-                          [com.github.ljpengelen/shadow-cljs-hash-assets-hook "1.1.0"]]}
+  {:dev       {:dependencies [[org.clojure/clojure "1.11.3"]
+                              [org.clojure/clojurescript "1.11.4"
+                               :exclusions
+                               [com.google.javascript/closure-compiler-unshaded
+                                org.clojure/google-closure-library
+                                org.clojure/google-closure-library-third-party]]
+                              [binaryage/devtools "1.0.7" :scope "test"]
+                              [day8.re-frame/re-frame-10x "1.6.0"]
+                              [com.github.ljpengelen/shadow-cljs-hash-assets-hook "1.1.0"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.17.8"]   ;; WARNING: also in package.json
-                          [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
-                          [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
-                          [com.google.javascript/closure-compiler-unshaded "v20220202"]
-                          [djblue/portal "0.42.1"]]}}
+   :scljs     {:dependencies [[thheller/shadow-cljs "2.17.8"] ;; WARNING: also in package.json
+                              [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
+                              [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
+                              [com.google.javascript/closure-compiler-unshaded "v20220202"]
+                              [djblue/portal "0.42.1"]]}
+
+   :portfolio {:dependencies [[no.cjohansen/portfolio "2024.03.18"]]
+               :source-paths ["portfolio/src"]}}
 
 
 
-  :aliases {"dev"       ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
-                         "watch" "nuvla-ui"]
+  :aliases {"dev"       ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
+                         "watch" "nuvla-ui" "portfolio"]
+            "serve"     ["with-profile" "+scljs,+portfolio" "run" "-m" "shadow.cljs.devtools.cli"
+                         "server"]
             "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
                          "cljs-repl" "nuvla-ui"]
             "install"   ["do"

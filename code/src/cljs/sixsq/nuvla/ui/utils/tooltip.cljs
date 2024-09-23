@@ -6,8 +6,8 @@
   [component tooltip]
   (if tooltip
     [ui/Popup
-     {:content   (r/as-element [:p tooltip])
-      :trigger   (r/as-element component)
+     {:content tooltip
+      :trigger (r/as-element component)
       :hoverable true}]
     component))
 

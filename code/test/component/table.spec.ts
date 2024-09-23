@@ -5,6 +5,8 @@ test('test', async ({ page }, { config }) => {
 
   await page.goto(baseURL + '/?id=sixsq.nuvla.ui.components.table-scenes%2Fsimple-table');
 
+  console.log("page content:" + await page.content());
+
   const iframe = page.frameLocator('iframe.canvas');
 
   const table = iframe.first().locator('table.ui');

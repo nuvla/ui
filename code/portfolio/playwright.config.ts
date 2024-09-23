@@ -46,8 +46,7 @@ const config: PlaywrightTestConfig = {
       name: 'component-tests',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: 'storageState.json',
-
+        // storageState: 'storageState.json',
         //         launchOptions: {
         //               slowMo: 500,
         //             },

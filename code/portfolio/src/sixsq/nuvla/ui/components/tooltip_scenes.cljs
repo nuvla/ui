@@ -1,11 +1,35 @@
 (ns sixsq.nuvla.ui.components.tooltip-scenes
   (:require [portfolio.reagent :refer-macros [defscene]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.tooltip :refer [with-tooltip]]))
 
 (defscene simple-tooltip
-  [with-tooltip
-   [:label "Component with tooltip"]
-   "Tooltip content"])
+  #_(let [child (r/atom nil)]
+      (js/setTimeout #(reset! child
+                              [ui/Popup
+                               {:content   (r/as-element [:div "Tooltip content"])
+                                :trigger   (r/as-element [:div "Component with tooltip"])
+                                :pinned    true
+                                :hoverable true}])
+                     5000)
+      (fn []
+        [:div.ui.container "Hello" @child
+         #_[with-tooltip
+            [:label "Component with tooltip"]
+            "Tooltip content"]]))
+  (let [context-ref (r/atom nil)]
+    (fn []
+      [:div
+       (when @context-ref
+         [ui/Popup
+          {:content "Tooltip content"
+           :trigger (r/as-element [:div "Component with tooltip"])
+           ;:pinned    true
+           ;:hoverable true
+           :context @context-ref}])
+       [:div {:ref (fn [el] (reset! context-ref el))}
+        "here"]])))
 
 (defscene longtext-tooltip
   [with-tooltip

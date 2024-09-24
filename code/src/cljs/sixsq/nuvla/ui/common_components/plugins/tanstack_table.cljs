@@ -1,11 +1,33 @@
 (ns sixsq.nuvla.ui.common-components.plugins.tanstack-table
   (:require [reagent.core :as r]
             ["@tanstack/react-table" :as rt]
+    ;import {
+    ;  DndContext,
+    ;  KeyboardSensor,
+    ;  MouseSensor,
+    ;  TouchSensor,
+    ;  closestCenter,
+    ;  type DragEndEvent,
+    ;  useSensor,
+    ;  useSensors,
+    ;} from '@dnd-kit/core'
+    ;import { restrictToHorizontalAxis } from '@dnd-kit/modifiers'
+    ;import {
+    ;  arrayMove,
+    ;  SortableContext,
+    ;  horizontalListSortingStrategy,
+    ;} from '@dnd-kit/sortable'
+    ;
+    ;// needed for row & cell level scope DnD setup
+    ;import { useSortable } from '@dnd-kit/sortable'
+            ["@dnd-kit/core" :as dnd-core]
+            ["@dnd-kit/modifiers" :as dnd-modifiers]
+            ["@dnd-kit/sortable" :as dnd-sortable]
+            ["@dnd-kit/utilities" :as dnd-utilities]
             ["react" :as react :default useMemo]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
-
 
 
 (defn mylink
@@ -79,51 +101,56 @@
 
 (defn product-groups-react-table
   [data]
-  (let [table            (rt/useReactTable
-                           #js {:columns             columns
-                                :data                data
-                                :getCoreRowModel     (rt/getCoreRowModel)
-                                :getFilteredRowModel (rt/getFilteredRowModel)
-                                :getSortedRowModel   (rt/getSortedRowModel)
-                                :globalFilterFn      "equalsString"
-                                ;:debugTable true,
-                                ;:debugHeaders true,
-                                ;:debugColumns true,
-                                :initialState        #js {:globalFilter ""}})]
+  (let [table (rt/useReactTable
+                #js {:columns             columns
+                     :data                data
+                     :getCoreRowModel     (rt/getCoreRowModel)
+                     :getFilteredRowModel (rt/getFilteredRowModel)
+                     :getSortedRowModel   (rt/getSortedRowModel)
+                     :globalFilterFn      "equalsString"
+                     ;:debugTable true,
+                     ;:debugHeaders true,
+                     ;:debugColumns true,
+                     :initialState        #js {:globalFilter ""}})]
     (js/console.info "Render product-groups-react-table" table)
     [:div
      [SearchInput table]
      [ColumnsSelector table]
      (let [^js headerGroups (.getHeaderGroups table)]
-       [ui/Table {:attached true}
-        [ui/TableHeader
-         (for [^js headerGroup headerGroups]
-           [ui/TableRow {:key (.-id headerGroup)}
-            (for [^js header (.-headers headerGroup)]
-              (let [^js column (.-column header)]
-                (let [sortable?              (.getCanSort column)]
-                  [ui/TableHeaderCell {:key      (.-id header)
+       [:> dnd-core/DndContext {
+                                ;collisionDetection= {closestCenter}
+                                ;modifiers=          {[restrictToHorizontalAxis]}
+                                :onDragEnd          #()
+                                :sensors            (dnd-core/useSensors (dnd-core/useSensor dnd-core/MouseSensor #js {}))}
+        [ui/Table {:attached true}
+         [ui/TableHeader
+          (for [^js headerGroup headerGroups]
+            [ui/TableRow {:key (.-id headerGroup)}
+             (for [^js header (.-headers headerGroup)]
+               (let [^js column (.-column header)]
+                 (let [sortable? (.getCanSort column)]
+                   [ui/TableHeaderCell {:key      (.-id header)
 
-                                      :title    (if sortable?
-                                                  (case (.getNextSortingOrder column)
-                                                    "asc" "Sort ascending"
-                                                    "desc" "Sort descending"
-                                                    "Clear sort")
-                                                  nil)
-                                      :style    (cond-> {}
-                                                        sortable? (assoc :cursor :pointer))
-                                      :on-click (.getToggleSortingHandler column)}
-                  (if (.-isPlaceholder header)
-                    nil
-                    (rt/flexRender (.. column -columnDef -header) (.getContext header)))
-                  (case (.getIsSorted column)
-                    "asc" [icons/CaretUpIcon]
-                    "desc" [icons/CaretDownIcon]
-                    nil)])))])]
-        [ui/TableBody
-         (for [^js row (.-rows (.getRowModel table))]
-           ^{:key (.-id row)}
-           [TableCellRow row])]])]))
+                                        :title    (if sortable?
+                                                    (case (.getNextSortingOrder column)
+                                                      "asc" "Sort ascending"
+                                                      "desc" "Sort descending"
+                                                      "Clear sort")
+                                                    nil)
+                                        :style    (cond-> {}
+                                                          sortable? (assoc :cursor :pointer))
+                                        :on-click (.getToggleSortingHandler column)}
+                    (if (.-isPlaceholder header)
+                      nil
+                      (rt/flexRender (.. column -columnDef -header) (.getContext header)))
+                    (case (.getIsSorted column)
+                      "asc" [icons/CaretUpIcon]
+                      "desc" [icons/CaretDownIcon]
+                      nil)])))])]
+         [ui/TableBody
+          (for [^js row (.-rows (.getRowModel table))]
+            ^{:key (.-id row)}
+            [TableCellRow row])]]])]))
 
 
 (defn Table []

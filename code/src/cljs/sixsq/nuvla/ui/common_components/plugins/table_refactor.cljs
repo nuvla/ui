@@ -15,66 +15,78 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.tooltip :as tt]))
 
+(defn !visible-columns-fn
+  [{:keys [::!current-columns ::!default-columns] :as _control}]
+  (r/track #(or @!current-columns @!default-columns)))
+
+(defn !columns-by-key-fn
+  [{:keys [::!columns] :as _control}]
+  (r/track #(into {} (map (juxt ::field-key identity) @!columns))))
+
+(defn DeleteColumn
+  [{:keys [::set-columns-fn] :as control} {:keys [::field-key ::no-delete] :as _column}]
+  (when (and (> (count @(!visible-columns-fn control)) 1)
+             (not no-delete))
+    [:span {:style {:margin-left "0.8rem"}}
+     [uix/LinkIcon {:color    "red"
+                    :name     "remove circle"
+                    :on-click #(set-columns-fn
+                                 (vec (remove (fn [fk] (= fk field-key))
+                                              @!visible-columns-fn)))
+                    :class    :toggle-invisible-on-parent-hover}]]))
+
 (defn TableHeaderCell
-  [control !visible-columns !visible-column?-fn column]
-  (js/console.info "Render TableHeaderCell " (::field-key column))
-  (when @(!visible-column?-fn (::field-key column))
-    (r/with-let [set-columns-fn (::set-current-columns-fn control)]
-      [ui/TableHeaderCell {:class ["show-child-on-hover"]}
-       (::header-content column)
-       [:span {:style {:margin-left "0.8rem"}}
-        (when (> (count @!visible-columns) 1)
-          [uix/LinkIcon {:color    "red"
-                        :name     "remove circle"
-                        :on-click #(set-columns-fn
-                                     (vec (remove (fn [field-key]
-                                                    (= field-key (::field-key column)))
-                                                  @!visible-columns)))
-                        :class    :toggle-invisible-on-parent-hover}])]])))
+  [control column]
+  (r/with-let [field-key (::field-key column)]
+    (js/console.info "Render TableHeaderCell " field-key)
+    [ui/TableHeaderCell {:class ["show-child-on-hover"]}
+     (::header-content column)
+     [DeleteColumn control column]]))
 
 (defn TableHeader
-  [control !visible-columns !visible-column?-fn]
+  [control]
   (js/console.info "Render TableHeader")
-  [ui/TableHeader
-   [ui/TableRow
-    (let [columns @(::!columns control)]
-      (for [column columns]
-        ^{:key (str "header-column-" (::field-key column))}
-        [TableHeaderCell control !visible-columns !visible-column?-fn column]))]])
+  (r/with-let [!visible-columns (!visible-columns-fn control)
+               !columns-by-key  (!columns-by-key-fn control)]
+    [ui/TableHeader
+     [ui/TableRow
+      (js/console.info @!columns-by-key)
+      (doall
+        (for [visible-column @!visible-columns]
+          ^{:key (str "header-column-" visible-column)}
+          [TableHeaderCell control (get @!columns-by-key visible-column)]))]]))
 
 (defn TableCell
-  [_control !visible-column?-fn row column]
+  [_control row column]
   (js/console.info "Render TableCell " (::field-key column))
-  (when @(!visible-column?-fn (::field-key column))
-    [ui/TableCell
-    ((::field-key column) row)]))
+  [ui/TableCell
+   ((::field-key column) row)])
 
 (defn TableRow
-  [control !visible-column?-fn row]
+  [control row]
   (js/console.info "Render TableRow " row)
-  (r/with-let [!columns (::!columns control)]
+  (r/with-let [visible-columns (!visible-columns-fn control)
+               !columns-by-key (!columns-by-key-fn control)]
     [ui/TableRow
-     (for [column @!columns]
-       ^{:key (str "row-" (:id row) "-column-" (::field-key column))}
-       [TableCell control !visible-column?-fn row column])]))
+     (doall
+       (for [visible-column @visible-columns]
+         (let [column (get @!columns-by-key visible-column)]
+           ^{:key (str "row-" (:id row) "-column-" visible-column)}
+           [TableCell control row column])))]))
 
 (defn TableBody
-  [control !visible-column?-fn]
+  [control]
   (js/console.info "Render TableBody")
   [ui/TableBody
-   (for [row @(::!rows control)]
-     ^{:key (str "row-" (:id row))}
-     [TableRow control !visible-column?-fn row])])
+   (for [data-row @(::!data control)]
+     ^{:key (str "row-" (:id data-row))}
+     [TableRow control data-row])])
 
 (defn Table
   [{:keys [::!current-columns ::!default-columns] :as control}]
-  (r/with-let [!visible-columns     (r/track #(or @!current-columns @!default-columns))
-               !visible-columns-set (r/track #(set @!visible-columns))
-               !visible-column?-fn  (fn [k] (r/track #(contains? @!visible-columns-set k)))]
-    (js/console.info "Render Table")
-    [ui/Table
-     [TableHeader control !visible-columns !visible-column?-fn]
-     [TableBody control !visible-column?-fn]]))
+  [ui/Table
+   [TableHeader control]
+   [TableBody control]])
 
 (reg-event-db
   ::set-current-columns-fn
@@ -89,7 +101,8 @@
   [reset-atom]
   (js/console.info "Render TableControllerReal")
   (r/with-let [columns          [{::field-key      :id
-                                  ::header-content "Id"}
+                                  ::header-content "Id"
+                                  ::no-delete      true}
                                  {::field-key      :name
                                   ::header-content "Name"}
                                  {::field-key      :age
@@ -97,7 +110,7 @@
                !current-columns (r/atom nil)
                ;!current-columns (subscribe [::current-columns])
                control          {::!columns               (r/atom columns)
-                                 ::!rows                  (r/atom [{:id 1, :name "hello"}
+                                 ::!data                  (r/atom [{:id 1, :name "hello"}
                                                                    {:id 2}])
                                  ::!default-columns       (r/atom [:id :name])
                                  ::set-current-columns-fn #(reset! !current-columns %)
@@ -105,12 +118,11 @@
                                  ::!current-columns       !current-columns}]
     [:div
      [ui/Button {:on-click #(swap! reset-atom inc)} "Reset"]
-     [ui/Button {:on-click #(reset! (::!rows control) [{:id 4} {:id 5}])} "Add row"]
+     [ui/Button {:on-click #(reset! (::!data control) [{:id 1, :name "hello"} {:id 5}])} "Add row"]
      [Table control]]))
 
 (defn TableController
   []
-  (js/console.info "Render TableController")
   (r/with-let [reset-atom (r/atom 0)]
     ^{:key @reset-atom}
     [TableControllerReal reset-atom]))
@@ -121,3 +133,14 @@
 ;; sortable
 ;; add remove columns
 ;; dynamic
+
+
+;; table
+;; accept control map
+;; delete column icon
+;; select columns modal
+;; sorting
+;; filtering
+;; drag columns
+;; selectable rows
+;; pagination

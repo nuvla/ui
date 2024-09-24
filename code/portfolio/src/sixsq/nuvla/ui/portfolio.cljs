@@ -4,6 +4,7 @@
             [sixsq.nuvla.ui.components.table-scenes]
             [sixsq.nuvla.ui.components.tooltip-scenes]
             [sixsq.nuvla.ui.components.overflow-tooltip-scenes]
+            [sixsq.nuvla.ui.components.table-refactor-scenes]
             [sixsq.nuvla.ui.components.tanstack-table-scenes]))
 
 (portfolio/start!

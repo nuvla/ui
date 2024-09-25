@@ -9,7 +9,7 @@ export async function gotoScene(config, page, componentNamespace, scene) {
   expect(portfolioIframe).not.toBeNull();
   const sceneIframe = await portfolioIframe.frameLocator('iframe.scene-canvas').first();
   expect(sceneIframe).not.toBeNull();
-  const sceneRootLocator = await sceneIframe.locator('div#root');
+  const sceneRootLocator = await sceneIframe.locator('body');
   expect(sceneRootLocator).toHaveCount(1);
   return sceneRootLocator.first();
 }

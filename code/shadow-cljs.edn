@@ -80,7 +80,7 @@
                                  :ns-regexp "-(spec|test)$"}
 
                      :portfolio {:target     :browser
-                                 :modules    {:scenes {:init-fn sixsq.nuvla.ui.portfolio/init}}
+                                 :modules    {:portfolio {:init-fn sixsq.nuvla.ui.portfolio/init}}
                                  :output-dir "portfolio/resources/public/js"
                                  :asset-path "/js"}}}
 

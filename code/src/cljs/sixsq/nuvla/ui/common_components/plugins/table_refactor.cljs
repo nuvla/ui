@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.routing.events :as routing-events]
             [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.tooltip :as tt]))
@@ -81,12 +82,113 @@
    (for [data-row @(::!data control)]
      ^{:key (str "row-" (:id data-row))}
      [TableRow control data-row])])
+;
+;(defn FormatFieldItem [selections-atom item field->view]
+;  (let [view         (get field->view item)
+;        tr           (subscribe [::i18n-subs/tr])
+;        label-string (if (keyword? item) (or (@tr [item]) item) item)]
+;    [ui/ListItem
+;     [ui/ListContent
+;      [ui/ListHeader {:style {:display :flex}}
+;       [ui/Checkbox {:checked   (contains? @selections-atom item)
+;                     :label     (if view (r/as-element [:label view]) label-string)
+;                     :on-change (ui-callback/checked (fn [checked]
+;                                                       (if checked
+;                                                         (swap! selections-atom set/union #{item})
+;                                                         (swap! selections-atom set/difference #{item}))))}]
+;       #_[:label view]]]]))
+;
+;(defn format-field-list [available-fields-atom selections-atom field->view]
+;  (let [items (sort available-fields-atom)]
+;    (vec (concat [ui/ListSA]
+;                 (map (fn [item] [FormatFieldItem selections-atom item field->view]) items)))))
+;
+;(defn SelectFieldsView
+;  [{:keys [show? selected-id-sub selections-atom
+;           selected-fields-sub available-fields
+;           update-fn trigger title-tr-key
+;           reset-to-default-fn field->view]}]
+;  (let [tr (subscribe [::i18n-subs/tr])]
+;    [ui/Modal
+;     {:closeIcon true
+;      :open      @show?
+;      :on-close  #(reset! show? false)}
+;     [uix/ModalHeader {:header (@tr [(or title-tr-key :fields)])}]
+;     [ui/ModalContent
+;      {:scrolling true}
+;      [format-field-list available-fields selections-atom field->view]]
+;     [ui/ModalActions
+;      (when (fn? reset-to-default-fn)
+;        [uix/Button
+;         {:text     "Select default columns"
+;          :on-click reset-to-default-fn}])
+;      [uix/Button
+;       {:text     (@tr [:cancel])
+;        :on-click #(reset! show? false)}]
+;      [uix/Button
+;       {:text     (@tr [:update])
+;        :primary  true
+;        :on-click (fn []
+;                    (reset! show? false)
+;                    (if (fn? update-fn)
+;                      (update-fn @selections-atom)
+;                      (dispatch [::events/set-selected-fields @selections-atom])))}]]]))
+
+
+(defn ColumnsSelectorButton
+  [open-fn]
+  (r/with-let [!hoverable (r/atom false)]
+    [:div {:on-mouse-enter #(reset! !hoverable true)
+           :on-mouse-leave #(reset! !hoverable false)
+           :style          {:min-height "1.5em"}
+           :on-click       open-fn}
+     [:span {:title "Columns selector"
+             :style {:float            :right
+                     :border           2
+                     :cursor           :pointer
+                     :background-color "rgb(249, 250, 251)"
+                     :border-width     "1px 1px 0px"
+                     :border-color     "rgba(34,36,38,.1)"
+                     :border-style     "solid"
+                     :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
+
+(defn ColumnsSelectorModal
+  [{:keys [::set-current-columns-fn] :as _control}]
+  (r/with-let [open?    (r/atom false)
+               open-fn  #(reset! open? true)
+               close-fn #(reset! open? false)
+               tr       (subscribe [::i18n-subs/tr])]
+    (js/console.info "ColumnsSelectorModal" @open?)
+    [ui/Modal {:close-icon true
+               :open       @open?
+               :trigger    (r/as-element [ColumnsSelectorButton open-fn])
+               :on-close   close-fn}
+     [uix/ModalHeader {:header "Select columnssss"}]
+     [ui/ModalContent {:scrolling true}
+      #_[format-field-list available-fields selections-atom field->view]]
+     [ui/ModalActions
+      #_(when (fn? reset-to-default-fn)
+          [uix/Button
+           {:text     "Select default columns"
+            :on-click reset-to-default-fn}])
+      (js/console.info tr #_(@tr [:cancel]))
+      [uix/Button
+       {:text     (@tr [:cancel])
+        :on-click close-fn}]
+      #_[uix/Button
+         {:text     (@tr [:update])
+          :primary  true
+          :on-click (fn []
+                      (close-fn)
+                      #_(set-current-columns-fn))}]]]))
 
 (defn Table
   [{:keys [::!current-columns ::!default-columns] :as control}]
-  [ui/Table
-   [TableHeader control]
-   [TableBody control]])
+  [:div
+   [ColumnsSelectorModal control]
+   [ui/Table {:attached true}
+    [TableHeader control]
+    [TableBody control]]])
 
 (reg-event-db
   ::set-current-columns-fn

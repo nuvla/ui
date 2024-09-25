@@ -98,8 +98,6 @@
      [Layout]]))
 
 (defn App []
-  #_(if (subscribe [::subs/app-loading?])
+  (if @(subscribe [::subs/app-loading?])
     [Loader]
-    [Render])
-  ;[table-refactor/TableController]
-  [tanstack-table/Table])
+    [Render]))

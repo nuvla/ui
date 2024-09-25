@@ -12,6 +12,7 @@
     "test:components": "playwright test --config=portfolio/playwright.config.ts",
     "test:components:headed": "playwright test --config=portfolio/playwright.config.ts --headed",
     "test:components:ci": "CI=true npx concurrently -k -s first -n \"PORTFOLIO,TEST\" -c \"magenta,blue\" \"lein serve\" \"npx wait-on tcp:127.0.0.1:8281 && npm run test:components\"",
+    "test:components:watch": "chokidar 'test/component/*.{spec,test}.{js,ts}' -c 'npm run test:components -- --retries=0 {path}'",
     "test:e2e:gen": "playwright codegen",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:watch": "chokidar 'test/**/*.{spec,test}.{js,ts}' -c 'npm run test:e2e -- --retries=0 {path}'",

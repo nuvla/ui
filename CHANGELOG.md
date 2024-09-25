@@ -6,6 +6,34 @@
 
 ## Released
 
+## [2.39.0](https://github.com/nuvla/ui/compare/2.38.1...2.39.0) (2024-09-25)
+
+
+### Features
+
+* **App:** App minimum requirement + resource check at deployment time ([#1624](https://github.com/nuvla/ui/issues/1624)) ([886b8bb](https://github.com/nuvla/ui/commit/886b8bbfb7a292ebb0848893a742f034fe633825))
+* **Deployment Group Detail:** Add minimum requirements check to deployment groups start&update modals ([886b8bb](https://github.com/nuvla/ui/commit/886b8bbfb7a292ebb0848893a742f034fe633825))
+* **Deployment Modal:** Requirements warning ([886b8bb](https://github.com/nuvla/ui/commit/886b8bbfb7a292ebb0848893a742f034fe633825))
+* **Edges details:** Support Docker resources  ([#1632](https://github.com/nuvla/ui/issues/1632)) ([932dd3a](https://github.com/nuvla/ui/commit/932dd3a2a2aa425e09761711fbf9fae278b4e675))
+
+
+### Bug Fixes
+
+* **Bulk progress plugin:** Change cancel icon ([f6f005a](https://github.com/nuvla/ui/commit/f6f005a5682517429d2cd24122e68673f5ea10ce))
+* **Deployment Group Detail:** fix e2e tests ([886b8bb](https://github.com/nuvla/ui/commit/886b8bbfb7a292ebb0848893a742f034fe633825))
+* **Deployments page:** Deployment bulk delete remove without forcing deletion ([#1630](https://github.com/nuvla/ui/issues/1630)) ([44b028a](https://github.com/nuvla/ui/commit/44b028ae1730e9ad2c4c8eb3db8b284a2d6d1589))
+* **dg-min-req:** check disk with maximum available space ([#1631](https://github.com/nuvla/ui/issues/1631)) ([4e1aac4](https://github.com/nuvla/ui/commit/4e1aac443ae7322af2500e7375b0f3141444b809))
+* **Edge page:** Remove double confirmation for bulk update action ([f6f005a](https://github.com/nuvla/ui/commit/f6f005a5682517429d2cd24122e68673f5ea10ce))
+* **Global:** Visual change flat without shadow inconsistency ([#1629](https://github.com/nuvla/ui/issues/1629)) ([ad0aec9](https://github.com/nuvla/ui/commit/ad0aec9933681e729cf468c4e85775d012602dd9))
+* **kvlt:** Monkey patch kvlt.platform.xhr/req-&gt;url to avoid IPv6 address in server name ([#1634](https://github.com/nuvla/ui/issues/1634)) ([6925c6c](https://github.com/nuvla/ui/commit/6925c6c9c64fb17b06fa8474a873f0c7472c6f3a))
+* **UIX:** ButtonAskingForConfirmation support icon and move action text to button ([f6f005a](https://github.com/nuvla/ui/commit/f6f005a5682517429d2cd24122e68673f5ea10ce))
+* **uix:** New option show-pencil? for TableRowCell ([886b8bb](https://github.com/nuvla/ui/commit/886b8bbfb7a292ebb0848893a742f034fe633825))
+
+
+### Minor Changes
+
+* **nuvlaedge-self-registration.py:** allow to manually define mac address and improved output (steps go to stdout, details and debugs go to stderr) ([#1626](https://github.com/nuvla/ui/issues/1626)) ([063f6b3](https://github.com/nuvla/ui/commit/063f6b395fbed85631ba2fc5f28cd7e4c0f59208))
+
 ## [2.38.1](https://github.com/nuvla/ui/compare/2.38.0...2.38.1) (2024-08-09)
 
 

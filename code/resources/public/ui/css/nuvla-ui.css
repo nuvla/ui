@@ -1160,14 +1160,12 @@ i.link.icons {
   visibility: visible;
 }
 
-.table-fixed-row-height td {
-  max-width: 300px;
+.max-width-26ch {
+  max-width: 26ch;
 }
 
-.table-fixed-row-height td,
-.table-fixed-row-height td > div {
-  overflow: hidden;
-  text-overflow: ellipsis;
+.max-width-50ch {
+  max-width: 50ch;
 }
 
 .table-fixed-row-height td:not(:first-child),
@@ -1178,7 +1176,7 @@ i.link.icons {
   margin: 0 2px 0 0 !important;
 }
 
-.table-fixed-row-height .vcenter {
+.vcenter {
   display: flex;
   height: 100%;
   align-items: center;

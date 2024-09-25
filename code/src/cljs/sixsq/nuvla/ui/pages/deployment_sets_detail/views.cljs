@@ -752,23 +752,23 @@
 
 (defn AddButton
   [{:keys [modal-id enabled tooltip data-testid] :or {enabled true}}]
-  (tt/with-tooltip [:div [uix/Button {:on-click    (fn [] (dispatch [::events/set-opened-modal modal-id]))
-                                      :disabled    (not enabled)
-                                      :data-testid data-testid
-                                      :icon        icons/i-plus-large
-                                      :class       "add-button"
-                                      :style       {:align-self "center"}}]]
-                   tooltip))
+  [tt/WithTooltip [:div [uix/Button {:on-click    (fn [] (dispatch [::events/set-opened-modal modal-id]))
+                                     :disabled    (not enabled)
+                                     :data-testid data-testid
+                                     :icon        icons/i-plus-large
+                                     :class       "add-button"
+                                     :style       {:align-self "center"}}]]
+   tooltip])
 
 (defn RemoveButton
   [{:keys [enabled tooltip on-click] :or {enabled true}}]
-  (tt/with-tooltip
-    [:span [icons/XMarkIcon
-            {:style    {:cursor (if enabled :pointer :default)}
-             :disabled (not enabled)
-             :color    "red"
-             :on-click on-click}]]
-    tooltip))
+  [tt/WithTooltip
+   [:span [icons/XMarkIcon
+           {:style    {:cursor (if enabled :pointer :default)}
+            :disabled (not enabled)
+            :color    "red"
+            :on-click on-click}]]
+   tooltip])
 
 (defn EditEdgeFilterButton
   [id creating?]
@@ -777,18 +777,18 @@
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         fleet-filter               (subscribe [::subs/fleet-filter])]
-    (tt/with-tooltip
-      [:span [uix/Button
-              {:disabled (and (not creating?) (not @edit-op-allowed?))
-               :on-click (fn []
-                           (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
-                           (dispatch [::events/set-opened-modal id]))
-               :icon     icons/i-pencil
-               :style    {:align-self "center"}}]]
-      (edit-not-allowed-msg {:TR                         @tr
-                             :can-edit-data?             @can-edit-data?
-                             :edit-op-allowed?           @edit-op-allowed?
-                             :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))))
+    [tt/WithTooltip
+     [:span [uix/Button
+             {:disabled (and (not creating?) (not @edit-op-allowed?))
+              :on-click (fn []
+                          (dispatch [::events/init-edge-picker-with-dynamic-filter @fleet-filter])
+                          (dispatch [::events/set-opened-modal id]))
+              :icon     icons/i-pencil
+              :style    {:align-self "center"}}]]
+     (edit-not-allowed-msg {:TR                         @tr
+                            :can-edit-data?             @can-edit-data?
+                            :edit-op-allowed?           @edit-op-allowed?
+                            :edit-not-allowed-in-state? @edit-not-allowed-in-state?})]))
 
 (defn AppsPicker
   [tab-key pagination-db-path]
@@ -844,28 +844,28 @@
         is-controlled-by-apps-set?          (subscribe [::subs/is-controlled-by-apps-set?])
         is-behind-latest-published-version? (subscribe [::module-plugin/is-behind-latest-published-version? [::spec/apps-sets i] (:href row-data)])]
     (if creating?
-      (tt/with-tooltip [:span cell-data] (@tr [:configure-app]))
+      [tt/WithTooltip [:span cell-data] (@tr [:configure-app])]
       [:span
-       (tt/with-tooltip
-         [:a
-          {:href     "#"
-           :on-click #(dispatch [::events/navigate-internal
-                                 {:query-params
-                                  (merge
-                                    {(routes-utils/db-path->query-param-key [::apps-config])
-                                     (create-app-config-query-key i (:href row-data))}
-                                    {:deployment-groups-detail-tab :apps})}])
-           :children [icons/StoreIcon]
-           :target   :_self}
-          cell-data
-          [:span {:style {:margin-left "0.5rem"}}
-           [icons/GearIcon]]]
-         (@tr [:configure-app]))
+       [tt/WithTooltip
+        [:a
+         {:href     "#"
+          :on-click #(dispatch [::events/navigate-internal
+                                {:query-params
+                                 (merge
+                                   {(routes-utils/db-path->query-param-key [::apps-config])
+                                    (create-app-config-query-key i (:href row-data))}
+                                   {:deployment-groups-detail-tab :apps})}])
+          :children [icons/StoreIcon]
+          :target   :_self}
+         cell-data
+         [:span {:style {:margin-left "0.5rem"}}
+          [icons/GearIcon]]]
+        (@tr [:configure-app])]
        (when (and @is-behind-latest-published-version? (not @is-controlled-by-apps-set?))
-         (tt/with-tooltip
-           [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
-                                                  :color :orange}]]
-           (@tr [:version-behind-published])))])))
+         [tt/WithTooltip
+          [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                                 :color :orange}]]
+          (@tr [:version-behind-published])])])))
 
 (defn LinkToModuleDetails
   [trigger]
@@ -893,10 +893,10 @@
          [:span {:style {:margin-left "0.5rem"}}
           [icons/GearIcon]]]]
        (when @is-behind-latest-published-version?
-         (tt/with-tooltip
-           [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
-                                                  :color :orange}]]
-           (@tr [:version-behind-published])))])))
+         [tt/WithTooltip
+          [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                                 :color :orange}]]
+          (@tr [:version-behind-published])])])))
 
 (defn AppsSetHeader
   [creating? no-apps?]
@@ -1469,17 +1469,17 @@
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])
         is-controlled-by-apps-set? (subscribe [::subs/is-controlled-by-apps-set?])]
     [uix/Accordion
-     (tt/with-tooltip
-       [:div [module-plugin/ModuleVersions
-              {:db-path      [::spec/apps-sets i]
-               :href         module-id
-               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?) @is-controlled-by-apps-set?)
-               :change-event [::events/edit-config]}]]
-       (edit-not-allowed-msg {:TR                         @tr
-                              :can-edit-data?             @can-edit-data?
-                              :edit-op-allowed?           @edit-op-allowed?
-                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?
-                              :is-controlled-by-apps-set? @is-controlled-by-apps-set?}))
+     [tt/WithTooltip
+      [:div [module-plugin/ModuleVersions
+             {:db-path      [::spec/apps-sets i]
+              :href         module-id
+              :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?) @is-controlled-by-apps-set?)
+              :change-event [::events/edit-config]}]]
+      (edit-not-allowed-msg {:TR                         @tr
+                             :can-edit-data?             @can-edit-data?
+                             :edit-op-allowed?           @edit-op-allowed?
+                             :edit-not-allowed-in-state? @edit-not-allowed-in-state?
+                             :is-controlled-by-apps-set? @is-controlled-by-apps-set?})]
      :label (if @is-controlled-by-apps-set? (str/capitalize (@tr [:version])) (@tr [:select-version]))]))
 
 (defn EnvVariablesApp
@@ -1489,17 +1489,17 @@
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
-     (tt/with-tooltip
-       [:div [module-plugin/EnvVariables
-              {:db-path           [::spec/apps-sets i]
-               :href              module-id
-               :read-only?        (or (not @can-edit-data?) (not @edit-op-allowed?))
-               :highlight-errors? true
-               :change-event      [::events/edit-config]}]]
-       (edit-not-allowed-msg {:TR                         @tr
-                              :can-edit-data?             @can-edit-data?
-                              :edit-op-allowed?           @edit-op-allowed?
-                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
+     [tt/WithTooltip
+      [:div [module-plugin/EnvVariables
+             {:db-path           [::spec/apps-sets i]
+              :href              module-id
+              :read-only?        (or (not @can-edit-data?) (not @edit-op-allowed?))
+              :highlight-errors? true
+              :change-event      [::events/edit-config]}]]
+      (edit-not-allowed-msg {:TR                         @tr
+                             :can-edit-data?             @can-edit-data?
+                             :edit-op-allowed?           @edit-op-allowed?
+                             :edit-not-allowed-in-state? @edit-not-allowed-in-state?})]
      :label (@tr [:env-variables])]))
 
 (defn FilesApp
@@ -1509,16 +1509,16 @@
         edit-op-allowed?           (subscribe [::subs/edit-op-allowed? creating?])
         edit-not-allowed-in-state? (subscribe [::subs/edit-not-allowed-in-state?])]
     [uix/Accordion
-     (tt/with-tooltip
-       [:div [module-plugin/Files
-              {:db-path      [::spec/apps-sets i]
-               :href         module-id
-               :change-event [::events/edit-config]
-               :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))}]]
-       (edit-not-allowed-msg {:TR                         @tr
-                              :can-edit-data?             @can-edit-data?
-                              :edit-op-allowed?           @edit-op-allowed?
-                              :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
+     [tt/WithTooltip
+      [:div [module-plugin/Files
+             {:db-path      [::spec/apps-sets i]
+              :href         module-id
+              :change-event [::events/edit-config]
+              :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))}]]
+      (edit-not-allowed-msg {:TR                         @tr
+                             :can-edit-data?             @can-edit-data?
+                             :edit-op-allowed?           @edit-op-allowed?
+                             :edit-not-allowed-in-state? @edit-not-allowed-in-state?})]
      :label (@tr [:module-files])]))
 
 
@@ -1648,10 +1648,10 @@
     [:<>
      [:h2 apps-set-name
       (when @is-behind-latest-published-version?
-        (tt/with-tooltip
-          [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
-                                                 :color :orange}]]
-          (@tr [:version-behind-published])))]
+        [tt/WithTooltip
+         [:span [icons/TriangleExclamationIcon {:style {:margin-left "5px"}
+                                                :color :orange}]]
+         (@tr [:version-behind-published])])]
      (when @is-behind-latest-published-version?
        [WarningVersionBehind [:warning-not-latest-app-set-version]])]))
 
@@ -1672,16 +1672,16 @@
                               [LinkToModule db-path (:id @apps-set) [:go-to-app-set]])
                    :content (@tr [:open-app-in-new-window])}]
         [uix/Accordion
-         (tt/with-tooltip
-           [:div [module-plugin/ModuleVersions
-                  {:db-path      [::spec/apps-sets 0 :apps-set]
-                   :href         (:id @apps-set)
-                   :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
-                   :change-event [::events/change-apps-set-version]}]]
-           (edit-not-allowed-msg {:TR                         @tr
-                                  :can-edit-data?             @can-edit-data?
-                                  :edit-op-allowed?           @edit-op-allowed?
-                                  :edit-not-allowed-in-state? @edit-not-allowed-in-state?}))
+         [tt/WithTooltip
+          [:div [module-plugin/ModuleVersions
+                 {:db-path      [::spec/apps-sets 0 :apps-set]
+                  :href         (:id @apps-set)
+                  :read-only?   (or (not @can-edit-data?) (not @edit-op-allowed?))
+                  :change-event [::events/change-apps-set-version]}]]
+          (edit-not-allowed-msg {:TR                         @tr
+                                 :can-edit-data?             @can-edit-data?
+                                 :edit-op-allowed?           @edit-op-allowed?
+                                 :edit-not-allowed-in-state? @edit-not-allowed-in-state?})]
          :label (@tr [:select-app-set-version])]
         [:h4 {:class :tab-app-detail} (@tr [:applications])]])
      configure-apps]))

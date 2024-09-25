@@ -635,15 +635,15 @@
                       :help-popup [uix/HelpPopup env-description]}
       (when overridden?
         [:div {:style {:float :right}}
-         (tt/with-tooltip
-           [:span [icons/EditIcon]]
-           (@tr [:overridden-value]))
+         [tt/WithTooltip
+          [icons/EditIcon]
+          (@tr [:overridden-value])]
          (when-not read-only?
-           (tt/with-tooltip
-             [:a {:href     "#"
-                  :on-click reset-env-value}
-              [icons/UndoIcon {:style {:color "black"}}]]
-             (@tr [:overridden-value-revert-to-default])))])]
+           [tt/WithTooltip
+            [:a {:href     "#"
+                 :on-click reset-env-value}
+             [icons/UndoIcon {:style {:color "black"}}]]
+            (@tr [:overridden-value-revert-to-default])])])]
      [EnvVarInput db-path href read-only? error? i env-variable]]))
 
 (defn EnvVariables
@@ -701,15 +701,16 @@
                       :align   :right}
         (when overridden?
           [:div {:style {:float :right}}
-           (tt/with-tooltip
-             [:span [icons/EditIcon]]
-             (tr [:overridden-value]))
+
+           [tt/WithTooltip
+            [icons/EditIcon]
+            (tr [:overridden-value])]
            (when-not read-only?
-             (tt/with-tooltip
-               [:a {:href     "#"
-                    :on-click reset-file-content}
-                [icons/UndoIcon {:style {:color "black"}}]]
-               (tr [:overridden-value-revert-to-default])))])]])))
+             [tt/WithTooltip
+              [:a {:href     "#"
+                   :on-click reset-file-content}
+               [icons/UndoIcon {:style {:color "black"}}]]
+              (tr [:overridden-value-revert-to-default])])])]])))
 
 (defn Files
   [{:keys [db-path href read-only? change-event]

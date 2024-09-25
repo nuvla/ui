@@ -30,6 +30,7 @@
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.tooltip :as tt]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 (def show-state-statistics (r/atom false))
@@ -193,10 +194,14 @@
         last-online           @(subscribe [::subs/last-online nuvlabox])
         creator               (subscribe [::session-subs/resolve-user created-by])
         owner                 (subscribe [::session-subs/resolve-user owner])
-        field-key->table-cell {:description      description,
+        field-key->table-cell {:description      [tt/WithOverflowTooltip
+                                                  {:content description
+                                                   :tooltip description}],
                                :tags             [uix/Tags tags],
                                :refresh-interval (str refresh-interval "s"),
-                               :name             (or name uuid),
+                               :name             [tt/WithOverflowTooltip
+                                                  {:content (or name uuid)
+                                                   :tooltip (or name uuid)}],
                                :created          [uix/TimeAgo created]
                                :state            [ui/Icon {:class (utils/state->icon state)}]
                                :online           [OnlineStatusIcon online nil true]

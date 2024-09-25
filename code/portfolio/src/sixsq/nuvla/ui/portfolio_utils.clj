@@ -9,6 +9,7 @@
                    :style {:border           :none
                            :flex-grow        1
                            :width            "100%"
+                           :min-height       "500px"
                            :background-color "rgb(255, 255, 255)"
                            :background-image :none}}])
        (defn ~id

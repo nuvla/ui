@@ -1,20 +1,12 @@
 (ns sixsq.nuvla.ui.common-components.plugins.table-refactor
-  (:require [cljs.spec.alpha :as s]
-            [clojure.edn :as edn]
-            [clojure.set :as set]
-            [clojure.string :as str]
-            [re-frame.core :refer [dispatch inject-cofx reg-event-db
+  (:require [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.pages.cimi.views :refer [SelectFieldsView]]
-            [sixsq.nuvla.ui.routing.events :as routing-events]
-            [sixsq.nuvla.ui.routing.utils :refer [get-query-param]]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.tooltip :as tt]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn !visible-columns-fn
   [{:keys [::!current-columns ::!default-columns] :as _control}]
@@ -24,17 +16,19 @@
   [{:keys [::!columns] :as _control}]
   (r/track #(into {} (map (juxt ::field-key identity) @!columns))))
 
+(defn remove-field-key
+  [current-columns field-key]
+  (vec (remove (fn [fk] (= fk field-key)) current-columns)))
+
 (defn DeleteColumn
-  [{:keys [::set-columns-fn] :as control} {:keys [::field-key ::no-delete] :as _column}]
-  (when (and (> (count @(!visible-columns-fn control)) 1)
-             (not no-delete))
-    [:span {:style {:margin-left "0.8rem"}}
-     [uix/LinkIcon {:color    "red"
-                    :name     "remove circle"
-                    :on-click #(set-columns-fn
-                                 (vec (remove (fn [fk] (= fk field-key))
-                                              @!visible-columns-fn)))
-                    :class    :toggle-invisible-on-parent-hover}]]))
+  [{:keys [::set-current-columns-fn] :as control} {:keys [::field-key ::no-delete] :as _column}]
+  (let [visible-columns @(!visible-columns-fn control)]
+    (when (and (> (count visible-columns) 1) (not no-delete))
+      [:span {:style {:margin-left "0.8rem"}}
+       [uix/LinkIcon {:color    "red"
+                      :name     "remove circle"
+                      :on-click #(set-current-columns-fn (remove-field-key visible-columns field-key))
+                      :class    :toggle-invisible-on-parent-hover}]])))
 
 (defn TableHeaderCell
   [control column]
@@ -82,58 +76,6 @@
    (for [data-row @(::!data control)]
      ^{:key (str "row-" (:id data-row))}
      [TableRow control data-row])])
-;
-;(defn FormatFieldItem [selections-atom item field->view]
-;  (let [view         (get field->view item)
-;        tr           (subscribe [::i18n-subs/tr])
-;        label-string (if (keyword? item) (or (@tr [item]) item) item)]
-;    [ui/ListItem
-;     [ui/ListContent
-;      [ui/ListHeader {:style {:display :flex}}
-;       [ui/Checkbox {:checked   (contains? @selections-atom item)
-;                     :label     (if view (r/as-element [:label view]) label-string)
-;                     :on-change (ui-callback/checked (fn [checked]
-;                                                       (if checked
-;                                                         (swap! selections-atom set/union #{item})
-;                                                         (swap! selections-atom set/difference #{item}))))}]
-;       #_[:label view]]]]))
-;
-;(defn format-field-list [available-fields-atom selections-atom field->view]
-;  (let [items (sort available-fields-atom)]
-;    (vec (concat [ui/ListSA]
-;                 (map (fn [item] [FormatFieldItem selections-atom item field->view]) items)))))
-;
-;(defn SelectFieldsView
-;  [{:keys [show? selected-id-sub selections-atom
-;           selected-fields-sub available-fields
-;           update-fn trigger title-tr-key
-;           reset-to-default-fn field->view]}]
-;  (let [tr (subscribe [::i18n-subs/tr])]
-;    [ui/Modal
-;     {:closeIcon true
-;      :open      @show?
-;      :on-close  #(reset! show? false)}
-;     [uix/ModalHeader {:header (@tr [(or title-tr-key :fields)])}]
-;     [ui/ModalContent
-;      {:scrolling true}
-;      [format-field-list available-fields selections-atom field->view]]
-;     [ui/ModalActions
-;      (when (fn? reset-to-default-fn)
-;        [uix/Button
-;         {:text     "Select default columns"
-;          :on-click reset-to-default-fn}])
-;      [uix/Button
-;       {:text     (@tr [:cancel])
-;        :on-click #(reset! show? false)}]
-;      [uix/Button
-;       {:text     (@tr [:update])
-;        :primary  true
-;        :on-click (fn []
-;                    (reset! show? false)
-;                    (if (fn? update-fn)
-;                      (update-fn @selections-atom)
-;                      (dispatch [::events/set-selected-fields @selections-atom])))}]]]))
-
 
 (defn ColumnsSelectorButton
   [open-fn]
@@ -153,34 +95,45 @@
                      :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
 
 (defn ColumnsSelectorModal
-  [{:keys [::set-current-columns-fn] :as _control}]
-  (r/with-let [open?    (r/atom false)
-               open-fn  #(reset! open? true)
-               close-fn #(reset! open? false)
-               tr       (subscribe [::i18n-subs/tr])]
-    (js/console.info "ColumnsSelectorModal" @open?)
-    [ui/Modal {:close-icon true
-               :open       @open?
-               :trigger    (r/as-element [ColumnsSelectorButton open-fn])
-               :on-close   close-fn}
-     [uix/ModalHeader {:header "Select columnssss"}]
-     [ui/ModalContent {:scrolling true}
-      #_[format-field-list available-fields selections-atom field->view]]
-     [ui/ModalActions
-      #_(when (fn? reset-to-default-fn)
+  [{:keys [::set-current-columns-fn ::!default-columns ::!columns] :as control}]
+  (r/with-let [open?                  (r/atom false)
+               !local-current-columns (r/atom nil)
+               open-fn                #(do
+                                         (reset! !local-current-columns @(!visible-columns-fn control))
+                                         (reset! open? true))
+               close-fn               #(reset! open? false)
+               tr                     (subscribe [::i18n-subs/tr])]
+    (let [set-local-current-columns (set @!local-current-columns)]
+      [ui/Modal {:close-icon true
+                 :open       @open?
+                 :trigger    (r/as-element [ColumnsSelectorButton open-fn])
+                 :on-close   close-fn}
+       [uix/ModalHeader {:header "Select columns"}]
+       [ui/ModalContent {:scrolling true}
+        [ui/Form
+         (doall
+           (for [{:keys [::field-key ::header-content]} @!columns]
+             ^{:key (str "checkbox-" field-key)}
+             [ui/FormCheckbox {:label     (or header-content field-key)
+                               :on-change (ui-callback/checked
+                                            #(swap! !local-current-columns
+                                                    (if % conj remove-field-key)
+                                                    field-key))
+                               :checked   (contains? set-local-current-columns field-key)}]))]]
+       [ui/ModalActions
+        (when !default-columns
           [uix/Button
            {:text     "Select default columns"
-            :on-click reset-to-default-fn}])
-      (js/console.info tr #_(@tr [:cancel]))
-      [uix/Button
-       {:text     (@tr [:cancel])
-        :on-click close-fn}]
-      #_[uix/Button
+            :on-click #(reset! !local-current-columns @!default-columns)}])
+        [uix/Button
+         {:text     (@tr [:cancel])
+          :on-click close-fn}]
+        [uix/Button
          {:text     (@tr [:update])
           :primary  true
           :on-click (fn []
-                      (close-fn)
-                      #_(set-current-columns-fn))}]]]))
+                      (set-current-columns-fn @!local-current-columns)
+                      (close-fn))}]]])))
 
 (defn Table
   [{:keys [::!current-columns ::!default-columns] :as control}]
@@ -232,16 +185,10 @@
 ;; table
 ;; rows
 ;; columns
-;; sortable
 ;; add remove columns
-;; dynamic
-
-
-;; table
-;; accept control map
-;; delete column icon
-;; select columns modal
-;; sorting
+;; columns selector modal
+;; sortable
+;; dynamic build columns list
 ;; filtering
 ;; drag columns
 ;; selectable rows

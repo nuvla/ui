@@ -5,10 +5,12 @@ test('test', async ({ page }, { config }) => {
 
   await page.goto(baseURL + '/?id=sixsq.nuvla.ui.components.table-scenes%2Fsimple-table');
 
-  const iframe = page.frameLocator('iframe.canvas');
+  const iframe = await page.frameLocator('iframe.canvas').first();
 
-  const table = iframe.first().locator('table.ui');
+  const table = await iframe.locator('table.ui');
+
   expect(table).toHaveCount(1);
 
   expect(table.first().locator('tr')).toHaveCount(2);
 });
+

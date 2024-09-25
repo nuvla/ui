@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.components.overflow-tooltip-scenes
-  (:require [portfolio.reagent :refer-macros [defscene]]
+  (:require [sixsq.nuvla.ui.portfolio-utils :refer [defscene]]
             [sixsq.nuvla.ui.utils.tooltip :refer [with-overflow-tooltip]]))
 
 (defscene overflow-tooltip

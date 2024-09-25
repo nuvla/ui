@@ -3,21 +3,29 @@
             [re-frame.core :refer [dispatch-sync]]
             [sixsq.nuvla.ui.db.events :as db-events]
             [sixsq.nuvla.ui.common-components.i18n.events :as i18n-events]
-            [sixsq.nuvla.ui.components.button-scenes]
-            [sixsq.nuvla.ui.components.table-scenes]
+            [reagent.dom :as rdom]
+            [goog.dom :as gdom]
             [sixsq.nuvla.ui.components.tooltip-scenes]
             [sixsq.nuvla.ui.components.overflow-tooltip-scenes]
             [sixsq.nuvla.ui.components.table-refactor-scenes]
-            [sixsq.nuvla.ui.components.tanstack-table-scenes]))
+            [sixsq.nuvla.ui.components.tanstack-table-scenes]
+            [sixsq.nuvla.ui.portfolio-utils :refer [scene-root]]))
 
-(portfolio/start!
-  {:config
-   {:canvas-path "/ui/portfolio.html"
-    ;:css-paths ["/ui/css/semantic.min.css"
-    ;            "/ui/css/nuvla-ui.css"
-    ;            "/ui/css/react-datepicker.min.css"]
-    :background/default-option-id :light-mode}})
+(defn init [])
 
-(defn init []
-  (dispatch-sync [::db-events/initialize-db])
-  (dispatch-sync [::i18n-events/set-locale]))
+(defn ^:export init-portfolio []
+  (portfolio/start!
+    {:config
+     {:background/default-option-id :light-mode}}))
+
+(defn mount-root [scene-id]
+  (rdom/render
+    (scene-root scene-id)
+    (gdom/getElement "root")))
+
+(defn ^:export init-scene []
+  (let [scene-id (-> (js/URLSearchParams. (-> js/document .-location .-search))
+                     (.get "id"))]
+    (dispatch-sync [::db-events/initialize-db])
+    (dispatch-sync [::i18n-events/set-locale])
+    (mount-root scene-id)))

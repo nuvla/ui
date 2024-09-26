@@ -2142,7 +2142,8 @@
         overview    {:menuItem {:content "Overview"
                                 :key     :overview
                                 :icon    icons/i-eye}
-                     :render   #(r/as-element [TabOverview])}]
+                     :render   #(r/as-element [TabOverview])}
+        docker      @(subscribe [::subs/docker])]
     (if (= state "SUSPENDED")
       [overview]
       [overview
@@ -2201,10 +2202,11 @@
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
                         :pagination-db-path ::spec/deployment-pagination
                         :fetch-event        [::events/get-deployments-for-edge]}]])}
-       {:menuItem {:content "Docker"
-                   :key     :docker
-                   :icon    icons/i-docker}
-        :render   #(r/as-element [coe-resources/Tab])}
+       (when docker
+         {:menuItem {:content "Docker"
+                     :key     :docker
+                     :icon    icons/i-docker}
+          :render   #(r/as-element [coe-resources/Tab])})
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    icons/i-shield}

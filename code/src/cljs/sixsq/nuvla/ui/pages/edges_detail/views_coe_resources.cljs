@@ -291,7 +291,7 @@
                                   ::!docker-images                   (subscribe [::subs/docker-images-ordered])
                                   ::!docker-containers               (subscribe [::subs/docker-containers-ordered])
                                   ::!docker-networks                 (subscribe [::subs/docker-networks-ordered])
-                                  ::!docker-configs                  (subscribe [::subs/docker-configs-ordered])
+                                  ;::!docker-configs                  (subscribe [::subs/docker-configs-ordered])
                                   ::!docker-volumes                  (subscribe [::subs/docker-volumes-ordered])}]
     [ui/Tab
      {:panes [{:menuItem "Containers", :render #(r/as-element [DockerContainerPane control])}

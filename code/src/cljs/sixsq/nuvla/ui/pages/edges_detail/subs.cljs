@@ -113,7 +113,6 @@
   :<- [::docker-containers-clean]
   :<- [::docker-containers-ordering]
   (fn [[containers ordering]]
-    (js/console.info ordering)
     (sort (partial general-utils/multi-key-direction-sort ordering) containers)))
 
 (reg-sub

@@ -2,6 +2,14 @@
 
 ## Released
 
+## [2.39.1](https://github.com/nuvla/ui/compare/2.39.0...2.39.1) (2024-09-26)
+
+
+### Bug Fixes
+
+* **Changelog:** Remove unreleased section ([a01069e](https://github.com/nuvla/ui/commit/a01069e406a6e0c7da4ef4fd970ac42fcff82048))
+* **Edge details page:** Do not show Docker tab when no data in nuvlabox status ([e3a5307](https://github.com/nuvla/ui/commit/e3a53079305e4297b425a96323bc0cb9a335286c))
+
 ## [2.39.0](https://github.com/nuvla/ui/compare/2.38.1...2.39.0) (2024-09-25)
 
 

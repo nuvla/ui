@@ -1,9 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Notifications - improve notification configuration for data records creation
-
 ## Released
 
 ## [2.39.0](https://github.com/nuvla/ui/compare/2.38.1...2.39.0) (2024-09-25)

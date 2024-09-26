@@ -457,3 +457,15 @@
    (format-number amount {:style  "currency"}))
   ([amount opts]
    (format-number amount (merge opts {:style "currency"}))))
+
+(defn multi-key-direction-sort
+  [orders x y]
+  (loop [rest-orders orders]
+    (when-let [[key direction value-fn] (first rest-orders)]
+      (let [get-sort-value (or value-fn key)
+            c              (if (= direction "desc")
+                             (compare (get-sort-value y) (get-sort-value x))
+                             (compare (get-sort-value x) (get-sort-value y)))]
+        (if (not= c 0)
+          c
+          (recur (rest rest-orders)))))))

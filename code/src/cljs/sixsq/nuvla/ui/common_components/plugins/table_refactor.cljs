@@ -6,7 +6,8 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (defn !visible-columns-fn
   [{:keys [::!current-columns ::!default-columns] :as _control}]
@@ -20,8 +21,20 @@
   [current-columns field-key]
   (vec (remove (fn [fk] (= fk field-key)) current-columns)))
 
+(defn !sorted-data-fn
+  [{:keys [::!sorting ::!data] :as _control}]
+  (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
+                  @!data)))
+
+(defn set-current-columns-fn*
+  [{:keys [::set-current-columns-fn ::!sorting ::set-sorting-fn] :as _control} columns]
+  (let [columns-set (set columns)
+        new-sorting (filter #(columns-set (first %)) @!sorting)]
+    (set-sorting-fn new-sorting))
+  (set-current-columns-fn columns))
+
 (defn DeleteColumn
-  [{:keys [::set-current-columns-fn] :as control} {:keys [::field-key ::no-delete] :as _column}]
+  [control {:keys [::field-key ::no-delete] :as _column}]
   (let [visible-columns @(!visible-columns-fn control)]
     (when (and (> (count visible-columns) 1) (not no-delete))
       [:span {:style {:margin-left "0.8rem"}}
@@ -29,15 +42,51 @@
                       :aria-label  "Delete Column"
                       :color       "red"
                       :name        "remove circle"
-                      :on-click    #(set-current-columns-fn (remove-field-key visible-columns field-key))
+                      :on-click    #(set-current-columns-fn* control (remove-field-key visible-columns field-key))
                       :class       :toggle-invisible-on-parent-hover}]])))
 
+(defn SortIcon [direction]
+  (let [direction->class {"asc"  " ascending"
+                          "desc" " descending"}]
+    (when direction
+      [uix/LinkIcon {:name (str "sort" (direction->class direction))}])))
+
+(defn- calc-new-sorting [sorting sort-key sort-direction]
+  (if (some? sort-direction)
+    (let [index (->> sorting
+                     (map-indexed vector)
+                     (some #(when (= sort-key (first (second %))) %))
+                     first)]
+      (if (some? index)
+        (update sorting index (constantly [sort-key sort-direction]))
+        (conj sorting [sort-key sort-direction])))
+    (vec (remove #(= sort-key (first %)) sorting))))
+
+(defn- get-field-sort-direction
+  [sorting field-key]
+  (->> sorting (some #(when (= field-key (first %)) %)) second))
+
+(defn- get-next-sort-direction
+  [sort-direction]
+  (case sort-direction
+    nil "asc"
+    "asc" "desc"
+    "desc" nil))
+
 (defn TableHeaderCell
-  [control column]
-  (r/with-let [field-key (::field-key column)]
+  [{:keys [::!sorting ::set-sorting-fn] :as control} column]
+  (let [field-key      (::field-key column)
+        sort-direction (get-field-sort-direction @!sorting field-key)
+        on-click       #(->> sort-direction
+                             get-next-sort-direction
+                             (calc-new-sorting @!sorting field-key)
+                             set-sorting-fn)]
     (js/console.info "Render TableHeaderCell " field-key)
-    [ui/TableHeaderCell {:class ["show-child-on-hover"]}
+    [ui/TableHeaderCell {:class    ["show-child-on-hover"]
+                         :on-click on-click}
      (::header-content column)
+     (when sort-direction
+       [SortIcon sort-direction])
      [DeleteColumn control column]]))
 
 (defn TableHeader
@@ -74,10 +123,12 @@
 (defn TableBody
   [control]
   (js/console.info "Render TableBody")
-  [ui/TableBody
-   (for [data-row @(::!data control)]
-     ^{:key (str "row-" (:id data-row))}
-     [TableRow control data-row])])
+  (r/with-let [!sorted-data (!sorted-data-fn control)]
+    [ui/TableBody
+     (doall
+       (for [data-row @!sorted-data]
+         ^{:key (str "row-" (:id data-row))}
+         [TableRow control data-row]))]))
 
 (defn ColumnsSelectorButton
   [open-fn]
@@ -97,7 +148,7 @@
                      :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
 
 (defn ColumnsSelectorModal
-  [{:keys [::set-current-columns-fn ::!default-columns ::!columns] :as control}]
+  [{:keys [::!default-columns ::!columns] :as control}]
   (r/with-let [open?                  (r/atom false)
                !local-current-columns (r/atom nil)
                open-fn                #(do
@@ -134,11 +185,11 @@
          {:text     (@tr [:update])
           :primary  true
           :on-click (fn []
-                      (set-current-columns-fn @!local-current-columns)
+                      (set-current-columns-fn* control @!local-current-columns)
                       (close-fn))}]]])))
 
 (defn Table
-  [{:keys [::!current-columns ::!default-columns] :as control}]
+  [control]
   [:div
    [ColumnsSelectorModal control]
    [ui/Table {:attached true}
@@ -166,6 +217,7 @@
                                   ::header-content "Created"}]
                !current-columns (r/atom nil)
                ;!current-columns (subscribe [::current-columns])
+               !sorting         (r/atom [])
                control          {::!columns               (r/atom columns)
                                  ::!data                  (r/atom [{:RepoDigests
                                                                     ["nuvladev/nuvlaedge@sha256:56f8fe1fdf35d50577ab135dcbf78cfb877ccdc41948ec9352d526614b7462f2"],
@@ -243,7 +295,9 @@
                                  ::!default-columns       (r/atom [:Id :Size :Created])
                                  ::set-current-columns-fn #(reset! !current-columns %)
                                  ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
-                                 ::!current-columns       !current-columns}]
+                                 ::!current-columns       !current-columns
+                                 ::set-sorting-fn         #(reset! !sorting %)
+                                 ::!sorting               !sorting}]
     [:div
      [ui/Button {:on-click #(swap! reset-atom inc)} "Reset"]
      [ui/Button {:on-click #(reset! (::!data control) [{:id 1, :name "hello"} {:id 5}])} "Add row"]

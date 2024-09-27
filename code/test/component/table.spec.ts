@@ -75,3 +75,17 @@ test('test', async ({ page }, { config }) => {
   await expectColumnData(page, table, 2, ['1725666894','1726074087','1725667915']);
 });
 
+test('test table draggable columns', async ({ page }, { config }) => {
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table-refactor');
+
+  const table = await sceneRoot.locator('table.ui');
+  await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
+
+//   Move Created column to first position
+  await expect(table.first().getByRole('button', { name: 'Id' })).toBeVisible();
+  await expect(table.first().getByRole('button', { name: 'Created' })).toBeVisible();
+  await table.first().getByRole('button', { name: 'Created' }).highlight();
+  await table.first().getByRole('button', { name: 'Size' }).highlight();
+  await table.first().getByRole('button', { name: 'Created' }).dragTo(table.first().getByRole('button', { name: 'Size' }));
+  await expectHeadersOrder(table, ['Id', 'Created', 'Size']);
+});

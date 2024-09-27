@@ -20,7 +20,9 @@
 
 (defn pointerSensor
   []
-  (useSensors (useSensor dnd-core/PointerSensor #js {"activationConstraint" #js {"distance" 5}})))
+  (useSensors (useSensor dnd-core/PointerSensor #js {
+                                                     ;"activationConstraint" #js {"distance" 5}
+                                                     })))
 
 (defn translate-css
   [sortable]

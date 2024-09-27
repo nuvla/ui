@@ -2,10 +2,7 @@
   (:require [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
-            ["@dnd-kit/core" :as dnd-core]
-            ["@dnd-kit/modifiers" :as dnd-modifiers]
-            ["@dnd-kit/sortable" :as dnd-sortable]
-            ["@dnd-kit/utilities" :as dnd-utilities]
+            [sixsq.nuvla.ui.utils.dnd :as dnd]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -82,7 +79,7 @@
 (defn TableHeaderCell
   [{:keys [::!sorting ::set-sorting-fn] :as control} column]
   (let [field-key      (::field-key column)
-        sortable       (dnd-sortable/useSortable #js {"id" (name field-key)})
+        sortable       (dnd/useSortable #js {"id" (name field-key)})
         setNodeRef     (.-setNodeRef sortable)
         sort-direction (get-field-sort-direction @!sorting field-key)
         on-click       #(->> sort-direction
@@ -93,7 +90,7 @@
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
     [:th (merge {:ref      setNodeRef
                  :class    ["show-child-on-hover"]
-                 :style    {:transform (.toString (.-Translate dnd-utilities/CSS) (.-transform sortable))}
+                 :style    {:transform (dnd/translate-css sortable)}
                  :on-click on-click}
                 (js->clj (.-attributes sortable))
                 (js->clj (.-listeners sortable)))
@@ -110,9 +107,9 @@
     [ui/TableHeader
      [ui/TableRow
       (js/console.info "TableHeader" @!columns-by-key @!visible-columns)
-      [:> dnd-sortable/SortableContext
+      [dnd/SortableContext
        {:items    (mapv name @!visible-columns)
-        :strategy dnd-sortable/horizontalListSortingStrategy}
+        :strategy dnd/horizontalListSortingStrategy}
        (doall
          (for [visible-column @!visible-columns]
            ^{:key (str "header-column-" visible-column)}
@@ -121,11 +118,11 @@
 (defn TableCell
   [_control row column]
   (js/console.info "Render TableCell " (::field-key column))
-  (let [sortable   (dnd-sortable/useSortable #js {"id" (name (::field-key column))})
+  (let [sortable   (dnd/useSortable #js {"id" (name (::field-key column))})
         setNodeRef (.-setNodeRef sortable)]
     ;Using html td tag instead of semantic ui TableCell, because for some reason it's not taking into account ref fn
     [:td {:ref   setNodeRef
-          :style {:transform (.toString (.-Translate dnd-utilities/CSS) (.-transform sortable))}}
+          :style {:transform (dnd/translate-css sortable)}}
      ((::field-key column) row)]))
 
 (defn TableRow
@@ -134,9 +131,9 @@
   (r/with-let [visible-columns (!visible-columns-fn control)
                !columns-by-key (!columns-by-key-fn control)]
     [ui/TableRow
-     [:> dnd-sortable/SortableContext
+     [dnd/SortableContext
       {:items    (mapv name @(!visible-columns-fn control))
-       :strategy dnd-sortable/horizontalListSortingStrategy}
+       :strategy dnd/horizontalListSortingStrategy}
       (doall
         (for [visible-column @visible-columns]
           (let [column (get @!columns-by-key visible-column)]
@@ -226,10 +223,10 @@
                                         set-current-columns-fn))))]
     [:div
      [ColumnsSelectorModal control]
-     [:> dnd-core/DndContext {:collisionDetection dnd-core/closestCenter
-                              :modifiers          [dnd-modifiers/restrictToHorizontalAxis]
-                              :onDragEnd          on-drag-end-fn
-                              :sensors            (dnd-core/useSensors (dnd-core/useSensor dnd-core/PointerSensor #js {"activationConstraint" #js {"distance" 5}}))}
+     [dnd/DndContext {:collisionDetection dnd/closestCenter
+                      :modifiers          [dnd/restrictToHorizontalAxis]
+                      :onDragEnd          on-drag-end-fn
+                      :sensors            (dnd/pointerSensor)}
       [ui/Table {:attached true}
        [TableHeader control]
        [TableBody control]]]]))

@@ -29,7 +29,7 @@
 (defn set-current-columns-fn*
   [{:keys [::set-current-columns-fn ::!sorting ::set-sorting-fn] :as _control} columns]
   (let [columns-set (set columns)
-        new-sorting (filter #(columns-set (first %)) @!sorting)]
+        new-sorting (filterv #(columns-set (first %)) @!sorting)]
     (set-sorting-fn new-sorting))
   (set-current-columns-fn columns))
 
@@ -42,7 +42,9 @@
                       :aria-label  "Delete Column"
                       :color       "red"
                       :name        "remove circle"
-                      :on-click    #(set-current-columns-fn* control (remove-field-key visible-columns field-key))
+                      :on-click    (fn [event]
+                                     (set-current-columns-fn* control (remove-field-key visible-columns field-key))
+                                     (.stopPropagation event))
                       :class       :toggle-invisible-on-parent-hover}]])))
 
 (defn SortIcon [direction]

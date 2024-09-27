@@ -1,18 +1,24 @@
 import { test, expect } from '@playwright/test';
 import { gotoScene } from './utils';
 
-function expectHeadersOrder(table, headers) {
-  expect(table.first().locator('thead tr th')).toHaveCount(headers.length);
-  headers.map((header, index) => {
-      expect(table.first().locator('thead tr th').nth(index)).toHaveText(header);
-  });
+async function expectHeadersOrder(table, headers) {
+  await expect(table.first().locator('thead tr th')).toHaveCount(headers.length);
+  for (let index = 0 ; index < headers.length ; index++) {
+      let header = headers[index];
+      await expect(table.first().locator('thead tr th').nth(index)).toHaveText(header);
+  }
+}
+
+async function expectColumnData(page, table, colIndex, colData) {
+  for (let rowIndex = 0; rowIndex < colData.length ; rowIndex++) {
+      let cellData = colData[rowIndex];
+      await expect(await table.locator('tbody > tr:nth-child(' + (rowIndex + 1) + ') > td:nth-child(' + colIndex + ')')).toHaveText(cellData);
+  };
 }
 
 async function openColumnSelectorModal(sceneRoot) {
   await sceneRoot.getByTitle('Columns selector').locator('i').click();
 }
-
-
 
 test('test', async ({ page }, { config }) => {
   const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table-refactor');
@@ -52,6 +58,20 @@ test('test', async ({ page }, { config }) => {
   await table.first().getByRole('cell', { name: 'Size' }).locator('a[aria-label="Delete Column"]').click();
   expectHeadersOrder(table, ['Id', 'Created']);
 
+// Sort by Created ascending
+  await table.first().getByRole('cell', { name: 'Created' }).click();
+  await expectColumnData(page, table, 2, ['1725666894','1725667915','1726074087']);
 
+// Sort by Created descending
+  await table.first().getByRole('cell', { name: 'Created' }).click();
+  await expectColumnData(page, table, 2, ['1726074087','1725667915','1725666894']);
+
+// Sort by Created descending + Id ascending
+  await table.first().getByRole('cell', { name: 'Id' }).click();
+  await expectColumnData(page, table, 2, ['1726074087','1725667915','1725666894']);
+
+// No more sorting on Created => Sort by Id ascending
+  await table.first().getByRole('cell', { name: 'Created' }).click();
+  await expectColumnData(page, table, 2, ['1725666894','1726074087','1725667915']);
 });
 

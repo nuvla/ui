@@ -2,6 +2,10 @@
   (:require [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
+            ["@dnd-kit/core" :as dnd-core]
+            ["@dnd-kit/modifiers" :as dnd-modifiers]
+            ["@dnd-kit/sortable" :as dnd-sortable]
+            ["@dnd-kit/utilities" :as dnd-utilities]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -78,14 +82,21 @@
 (defn TableHeaderCell
   [{:keys [::!sorting ::set-sorting-fn] :as control} column]
   (let [field-key      (::field-key column)
+        sortable       (dnd-sortable/useSortable #js {"id" (name field-key)})
+        setNodeRef     (.-setNodeRef sortable)
         sort-direction (get-field-sort-direction @!sorting field-key)
         on-click       #(->> sort-direction
                              get-next-sort-direction
                              (calc-new-sorting @!sorting field-key)
                              set-sorting-fn)]
     (js/console.info "Render TableHeaderCell " field-key)
-    [ui/TableHeaderCell {:class    ["show-child-on-hover"]
-                         :on-click on-click}
+    ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
+    [:th (merge {:ref      setNodeRef
+                 :class    ["show-child-on-hover"]
+                 :style    {:transform (.toString (.-Translate dnd-utilities/CSS) (.-transform sortable))}
+                 :on-click on-click}
+                (js->clj (.-attributes sortable))
+                (js->clj (.-listeners sortable)))
      (::header-content column)
      (when sort-direction
        [SortIcon sort-direction])
@@ -98,17 +109,24 @@
                !columns-by-key  (!columns-by-key-fn control)]
     [ui/TableHeader
      [ui/TableRow
-      (js/console.info @!columns-by-key)
-      (doall
-        (for [visible-column @!visible-columns]
-          ^{:key (str "header-column-" visible-column)}
-          [TableHeaderCell control (get @!columns-by-key visible-column)]))]]))
+      (js/console.info "TableHeader" @!columns-by-key @!visible-columns)
+      [:> dnd-sortable/SortableContext
+       {:items    (mapv name @!visible-columns)
+        :strategy dnd-sortable/horizontalListSortingStrategy}
+       (doall
+         (for [visible-column @!visible-columns]
+           ^{:key (str "header-column-" visible-column)}
+           [:f> TableHeaderCell control (get @!columns-by-key visible-column)]))]]]))
 
 (defn TableCell
   [_control row column]
   (js/console.info "Render TableCell " (::field-key column))
-  [ui/TableCell
-   ((::field-key column) row)])
+  (let [sortable   (dnd-sortable/useSortable #js {"id" (name (::field-key column))})
+        setNodeRef (.-setNodeRef sortable)]
+    ;Using html td tag instead of semantic ui TableCell, because for some reason it's not taking into account ref fn
+    [:td {:ref   setNodeRef
+          :style {:transform (.toString (.-Translate dnd-utilities/CSS) (.-transform sortable))}}
+     ((::field-key column) row)]))
 
 (defn TableRow
   [control row]
@@ -116,11 +134,14 @@
   (r/with-let [visible-columns (!visible-columns-fn control)
                !columns-by-key (!columns-by-key-fn control)]
     [ui/TableRow
-     (doall
-       (for [visible-column @visible-columns]
-         (let [column (get @!columns-by-key visible-column)]
-           ^{:key (str "row-" (:id row) "-column-" visible-column)}
-           [TableCell control row column])))]))
+     [:> dnd-sortable/SortableContext
+      {:items    (mapv name @(!visible-columns-fn control))
+       :strategy dnd-sortable/horizontalListSortingStrategy}
+      (doall
+        (for [visible-column @visible-columns]
+          (let [column (get @!columns-by-key visible-column)]
+            ^{:key (str "row-" (:id row) "-column-" visible-column)}
+            [:f> TableCell control row column])))]]))
 
 (defn TableBody
   [control]
@@ -191,12 +212,27 @@
                       (close-fn))}]]])))
 
 (defn Table
-  [control]
-  [:div
-   [ColumnsSelectorModal control]
-   [ui/Table {:attached true}
-    [TableHeader control]
-    [TableBody control]]])
+  [{:keys [::set-current-columns-fn] :as control}]
+  (r/with-let [on-drag-end-fn (fn [e]
+                                (let [active    (.-active e)
+                                      over      (.-over e)
+                                      active-id (keyword (.-id active))
+                                      over-id   (keyword (.-id over))
+                                      get-index #(-> % .-data .-current .-sortable .-index)]
+                                  (when (and active over (not= active-id over-id))
+                                    (-> @(!visible-columns-fn control)
+                                        (assoc (get-index active) over-id)
+                                        (assoc (get-index over) active-id)
+                                        set-current-columns-fn))))]
+    [:div
+     [ColumnsSelectorModal control]
+     [:> dnd-core/DndContext {:collisionDetection dnd-core/closestCenter
+                              :modifiers          [dnd-modifiers/restrictToHorizontalAxis]
+                              :onDragEnd          on-drag-end-fn
+                              :sensors            (dnd-core/useSensors (dnd-core/useSensor dnd-core/PointerSensor #js {"activationConstraint" #js {"distance" 5}}))}
+      [ui/Table {:attached true}
+       [TableHeader control]
+       [TableBody control]]]]))
 
 (reg-event-db
   ::set-current-columns-fn
@@ -303,7 +339,7 @@
     [:div
      [ui/Button {:on-click #(swap! reset-atom inc)} "Reset"]
      [ui/Button {:on-click #(reset! (::!data control) [{:id 1, :name "hello"} {:id 5}])} "Add row"]
-     [Table control]]))
+     [:f> Table control]]))
 
 (defn TableController
   []

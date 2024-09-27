@@ -50,28 +50,28 @@ test('test', async ({ page }, { config }) => {
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
 
 // Expect delete Id column is not possible
-  await table.first().getByRole('cell', { name: 'Id' }).hover();
-  await expect(table.first().getByRole('cell', { name: 'Id' }).locator('a[aria-label="Delete Column"]')).toHaveCount(0);
+  await table.first().getByRole('button', { name: 'Id' }).hover();
+  await expect(table.first().getByRole('button', { name: 'Id' }).locator('a[aria-label="Delete Column"]')).toHaveCount(0);
 
 // Expect delete Size column is possible
-  await table.first().getByRole('cell', { name: 'Size' }).hover();
-  await table.first().getByRole('cell', { name: 'Size' }).locator('a[aria-label="Delete Column"]').click();
+  await table.first().getByRole('button', { name: 'Size' }).hover();
+  await table.first().getByRole('button', { name: 'Size' }).locator('a[aria-label="Delete Column"]').click();
   await expectHeadersOrder(table, ['Id', 'Created']);
 
 // Sort by Created ascending
-  await table.first().getByRole('cell', { name: 'Created' }).click();
+  await table.first().getByRole('button', { name: 'Created' }).click();
   await expectColumnData(page, table, 2, ['1725666894','1725667915','1726074087']);
 
 // Sort by Created descending
-  await table.first().getByRole('cell', { name: 'Created' }).click();
+  await table.first().getByRole('button', { name: 'Created' }).click();
   await expectColumnData(page, table, 2, ['1726074087','1725667915','1725666894']);
 
 // Sort by Created descending + Id ascending
-  await table.first().getByRole('cell', { name: 'Id' }).click();
+  await table.first().getByRole('button', { name: 'Id' }).click();
   await expectColumnData(page, table, 2, ['1726074087','1725667915','1725666894']);
 
 // No more sorting on Created => Sort by Id ascending
-  await table.first().getByRole('cell', { name: 'Created' }).click();
+  await table.first().getByRole('button', { name: 'Created' }).click();
   await expectColumnData(page, table, 2, ['1725666894','1726074087','1725667915']);
 });
 

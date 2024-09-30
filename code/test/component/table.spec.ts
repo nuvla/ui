@@ -80,7 +80,15 @@ test('test table draggable columns', async ({ page }, { config }) => {
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
 
-//   Move Created column to first position
+//   Move Created column to Size position
   await dragAndDrop(page, table.getByRole('button', { name: 'Created' }), table.getByRole('button', { name: 'Size' }));
   await expectHeadersOrder(table, ['Id', 'Created', 'Size']);
+
+//   Move Created column to original position
+  await dragAndDrop(page, table.getByRole('button', { name: 'Size' }), table.getByRole('button', { name: 'Created' }));
+  await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
+
+//   Move Created column to first position
+  await dragAndDrop(page, table.getByRole('button', { name: 'Created' }), table.getByRole('button', { name: 'Id' }));
+  await expectHeadersOrder(table, ['Created', 'Size', 'Id']);
 });

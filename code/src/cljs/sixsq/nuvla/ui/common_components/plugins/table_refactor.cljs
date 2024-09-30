@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.common-components.plugins.table-refactor
-  (:require [re-frame.core :refer [dispatch inject-cofx reg-event-db
+  (:require [clojure.set :as set]
+            [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.utils.dnd :as dnd]
@@ -26,6 +27,14 @@
   [{:keys [::!sorting ::!data] :as _control}]
   (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
                   @!data)))
+
+(defn !selected?-fn
+  [{:keys [::!selected] :as _control} row-id]
+  (r/track #(contains? @!selected row-id)))
+
+(defn !all-row-ids-fn
+  [{:keys [::!data ::row-id-fn] :as _control}]
+  (r/track #(set (mapv row-id-fn @!data))))
 
 (defn set-current-columns-fn*
   [{:keys [::set-current-columns-fn ::!sorting ::set-sorting-fn] :as _control} columns]
@@ -76,6 +85,23 @@
     "asc" "desc"
     "desc" nil))
 
+(defn TableSelectAllCheckbox
+  [{:keys [::!selected] :as control}]
+  (r/with-let [!all-row-ids (!all-row-ids-fn control)
+               !selected?   (r/track #(= @!all-row-ids @!selected))]
+    [:th [ui/Checkbox {:style    {:position       :relative
+                                  :vertical-align :middle}
+                       :checked  @!selected?
+                       :on-click #(reset! !selected (if @!selected? #{} @!all-row-ids))}]]))
+
+(defn TableCellCheckbox
+  [{:keys [::!selected] :as control} row-id]
+  (r/with-let [!selected? (!selected?-fn control row-id)]
+    [:td [ui/Checkbox {:checked  @!selected?
+                       :on-click #(swap! !selected (if @!selected? disj conj) row-id)
+                       :style    {:position       :relative
+                                  :vertical-align :middle}}]]))
+
 (defn TableHeaderCell
   [{:keys [::!sorting ::set-sorting-fn] :as control} column]
   (let [field-key      (::field-key column)
@@ -104,7 +130,8 @@
   [control]
   (js/console.info "Render TableHeader")
   (r/with-let [!visible-columns (!visible-columns-fn control)
-               !columns-by-key  (!columns-by-key-fn control)]
+               !columns-by-key  (!columns-by-key-fn control)
+               !selectable?     (::!selectable? control)]
     [ui/TableHeader
      [ui/TableRow
       (js/console.info "TableHeader" @!columns-by-key @!visible-columns)
@@ -112,9 +139,13 @@
        {:items    (mapv name @!visible-columns)
         :strategy dnd/horizontalListSortingStrategy}
        (doall
-         (for [visible-column @!visible-columns]
-           ^{:key (str "header-column-" visible-column)}
-           [:f> TableHeaderCell control (get @!columns-by-key visible-column)]))]]]))
+         (cond->>
+           (for [visible-column @!visible-columns]
+             ^{:key (str "header-column-" visible-column)}
+             [:f> TableHeaderCell control (get @!columns-by-key visible-column)])
+           @!selectable? (cons
+                           ^{:key "select-all"}
+                           [TableSelectAllCheckbox control])))]]]))
 
 (defn TableCell
   [_control row column]
@@ -127,28 +158,33 @@
      ((::field-key column) row)]))
 
 (defn TableRow
-  [control row]
+  [{:keys [::row-id-fn] :as control} row]
   (js/console.info "Render TableRow " row)
   (r/with-let [visible-columns (!visible-columns-fn control)
-               !columns-by-key (!columns-by-key-fn control)]
+               !columns-by-key (!columns-by-key-fn control)
+               !selectable?    (::!selectable? control)
+               row-id          (row-id-fn row)]
     [ui/TableRow
      [dnd/SortableContext
       {:items    (mapv name @(!visible-columns-fn control))
        :strategy dnd/horizontalListSortingStrategy}
       (doall
-        (for [visible-column @visible-columns]
-          (let [column (get @!columns-by-key visible-column)]
-            ^{:key (str "row-" (:id row) "-column-" visible-column)}
-            [:f> TableCell control row column])))]]))
+        (cond->> (for [visible-column @visible-columns]
+                   (let [column (get @!columns-by-key visible-column)]
+                     ^{:key (str "row-" row-id "-column-" visible-column)}
+                     [:f> TableCell control row column]))
+                 @!selectable? (cons
+                                 ^{:key (str "select-" row-id)}
+                                 [TableCellCheckbox control row-id])))]]))
 
 (defn TableBody
-  [control]
+  [{:keys [::row-id-fn] :as control}]
   (js/console.info "Render TableBody")
   (r/with-let [!sorted-data (!sorted-data-fn control)]
     [ui/TableBody
      (doall
        (for [data-row @!sorted-data]
-         ^{:key (str "row-" (:id data-row))}
+         ^{:key (str "row-" (row-id-fn data-row))}
          [TableRow control data-row]))]))
 
 (defn ColumnsSelectorButton
@@ -156,9 +192,9 @@
   (r/with-let [!hoverable (r/atom false)]
     [:div {:on-mouse-enter #(reset! !hoverable true)
            :on-mouse-leave #(reset! !hoverable false)
-           :style          {:min-height "1.5em"}
-           :on-click       open-fn}
+           :style          {:min-height "1.5em"}}
      [:span {:title "Columns selector"
+             :on-click       open-fn
              :style {:float            :right
                      :border           2
                      :cursor           :pointer
@@ -254,7 +290,10 @@
                !current-columns (r/atom nil)
                ;!current-columns (subscribe [::current-columns])
                !sorting         (r/atom [])
-               control          {::!columns               (r/atom columns)
+               !selected        (r/atom #{})
+               !selectable?     (r/atom false)
+               control          {::row-id-fn              :Id
+                                 ::!columns               (r/atom columns)
                                  ::!data                  (r/atom [{:RepoDigests
                                                                     ["nuvladev/nuvlaedge@sha256:56f8fe1fdf35d50577ab135dcbf78cfb877ccdc41948ec9352d526614b7462f2"],
                                                                     :Labels
@@ -333,10 +372,15 @@
                                  ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
                                  ::!current-columns       !current-columns
                                  ::set-sorting-fn         #(reset! !sorting %)
-                                 ::!sorting               !sorting}]
+                                 ::!sorting               !sorting
+                                 ::!selectable?           !selectable?
+                                 ::!selected              !selected
+                                 ::set-selected-fn        #(reset! !selected %)
+                                 }]
     [:div
      [ui/Button {:on-click #(swap! reset-atom inc)} "Reset"]
      [ui/Button {:on-click #(reset! (::!data control) [{:id 1, :name "hello"} {:id 5}])} "Add row"]
+     [ui/Button {:on-click #(swap! !selectable? not)} "Selectable?"]
      [:f> Table control]]))
 
 (defn TableController

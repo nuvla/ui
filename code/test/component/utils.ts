@@ -25,6 +25,6 @@ export async function dragAndDrop(page, from, to) {
   const toCoords = await to.boundingBox();
   await from.hover();
   await page.mouse.down();
-  await page.mouse.move(toCoords.x, toCoords.y, {steps: 2});
+  await page.mouse.move(toCoords.x + toCoords.width / 2, toCoords.y + toCoords.height / 2, {steps: 2});
   await page.mouse.up();
 }

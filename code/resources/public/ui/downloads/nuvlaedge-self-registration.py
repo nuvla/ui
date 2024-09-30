@@ -55,6 +55,11 @@ from subprocess import run, PIPE, STDOUT, TimeoutExpired
 import requests
 import urllib3
 
+try:
+    from urllib3.exceptions import NameResolutionError
+except ImportError:
+    from socket import gaierror as NameResolutionError
+
 
 __copyright__ = "Copyright (C) 2024 SixSq"
 __email__ = "support@sixsq.com"
@@ -504,7 +509,7 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         exceptions = get_all_exceptions(e)
-        if urllib3.exceptions.NameResolutionError in exceptions:
+        if NameResolutionError in exceptions:
             print('Name resolution error')
         elif ssl.SSLCertVerificationError in exceptions:
             print('Certificate validation error')

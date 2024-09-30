@@ -90,7 +90,8 @@
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
     [:th (merge {:ref      setNodeRef
                  :class    ["show-child-on-hover"]
-                 :style    {:transform (dnd/translate-css sortable)}
+                 :style    {:cursor    :pointer
+                            :transform (dnd/translate-css sortable)}
                  :on-click on-click}
                 (js->clj (.-attributes sortable))
                 (js->clj (.-listeners sortable)))

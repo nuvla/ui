@@ -14,4 +14,17 @@ export async function gotoScene(config, page, componentNamespace, scene) {
   return sceneRootLocator.first();
 }
 
+export async function locatorOne(element, selector) {
+  const locator = await element.locator(selector);
+  await expect(locator).toHaveCount(1);
+  return locator.first();
+}
 
+export async function dragAndDrop(page, from, to) {
+  // regular Playwright dragTo function does not seem to work with "activationConstraint" #js {"distance" 5}
+  const toCoords = await to.boundingBox();
+  await from.hover();
+  await page.mouse.down();
+  await page.mouse.move(toCoords.x, toCoords.y, {steps: 2});
+  await page.mouse.up();
+}

@@ -298,6 +298,7 @@
   [!global-filter]
   (js/console.info "Render SearchInput")
   [ui/Input {:style       {:padding "4px"}
+             :class       :global-filter
              :placeholder "search..."
              :on-change   (ui-callback/input-callback #(reset! !global-filter %))}])
 

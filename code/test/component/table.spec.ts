@@ -92,3 +92,28 @@ test('test table draggable columns', async ({ page }, { config }) => {
   await dragAndDrop(page, table.getByRole('button', { name: 'Created' }), table.getByRole('button', { name: 'Id' }));
   await expectHeadersOrder(table, ['Created', 'Size', 'Id']);
 });
+
+test('test global filtering', async ({ page }, { config }) => {
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table-refactor');
+
+  const table = await locatorOne(sceneRoot, 'table.ui');
+  const filterInput = await locatorOne(sceneRoot, '.global-filter > input');
+
+  await expect(table.locator('tbody tr')).toHaveCount(3);
+
+  // global filter: 2 rows contain 1725, in column Created
+  await filterInput.fill('1725');
+  await expect(table.locator('tbody tr')).toHaveCount(2);
+
+  // Modal unselect Created column
+  openColumnSelectorModal(sceneRoot);
+  await sceneRoot.locator('label').filter({ hasText: 'Created' }).click();
+  await sceneRoot.getByLabel('update').click();
+
+  // Filtering does not apply to invisible columns
+  await expect(table.locator('tbody tr')).toHaveCount(0);
+
+  // Clear the filter
+  await filterInput.fill('');
+  await expect(table.locator('tbody tr')).toHaveCount(3);
+});

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.common-components.plugins.table-refactor
   (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
@@ -24,9 +25,23 @@
   (vec (remove (fn [fk] (= fk field-key)) current-columns)))
 
 (defn !sorted-data-fn
-  [{:keys [::!sorting ::!data] :as _control}]
+  [{:keys [::!sorting] :as _control} !data]
   (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
                   @!data)))
+
+(defn default-filter-fn
+  [filter-str s]
+  (or (nil? filter-str)
+      (and (some? s)
+           (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
+
+(defn !filtered-data-fn
+  [{:keys [::!global-filter ::global-filter-fn] :as _control} !data !visible-columns]
+  (r/track (fn filter-data []
+             (let [filter-fn (or global-filter-fn default-filter-fn)]
+               (doall (filter #(some (partial filter-fn @!global-filter)
+                                     (vals (select-keys % @!visible-columns)))
+                              @!data))))))
 
 (defn !selected?-fn
   [{:keys [::!selected] :as _control} row-id]
@@ -60,8 +75,8 @@
 (defn SortIcon [direction]
   (let [direction->class {"asc"  " ascending"
                           "desc" " descending"}]
-    (when direction
-      [uix/LinkIcon {:name (str "sort" (direction->class direction))}])))
+    [uix/LinkIcon {:class (if direction :visible :invisible)
+                   :name  (str "sort" (direction->class direction))}]))
 
 (defn- calc-new-sorting [sorting sort-key sort-direction]
   (if (some? sort-direction)
@@ -116,14 +131,14 @@
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
     [:th (merge {:ref      setNodeRef
                  :class    ["show-child-on-hover"]
-                 :style    {:cursor    :pointer
-                            :transform (dnd/translate-css sortable)}
+                 :style    {:cursor      :pointer
+                            :user-select :none
+                            :transform   (dnd/translate-css sortable)}
                  :on-click on-click}
                 (js->clj (.-attributes sortable))
                 (js->clj (.-listeners sortable)))
      (::header-content column)
-     (when sort-direction
-       [SortIcon sort-direction])
+     [SortIcon sort-direction]
      [DeleteColumn control column]]))
 
 (defn TableHeader
@@ -178,9 +193,11 @@
                                  [TableCellCheckbox control row-id])))]]))
 
 (defn TableBody
-  [{:keys [::row-id-fn] :as control}]
+  [{:keys [::row-id-fn ::!data] :as control}]
   (js/console.info "Render TableBody")
-  (r/with-let [!sorted-data (!sorted-data-fn control)]
+  (r/with-let [!visible-columns (!visible-columns-fn control)
+               !filtered-data   (!filtered-data-fn control !data !visible-columns)
+               !sorted-data     (!sorted-data-fn control !filtered-data)]
     [ui/TableBody
      (doall
        (for [data-row @!sorted-data]
@@ -193,16 +210,16 @@
     [:div {:on-mouse-enter #(reset! !hoverable true)
            :on-mouse-leave #(reset! !hoverable false)
            :style          {:min-height "1.5em"}}
-     [:span {:title "Columns selector"
-             :on-click       open-fn
-             :style {:float            :right
-                     :border           2
-                     :cursor           :pointer
-                     :background-color "rgb(249, 250, 251)"
-                     :border-width     "1px 1px 0px"
-                     :border-color     "rgba(34,36,38,.1)"
-                     :border-style     "solid"
-                     :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
+     [:span {:title    "Columns selector"
+             :on-click open-fn
+             :style    {:float            :right
+                        :border           2
+                        :cursor           :pointer
+                        :background-color "rgb(249, 250, 251)"
+                        :border-width     "1px 1px 0px"
+                        :border-color     "rgba(34,36,38,.1)"
+                        :border-style     "solid"
+                        :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
 
 (defn ColumnsSelectorModal
   [{:keys [::!default-columns ::!columns] :as control}]
@@ -277,6 +294,19 @@
   ::current-columns
   :-> ::current-columns)
 
+(defn SearchInput
+  [!global-filter]
+  (js/console.info "Render SearchInput")
+  [ui/Input {:style       {:padding "4px"}
+             :placeholder "search..."
+             :on-change   (ui-callback/input-callback #(reset! !global-filter %))}])
+
+(defn case-sensitive-filter-fn
+  [filter-str s]
+  (or (nil? filter-str)
+      (and (some? s)
+           (str/includes? (str s) filter-str))))
+
 (defn TableControllerReal
   [reset-atom]
   (js/console.info "Render TableControllerReal")
@@ -292,6 +322,7 @@
                !sorting         (r/atom [])
                !selected        (r/atom #{})
                !selectable?     (r/atom false)
+               !global-filter   (r/atom nil)
                control          {::row-id-fn              :Id
                                  ::!columns               (r/atom columns)
                                  ::!data                  (r/atom [{:RepoDigests
@@ -376,8 +407,11 @@
                                  ::!selectable?           !selectable?
                                  ::!selected              !selected
                                  ::set-selected-fn        #(reset! !selected %)
+                                 ::!global-filter         !global-filter
+                                 ::global-filter-fn       case-sensitive-filter-fn
                                  }]
     [:div
+     [SearchInput !global-filter]
      [ui/Button {:on-click #(swap! reset-atom inc)} "Reset"]
      [ui/Button {:on-click #(reset! (::!data control) [{:id 1, :name "hello"} {:id 5}])} "Add row"]
      [ui/Button {:on-click #(swap! !selectable? not)} "Selectable?"]

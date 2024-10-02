@@ -395,8 +395,8 @@
 
 
 (defn LinkIcon
-  [{:keys [name on-click color class]}]
-  [:a {:class class} [icons/Icon {:name name, :link true, :on-click on-click :color color}]])
+  [{:keys [name on-click color class aria-label]}]
+  [:a {:class class :aria-label aria-label} [icons/Icon {:name name, :link true, :on-click on-click :color color}]])
 
 (defn link-on-click
   [href event]

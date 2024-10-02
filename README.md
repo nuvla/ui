@@ -105,6 +105,21 @@ When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui a
 
 ## Testing
 
+### Component testing
+
+We use [`Portfolio`](https://github.com/cjohansen/portfolio) for component showcasing and
+[`playwright`](https://playwright.dev/) for component testing.
+
+By running `lein dev` a Porfolio server is started automatically on port 8281.
+
+To execute all component tests run the following command (Portfolio needs to be running for this command to work):
+
+`npm run test:components`
+
+or for headed mode:
+
+`npm run test:components:headed`
+
 ### End to end testing
 
 We use [`playwright`](https://playwright.dev/) for e2e-testing.

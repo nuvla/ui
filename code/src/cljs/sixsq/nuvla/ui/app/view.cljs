@@ -4,6 +4,8 @@
             [sixsq.nuvla.ui.common-components.intercom.views :as intercom]
             [sixsq.nuvla.ui.main.components :as main-components]
             [sixsq.nuvla.ui.main.subs :as subs]
+            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor]
+            [sixsq.nuvla.ui.common-components.plugins.tanstack-table :as tanstack-table]
             [sixsq.nuvla.ui.main.views :as main-views]
             [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
             [sixsq.nuvla.ui.pages.apps.apps-applications-sets.views]

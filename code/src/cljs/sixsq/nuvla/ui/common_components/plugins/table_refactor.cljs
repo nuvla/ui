@@ -23,11 +23,6 @@
   [current-columns field-key]
   (vec (remove (fn [fk] (= fk field-key)) current-columns)))
 
-(defn !sorted-data-fn
-  [{:keys [::!sorting] :as _control} !data]
-  (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
-                  @!data)))
-
 (defn case-insensitive-filter-fn
   [filter-str s]
   (or (nil? filter-str)
@@ -46,6 +41,27 @@
              (doall (filter #(some (partial global-filter-fn @!global-filter)
                                    (vals (select-keys % @!visible-columns)))
                             @!data)))))
+
+(defn !sorted-data-fn
+  [{:keys [::!sorting] :as _control} !data]
+  (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
+                  @!data)))
+
+(defn !processed-data-fn
+  [{:keys [::!data] :as control}]
+  (r/track (fn processed-data []
+             (let [!visible-columns (!visible-columns-fn control)
+                   !filtered-data   (!filtered-data-fn control !data !visible-columns)
+                   !sorted-data     (!sorted-data-fn control !filtered-data)]
+               @!sorted-data))))
+
+(defn !paginated-data-fn
+  [{:keys [::!pagination ::!enable-pagination?] :as control}]
+  (r/track #(let [!processed-data (!processed-data-fn control)]
+              (if @!enable-pagination?
+                (let [{:keys [page-index page-size]} @!pagination]
+                  (->> @!processed-data (drop (* page-index page-size)) (take page-size)))
+                @!processed-data))))
 
 (defn !selected?-fn
   [{:keys [::!selected] :as _control} row-id]
@@ -202,12 +218,10 @@
 (defn TableBody
   [{:keys [::row-id-fn ::!data] :as control}]
   (js/console.info "Render TableBody")
-  (r/with-let [!visible-columns (!visible-columns-fn control)
-               !filtered-data   (!filtered-data-fn control !data !visible-columns)
-               !sorted-data     (!sorted-data-fn control !filtered-data)]
+  (r/with-let [!paginated-data (!paginated-data-fn control)]
     [ui/TableBody
      (doall
-       (for [data-row @!sorted-data]
+       (for [data-row @!paginated-data]
          ^{:key (str "row-" (row-id-fn data-row))}
          [TableRow control data-row]))]))
 
@@ -269,8 +283,35 @@
                       (set-current-columns-fn* control @!local-current-columns)
                       (close-fn))}]]])))
 
+(defn Pagination
+  [{:keys [::!pagination ::set-pagination-fn ::processed-data-fn] :as control}]
+  (let [{:keys [page-index page-size] :as pagination} @!pagination
+        !processed-data (!processed-data-fn control)
+        total-items     (count @!processed-data)
+        page-count      (cond-> (quot total-items page-size)
+                                (pos? (rem total-items page-size)) inc)
+        goto-page       #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
+        set-page-size   #(set-pagination-fn (assoc pagination :page-size % :page-index 0))]
+    [:div {:style {:display    :flex
+                   :margin-top "4px"
+                   :gap        "4px"}}
+     [:label (str "Total " total-items)]
+     [:button {:disabled (zero? page-index), :on-click #(goto-page 0)} "<<"]
+     [:button {:disabled (zero? page-index), :on-click #(goto-page (dec page-index))} "<"]
+     [:label (str "Page " (inc page-index) " of " page-count)]
+     [:button {:disabled (= page-index (dec page-count)), :on-click #(goto-page (inc page-index))} ">"]
+     [:button {:disabled (= page-index (dec page-count)), :on-click #(goto-page (dec page-count))} ">>"]
+     [ui/Dropdown {:value     page-size
+                   :options   (map (fn [n-per-page] {:key     n-per-page
+                                                     :value   n-per-page
+                                                     :content n-per-page
+                                                     :text    (str n-per-page " per page")})
+                                   [10 20 30 40])
+                   :pointing  true
+                   :on-change (ui-callback/value set-page-size)}]]))
+
 (defn Table
-  [{:keys [::set-current-columns-fn] :as control}]
+  [{:keys [::set-current-columns-fn ::!enable-pagination?] :as control}]
   (r/with-let [on-drag-end-fn (fn [e]
                                 (let [active    (.-active e)
                                       over      (.-over e)
@@ -290,7 +331,9 @@
                       :sensors            (dnd/pointerSensor)}
       [ui/Table {:attached true}
        [TableHeader control]
-       [TableBody control]]]]))
+       [TableBody control]]]
+     (when @!enable-pagination?
+       [Pagination control])]))
 
 (reg-event-db
   ::set-current-columns-fn
@@ -339,6 +382,12 @@
            ;; Global filter on all visible columns
            !global-filter
            global-filter-fn
+
+           ;; Optional
+           ;; Pagination
+           !enable-pagination?
+           !pagination
+           set-pagination-fn
            ]}]
   (r/with-let [row-id-fn              (or row-id-fn :id)
                !sorting               (or !sorting (r/atom []))
@@ -356,6 +405,8 @@
                ;!current-columns (subscribe [::current-columns])]
                !global-filter         (or !global-filter (r/atom nil))
                global-filter-fn       (or global-filter-fn case-insensitive-filter-fn)
+               !enable-pagination?    (or !enable-pagination? (r/atom false))
+               set-pagination-fn      (or set-pagination-fn #(reset! !pagination %))
                ]
     [:f> Table {::row-id-fn              row-id-fn
                 ::!columns               !columns
@@ -369,7 +420,12 @@
                 ::!selected              !selected
                 ::set-selected-fn        set-selected-fn
                 ::!global-filter         !global-filter
-                ::global-filter-fn       global-filter-fn}]))
+                ::global-filter-fn       global-filter-fn
+                ::!enable-pagination?    !enable-pagination?
+                ; ::!manual-pagination
+                ::!pagination            !pagination
+                ::set-pagination-fn      set-pagination-fn
+                }]))
 
 ;; table
 ;; rows

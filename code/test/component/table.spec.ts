@@ -21,7 +21,7 @@ async function openColumnSelectorModal(sceneRoot) {
 }
 
 test('test column selection, deletion and sorting', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table-refactor');
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'Table');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
 
@@ -75,7 +75,7 @@ test('test column selection, deletion and sorting', async ({ page }, { config })
 });
 
 test('test table draggable columns', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table-refactor');
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'Table');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
@@ -93,8 +93,41 @@ test('test table draggable columns', async ({ page }, { config }) => {
   await expectHeadersOrder(table, ['Created', 'Size', 'Id']);
 });
 
+
+test('test selectable table rows', async ({ page }, { config }) => {
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'Selectable');
+
+  const table = await locatorOne(sceneRoot, 'table.ui');
+  await expectHeadersOrder(table, ['', 'Id', 'Size', 'Created']);
+
+  // select all
+  await table.locator('thead > tr > th:nth-child(1) > div').click();
+  await expect(await table.locator('thead > tr > th:nth-child(1) > div > input')).toBeChecked();
+  await expect(await table.locator('tbody > tr:nth-child(1) > td:nth-child(1) > div > input')).toBeChecked();
+  await expect(await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div > input')).toBeChecked();
+  await expect(await table.locator('tbody > tr:nth-child(3) > td:nth-child(1) > div > input')).toBeChecked();
+
+  // unselect all
+  await table.locator('thead > tr > th:nth-child(1) > div').click();
+  await expect(await table.locator('tbody > tr:nth-child(1) > td:nth-child(1) > div > input')).toBeChecked({checked: false});
+  await expect(await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div > input')).toBeChecked({checked: false});
+  await expect(await table.locator('tbody > tr:nth-child(3) > td:nth-child(1) > div > input')).toBeChecked({checked: false});
+
+  // select first row
+  await table.locator('tbody > tr:nth-child(1) > td:nth-child(1) > div').click();
+  await expect(await table.locator('tbody > tr:nth-child(1) > td:nth-child(1) > div > input')).toBeChecked();
+  await expect(await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div > input')).toBeChecked({checked: false});
+
+  //select second and third rows
+  await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div').click();
+  await table.locator('tbody > tr:nth-child(3) > td:nth-child(1) > div').click();
+  await expect(await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div > input')).toBeChecked();
+  await expect(await table.locator('tbody > tr:nth-child(3) > td:nth-child(1) > div > input')).toBeChecked();
+  await expect(await table.locator('thead > tr > th:nth-child(1) > div > input')).toBeChecked();
+});
+
 test('test global filtering', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table-refactor');
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'GlobalFilter');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   const filterInput = await locatorOne(sceneRoot, '.global-filter > input');

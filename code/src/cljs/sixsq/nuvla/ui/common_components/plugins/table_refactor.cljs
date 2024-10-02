@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.common-components.plugins.table-refactor
-  (:require [clojure.set :as set]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
@@ -29,19 +28,24 @@
   (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
                   @!data)))
 
-(defn default-filter-fn
+(defn case-insensitive-filter-fn
   [filter-str s]
   (or (nil? filter-str)
       (and (some? s)
            (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
 
+(defn case-sensitive-filter-fn
+  [filter-str s]
+  (or (nil? filter-str)
+      (and (some? s)
+           (str/includes? (str s) filter-str))))
+
 (defn !filtered-data-fn
   [{:keys [::!global-filter ::global-filter-fn] :as _control} !data !visible-columns]
   (r/track (fn filter-data []
-             (let [filter-fn (or global-filter-fn default-filter-fn)]
-               (doall (filter #(some (partial filter-fn @!global-filter)
-                                     (vals (select-keys % @!visible-columns)))
-                              @!data))))))
+             (doall (filter #(some (partial global-filter-fn @!global-filter)
+                                   (vals (select-keys % @!visible-columns)))
+                            @!data)))))
 
 (defn !selected?-fn
   [{:keys [::!selected] :as _control} row-id]
@@ -101,21 +105,24 @@
     "desc" nil))
 
 (defn TableSelectAllCheckbox
-  [{:keys [::!selected] :as control}]
+  [{:keys [::!selected ::set-selected-fn] :as control}]
   (r/with-let [!all-row-ids (!all-row-ids-fn control)
                !selected?   (r/track #(= @!all-row-ids @!selected))]
-    [:th [ui/Checkbox {:style    {:position       :relative
-                                  :vertical-align :middle}
-                       :checked  @!selected?
-                       :on-click #(reset! !selected (if @!selected? #{} @!all-row-ids))}]]))
+    [:th [ui/Checkbox {:data-testid "checkbox-select-all"
+                       :style       {:position       :relative
+                                     :vertical-align :middle}
+                       :checked     @!selected?
+                       :on-click    #(set-selected-fn (if @!selected? #{} @!all-row-ids))}]]))
 
 (defn TableCellCheckbox
-  [{:keys [::!selected] :as control} row-id]
+  [{:keys [::!selected ::set-selected-fn] :as control} row-id]
   (r/with-let [!selected? (!selected?-fn control row-id)]
-    [:td [ui/Checkbox {:checked  @!selected?
-                       :on-click #(swap! !selected (if @!selected? disj conj) row-id)
-                       :style    {:position       :relative
-                                  :vertical-align :middle}}]]))
+    [:td
+     [ui/Checkbox {:data-testid (str "checkbox-select-" row-id)
+                   :checked     @!selected?
+                   :on-click    #(set-selected-fn ((if @!selected? disj conj) @!selected row-id))
+                   :style       {:position       :relative
+                                 :vertical-align :middle}}]]))
 
 (defn TableHeaderCell
   [{:keys [::!sorting ::set-sorting-fn] :as control} column]
@@ -294,135 +301,75 @@
   ::current-columns
   :-> ::current-columns)
 
-(defn SearchInput
-  [!global-filter]
-  (js/console.info "Render SearchInput")
-  [ui/Input {:style       {:padding "4px"}
-             :class       :global-filter
-             :placeholder "search..."
-             :on-change   (ui-callback/input-callback #(reset! !global-filter %))}])
-
-(defn case-sensitive-filter-fn
-  [filter-str s]
-  (or (nil? filter-str)
-      (and (some? s)
-           (str/includes? (str s) filter-str))))
-
-(defn TableControllerReal
-  [reset-atom]
-  (js/console.info "Render TableControllerReal")
-  (r/with-let [columns          [{::field-key      :Id
-                                  ::header-content "Id"
-                                  ::no-delete      true}
-                                 {::field-key      :Size
-                                  ::header-content "Size"}
-                                 {::field-key      :Created
-                                  ::header-content "Created"}]
-               !current-columns (r/atom nil)
-               ;!current-columns (subscribe [::current-columns])
-               !sorting         (r/atom [])
-               !selected        (r/atom #{})
-               !selectable?     (r/atom false)
-               !global-filter   (r/atom nil)
-               control          {::row-id-fn              :Id
-                                 ::!columns               (r/atom columns)
-                                 ::!data                  (r/atom [{:RepoDigests
-                                                                    ["nuvladev/nuvlaedge@sha256:56f8fe1fdf35d50577ab135dcbf78cfb877ccdc41948ec9352d526614b7462f2"],
-                                                                    :Labels
-                                                                    {:git.build.time                   "$(date --utc +%FT%T.%3NZ)",
-                                                                     :org.opencontainers.image.vendor  "SixSq SA",
-                                                                     :org.opencontainers.image.created "$(date --utc +%FT%T.%3NZ)",
-                                                                     :git.run.id                       "10816164086",
-                                                                     :org.opencontainers.image.url
-                                                                     "https://github.com/nuvlaedge/nuvlaedge",
-                                                                     :org.opencontainers.image.authors "support@sixsq.com",
-                                                                     :git.branch                       "coe-resources",
-                                                                     :git.commit.id                    "24bb0659461896b22a4a8b675a30b011bbf4efe4",
-                                                                     :org.opencontainers.image.title   "NuvlaEdge",
-                                                                     :org.opencontainers.image.description
-                                                                     "Common image for NuvlaEdge software components",
-                                                                     :git.run.number                   "839"},
-                                                                    :SharedSize -1,
-                                                                    :Size       192121737,
-                                                                    :Id
-                                                                    "sha256:b4a4526cfd461c7bd1ad3b3e864b9a3f671890b2c42ea0cbad55dd999ab6ae9c",
-                                                                    :Containers -1,
-                                                                    :ParentId   "",
-                                                                    :Created    1726074087,
-                                                                    :RepoTags   ["nuvladev/nuvlaedge:coe-resources"]}
-                                                                   {:RepoDigests
-                                                                    ["nuvladev/nuvlaedge@sha256:33426aed6440dccdd36e75b5a46073d0888295496c17e2afcdddb51539ea7b99"],
-                                                                    :Labels
-                                                                    {:git.build.time                   "$(date --utc +%FT%T.%3NZ)",
-                                                                     :org.opencontainers.image.vendor  "SixSq SA",
-                                                                     :org.opencontainers.image.created "$(date --utc +%FT%T.%3NZ)",
-                                                                     :git.run.id                       "10746857192",
-                                                                     :org.opencontainers.image.url
-                                                                     "https://github.com/nuvlaedge/nuvlaedge",
-                                                                     :org.opencontainers.image.authors "support@sixsq.com",
-                                                                     :git.branch                       "coe-resources",
-                                                                     :git.commit.id                    "46a2ba7903ee7a1faa54b2aba9e283242c1bee5a",
-                                                                     :org.opencontainers.image.title   "NuvlaEdge",
-                                                                     :org.opencontainers.image.description
-                                                                     "Common image for NuvlaEdge software components",
-                                                                     :git.run.number                   "836"},
-                                                                    :SharedSize -1,
-                                                                    :Size       191903136,
-                                                                    :Id
-                                                                    "sha256:bd1e8ef984a199d31d3fc478431165ca0236176ad62fab2a4e68a2c5b8e12fbd",
-                                                                    :Containers -1,
-                                                                    :ParentId   "",
-                                                                    :Created    1725667915,
-                                                                    :RepoTags   []}
-                                                                   {:RepoDigests
-                                                                    ["nuvladev/nuvlaedge@sha256:2d92c970a5d8ce3e2fae5b88bb4d2a2cf701b0cdd4aa41e883aea79cd3e61859"],
-                                                                    :Labels
-                                                                    {:git.build.time                   "$(date --utc +%FT%T.%3NZ)",
-                                                                     :org.opencontainers.image.vendor  "SixSq SA",
-                                                                     :org.opencontainers.image.created "$(date --utc +%FT%T.%3NZ)",
-                                                                     :git.run.id                       "10746651311",
-                                                                     :org.opencontainers.image.url
-                                                                     "https://github.com/nuvlaedge/nuvlaedge",
-                                                                     :org.opencontainers.image.authors "support@sixsq.com",
-                                                                     :git.branch                       "coe-resources",
-                                                                     :git.commit.id                    "109a34446f5edf006fb1400ca266490492bf7363",
-                                                                     :org.opencontainers.image.title   "NuvlaEdge",
-                                                                     :org.opencontainers.image.description
-                                                                     "Common image for NuvlaEdge software components",
-                                                                     :git.run.number                   "835"},
-                                                                    :SharedSize -1,
-                                                                    :Size       191903117,
-                                                                    :Id
-                                                                    "sha256:0ec61197db8b0989753da0c499be52b48c5d746a7d675ae358e157912d7d47bb",
-                                                                    :Containers -1,
-                                                                    :ParentId   "",
-                                                                    :Created    1725666894,
-                                                                    :RepoTags   []}]
-                                                                  )
-                                 ::!default-columns       (r/atom [:Id :Size :Created])
-                                 ::set-current-columns-fn #(reset! !current-columns %)
-                                 ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
-                                 ::!current-columns       !current-columns
-                                 ::set-sorting-fn         #(reset! !sorting %)
-                                 ::!sorting               !sorting
-                                 ::!selectable?           !selectable?
-                                 ::!selected              !selected
-                                 ::set-selected-fn        #(reset! !selected %)
-                                 ::!global-filter         !global-filter
-                                 ::global-filter-fn       case-sensitive-filter-fn
-                                 }]
-    [:div
-     [SearchInput !global-filter]
-     [ui/Button {:on-click #(swap! reset-atom inc)} "Reset"]
-     [ui/Button {:on-click #(reset! (::!data control) [{:id 1, :name "hello"} {:id 5}])} "Add row"]
-     [ui/Button {:on-click #(swap! !selectable? not)} "Selectable?"]
-     [:f> Table control]]))
-
 (defn TableController
-  []
-  (r/with-let [reset-atom (r/atom 0)]
-    ^{:key @reset-atom}
-    [TableControllerReal reset-atom]))
+  [{:keys [
+           ;; Definition of columns to display
+           !columns
+
+           ;; Data To be displayed
+           !data
+
+           ;; Default columns to display when current-columns is not defined yet.
+           ;; Allows to reset current-columns to something defined by the developer.
+           !default-columns
+
+           ;; Optional
+           ;; Give a function that allow to retrieve the row id. By default it's :id
+           row-id-fn
+
+           ;; Optional
+           ;; To control which columns are currently displayed override following control attributes
+           ;; format: vector of column_ids
+           !current-columns
+           set-current-columns-fn
+
+           ;; Optional
+           ;; To control which columns are sorted override following control attributes
+           ;; format: vector of (vector of column_id direction)
+           !sorting
+           set-sorting-fn
+
+           ;; Optional
+           ;; make table row selectable
+           !selectable?
+           !selected
+           set-selected-fn
+
+           ;; Optional
+           ;; Global filter on all visible columns
+           !global-filter
+           global-filter-fn
+           ]}]
+  (r/with-let [row-id-fn              (or row-id-fn :id)
+               !sorting               (or !sorting (r/atom []))
+               !selected              (or !selected (r/atom #{}))
+               !selectable?           (or !selectable? (r/atom false))
+               !columns               (or !columns (r/atom []))
+               !data                  (or !data (r/atom []))
+               !default-columns       (or !default-columns (r/atom [:id]))
+               !current-columns       (or !current-columns (r/atom nil))
+               set-current-columns-fn (or set-current-columns-fn #(reset! !current-columns %))
+               ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
+               set-sorting-fn         (or set-sorting-fn #(reset! !sorting %))
+               set-selected-fn        (or set-selected-fn #(reset! !selected %))
+               ;!current-columns (r/atom nil)
+               ;!current-columns (subscribe [::current-columns])]
+               !global-filter         (or !global-filter (r/atom nil))
+               global-filter-fn       (or global-filter-fn case-insensitive-filter-fn)
+               ]
+    [:f> Table {::row-id-fn              row-id-fn
+                ::!columns               !columns
+                ::!data                  !data
+                ::!default-columns       !default-columns
+                ::set-current-columns-fn set-current-columns-fn
+                ::!current-columns       !current-columns
+                ::set-sorting-fn         set-sorting-fn
+                ::!sorting               !sorting
+                ::!selectable?           !selectable?
+                ::!selected              !selected
+                ::set-selected-fn        set-selected-fn
+                ::!global-filter         !global-filter
+                ::global-filter-fn       global-filter-fn}]))
 
 ;; table
 ;; rows

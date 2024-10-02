@@ -21,7 +21,7 @@ async function openColumnSelectorModal(sceneRoot) {
 }
 
 test('test column selection, deletion and sorting', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'Table');
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
 
@@ -75,7 +75,7 @@ test('test column selection, deletion and sorting', async ({ page }, { config })
 });
 
 test('test table draggable columns', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'Table');
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
@@ -95,7 +95,7 @@ test('test table draggable columns', async ({ page }, { config }) => {
 
 
 test('test selectable table rows', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'Selectable');
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'selectable');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['', 'Id', 'Size', 'Created']);
@@ -127,7 +127,7 @@ test('test selectable table rows', async ({ page }, { config }) => {
 });
 
 test('test global filtering', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'GlobalFilter');
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'global-filter');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   const filterInput = await locatorOne(sceneRoot, '.global-filter > input');

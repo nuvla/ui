@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.views-coe-resources
-  (:require [re-frame.core :refer [dispatch subscribe]]
+  (:require [clojure.edn :as edn]
+            [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
+            [re-frame.cofx :refer [inject-cofx]]
+            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor]
             [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            ;[clojure.string :as str]
-            ;[sixsq.nuvla.ui.utils.icons :as icons]
-            ;[sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
-            ;[sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [reagent.core :as r]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
@@ -17,21 +16,13 @@
   [{cell-data :cell-data}]
   (data-utils/format-bytes cell-data))
 
+(defn CellBytesBis
+  [cell-data _row _column]
+  (data-utils/format-bytes cell-data))
+
 (defn CellTimeAgo
   [{:keys [cell-data]}]
   [uix/TimeAgo cell-data])
-
-;(defn CellModalTextArea
-;  [{:keys [cell-data]}]
-;  [ui/Modal {:close-icon true
-;             :trigger    (r/as-element [ui/Icon {:name  "magnify"
-;                                                 :style {:cursor :pointer}}])}
-;   [ui/ModalHeader "Data"]
-;   [ui/ModalContent
-;    [ui/Form
-;     [ui/TextArea {:default-value cell-data
-;                   :disabled      true
-;                   :rows          10}]]]])
 
 (defn label-group-overflow-detector
   [Component]
@@ -103,18 +94,51 @@
                  :header-content "Name"})
 (def field-driver {:field-key      :Driver
                    :header-content "Driver"})
+(def local-storage-key "nuvla.ui.table.edges.docker.column-configs")
+
+(reg-sub
+  ::current-cols
+  (fn [db [_ k default-columns]]
+    (let [ls (aget js/window "localStorage")
+          data (or
+                 (get db local-storage-key)
+                 (edn/read-string (.getItem ls local-storage-key)))]
+      (get data k))))
+
+(reg-event-fx
+  ::set-current-cols
+  [(inject-cofx :storage/get {:name local-storage-key})]
+  (fn [{storage :storage/get
+        db :db} [_ k columns]]
+    (js/console.info ::set-current-cols k columns (merge (or (edn/read-string storage) {}) {k columns}))
+    {:db (assoc-in db [local-storage-key k] columns)
+     :storage/set {:session? false
+                   :name     local-storage-key
+                   :value    (merge (or (edn/read-string storage) {}) {k columns})}}))
 
 (defn DockerTable
   [{:keys [rows columns default-columns sort-config-db-path db-path]}]
-  [table-plugin/TableColsEditable
-   {:columns           columns
-    :sort-config       {:db-path sort-config-db-path}
-    :default-columns   default-columns
-    :table-props       {:stackable true}
-    :wrapper-div-class nil
-    :cell-props        {:header {:single-line true}}
-    :rows              @rows}
-   db-path])
+  [:<>
+   [table-refactor/TableController
+    {:!columns               (r/atom (mapv (fn [{:keys [field-key header-content no-sort?] :as c}]
+                                             (cond-> {::table-refactor/field-key      field-key
+                                                      ::table-refactor/header-content header-content
+                                                      ::table-refactor/no-sort?       no-sort?}
+                                                     (= field-key :SizeRw) (assoc ::table-refactor/field-cell CellBytesBis))) columns))
+     :!default-columns       (r/atom (vec default-columns))
+     :!current-columns       (subscribe [::current-cols sort-config-db-path (vec default-columns)])
+     :set-current-columns-fn #(dispatch [::set-current-cols sort-config-db-path %])
+     :!data                  rows
+     :!selectable?           (r/atom true)}]
+   [table-plugin/TableColsEditable
+    {:columns           columns
+     :sort-config       {:db-path sort-config-db-path}
+     :default-columns   (set default-columns)
+     :table-props       {:stackable true}
+     :wrapper-div-class nil
+     :cell-props        {:header {:single-line true}}
+     :rows              @rows}
+    db-path]])
 
 (defn DockerImagesTable [control]
   [DockerTable
@@ -138,7 +162,7 @@
                            :cell           PrimaryLabelGroup}
                           field-labels]
     :sort-config-db-path ::spec/docker-images-ordering
-    :default-columns     #{:id :Size :Created :RepoTags}}])
+    :default-columns     [:id :Size :Created :RepoTags]}])
 
 ;(defn PullImageMenuItem
 ;  [opts]
@@ -203,7 +227,7 @@
                           field-created-at
                           field-labels]
     :sort-config-db-path ::spec/docker-volumes-ordering
-    :default-columns     #{:id :Driver :Mountpoint :CreatedAt :Labels}}])
+    :default-columns     [:id :Driver :Mountpoint :CreatedAt :Labels]}])
 
 (defn DockerVolumePane [control]
   [ui/TabPane [DockerVolumesTable control]])
@@ -235,7 +259,7 @@
                           {:field-key      :ImageID
                            :header-content "Image Id"}]
     :sort-config-db-path ::spec/docker-containers-ordering
-    :default-columns     #{:id :Image :SizeRootFs :Created :Status}}])
+    :default-columns     [:id :Image :SizeRootFs :Created :Status]}])
 
 (defn DockerContainerPane [control]
   [ui/TabPane [DockerContainersTable control]])
@@ -253,7 +277,7 @@
                            :cell           KeyValueLabelGroup}
                           field-labels]
     :sort-config-db-path ::spec/docker-networks-ordering
-    :default-columns     #{:id :Name :Created :Labels :Driver}}])
+    :default-columns     [:id :Name :Created :Labels :Driver]}])
 
 (defn DockerNetworkPane [control]
   [ui/TabPane [DockerNetworksTable control]])

@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.tooltip :as tt]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
@@ -25,8 +26,10 @@
 
 (defn !sorted-data-fn
   [{:keys [::!sorting] :as _control} !data]
-  (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
-                  @!data)))
+  (r/track #(do
+              (js/console.info "!sorted-data-fn" @!sorting)
+              (sort (partial general-utils/multi-key-direction-sort @!sorting)
+                      @!data))))
 
 (defn case-insensitive-filter-fn
   [filter-str s]
@@ -62,19 +65,23 @@
     (set-sorting-fn new-sorting))
   (set-current-columns-fn columns))
 
+(defn CellOverflowTooltip
+  [cell-data _row _column]
+  (let [str-cell-data (str cell-data)]
+    [tt/WithOverflowTooltip {:content str-cell-data :tooltip str-cell-data}]))
+
 (defn DeleteColumn
-  [control {:keys [::field-key ::no-delete] :as _column}]
-  (let [visible-columns @(!visible-columns-fn control)]
-    (when (and (> (count visible-columns) 1) (not no-delete))
-      [:span {:style {:margin-left "0.8rem"}}
-       [uix/LinkIcon {:data-testid "DeleteColumn"
-                      :aria-label  "Delete Column"
-                      :color       "red"
-                      :name        "remove circle"
-                      :on-click    (fn [event]
-                                     (set-current-columns-fn* control (remove-field-key visible-columns field-key))
-                                     (.stopPropagation event))
-                      :class       :toggle-invisible-on-parent-hover}]])))
+  [{:keys [::!visible-columns] :as control} {:keys [::field-key ::no-delete] :as _column}]
+  (when (and (> (count @!visible-columns) 1) (not no-delete))
+    [:span {:style {:margin-left "0.8rem"}}
+     [uix/LinkIcon {:data-testid "DeleteColumn"
+                    :aria-label  "Delete Column"
+                    :color       "red"
+                    :name        "remove circle"
+                    :on-click    (fn [event]
+                                   (set-current-columns-fn* control (remove-field-key @!visible-columns field-key))
+                                   (.stopPropagation event))
+                    :class       :toggle-invisible-on-parent-hover}]]))
 
 (defn SortIcon [direction]
   (let [direction->class {"asc"  " ascending"
@@ -127,17 +134,19 @@
 (defn TableHeaderCell
   [{:keys [::!sorting ::set-sorting-fn] :as control} column]
   (let [field-key      (::field-key column)
+        no-delete?     (::no-delete? column)
+        no-sort?       (::no-sort? column)
         sortable       (dnd/useSortable #js {"id" (name field-key)})
-        setNodeRef     (.-setNodeRef sortable)
         sort-direction (get-field-sort-direction @!sorting field-key)
         on-click       #(->> sort-direction
                              get-next-sort-direction
                              (calc-new-sorting @!sorting field-key)
-                             set-sorting-fn)]
+                             set-sorting-fn)
+        setNodeRef     (.-setNodeRef sortable)]
     (js/console.info "Render TableHeaderCell " field-key)
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
     [:th (merge {:ref      setNodeRef
-                 :class    ["show-child-on-hover"]
+                 :class    ["show-child-on-hover" "single line"]
                  :style    {:cursor      :pointer
                             :user-select :none
                             :transform   (dnd/translate-css sortable)}
@@ -145,15 +154,15 @@
                 (js->clj (.-attributes sortable))
                 (js->clj (.-listeners sortable)))
      (::header-content column)
-     [SortIcon sort-direction]
-     [DeleteColumn control column]]))
+     (when-not no-sort?
+       [SortIcon sort-direction])
+     (when-not no-delete?
+       [DeleteColumn control column])]))
 
 (defn TableHeader
-  [control]
+  [{:keys [::!visible-columns ::!columns-by-key] :as control}]
   (js/console.info "Render TableHeader")
-  (r/with-let [!visible-columns (!visible-columns-fn control)
-               !columns-by-key  (!columns-by-key-fn control)
-               !selectable?     (::!selectable? control)]
+  (r/with-let [!selectable? (::!selectable? control)]
     [ui/TableHeader
      [ui/TableRow
       (js/console.info "TableHeader" @!columns-by-key @!visible-columns)
@@ -173,25 +182,24 @@
   [_control row column]
   (js/console.info "Render TableCell " (::field-key column))
   (let [sortable   (dnd/useSortable #js {"id" (name (::field-key column))})
-        setNodeRef (.-setNodeRef sortable)]
+        setNodeRef (.-setNodeRef sortable)
+        cell-data  ((::field-key column) row)
+        Cell       (get column ::field-cell CellOverflowTooltip)]
     ;Using html td tag instead of semantic ui TableCell, because for some reason it's not taking into account ref fn
     [:td {:ref   setNodeRef
           :style {:transform (dnd/translate-css sortable)}}
-     ((::field-key column) row)]))
+     [Cell cell-data row column]]))
 
 (defn TableRow
-  [{:keys [::row-id-fn] :as control} row]
-  (js/console.info "Render TableRow " row)
-  (r/with-let [visible-columns (!visible-columns-fn control)
-               !columns-by-key (!columns-by-key-fn control)
-               !selectable?    (::!selectable? control)
-               row-id          (row-id-fn row)]
+  [{:keys [::row-id-fn ::!visible-columns ::!columns-by-key] :as control} row]
+  (r/with-let [!selectable? (::!selectable? control)
+               row-id       (row-id-fn row)]
     [ui/TableRow
      [dnd/SortableContext
-      {:items    (mapv name @(!visible-columns-fn control))
+      {:items    (mapv name @!visible-columns)
        :strategy dnd/horizontalListSortingStrategy}
       (doall
-        (cond->> (for [visible-column @visible-columns]
+        (cond->> (for [visible-column @!visible-columns]
                    (let [column (get @!columns-by-key visible-column)]
                      ^{:key (str "row-" row-id "-column-" visible-column)}
                      [:f> TableCell control row column]))
@@ -200,11 +208,10 @@
                                  [TableCellCheckbox control row-id])))]]))
 
 (defn TableBody
-  [{:keys [::row-id-fn ::!data] :as control}]
+  [{:keys [::row-id-fn ::!data ::!visible-columns] :as control}]
   (js/console.info "Render TableBody")
-  (r/with-let [!visible-columns (!visible-columns-fn control)
-               !filtered-data   (!filtered-data-fn control !data !visible-columns)
-               !sorted-data     (!sorted-data-fn control !filtered-data)]
+  (r/with-let [!filtered-data (!filtered-data-fn control !data !visible-columns)
+               !sorted-data   (!sorted-data-fn control !filtered-data)]
     [ui/TableBody
      (doall
        (for [data-row @!sorted-data]
@@ -229,11 +236,11 @@
                         :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
 
 (defn ColumnsSelectorModal
-  [{:keys [::!default-columns ::!columns] :as control}]
+  [{:keys [::!default-columns ::!columns ::!visible-columns] :as control}]
   (r/with-let [open?                  (r/atom false)
                !local-current-columns (r/atom nil)
                open-fn                #(do
-                                         (reset! !local-current-columns @(!visible-columns-fn control))
+                                         (reset! !local-current-columns @!visible-columns)
                                          (reset! open? true))
                close-fn               #(reset! open? false)
                tr                     (subscribe [::i18n-subs/tr])]
@@ -271,26 +278,32 @@
 
 (defn Table
   [{:keys [::set-current-columns-fn] :as control}]
-  (r/with-let [on-drag-end-fn (fn [e]
-                                (let [active    (.-active e)
-                                      over      (.-over e)
-                                      active-id (keyword (.-id active))
-                                      over-id   (keyword (.-id over))
-                                      get-index #(-> % .-data .-current .-sortable .-index)]
-                                  (when (and active over (not= active-id over-id))
-                                    (-> @(!visible-columns-fn control)
-                                        (assoc (get-index active) over-id)
-                                        (assoc (get-index over) active-id)
-                                        set-current-columns-fn))))]
+  (r/with-let [!visible-columns (!visible-columns-fn control)
+               on-drag-end-fn   (fn [e]
+                                  (let [active    (.-active e)
+                                        over      (.-over e)
+                                        active-id (keyword (.-id active))
+                                        over-id   (keyword (.-id over))
+                                        get-index #(-> % .-data .-current .-sortable .-index)]
+                                    (when (and active over (not= active-id over-id))
+                                      (-> @!visible-columns
+                                          (assoc (get-index active) over-id)
+                                          (assoc (get-index over) active-id)
+                                          set-current-columns-fn))))
+               control          (assoc control ::!visible-columns !visible-columns
+                                               ::!columns-by-key (!columns-by-key-fn control))]
     [:div
      [ColumnsSelectorModal control]
-     [dnd/DndContext {:collisionDetection dnd/closestCenter
-                      :modifiers          [dnd/restrictToHorizontalAxis]
-                      :onDragEnd          on-drag-end-fn
-                      :sensors            (dnd/pointerSensor)}
-      [ui/Table {:attached true}
-       [TableHeader control]
-       [TableBody control]]]]))
+     [:div {:style {:overflow :auto
+                    :padding  0
+                    :position :relative}}
+      [dnd/DndContext {:collisionDetection dnd/closestCenter
+                       :modifiers          [dnd/restrictToHorizontalAxis]
+                       :on-drag-end        on-drag-end-fn
+                       :sensors            (dnd/pointerSensor)}
+       [ui/Table {:stackable true}
+        [TableHeader control]
+        [TableBody control]]]]]))
 
 (reg-event-db
   ::set-current-columns-fn

@@ -16,6 +16,10 @@ async function expectColumnData(page, table, colIndex, colData) {
   };
 }
 
+async function expectTableRowCount(table, rowCount) {
+  await expect(table.locator('tbody tr')).toHaveCount(rowCount);
+}
+
 async function openColumnSelectorModal(sceneRoot) {
   await sceneRoot.getByTitle('Columns selector').locator('i').click();
 }
@@ -132,11 +136,11 @@ test('test global filtering', async ({ page }, { config }) => {
   const table = await locatorOne(sceneRoot, 'table.ui');
   const filterInput = await locatorOne(sceneRoot, '.global-filter > input');
 
-  await expect(table.locator('tbody tr')).toHaveCount(3);
+  await expectTableRowCount(table, 3);
 
   // global filter: 2 rows contain 1725, in column Created
   await filterInput.fill('1725');
-  await expect(table.locator('tbody tr')).toHaveCount(2);
+  await expectTableRowCount(table, 2);
 
   // Modal unselect Created column
   openColumnSelectorModal(sceneRoot);
@@ -149,4 +153,62 @@ test('test global filtering', async ({ page }, { config }) => {
   // Clear the filter
   await filterInput.fill('');
   await expect(table.locator('tbody tr')).toHaveCount(3);
+});
+
+async function expectPaginationState(page, table, paginationDiv, totalItems, pageSize, activeIndex) {
+  const paginationSummary = await locatorOne(paginationDiv, '>div:nth-child(1)');
+  const paginationTotal = await locatorOne(paginationSummary, '>div:nth-child(1)');
+  const pageSizeSelection = await locatorOne(paginationSummary, '>div:nth-child(3)');
+  const pageSizeSelected = await locatorOne(pageSizeSelection, '>div:nth-child(1)');
+  const paginationNavigation = await locatorOne(paginationDiv, '>div.uix-pagination-navigation');
+  const expectedRowCount = activeIndex * pageSize < totalItems ? pageSize : totalItems % pageSize;
+
+  // Check the text about the total number of items
+  await expect(paginationTotal).toHaveText('Total:' + totalItems);
+  // Check the selected number of items per page
+  await expect(pageSizeSelected).toHaveText(pageSize + ' per page');
+
+  // Expect the current page link to be active
+  const activeItemLink = await locatorOne(paginationNavigation, 'a.active[type="pageItem"]');
+  await expect(activeItemLink).toHaveText(activeIndex.toString());
+
+  // Check the table row count and Idx column data
+  await expectTableRowCount(table, expectedRowCount);
+  await expectColumnData(page, table, 4, [...Array(expectedRowCount).keys()].map(x => x + pageSize * (activeIndex - 1)).map(x => x.toString()));
+}
+
+async function selectPageSize(paginationDiv, pageSize) {
+  const paginationSummary = await locatorOne(paginationDiv, '>div:nth-child(1)');
+  const pageSizeSelection = await locatorOne(paginationSummary, '>div:nth-child(3)');
+  await pageSizeSelection.click();
+  await pageSizeSelection.getByText(pageSize.toString()).click();
+}
+
+test('test pagination', async ({ page }, { config }) => {
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'pagination');
+
+  const table = await locatorOne(sceneRoot, 'table.ui');
+  const paginationDiv = await locatorOne(sceneRoot, 'div.uix-pagination');
+  const paginationNavigation = await locatorOne(paginationDiv, '>div.uix-pagination-navigation');
+  const firstItemLink = await locatorOne(paginationNavigation, 'a[type="firstItem"]');
+  const prevItemLink = await locatorOne(paginationNavigation, 'a[type="prevItem"]');
+  const nextItemLink = await locatorOne(paginationNavigation, 'a[type="nextItem"]');
+  const lastItemLink = await locatorOne(paginationNavigation, 'a[type="lastItem"]');
+
+  // Move through the pages and check the pagination state
+  await expectPaginationState(page, table, paginationDiv, 303, 10, 1);
+  await nextItemLink.click();
+  await expectPaginationState(page, table, paginationDiv, 303, 10, 2);
+  await prevItemLink.click();
+  await expectPaginationState(page, table, paginationDiv, 303, 10, 1);
+  await lastItemLink.click();
+  await expectPaginationState(page, table, paginationDiv, 303, 10, 31);
+  await firstItemLink.click();
+  await expectPaginationState(page, table, paginationDiv, 303, 10, 1);
+
+  // Change the page size and repeat the checks
+  await selectPageSize(paginationDiv, 30);
+  await expectPaginationState(page, table, paginationDiv, 303, 30, 1);
+  await lastItemLink.click();
+  await expectPaginationState(page, table, paginationDiv, 303, 30, 11);
 });

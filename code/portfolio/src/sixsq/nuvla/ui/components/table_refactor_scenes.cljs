@@ -101,7 +101,7 @@
                                                                       :ParentId   "",
                                                                       :Created    1725666894,
                                                                       :RepoTags   []}]
-                                                                    enable-pagination? (->> (repeat 11)
+                                                                    enable-pagination? (->> (repeat 101)
                                                                                             (apply concat)
                                                                                             (map-indexed (fn [idx item] (assoc item :Idx idx)))
                                                                                             vec)))}]))

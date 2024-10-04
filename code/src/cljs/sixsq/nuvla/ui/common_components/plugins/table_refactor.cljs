@@ -25,6 +25,9 @@
 
 (defn case-insensitive-filter-fn
   [filter-str s]
+  (prn :filter-str filter-str :s s :=>> (or (nil? filter-str)
+                                            (and (some? s)
+                                                 (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
   (or (nil? filter-str)
       (and (some? s)
            (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
@@ -36,16 +39,19 @@
            (str/includes? (str s) filter-str))))
 
 (defn !filtered-data-fn
-  [{:keys [::!global-filter ::global-filter-fn] :as _control} !data !visible-columns]
+  [{:keys [::!enable-global-filter? ::!global-filter ::global-filter-fn] :as _control} !data !visible-columns]
   (r/track (fn filter-data []
-             (doall (filter #(some (partial global-filter-fn @!global-filter)
-                                   (vals (select-keys % @!visible-columns)))
-                            @!data)))))
+             (if @!enable-global-filter?
+               (doall (filter #(some (partial global-filter-fn @!global-filter)
+                                     (vals (select-keys % @!visible-columns)))
+                              @!data))
+               @!data))))
 
 (defn !sorted-data-fn
-  [{:keys [::!sorting] :as _control} !data]
-  (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
-                  @!data)))
+  [{:keys [::!enable-sorting? ::!sorting] :as _control} !data]
+  (r/track #(if @!enable-sorting?
+              (sort (partial general-utils/multi-key-direction-sort @!sorting) @!data)
+              @!data)))
 
 (defn !processed-data-fn
   [{:keys [::!data] :as control}]
@@ -92,10 +98,10 @@
                                      (.stopPropagation event))
                       :class       :toggle-invisible-on-parent-hover}]])))
 
-(defn SortIcon [direction]
+(defn SortIcon [{:keys [::!enable-sorting?]} direction]
   (let [direction->class {"asc"  " ascending"
                           "desc" " descending"}]
-    [uix/LinkIcon {:class (if direction :visible :invisible)
+    [uix/LinkIcon {:class (if (and @!enable-sorting? direction) :visible :invisible)
                    :name  (str "sort" (direction->class direction))}]))
 
 (defn- calc-new-sorting [sorting sort-key sort-direction]
@@ -141,7 +147,7 @@
                                  :vertical-align :middle}}]]))
 
 (defn TableHeaderCell
-  [{:keys [::!sorting ::set-sorting-fn] :as control} column]
+  [{:keys [::!enable-sorting? ::!sorting ::set-sorting-fn] :as control} column]
   (let [field-key      (::field-key column)
         sortable       (dnd/useSortable #js {"id" (name field-key)})
         setNodeRef     (.-setNodeRef sortable)
@@ -157,11 +163,11 @@
                  :style    {:cursor      :pointer
                             :user-select :none
                             :transform   (dnd/translate-css sortable)}
-                 :on-click on-click}
+                 :on-click (when @!enable-sorting? on-click)}
                 (js->clj (.-attributes sortable))
                 (js->clj (.-listeners sortable)))
      (::header-content column)
-     [SortIcon sort-direction]
+     [SortIcon control sort-direction]
      [DeleteColumn control column]]))
 
 (defn TableHeader
@@ -315,7 +321,7 @@
   {:content (r/as-element [ui/Icon {:class icon-name}]) :icon true})
 
 (defn NuvlaPagination
-  [{:keys [::tr-fn ::!pagination ::set-pagination-fn ::processed-data-fn] :as control}]
+  [{:keys [::tr-fn ::!pagination ::set-pagination-fn] :as control}]
   (let [{:keys [page-index page-size] :as pagination} @!pagination
         !processed-data (!processed-data-fn control)
         total-items     (count @!processed-data)
@@ -416,6 +422,7 @@
            ;; Optional
            ;; To control which columns are sorted override following control attributes
            ;; format: vector of (vector of column_id direction)
+           !enable-sorting?
            !sorting
            set-sorting-fn
 
@@ -425,12 +432,13 @@
            !selected
            set-selected-fn
 
-           ;; Optional
+           ;; Optional (enabled by default)
            ;; Global filter on all visible columns
+           !enable-global-filter?
            !global-filter
            global-filter-fn
 
-           ;; Optional
+           ;; Optional (disabled by default)
            ;; Pagination
            !enable-pagination?
            !pagination
@@ -450,10 +458,12 @@
                !current-columns       (or !current-columns (r/atom nil))
                set-current-columns-fn (or set-current-columns-fn #(reset! !current-columns %))
                ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
+               !enable-sorting?       (or !enable-sorting? (r/atom true))
                set-sorting-fn         (or set-sorting-fn #(reset! !sorting %))
                set-selected-fn        (or set-selected-fn #(reset! !selected %))
                ;!current-columns (r/atom nil)
                ;!current-columns (subscribe [::current-columns])]
+               !enable-global-filter? (or !enable-global-filter? (r/atom true))
                !global-filter         (or !global-filter (r/atom nil))
                global-filter-fn       (or global-filter-fn case-insensitive-filter-fn)
                !enable-pagination?    (or !enable-pagination? (r/atom false))
@@ -467,10 +477,12 @@
                 ::set-current-columns-fn set-current-columns-fn
                 ::!current-columns       !current-columns
                 ::set-sorting-fn         set-sorting-fn
+                ::!enable-sorting?       !enable-sorting?
                 ::!sorting               !sorting
                 ::!selectable?           !selectable?
                 ::!selected              !selected
                 ::set-selected-fn        set-selected-fn
+                ::!enable-global-filter? !enable-global-filter?
                 ::!global-filter         !global-filter
                 ::global-filter-fn       global-filter-fn
                 ::!enable-pagination?    !enable-pagination?

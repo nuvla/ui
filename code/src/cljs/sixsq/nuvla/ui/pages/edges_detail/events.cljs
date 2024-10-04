@@ -6,6 +6,7 @@
             [sixsq.nuvla.ui.common-components.job.events :as job-events]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
+            [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.main.spec :as main-spec]
             [sixsq.nuvla.ui.pages.deployments.events :as deployments-events]
@@ -18,10 +19,23 @@
             [sixsq.nuvla.ui.utils.time :as time]
             [sixsq.nuvla.ui.utils.timeseries :as ts-utils]))
 
+(def refresh-action-id :nuvlabox-get-nuvlabox)
+
+(reg-event-fx
+  ::refresh
+  (fn [_ [_ uuid]]
+    {:fx [[:dispatch [::main-events/action-interval-start
+                      {:id        refresh-action-id
+                       :frequency 10000
+                       :event     [::get-nuvlabox (str "nuvlabox/" uuid)]}]]]}))
+
 (reg-event-fx
   ::set-nuvlabox-status
-  (fn [{db :db} [_ {:keys [vulnerabilities] :as nuvlabox-status}]]
-    {:db (assoc db ::spec/nuvlabox-status nuvlabox-status)
+  (fn [{{:keys [::spec/coe-resource-docker-available?] :as db} :db}
+       [_ {:keys [vulnerabilities coe-resources] :as nuvlabox-status}]]
+    {:db (assoc db ::spec/nuvlabox-status nuvlabox-status
+                   ::spec/coe-resource-docker-available? (or coe-resource-docker-available?
+                                                             (some? (:docker coe-resources))))
      :fx [[:dispatch [::get-nuvlaedge-release nuvlabox-status]]
           [:dispatch [::set-nuvlabox-vulns vulnerabilities]]]}))
 
@@ -55,22 +69,45 @@
   (fn [db [_ vuln-severity]]
     (assoc db ::spec/vuln-severity-selector vuln-severity)))
 
+(def tab-key-consumption :consumption)
+(def tab-key-vulnerabilities :vulnerabilities)
+(def tab-key-docker :docker)
+(def tab-key-playbooks :playbooks)
+
+(def nb-status-attrs "id, parent, version, created, updated, acl, name, description, tags,
+status, next-heartbeat, last-heartbeat, next-telemetry, last-telemetry, current-time, operating-system,
+architecture, hostname, ip, docker-server-version, last-boot, wifi-password, nuvlabox-api-endpoint, inferred-location,
+gpio-pins, nuvlabox-engine-version, container-plugins, installation-parameters, jobs, swarm-node-cert-expiry-date,
+online, online-prev, kubelet-version, host-user-home, node-id, cluster-id, cluster-node-labels, cluster-node-role,
+cluster-nodes, cluster-managers, cluster-join-address, status-notes, orchestrator, temperatures, components, network")
+
 (reg-event-fx
   ::get-nuvlabox-status
-  (fn [_ [_ nb-status-id]]
-    {::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
-                        :on-error #(dispatch [::set-nuvlabox-status nil])]}))
+  (fn [{{:keys [::spec/nuvlabox-status
+                ::spec/coe-resource-docker-available?] :as db} :db} [_ nb-status-id]]
+    (let [active-tab (tab-plugin/get-active-tab db [::spec/tab])
+          select-str (cond-> nb-status-attrs
+                             (= active-tab tab-key-consumption) (str ", resources")
+                             (= active-tab tab-key-vulnerabilities) (str ", vulnerabilities")
+                             (or
+                               (false? coe-resource-docker-available?)
+                               (= active-tab tab-key-docker)) (str ", coe-resources"))]
+      {::cimi-api-fx/search [:nuvlabox-status
+                             {:filter (str "id='" nb-status-id "'")
+                              :select select-str
+                              :last   1}
+                             #(dispatch [::set-nuvlabox-status (some-> % :resources first)])]})))
 
 (reg-event-fx
   ::set-nuvlabox
   (fn [{:keys [db]} [_ {nb-status-id     :nuvlabox-status
                         infra-srv-grp-id :infrastructure-service-group
                         :as              nuvlabox}]]
-    {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
-                                 ::spec/nuvlabox nuvlabox
-                                 ::main-spec/loading? false)
-     :fx               [[:dispatch [::get-nuvlabox-status nb-status-id]]
-                        (when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
+    {:db (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
+                   ::spec/nuvlabox nuvlabox
+                   ::main-spec/loading? false)
+     :fx [[:dispatch [::get-nuvlabox-status nb-status-id]]
+          (when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
 
 (reg-event-fx
   ::get-nuvlabox-associated-ssh-keys
@@ -320,13 +357,14 @@
 
 (reg-event-fx
   ::get-nuvlabox-playbooks
-  (fn [_ [_ nuvlabox-id]]
-    {::cimi-api-fx/search [:nuvlabox-playbook
-                           {:filter  (str "parent='" nuvlabox-id "'")
-                            :select  "id, run, enabled, type, output, name, description"
-                            :orderby "type:desc"
-                            :last    1000}
-                           #(dispatch [::set-nuvlabox-playbooks (:resources %)])]}))
+  (fn [{:keys [db]} [_ nuvlabox-id]]
+    (when (= (tab-plugin/get-active-tab db [::spec/tab]) tab-key-playbooks)
+      {::cimi-api-fx/search [:nuvlabox-playbook
+                             {:filter  (str "parent='" nuvlabox-id "'")
+                              :select  "id, run, enabled, type, output, name, description"
+                              :orderby "type:desc"
+                              :last    10000}
+                             #(dispatch [::set-nuvlabox-playbooks (:resources %)])]})))
 
 (reg-event-db
   ::set-nuvlabox-playbooks
@@ -519,5 +557,3 @@
                         {:header  "Could not fetch NuvlaEdge statistics"
                          :content message
                          :type    :error}]]]})))
-
-

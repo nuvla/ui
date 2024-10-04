@@ -25,9 +25,6 @@
 
 (defn case-insensitive-filter-fn
   [filter-str s]
-  (prn :filter-str filter-str :s s :=>> (or (nil? filter-str)
-                                            (and (some? s)
-                                                 (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
   (or (nil? filter-str)
       (and (some? s)
            (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
@@ -85,7 +82,7 @@
   (set-current-columns-fn columns))
 
 (defn DeleteColumn
-  [control {:keys [::field-key ::no-delete] :as _column}]
+  [{:keys [::!enable-column-customization?] :as control} {:keys [::field-key ::no-delete] :as _column}]
   (let [visible-columns @(!visible-columns-fn control)]
     (when (and (> (count visible-columns) 1) (not no-delete))
       [:span {:style {:margin-left "0.8rem"}}
@@ -96,7 +93,9 @@
                       :on-click    (fn [event]
                                      (set-current-columns-fn* control (remove-field-key visible-columns field-key))
                                      (.stopPropagation event))
-                      :class       :toggle-invisible-on-parent-hover}]])))
+                      :class       (cond-> [:toggle-invisible-on-parent-hover]
+                                           (not @!enable-column-customization?)
+                                           (conj :invisible))}]])))
 
 (defn SortIcon [{:keys [::!enable-sorting?]} direction]
   (let [direction->class {"asc"  " ascending"
@@ -147,7 +146,7 @@
                                  :vertical-align :middle}}]]))
 
 (defn TableHeaderCell
-  [{:keys [::!enable-sorting? ::!sorting ::set-sorting-fn] :as control} column]
+  [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn] :as control} column]
   (let [field-key      (::field-key column)
         sortable       (dnd/useSortable #js {"id" (name field-key)})
         setNodeRef     (.-setNodeRef sortable)
@@ -158,14 +157,18 @@
                              set-sorting-fn)]
     (js/console.info "Render TableHeaderCell " field-key)
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
-    [:th (merge {:ref      setNodeRef
-                 :class    ["show-child-on-hover"]
-                 :style    {:cursor      :pointer
-                            :user-select :none
-                            :transform   (dnd/translate-css sortable)}
+    [:th (merge {:class    ["show-child-on-hover"]
+                 :style    (cond-> {:cursor      :pointer
+                                    :user-select :none}
+                                   @!enable-column-customization?
+                                   (assoc :transform (dnd/translate-css sortable)))
                  :on-click (when @!enable-sorting? on-click)}
+                ;; always adding attributes for consistency on the `role` attribute of the header
+                ;; (.-attributes sortable) changes the role from `cell` to `button`
                 (js->clj (.-attributes sortable))
-                (js->clj (.-listeners sortable)))
+                (when @!enable-column-customization?
+                  (merge {:ref setNodeRef}
+                         (js->clj (.-listeners sortable)))))
      (::header-content column)
      [SortIcon control sort-direction]
      [DeleteColumn control column]]))
@@ -173,9 +176,9 @@
 (defn TableHeader
   [control]
   (js/console.info "Render TableHeader")
-  (r/with-let [!visible-columns (!visible-columns-fn control)
-               !columns-by-key  (!columns-by-key-fn control)
-               !selectable?     (::!selectable? control)]
+  (r/with-let [!visible-columns       (!visible-columns-fn control)
+               !columns-by-key        (!columns-by-key-fn control)
+               !enable-row-selection? (::!enable-row-selection? control)]
     [ui/TableHeader
      [ui/TableRow
       (js/console.info "TableHeader" @!columns-by-key @!visible-columns)
@@ -187,14 +190,15 @@
            (for [visible-column @!visible-columns]
              ^{:key (str "header-column-" visible-column)}
              [:f> TableHeaderCell control (get @!columns-by-key visible-column)])
-           @!selectable? (cons
-                           ^{:key "select-all"}
-                           [TableSelectAllCheckbox control])))]]]))
+           @!enable-row-selection? (cons
+                                     ^{:key "select-all"}
+                                     [TableSelectAllCheckbox control])))]]]))
 
 (defn TableCell
-  [_control row column]
+  [{:keys [::!enable-column-customization?] :as _control} row column]
   (js/console.info "Render TableCell " (::field-key column))
-  (let [sortable   (dnd/useSortable #js {"id" (name (::field-key column))})
+  (let [sortable   (dnd/useSortable #js {"id"       (name (::field-key column))
+                                         "disabled" (not @!enable-column-customization?)})
         setNodeRef (.-setNodeRef sortable)]
     ;Using html td tag instead of semantic ui TableCell, because for some reason it's not taking into account ref fn
     [:td {:ref   setNodeRef
@@ -204,10 +208,10 @@
 (defn TableRow
   [{:keys [::row-id-fn] :as control} row]
   (js/console.info "Render TableRow " row)
-  (r/with-let [visible-columns (!visible-columns-fn control)
-               !columns-by-key (!columns-by-key-fn control)
-               !selectable?    (::!selectable? control)
-               row-id          (row-id-fn row)]
+  (r/with-let [visible-columns        (!visible-columns-fn control)
+               !columns-by-key        (!columns-by-key-fn control)
+               !enable-row-selection? (::!enable-row-selection? control)
+               row-id                 (row-id-fn row)]
     [ui/TableRow
      [dnd/SortableContext
       {:items    (mapv name @(!visible-columns-fn control))
@@ -217,9 +221,9 @@
                    (let [column (get @!columns-by-key visible-column)]
                      ^{:key (str "row-" row-id "-column-" visible-column)}
                      [:f> TableCell control row column]))
-                 @!selectable? (cons
-                                 ^{:key (str "select-" row-id)}
-                                 [TableCellCheckbox control row-id])))]]))
+                 @!enable-row-selection? (cons
+                                           ^{:key (str "select-" row-id)}
+                                           [TableCellCheckbox control row-id])))]]))
 
 (defn TableBody
   [{:keys [::row-id-fn ::!data] :as control}]
@@ -364,7 +368,7 @@
        :onPageChange  (ui-callback/callback :activePage #(goto-page (dec %)))}]]))
 
 (defn Table
-  [{:keys [::set-current-columns-fn ::!enable-pagination?] :as control}]
+  [{:keys [::!enable-column-customization? ::set-current-columns-fn ::!enable-pagination?] :as control}]
   (r/with-let [on-drag-end-fn (fn [e]
                                 (let [active    (.-active e)
                                       over      (.-over e)
@@ -377,7 +381,8 @@
                                         (assoc (get-index over) active-id)
                                         set-current-columns-fn))))]
     [:div
-     [ColumnsSelectorModal control]
+     (when @!enable-column-customization?
+       [ColumnsSelectorModal control])
      [dnd/DndContext {:collisionDetection dnd/closestCenter
                       :modifiers          [dnd/restrictToHorizontalAxis]
                       :onDragEnd          on-drag-end-fn
@@ -413,6 +418,10 @@
            ;; Give a function that allow to retrieve the row id. By default it's :id
            row-id-fn
 
+           ;; Optional (enabled by default)
+           ;; Make it possible for the user to select which columns are visible and to rearrange their order
+           !enable-column-customization?
+
            ;; Optional
            ;; To control which columns are currently displayed override following control attributes
            ;; format: vector of column_ids
@@ -428,7 +437,7 @@
 
            ;; Optional
            ;; make table row selectable
-           !selectable?
+           !enable-row-selection?
            !selected
            set-selected-fn
 
@@ -448,48 +457,50 @@
            ;; Translations
            tr-fn
            ]}]
-  (r/with-let [row-id-fn              (or row-id-fn :id)
-               !sorting               (or !sorting (r/atom []))
-               !selected              (or !selected (r/atom #{}))
-               !selectable?           (or !selectable? (r/atom false))
-               !columns               (or !columns (r/atom []))
-               !data                  (or !data (r/atom []))
-               !default-columns       (or !default-columns (r/atom [:id]))
-               !current-columns       (or !current-columns (r/atom nil))
-               set-current-columns-fn (or set-current-columns-fn #(reset! !current-columns %))
+  (r/with-let [row-id-fn                     (or row-id-fn :id)
+               !sorting                      (or !sorting (r/atom []))
+               !selected                     (or !selected (r/atom #{}))
+               !enable-row-selection?        (or !enable-row-selection? (r/atom false))
+               !columns                      (or !columns (r/atom []))
+               !data                         (or !data (r/atom []))
+               !default-columns              (or !default-columns (r/atom [:id]))
+               !enable-column-customization? (or !enable-column-customization? (r/atom true))
+               !current-columns              (or !current-columns (r/atom nil))
+               set-current-columns-fn        (or set-current-columns-fn #(reset! !current-columns %))
                ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
-               !enable-sorting?       (or !enable-sorting? (r/atom true))
-               set-sorting-fn         (or set-sorting-fn #(reset! !sorting %))
-               set-selected-fn        (or set-selected-fn #(reset! !selected %))
+               !enable-sorting?              (or !enable-sorting? (r/atom true))
+               set-sorting-fn                (or set-sorting-fn #(reset! !sorting %))
+               set-selected-fn               (or set-selected-fn #(reset! !selected %))
                ;!current-columns (r/atom nil)
                ;!current-columns (subscribe [::current-columns])]
-               !enable-global-filter? (or !enable-global-filter? (r/atom true))
-               !global-filter         (or !global-filter (r/atom nil))
-               global-filter-fn       (or global-filter-fn case-insensitive-filter-fn)
-               !enable-pagination?    (or !enable-pagination? (r/atom false))
-               set-pagination-fn      (or set-pagination-fn #(reset! !pagination %))
-               tr-fn                  (or tr-fn (comp str/capitalize name first))
+               !enable-global-filter?        (or !enable-global-filter? (r/atom true))
+               !global-filter                (or !global-filter (r/atom nil))
+               global-filter-fn              (or global-filter-fn case-insensitive-filter-fn)
+               !enable-pagination?           (or !enable-pagination? (r/atom false))
+               set-pagination-fn             (or set-pagination-fn #(reset! !pagination %))
+               tr-fn                         (or tr-fn (comp str/capitalize name first))
                ]
-    [:f> Table {::row-id-fn              row-id-fn
-                ::!columns               !columns
-                ::!data                  !data
-                ::!default-columns       !default-columns
-                ::set-current-columns-fn set-current-columns-fn
-                ::!current-columns       !current-columns
-                ::set-sorting-fn         set-sorting-fn
-                ::!enable-sorting?       !enable-sorting?
-                ::!sorting               !sorting
-                ::!selectable?           !selectable?
-                ::!selected              !selected
-                ::set-selected-fn        set-selected-fn
-                ::!enable-global-filter? !enable-global-filter?
-                ::!global-filter         !global-filter
-                ::global-filter-fn       global-filter-fn
-                ::!enable-pagination?    !enable-pagination?
+    [:f> Table {::row-id-fn                     row-id-fn
+                ::!columns                      !columns
+                ::!data                         !data
+                ::!default-columns              !default-columns
+                ::!enable-column-customization? !enable-column-customization?
+                ::set-current-columns-fn        set-current-columns-fn
+                ::!current-columns              !current-columns
+                ::set-sorting-fn                set-sorting-fn
+                ::!enable-sorting?              !enable-sorting?
+                ::!sorting                      !sorting
+                ::!enable-row-selection?        !enable-row-selection?
+                ::!selected                     !selected
+                ::set-selected-fn               set-selected-fn
+                ::!enable-global-filter?        !enable-global-filter?
+                ::!global-filter                !global-filter
+                ::global-filter-fn              global-filter-fn
+                ::!enable-pagination?           !enable-pagination?
                 ; ::!manual-pagination
-                ::!pagination            !pagination
-                ::set-pagination-fn      set-pagination-fn
-                ::tr-fn                  tr-fn
+                ::!pagination                   !pagination
+                ::set-pagination-fn             set-pagination-fn
+                ::tr-fn                         tr-fn
                 }]))
 
 ;; table

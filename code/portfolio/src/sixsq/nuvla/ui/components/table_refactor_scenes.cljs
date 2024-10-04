@@ -10,7 +10,11 @@
   [{:keys [!enable-pagination?] :as control}]
   (let [enable-pagination? (if !enable-pagination? @!enable-pagination? false)]
     [table-refactor/TableController
-     (merge control
+     (merge {;; for testing purposes disable all functionalities that are otherwise enabled
+             ;; by default. They can be enabled in each test via the control map.
+             :!enable-column-customization? (r/atom false)
+             :!enable-sorting?              (r/atom false)}
+            control
             {:!columns         (r/atom (cond->
                                          [{::table-refactor/field-key      :Id
                                            ::table-refactor/header-content "Id"
@@ -104,11 +108,40 @@
                                                                  (map-indexed (fn [idx item] (assoc item :Idx idx)))
                                                                  vec)))})]))
 
-(defscene table
+(defscene basic-table
   [TableController])
 
-(defscene selectable
-  [TableController {:!selectable? (r/atom true)}])
+(defn ColumnCustomizationParams
+  [!enable-column-customization?]
+  [:div {:style {:margin-bottom "5px"}}
+   [ui/Checkbox {:data-testid "checkbox-enable-column-customization"
+                 :label       "Enable column customization ?"
+                 :style       {:position       :relative
+                               :vertical-align :middle}
+                 :checked     @!enable-column-customization?
+                 :on-click    #(swap! !enable-column-customization? not)}]])
+
+(defscene column-customization
+  (r/with-let [!enable-column-customization? (r/atom true)]
+    [:div
+     [ColumnCustomizationParams !enable-column-customization?]
+     [TableController {:!enable-column-customization? !enable-column-customization?}]]))
+
+(defn RowSelectionParams
+  [!enable-row-selection?]
+  [:div {:style {:margin-bottom "5px"}}
+   [ui/Checkbox {:data-testid "checkbox-enable-row-selection"
+                 :label       "Enable row selection ?"
+                 :style       {:position       :relative
+                               :vertical-align :middle}
+                 :checked     @!enable-row-selection?
+                 :on-click    #(swap! !enable-row-selection? not)}]])
+
+(defscene row-selection
+  (r/with-let [!enable-row-selection? (r/atom true)]
+    [:div
+     [RowSelectionParams !enable-row-selection?]
+     [TableController {:!enable-row-selection? !enable-row-selection?}]]))
 
 (defn SearchInput
   [!global-filter]
@@ -133,12 +166,14 @@
      [SearchInput !global-filter])])
 
 (defscene global-filter
-  (r/with-let [!enable-global-filter? (r/atom true)
-               !global-filter         (r/atom "")]
+  (r/with-let [!enable-column-customization? (r/atom true)
+               !enable-global-filter?        (r/atom true)
+               !global-filter                (r/atom "")]
     [:div
      [GlobalFilterParams !enable-global-filter? !global-filter]
-     [TableController {:!enable-global-filter? !enable-global-filter?
-                       :!global-filter         !global-filter}]]))
+     [TableController {:!enable-column-customization? !enable-column-customization?
+                       :!enable-global-filter?        !enable-global-filter?
+                       :!global-filter                !global-filter}]]))
 
 (defn SortingParams
   [!enable-sorting?]

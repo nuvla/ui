@@ -28,14 +28,21 @@ async function openColumnSelectorModal(sceneRoot) {
   await sceneRoot.getByTitle('Columns selector').locator('i').click();
 }
 
-test('test column selection and deletion', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table');
+test('test basic table', async ({ page }, { config }) => {
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'basic-table');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
 
   expectHeaderRowCount(table, 1);
   expectTableRowCount(table, 3);
+});
+
+test('test column customization', async ({ page }, { config }) => {
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'column-customization');
+
+  const table = await locatorOne(sceneRoot, 'table.ui');
+  await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
 
   // Modal unselect Created column
   openColumnSelectorModal(sceneRoot);
@@ -65,8 +72,8 @@ test('test column selection and deletion', async ({ page }, { config }) => {
   await expectHeadersOrder(table, ['Id', 'Created']);
 });
 
-test('test table draggable columns', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'table');
+test('test draggable columns', async ({ page }, { config }) => {
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'column-customization');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
@@ -86,7 +93,7 @@ test('test table draggable columns', async ({ page }, { config }) => {
 
 
 test('test selectable table rows', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'selectable');
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'row-selection');
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['', 'Id', 'Size', 'Created']);

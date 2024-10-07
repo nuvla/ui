@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.common-components.plugins.table-refactor
-  (:require [clojure.set :as set]
+  (:require [clojure.string :as str]
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
@@ -23,10 +23,48 @@
   [current-columns field-key]
   (vec (remove (fn [fk] (= fk field-key)) current-columns)))
 
+(defn case-insensitive-filter-fn
+  [filter-str s]
+  (or (nil? filter-str)
+      (and (some? s)
+           (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
+
+(defn case-sensitive-filter-fn
+  [filter-str s]
+  (or (nil? filter-str)
+      (and (some? s)
+           (str/includes? (str s) filter-str))))
+
+(defn !filtered-data-fn
+  [{:keys [::!enable-global-filter? ::!global-filter ::global-filter-fn] :as _control} !data !visible-columns]
+  (r/track (fn filter-data []
+             (if @!enable-global-filter?
+               (doall (filter #(some (partial global-filter-fn @!global-filter)
+                                     (vals (select-keys % @!visible-columns)))
+                              @!data))
+               @!data))))
+
 (defn !sorted-data-fn
-  [{:keys [::!sorting ::!data] :as _control}]
-  (r/track #(sort (partial general-utils/multi-key-direction-sort @!sorting)
-                  @!data)))
+  [{:keys [::!enable-sorting? ::!sorting] :as _control} !data]
+  (r/track #(if @!enable-sorting?
+              (sort (partial general-utils/multi-key-direction-sort @!sorting) @!data)
+              @!data)))
+
+(defn !processed-data-fn
+  [{:keys [::!data] :as control}]
+  (r/track (fn processed-data []
+             (let [!visible-columns (!visible-columns-fn control)
+                   !filtered-data   (!filtered-data-fn control !data !visible-columns)
+                   !sorted-data     (!sorted-data-fn control !filtered-data)]
+               @!sorted-data))))
+
+(defn !paginated-data-fn
+  [{:keys [::!pagination ::!enable-pagination?] :as control}]
+  (r/track #(let [!processed-data (!processed-data-fn control)]
+              (if @!enable-pagination?
+                (let [{:keys [page-index page-size]} @!pagination]
+                  (->> @!processed-data (drop (* page-index page-size)) (take page-size)))
+                @!processed-data))))
 
 (defn !selected?-fn
   [{:keys [::!selected] :as _control} row-id]
@@ -44,7 +82,7 @@
   (set-current-columns-fn columns))
 
 (defn DeleteColumn
-  [control {:keys [::field-key ::no-delete] :as _column}]
+  [{:keys [::!enable-column-customization?] :as control} {:keys [::field-key ::no-delete] :as _column}]
   (let [visible-columns @(!visible-columns-fn control)]
     (when (and (> (count visible-columns) 1) (not no-delete))
       [:span {:style {:margin-left "0.8rem"}}
@@ -55,13 +93,15 @@
                       :on-click    (fn [event]
                                      (set-current-columns-fn* control (remove-field-key visible-columns field-key))
                                      (.stopPropagation event))
-                      :class       :toggle-invisible-on-parent-hover}]])))
+                      :class       (cond-> [:toggle-invisible-on-parent-hover]
+                                           (not @!enable-column-customization?)
+                                           (conj :invisible))}]])))
 
-(defn SortIcon [direction]
+(defn SortIcon [{:keys [::!enable-sorting?]} direction]
   (let [direction->class {"asc"  " ascending"
                           "desc" " descending"}]
-    (when direction
-      [uix/LinkIcon {:name (str "sort" (direction->class direction))}])))
+    [uix/LinkIcon {:class (if (and @!enable-sorting? direction) :visible :invisible)
+                   :name  (str "sort" (direction->class direction))}]))
 
 (defn- calc-new-sorting [sorting sort-key sort-direction]
   (if (some? sort-direction)
@@ -86,24 +126,27 @@
     "desc" nil))
 
 (defn TableSelectAllCheckbox
-  [{:keys [::!selected] :as control}]
+  [{:keys [::!selected ::set-selected-fn] :as control}]
   (r/with-let [!all-row-ids (!all-row-ids-fn control)
                !selected?   (r/track #(= @!all-row-ids @!selected))]
-    [:th [ui/Checkbox {:style    {:position       :relative
-                                  :vertical-align :middle}
-                       :checked  @!selected?
-                       :on-click #(reset! !selected (if @!selected? #{} @!all-row-ids))}]]))
+    [:th [ui/Checkbox {:data-testid "checkbox-select-all"
+                       :style       {:position       :relative
+                                     :vertical-align :middle}
+                       :checked     @!selected?
+                       :on-click    #(set-selected-fn (if @!selected? #{} @!all-row-ids))}]]))
 
 (defn TableCellCheckbox
-  [{:keys [::!selected] :as control} row-id]
+  [{:keys [::!selected ::set-selected-fn] :as control} row-id]
   (r/with-let [!selected? (!selected?-fn control row-id)]
-    [:td [ui/Checkbox {:checked  @!selected?
-                       :on-click #(swap! !selected (if @!selected? disj conj) row-id)
-                       :style    {:position       :relative
-                                  :vertical-align :middle}}]]))
+    [:td
+     [ui/Checkbox {:data-testid (str "checkbox-select-" row-id)
+                   :checked     @!selected?
+                   :on-click    #(set-selected-fn ((if @!selected? disj conj) @!selected row-id))
+                   :style       {:position       :relative
+                                 :vertical-align :middle}}]]))
 
 (defn TableHeaderCell
-  [{:keys [::!sorting ::set-sorting-fn] :as control} column]
+  [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn] :as control} column]
   (let [field-key      (::field-key column)
         sortable       (dnd/useSortable #js {"id" (name field-key)})
         setNodeRef     (.-setNodeRef sortable)
@@ -114,24 +157,28 @@
                              set-sorting-fn)]
     (js/console.info "Render TableHeaderCell " field-key)
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
-    [:th (merge {:ref      setNodeRef
-                 :class    ["show-child-on-hover"]
-                 :style    {:cursor    :pointer
-                            :transform (dnd/translate-css sortable)}
-                 :on-click on-click}
+    [:th (merge {:class    ["show-child-on-hover"]
+                 :style    (cond-> {:cursor      :pointer
+                                    :user-select :none}
+                                   @!enable-column-customization?
+                                   (assoc :transform (dnd/translate-css sortable)))
+                 :on-click (when @!enable-sorting? on-click)}
+                ;; always adding attributes for consistency on the `role` attribute of the header
+                ;; (.-attributes sortable) changes the role from `cell` to `button`
                 (js->clj (.-attributes sortable))
-                (js->clj (.-listeners sortable)))
+                (when @!enable-column-customization?
+                  (merge {:ref setNodeRef}
+                         (js->clj (.-listeners sortable)))))
      (::header-content column)
-     (when sort-direction
-       [SortIcon sort-direction])
+     [SortIcon control sort-direction]
      [DeleteColumn control column]]))
 
 (defn TableHeader
   [control]
   (js/console.info "Render TableHeader")
-  (r/with-let [!visible-columns (!visible-columns-fn control)
-               !columns-by-key  (!columns-by-key-fn control)
-               !selectable?     (::!selectable? control)]
+  (r/with-let [!visible-columns       (!visible-columns-fn control)
+               !columns-by-key        (!columns-by-key-fn control)
+               !enable-row-selection? (::!enable-row-selection? control)]
     [ui/TableHeader
      [ui/TableRow
       (js/console.info "TableHeader" @!columns-by-key @!visible-columns)
@@ -143,14 +190,15 @@
            (for [visible-column @!visible-columns]
              ^{:key (str "header-column-" visible-column)}
              [:f> TableHeaderCell control (get @!columns-by-key visible-column)])
-           @!selectable? (cons
-                           ^{:key "select-all"}
-                           [TableSelectAllCheckbox control])))]]]))
+           @!enable-row-selection? (cons
+                                     ^{:key "select-all"}
+                                     [TableSelectAllCheckbox control])))]]]))
 
 (defn TableCell
-  [_control row column]
+  [{:keys [::!enable-column-customization?] :as _control} row column]
   (js/console.info "Render TableCell " (::field-key column))
-  (let [sortable   (dnd/useSortable #js {"id" (name (::field-key column))})
+  (let [sortable   (dnd/useSortable #js {"id"       (name (::field-key column))
+                                         "disabled" (not @!enable-column-customization?)})
         setNodeRef (.-setNodeRef sortable)]
     ;Using html td tag instead of semantic ui TableCell, because for some reason it's not taking into account ref fn
     [:td {:ref   setNodeRef
@@ -160,10 +208,10 @@
 (defn TableRow
   [{:keys [::row-id-fn] :as control} row]
   (js/console.info "Render TableRow " row)
-  (r/with-let [visible-columns (!visible-columns-fn control)
-               !columns-by-key (!columns-by-key-fn control)
-               !selectable?    (::!selectable? control)
-               row-id          (row-id-fn row)]
+  (r/with-let [visible-columns        (!visible-columns-fn control)
+               !columns-by-key        (!columns-by-key-fn control)
+               !enable-row-selection? (::!enable-row-selection? control)
+               row-id                 (row-id-fn row)]
     [ui/TableRow
      [dnd/SortableContext
       {:items    (mapv name @(!visible-columns-fn control))
@@ -173,17 +221,17 @@
                    (let [column (get @!columns-by-key visible-column)]
                      ^{:key (str "row-" row-id "-column-" visible-column)}
                      [:f> TableCell control row column]))
-                 @!selectable? (cons
-                                 ^{:key (str "select-" row-id)}
-                                 [TableCellCheckbox control row-id])))]]))
+                 @!enable-row-selection? (cons
+                                           ^{:key (str "select-" row-id)}
+                                           [TableCellCheckbox control row-id])))]]))
 
 (defn TableBody
-  [{:keys [::row-id-fn] :as control}]
+  [{:keys [::row-id-fn ::!data] :as control}]
   (js/console.info "Render TableBody")
-  (r/with-let [!sorted-data (!sorted-data-fn control)]
+  (r/with-let [!paginated-data (!paginated-data-fn control)]
     [ui/TableBody
      (doall
-       (for [data-row @!sorted-data]
+       (for [data-row @!paginated-data]
          ^{:key (str "row-" (row-id-fn data-row))}
          [TableRow control data-row]))]))
 
@@ -193,60 +241,135 @@
     [:div {:on-mouse-enter #(reset! !hoverable true)
            :on-mouse-leave #(reset! !hoverable false)
            :style          {:min-height "1.5em"}}
-     [:span {:title "Columns selector"
-             :on-click       open-fn
-             :style {:float            :right
-                     :border           2
-                     :cursor           :pointer
-                     :background-color "rgb(249, 250, 251)"
-                     :border-width     "1px 1px 0px"
-                     :border-color     "rgba(34,36,38,.1)"
-                     :border-style     "solid"
-                     :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
+     [:span {:title    "Columns selector"
+             :on-click open-fn
+             :style    {:float            :right
+                        :border           2
+                        :cursor           :pointer
+                        :background-color "rgb(249, 250, 251)"
+                        :border-width     "1px 1px 0px"
+                        :border-color     "rgba(34,36,38,.1)"
+                        :border-style     "solid"
+                        :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
 
 (defn ColumnsSelectorModal
-  [{:keys [::!default-columns ::!columns] :as control}]
-  (r/with-let [open?                  (r/atom false)
-               !local-current-columns (r/atom nil)
-               open-fn                #(do
-                                         (reset! !local-current-columns @(!visible-columns-fn control))
-                                         (reset! open? true))
-               close-fn               #(reset! open? false)
-               tr                     (subscribe [::i18n-subs/tr])]
-    (let [set-local-current-columns (set @!local-current-columns)]
-      [ui/Modal {:close-icon true
-                 :open       @open?
-                 :trigger    (r/as-element [ColumnsSelectorButton open-fn])
-                 :on-close   close-fn}
-       [uix/ModalHeader {:header "Select columns"}]
-       [ui/ModalContent {:scrolling true}
-        [ui/Form
-         (doall
-           (for [{:keys [::field-key ::header-content]} @!columns]
-             ^{:key (str "checkbox-" field-key)}
-             [ui/FormCheckbox {:label     (or header-content field-key)
-                               :on-change (ui-callback/checked
-                                            #(swap! !local-current-columns
-                                                    (if % conj remove-field-key)
-                                                    field-key))
-                               :checked   (contains? set-local-current-columns field-key)}]))]]
-       [ui/ModalActions
-        (when !default-columns
+  [{:keys [::!default-columns ::!columns ::!enable-column-customization?] :as control}]
+  (when @!enable-column-customization?
+    (r/with-let [open?                  (r/atom false)
+                 !local-current-columns (r/atom nil)
+                 open-fn                #(do
+                                           (reset! !local-current-columns @(!visible-columns-fn control))
+                                           (reset! open? true))
+                 close-fn               #(reset! open? false)
+                 tr                     (subscribe [::i18n-subs/tr])]
+      (let [set-local-current-columns (set @!local-current-columns)]
+        [ui/Modal {:close-icon true
+                   :open       @open?
+                   :trigger    (r/as-element [ColumnsSelectorButton open-fn])
+                   :on-close   close-fn}
+         [uix/ModalHeader {:header "Select columns"}]
+         [ui/ModalContent {:scrolling true}
+          [ui/Form
+           (doall
+             (for [{:keys [::field-key ::header-content]} @!columns]
+               ^{:key (str "checkbox-" field-key)}
+               [ui/FormCheckbox {:label     (or header-content field-key)
+                                 :on-change (ui-callback/checked
+                                              #(swap! !local-current-columns
+                                                      (if % conj remove-field-key)
+                                                      field-key))
+                                 :checked   (contains? set-local-current-columns field-key)}]))]]
+         [ui/ModalActions
+          (when !default-columns
+            [uix/Button
+             {:text     "Select default columns"
+              :on-click #(reset! !local-current-columns @!default-columns)}])
           [uix/Button
-           {:text     "Select default columns"
-            :on-click #(reset! !local-current-columns @!default-columns)}])
-        [uix/Button
-         {:text     (@tr [:cancel])
-          :on-click close-fn}]
-        [uix/Button
-         {:text     (@tr [:update])
-          :primary  true
-          :on-click (fn []
-                      (set-current-columns-fn* control @!local-current-columns)
-                      (close-fn))}]]])))
+           {:text     (@tr [:cancel])
+            :on-click close-fn}]
+          [uix/Button
+           {:text     (@tr [:update])
+            :primary  true
+            :on-click (fn []
+                        (set-current-columns-fn* control @!local-current-columns)
+                        (close-fn))}]]]))))
+
+(defn BasicPagination
+  [{:keys [::!pagination ::set-pagination-fn ::processed-data-fn] :as control}]
+  (let [{:keys [page-index page-size] :as pagination} @!pagination
+        !processed-data (!processed-data-fn control)
+        total-items     (count @!processed-data)
+        page-count      (cond-> (quot total-items page-size)
+                                (pos? (rem total-items page-size)) inc)
+        goto-page       #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
+        set-page-size   #(set-pagination-fn (assoc pagination :page-size % :page-index 0))]
+    [:div {:style {:display    :flex
+                   :margin-top "4px"
+                   :gap        "4px"}}
+     [:label (str "Total " total-items)]
+     [:button {:disabled (zero? page-index), :on-click #(goto-page 0)} "<<"]
+     [:button {:disabled (zero? page-index), :on-click #(goto-page (dec page-index))} "<"]
+     [:label (str "Page " (inc page-index) " of " page-count)]
+     [:button {:disabled (= page-index (dec page-count)), :on-click #(goto-page (inc page-index))} ">"]
+     [:button {:disabled (= page-index (dec page-count)), :on-click #(goto-page (dec page-count))} ">>"]
+     [ui/Dropdown {:value     page-size
+                   :options   (map (fn [n-per-page] {:key     n-per-page
+                                                     :value   n-per-page
+                                                     :content n-per-page
+                                                     :text    (str n-per-page " per page")})
+                                   [10 20 30 40])
+                   :pointing  true
+                   :on-change (ui-callback/value set-page-size)}]]))
+
+(defn- icon
+  [icon-name]
+  {:content (r/as-element [ui/Icon {:class icon-name}]) :icon true})
+
+(defn NuvlaPagination
+  [{:keys [::tr-fn ::!pagination ::set-pagination-fn] :as control}]
+  (let [{:keys [page-index page-size] :as pagination} @!pagination
+        !processed-data (!processed-data-fn control)
+        total-items     (count @!processed-data)
+        page-count      (cond-> (quot total-items page-size)
+                                (pos? (rem total-items page-size)) inc)
+        goto-page       #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
+        set-page-size   #(set-pagination-fn (assoc pagination :page-size % :page-index 0))
+        per-page-opts   (map (fn [n-per-page] {:key     n-per-page
+                                               :value   n-per-page
+                                               :content n-per-page
+                                               :text    (str n-per-page " per page")})
+                             [10 20 30 40])]
+    [:div {:style {:display         :flex
+                   :justify-content :space-between
+                   :align-items     :baseline
+                   :flex-wrap       :wrap-reverse
+                   :margin-top      10}
+           :class :uix-pagination}
+     [:div {:style {:display :flex}
+            :class :uix-pagination-control}
+      [:div {:style {:display :flex}}
+       [:div {:style {:margin-right "0.5rem"}}
+        (str (str/capitalize (tr-fn [:total])) ":")]
+       [:div (or total-items 0)]]
+      [:div {:style {:color "#C10E12" :margin-right "1rem" :margin-left "1rem"}} "| "]
+      [ui/Dropdown {:value     page-size
+                    :options   per-page-opts
+                    :pointing  true
+                    :on-change (ui-callback/value set-page-size)}]]
+     [ui/Pagination
+      {:size          :tiny
+       :class         :uix-pagination-navigation
+       :total-pages   page-count
+       :first-item    (icon "angle double left")
+       :last-item     (icon "angle double right")
+       :prev-item     (icon "angle left")
+       :next-item     (icon "angle right")
+       :ellipsis-item nil
+       :active-page   (inc page-index)
+       :onPageChange  (ui-callback/callback :activePage #(goto-page (dec %)))}]]))
 
 (defn Table
-  [{:keys [::set-current-columns-fn] :as control}]
+  [{:keys [::!enable-column-customization? ::set-current-columns-fn ::!enable-pagination?] :as control}]
   (r/with-let [on-drag-end-fn (fn [e]
                                 (let [active    (.-active e)
                                       over      (.-over e)
@@ -266,7 +389,9 @@
                       :sensors            (dnd/pointerSensor)}
       [ui/Table {:attached true}
        [TableHeader control]
-       [TableBody control]]]]))
+       [TableBody control]]]
+     (when @!enable-pagination?
+       [NuvlaPagination control])]))
 
 (reg-event-db
   ::set-current-columns-fn
@@ -277,117 +402,106 @@
   ::current-columns
   :-> ::current-columns)
 
-(defn TableControllerReal
-  [reset-atom]
-  (js/console.info "Render TableControllerReal")
-  (r/with-let [columns          [{::field-key      :Id
-                                  ::header-content "Id"
-                                  ::no-delete      true}
-                                 {::field-key      :Size
-                                  ::header-content "Size"}
-                                 {::field-key      :Created
-                                  ::header-content "Created"}]
-               !current-columns (r/atom nil)
-               ;!current-columns (subscribe [::current-columns])
-               !sorting         (r/atom [])
-               !selected        (r/atom #{})
-               !selectable?     (r/atom false)
-               control          {::row-id-fn              :Id
-                                 ::!columns               (r/atom columns)
-                                 ::!data                  (r/atom [{:RepoDigests
-                                                                    ["nuvladev/nuvlaedge@sha256:56f8fe1fdf35d50577ab135dcbf78cfb877ccdc41948ec9352d526614b7462f2"],
-                                                                    :Labels
-                                                                    {:git.build.time                   "$(date --utc +%FT%T.%3NZ)",
-                                                                     :org.opencontainers.image.vendor  "SixSq SA",
-                                                                     :org.opencontainers.image.created "$(date --utc +%FT%T.%3NZ)",
-                                                                     :git.run.id                       "10816164086",
-                                                                     :org.opencontainers.image.url
-                                                                     "https://github.com/nuvlaedge/nuvlaedge",
-                                                                     :org.opencontainers.image.authors "support@sixsq.com",
-                                                                     :git.branch                       "coe-resources",
-                                                                     :git.commit.id                    "24bb0659461896b22a4a8b675a30b011bbf4efe4",
-                                                                     :org.opencontainers.image.title   "NuvlaEdge",
-                                                                     :org.opencontainers.image.description
-                                                                     "Common image for NuvlaEdge software components",
-                                                                     :git.run.number                   "839"},
-                                                                    :SharedSize -1,
-                                                                    :Size       192121737,
-                                                                    :Id
-                                                                    "sha256:b4a4526cfd461c7bd1ad3b3e864b9a3f671890b2c42ea0cbad55dd999ab6ae9c",
-                                                                    :Containers -1,
-                                                                    :ParentId   "",
-                                                                    :Created    1726074087,
-                                                                    :RepoTags   ["nuvladev/nuvlaedge:coe-resources"]}
-                                                                   {:RepoDigests
-                                                                    ["nuvladev/nuvlaedge@sha256:33426aed6440dccdd36e75b5a46073d0888295496c17e2afcdddb51539ea7b99"],
-                                                                    :Labels
-                                                                    {:git.build.time                   "$(date --utc +%FT%T.%3NZ)",
-                                                                     :org.opencontainers.image.vendor  "SixSq SA",
-                                                                     :org.opencontainers.image.created "$(date --utc +%FT%T.%3NZ)",
-                                                                     :git.run.id                       "10746857192",
-                                                                     :org.opencontainers.image.url
-                                                                     "https://github.com/nuvlaedge/nuvlaedge",
-                                                                     :org.opencontainers.image.authors "support@sixsq.com",
-                                                                     :git.branch                       "coe-resources",
-                                                                     :git.commit.id                    "46a2ba7903ee7a1faa54b2aba9e283242c1bee5a",
-                                                                     :org.opencontainers.image.title   "NuvlaEdge",
-                                                                     :org.opencontainers.image.description
-                                                                     "Common image for NuvlaEdge software components",
-                                                                     :git.run.number                   "836"},
-                                                                    :SharedSize -1,
-                                                                    :Size       191903136,
-                                                                    :Id
-                                                                    "sha256:bd1e8ef984a199d31d3fc478431165ca0236176ad62fab2a4e68a2c5b8e12fbd",
-                                                                    :Containers -1,
-                                                                    :ParentId   "",
-                                                                    :Created    1725667915,
-                                                                    :RepoTags   []}
-                                                                   {:RepoDigests
-                                                                    ["nuvladev/nuvlaedge@sha256:2d92c970a5d8ce3e2fae5b88bb4d2a2cf701b0cdd4aa41e883aea79cd3e61859"],
-                                                                    :Labels
-                                                                    {:git.build.time                   "$(date --utc +%FT%T.%3NZ)",
-                                                                     :org.opencontainers.image.vendor  "SixSq SA",
-                                                                     :org.opencontainers.image.created "$(date --utc +%FT%T.%3NZ)",
-                                                                     :git.run.id                       "10746651311",
-                                                                     :org.opencontainers.image.url
-                                                                     "https://github.com/nuvlaedge/nuvlaedge",
-                                                                     :org.opencontainers.image.authors "support@sixsq.com",
-                                                                     :git.branch                       "coe-resources",
-                                                                     :git.commit.id                    "109a34446f5edf006fb1400ca266490492bf7363",
-                                                                     :org.opencontainers.image.title   "NuvlaEdge",
-                                                                     :org.opencontainers.image.description
-                                                                     "Common image for NuvlaEdge software components",
-                                                                     :git.run.number                   "835"},
-                                                                    :SharedSize -1,
-                                                                    :Size       191903117,
-                                                                    :Id
-                                                                    "sha256:0ec61197db8b0989753da0c499be52b48c5d746a7d675ae358e157912d7d47bb",
-                                                                    :Containers -1,
-                                                                    :ParentId   "",
-                                                                    :Created    1725666894,
-                                                                    :RepoTags   []}]
-                                                                  )
-                                 ::!default-columns       (r/atom [:Id :Size :Created])
-                                 ::set-current-columns-fn #(reset! !current-columns %)
-                                 ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
-                                 ::!current-columns       !current-columns
-                                 ::set-sorting-fn         #(reset! !sorting %)
-                                 ::!sorting               !sorting
-                                 ::!selectable?           !selectable?
-                                 ::!selected              !selected
-                                 ::set-selected-fn        #(reset! !selected %)
-                                 }]
-    [:div
-     [ui/Button {:on-click #(swap! reset-atom inc)} "Reset"]
-     [ui/Button {:on-click #(reset! (::!data control) [{:id 1, :name "hello"} {:id 5}])} "Add row"]
-     [ui/Button {:on-click #(swap! !selectable? not)} "Selectable?"]
-     [:f> Table control]]))
-
 (defn TableController
-  []
-  (r/with-let [reset-atom (r/atom 0)]
-    ^{:key @reset-atom}
-    [TableControllerReal reset-atom]))
+  [{:keys [
+           ;; Definition of columns to display
+           !columns
+
+           ;; Data To be displayed
+           !data
+
+           ;; Default columns to display when current-columns is not defined yet.
+           ;; Allows to reset current-columns to something defined by the developer.
+           !default-columns
+
+           ;; Optional
+           ;; Give a function that allow to retrieve the row id. By default it's :id
+           row-id-fn
+
+           ;; Optional (enabled by default)
+           ;; Make it possible for the user to select which columns are visible and to rearrange their order
+           !enable-column-customization?
+
+           ;; Optional
+           ;; To control which columns are currently displayed override following control attributes
+           ;; format: vector of column_ids
+           !current-columns
+           set-current-columns-fn
+
+           ;; Optional
+           ;; To control which columns are sorted override following control attributes
+           ;; format: vector of (vector of column_id direction)
+           !enable-sorting?
+           !sorting
+           set-sorting-fn
+
+           ;; Optional
+           ;; make table row selectable
+           !enable-row-selection?
+           !selected
+           set-selected-fn
+
+           ;; Optional (enabled by default)
+           ;; Global filter on all visible columns
+           !enable-global-filter?
+           !global-filter
+           global-filter-fn
+
+           ;; Optional (disabled by default)
+           ;; Pagination
+           !enable-pagination?
+           !pagination
+           set-pagination-fn
+
+           ;; Optional
+           ;; Translations
+           tr-fn
+           ]}]
+  (r/with-let [row-id-fn                     (or row-id-fn :id)
+               !sorting                      (or !sorting (r/atom []))
+               !selected                     (or !selected (r/atom #{}))
+               !enable-row-selection?        (or !enable-row-selection? (r/atom false))
+               !columns                      (or !columns (r/atom []))
+               !data                         (or !data (r/atom []))
+               !default-columns              (or !default-columns (r/atom [:id]))
+               !enable-column-customization? (or !enable-column-customization? (r/atom true))
+               !current-columns              (or !current-columns (r/atom nil))
+               set-current-columns-fn        (or set-current-columns-fn #(reset! !current-columns %))
+               ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
+               !enable-sorting?              (or !enable-sorting? (r/atom true))
+               set-sorting-fn                (or set-sorting-fn #(reset! !sorting %))
+               set-selected-fn               (or set-selected-fn #(reset! !selected %))
+               ;!current-columns (r/atom nil)
+               ;!current-columns (subscribe [::current-columns])]
+               !enable-global-filter?        (or !enable-global-filter? (r/atom true))
+               !global-filter                (or !global-filter (r/atom nil))
+               global-filter-fn              (or global-filter-fn case-insensitive-filter-fn)
+               !enable-pagination?           (or !enable-pagination? (r/atom false))
+               set-pagination-fn             (or set-pagination-fn #(reset! !pagination %))
+               tr-fn                         (or tr-fn (comp str/capitalize name first))
+               ]
+    [:f> Table {::row-id-fn                     row-id-fn
+                ::!columns                      !columns
+                ::!data                         !data
+                ::!default-columns              !default-columns
+                ::!enable-column-customization? !enable-column-customization?
+                ::set-current-columns-fn        set-current-columns-fn
+                ::!current-columns              !current-columns
+                ::set-sorting-fn                set-sorting-fn
+                ::!enable-sorting?              !enable-sorting?
+                ::!sorting                      !sorting
+                ::!enable-row-selection?        !enable-row-selection?
+                ::!selected                     !selected
+                ::set-selected-fn               set-selected-fn
+                ::!enable-global-filter?        !enable-global-filter?
+                ::!global-filter                !global-filter
+                ::global-filter-fn              global-filter-fn
+                ::!enable-pagination?           !enable-pagination?
+                ; ::!manual-pagination
+                ::!pagination                   !pagination
+                ::set-pagination-fn             set-pagination-fn
+                ::tr-fn                         tr-fn
+                }]))
 
 ;; table
 ;; rows

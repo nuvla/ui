@@ -11,7 +11,7 @@
                                   :style    {:border           :none
                                              :flex-grow        1
                                              :width            "100%"
-                                             :min-height       "500px"
+                                             :min-height       "800px"
                                              :background-color "rgb(255, 255, 255)"
                                              :background-image :none}
                                   :data-src '~@body}])

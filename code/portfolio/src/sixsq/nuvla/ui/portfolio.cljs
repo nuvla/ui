@@ -9,7 +9,7 @@
             [sixsq.nuvla.ui.components.overflow-tooltip-scenes]
             [sixsq.nuvla.ui.components.table-refactor-scenes]
             [sixsq.nuvla.ui.components.tanstack-table-scenes]
-            [sixsq.nuvla.ui.portfolio-utils :refer [scene-root]]))
+            [sixsq.nuvla.ui.portfolio-utils :refer [Scene]]))
 
 (defn init [])
 
@@ -20,7 +20,7 @@
 
 (defn mount-root [scene-id]
   (rdom/render
-    (scene-root scene-id)
+    [Scene scene-id]
     (gdom/getElement "root")))
 
 (defn ^:export init-scene []

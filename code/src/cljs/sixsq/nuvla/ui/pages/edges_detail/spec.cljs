@@ -33,32 +33,33 @@
 (s/def ::timespan (s/nilable any?))
 (s/def ::availability-15-min nil)
 
-(def defaults {::nuvlabox                     nil
-               ::nuvlabox-status              nil
-               ::nuvlabox-associated-ssh-keys nil
-               ::nuvlabox-peripherals         nil
-               ::vuln-severity-selector       nil
-               ::matching-vulns-from-db       nil
-               ::nuvlabox-vulns               nil
-               ::nuvlabox-managers            nil
-               ::join-token                   nil
-               ::nuvlabox-cluster             nil
-               ::nuvlabox-not-found?          false
-               ::nuvlabox-playbooks           nil
-               ::infra-services               []
-               ::nuvlabox-emergency-playbooks nil
-               ::nuvlabox-current-playbook    nil
-               ::events                       (audit-log-plugin/build-spec
-                                                :default-items-per-page 15
-                                                :default-show-all-events? true)
-               ::tab                          (tab-plugin/build-spec)
-               ::nuvlaedge-release            nil
-               ::edge-stats                   nil
-               ::stats-loading?               nil
-               ::timespan                     {:timespan-option "last 15 minutes"
-                                               :from            (time/subtract-minutes (time/now) 15)
-                                               :to              (time/now)}
-               ::availability-15-min          nil})
+(def defaults {::coe-resource-docker-available? false
+               ::nuvlabox                       nil
+               ::nuvlabox-status                nil
+               ::nuvlabox-associated-ssh-keys   nil
+               ::nuvlabox-peripherals           nil
+               ::vuln-severity-selector         nil
+               ::matching-vulns-from-db         nil
+               ::nuvlabox-vulns                 nil
+               ::nuvlabox-managers              nil
+               ::join-token                     nil
+               ::nuvlabox-cluster               nil
+               ::nuvlabox-not-found?            false
+               ::nuvlabox-playbooks             nil
+               ::infra-services                 []
+               ::nuvlabox-emergency-playbooks   nil
+               ::nuvlabox-current-playbook      nil
+               ::events                         (audit-log-plugin/build-spec
+                                                  :default-items-per-page 15
+                                                  :default-show-all-events? true)
+               ::tab                            (tab-plugin/build-spec)
+               ::nuvlaedge-release              nil
+               ::edge-stats                     nil
+               ::stats-loading?                 nil
+               ::timespan                       {:timespan-option "last 15 minutes"
+                                                 :from            (time/subtract-minutes (time/now) 15)
+                                                 :to              (time/now)}
+               ::availability-15-min            nil})
 
 (s/def ::deployment-pagination any?)
 

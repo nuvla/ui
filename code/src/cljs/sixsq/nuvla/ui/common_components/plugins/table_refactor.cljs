@@ -253,45 +253,46 @@
                         :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
 
 (defn ColumnsSelectorModal
-  [{:keys [::!default-columns ::!columns] :as control}]
-  (r/with-let [open?                  (r/atom false)
-               !local-current-columns (r/atom nil)
-               open-fn                #(do
-                                         (reset! !local-current-columns @(!visible-columns-fn control))
-                                         (reset! open? true))
-               close-fn               #(reset! open? false)
-               tr                     (subscribe [::i18n-subs/tr])]
-    (let [set-local-current-columns (set @!local-current-columns)]
-      [ui/Modal {:close-icon true
-                 :open       @open?
-                 :trigger    (r/as-element [ColumnsSelectorButton open-fn])
-                 :on-close   close-fn}
-       [uix/ModalHeader {:header "Select columns"}]
-       [ui/ModalContent {:scrolling true}
-        [ui/Form
-         (doall
-           (for [{:keys [::field-key ::header-content]} @!columns]
-             ^{:key (str "checkbox-" field-key)}
-             [ui/FormCheckbox {:label     (or header-content field-key)
-                               :on-change (ui-callback/checked
-                                            #(swap! !local-current-columns
-                                                    (if % conj remove-field-key)
-                                                    field-key))
-                               :checked   (contains? set-local-current-columns field-key)}]))]]
-       [ui/ModalActions
-        (when !default-columns
+  [{:keys [::!default-columns ::!columns ::!enable-column-customization?] :as control}]
+  (when @!enable-column-customization?
+    (r/with-let [open?                  (r/atom false)
+                 !local-current-columns (r/atom nil)
+                 open-fn                #(do
+                                           (reset! !local-current-columns @(!visible-columns-fn control))
+                                           (reset! open? true))
+                 close-fn               #(reset! open? false)
+                 tr                     (subscribe [::i18n-subs/tr])]
+      (let [set-local-current-columns (set @!local-current-columns)]
+        [ui/Modal {:close-icon true
+                   :open       @open?
+                   :trigger    (r/as-element [ColumnsSelectorButton open-fn])
+                   :on-close   close-fn}
+         [uix/ModalHeader {:header "Select columns"}]
+         [ui/ModalContent {:scrolling true}
+          [ui/Form
+           (doall
+             (for [{:keys [::field-key ::header-content]} @!columns]
+               ^{:key (str "checkbox-" field-key)}
+               [ui/FormCheckbox {:label     (or header-content field-key)
+                                 :on-change (ui-callback/checked
+                                              #(swap! !local-current-columns
+                                                      (if % conj remove-field-key)
+                                                      field-key))
+                                 :checked   (contains? set-local-current-columns field-key)}]))]]
+         [ui/ModalActions
+          (when !default-columns
+            [uix/Button
+             {:text     "Select default columns"
+              :on-click #(reset! !local-current-columns @!default-columns)}])
           [uix/Button
-           {:text     "Select default columns"
-            :on-click #(reset! !local-current-columns @!default-columns)}])
-        [uix/Button
-         {:text     (@tr [:cancel])
-          :on-click close-fn}]
-        [uix/Button
-         {:text     (@tr [:update])
-          :primary  true
-          :on-click (fn []
-                      (set-current-columns-fn* control @!local-current-columns)
-                      (close-fn))}]]])))
+           {:text     (@tr [:cancel])
+            :on-click close-fn}]
+          [uix/Button
+           {:text     (@tr [:update])
+            :primary  true
+            :on-click (fn []
+                        (set-current-columns-fn* control @!local-current-columns)
+                        (close-fn))}]]]))))
 
 (defn BasicPagination
   [{:keys [::!pagination ::set-pagination-fn ::processed-data-fn] :as control}]
@@ -381,8 +382,7 @@
                                         (assoc (get-index over) active-id)
                                         set-current-columns-fn))))]
     [:div
-     (when @!enable-column-customization?
-       [ColumnsSelectorModal control])
+     [ColumnsSelectorModal control]
      [dnd/DndContext {:collisionDetection dnd/closestCenter
                       :modifiers          [dnd/restrictToHorizontalAxis]
                       :onDragEnd          on-drag-end-fn

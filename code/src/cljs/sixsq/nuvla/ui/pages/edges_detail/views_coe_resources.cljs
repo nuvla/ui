@@ -104,7 +104,7 @@
 
 (defn DockerTable
   [{:keys [rows columns default-columns sort-config-db-path]}]
-  (r/with-let [!selectable? (r/atom true)]
+  (r/with-let [!selected (r/atom #{})]
     [table/TableController
      {:!columns               (r/atom columns)
       :!default-columns       (r/atom default-columns)
@@ -112,8 +112,8 @@
       :set-current-columns-fn #(dispatch [::set-current-cols sort-config-db-path %])
       :!data                  rows
       :!enable-row-selection? (r/atom true)
-      :!selectable?           !selectable?
-      :set-selected-fn        #(reset! !selectable? %)}]))
+      :!selected              !selected
+      :set-selected-fn        #(reset! !selected %)}]))
 
 (defn DockerImagesTable [control]
   [DockerTable

@@ -58,13 +58,6 @@
   :-> ::spec/docker-images-ordering)
 
 (reg-sub
-  ::docker-images-ordered
-  :<- [::docker-images-clean]
-  :<- [::docker-images-ordering]
-  (fn [[images ordering]]
-    (sort (partial general-utils/multi-key-direction-sort ordering) images)))
-
-(reg-sub
   ::docker-volumes
   :<- [::docker]
   :-> :volumes)
@@ -77,17 +70,6 @@
            (-> volume
                (assoc :id (:Name volume))
                (dissoc :Name))) volumes)))
-
-(reg-sub
-  ::docker-volumes-ordering
-  :-> ::spec/docker-volumes-ordering)
-
-(reg-sub
-  ::docker-volumes-ordered
-  :<- [::docker-volumes-clean]
-  :<- [::docker-volumes-ordering]
-  (fn [[volumes ordering]]
-    (sort (partial general-utils/multi-key-direction-sort ordering) volumes)))
 
 (reg-sub
   ::docker-containers
@@ -105,17 +87,6 @@
                (dissoc :Id))) containers)))
 
 (reg-sub
-  ::docker-containers-ordering
-  :-> ::spec/docker-containers-ordering)
-
-(reg-sub
-  ::docker-containers-ordered
-  :<- [::docker-containers-clean]
-  :<- [::docker-containers-ordering]
-  (fn [[containers ordering]]
-    (sort (partial general-utils/multi-key-direction-sort ordering) containers)))
-
-(reg-sub
   ::docker-networks
   :<- [::docker]
   :-> :networks)
@@ -128,17 +99,6 @@
            (-> network
                (assoc :id (:Id network))
                (dissoc :Id))) networks)))
-
-(reg-sub
-  ::docker-networks-ordering
-  :-> ::spec/docker-networks-ordering)
-
-(reg-sub
-  ::docker-networks-ordered
-  :<- [::docker-networks-clean]
-  :<- [::docker-networks-ordering]
-  (fn [[networks ordering]]
-    (sort (partial general-utils/multi-key-direction-sort ordering) networks)))
 
 ;(reg-sub
 ;  ::docker-configs
@@ -157,17 +117,6 @@
 ;                      :Labels (get-in config [:Spec :Labels])
 ;                      :Version (get-in config [:Version :Index]))
 ;               (dissoc :Spec :ID))) configs)))
-;
-;(reg-sub
-;  ::docker-configs-ordering
-;  :-> ::spec/docker-configs-ordering)
-;
-;(reg-sub
-;  ::docker-configs-ordered
-;  :<- [::docker-configs-clean]
-;  :<- [::docker-configs-ordering]
-;  (fn [[configs ordering]]
-;    (sort (partial general-utils/multi-key-direction-sort ordering) configs)))
 
 (reg-sub
   ::container-stats-ordered

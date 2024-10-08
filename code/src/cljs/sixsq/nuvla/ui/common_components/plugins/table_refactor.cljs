@@ -49,11 +49,9 @@
     (r/track (fn paginated-data-fn []
                (if @!enable-pagination?
                  (let [{:keys [page-index page-size]} @!pagination
-                       n      (count @!processed-data)
                        start  (* page-index page-size)
-                       th-end (+ start page-size)
-                       end    (if (> th-end n) n th-end)]
-                   (subvec @!processed-data (* page-index page-size) end))
+                       end    (min (+ start page-size) (count @!processed-data))]
+                   (subvec @!processed-data start end))
                  @!processed-data)))))
 
 (defn !selected?-fn
@@ -300,32 +298,6 @@
             :on-click (fn []
                         (set-current-columns-fn* control @!local-current-columns)
                         (close-fn))}]]]))))
-
-(defn BasicPagination
-  [{:keys [::!pagination ::set-pagination-fn ::!processed-data] :as _control}]
-  (let [{:keys [page-index page-size] :as pagination} @!pagination
-        total-items   (count @!processed-data)
-        page-count    (cond-> (quot total-items page-size)
-                              (pos? (rem total-items page-size)) inc)
-        goto-page     #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
-        set-page-size #(set-pagination-fn (assoc pagination :page-size % :page-index 0))]
-    [:div {:style {:display    :flex
-                   :margin-top "4px"
-                   :gap        "4px"}}
-     [:label (str "Total " total-items)]
-     [:button {:disabled (zero? page-index), :on-click #(goto-page 0)} "<<"]
-     [:button {:disabled (zero? page-index), :on-click #(goto-page (dec page-index))} "<"]
-     [:label (str "Page " (inc page-index) " of " page-count)]
-     [:button {:disabled (= page-index (dec page-count)), :on-click #(goto-page (inc page-index))} ">"]
-     [:button {:disabled (= page-index (dec page-count)), :on-click #(goto-page (dec page-count))} ">>"]
-     [ui/Dropdown {:value     page-size
-                   :options   (map (fn [n-per-page] {:key     n-per-page
-                                                     :value   n-per-page
-                                                     :content n-per-page
-                                                     :text    (str n-per-page " per page")})
-                                   [10 20 30 40])
-                   :pointing  true
-                   :on-change (ui-callback/value set-page-size)}]]))
 
 (defn- icon
   [icon-name]

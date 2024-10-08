@@ -313,17 +313,19 @@
                    :on-click   (fn [event]
                                  (select-fn)
                                  (.stopPropagation event))}
-     [ui/Checkbox {:id         idx
-                   :aria-label (str "select " edge-name)
-                   :checked    checked?}]]))
+     [:div.vcenter
+      [ui/Checkbox {:id         idx
+                    :aria-label (str "select " edge-name)
+                    :checked    checked?}]]]))
 
 
-(defn HeaderCellCeckbox
+(defn HeaderCellCheckbox
   [{:keys [db-path resources-sub-key page-selected?-sub]}]
   (let [resources @(subscribe resources-sub-key)]
-    [ui/Checkbox {:aria-label "select all on page"
-                  :checked    @page-selected?-sub
-                  :on-click   #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]))
+    [:div.vcenter
+     [ui/Checkbox {:aria-label "select all on page"
+                   :checked    @page-selected?-sub
+                   :on-click   #(dispatch [::select-all-in-page {:resources resources :db-path db-path}])}]]))
 
 (defn BulkActionBar
   [{:keys [selected-set-sub total-count-sub-key selected-all-sub disabled-tooltip
@@ -633,7 +635,8 @@
                      :dragging   nil})]
     (fn [{:keys [cell-props columns rows
                  row-click-handler row-props
-                 sort-config select-config]
+                 sort-config select-config wrapper-div-class]
+          :or   {wrapper-div-class :table-fixed-row-height}
           :as   props}]
       (let [{:keys [bulk-actions select-db-path total-count-sub-key disabled-tooltip
                     resources-sub-key rights-needed select-label-accessor select-all-query-param]} select-config
@@ -667,15 +670,15 @@
           [:div {:style {:overflow :auto
                          :padding  0
                          :position :relative}
-                 :class :table-fixed-row-height}
+                 :class wrapper-div-class}
            [ui/Table (merge {:stackable false} (:table-props props))
             [ui/TableHeader (:header-props props)
              [ui/TableRow
               (when selectable?
                 [ui/TableHeaderCell
                  {:style {:width "30px"}}
-                 [HeaderCellCeckbox {:db-path            select-db-path :resources-sub-key resources-sub-key
-                                     :page-selected?-sub page-selected? :rights-needed rights-needed}]])
+                 [HeaderCellCheckbox {:db-path            select-db-path :resources-sub-key resources-sub-key
+                                      :page-selected?-sub page-selected? :rights-needed rights-needed}]])
               (doall
                 (for [col columns
                       :when col
@@ -719,8 +722,8 @@
             [ui/TableBody (:body-props props)
              (doall
                (for [[idx row] (map-indexed vector rows)
-                     :let [id (or (:id row) (random-uuid))]]
-                 ^{:key (:id row)}
+                     :let [id (or (:id row) (:Id row) (random-uuid))]]
+                 ^{:key id}
                  [ui/TableRow (get-row-props row)
                   (when selectable?
                     [CellCheckbox {:id               id :selected-set-sub selected-set :db-path select-db-path
@@ -739,7 +742,7 @@
                     ^{:key (str id "-" field-key)}
                     [ui/TableCell
                      (cond->
-                       cell-props
+                       (merge {} cell-props)
 
                        last?
                        (assoc :colSpan 2)
@@ -749,20 +752,16 @@
                          (not (:on-click cell-props)))
                        (-> (assoc :on-click (fn [event] (.stopPropagation event)))
                            (update :style merge {:cursor :auto})))
-
-                     (cond
-                       cell (if (string? cell) [tt/with-overflow-tooltip
-                                                [:div.vcenter [:div.ellipsing cell]] cell]
-                                               [cell {:row-data  row
-                                                      :cell-data cell-data
-                                                      :field-key field-key}])
-                       :else (let [s (str (if (or
-                                                (not (coll? cell-data))
-                                                (seq cell-data))
-                                            cell-data
-                                            ""))]
-                               [tt/with-overflow-tooltip
-                                [:div.vcenter [:div.ellipsing s]] s]))])]))]]]]]))))
+                     (if cell
+                       [cell {:row-data  row
+                              :cell-data cell-data
+                              :field-key field-key}]
+                       (let [s (str (if (or
+                                          (not (coll? cell-data))
+                                          (seq cell-data))
+                                      cell-data
+                                      ""))]
+                         [tt/WithOverflowTooltip {:content s :tooltip s}]))])]))]]]]]))))
 
 
 (defn ConfigureVisibleColumns

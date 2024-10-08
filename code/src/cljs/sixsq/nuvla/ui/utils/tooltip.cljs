@@ -1,24 +1,28 @@
 (ns sixsq.nuvla.ui.utils.tooltip
   (:require [reagent.core :as r]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
-(defn with-tooltip
-  [component tooltip]
+(defn WithTooltip
+  [Component tooltip]
   (if tooltip
     [ui/Popup
-     {:content tooltip
-      :trigger (r/as-element component)
+     {:disabled  (nil? tooltip)
+      :content   (r/as-element [:p tooltip])
+      :trigger   (r/as-element Component)
       :hoverable true}]
-    component))
+    Component))
 
-(defn with-overflow-tooltip
-  [_ _]
-  (let [ref    (r/atom nil)
-        ref-fn #(some->> % (reset! ref))]
-    (fn [component tooltip]
-      (let [overflowed? (when-let [el @ref]
-                          (or (< (.-offsetWidth el) (.-scrollWidth el))
-                              (< (.-offsetHeight el) (.-scrollHeight el))))]
-        (if overflowed?
-          (with-tooltip component tooltip)
-          [:div {:ref ref-fn} component])))))
+(defn WithOverflowTooltip
+  []
+  (r/with-let [ref       (atom nil)
+               overflow? (r/atom false)
+               ref-fn    #(reset! ref %)]
+    (r/create-class
+      {:display-name        "with-overflow-tooltip"
+       :reagent-render      (fn [{:keys [as content tooltip]
+                                  :or   {as :div.max-width-26ch.ellipsing}}]
+                              [WithTooltip [:div.vcenter
+                                            [as {:ref ref-fn} content]]
+                               (when @overflow? tooltip)])
+       :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))

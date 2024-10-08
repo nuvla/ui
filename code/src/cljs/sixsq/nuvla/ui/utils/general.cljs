@@ -440,6 +440,17 @@
 
 (def browser-fav-language (read-fav-language!))
 
+(defn overflowed?
+  [el]
+  (or (< (.-offsetWidth el) (.-scrollWidth el))
+      (< (.-offsetHeight el) (.-scrollHeight el))))
+
+(defn safe-compare
+  [x y]
+  (try
+    (compare x y)
+    (catch :default _ 0)))
+
 (defn format-number
   ([amount]
    (format-number amount {:locale browser-fav-language}))

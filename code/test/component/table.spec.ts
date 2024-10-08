@@ -265,7 +265,6 @@ test('test pagination', async ({ page }, { config }) => {
 
 test('test simultaneous filtering, sorting and pagination', async ({ page }, { config }) => {
   const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'filter-sort-paginate');
-
   const table = await locatorOne(sceneRoot, 'table.ui');
   const paginationDiv = await locatorOne(sceneRoot, 'div.uix-pagination');
   const paginationNavigation = await locatorOne(paginationDiv, '>div.uix-pagination-navigation');
@@ -285,7 +284,6 @@ test('test simultaneous filtering, sorting and pagination', async ({ page }, { c
   await filterInput.fill('1725');
   await expectPaginationState(page, table, paginationDiv, 202, 10, 2,
       [16,17,19,20,22,23,25,26,28,29]);
-
   // Sort by Created ascending and Idx descending
   await table.getByRole('button', { name: 'Created' }).click();
   await table.getByRole('button', { name: 'Idx' }).click();

@@ -626,9 +626,11 @@
   [opts]
   [I opts (str i-cloud "-download")])
 
+
+(def i-download "fal download")
 (defn DownloadIcon
   [opts]
-  [I opts "fal download"])
+  [I opts i-download])
 
 (def i-circle-outline "circle outline")
 (defn CircleOutlineIcon
@@ -693,3 +695,8 @@
 (defn ExportIcon
   [opts]
   [I opts i-export])
+
+(def i-search "fal fa-search")
+(defn SearchIcon
+  [opts]
+  [I opts i-search])

@@ -39,19 +39,11 @@
             [sixsq.nuvla.ui.utils.values :as values]
             [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
-
-(def refresh-action-id :nuvlabox-get-nuvlabox)
 (def tab-historical-data-key :historical-data)
-
 
 (defn refresh-nuvlaedge-data
   [uuid]
-  (dispatch [::main-events/action-interval-start
-             {:id        refresh-action-id
-              :frequency 10000
-              :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
-
-
+  (dispatch [::events/refresh uuid]))
 
 (defn DecommissionButton
   [nuvlabox]
@@ -733,7 +725,7 @@
               [DeleteButton @nuvlabox]))
 
           [components/RefreshMenu
-           {:action-id  refresh-action-id
+           {:action-id  events/refresh-action-id
             :loading?   @loading?
             :on-refresh (fn [_]
                           (refresh-nuvlaedge-data uuid))}
@@ -1018,7 +1010,7 @@
 
 (defn- StatsTable [container-stats]
   (if (:cpu-usage (first container-stats))
-    [NewStatsTable container-stats]
+    [NewStatsTable]
     [OldStatsTable container-stats]))
 
 (defn Load
@@ -2007,8 +1999,7 @@
         run               (r/atom nil)
         enabled-changed?  (r/atom false)
         can-edit?         (subscribe [::subs/can-edit?])
-        on-change-fn      (fn [k]
-                            (dispatch [::events/get-nuvlabox-current-playbook k]))]
+        on-change-fn      #(dispatch [::events/get-nuvlabox-current-playbook %])]
     (fn []
       (let [n (count @playbooks)]
         [ui/TabPane
@@ -2133,17 +2124,17 @@
 
 (defn tabs
   []
-  (let [tr          @(subscribe [::i18n-subs/tr])
-        nuvlabox    (subscribe [::subs/nuvlabox])
+  (let [tr                    @(subscribe [::i18n-subs/tr])
+        nuvlabox              (subscribe [::subs/nuvlabox])
         {:keys [id state]} @nuvlabox
-        can-edit?   @(subscribe [::subs/can-edit?])
-        peripherals @(subscribe [::subs/nuvlabox-peripherals-ids])
-        deployments @(subscribe [::deployments-subs/deployments])
-        overview    {:menuItem {:content "Overview"
-                                :key     :overview
-                                :icon    icons/i-eye}
-                     :render   #(r/as-element [TabOverview])}
-        docker      @(subscribe [::subs/docker])]
+        can-edit?             @(subscribe [::subs/can-edit?])
+        peripherals           @(subscribe [::subs/nuvlabox-peripherals-ids])
+        deployments           @(subscribe [::deployments-subs/deployments])
+        overview              {:menuItem {:content "Overview"
+                                          :key     :overview
+                                          :icon    icons/i-eye}
+                               :render   #(r/as-element [TabOverview])}
+        coe-resources-docker? @(subscribe [::subs/coe-resource-docker-available?])]
     (if (= state "SUSPENDED")
       [overview]
       [overview
@@ -2151,18 +2142,8 @@
                    :key     :location
                    :icon    icons/i-location-dot}
         :render   #(r/as-element [TabLocation])}
-       {:menuItem {:content (r/as-element
-                              [ui/Popup
-                               {:trigger        (r/as-element
-                                                  [:span "Resource Consumption"])
-                                :content        (tr [:nuvlabox-datagateway-popup])
-                                :header         "data-gateway"
-                                :position       "top center"
-                                :wide           true
-                                :on             "hover"
-                                :size           "tiny"
-                                :hide-on-scroll true}])
-                   :key     :consumption
+       {:menuItem {:content (r/as-element [:span "Resource Consumption"])
+                   :key     events/tab-key-consumption
                    :icon    icons/i-gauge}
         :render   #(r/as-element [TabLoad])}
        {:menuItem {:content (r/as-element [:span (str/capitalize (tr [:logs]))])
@@ -2202,17 +2183,17 @@
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
                         :pagination-db-path ::spec/deployment-pagination
                         :fetch-event        [::events/get-deployments-for-edge]}]])}
-       (when docker
+       (when coe-resources-docker?
          {:menuItem {:content "Docker"
-                     :key     :docker
+                     :key     events/tab-key-docker
                      :icon    icons/i-docker}
           :render   #(r/as-element [coe-resources/Tab])})
        {:menuItem {:content "Vulnerabilities"
-                   :key     :vulnerabilities
+                   :key     events/tab-key-vulnerabilities
                    :icon    icons/i-shield}
         :render   #(r/as-element [TabVulnerabilities])}
        {:menuItem {:content "Playbooks"
-                   :key     :playbooks
+                   :key     events/tab-key-playbooks
                    :icon    icons/i-book}
         :render   #(r/as-element [TabPlaybooks])}
        (job-views/jobs-section)
@@ -2222,15 +2203,16 @@
                      :edit-event      ::events/edit})])))
 
 (defn TabsNuvlaBox
-  []
+  [uuid]
   [tab-plugin/Tab
-   {:db-path [::spec/tab]
-    :menu    {:secondary true
-              :pointing  true
-              :style     {:display        "flex"
-                          :flex-direction "row"
-                          :flex-wrap      "wrap"}}
-    :panes   (tabs)}])
+   {:db-path      [::spec/tab]
+    :menu         {:secondary true
+                   :pointing  true
+                   :style     {:display        "flex"
+                               :flex-direction "row"
+                               :flex-wrap      "wrap"}}
+    :change-event [::events/refresh uuid]
+    :panes        (tabs)}])
 
 
 (defn PageHeader
@@ -2278,5 +2260,5 @@
           #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
          [job-views/ProgressJobAction @nb-status]
          [TelemetryOutdatedMessage @nb-status]]
-        [TabsNuvlaBox]
+        [TabsNuvlaBox uuid]
         [AddPlaybookModal]]])))

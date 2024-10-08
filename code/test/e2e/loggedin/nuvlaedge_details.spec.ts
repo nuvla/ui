@@ -26,10 +26,10 @@ test('NuvlaEdge creation and deletion', async ({ page }, { config }) => {
       }
     }
   );
-  await page.route('api/nuvlabox-status/**', (route) => {
+  await page.route('api/nuvlabox-status', (route) => {
     route.fulfill({
       status: 200,
-      body: JSON.stringify(nuvlaboxStatusMock),
+      body: JSON.stringify({resources: [nuvlaboxStatusMock]}),
     });
   });
 

@@ -30,6 +30,10 @@
   :-> :coe-resources)
 
 (reg-sub
+  ::coe-resource-docker-available?
+  :-> ::spec/coe-resource-docker-available?)
+
+(reg-sub
   ::docker
   :<- [::coe-resources]
   :-> :docker)

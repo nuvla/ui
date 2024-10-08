@@ -518,3 +518,4 @@ if __name__ == "__main__":
         else:
             print(str(e).splitlines()[-1], file=sys.stdout)
         traceback.print_exception(e, file=sys.stderr)
+        sys.exit(1)

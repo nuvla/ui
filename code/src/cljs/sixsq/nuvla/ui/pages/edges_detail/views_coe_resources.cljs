@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
             [re-frame.cofx :refer [inject-cofx]]
-            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.pages.edges-detail.events :as events]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table]
             [sixsq.nuvla.ui.pages.data.utils :as data-utils]
@@ -40,11 +40,10 @@
 
 (reg-event-fx
   ::coe-resource-actions
-  (fn [{{:keys [::spec/nuvlabox]} :db} [_ payload]]
+  (fn [{{:keys [::spec/nuvlabox]} :db} [_ payload close-modal-fn]]
     (let [resource-id (:id nuvlabox)]
-      {::cimi-api-fx/operation [resource-id "coe-resource-actions" #(js/console.info "coe-resource-actions success result:" %)
-                                :data payload
-                                :on-error #(js/console.error "coe-resource-actions error result:" %)]})))
+      {:fx [[:dispatch [::events/operation resource-id "coe-resource-actions" payload
+                        close-modal-fn close-modal-fn]]]})))
 
 (defn CellBytes
   [cell-data _row _column]
@@ -308,10 +307,8 @@
                close-pull-modal #(reset! !pull-modal-open? false)
                control           {::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
                                   ::docker-image-pull-modal-close-fn close-pull-modal
-                                  ::docker-image-pull-action-fn      (fn [image]
-                                                                       (dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id image}]}])
-
-                                                                       (close-pull-modal))
+                                  ::docker-image-pull-action-fn      #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
+                                                                                 close-pull-modal])
                                   ::!can-manage?                     !can-manage?
                                   ::!docker-image-pull-modal-open?   !pull-modal-open?
                                   ::!docker-images                   (subscribe [::subs/docker-images-clean])

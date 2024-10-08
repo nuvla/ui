@@ -12,13 +12,64 @@
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
-(defn !visible-columns-fn
-  [{:keys [::!current-columns ::!default-columns] :as _control}]
-  (r/track (fn visible-columns-fn [] (or @!current-columns @!default-columns))))
+(defn set-!visible-columns
+  [{:keys [::!current-columns ::!default-columns] :as control}]
+  (assoc control ::!visible-columns
+                 (r/track (fn visible-columns-fn []
+                            (or @!current-columns @!default-columns)))))
 
-(defn !columns-by-key-fn
-  [{:keys [::!columns] :as _control}]
-  (r/track (fn columns-by-key-fn [] (into {} (map (juxt ::field-key identity) @!columns)))))
+(defn set-!columns-by-key
+  [{:keys [::!columns] :as control}]
+  (assoc control
+    ::!columns-by-key
+                 (r/track (fn columns-by-key-fn []
+                            (into {} (map (juxt ::field-key identity) @!columns))))))
+
+(defn set-!processed-data
+  [{:keys [::!enable-global-filter? ::!global-filter
+           ::global-filter-fn ::!visible-columns
+           ::!enable-sorting? ::!sorting
+           ::!data] :as control}]
+  (assoc control
+    ::!processed-data
+    (r/track (fn processed-data []
+               (let [filtered-data (if @!enable-global-filter?
+                                     (filterv #(some (partial global-filter-fn @!global-filter)
+                                                     (vals (select-keys % @!visible-columns)))
+                                              @!data)
+                                     @!data)]
+                 (if @!enable-sorting?
+                   (vec (sort (partial general-utils/multi-key-direction-sort @!sorting) filtered-data))
+                   filtered-data))))))
+
+(defn set-!paginated-data
+  [{:keys [::!pagination ::!enable-pagination? ::!processed-data] :as control}]
+  (assoc control
+    ::!paginated-data
+    (r/track (fn paginated-data-fn []
+               (if @!enable-pagination?
+                 (let [{:keys [page-index page-size]} @!pagination
+                       n      (count @!processed-data)
+                       start  (* page-index page-size)
+                       th-end (+ start page-size)
+                       end    (if (> th-end n) n th-end)]
+                   (subvec @!processed-data (* page-index page-size) end))
+                 @!processed-data)))))
+
+(defn !selected?-fn
+  [{:keys [::!selected] :as _control} row-id]
+  (r/track (fn selected?-fn [] (contains? @!selected row-id))))
+
+(defn !all-row-ids-fn
+  [{:keys [::!data ::row-id-fn] :as _control}]
+  (r/track (fn all-row-ids-fn [] (set (mapv row-id-fn @!data)))))
+
+(defn set-current-columns-fn*
+  [{:keys [::set-current-columns-fn ::!sorting ::set-sorting-fn] :as _control} columns]
+  (let [columns-set (set columns)
+        new-sorting (filterv #(columns-set (first %)) @!sorting)]
+    (set-sorting-fn new-sorting))
+  (set-current-columns-fn columns))
 
 (defn remove-field-key
   [current-columns field-key]
@@ -36,51 +87,6 @@
       (and (some? s)
            (str/includes? (str s) filter-str))))
 
-(defn !filtered-data-fn
-  [{:keys [::!enable-global-filter? ::!global-filter ::global-filter-fn ::!visible-columns] :as _control} !data]
-  (r/track (fn filter-data []
-             (if @!enable-global-filter?
-               (doall (filter #(some (partial global-filter-fn @!global-filter)
-                                     (vals (select-keys % @!visible-columns)))
-                              @!data))
-               @!data))))
-
-(defn !sorted-data-fn
-  [{:keys [::!enable-sorting? ::!sorting] :as _control} !data]
-  (r/track #(if @!enable-sorting?
-              (sort (partial general-utils/multi-key-direction-sort @!sorting) @!data)
-              @!data)))
-
-(defn !processed-data-fn
-  [{:keys [::!data ::!visible-columns] :as control}]
-  (r/track (fn processed-data []
-             (let [!filtered-data (!filtered-data-fn control !data)
-                   !sorted-data   (!sorted-data-fn control !filtered-data)]
-               @!sorted-data))))
-
-(defn !paginated-data-fn
-  [{:keys [::!pagination ::!enable-pagination?] :as control}]
-  (r/track #(let [!processed-data (!processed-data-fn control)]
-              (if @!enable-pagination?
-                (let [{:keys [page-index page-size]} @!pagination]
-                  (->> @!processed-data (drop (* page-index page-size)) (take page-size)))
-                @!processed-data))))
-
-(defn !selected?-fn
-  [{:keys [::!selected] :as _control} row-id]
-  (r/track #(contains? @!selected row-id)))
-
-(defn !all-row-ids-fn
-  [{:keys [::!data ::row-id-fn] :as _control}]
-  (r/track #(set (mapv row-id-fn @!data))))
-
-(defn set-current-columns-fn*
-  [{:keys [::set-current-columns-fn ::!sorting ::set-sorting-fn] :as _control} columns]
-  (let [columns-set (set columns)
-        new-sorting (filterv #(columns-set (first %)) @!sorting)]
-    (set-sorting-fn new-sorting))
-  (set-current-columns-fn columns))
-
 (defn CellOverflowTooltip
   [cell-data _row _column]
   (let [str-cell-data (str cell-data)]
@@ -89,24 +95,21 @@
 (defn DeleteColumn
   [{:keys [::!enable-column-customization? ::!visible-columns] :as control}
    {:keys [::field-key ::no-delete] :as _column}]
-  (let [visible-columns @!visible-columns]
-    (when (and (> (count visible-columns) 1) (not no-delete))
-      [:span {:style {:margin-left "0.8rem"}}
-       [uix/LinkIcon {:data-testid "DeleteColumn"
-                      :aria-label  "Delete Column"
-                      :color       "red"
-                      :name        "remove circle"
-                      :on-click    (fn [event]
-                                     (set-current-columns-fn* control (remove-field-key visible-columns field-key))
-                                     (.stopPropagation event))
-                      :class       (cond-> [:toggle-invisible-on-parent-hover]
-                                           (not @!enable-column-customization?)
-                                           (conj :invisible))}]])))
+  (when (and @!enable-column-customization? (not no-delete) (> (count @!visible-columns) 1))
+    [:span {:style {:margin-left "0.8rem"}}
+     [uix/LinkIcon {:data-testid "DeleteColumn"
+                    :aria-label  "Delete Column"
+                    :color       "red"
+                    :name        "remove circle"
+                    :on-click    (fn [event]
+                                   (set-current-columns-fn* control (remove-field-key @!visible-columns field-key))
+                                   (.stopPropagation event))
+                    :class       [:toggle-invisible-on-parent-hover]}]]))
 
-(defn SortIcon [{:keys [::!enable-sorting?]} direction no-sort?]
+(defn SortIcon [{:keys [::!enable-sorting?]} direction]
   (let [direction->class {"asc"  " ascending"
                           "desc" " descending"}]
-    [uix/LinkIcon {:class (if (and @!enable-sorting? (not no-sort?) direction) :visible :invisible)
+    [uix/LinkIcon {:class (if (and @!enable-sorting? direction) :visible :invisible)
                    :name  (str "sort" (direction->class direction))}]))
 
 (defn- calc-new-sorting [sorting sort-key sort-direction]
@@ -134,7 +137,7 @@
 (defn TableSelectAllCheckbox
   [{:keys [::!selected ::set-selected-fn] :as control}]
   (r/with-let [!all-row-ids (!all-row-ids-fn control)
-               !selected?   (r/track #(= @!all-row-ids @!selected))]
+               !selected?   (r/track (fn selected? [] (= @!all-row-ids @!selected)))]
     [:th [ui/Checkbox {:data-testid "checkbox-select-all"
                        :style       {:position       :relative
                                      :vertical-align :middle}
@@ -176,26 +179,29 @@
                   (merge {:ref setNodeRef}
                          (js->clj (.-listeners sortable)))))
      (::header-content column)
-     [SortIcon control sort-direction (::no-sort? column)]
+     [SortIcon control sort-direction]
      [DeleteColumn control column]]))
 
+(defn columns-by-key-fn [{:keys [::!columns] :as control}] (into {} (map (juxt ::field-key identity) @!columns)))
+
 (defn TableHeader
-  [{:keys [::!visible-columns ::!columns-by-key] :as control}]
-  (js/console.info "Render TableHeader")
-  (r/with-let [!enable-row-selection? (::!enable-row-selection? control)]
+  [{:keys [::!current-columns ::!default-columns ::!visible-columns] :as control}]
+  (r/with-let [!columns-by-key        (r/track columns-by-key-fn control)
+               !enable-row-selection? (::!enable-row-selection? control)]
+    (js/console.info "Render TableHeader " (str @!visible-columns))
     [ui/TableHeader
      [ui/TableRow
-      (js/console.info "TableHeader" @!columns-by-key @!visible-columns)
-      (when @!enable-row-selection?
-        ^{:key "select-all"}
-        [TableSelectAllCheckbox control])
       [dnd/SortableContext
        {:items    (mapv name @!visible-columns)
         :strategy dnd/horizontalListSortingStrategy}
        (doall
-         (for [visible-column @!visible-columns]
-           ^{:key (str "header-column-" visible-column)}
-           [:f> TableHeaderCell control (get @!columns-by-key visible-column)]))]]]))
+         (cond->>
+           (for [visible-column @!visible-columns]
+             ^{:key (str "header-column-" visible-column)}
+             [:f> TableHeaderCell control (get @!columns-by-key visible-column)])
+           @!enable-row-selection? (cons
+                                     ^{:key "select-all"}
+                                     [TableSelectAllCheckbox control])))]]]))
 
 (defn TableCell
   [{:keys [::!enable-column-customization?] :as _control} row column]
@@ -207,13 +213,13 @@
     ;Using html td tag instead of semantic ui TableCell, because for some reason it's not taking into account ref fn
     [:td {:ref   setNodeRef
           :style {:transform (dnd/translate-css sortable)}}
-     [Cell ((::field-key column) row) ((::field-key column) row) row column]]))
+     [Cell ((::field-key column) row) row column]]))
 
 (defn TableRow
-  [{:keys [::row-id-fn ::!visible-columns ::!columns-by-key] :as control} row]
+  [{:keys [::row-id-fn ::!visible-columns ::!columns-by-key
+           ::!enable-row-selection?] :as control} row]
   (js/console.info "Render TableRow " row)
-  (r/with-let [!enable-row-selection? (::!enable-row-selection? control)
-               row-id                 (row-id-fn row)]
+  (r/with-let [row-id (row-id-fn row)]
     [ui/TableRow
      [dnd/SortableContext
       {:items    (mapv name @!visible-columns)
@@ -228,14 +234,13 @@
                                            [TableCellCheckbox control row-id])))]]))
 
 (defn TableBody
-  [{:keys [::row-id-fn ::!data] :as control}]
+  [{:keys [::row-id-fn ::!data ::!paginated-data] :as control}]
   (js/console.info "Render TableBody")
-  (r/with-let [!paginated-data (!paginated-data-fn control)]
-    [ui/TableBody
-     (doall
-       (for [data-row @!paginated-data]
-         ^{:key (str "row-" (row-id-fn data-row))}
-         [TableRow control data-row]))]))
+  [ui/TableBody
+   (doall
+     (for [data-row @!paginated-data]
+       ^{:key (str "row-" (row-id-fn data-row))}
+       [TableRow control data-row]))])
 
 (defn ColumnsSelectorButton
   [open-fn]
@@ -297,14 +302,13 @@
                         (close-fn))}]]]))))
 
 (defn BasicPagination
-  [{:keys [::!pagination ::set-pagination-fn ::processed-data-fn] :as control}]
+  [{:keys [::!pagination ::set-pagination-fn ::!processed-data] :as _control}]
   (let [{:keys [page-index page-size] :as pagination} @!pagination
-        !processed-data (!processed-data-fn control)
-        total-items     (count @!processed-data)
-        page-count      (cond-> (quot total-items page-size)
-                                (pos? (rem total-items page-size)) inc)
-        goto-page       #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
-        set-page-size   #(set-pagination-fn (assoc pagination :page-size % :page-index 0))]
+        total-items   (count @!processed-data)
+        page-count    (cond-> (quot total-items page-size)
+                              (pos? (rem total-items page-size)) inc)
+        goto-page     #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
+        set-page-size #(set-pagination-fn (assoc pagination :page-size % :page-index 0))]
     [:div {:style {:display    :flex
                    :margin-top "4px"
                    :gap        "4px"}}
@@ -328,19 +332,18 @@
   {:content (r/as-element [ui/Icon {:class icon-name}]) :icon true})
 
 (defn NuvlaPagination
-  [{:keys [::tr-fn ::!pagination ::set-pagination-fn] :as control}]
+  [{:keys [::tr-fn ::!pagination ::set-pagination-fn ::!processed-data] :as control}]
   (let [{:keys [page-index page-size] :as pagination} @!pagination
-        !processed-data (!processed-data-fn control)
-        total-items     (count @!processed-data)
-        page-count      (cond-> (quot total-items page-size)
-                                (pos? (rem total-items page-size)) inc)
-        goto-page       #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
-        set-page-size   #(set-pagination-fn (assoc pagination :page-size % :page-index 0))
-        per-page-opts   (map (fn [n-per-page] {:key     n-per-page
-                                               :value   n-per-page
-                                               :content n-per-page
-                                               :text    (str n-per-page " per page")})
-                             [10 20 30 40])]
+        total-items   (count @!processed-data)
+        page-count    (cond-> (quot total-items page-size)
+                              (pos? (rem total-items page-size)) inc)
+        goto-page     #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
+        set-page-size #(set-pagination-fn (assoc pagination :page-size % :page-index 0))
+        per-page-opts (map (fn [n-per-page] {:key     n-per-page
+                                             :value   n-per-page
+                                             :content n-per-page
+                                             :text    (str n-per-page " per page")})
+                           [10 20 30 40])]
     [:div {:style {:display         :flex
                    :justify-content :space-between
                    :align-items     :baseline
@@ -371,33 +374,34 @@
        :onPageChange  (ui-callback/callback :activePage #(goto-page (dec %)))}]]))
 
 (defn Table
-  [{:keys [::!enable-column-customization? ::set-current-columns-fn ::!enable-pagination?] :as control}]
-  (r/with-let [!visible-columns (!visible-columns-fn control)
-               on-drag-end-fn   (fn [e]
-                                  (let [active    (.-active e)
-                                        over      (.-over e)
-                                        active-id (keyword (.-id active))
-                                        over-id   (keyword (.-id over))
-                                        get-index #(-> % .-data .-current .-sortable .-index)]
-                                    (when (and active over (not= active-id over-id))
-                                      (-> @!visible-columns
-                                          (assoc (get-index active) over-id)
-                                          (assoc (get-index over) active-id)
-                                          set-current-columns-fn))))
-               control          (assoc control ::!visible-columns !visible-columns
-                                               ::!columns-by-key (!columns-by-key-fn control))]
-    (js/console.info "TTT Render Table")
+  [control]
+  (r/with-let [{:keys [::!enable-column-customization? ::set-current-columns-fn
+                       ::!enable-pagination? ::!visible-columns] :as control}
+               (->> control
+                    set-!visible-columns
+                    set-!columns-by-key
+                    set-!processed-data
+                    set-!paginated-data)
+               on-drag-end-fn (fn [e]
+                                (let [active    (.-active e)
+                                      over      (.-over e)
+                                      active-id (keyword (.-id active))
+                                      over-id   (keyword (.-id over))
+                                      get-index #(-> % .-data .-current .-sortable .-index)]
+                                  (when (and active over (not= active-id over-id))
+                                    (-> @!visible-columns
+                                        (assoc (get-index active) over-id)
+                                        (assoc (get-index over) active-id)
+                                        set-current-columns-fn))))]
     [:div
      [ColumnsSelectorModal control]
-     [:div {:style {:overflow :auto
-                    :position :relative}}
-      [dnd/DndContext {:collisionDetection dnd/closestCenter
-                       :modifiers          [dnd/restrictToHorizontalAxis]
-                       :onDragEnd          on-drag-end-fn
-                       :sensors            (dnd/pointerSensor)}
-       [ui/Table
-        [TableHeader control]
-        [TableBody control]]]]
+     [dnd/DndContext {:collisionDetection dnd/closestCenter
+                      :modifiers          [dnd/restrictToHorizontalAxis]
+                      :onDragEnd          on-drag-end-fn
+                      :sensors            (dnd/pointerSensor)}
+      [ui/Table
+       [TableHeader control]
+       [TableBody control]]]
      (when @!enable-pagination?
        [NuvlaPagination control])]))
 

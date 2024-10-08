@@ -2,27 +2,17 @@
   (:require [clojure.edn :as edn]
             [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
             [re-frame.cofx :refer [inject-cofx]]
-            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor]
+            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table]
             [sixsq.nuvla.ui.pages.data.utils :as data-utils]
-            [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [reagent.core :as r]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
-            [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
-            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+            [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]))
 
 (defn CellBytes
-  [{cell-data :cell-data}]
-  (data-utils/format-bytes cell-data))
-
-(defn CellBytesBis
   [cell-data _row _column]
   (data-utils/format-bytes cell-data))
-
-(defn CellTimeAgo
-  [{:keys [cell-data]}]
-  [uix/TimeAgo cell-data])
 
 (defn label-group-overflow-detector
   [Component]
@@ -45,61 +35,57 @@
        :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))
 
 (defn KeyValueLabelGroup
-  [{:keys [cell-data row-data]}]
+  [cell-data _row _column]
   (label-group-overflow-detector
     (fn []
       [ui/LabelGroup
        (for [[k v] cell-data]
-         ^{:key (str (:Id row-data) k)}
+         ^{:key k}
          [ui/Label {:content k :detail (str v)}])])))
 
 (defn PrimaryLabelGroup
-  [{:keys [cell-data row-data]}]
+  [cell-data _row _column]
   (label-group-overflow-detector
     (fn []
       [ui/LabelGroup {:color :blue}
        (for [v cell-data]
-         ^{:key (str (:Id row-data) v)}
+         ^{:key (str v)}
          [ui/Label {:content v}])])))
 
 (defn SecondaryLabelGroup
-  [{:keys [cell-data row-data]}]
+  [cell-data _row _column]
   (label-group-overflow-detector
     (fn []
       [ui/LabelGroup
        (for [v cell-data]
-         ^{:key (str (:Id row-data) v)}
+         ^{:key (str v)}
          [ui/Label {:content v}])])))
 
-
-(def field-id {:field-key      :id
-               :header-content "Id"})
-(def field-created {:field-key      :Created
-                    :header-content "Created"
-                    :cell           CellTimeAgo})
-(def field-created-iso {:field-key      :Created
-                        :header-content "Created"
-                        :cell           CellTimeAgo})
-(def field-created-at {:field-key      :CreatedAt
-                       :header-content "Created"
-                       :cell           CellTimeAgo})
-;(def field-updated-at {:field-key      :UpdatedAt
-;                       :header-content "Updated"
-;                       :cell           CellTimeAgo})
-(def field-labels {:field-key      :Labels
-                   :header-content "Labels"
-                   :no-sort?       true
-                   :cell           KeyValueLabelGroup})
-(def field-name {:field-key      :Name
-                 :header-content "Name"})
-(def field-driver {:field-key      :Driver
-                   :header-content "Driver"})
+(def field-id {::table/field-key      :id
+               ::table/header-content "Id"})
+(def field-created {::table/field-key      :Created
+                    ::table/header-content "Created"
+                    ::table/field-cell     table/CellTimeAgo})
+(def field-created-iso {::table/field-key      :Created
+                        ::table/header-content "Created"
+                        ::table/field-cell     table/CellTimeAgo})
+(def field-created-at {::table/field-key      :CreatedAt
+                       ::table/header-content "Created"
+                       ::table/field-cell     table/CellTimeAgo})
+(def field-labels {::table/field-key      :Labels
+                   ::table/header-content "Labels"
+                   ::table/no-sort?       true
+                   ::table/field-cell     KeyValueLabelGroup})
+(def field-name {::table/field-key      :Name
+                 ::table/header-content "Name"})
+(def field-driver {::table/field-key      :Driver
+                   ::table/header-content "Driver"})
 (def local-storage-key "nuvla.ui.table.edges.docker.column-configs")
 
 (reg-sub
   ::current-cols
-  (fn [db [_ k default-columns]]
-    (let [ls (aget js/window "localStorage")
+  (fn [db [_ k]]
+    (let [ls   (aget js/window "localStorage")
           data (or
                  (get db local-storage-key)
                  (edn/read-string (.getItem ls local-storage-key)))]
@@ -109,58 +95,51 @@
   ::set-current-cols
   [(inject-cofx :storage/get {:name local-storage-key})]
   (fn [{storage :storage/get
-        db :db} [_ k columns]]
+        db      :db} [_ k columns]]
     (js/console.info ::set-current-cols k columns (merge (or (edn/read-string storage) {}) {k columns}))
-    {:db (assoc-in db [local-storage-key k] columns)
+    {:db          (assoc-in db [local-storage-key k] columns)
      :storage/set {:session? false
                    :name     local-storage-key
                    :value    (merge (or (edn/read-string storage) {}) {k columns})}}))
 
 (defn DockerTable
-  [{:keys [rows columns default-columns sort-config-db-path db-path]}]
-  [:<>
-   [table-refactor/TableController
-    {:!columns               (r/atom (mapv (fn [{:keys [field-key header-content no-sort?] :as c}]
-                                             (cond-> {::table-refactor/field-key      field-key
-                                                      ::table-refactor/header-content header-content
-                                                      ::table-refactor/no-sort?       no-sort?}
-                                                     (= field-key :SizeRw) (assoc ::table-refactor/field-cell CellBytesBis))) columns))
-     :!default-columns       (r/atom (vec default-columns))
-     :!current-columns       (subscribe [::current-cols sort-config-db-path (vec default-columns)])
-     :set-current-columns-fn #(dispatch [::set-current-cols sort-config-db-path %])
-     :!data                  rows
-     :!selectable?           (r/atom true)}]
-   [table-plugin/TableColsEditable
-    {:columns           columns
-     :sort-config       {:db-path sort-config-db-path}
-     :default-columns   (set default-columns)
-     :table-props       {:stackable true}
-     :wrapper-div-class nil
-     :cell-props        {:header {:single-line true}}
-     :rows              @rows}
-    db-path]])
+  [{:keys [rows columns default-columns sort-config-db-path]}]
+  (r/with-let [!selectable? (r/atom true)]
+    [table/TableController
+     {:!columns               (r/atom columns)
+      :!default-columns       (r/atom default-columns)
+      :!current-columns       (subscribe [::current-cols sort-config-db-path])
+      :set-current-columns-fn #(dispatch [::set-current-cols sort-config-db-path %])
+      :!data                  rows
+      :!enable-row-selection? (r/atom true)
+      :!selectable?           !selectable?
+      :set-selected-fn        #(reset! !selectable? %)}]))
 
 (defn DockerImagesTable [control]
   [DockerTable
    {:db-path             ::table-cols-edge-detail-coe-resource-docker-images
     :rows                (::!docker-images control)
     :columns             [field-id
-                          {:field-key      :ParentId
-                           :header-content "Parent Id"
-                           :no-sort?       true}
-                          {:field-key      :RepoDigests
-                           :header-content "Repo Digests"
-                           :no-sort?       true
-                           :cell           SecondaryLabelGroup}
-                          {:field-key      :Size
-                           :header-content "Size"
-                           :cell           CellBytes}
+                          {::table/field-key      :ParentId
+                           ::table/header-content "Parent Id"
+                           ::table/no-sort?       true}
+                          {::table/field-key      :RepoDigests
+                           ::table/header-content "Repo Digests"
+                           ::table/field-cell     SecondaryLabelGroup
+                           ::table/no-sort?       true}
+                          {::table/field-key      :Size
+                           ::table/header-content "Size"
+                           ::table/field-cell     CellBytes}
                           field-created
-                          {:field-key      :RepoTags
-                           :header-content "Tags"
-                           :no-sort?       true
-                           :cell           PrimaryLabelGroup}
-                          field-labels]
+                          {::table/field-key      :RepoTags
+                           ::table/header-content "Tags"
+                           ::table/no-sort?       true
+                           ::table/field-cell     PrimaryLabelGroup}
+                          field-labels
+                          {::table/field-key      :Repository
+                           ::table/header-content "Repository"}
+                          {::table/field-key      :Tag
+                           ::table/header-content "Tag"}]
     :sort-config-db-path ::spec/docker-images-ordering
     :default-columns     [:id :Size :Created :RepoTags]}])
 
@@ -217,15 +196,17 @@
   [DockerTable
    {:db-path             ::table-cols-edge-detail-coe-resource-docker-volumes
     :rows                (::!docker-volumes control)
-    :columns             [{:field-key      :id
-                           :header-content "Name"}
+    :columns             [{::table/field-key      :id
+                           ::table/header-content "Name"}
                           field-driver
-                          {:field-key      :Scope
-                           :header-content "Scope"}
-                          {:field-key      :Mountpoint
-                           :header-content "Mount point"}
+                          {::table/field-key      :Scope
+                           ::table/header-content "Scope"}
+                          {::table/field-key      :Mountpoint
+                           ::table/header-content "Mount point"}
                           field-created-at
-                          field-labels]
+                          field-labels
+                          {::table/field-key      :Options
+                           ::table/header-content "Options"}]
     :sort-config-db-path ::spec/docker-volumes-ordering
     :default-columns     [:id :Driver :Mountpoint :CreatedAt :Labels]}])
 
@@ -237,29 +218,42 @@
    {:db-path             ::table-cols-edge-detail-coe-resource-docker-containers
     :rows                (::!docker-containers control)
     :columns             [field-id
-                          {:field-key      :Image
-                           :header-content "Image"}
+                          {::table/field-key      :Image
+                           ::table/header-content "Image"}
                           field-created
-                          {:field-key      :Status
-                           :header-content "Status"}
-                          {:field-key      :SizeRootFs
-                           :header-content "Size RootFs"
-                           :cell           CellBytes}
+                          {::table/field-key      :Status
+                           ::table/header-content "Status"}
+                          {::table/field-key      :SizeRootFs
+                           ::table/header-content "Size RootFs"
+                           ::table/field-cell     CellBytes}
                           field-labels
-                          {:field-key      :HostConfig
-                           :header-content "Host config"
-                           :cell           KeyValueLabelGroup}
-                          {:field-key      :Names
-                           :header-content "Names"
-                           :no-sort?       true
-                           :cell           SecondaryLabelGroup}
-                          {:field-key      :SizeRw
-                           :header-content "Size RW"
-                           :cell           CellBytes}
-                          {:field-key      :ImageID
-                           :header-content "Image Id"}]
+                          {::table/field-key      :HostConfig
+                           ::table/header-content "Host config"
+                           ::table/field-cell     KeyValueLabelGroup}
+                          {::table/field-key      :Names
+                           ::table/header-content "Names"
+                           ::table/field-cell     SecondaryLabelGroup}
+                          {::table/field-key      :SizeRw
+                           ::table/header-content "Size RW"
+                           ::table/field-cell     CellBytes}
+                          {::table/field-key      :ImageID
+                           ::table/header-content "Image Id"}
+                          {::table/field-key      :Mounts
+                           ::table/header-content "Mounts"
+                           ::table/no-sort?       true}
+                          {::table/field-key      :Name
+                           ::table/header-content "Name"}
+                          {::table/field-key      :NetworkSettings
+                           ::table/header-content "NetworkSettings"
+                           ::table/no-sort?       true}
+                          {::table/field-key      :State
+                           ::table/header-content "State"}
+                          {::table/field-key      :Command
+                           ::table/header-content "Command"}
+                          {::table/field-key      :Ports
+                           ::table/header-content "Ports"}]
     :sort-config-db-path ::spec/docker-containers-ordering
-    :default-columns     [:id :Image :SizeRootFs :Created :Status]}])
+    :default-columns     [:id :Image :Created :Status :SizeRootFs]}])
 
 (defn DockerContainerPane [control]
   [ui/TabPane [DockerContainersTable control]])
@@ -272,36 +266,29 @@
                           field-name
                           field-created-iso
                           field-driver
-                          {:field-key      :Options
-                           :header-content "Options"
-                           :cell           KeyValueLabelGroup}
-                          field-labels]
+                          {::table/field-key      :Options
+                           ::table/header-content "Options"
+                           ::table/field-cell     KeyValueLabelGroup}
+                          field-labels
+                          {::table/field-key      :Attachable
+                           ::table/header-content "Attachable"}
+                          {::table/field-key      :ConfigFrom
+                           ::table/header-content "ConfigFrom"}
+                          {::table/field-key      :ConfigOnly
+                           ::table/header-content "ConfigOnly"}
+                          {::table/field-key      :EnableIPv6
+                           ::table/header-content "EnableIPv6"}
+                          {::table/field-key      :IPAM
+                           ::table/header-content "IPAM"}
+                          {::table/field-key      :Ingress
+                           ::table/header-content "Internal"}
+                          {::table/field-key      :Scope
+                           ::table/header-content "Scope"}]
     :sort-config-db-path ::spec/docker-networks-ordering
     :default-columns     [:id :Name :Created :Labels :Driver]}])
 
 (defn DockerNetworkPane [control]
   [ui/TabPane [DockerNetworksTable control]])
-
-;(defn- DockerConfigsTable [control]
-;  [DockerTable
-;   {:db-path             ::table-cols-edge-detail-coe-resource-docker-configs
-;    :rows                (::!docker-configs control)
-;    :columns             [field-id
-;                          field-name
-;                          field-created-at
-;                          field-updated-at
-;                          {:field-key      :Version
-;                           :header-content "Version"}
-;                          {:field-key      :Data
-;                           :header-content "Data"
-;                           :no-sort?       true
-;                           :cell           CellModalTextArea}
-;                          field-labels]
-;    :sort-config-db-path ::spec/docker-configs-ordering
-;    :default-columns     #{:id :Name :CreatedAt :UpdatedAt :Data}}])
-;
-;(defn DockerConfigPane [control]
-;  [ui/TabPane [DockerConfigsTable control]])
 
 (defn Tab
   []

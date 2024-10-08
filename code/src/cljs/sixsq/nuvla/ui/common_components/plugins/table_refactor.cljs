@@ -90,6 +90,10 @@
   (let [str-cell-data (str cell-data)]
     [tt/WithOverflowTooltip {:content str-cell-data :tooltip str-cell-data}]))
 
+(defn CellTimeAgo
+  [cell-data _row _column]
+  [uix/TimeAgo cell-data])
+
 (defn DeleteColumn
   [{:keys [::!enable-column-customization? ::!visible-columns] :as control}
    {:keys [::field-key ::no-delete] :as _column}]
@@ -104,11 +108,11 @@
                                    (.stopPropagation event))
                     :class       [:toggle-invisible-on-parent-hover]}]]))
 
-(defn SortIcon [{:keys [::!enable-sorting?]} direction]
-  (let [direction->class {"asc"  " ascending"
-                          "desc" " descending"}]
-    [uix/LinkIcon {:class (if (and @!enable-sorting? direction) :visible :invisible)
-                   :name  (str "sort" (direction->class direction))}]))
+(defn SortIcon [{:keys [::!enable-sorting?]} column direction]
+  (when (and @!enable-sorting? direction (not (::no-sort? column)))
+    (let [direction->class {"asc"  " ascending"
+                            "desc" " descending"}]
+      [uix/LinkIcon {:name  (str "sort" (direction->class direction))}])))
 
 (defn- calc-new-sorting [sorting sort-key sort-direction]
   (if (some? sort-direction)
@@ -177,7 +181,7 @@
                   (merge {:ref setNodeRef}
                          (js->clj (.-listeners sortable)))))
      (::header-content column)
-     [SortIcon control sort-direction]
+     [SortIcon control column sort-direction]
      [DeleteColumn control column]]))
 
 (defn columns-by-key-fn [{:keys [::!columns] :as control}] (into {} (map (juxt ::field-key identity) @!columns)))
@@ -371,9 +375,12 @@
                       :modifiers          [dnd/restrictToHorizontalAxis]
                       :onDragEnd          on-drag-end-fn
                       :sensors            (dnd/pointerSensor)}
-      [ui/Table
-       [TableHeader control]
-       [TableBody control]]]
+      [:div {:style {:overflow :auto
+                     :padding  0
+                     :position :relative}}
+       [ui/Table
+        [TableHeader control]
+        [TableBody control]]]]
      (when @!enable-pagination?
        [NuvlaPagination control])]))
 

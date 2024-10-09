@@ -161,6 +161,32 @@ cluster-nodes, cluster-managers, cluster-join-address, status-notes, orchestrato
        [resource-id operation on-success :data data :on-error on-error-fn]})))
 
 (reg-event-fx
+  ::custom-action
+  (fn [_ [_ resource-id operation success-msg]]
+    (let [on-job-complete (fn [{:keys [status-message return-code]}]
+                            (dispatch [::messages-events/add
+                                       {:header  (str (str/capitalize operation)
+                                                      " on " resource-id
+                                                      (if (= return-code 0)
+                                                        " completed."
+                                                        " failed!"))
+                                        :content status-message
+                                        :type    (if (= return-code 0)
+                                                   :success
+                                                   :error)}]))
+          on-success      #(when success-msg
+                             (dispatch [::messages-events/add
+                                        {:header  success-msg
+                                         :content success-msg
+                                         :type    :success}])
+                             (dispatch
+                               [::job-events/wait-job-to-complete
+                                {:job-id              (:location %)
+                                 :on-complete         on-job-complete
+                                 :refresh-interval-ms 5000}]))]
+      {::cimi-api-fx/operation [resource-id operation on-success]})))
+
+(reg-event-fx
   ::operation-text-response
   (fn [_ [_ operation resource-id on-success-fn on-error-fn]]
     (let [on-success #(do
@@ -252,32 +278,6 @@ cluster-nodes, cluster-managers, cluster-join-address, status-notes, orchestrato
   (fn [{{:keys [::spec/nuvlabox]} :db} _]
     (let [nuvlabox-id (:id nuvlabox)]
       {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::routing-events/navigate routes/edges])]})))
-
-(reg-event-fx
-  ::custom-action
-  (fn [_ [_ resource-id operation success-msg]]
-    (let [on-job-complete (fn [{:keys [status-message return-code]}]
-                            (dispatch [::messages-events/add
-                                       {:header  (str (str/capitalize operation)
-                                                      " on " resource-id
-                                                      (if (= return-code 0)
-                                                        " completed."
-                                                        " failed!"))
-                                        :content status-message
-                                        :type    (if (= return-code 0)
-                                                   :success
-                                                   :error)}]))
-          on-success      #(when success-msg
-                             (dispatch [::messages-events/add
-                                        {:header  success-msg
-                                         :content success-msg
-                                         :type    :success}])
-                             (dispatch
-                               [::job-events/wait-job-to-complete
-                                {:job-id              (:location %)
-                                 :on-complete         on-job-complete
-                                 :refresh-interval-ms 5000}]))]
-      {::cimi-api-fx/operation [resource-id operation on-success]})))
 
 (reg-event-db
   ::set-nuvlabox-managers

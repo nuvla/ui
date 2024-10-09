@@ -41,9 +41,8 @@
 (reg-event-fx
   ::coe-resource-actions
   (fn [{{:keys [::spec/nuvlabox]} :db} [_ payload close-modal-fn]]
-    (let [resource-id (:id nuvlabox)]
-      {:fx [[:dispatch [::events/operation resource-id "coe-resource-actions" payload
-                        close-modal-fn close-modal-fn]]]})))
+    {:fx [[:dispatch [::events/operation (:id nuvlabox) "coe-resource-actions" payload
+                      close-modal-fn close-modal-fn]]]}))
 
 (defn CellBytes
   [cell-data _row _column]
@@ -117,44 +116,46 @@
                    ::table/header-content "Driver"})
 
 (defn DockerTable
-  [{:keys [rows columns default-columns sort-config-db-path]}]
-  (r/with-let [!selected (r/atom #{})]
-    [table/TableController
-     {:!columns               (r/atom columns)
-      :!default-columns       (r/atom default-columns)
-      :!current-columns       (subscribe [::current-cols sort-config-db-path])
-      :set-current-columns-fn #(dispatch [::set-current-cols sort-config-db-path %])
-      :!data                  rows
-      :!enable-row-selection? (r/atom true)
-      :!selected              !selected
-      :set-selected-fn        #(reset! !selected %)}]))
+  [{:keys [rows columns default-columns sort-config-key !selected set-selected-fn]}]
+  [table/TableController
+   {:!columns               (r/atom columns)
+    :!default-columns       (r/atom default-columns)
+    :!current-columns       (subscribe [::current-cols sort-config-key])
+    :set-current-columns-fn #(dispatch [::set-current-cols sort-config-key %])
+    :!data                  rows
+    :!enable-row-selection? (r/atom true)
+    :!selected              !selected
+    :set-selected-fn        set-selected-fn}])
 
-(defn DockerImagesTable [control]
+(defn DockerImagesTable
+  [{:keys [::!selected ::set-selected-fn] :as control}]
   [DockerTable
-   {:db-path             ::table-cols-edge-detail-coe-resource-docker-images
-    :rows                (::!docker-images control)
-    :columns             [field-id
-                          {::table/field-key      :ParentId
-                           ::table/header-content "Parent Id"
-                           ::table/no-sort?       true}
-                          {::table/field-key      :RepoDigests
-                           ::table/header-content "Repo Digests"
-                           ::table/field-cell     SecondaryLabelGroup
-                           ::table/no-sort?       true}
-                          {::table/field-key      :Size
-                           ::table/header-content "Size"
-                           ::table/field-cell     CellBytes}
-                          field-created
-                          {::table/field-key      :RepoTags
-                           ::table/header-content "Tags"
-                           ::table/no-sort?       true
-                           ::table/field-cell     PrimaryLabelGroup}
-                          field-labels
-                          {::table/field-key      :Repository
-                           ::table/header-content "Repository"}
-                          {::table/field-key      :Tag
-                           ::table/header-content "Tag"}]
-    :default-columns     [:id :Size :Created :RepoTags]}])
+   {:rows            (::!docker-images control)
+    :columns         [field-id
+                      {::table/field-key      :ParentId
+                       ::table/header-content "Parent Id"
+                       ::table/no-sort?       true}
+                      {::table/field-key      :RepoDigests
+                       ::table/header-content "Repo Digests"
+                       ::table/field-cell     SecondaryLabelGroup
+                       ::table/no-sort?       true}
+                      {::table/field-key      :Size
+                       ::table/header-content "Size"
+                       ::table/field-cell     CellBytes}
+                      field-created
+                      {::table/field-key      :RepoTags
+                       ::table/header-content "Tags"
+                       ::table/no-sort?       true
+                       ::table/field-cell     PrimaryLabelGroup}
+                      field-labels
+                      {::table/field-key      :Repository
+                       ::table/header-content "Repository"}
+                      {::table/field-key      :Tag
+                       ::table/header-content "Tag"}]
+    :default-columns [:id :Size :Created :RepoTags]
+    :!selected       !selected
+    :set-selected-fn set-selected-fn
+    :sort-config-key :docker-images}])
 
 (defn PullImageMenuItem
   [opts]
@@ -186,13 +187,38 @@
      [ui/ModalActions
       [PullImageActionButton control image-value]]]))
 
+(defn DeleteMenuItem
+  [{:keys [on-confirm enabled? !delete-modal-open? on-click]}]
+  (r/with-let [tr     (subscribe [::i18n-subs/tr])
+               header (str (str/capitalize (@tr [:delete])) " " "images")]
+    [uix/ModalDanger
+     {:with-confirm-step? true
+      :button-text        header
+      :on-confirm         on-confirm
+      :content            (@tr [:are-you-sure?])
+      :open               @!delete-modal-open?
+      :trigger            (r/as-element
+                            [ui/MenuItem {:disabled (not enabled?)
+                                          :on-click on-click}
+                             [icons/TrashIcon] (@tr [:delete])])
+      :header             header
+      :header-class       [:nuvla-edges :delete-modal-header]}]))
+
+(defn DeleteImageMenuItem
+  [{:keys [::docker-image-delete-action-fn ::!selected ::set-selected-fn
+           ::!delete-modal-open? ::delete-modal-open-fn] :as _control}]
+  [DeleteMenuItem {:on-confirm          #(do (docker-image-delete-action-fn @!selected)
+                                             (set-selected-fn #{}))
+                   :enabled?            (seq @!selected)
+                   :!delete-modal-open? !delete-modal-open?
+                   :on-click delete-modal-open-fn}])
+
 (defn ImageActionBar
   [control]
   (r/with-let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu
      [PullImageModal control]
-     [ui/MenuItem {:on-click #()}
-      [icons/TrashIcon] "Remove"]
+     [DeleteImageMenuItem control]
      [ui/MenuMenu {:position "right"}
       [ui/MenuItem
        [ui/Input {:transparent true
@@ -207,116 +233,127 @@
 
 (defn DockerVolumesTable [control]
   [DockerTable
-   {:db-path             ::table-cols-edge-detail-coe-resource-docker-volumes
-    :rows                (::!docker-volumes control)
-    :columns             [{::table/field-key      :id
-                           ::table/header-content "Name"}
-                          field-driver
-                          {::table/field-key      :Scope
-                           ::table/header-content "Scope"}
-                          {::table/field-key      :Mountpoint
-                           ::table/header-content "Mount point"}
-                          field-created-at
-                          field-labels
-                          {::table/field-key      :Options
-                           ::table/header-content "Options"}]
-    :default-columns     [:id :Driver :Mountpoint :CreatedAt :Labels]}])
+   {:rows            (::!docker-volumes control)
+    :columns         [{::table/field-key      :id
+                       ::table/header-content "Name"}
+                      field-driver
+                      {::table/field-key      :Scope
+                       ::table/header-content "Scope"}
+                      {::table/field-key      :Mountpoint
+                       ::table/header-content "Mount point"}
+                      field-created-at
+                      field-labels
+                      {::table/field-key      :Options
+                       ::table/header-content "Options"}]
+    :default-columns [:id :Driver :Mountpoint :CreatedAt :Labels]
+    :sort-config-key :docker-volumes}])
 
 (defn DockerVolumePane [control]
   [ui/TabPane [DockerVolumesTable control]])
 
-(defn- DockerContainersTable [control]
+(defn- DockerContainersTable
+  [control]
   [DockerTable
-   {:db-path             ::table-cols-edge-detail-coe-resource-docker-containers
-    :rows                (::!docker-containers control)
-    :columns             [field-id
-                          {::table/field-key      :Image
-                           ::table/header-content "Image"}
-                          field-created
-                          {::table/field-key      :Status
-                           ::table/header-content "Status"}
-                          {::table/field-key      :SizeRootFs
-                           ::table/header-content "Size RootFs"
-                           ::table/field-cell     CellBytes}
-                          field-labels
-                          {::table/field-key      :HostConfig
-                           ::table/header-content "Host config"
-                           ::table/field-cell     KeyValueLabelGroup}
-                          {::table/field-key      :Names
-                           ::table/header-content "Names"
-                           ::table/field-cell     SecondaryLabelGroup}
-                          {::table/field-key      :SizeRw
-                           ::table/header-content "Size RW"
-                           ::table/field-cell     CellBytes}
-                          {::table/field-key      :ImageID
-                           ::table/header-content "Image Id"}
-                          {::table/field-key      :Mounts
-                           ::table/header-content "Mounts"
-                           ::table/no-sort?       true}
-                          {::table/field-key      :Name
-                           ::table/header-content "Name"}
-                          {::table/field-key      :NetworkSettings
-                           ::table/header-content "NetworkSettings"
-                           ::table/no-sort?       true}
-                          {::table/field-key      :State
-                           ::table/header-content "State"}
-                          {::table/field-key      :Command
-                           ::table/header-content "Command"}
-                          {::table/field-key      :Ports
-                           ::table/header-content "Ports"}]
-    :default-columns     [:id :Image :Created :Status :SizeRootFs]}])
+   {:rows            (::!docker-containers control)
+    :columns         [field-id
+                      {::table/field-key      :Image
+                       ::table/header-content "Image"}
+                      field-created
+                      {::table/field-key      :Status
+                       ::table/header-content "Status"}
+                      {::table/field-key      :SizeRootFs
+                       ::table/header-content "Size RootFs"
+                       ::table/field-cell     CellBytes}
+                      field-labels
+                      {::table/field-key      :HostConfig
+                       ::table/header-content "Host config"
+                       ::table/field-cell     KeyValueLabelGroup}
+                      {::table/field-key      :Names
+                       ::table/header-content "Names"
+                       ::table/field-cell     SecondaryLabelGroup}
+                      {::table/field-key      :SizeRw
+                       ::table/header-content "Size RW"
+                       ::table/field-cell     CellBytes}
+                      {::table/field-key      :ImageID
+                       ::table/header-content "Image Id"}
+                      {::table/field-key      :Mounts
+                       ::table/header-content "Mounts"
+                       ::table/no-sort?       true}
+                      {::table/field-key      :Name
+                       ::table/header-content "Name"}
+                      {::table/field-key      :NetworkSettings
+                       ::table/header-content "NetworkSettings"
+                       ::table/no-sort?       true}
+                      {::table/field-key      :State
+                       ::table/header-content "State"}
+                      {::table/field-key      :Command
+                       ::table/header-content "Command"}
+                      {::table/field-key      :Ports
+                       ::table/header-content "Ports"}]
+    :default-columns [:id :Image :Created :Status :SizeRootFs]
+    :sort-config-key :docker-containers}])
 
 (defn DockerContainerPane [control]
   [ui/TabPane [DockerContainersTable control]])
 
 (defn- DockerNetworksTable [control]
   [DockerTable
-   {:db-path             ::table-cols-edge-detail-coe-resource-docker-networks
-    :rows                (::!docker-networks control)
-    :columns             [field-id
-                          field-name
-                          field-created-iso
-                          field-driver
-                          {::table/field-key      :Options
-                           ::table/header-content "Options"
-                           ::table/field-cell     KeyValueLabelGroup}
-                          field-labels
-                          {::table/field-key      :Attachable
-                           ::table/header-content "Attachable"}
-                          {::table/field-key      :ConfigFrom
-                           ::table/header-content "ConfigFrom"}
-                          {::table/field-key      :ConfigOnly
-                           ::table/header-content "ConfigOnly"}
-                          {::table/field-key      :EnableIPv6
-                           ::table/header-content "EnableIPv6"}
-                          {::table/field-key      :IPAM
-                           ::table/header-content "IPAM"}
-                          {::table/field-key      :Ingress
-                           ::table/header-content "Internal"}
-                          {::table/field-key      :Scope
-                           ::table/header-content "Scope"}]
-    :default-columns     [:id :Name :Created :Labels :Driver]}])
+   {:rows            (::!docker-networks control)
+    :columns         [field-id
+                      field-name
+                      field-created-iso
+                      field-driver
+                      {::table/field-key      :Options
+                       ::table/header-content "Options"
+                       ::table/field-cell     KeyValueLabelGroup}
+                      field-labels
+                      {::table/field-key      :Attachable
+                       ::table/header-content "Attachable"}
+                      {::table/field-key      :ConfigFrom
+                       ::table/header-content "ConfigFrom"}
+                      {::table/field-key      :ConfigOnly
+                       ::table/header-content "ConfigOnly"}
+                      {::table/field-key      :EnableIPv6
+                       ::table/header-content "EnableIPv6"}
+                      {::table/field-key      :IPAM
+                       ::table/header-content "IPAM"}
+                      {::table/field-key      :Ingress
+                       ::table/header-content "Internal"}
+                      {::table/field-key      :Scope
+                       ::table/header-content "Scope"}]
+    :default-columns [:id :Name :Created :Labels :Driver]
+    :sort-config-key :docker-networks}])
 
 (defn DockerNetworkPane [control]
   [ui/TabPane [DockerNetworksTable control]])
 
 (defn Tab
   []
-  (r/with-let [!can-manage?      (r/atom false)
-               !pull-modal-open? (r/atom false)
-               close-pull-modal #(reset! !pull-modal-open? false)
-               control           {::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
-                                  ::docker-image-pull-modal-close-fn close-pull-modal
-                                  ::docker-image-pull-action-fn      #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
-                                                                                 close-pull-modal])
-                                  ::!can-manage?                     !can-manage?
-                                  ::!docker-image-pull-modal-open?   !pull-modal-open?
-                                  ::!docker-images                   (subscribe [::subs/docker-images-clean])
-                                  ::!docker-containers               (subscribe [::subs/docker-containers-clean])
-                                  ::!docker-networks                 (subscribe [::subs/docker-networks-clean])
-                                  ::!docker-volumes                  (subscribe [::subs/docker-volumes-clean])}]
+  (r/with-let [!can-manage?        (r/atom false)
+               !pull-modal-open?   (r/atom false)
+               !delete-modal-open? (r/atom false)
+               !selected           (r/atom #{})
+               set-selected-fn     #(reset! !selected %)
+               close-pull-modal    #(reset! !pull-modal-open? false)
+               control             {::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
+                                    ::docker-image-pull-modal-close-fn close-pull-modal
+                                    ::docker-image-pull-action-fn      #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
+                                                                                   close-pull-modal])
+                                    ::!delete-modal-open?              !delete-modal-open?
+                                    ::delete-modal-open-fn             #(reset! !delete-modal-open? true)
+                                    ::docker-image-delete-action-fn    #(dispatch [::coe-resource-actions {:docker (mapv (fn [id] {:resource "image" :action "remove" :id id}) %)}
+                                                                                   (fn [] (reset! !delete-modal-open? false))])
+                                    ::!can-manage?                     !can-manage?
+                                    ::!docker-image-pull-modal-open?   !pull-modal-open?
+                                    ::!selected                        !selected
+                                    ::set-selected-fn                  set-selected-fn
+                                    ::!docker-images                   (subscribe [::subs/docker-images-clean])
+                                    ::!docker-containers               (subscribe [::subs/docker-containers-clean])
+                                    ::!docker-networks                 (subscribe [::subs/docker-networks-clean])
+                                    ::!docker-volumes                  (subscribe [::subs/docker-volumes-clean])}]
     [ui/Tab
-     {:panes [{:menuItem "Containers", :render #(r/as-element [DockerContainerPane control])}
-              {:menuItem "Images", :render #(r/as-element [DockerImagePane control])}
-              {:menuItem "Volumes", :render #(r/as-element [DockerVolumePane control])}
-              {:menuItem "Networks", :render #(r/as-element [DockerNetworkPane control])}]}]))
+     {:on-tab-change #(set-selected-fn #{})
+      :panes         [{:menuItem "Containers", :render #(r/as-element [DockerContainerPane control])}
+                      {:menuItem "Images", :render #(r/as-element [DockerImagePane control])}
+                      {:menuItem "Volumes", :render #(r/as-element [DockerVolumePane control])}
+                      {:menuItem "Networks", :render #(r/as-element [DockerNetworkPane control])}]}]))

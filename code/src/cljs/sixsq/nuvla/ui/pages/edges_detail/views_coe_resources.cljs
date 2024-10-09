@@ -120,7 +120,6 @@
 (defn DockerTable
   [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination] :as _control}
    {:keys [rows columns default-columns sort-config-key]}]
-  (js/console.info "DockerTable" !pagination)
   [table/TableController
    {:!columns               (r/atom columns)
     :!default-columns       (r/atom default-columns)
@@ -137,7 +136,6 @@
 
 (defn DockerImagesTable
   [control]
-  (js/console.info "DockerImagesTable" control)
   [DockerTable
    control
    {:rows            (::!docker-images control)
@@ -162,7 +160,8 @@
                        ::table/header-content "Repository"}
                       {::table/field-key      :Tag
                        ::table/header-content "Tag"}]
-    :default-columns [:id :Size :Created :RepoTags]}])
+    :default-columns [:id :Size :Created :RepoTags]
+    :sort-config-key :docker-images}])
 
 (defn PullImageMenuItem
   [opts]
@@ -233,12 +232,11 @@
 
 (defn ImageActionBar
   [control]
-  (r/with-let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu
-     [PullImageModal control]
-     [DeleteImageMenuItem control]
-     [ui/MenuMenu {:position "right"}
-      [SearchInput control]]]))
+  [ui/Menu
+   [PullImageModal control]
+   [DeleteImageMenuItem control]
+   [ui/MenuMenu {:position "right"}
+    [SearchInput control]]])
 
 (defn DockerImagePane
   [control]
@@ -356,7 +354,11 @@
                !global-filter      (r/atom "")
                !pagination         (r/atom default-pagination)
                close-pull-modal    #(reset! !pull-modal-open? false)
-               control             {::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
+               control             {::!docker-images                   (subscribe [::subs/docker-images-clean])
+                                    ::!docker-containers               (subscribe [::subs/docker-containers-clean])
+                                    ::!docker-networks                 (subscribe [::subs/docker-networks-clean])
+                                    ::!docker-volumes                  (subscribe [::subs/docker-volumes-clean])
+                                    ::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
                                     ::docker-image-pull-modal-close-fn close-pull-modal
                                     ::docker-image-pull-action-fn      #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
                                                                                    close-pull-modal])
@@ -368,10 +370,6 @@
                                     ::!docker-image-pull-modal-open?   !pull-modal-open?
                                     ::!selected                        !selected
                                     ::set-selected-fn                  set-selected-fn
-                                    ::!docker-images                   (subscribe [::subs/docker-images-clean])
-                                    ::!docker-containers               (subscribe [::subs/docker-containers-clean])
-                                    ::!docker-networks                 (subscribe [::subs/docker-networks-clean])
-                                    ::!docker-volumes                  (subscribe [::subs/docker-volumes-clean])
                                     ::!global-filter                   !global-filter
                                     ::!pagination                      !pagination}]
     [ui/Tab

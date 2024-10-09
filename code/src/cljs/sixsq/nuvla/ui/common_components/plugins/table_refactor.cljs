@@ -107,12 +107,13 @@
 (defn SortIcon [{:keys [::!enable-sorting?]}
                 {:keys [::no-sort] :as _column}
                 direction]
-  (let [dir-class (case direction
-                    "asc" " ascending"
-                    "desc" " descending"
-                    nil)]
-    [uix/LinkIcon {:class [(when dir-class :black) (if (and @!enable-sorting? (not no-sort)) :visible :invisible)]
-                   :name  (str "sort " dir-class)}]))
+  (when (and @!enable-sorting? (not no-sort))
+    (let [dir-class (case direction
+                      "asc" "ascending"
+                      "desc" "descending"
+                      nil)]
+      [uix/LinkIcon {:class [(when dir-class :black)]
+                     :name  (str "sort " dir-class)}])))
 
 (defn- calc-new-sorting [sorting sort-key sort-direction]
   (if (some? sort-direction)

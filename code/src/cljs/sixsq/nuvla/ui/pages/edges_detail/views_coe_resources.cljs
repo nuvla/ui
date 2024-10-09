@@ -20,7 +20,7 @@
 (def local-storage-key "nuvla.ui.table.edges.docker.column-configs")
 
 (def default-pagination {:page-index 0
-                         :page-size  20})
+                         :page-size  25})
 
 (reg-sub
   ::current-cols
@@ -308,7 +308,6 @@
     :sort-config-key :docker-containers}])
 
 (defn DockerContainerPane [control]
-  (js/console.info "DockerContainerPane" control)
   [ui/TabPane [DockerContainersTable control]])
 
 (defn- DockerNetworksTable [control]

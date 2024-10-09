@@ -122,7 +122,8 @@
                       "desc" "descending"
                       nil)]
       [uix/LinkIcon {:class [(when dir-class :black)]
-                     :name  (str "sort " dir-class)}])))
+                     :name  (cond-> "sort"
+                                    dir-class (str " " dir-class))}])))
 
 (defn- calc-new-sorting [sorting sort-key sort-direction]
   (if (some? sort-direction)
@@ -177,7 +178,6 @@
                              get-next-sort-direction
                              (calc-new-sorting @!sorting field-key)
                              set-sorting-fn)]
-    (js/console.info "Render TableHeaderCell " field-key)
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
     [:th (merge {:class    ["show-child-on-hover" "single line"]
                  :style    (cond-> {:user-select :none}
@@ -200,7 +200,6 @@
   [{:keys [::!current-columns ::!default-columns ::!visible-columns
            ::!columns-by-key] :as control}]
   (r/with-let [!enable-row-selection? (::!enable-row-selection? control)]
-    (js/console.info "Render TableHeader " (str @!visible-columns))
     [ui/TableHeader
      [ui/TableRow
       [dnd/SortableContext
@@ -217,7 +216,6 @@
 
 (defn TableCell
   [{:keys [::!enable-column-customization?] :as _control} row column]
-  (js/console.info "Render TableCell " (::field-key column))
   (let [sortable   (dnd/useSortable #js {"id"       (name (::field-key column))
                                          "disabled" (not @!enable-column-customization?)})
         setNodeRef (.-setNodeRef sortable)
@@ -230,7 +228,6 @@
 (defn TableRow
   [{:keys [::row-id-fn ::!visible-columns ::!columns-by-key
            ::!enable-row-selection?] :as control} row]
-  (js/console.info "Render TableRow " row)
   (r/with-let [row-id (row-id-fn row)]
     [ui/TableRow
      [dnd/SortableContext
@@ -247,7 +244,6 @@
 
 (defn TableBody
   [{:keys [::row-id-fn ::!data ::!paginated-data] :as control}]
-  (js/console.info "Render TableBody")
   [ui/TableBody
    (doall
      (for [data-row @!paginated-data]
@@ -473,12 +469,9 @@
                !enable-column-customization? (or !enable-column-customization? (r/atom true))
                !current-columns              (or !current-columns (r/atom nil))
                set-current-columns-fn        (or set-current-columns-fn #(reset! !current-columns %))
-               ;::set-current-columns-fn #(dispatch [::set-current-columns-fn %])
                !enable-sorting?              (or !enable-sorting? (r/atom true))
                set-sorting-fn                (or set-sorting-fn #(reset! !sorting %))
                set-selected-fn               (or set-selected-fn #(reset! !selected %))
-               ;!current-columns (r/atom nil)
-               ;!current-columns (subscribe [::current-columns])]
                !enable-global-filter?        (or !enable-global-filter? (r/atom true))
                !global-filter                (or !global-filter (r/atom nil))
                global-filter-fn              (or global-filter-fn case-insensitive-filter-fn)

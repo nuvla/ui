@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -351,3 +352,8 @@
 (reg-sub
   ::availability-15-min
   :-> ::spec/availability-15-min)
+
+(reg-sub
+  ::stats-table-current-cols
+  :<- [::main-subs/current-cols spec/stats-table-col-configs-local-storage-key ::spec/stats-columns-ordering]
+  identity)

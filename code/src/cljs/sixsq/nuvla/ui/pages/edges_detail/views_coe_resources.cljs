@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.views-coe-resources
-  (:require [clojure.edn :as edn]
-            [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
-            [re-frame.cofx :refer [inject-cofx]]
+  (:require [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor]
             [sixsq.nuvla.ui.pages.data.utils :as data-utils]
             [sixsq.nuvla.ui.common-components.plugins.table :as table-plugin]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [reagent.core :as r]
@@ -94,27 +94,10 @@
                  :header-content "Name"})
 (def field-driver {:field-key      :Driver
                    :header-content "Driver"})
+
 (def local-storage-key "nuvla.ui.table.edges.docker.column-configs")
 
-(reg-sub
-  ::current-cols
-  (fn [db [_ k default-columns]]
-    (let [ls (aget js/window "localStorage")
-          data (or
-                 (get db local-storage-key)
-                 (edn/read-string (.getItem ls local-storage-key)))]
-      (get data k))))
-
-(reg-event-fx
-  ::set-current-cols
-  [(inject-cofx :storage/get {:name local-storage-key})]
-  (fn [{storage :storage/get
-        db :db} [_ k columns]]
-    (js/console.info ::set-current-cols k columns (merge (or (edn/read-string storage) {}) {k columns}))
-    {:db (assoc-in db [local-storage-key k] columns)
-     :storage/set {:session? false
-                   :name     local-storage-key
-                   :value    (merge (or (edn/read-string storage) {}) {k columns})}}))
+(main-events/reg-set-current-cols-event-fx ::set-current-cols local-storage-key)
 
 (defn DockerTable
   [{:keys [rows columns default-columns sort-config-db-path db-path]}]
@@ -126,7 +109,7 @@
                                                       ::table-refactor/no-sort?       no-sort?}
                                                      (= field-key :SizeRw) (assoc ::table-refactor/field-cell CellBytesBis))) columns))
      :!default-columns       (r/atom (vec default-columns))
-     :!current-columns       (subscribe [::current-cols sort-config-db-path (vec default-columns)])
+     :!current-columns       (subscribe [::main-subs/current-cols local-storage-key sort-config-db-path])
      :set-current-columns-fn #(dispatch [::set-current-cols sort-config-db-path %])
      :!data                  rows
      :!selectable?           (r/atom true)}]

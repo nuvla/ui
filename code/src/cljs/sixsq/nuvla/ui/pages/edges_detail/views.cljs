@@ -9,7 +9,6 @@
             [sixsq.nuvla.ui.common-components.job.views :as job-views]
             [sixsq.nuvla.ui.common-components.plugins.audit-log :as audit-log-plugin]
             [sixsq.nuvla.ui.common-components.plugins.nav-tab :as tab-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.table :refer [TableColsEditable]]
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor]
             [sixsq.nuvla.ui.common-components.resource-log.views :as log-views]
             [sixsq.nuvla.ui.config :as config]
@@ -940,49 +939,51 @@
 (defn- NewStatsTable []
   (let [augmented-container-stats @(subscribe [::subs/augmented-container-stats])]
     [table-refactor/TableController
-     {:!columns         (r/atom [{::table-refactor/field-key      :name
-                                  ::table-refactor/header-content "Container Name"}
-                                 {::table-refactor/field-key      :image
-                                  ::table-refactor/header-content "Container Image"}
-                                 {::table-refactor/field-key      :cpu-usage
-                                  ::table-refactor/header-content "CPU %"
-                                  ::table-refactor/field-cell     CellCpuUsage}
-                                 {::table-refactor/field-key      :mem-usage
-                                  ::table-refactor/header-content "Mem Usage"
-                                  ::table-refactor/field-cell     CellBytes}
-                                 {::table-refactor/field-key      :mem-limit
-                                  ::table-refactor/header-content "Mem Limit"
-                                  ::table-refactor/field-cell     CellBytes}
-                                 {::table-refactor/field-key      :mem-usage-perc
-                                  ::table-refactor/header-content "Mem Usage %"
-                                  ::table-refactor/field-cell     CellMemUsagePerc}
-                                 {::table-refactor/field-key      :status
-                                  ::table-refactor/header-content "Status"}
-                                 {::table-refactor/field-key      :restart-count
-                                  ::table-refactor/header-content "Restart Count"}
-                                 {::table-refactor/field-key      :disk-in
-                                  ::table-refactor/header-content "Disk In"
-                                  ::table-refactor/field-cell     CellBytes}
-                                 {::table-refactor/field-key      :disk-out
-                                  ::table-refactor/header-content "Disk Out"
-                                  ::table-refactor/field-cell     CellBytes}
-                                 {::table-refactor/field-key      :net-in
-                                  ::table-refactor/header-content "Network In"
-                                  ::table-refactor/field-cell     CellBytes}
-                                 {::table-refactor/field-key      :net-out
-                                  ::table-refactor/header-content "Network Out"
-                                  ::table-refactor/field-cell     CellBytes}
-                                 {::table-refactor/field-key      :created-at
-                                  ::table-refactor/header-content "Created"
-                                  ::table-refactor/field-cell     CellTimeAgo}
-                                 {::table-refactor/field-key      :started-at
-                                  ::table-refactor/header-content "Started"
-                                  ::table-refactor/field-cell     CellTimeAgo}
-                                 {::table-refactor/field-key      :cpu-capacity
-                                  ::table-refactor/header-content "CPU capacity"}])
-      :!default-columns (r/atom [:name :image :cpu-usage :mem-usage-perc :status :restart-count])
-      :row-id-fn        :name
-      :!data            (r/atom augmented-container-stats)}]))
+     {:!columns               (r/atom [{::table-refactor/field-key      :name
+                                        ::table-refactor/header-content "Container Name"}
+                                       {::table-refactor/field-key      :image
+                                        ::table-refactor/header-content "Container Image"}
+                                       {::table-refactor/field-key      :cpu-usage
+                                        ::table-refactor/header-content "CPU %"
+                                        ::table-refactor/field-cell     CellCpuUsage}
+                                       {::table-refactor/field-key      :mem-usage
+                                        ::table-refactor/header-content "Mem Usage"
+                                        ::table-refactor/field-cell     CellBytes}
+                                       {::table-refactor/field-key      :mem-limit
+                                        ::table-refactor/header-content "Mem Limit"
+                                        ::table-refactor/field-cell     CellBytes}
+                                       {::table-refactor/field-key      :mem-usage-perc
+                                        ::table-refactor/header-content "Mem Usage %"
+                                        ::table-refactor/field-cell     CellMemUsagePerc}
+                                       {::table-refactor/field-key      :status
+                                        ::table-refactor/header-content "Status"}
+                                       {::table-refactor/field-key      :restart-count
+                                        ::table-refactor/header-content "Restart Count"}
+                                       {::table-refactor/field-key      :disk-in
+                                        ::table-refactor/header-content "Disk In"
+                                        ::table-refactor/field-cell     CellBytes}
+                                       {::table-refactor/field-key      :disk-out
+                                        ::table-refactor/header-content "Disk Out"
+                                        ::table-refactor/field-cell     CellBytes}
+                                       {::table-refactor/field-key      :net-in
+                                        ::table-refactor/header-content "Network In"
+                                        ::table-refactor/field-cell     CellBytes}
+                                       {::table-refactor/field-key      :net-out
+                                        ::table-refactor/header-content "Network Out"
+                                        ::table-refactor/field-cell     CellBytes}
+                                       {::table-refactor/field-key      :created-at
+                                        ::table-refactor/header-content "Created"
+                                        ::table-refactor/field-cell     CellTimeAgo}
+                                       {::table-refactor/field-key      :started-at
+                                        ::table-refactor/header-content "Started"
+                                        ::table-refactor/field-cell     CellTimeAgo}
+                                       {::table-refactor/field-key      :cpu-capacity
+                                        ::table-refactor/header-content "CPU capacity"}])
+      :!default-columns       (r/atom [:name :image :cpu-usage :mem-usage-perc :status :restart-count])
+      :!current-columns       (subscribe [::subs/stats-table-current-cols])
+      :set-current-columns-fn #(dispatch [::events/set-stats-table-current-cols %])
+      :row-id-fn              :name
+      :!data                  (r/atom augmented-container-stats)}]))
 
 
 (defn- OldStatsTable [container-stats]

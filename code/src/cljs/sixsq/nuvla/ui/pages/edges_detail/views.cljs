@@ -929,114 +929,60 @@
   [_cell-data {:keys [mem-usage mem-limit] :as _row} _column]
   [BytesUsage mem-usage mem-limit])
 
+(defn CellTimeAgo
+  [cell-data _row _column]
+  [uix/TimeAgo cell-data])
+
 (defn CellBytes
   [cell-data _row _column]
   (data-utils/format-bytes cell-data))
 
 (defn- NewStatsTable []
-  (let [container-stats-ordered @(subscribe [::subs/container-stats-ordered])
-        cell-bytes              (fn [{cell-data :cell-data}]
-                                  (data-utils/format-bytes cell-data))]
-    [:div
-     [table-refactor/TableController
-      {:!columns         (r/atom [{::table-refactor/field-key      :name
-                                   ::table-refactor/header-content "Container Name"}
-                                  {::table-refactor/field-key      :image
-                                   ::table-refactor/header-content "Container Image"}
-                                  {::table-refactor/field-key      :cpu-usage
-                                   ::table-refactor/header-content "CPU %"
-                                   ::table-refactor/field-cell     CellCpuUsage}
-                                  {::table-refactor/field-key      :mem-usage
-                                   ::table-refactor/header-content "Mem Usage"
-                                   ::table-refactor/field-cell     CellBytes}
-                                  {::table-refactor/field-key      :mem-limit
-                                   ::table-refactor/header-content "Mem Limit"
-                                   ::table-refactor/field-cell     CellBytes}
-                                  {::table-refactor/field-key      :mem-usage-perc
-                                   ::table-refactor/header-content "Mem Usage %"
-                                   ::table-refactor/field-cell     CellMemUsagePerc}
-                                  {::table-refactor/field-key      :status
-                                   ::table-refactor/header-content "Status"}
-                                  {::table-refactor/field-key      :restart-count
-                                   ::table-refactor/header-content "Restart Count"}
-                                  {::table-refactor/field-key      :disk-in
-                                   ::table-refactor/header-content "Disk In"
-                                   ::table-refactor/field-cell     CellBytes}
-                                  {::table-refactor/field-key      :disk-out
-                                   ::table-refactor/header-content "Disk Out"
-                                   ::table-refactor/field-cell     CellBytes}
-                                  {::table-refactor/field-key      :net-in
-                                   ::table-refactor/header-content "Network In"
-                                   ::table-refactor/field-cell     CellBytes}
-                                  {::table-refactor/field-key      :net-out
-                                   ::table-refactor/header-content "Network Out"
-                                   ::table-refactor/field-cell     CellBytes}
-                                  {::table-refactor/field-key      :created-at
-                                   ::table-refactor/header-content "Created"}
-                                  {::table-refactor/field-key      :started-at
-                                   ::table-refactor/header-content "Started"}
-                                  {::table-refactor/field-key      :cpu-capacity
-                                   ::table-refactor/header-content "CPU capacity"}])
-       :!default-columns (r/atom [:name :image :cpu-usage :mem-usage-perc :status :restart-count])
-       :row-id-fn        :id
-       :!data            (r/atom container-stats-ordered)}]
-     [TableColsEditable
-      {:columns         [{:field-key      :name
-                          :header-content "Container Name"}
-                         {:field-key      :image
-                          :header-content "Container Image"}
-                         {:field-key      :cpu-usage
-                          :header-content "CPU %"
-                          :cell           (fn [{value :cell-data}]
-                                            (if value
-                                              (str (general-utils/to-fixed value) " %")
-                                              "-"))}
-                         {:field-key      :mem-usage
-                          :header-content "Mem Usage"
-                          :cell           cell-bytes}
-                         {:field-key      :mem-limit
-                          :header-content "Mem Limit"
-                          :cell           cell-bytes}
-                         {:field-key      :mem-usage-perc
-                          :header-content "Mem Usage %"
-                          :cell           (fn [{{:keys [mem-usage mem-limit]} :row-data}]
-                                            [BytesUsage mem-usage mem-limit])
-                          :cell-props     {:style {:text-align "right"}}
-                          :sort-value-fn  (fn [{:keys [mem-usage mem-limit]}]
-                                            (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
-                                              (/ (double mem-usage) mem-limit)))}
-                         {:field-key      :status
-                          :header-content "Status"}
-                         {:field-key      :restart-count
-                          :header-content "Restart Count"}
-                         {:field-key      :disk-in
-                          :header-content "Disk In"
-                          :cell           cell-bytes}
-                         {:field-key      :disk-out
-                          :header-content "Disk Out"
-                          :cell           cell-bytes}
-                         {:field-key      :net-in
-                          :header-content "Network In"
-                          :cell           cell-bytes}
-                         {:field-key      :net-out
-                          :header-content "Network Out"
-                          :cell           cell-bytes}
-                         {:field-key      :created-at
-                          :header-content "Created"
-                          :cell           (fn [{{:keys [created-at]} :row-data}]
-                                            [uix/TimeAgo created-at])}
-                         {:field-key      :started-at
-                          :header-content "Started"
-                          :cell           (fn [{{:keys [started-at]} :row-data}]
-                                            [uix/TimeAgo started-at])}
-                         {:field-key      :cpu-capacity
-                          :header-content "CPU capacity"}]
-       :sort-config     {:db-path ::spec/stats-container-ordering}
-       :default-columns #{:name :image :cpu-usage :mem-usage-perc :status :restart-count}
-       :table-props     (merge style/single-line {:stackable true})
-       :cell-props      {:header {:single-line true}}
-       :rows            container-stats-ordered}
-      ::table-cols-edge-detail-container-config]]))
+  (let [augmented-container-stats @(subscribe [::subs/augmented-container-stats])]
+    [table-refactor/TableController
+     {:!columns         (r/atom [{::table-refactor/field-key      :name
+                                  ::table-refactor/header-content "Container Name"}
+                                 {::table-refactor/field-key      :image
+                                  ::table-refactor/header-content "Container Image"}
+                                 {::table-refactor/field-key      :cpu-usage
+                                  ::table-refactor/header-content "CPU %"
+                                  ::table-refactor/field-cell     CellCpuUsage}
+                                 {::table-refactor/field-key      :mem-usage
+                                  ::table-refactor/header-content "Mem Usage"
+                                  ::table-refactor/field-cell     CellBytes}
+                                 {::table-refactor/field-key      :mem-limit
+                                  ::table-refactor/header-content "Mem Limit"
+                                  ::table-refactor/field-cell     CellBytes}
+                                 {::table-refactor/field-key      :mem-usage-perc
+                                  ::table-refactor/header-content "Mem Usage %"
+                                  ::table-refactor/field-cell     CellMemUsagePerc}
+                                 {::table-refactor/field-key      :status
+                                  ::table-refactor/header-content "Status"}
+                                 {::table-refactor/field-key      :restart-count
+                                  ::table-refactor/header-content "Restart Count"}
+                                 {::table-refactor/field-key      :disk-in
+                                  ::table-refactor/header-content "Disk In"
+                                  ::table-refactor/field-cell     CellBytes}
+                                 {::table-refactor/field-key      :disk-out
+                                  ::table-refactor/header-content "Disk Out"
+                                  ::table-refactor/field-cell     CellBytes}
+                                 {::table-refactor/field-key      :net-in
+                                  ::table-refactor/header-content "Network In"
+                                  ::table-refactor/field-cell     CellBytes}
+                                 {::table-refactor/field-key      :net-out
+                                  ::table-refactor/header-content "Network Out"
+                                  ::table-refactor/field-cell     CellBytes}
+                                 {::table-refactor/field-key      :created-at
+                                  ::table-refactor/header-content "Created"
+                                  ::table-refactor/field-cell     CellTimeAgo}
+                                 {::table-refactor/field-key      :started-at
+                                  ::table-refactor/header-content "Started"
+                                  ::table-refactor/field-cell     CellTimeAgo}
+                                 {::table-refactor/field-key      :cpu-capacity
+                                  ::table-refactor/header-content "CPU capacity"}])
+      :!default-columns (r/atom [:name :image :cpu-usage :mem-usage-perc :status :restart-count])
+      :row-id-fn        :name
+      :!data            (r/atom augmented-container-stats)}]))
 
 
 (defn- OldStatsTable [container-stats]
@@ -1075,10 +1021,9 @@
            [ui/TableCell restart-count]]))]]]])
 
 (defn- StatsTable [container-stats]
-  [NewStatsTable container-stats]
-  #_(if (:cpu-usage (first container-stats))
-      [NewStatsTable container-stats]
-      [OldStatsTable container-stats]))
+  (if (:cpu-usage (first container-stats))
+    [NewStatsTable container-stats]
+    [OldStatsTable container-stats]))
 
 (defn Load
   [resources]

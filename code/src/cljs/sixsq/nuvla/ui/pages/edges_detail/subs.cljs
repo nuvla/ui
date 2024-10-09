@@ -170,11 +170,14 @@
 ;    (sort (partial general-utils/multi-key-direction-sort ordering) configs)))
 
 (reg-sub
-  ::container-stats-ordered
+  ::augmented-container-stats
   :<- [::container-stats]
-  :<- [::stats-container-ordering]
-  (fn [[container-stats stats-container-ordering]]
-    (sort (partial general-utils/multi-key-direction-sort stats-container-ordering) container-stats)))
+  (fn [container-stats]
+    (mapv (fn [{:keys [mem-usage mem-limit] :as row}]
+            (assoc row :mem-usage-perc
+                       (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
+                         (/ (double mem-usage) mem-limit))))
+          container-stats)))
 
 (reg-sub
   ::nuvlaedge-release

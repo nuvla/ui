@@ -1221,3 +1221,17 @@ i.link.icon.app-details-add-config-param-icon:hover {
 #minimum-requirements .ui.fluid.input {
   width: 250px;
 }
+
+table.ui i.icon.sort:before {
+  color: unset !important;
+}
+
+table.ui i.icon.sort {
+  color: black !important;
+  opacity: 0.4;
+}
+
+table.ui i.icon.sort.ascending,
+table.ui i.icon.sort.descending {
+  opacity: 0.8;
+}

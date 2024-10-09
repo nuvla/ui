@@ -25,7 +25,19 @@ async function expectTableRowCount(table, rowCount) {
 }
 
 async function openColumnSelectorModal(sceneRoot) {
-  await sceneRoot.getByTitle('Columns selector').locator('i').click();
+  return sceneRoot.getByTitle('Columns selector').locator('i').click();
+}
+
+function getColumnHeader(table, colName) {
+  return table.getByRole('button', { name: colName });
+}
+
+function getColumnHeaderLabel(table, colName) {
+  return getColumnHeader(table, colName).getByTestId('column-header-text');
+}
+
+function getDeleteColumnButton(table, colName) {
+  return getColumnHeader(table, colName).locator('a[aria-label="Delete Column"]');
 }
 
 test('test basic table', async ({ page }, { config }) => {
@@ -63,12 +75,12 @@ test('test column customization', async ({ page }, { config }) => {
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
 
   // Expect delete Id column is not possible
-  await table.getByRole('button', { name: 'Id' }).hover();
-  await expect(table.getByRole('button', { name: 'Id' }).locator('a[aria-label="Delete Column"]')).toHaveCount(0);
+  await getColumnHeaderLabel(table, 'Id').hover();
+  await expect(getDeleteColumnButton(table, 'Id')).toHaveCount(0);
 
   // Expect delete Size column is possible
-  await table.getByRole('button', { name: 'Size' }).hover();
-  await table.getByRole('button', { name: 'Size' }).locator('a[aria-label="Delete Column"]').click();
+  await getColumnHeader(table, 'Size').hover();
+  await getDeleteColumnButton(table, 'Size').click();
   await expectHeadersOrder(table, ['Id', 'Created']);
 });
 
@@ -79,15 +91,15 @@ test('test draggable columns', async ({ page }, { config }) => {
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
 
   // Move Created column to Size position
-  await dragAndDrop(page, table.getByRole('button', { name: 'Created' }), table.getByRole('button', { name: 'Size' }));
+  await dragAndDrop(page, getColumnHeader(table, 'Created'), getColumnHeader(table, 'Size'));
   await expectHeadersOrder(table, ['Id', 'Created', 'Size']);
 
   // Move Created column to original position
-  await dragAndDrop(page, table.getByRole('button', { name: 'Size' }), table.getByRole('button', { name: 'Created' }));
+  await dragAndDrop(page, getColumnHeader(table, 'Size'), getColumnHeader(table, 'Created'));
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
 
   // Move Created column to first position
-  await dragAndDrop(page, table.getByRole('button', { name: 'Created' }), table.getByRole('button', { name: 'Id' }));
+  await dragAndDrop(page, getColumnHeader(table, 'Created'), getColumnHeader(table, 'Id'));
   await expectHeadersOrder(table, ['Created', 'Size', 'Id']);
 });
 
@@ -162,7 +174,7 @@ test('test sorting', async ({ page }, { config }) => {
 
   const table = await locatorOne(sceneRoot, 'table.ui');
 
-  await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
+  await expectHeadersOrder(table, ['Id', 'Size', 'Created', 'Not sortable']);
 
   expect(table.locator('thead tr')).toHaveCount(1);
   expectTableRowCount(table, 3);
@@ -171,15 +183,15 @@ test('test sorting', async ({ page }, { config }) => {
   await expectColumnData(page, table, 3, ['1725666894','1725667915','1726074087']);
 
   // Sort by Created descending
-  await table.getByRole('button', { name: 'Created' }).click();
+  await getColumnHeaderLabel(table, 'Created').click();
   await expectColumnData(page, table, 3, ['1726074087','1725667915','1725666894']);
 
   // Sort by Created descending + Id ascending
-  await table.getByRole('button', { name: 'Id' }).click();
+  await getColumnHeaderLabel(table, 'Id').click();
   await expectColumnData(page, table, 3, ['1726074087','1725667915','1725666894']);
 
   // No more sorting on Created => Sort by Id ascending
-  await table.getByRole('button', { name: 'Created' }).click();
+  await getColumnHeaderLabel(table, 'Created').click();
   await expectColumnData(page, table, 3, ['1725666894','1726074087','1725667915']);
 
   // Disable sorting => data shown in the order in which it is passed in
@@ -187,13 +199,13 @@ test('test sorting', async ({ page }, { config }) => {
   await expectColumnData(page, table, 3, ['1726074087','1725667915','1725666894']);
 
   // Try to sort by Id descending, but expect no effect as sorting is not enabled
-  await table.getByRole('button', { name: 'Id' }).click();
+  await getColumnHeaderLabel(table, 'Id').click();
   await expectColumnData(page, table, 3, ['1726074087','1725667915','1725666894']);
 
   // Enable sorting again and then sort by Id descending
   await sceneRoot.getByTestId('checkbox-enable-sorting').click();
   await expectColumnData(page, table, 3, ['1725666894','1726074087','1725667915']);
-  await table.getByRole('button', { name: 'Id' }).click();
+  await getColumnHeaderLabel(table, 'Id').click();
   await expectColumnData(page, table, 3, ['1725667915','1726074087','1725666894']);
 });
 
@@ -241,21 +253,21 @@ test('test pagination', async ({ page }, { config }) => {
   const lastItemLink = await locatorOne(paginationNavigation, 'a[type="lastItem"]');
 
   // Move through the pages and check the pagination state
-  await expectPaginationState(page, table, paginationDiv, 303, 10, 1);
+  await expectPaginationState(page, table, paginationDiv, 303, 25, 1);
   await nextItemLink.click();
-  await expectPaginationState(page, table, paginationDiv, 303, 10, 2);
+  await expectPaginationState(page, table, paginationDiv, 303, 25, 2);
   await prevItemLink.click();
-  await expectPaginationState(page, table, paginationDiv, 303, 10, 1);
+  await expectPaginationState(page, table, paginationDiv, 303, 25, 1);
   await lastItemLink.click();
-  await expectPaginationState(page, table, paginationDiv, 303, 10, 31);
+  await expectPaginationState(page, table, paginationDiv, 303, 25, 13);
   await firstItemLink.click();
-  await expectPaginationState(page, table, paginationDiv, 303, 10, 1);
+  await expectPaginationState(page, table, paginationDiv, 303, 25, 1);
 
   // Change the page size and repeat the checks
-  await selectPageSize(paginationDiv, 30);
-  await expectPaginationState(page, table, paginationDiv, 303, 30, 1);
+  await selectPageSize(paginationDiv, 50);
+  await expectPaginationState(page, table, paginationDiv, 303, 50, 1);
   await lastItemLink.click();
-  await expectPaginationState(page, table, paginationDiv, 303, 30, 11);
+  await expectPaginationState(page, table, paginationDiv, 303, 50, 7);
 
   // Disable pagination => all passed in data is shown in the table and pagination control is not shown
   await sceneRoot.getByTestId('checkbox-enable-pagination').click();
@@ -274,23 +286,24 @@ test('test simultaneous filtering, sorting and pagination', async ({ page }, { c
   const lastItemLink = await locatorOne(paginationNavigation, 'a[type="lastItem"]');
 
   // Move through the pages and check the pagination state
-  await expectPaginationState(page, table, paginationDiv, 303, 10, 1);
+  await expectPaginationState(page, table, paginationDiv, 303, 25, 1);
   await nextItemLink.click();
-  await expectPaginationState(page, table, paginationDiv, 303, 10, 2);
+  await expectPaginationState(page, table, paginationDiv, 303, 25, 2);
 
   // Apply a global filter
   const filterInput = await locatorOne(sceneRoot, '.global-filter > input');
   // global filter: 202 rows contain 1725, in column Created
   await filterInput.fill('1725');
-  await expectPaginationState(page, table, paginationDiv, 202, 10, 2,
-      [16,17,19,20,22,23,25,26,28,29]);
+  await nextItemLink.click();
+  await expectPaginationState(page, table, paginationDiv, 202, 25, 2,
+      [38,40,41,43,44,46,47,49,50,52,53,55,56,58,59,61,62,64,65,67,68,70,71,73,74]);
   // Sort by Created ascending and Idx descending
-  await table.getByRole('button', { name: 'Created' }).click();
-  await table.getByRole('button', { name: 'Idx' }).click();
-  await table.getByRole('button', { name: 'Idx' }).click();
-  await expectPaginationState(page, table, paginationDiv, 202, 10, 2,
-      [272,269,266,263,260,257,254,251,248,245]);
+  await getColumnHeaderLabel(table, 'Created').click();
+  await getColumnHeaderLabel(table, 'Idx').click();
+  await getColumnHeaderLabel(table, 'Idx').click();
+  await expectPaginationState(page, table, paginationDiv, 202, 25, 2,
+      [227,224,221,218,215,212,209,206,203,200,197,194,191,188,185,182,179,176,173,170,167,164,161,158,155]);
   await lastItemLink.click();
-  await expectPaginationState(page, table, paginationDiv, 202, 10, 21,
+  await expectPaginationState(page, table, paginationDiv, 202, 25, 9,
       [4,1]);
 });

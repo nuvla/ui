@@ -7,8 +7,9 @@
 
 
 (defn TableController
-  [{:keys [!enable-pagination?] :as control}]
-  (let [enable-pagination? (if !enable-pagination? @!enable-pagination? false)]
+  [{:keys [!enable-sorting? !enable-pagination?] :as control}]
+  (let [enable-sorting?    (if !enable-sorting? @!enable-sorting? false)
+        enable-pagination? (if !enable-pagination? @!enable-pagination? false)]
     [table-refactor/TableController
      (merge {;; for testing purposes disable all functionalities that are otherwise enabled
              ;; by default. They can be enabled in each test via the control map.
@@ -26,9 +27,14 @@
                                          enable-pagination?
                                          (conj {::table-refactor/field-key      :Idx
                                                 ::table-refactor/header-content "Idx"
-                                                ::table-refactor/no-delete      true})))
+                                                ::table-refactor/no-delete      true})
+                                         enable-sorting?
+                                         (conj {::table-refactor/field-key      :NoSort
+                                                ::table-refactor/header-content "Not sortable"
+                                                ::table-refactor/no-sort?       true})))
              :!default-columns (r/atom (cond-> [:Id :Size :Created]
-                                               enable-pagination? (conj :Idx)))
+                                               enable-pagination? (conj :Idx)
+                                               enable-sorting? (conj :NoSort)))
              :row-id-fn        (if enable-pagination? :Idx :Id)
              :!data            (r/atom (cond->
                                          [{:RepoDigests
@@ -138,10 +144,10 @@
                  :on-click    #(swap! !enable-row-selection? not)}]])
 
 (defscene row-selection
-          (r/with-let [!enable-row-selection? (r/atom true)]
-            [:div
-             [RowSelectionParams !enable-row-selection?]
-             [TableController {:!enable-row-selection? !enable-row-selection?}]]))
+  (r/with-let [!enable-row-selection? (r/atom true)]
+    [:div
+     [RowSelectionParams !enable-row-selection?]
+     [TableController {:!enable-row-selection? !enable-row-selection?}]]))
 
 (defn SearchInput
   [!global-filter]
@@ -166,14 +172,14 @@
      [SearchInput !global-filter])])
 
 (defscene global-filter
-          (r/with-let [!enable-column-customization? (r/atom true)
-                       !enable-global-filter?        (r/atom true)
-                       !global-filter                (r/atom "")]
-            [:div
-             [GlobalFilterParams !enable-global-filter? !global-filter]
-             [TableController {:!enable-column-customization? !enable-column-customization?
-                               :!enable-global-filter?        !enable-global-filter?
-                               :!global-filter                !global-filter}]]))
+  (r/with-let [!enable-column-customization? (r/atom true)
+               !enable-global-filter?        (r/atom true)
+               !global-filter                (r/atom "")]
+    [:div
+     [GlobalFilterParams !enable-global-filter? !global-filter]
+     [TableController {:!enable-column-customization? !enable-column-customization?
+                       :!enable-global-filter?        !enable-global-filter?
+                       :!global-filter                !global-filter}]]))
 
 (defn SortingParams
   [!enable-sorting?]
@@ -186,12 +192,12 @@
                  :on-click    #(swap! !enable-sorting? not)}]])
 
 (defscene sorting
-          (r/with-let [!enable-sorting? (r/atom true)
-                       !sorting         (r/atom [[:Created "asc"]])]
-            [:div
-             [SortingParams !enable-sorting?]
-             [TableController {:!enable-sorting? !enable-sorting?
-                               :!sorting         !sorting}]]))
+  (r/with-let [!enable-sorting? (r/atom true)
+               !sorting         (r/atom [[:Created "asc"]])]
+    [:div
+     [SortingParams !enable-sorting?]
+     [TableController {:!enable-sorting? !enable-sorting?
+                       :!sorting         !sorting}]]))
 
 (defn PaginationParams
   [!enable-pagination?]
@@ -204,30 +210,30 @@
                  :on-click    #(swap! !enable-pagination? not)}]])
 
 (defscene pagination
-          (r/with-let [!enable-pagination? (r/atom true)
-                       !pagination         (r/atom {:page-index 0
-                                                    :page-size  10})]
-            [:div
-             [PaginationParams !enable-pagination?]
-             [TableController {:!enable-pagination? !enable-pagination?
-                               :!pagination         !pagination}]]))
+  (r/with-let [!enable-pagination? (r/atom true)
+               !pagination         (r/atom {:page-index 0
+                                            :page-size  25})]
+    [:div
+     [PaginationParams !enable-pagination?]
+     [TableController {:!enable-pagination? !enable-pagination?
+                       :!pagination         !pagination}]]))
 
 (defscene filter-sort-paginate
-          (r/with-let [!enable-global-filter?        (r/atom true)
-                       !enable-sorting?              (r/atom true)
-                       !enable-pagination?           (r/atom true)
-                       !enable-column-customization? (r/atom false)
-                       !global-filter                (r/atom "")
-                       !pagination                   (r/atom {:page-index 0
-                                                              :page-size  10})]
-            [:div
-             [GlobalFilterParams !enable-global-filter? !global-filter]
-             [SortingParams !enable-sorting?]
-             [PaginationParams !enable-pagination?]
-             [ColumnCustomizationParams !enable-column-customization?]
-             [TableController {:!enable-global-filter?        !enable-global-filter?
-                               :!enable-column-customization? !enable-column-customization?
-                               :!enable-sorting?              !enable-sorting?
-                               :!enable-pagination?           !enable-pagination?
-                               :!global-filter                !global-filter
-                               :!pagination                   !pagination}]]))
+  (r/with-let [!enable-global-filter?        (r/atom true)
+               !enable-sorting?              (r/atom true)
+               !enable-pagination?           (r/atom true)
+               !enable-column-customization? (r/atom false)
+               !global-filter                (r/atom "")
+               !pagination                   (r/atom {:page-index 0
+                                                      :page-size  25})]
+    [:div
+     [GlobalFilterParams !enable-global-filter? !global-filter]
+     [SortingParams !enable-sorting?]
+     [PaginationParams !enable-pagination?]
+     [ColumnCustomizationParams !enable-column-customization?]
+     [TableController {:!enable-global-filter?        !enable-global-filter?
+                       :!enable-column-customization? !enable-column-customization?
+                       :!enable-sorting?              !enable-sorting?
+                       :!enable-pagination?           !enable-pagination?
+                       :!global-filter                !global-filter
+                       :!pagination                   !pagination}]]))

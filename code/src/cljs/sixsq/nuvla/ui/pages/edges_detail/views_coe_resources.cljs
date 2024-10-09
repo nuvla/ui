@@ -6,7 +6,8 @@
             [sixsq.nuvla.ui.pages.edges-detail.events :as events]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table]
-            [sixsq.nuvla.ui.pages.data.utils :as data-utils]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -45,10 +46,6 @@
   (fn [{{:keys [::spec/nuvlabox]} :db} [_ payload close-modal-fn]]
     {:fx [[:dispatch [::events/operation (:id nuvlabox) "coe-resource-actions" payload
                       close-modal-fn close-modal-fn]]]}))
-
-(defn CellBytes
-  [cell-data _row _column]
-  (data-utils/format-bytes cell-data))
 
 (defn label-group-overflow-detector
   [Component]
@@ -117,13 +114,15 @@
 (def field-driver {::table/field-key      :Driver
                    ::table/header-content "Driver"})
 
+(main-events/reg-set-current-cols-event-fx ::set-current-cols local-storage-key)
+
 (defn DockerTable
   [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination] :as _control}
    {:keys [rows columns default-columns sort-config-key]}]
   [table/TableController
    {:!columns               (r/atom columns)
     :!default-columns       (r/atom default-columns)
-    :!current-columns       (subscribe [::current-cols sort-config-key])
+    :!current-columns       (subscribe [::main-subs/current-cols local-storage-key sort-config-key])
     :set-current-columns-fn #(dispatch [::set-current-cols sort-config-key %])
     :!data                  rows
     :!enable-row-selection? (r/atom true)
@@ -149,7 +148,7 @@
                        ::table/no-sort?       true}
                       {::table/field-key      :Size
                        ::table/header-content "Size"
-                       ::table/field-cell     CellBytes}
+                       ::table/field-cell     table/CellBytes}
                       field-created
                       {::table/field-key      :RepoTags
                        ::table/header-content "Tags"
@@ -278,7 +277,7 @@
                        ::table/header-content "Status"}
                       {::table/field-key      :SizeRootFs
                        ::table/header-content "Size RootFs"
-                       ::table/field-cell     CellBytes}
+                       ::table/field-cell     table/CellBytes}
                       field-labels
                       {::table/field-key      :HostConfig
                        ::table/header-content "Host config"
@@ -288,7 +287,7 @@
                        ::table/field-cell     SecondaryLabelGroup}
                       {::table/field-key      :SizeRw
                        ::table/header-content "Size RW"
-                       ::table/field-cell     CellBytes}
+                       ::table/field-cell     table/CellBytes}
                       {::table/field-key      :ImageID
                        ::table/header-content "Image Id"}
                       {::table/field-key      :Mounts

@@ -557,3 +557,11 @@ cluster-nodes, cluster-managers, cluster-join-address, status-notes, orchestrato
                         {:header  "Could not fetch NuvlaEdge statistics"
                          :content message
                          :type    :error}]]]})))
+
+(main-events/reg-set-current-cols-event-fx
+  ::set-stats-table-current-cols-main spec/stats-table-col-configs-local-storage-key)
+
+(reg-event-fx
+  ::set-stats-table-current-cols
+  (fn [_ [_ columns]]
+    {:fx [[:dispatch [::set-stats-table-current-cols-main ::spec/stats-columns-ordering columns]]]}))

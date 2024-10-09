@@ -1,9 +1,11 @@
 (ns sixsq.nuvla.ui.main.events
   (:require [ajax.core :as ajax]
+            [clojure.edn :as edn]
             [clojure.set :as set]
             [clojure.string :as str]
             [day8.re-frame.http-fx]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [re-frame.cofx :refer [inject-cofx]]
             [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
             [sixsq.nuvla.ui.common-components.messages.events :as messages-events]
             [sixsq.nuvla.ui.common-components.messages.spec :as messages-spec]
@@ -409,3 +411,15 @@
     {:fx [(when (#{:mobile :tablet} device)
             [:dispatch [::close-sidebar]])
           [:dispatch [::routing-events/navigate url]]]}))
+
+(defn reg-set-current-cols-event-fx
+  [id local-storage-key]
+  (reg-event-fx
+    id
+    [(inject-cofx :storage/get {:name local-storage-key})]
+    (fn [{storage :storage/get
+          db      :db} [_ k columns]]
+      {:db          (assoc-in db [local-storage-key k] columns)
+       :storage/set {:session? false
+                     :name     local-storage-key
+                     :value    (merge (or (edn/read-string storage) {}) {k columns})}})))

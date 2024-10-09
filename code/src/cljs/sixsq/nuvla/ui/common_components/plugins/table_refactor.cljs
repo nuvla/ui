@@ -22,8 +22,8 @@
   [{:keys [::!columns] :as control}]
   (assoc control
     ::!columns-by-key
-                 (r/track (fn columns-by-key-fn []
-                            (into {} (map (juxt ::field-key identity) @!columns))))))
+    (r/track (fn columns-by-key-fn []
+               (into {} (map (juxt ::field-key identity) @!columns))))))
 
 (defn set-!processed-data
   [{:keys [::!enable-global-filter? ::!global-filter
@@ -49,8 +49,8 @@
     (r/track (fn paginated-data-fn []
                (if @!enable-pagination?
                  (let [{:keys [page-index page-size]} @!pagination
-                       start  (* page-index page-size)
-                       end    (min (+ start page-size) (count @!processed-data))]
+                       start (* page-index page-size)
+                       end   (min (+ start page-size) (count @!processed-data))]
                    (subvec @!processed-data start end))
                  @!processed-data)))))
 
@@ -104,11 +104,16 @@
                                    (.stopPropagation event))
                     :class       [:toggle-invisible-on-parent-hover]}]]))
 
-(defn SortIcon [{:keys [::!enable-sorting?]} direction]
-  (let [direction->class {"asc"  " ascending"
-                          "desc" " descending"}]
-    [uix/LinkIcon {:class (if (and @!enable-sorting? direction) :visible :invisible)
-                   :name  (str "sort" (direction->class direction))}]))
+(defn SortIcon [{:keys [::!enable-sorting?]}
+                {:keys [::no-sort] :as _column}
+                direction]
+  (when (and @!enable-sorting? (not no-sort))
+    (let [dir-class (case direction
+                      "asc" "ascending"
+                      "desc" "descending"
+                      nil)]
+      [uix/LinkIcon {:class [(when dir-class :black)]
+                     :name  (str "sort " dir-class)}])))
 
 (defn- calc-new-sorting [sorting sort-key sort-direction]
   (if (some? sort-direction)
@@ -153,7 +158,8 @@
                                  :vertical-align :middle}}]]))
 
 (defn TableHeaderCell
-  [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn] :as control} column]
+  [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn] :as control}
+   {:keys [::no-sort] :as column}]
   (let [field-key      (::field-key column)
         sortable       (dnd/useSortable #js {"id" (name field-key)})
         setNodeRef     (.-setNodeRef sortable)
@@ -165,19 +171,20 @@
     (js/console.info "Render TableHeaderCell " field-key)
     ;Using html th tag instead of semantic ui TableHeaderCell, because for some reason it's not taking into account ref fn
     [:th (merge {:class    ["show-child-on-hover" "single line"]
-                 :style    (cond-> {:cursor      :pointer
-                                    :user-select :none}
+                 :style    (cond-> {:user-select :none}
+                                   (and @!enable-sorting? (not no-sort))
+                                   (assoc :cursor :pointer)
                                    @!enable-column-customization?
                                    (assoc :transform (dnd/translate-css sortable)))
-                 :on-click (when @!enable-sorting? on-click)}
+                 :on-click (when (and @!enable-sorting? (not no-sort)) on-click)}
                 ;; always adding attributes for consistency on the `role` attribute of the header
                 ;; (.-attributes sortable) changes the role from `cell` to `button`
                 (js->clj (.-attributes sortable))
                 (when @!enable-column-customization?
                   (merge {:ref setNodeRef}
                          (js->clj (.-listeners sortable)))))
-     (::header-content column)
-     [SortIcon control sort-direction]
+     [:span {:data-testid "column-header-text"} (::header-content column)]
+     [SortIcon control column sort-direction]
      [DeleteColumn control column]]))
 
 (defn columns-by-key-fn [{:keys [::!columns] :as control}] (into {} (map (juxt ::field-key identity) @!columns)))
@@ -304,46 +311,53 @@
   {:content (r/as-element [ui/Icon {:class icon-name}]) :icon true})
 
 (defn NuvlaPagination
-  [{:keys [::tr-fn ::!pagination ::set-pagination-fn ::!processed-data] :as control}]
-  (let [{:keys [page-index page-size] :as pagination} @!pagination
-        total-items   (count @!processed-data)
-        page-count    (cond-> (quot total-items page-size)
-                              (pos? (rem total-items page-size)) inc)
-        goto-page     #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
-        set-page-size #(set-pagination-fn (assoc pagination :page-size % :page-index 0))
-        per-page-opts (map (fn [n-per-page] {:key     n-per-page
-                                             :value   n-per-page
-                                             :content n-per-page
-                                             :text    (str n-per-page " per page")})
-                           [10 20 30 40])]
-    [:div {:style {:display         :flex
-                   :justify-content :space-between
-                   :align-items     :baseline
-                   :flex-wrap       :wrap-reverse
-                   :margin-top      10}
-           :class :uix-pagination}
-     [:div {:style {:display :flex}
-            :class :uix-pagination-control}
-      [:div {:style {:display :flex}}
-       [:div {:style {:margin-right "0.5rem"}}
-        (str (str/capitalize (tr-fn [:total])) ":")]
-       [:div (or total-items 0)]]
-      [:div {:style {:color "#C10E12" :margin-right "1rem" :margin-left "1rem"}} "| "]
-      [ui/Dropdown {:value     page-size
-                    :options   per-page-opts
-                    :pointing  true
-                    :on-change (ui-callback/value set-page-size)}]]
-     [ui/Pagination
-      {:size          :tiny
-       :class         :uix-pagination-navigation
-       :total-pages   page-count
-       :first-item    (icon "angle double left")
-       :last-item     (icon "angle double right")
-       :prev-item     (icon "angle left")
-       :next-item     (icon "angle right")
-       :ellipsis-item nil
-       :active-page   (inc page-index)
-       :onPageChange  (ui-callback/callback :activePage #(goto-page (dec %)))}]]))
+  [{:keys [::!global-filter ::!pagination ::set-pagination-fn] :as _control}]
+  ;; whenever the global filter changes, reset the pagination index to point to the first page
+  (when !global-filter
+    (add-watch !global-filter :watcher
+               (fn [_key _ref old-value new-value]
+                 (when-not (= old-value new-value)
+                   (set-pagination-fn (assoc @!pagination :page-index 0))))))
+  (fn [{:keys [::tr-fn ::!pagination ::set-pagination-fn ::!processed-data] :as _control}]
+    (let [{:keys [page-index page-size] :as pagination} @!pagination
+          total-items   (count @!processed-data)
+          page-count    (cond-> (quot total-items page-size)
+                                (pos? (rem total-items page-size)) inc)
+          goto-page     #(set-pagination-fn (assoc pagination :page-index (max 0 (min (dec page-count) %))))
+          set-page-size #(set-pagination-fn (assoc pagination :page-size % :page-index 0))
+          per-page-opts (map (fn [n-per-page] {:key     n-per-page
+                                               :value   n-per-page
+                                               :content n-per-page
+                                               :text    (str n-per-page " per page")})
+                             [25 50 100])]
+      [:div {:style {:display         :flex
+                     :justify-content :space-between
+                     :align-items     :baseline
+                     :flex-wrap       :wrap-reverse
+                     :margin-top      10}
+             :class :uix-pagination}
+       [:div {:style {:display :flex}
+              :class :uix-pagination-control}
+        [:div {:style {:display :flex}}
+         [:div {:style {:margin-right "0.5rem"}}
+          (str (str/capitalize (tr-fn [:total])) ":")]
+         [:div (or total-items 0)]]
+        [:div {:style {:color "#C10E12" :margin-right "1rem" :margin-left "1rem"}} "| "]
+        [ui/Dropdown {:value     page-size
+                      :options   per-page-opts
+                      :pointing  true
+                      :on-change (ui-callback/value set-page-size)}]]
+       [ui/Pagination
+        {:size          :tiny
+         :class         :uix-pagination-navigation
+         :total-pages   page-count
+         :first-item    (icon "angle double left")
+         :last-item     (icon "angle double right")
+         :prev-item     (icon "angle left")
+         :next-item     (icon "angle right")
+         :ellipsis-item nil
+         :active-page   (inc page-index)
+         :onPageChange  (ui-callback/callback :activePage #(goto-page (dec %)))}]])))
 
 (defn Table
   [control]
@@ -367,13 +381,14 @@
                                         set-current-columns-fn))))]
     [:div
      [ColumnsSelectorModal control]
-     [dnd/DndContext {:collisionDetection dnd/closestCenter
-                      :modifiers          [dnd/restrictToHorizontalAxis]
-                      :onDragEnd          on-drag-end-fn
-                      :sensors            (dnd/pointerSensor)}
-      [ui/Table
-       [TableHeader control]
-       [TableBody control]]]
+     [:div.table-wrapper
+      [dnd/DndContext {:collisionDetection dnd/closestCenter
+                       :modifiers          [dnd/restrictToHorizontalAxis]
+                       :onDragEnd          on-drag-end-fn
+                       :sensors            (dnd/pointerSensor)}
+       [ui/Table
+        [TableHeader control]
+        [TableBody control]]]]
      (when @!enable-pagination?
        [NuvlaPagination control])]))
 

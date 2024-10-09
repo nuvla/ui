@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.pages.edges-detail.subs
   (:require [clojure.string :as str]
             [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.edges.utils :as edges-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -170,11 +171,14 @@
 ;    (sort (partial general-utils/multi-key-direction-sort ordering) configs)))
 
 (reg-sub
-  ::container-stats-ordered
+  ::augmented-container-stats
   :<- [::container-stats]
-  :<- [::stats-container-ordering]
-  (fn [[container-stats stats-container-ordering]]
-    (sort (partial general-utils/multi-key-direction-sort stats-container-ordering) container-stats)))
+  (fn [container-stats]
+    (mapv (fn [{:keys [mem-usage mem-limit] :as row}]
+            (assoc row :mem-usage-perc
+                       (when (and (number? mem-usage) (number? mem-limit) (not (zero? mem-limit)))
+                         (/ (double mem-usage) mem-limit))))
+          container-stats)))
 
 (reg-sub
   ::nuvlaedge-release
@@ -348,3 +352,8 @@
 (reg-sub
   ::availability-15-min
   :-> ::spec/availability-15-min)
+
+(reg-sub
+  ::stats-table-current-cols
+  :<- [::main-subs/current-cols spec/stats-table-col-configs-local-storage-key ::spec/stats-columns-ordering]
+  identity)

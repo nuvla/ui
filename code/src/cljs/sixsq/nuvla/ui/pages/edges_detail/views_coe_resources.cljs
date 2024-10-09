@@ -18,6 +18,9 @@
 
 (def local-storage-key "nuvla.ui.table.edges.docker.column-configs")
 
+(def default-pagination {:page-index 0
+                         :page-size  20})
+
 (reg-sub
   ::current-cols
   (fn [db [_ k]]
@@ -115,8 +118,9 @@
                    ::table/header-content "Driver"})
 
 (defn DockerTable
-  [{:keys [rows columns default-columns sort-config-key !selected
-           set-selected-fn !global-filter]}]
+  [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination] :as _control}
+   {:keys [rows columns default-columns sort-config-key]}]
+  (js/console.info "DockerTable" !pagination)
   [table/TableController
    {:!columns               (r/atom columns)
     :!default-columns       (r/atom default-columns)
@@ -127,38 +131,38 @@
     :!selected              !selected
     :set-selected-fn        set-selected-fn
     :!global-filter         !global-filter
+    :!enable-pagination?    (r/atom true)
+    :!pagination            !pagination
     :!enable-global-filter? (r/atom true)}])
 
 (defn DockerImagesTable
-  [{:keys [::!selected ::set-selected-fn ::!global-filter ::global-filter-fn] :as control}]
+  [control]
+  (js/console.info "DockerImagesTable" control)
   [DockerTable
-   {:rows             (::!docker-images control)
-    :columns          [field-id
-                       {::table/field-key      :ParentId
-                        ::table/header-content "Parent Id"
-                        ::table/no-sort?       true}
-                       {::table/field-key      :RepoDigests
-                        ::table/header-content "Repo Digests"
-                        ::table/field-cell     SecondaryLabelGroup
-                        ::table/no-sort?       true}
-                       {::table/field-key      :Size
-                        ::table/header-content "Size"
-                        ::table/field-cell     CellBytes}
-                       field-created
-                       {::table/field-key      :RepoTags
-                        ::table/header-content "Tags"
-                        ::table/no-sort?       true
-                        ::table/field-cell     PrimaryLabelGroup}
-                       field-labels
-                       {::table/field-key      :Repository
-                        ::table/header-content "Repository"}
-                       {::table/field-key      :Tag
-                        ::table/header-content "Tag"}]
-    :default-columns  [:id :Size :Created :RepoTags]
-    :!selected        !selected
-    :set-selected-fn  set-selected-fn
-    :sort-config-key  :docker-images
-    :!global-filter   !global-filter}])
+   control
+   {:rows            (::!docker-images control)
+    :columns         [field-id
+                      {::table/field-key      :ParentId
+                       ::table/header-content "Parent Id"
+                       ::table/no-sort?       true}
+                      {::table/field-key      :RepoDigests
+                       ::table/header-content "Repo Digests"
+                       ::table/field-cell     SecondaryLabelGroup
+                       ::table/no-sort?       true}
+                      {::table/field-key      :Size
+                       ::table/header-content "Size"
+                       ::table/field-cell     CellBytes}
+                      field-created
+                      {::table/field-key      :RepoTags
+                       ::table/header-content "Tags"
+                       ::table/no-sort?       true
+                       ::table/field-cell     PrimaryLabelGroup}
+                      field-labels
+                      {::table/field-key      :Repository
+                       ::table/header-content "Repository"}
+                      {::table/field-key      :Tag
+                       ::table/header-content "Tag"}]
+    :default-columns [:id :Size :Created :RepoTags]}])
 
 (defn PullImageMenuItem
   [opts]
@@ -217,13 +221,15 @@
                    :on-click            delete-modal-open-fn}])
 
 (defn SearchInput
-  [{:keys [::!global-filter] :as _control}]
+  [{:keys [::!global-filter ::!pagination] :as _control}]
   (r/with-let [tr (subscribe [::i18n-subs/tr])]
     [ui/MenuItem
      [ui/Input {:transparent true
                 :placeholder (str (@tr [:search]) "...")
                 :icon        (r/as-element [icons/SearchIcon])
-                :on-change   (ui-callback/input-callback #(reset! !global-filter %))}]]))
+                :on-change   (ui-callback/input-callback
+                               #(do (reset! !global-filter %)
+                                    (reset! !pagination default-pagination)))}]]))
 
 (defn ImageActionBar
   [control]
@@ -242,6 +248,7 @@
 
 (defn DockerVolumesTable [control]
   [DockerTable
+   control
    {:rows            (::!docker-volumes control)
     :columns         [{::table/field-key      :id
                        ::table/header-content "Name"}
@@ -263,6 +270,7 @@
 (defn- DockerContainersTable
   [control]
   [DockerTable
+   control
    {:rows            (::!docker-containers control)
     :columns         [field-id
                       {::table/field-key      :Image
@@ -303,10 +311,12 @@
     :sort-config-key :docker-containers}])
 
 (defn DockerContainerPane [control]
+  (js/console.info "DockerContainerPane" control)
   [ui/TabPane [DockerContainersTable control]])
 
 (defn- DockerNetworksTable [control]
   [DockerTable
+   control
    {:rows            (::!docker-networks control)
     :columns         [field-id
                       field-name
@@ -344,6 +354,7 @@
                !selected           (r/atom #{})
                set-selected-fn     #(reset! !selected %)
                !global-filter      (r/atom "")
+               !pagination         (r/atom default-pagination)
                close-pull-modal    #(reset! !pull-modal-open? false)
                control             {::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
                                     ::docker-image-pull-modal-close-fn close-pull-modal
@@ -361,9 +372,11 @@
                                     ::!docker-containers               (subscribe [::subs/docker-containers-clean])
                                     ::!docker-networks                 (subscribe [::subs/docker-networks-clean])
                                     ::!docker-volumes                  (subscribe [::subs/docker-volumes-clean])
-                                    ::!global-filter                   !global-filter}]
+                                    ::!global-filter                   !global-filter
+                                    ::!pagination                      !pagination}]
     [ui/Tab
      {:on-tab-change #(do (set-selected-fn #{})
+                          (reset! !pagination default-pagination)
                           (reset! !global-filter ""))
       :panes         [{:menuItem "Containers", :render #(r/as-element [DockerContainerPane control])}
                       {:menuItem "Images", :render #(r/as-element [DockerImagePane control])}

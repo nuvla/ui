@@ -5,11 +5,13 @@
 
 (defn WithTooltip
   [Component tooltip]
-  [ui/Popup
-   {:disabled  (nil? tooltip)
-    :content   (r/as-element [:p tooltip])
-    :trigger   (r/as-element Component)
-    :hoverable true}])
+  (if tooltip
+    [ui/Popup
+     {:disabled  (nil? tooltip)
+      :content   (r/as-element [:p tooltip])
+      :trigger   (r/as-element Component)
+      :hoverable true}]
+    Component))
 
 (defn WithOverflowTooltip
   []

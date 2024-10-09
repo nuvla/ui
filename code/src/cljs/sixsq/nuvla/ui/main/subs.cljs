@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.subs
-  (:require [re-frame.core :refer [reg-sub]]
+  (:require [clojure.edn :as edn]
+            [re-frame.core :refer [reg-sub]]
             [sixsq.nuvla.ui.main.spec :as spec]
             [sixsq.nuvla.ui.pages.cimi.subs :as api-subs]
             [sixsq.nuvla.ui.session.subs :as session-subs]))
@@ -145,3 +146,12 @@
   :<- [::session-subs/session-loading?]
   (fn [[cep session-loading?]]
     (or (nil? cep) session-loading?)))
+
+(reg-sub
+  ::current-cols
+  (fn [db [_ local-storage-key k]]
+    (let [ls (aget js/window "localStorage")
+          data (or
+                 (get db local-storage-key)
+                 (edn/read-string (.getItem ls local-storage-key)))]
+      (get data k))))

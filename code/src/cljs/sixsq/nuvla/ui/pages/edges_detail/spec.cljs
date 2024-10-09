@@ -5,6 +5,8 @@
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
             [sixsq.nuvla.ui.utils.time :as time]))
 
+(def stats-table-col-configs-local-storage-key "nuvla.ui.table.edges.stats.column-configs")
+
 (s/def ::nuvlabox (s/nilable any?))
 (s/def ::nuvlabox-status (s/nilable any?))
 (s/def ::nuvlabox-associated-ssh-keys (s/nilable any?))

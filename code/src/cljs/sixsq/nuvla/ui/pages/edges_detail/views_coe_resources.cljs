@@ -193,7 +193,7 @@
       [PullImageActionButton control image-value]]]))
 
 (defn DeleteMenuItem
-  [{:keys [on-confirm enabled? !delete-modal-open? on-click]}]
+  [{:keys [on-confirm enabled? !delete-modal-open? on-click on-close]}]
   (r/with-let [tr     (subscribe [::i18n-subs/tr])
                header (str (str/capitalize (@tr [:delete])) " " "images")]
     [uix/ModalDanger
@@ -202,6 +202,7 @@
       :on-confirm         on-confirm
       :content            (@tr [:are-you-sure?])
       :open               @!delete-modal-open?
+      :on-close           on-close
       :trigger            (r/as-element
                             [ui/MenuItem {:disabled (not enabled?)
                                           :on-click on-click}
@@ -211,11 +212,12 @@
 
 (defn DeleteImageMenuItem
   [{:keys [::docker-image-delete-action-fn ::!selected ::set-selected-fn
-           ::!delete-modal-open? ::delete-modal-open-fn] :as _control}]
+           ::!delete-modal-open? ::delete-modal-open-fn ::delete-modal-close-fn] :as _control}]
   [DeleteMenuItem {:on-confirm          #(do (docker-image-delete-action-fn @!selected)
                                              (set-selected-fn #{}))
                    :enabled?            (seq @!selected)
                    :!delete-modal-open? !delete-modal-open?
+                   :on-close            delete-modal-close-fn
                    :on-click            delete-modal-open-fn}])
 
 (defn SearchInput
@@ -344,32 +346,34 @@
 
 (defn Tab
   []
-  (r/with-let [!can-manage?        (r/atom false)
-               !pull-modal-open?   (r/atom false)
-               !delete-modal-open? (r/atom false)
-               !selected           (r/atom #{})
-               set-selected-fn     #(reset! !selected %)
-               !global-filter      (r/atom "")
-               !pagination         (r/atom default-pagination)
-               close-pull-modal    #(reset! !pull-modal-open? false)
-               control             {::!docker-images                   (subscribe [::subs/docker-images-clean])
-                                    ::!docker-containers               (subscribe [::subs/docker-containers-clean])
-                                    ::!docker-networks                 (subscribe [::subs/docker-networks-clean])
-                                    ::!docker-volumes                  (subscribe [::subs/docker-volumes-clean])
-                                    ::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
-                                    ::docker-image-pull-modal-close-fn close-pull-modal
-                                    ::docker-image-pull-action-fn      #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
-                                                                                   close-pull-modal])
-                                    ::!delete-modal-open?              !delete-modal-open?
-                                    ::delete-modal-open-fn             #(reset! !delete-modal-open? true)
-                                    ::docker-image-delete-action-fn    #(dispatch [::coe-resource-actions {:docker (mapv (fn [id] {:resource "image" :action "remove" :id id}) %)}
-                                                                                   (fn [] (reset! !delete-modal-open? false))])
-                                    ::!can-manage?                     !can-manage?
-                                    ::!docker-image-pull-modal-open?   !pull-modal-open?
-                                    ::!selected                        !selected
-                                    ::set-selected-fn                  set-selected-fn
-                                    ::!global-filter                   !global-filter
-                                    ::!pagination                      !pagination}]
+  (r/with-let [!can-manage?          (r/atom false)
+               !pull-modal-open?     (r/atom false)
+               !delete-modal-open?   (r/atom false)
+               !selected             (r/atom #{})
+               set-selected-fn       #(reset! !selected %)
+               !global-filter        (r/atom "")
+               !pagination           (r/atom default-pagination)
+               close-pull-modal      #(reset! !pull-modal-open? false)
+               delete-modal-close-fn #(reset! !delete-modal-open? false)
+               control               {::!docker-images                   (subscribe [::subs/docker-images-clean])
+                                      ::!docker-containers               (subscribe [::subs/docker-containers-clean])
+                                      ::!docker-networks                 (subscribe [::subs/docker-networks-clean])
+                                      ::!docker-volumes                  (subscribe [::subs/docker-volumes-clean])
+                                      ::docker-image-pull-modal-open-fn  #(reset! !pull-modal-open? true)
+                                      ::docker-image-pull-modal-close-fn close-pull-modal
+                                      ::docker-image-pull-action-fn      #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
+                                                                                     close-pull-modal])
+                                      ::!delete-modal-open?              !delete-modal-open?
+                                      ::delete-modal-open-fn             #(reset! !delete-modal-open? true)
+                                      ::delete-modal-close-fn            delete-modal-close-fn
+                                      ::docker-image-delete-action-fn    #(dispatch [::coe-resource-actions {:docker (mapv (fn [id] {:resource "image" :action "remove" :id id}) %)}
+                                                                                     delete-modal-close-fn])
+                                      ::!can-manage?                     !can-manage?
+                                      ::!docker-image-pull-modal-open?   !pull-modal-open?
+                                      ::!selected                        !selected
+                                      ::set-selected-fn                  set-selected-fn
+                                      ::!global-filter                   !global-filter
+                                      ::!pagination                      !pagination}]
     [ui/Tab
      {:on-tab-change #(do (set-selected-fn #{})
                           (reset! !pagination default-pagination)

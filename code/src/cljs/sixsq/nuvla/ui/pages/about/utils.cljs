@@ -2,12 +2,9 @@
   (:require [clojure.set :as set]))
 
 (def feature-edge-on-k8s "edge-on-k8s")
-(def feature-internal-ui-demo-page "internal")
 
 (def feature-flags [{:k     feature-edge-on-k8s
-                     :label "k8s installation method available in Add Edge modal."}
-                    {:k     feature-internal-ui-demo-page
-                     :label "show internal ui demo/docu page."}])
+                     :label "k8s installation method available in Add Edge modal."}])
 
 (def existing-feature-flags-keys (->> feature-flags (map :k) set))
 

@@ -8,24 +8,17 @@
             [sixsq.nuvla.ui.pages.about.events :as about-events]
             [sixsq.nuvla.ui.pages.about.subs :as subs]
             [sixsq.nuvla.ui.pages.about.utils :as utils]
-            [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn FeatureFlag
   [{:keys [k label]}]
-  (let [user-identifier (subscribe [::session-subs/identifier])
-        is-internal?    (and
-                          (not (str/blank? @user-identifier) )
-                          (str/ends-with? @user-identifier "@sixsq.com"))]
-   (when (or is-internal?
-             (not= utils/feature-internal-ui-demo-page k))
-     [ui/FormCheckbox
-      {:label     label
-       :toggle    true
-       :checked   @(subscribe [::subs/feature-flag-enabled? k])
-       :on-change (ui-callback/checked
-                    #(dispatch [::about-events/set-feature-flag k %]))}])))
+  [ui/FormCheckbox
+   {:label     label
+    :toggle    true
+    :checked   @(subscribe [::subs/feature-flag-enabled? k])
+    :on-change (ui-callback/checked
+                 #(dispatch [::about-events/set-feature-flag k %]))}])
 
 (defn ExperimentalFeatures
   []

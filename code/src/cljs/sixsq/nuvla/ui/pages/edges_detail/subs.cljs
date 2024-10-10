@@ -242,6 +242,12 @@
     (general-utils/can-operation? "update-nuvlabox" nuvlabox)))
 
 (reg-sub
+  ::can-coe-resource-actions?
+  :<- [::nuvlabox]
+  (fn [nuvlabox]
+    (general-utils/can-operation? "coe-resource-actions" nuvlabox)))
+
+(reg-sub
   ::update-available?
   :<- [::can-update?]
   :<- [::nuvlabox-status]

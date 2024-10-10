@@ -106,7 +106,7 @@
                    ::table/header-content "Driver"})
 
 (defn DockerTable
-  [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination] :as control} k]
+  [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination ::!can-action?] :as control} k]
   (let [{:keys [::!data ::!columns ::!default-columns]} (get control k)]
     [table/TableController
      {:!columns               !columns
@@ -114,7 +114,7 @@
       :!current-columns       (subscribe [::main-subs/current-cols local-storage-key k])
       :set-current-columns-fn #(dispatch [::set-current-cols k %])
       :!data                  !data
-      :!enable-row-selection? (r/atom true)
+      :!enable-row-selection? !can-action?
       :!selected              !selected
       :set-selected-fn        set-selected-fn
       :!global-filter         !global-filter
@@ -123,7 +123,7 @@
       :!enable-global-filter? (r/atom true)}]))
 
 (defn PullImageModal
-  [{:keys [::!can-manage?] :as control} k]
+  [{:keys [::!action-disabled ::!selected] :as control} k]
   (r/with-let [image-value           (r/atom "")
                update-image-value-fn #(reset! image-value %)
                {:keys [::!pull-modal-open? ::pull-modal-close-fn
@@ -132,7 +132,7 @@
                :close-icon true
                :on-close   pull-modal-close-fn
                :trigger    (r/as-element
-                             [ui/MenuItem {:disabled @!can-manage?
+                             [ui/MenuItem {:disabled @!action-disabled
                                            :on-click pull-modal-open-fn}
                               [icons/DownloadIcon] "Pull"])}
      [ui/ModalHeader "Pull image"]
@@ -147,39 +147,27 @@
                    :content  "Pull image"
                    :on-click #(pull-action-fn @image-value)}]]]))
 
-(defn DeleteModal
-  [{:keys [on-confirm enabled? !delete-modal-open? on-click on-close msg]}]
-  (r/with-let [tr (subscribe [::i18n-subs/tr])]
+(defn DeleteMenuItem
+  [{:keys [::docker-image-delete-action-fn ::!selected ::set-selected-fn ::!action-disabled
+           ::!delete-modal-open? ::delete-modal-open-fn ::delete-modal-close-fn] :as control} k]
+  (r/with-let [tr  (subscribe [::i18n-subs/tr])
+               {:keys [::delete-fn ::resource-type]} (get control k)
+               msg (str (str/capitalize (@tr [:delete])) " " resource-type)]
     [uix/ModalDanger
      {:with-confirm-step? true
       :button-text        msg
-      :on-confirm         on-confirm
+      :on-confirm         #(do
+                             (delete-fn)
+                             (set-selected-fn #{}))
       :content            (@tr [:are-you-sure?])
       :open               @!delete-modal-open?
-      :on-close           on-close
+      :on-close           delete-modal-close-fn
       :trigger            (r/as-element
-                            [ui/MenuItem {:disabled (not enabled?)
-                                          :on-click on-click}
+                            [ui/MenuItem {:disabled @!action-disabled
+                                          :on-click delete-modal-open-fn}
                              [icons/TrashIcon] (@tr [:delete])])
       :header             msg
       :header-class       [:nuvla-edges :delete-modal-header]}]))
-
-(defn DeleteMenuItem
-  [{:keys [::docker-image-delete-action-fn ::!selected ::set-selected-fn
-           ::!delete-modal-open? ::delete-modal-open-fn ::delete-modal-close-fn] :as control}
-   k]
-  (r/with-let [tr            (subscribe [::i18n-subs/tr])
-               delete-fn     (get-in control [k ::delete-fn])
-               resource-type (get-in control [k ::resource-type])
-               msg           (str (str/capitalize (@tr [:delete])) " " resource-type)]
-    [DeleteModal {:on-confirm          #(do
-                                          (delete-fn)
-                                          (set-selected-fn #{}))
-                  :enabled?            (seq @!selected)
-                  :msg                 msg
-                  :!delete-modal-open? !delete-modal-open?
-                  :on-close            delete-modal-close-fn
-                  :on-click            delete-modal-open-fn}]))
 
 (defn SearchInput
   [{:keys [::!global-filter ::!pagination] :as _control}]
@@ -207,7 +195,7 @@
    [DockerTable control k]])
 
 (defn Tab []
-  (r/with-let [!can-manage?          (r/atom false)
+  (r/with-let [!can-actions?         (subscribe [::subs/can-coe-resource-actions?])
                !pull-modal-open?     (r/atom false)
                !delete-modal-open?   (r/atom false)
                !selected             (r/atom #{})
@@ -332,11 +320,12 @@
                                       ::docker-containers     docker-containers
                                       ::docker-volumes        docker-volumes
                                       ::docker-networks       docker-networks
+                                      ::!can-action?          !can-actions?
                                       ::!delete-modal-open?   !delete-modal-open?
                                       ::delete-modal-open-fn  #(reset! !delete-modal-open? true)
                                       ::delete-modal-close-fn delete-modal-close-fn
-                                      ::!can-manage?          !can-manage?
                                       ::!selected             !selected
+                                      ::!action-disabled      (r/track (fn action-disabled [] (not (and @!can-actions? (seq @!selected)))))
                                       ::set-selected-fn       set-selected-fn
                                       ::!global-filter        !global-filter
                                       ::!pagination           !pagination}]

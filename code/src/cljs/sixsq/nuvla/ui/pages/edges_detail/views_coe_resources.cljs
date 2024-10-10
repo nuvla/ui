@@ -11,6 +11,7 @@
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [reagent.core :as r]
+            [sixsq.nuvla.ui.common-components.job.views :as job-views]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -31,6 +32,20 @@
       (get data k))))
 
 (main-events/reg-set-current-cols-event-fx ::set-current-cols local-storage-key)
+
+(defmethod job-views/JobCell "coe_resource_actions"
+  [{:keys [status-message] :as resource}]
+  (if-let [responses (some-> status-message general-utils/json->edn :docker)]
+    [ui/TableCell {:verticalAlign "top"}
+     [:div
+      (for [{:keys [success content message return-code] :as response} responses]
+        ^{:key (random-uuid)}
+        [ui/Segment {:color     (if success "green" "red")
+                     :secondary true}
+         [ui/Label {:horizontal true
+                    :color (if success "green" "red")} return-code]
+         (or message content)])]]
+    [job-views/DefaultJobCell resource]))
 
 (reg-event-fx
   ::coe-resource-actions

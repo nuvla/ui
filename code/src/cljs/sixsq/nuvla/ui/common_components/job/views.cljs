@@ -13,8 +13,25 @@
             [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.values :as values]))
 
-(defn JobRow
+(defn DefaultJobCell
+  [{:keys [state status-message] :as _resource}]
+  [ui/TableCell {:verticalAlign "top"}
+   [:div {:style (cond-> {:white-space :pre
+                          :overflow    :auto
+                          :min-height  "10em"}
+                         (= state "QUEUED") (assoc :display "none"))}
+    [uix/TruncateContent
+     {:content (some-> status-message
+                       (str/replace #"\\n" "\n")) :length 300}]]])
+
+(defmulti JobCell :action)
+
+(defmethod JobCell :default
   [resource]
+  [DefaultJobCell resource])
+
+(defn JobRow
+  [{:keys [id action state time-of-status-change updated progress return-code] :as resource}]
   [ui/TableRow
    [ui/TableCell {:verticalAlign "top"}
     [:dl {:style {:overflow              :auto
@@ -22,26 +39,19 @@
                   :grid-template-columns "repeat(2,auto)"
                   :width                 "max-content"
                   :max-width             "100%"}}
-     (for [[k v] [[:id [values/AsLink (:id resource)
-                        :label (general-utils/id->short-uuid (:id resource))]]
-                  [:action (:action resource)]
-                  [:state (:state resource)]
-                  [:timestamp (or (:time-of-status-change resource)
-                                  (:updated resource))]
-                  [:progress (:progress resource)]
-                  [:return-code (:return-code resource)]]]
+     (for [[k v] [[:id [values/AsLink id
+                        :label (general-utils/id->short-uuid id)]]
+                  [:action action]
+                  [:state state]
+                  [:timestamp (or time-of-status-change
+                                  updated)]
+                  [:progress progress]
+                  [:return-code return-code]]]
        ^{:key (str (:id resource) "_" k)}
        [:<>
         [:dt [:b [uix/TR k str/capitalize] ":"]]
         [:dd v]])]]
-   [ui/TableCell {:verticalAlign "top"}
-    [:div {:style (cond-> {:white-space :pre
-                           :overflow    :auto
-                           :min-height  "10em"}
-                          (= (:state resource) "QUEUED") (assoc :display "none"))}
-     [uix/TruncateContent
-      {:content (some-> resource :status-message
-                        (str/replace #"\\n" "\n")) :length 300}]]]])
+   [JobCell resource]])
 
 (defn JobsTable
   [_jobs]

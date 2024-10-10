@@ -138,7 +138,7 @@
       :!enable-global-filter? (r/atom true)}]))
 
 (defn PullImageModal
-  [{:keys [::!action-disabled ::!selected] :as control} k]
+  [{:keys [::!can-action? ::!selected] :as control} k]
   (r/with-let [image-value           (r/atom "")
                update-image-value-fn #(reset! image-value %)
                {:keys [::!pull-modal-open? ::pull-modal-close-fn
@@ -147,7 +147,7 @@
                :close-icon true
                :on-close   pull-modal-close-fn
                :trigger    (r/as-element
-                             [ui/MenuItem {:disabled @!action-disabled
+                             [ui/MenuItem {:disabled (not @!can-action?)
                                            :on-click pull-modal-open-fn}
                               [icons/DownloadIcon] "Pull"])}
      [ui/ModalHeader "Pull image"]

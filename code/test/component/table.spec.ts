@@ -9,10 +9,22 @@ async function expectHeadersOrder(table, headers) {
   }
 }
 
-async function expectColumnData(page, table, colIndex, colData) {
+async function getColumnIndex(table, headerText) {
+  const colCount = await table.locator('thead tr th').count();
+  for (let index = 0 ; index < colCount ; index++) {
+      const actualHeaderText = await table.locator('thead tr th').nth(index).textContent();
+      if (actualHeaderText == headerText) {
+        return index;
+      }
+  }
+  return -1;
+}
+
+async function expectColumnData(page, table, colName, colData) {
+  const colIndex = await getColumnIndex(table, colName);
   for (let rowIndex = 0; rowIndex < colData.length ; rowIndex++) {
       let cellData = colData[rowIndex];
-      await expect(await table.locator('tbody > tr:nth-child(' + (rowIndex + 1) + ') > td:nth-child(' + colIndex + ')')).toHaveText(cellData);
+      await expect(await table.locator('tbody > tr:nth-child(' + (rowIndex + 1) + ') > td:nth-child(' + (colIndex + 1) + ')')).toHaveText(cellData);
   };
 }
 
@@ -38,6 +50,18 @@ function getColumnHeaderLabel(table, colName) {
 
 function getDeleteColumnButton(table, colName) {
   return getColumnHeader(table, colName).locator('a[aria-label="Delete Column"]');
+}
+
+async function selectAllClick(table) {
+  await table.locator('thead > tr > th:nth-child(1) > div').click();
+}
+
+async function selectRow(table, rowIndex) {
+  await table.locator('tbody > tr:nth-child(' + (rowIndex + 1) + ') > td:nth-child(1) > div').click();
+}
+
+async function expectSelectedItemsCount(sceneRoot, selectedItemsCount) {
+  await expect(sceneRoot.getByTestId('selected-items-summary')).toHaveText(selectedItemsCount + ' items selected');
 }
 
 test('test basic table', async ({ page }, { config }) => {
@@ -109,31 +133,36 @@ test('test selectable table rows', async ({ page }, { config }) => {
 
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['', 'Id', 'Size', 'Created']);
+  await expectSelectedItemsCount(sceneRoot, 0);
 
   // select all
-  await table.locator('thead > tr > th:nth-child(1) > div').click();
+  await selectAllClick(table);
   await expect(await table.locator('thead > tr > th:nth-child(1) > div > input')).toBeChecked();
   await expect(await table.locator('tbody > tr:nth-child(1) > td:nth-child(1) > div > input')).toBeChecked();
   await expect(await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div > input')).toBeChecked();
   await expect(await table.locator('tbody > tr:nth-child(3) > td:nth-child(1) > div > input')).toBeChecked();
+  await expectSelectedItemsCount(sceneRoot, 3);
 
   // unselect all
-  await table.locator('thead > tr > th:nth-child(1) > div').click();
+  await selectAllClick(table);
   await expect(await table.locator('tbody > tr:nth-child(1) > td:nth-child(1) > div > input')).toBeChecked({checked: false});
   await expect(await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div > input')).toBeChecked({checked: false});
   await expect(await table.locator('tbody > tr:nth-child(3) > td:nth-child(1) > div > input')).toBeChecked({checked: false});
+  await expectSelectedItemsCount(sceneRoot, 0);
 
   // select first row
-  await table.locator('tbody > tr:nth-child(1) > td:nth-child(1) > div').click();
+  await selectRow(table, 0);
   await expect(await table.locator('tbody > tr:nth-child(1) > td:nth-child(1) > div > input')).toBeChecked();
   await expect(await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div > input')).toBeChecked({checked: false});
+  await expectSelectedItemsCount(sceneRoot, 1);
 
   //select second and third rows
-  await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div').click();
-  await table.locator('tbody > tr:nth-child(3) > td:nth-child(1) > div').click();
+  await selectRow(table, 1);
+  await selectRow(table, 2);
   await expect(await table.locator('tbody > tr:nth-child(2) > td:nth-child(1) > div > input')).toBeChecked();
   await expect(await table.locator('tbody > tr:nth-child(3) > td:nth-child(1) > div > input')).toBeChecked();
   await expect(await table.locator('thead > tr > th:nth-child(1) > div > input')).toBeChecked();
+  await expectSelectedItemsCount(sceneRoot, 3);
 });
 
 test('test global filter', async ({ page }, { config }) => {
@@ -180,33 +209,33 @@ test('test sorting', async ({ page }, { config }) => {
   expectTableRowCount(table, 3);
 
   // Sorted by default by Created ascending by scene definition
-  await expectColumnData(page, table, 3, ['1725666894','1725667915','1726074087']);
+  await expectColumnData(page, table, 'Created', ['1725666894','1725667915','1726074087']);
 
   // Sort by Created descending
   await getColumnHeaderLabel(table, 'Created').click();
-  await expectColumnData(page, table, 3, ['1726074087','1725667915','1725666894']);
+  await expectColumnData(page, table, 'Created', ['1726074087','1725667915','1725666894']);
 
   // Sort by Created descending + Id ascending
   await getColumnHeaderLabel(table, 'Id').click();
-  await expectColumnData(page, table, 3, ['1726074087','1725667915','1725666894']);
+  await expectColumnData(page, table, 'Created', ['1726074087','1725667915','1725666894']);
 
   // No more sorting on Created => Sort by Id ascending
   await getColumnHeaderLabel(table, 'Created').click();
-  await expectColumnData(page, table, 3, ['1725666894','1726074087','1725667915']);
+  await expectColumnData(page, table, 'Created', ['1725666894','1726074087','1725667915']);
 
   // Disable sorting => data shown in the order in which it is passed in
   await sceneRoot.getByTestId('checkbox-enable-sorting').click();
-  await expectColumnData(page, table, 3, ['1726074087','1725667915','1725666894']);
+  await expectColumnData(page, table, 'Created', ['1726074087','1725667915','1725666894']);
 
   // Try to sort by Id descending, but expect no effect as sorting is not enabled
   await getColumnHeaderLabel(table, 'Id').click();
-  await expectColumnData(page, table, 3, ['1726074087','1725667915','1725666894']);
+  await expectColumnData(page, table, 'Created', ['1726074087','1725667915','1725666894']);
 
   // Enable sorting again and then sort by Id descending
   await sceneRoot.getByTestId('checkbox-enable-sorting').click();
-  await expectColumnData(page, table, 3, ['1725666894','1726074087','1725667915']);
+  await expectColumnData(page, table, 'Created', ['1725666894','1726074087','1725667915']);
   await getColumnHeaderLabel(table, 'Id').click();
-  await expectColumnData(page, table, 3, ['1725667915','1726074087','1725666894']);
+  await expectColumnData(page, table, 'Created', ['1725667915','1726074087','1725666894']);
 });
 
 async function expectPaginationState(page, table, paginationDiv, totalItems, pageSize, activeIndex, expectedIdxColumnData) {
@@ -228,7 +257,7 @@ async function expectPaginationState(page, table, paginationDiv, totalItems, pag
 
   // Check the table row count and Idx column data
   await expectTableRowCount(table, expectedRowCount);
-  await expectColumnData(page, table, 4,
+  await expectColumnData(page, table, 'Idx',
       (expectedIdxColumnData ? expectedIdxColumnData.map(x => x.toString()) : null) ||
       [...Array(expectedRowCount).keys()].map(x => x + pageSize * (activeIndex - 1)).map(x => x.toString())
   );
@@ -275,8 +304,8 @@ test('test pagination', async ({ page }, { config }) => {
   await expect(sceneRoot.locator('div.uix-pagination')).toHaveCount(0);
 });
 
-test('test simultaneous filtering, sorting and pagination', async ({ page }, { config }) => {
-  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'filter-sort-paginate');
+test('test simultaneous filtering, sorting, row selection and pagination', async ({ page }, { config }) => {
+  const sceneRoot = await gotoScene(config, page, 'table-refactor-scenes', 'filter-sort-paginate-select');
   const table = await locatorOne(sceneRoot, 'table.ui');
   const paginationDiv = await locatorOne(sceneRoot, 'div.uix-pagination');
   const paginationNavigation = await locatorOne(paginationDiv, '>div.uix-pagination-navigation');
@@ -290,13 +319,29 @@ test('test simultaneous filtering, sorting and pagination', async ({ page }, { c
   await nextItemLink.click();
   await expectPaginationState(page, table, paginationDiv, 303, 25, 2);
 
+  // Select all rows
+  await selectAllClick(table);
+  await expectSelectedItemsCount(sceneRoot, 303);
+
   // Apply a global filter
   const filterInput = await locatorOne(sceneRoot, '.global-filter > input');
-  // global filter: 202 rows contain 1725, in column Created
+  // Global filter: 202 rows contain 1725, in column Created
   await filterInput.fill('1725');
+  // Filtering does not change the selection
+  await expectSelectedItemsCount(sceneRoot, 303);
+  // Unselect all filtered rows
+  await selectAllClick(table);
+  await expectSelectedItemsCount(sceneRoot, 101);
+  // Select all rows
+  await selectAllClick(table);
+  // Select all after filtering only selects filtered rows
+  await expectSelectedItemsCount(sceneRoot, 303);
+
   await nextItemLink.click();
   await expectPaginationState(page, table, paginationDiv, 202, 25, 2,
       [38,40,41,43,44,46,47,49,50,52,53,55,56,58,59,61,62,64,65,67,68,70,71,73,74]);
+  await expectSelectedItemsCount(sceneRoot, 303);
+
   // Sort by Created ascending and Idx descending
   await getColumnHeaderLabel(table, 'Created').click();
   await getColumnHeaderLabel(table, 'Idx').click();
@@ -306,4 +351,9 @@ test('test simultaneous filtering, sorting and pagination', async ({ page }, { c
   await lastItemLink.click();
   await expectPaginationState(page, table, paginationDiv, 202, 25, 9,
       [4,1]);
+  await expectSelectedItemsCount(sceneRoot, 303);
+  // Clear the filter and deselect all rows
+  await filterInput.fill('');
+  await selectAllClick(table);
+  await expectSelectedItemsCount(sceneRoot, 0);
 });

@@ -106,7 +106,7 @@
     [:div {:style {:text-align :center}}
      [icons/CheckIconFull {:color "green"}]]))
 
-(def field-id {::table/field-key      :id
+(def field-id {::table/field-key      :Id
                ::table/header-content "Id"
                ::table/field-cell     (table/CellOverflowTooltipAs :div.max-width-12ch.ellipsing)})
 (def field-created {::table/field-key      :Created
@@ -129,7 +129,7 @@
 
 (defn DockerTable
   [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination ::!can-action?] :as control} k]
-  (let [{:keys [::!data ::!columns ::!default-columns]} (get control k)]
+  (let [{:keys [::!data ::!columns ::!default-columns ::row-id-fn]} (get control k)]
     [table/TableController
      {:!columns                      !columns
       :!default-columns              !default-columns
@@ -143,7 +143,8 @@
       :!enable-pagination?           (r/atom true)
       :!pagination                   !pagination
       :!enable-global-filter?        (r/atom true)
-      :!enable-column-customization? (r/atom true)}]))
+      :!enable-column-customization? (r/atom true)
+      :row-id-fn (or row-id-fn :Id)}]))
 
 (defn PullImageModal
   [{:keys [::!can-action? ::!selected] :as control} k]
@@ -252,7 +253,7 @@
                                                                       ::table/header-content "Repository"}
                                                                      {::table/field-key      :Tag
                                                                       ::table/header-content "Tag"}])
-                                      ::!default-columns    (r/atom [:id :Size :Created :RepoTags])
+                                      ::!default-columns    (r/atom [:Id :Size :Created :RepoTags])
                                       ::resource-type       "images"
                                       ::delete-fn           (partial delete-resource-fn "image")
                                       ::!pull-modal-open?   !pull-modal-open?
@@ -301,11 +302,11 @@
                                                                    ::table/header-content "Ports"
                                                                    ::table/no-sort?       true
                                                                    ::table/field-cell     SecondaryLabelGroup}])
-                                      ::!default-columns (r/atom [:id :Name :Image :Status :Created :Ports])
+                                      ::!default-columns (r/atom [:Id :Name :Image :Status :Created :Ports])
                                       ::resource-type    "containers"
                                       ::delete-fn        (partial delete-resource-fn "container")}
-               docker-volumes        {::!data            (subscribe [::subs/docker-volumes-clean])
-                                      ::!columns         (r/atom [{::table/field-key      :id
+               docker-volumes        {::!data            (subscribe [::subs/docker-volumes])
+                                      ::!columns         (r/atom [{::table/field-key      :Name
                                                                    ::table/header-content "Name"
                                                                    ::table/field-cell     (table/CellOverflowTooltipAs :div.max-width-50ch.ellipsing)}
                                                                   field-driver
@@ -317,9 +318,10 @@
                                                                   field-labels
                                                                   {::table/field-key      :Options
                                                                    ::table/header-content "Options"}])
-                                      ::!default-columns (r/atom [:id :CreatedAt :Driver])
+                                      ::row-id-fn        :Name
+                                      ::!default-columns (r/atom [:Name :CreatedAt :Driver])
                                       ::resource-type    "volumes"}
-               docker-networks       {::!data            (subscribe [::subs/docker-networks-clean])
+               docker-networks       {::!data            (subscribe [::subs/docker-networks])
                                       ::!columns         (r/atom [field-id
                                                                   field-name
                                                                   field-created-iso
@@ -341,10 +343,14 @@
                                                                   {::table/field-key      :IPAM
                                                                    ::table/header-content "IPAM"}
                                                                   {::table/field-key      :Ingress
-                                                                   ::table/header-content "Internal"}
+                                                                   ::table/header-content "Ingress"
+                                                                   ::table/field-cell     Boolean}
+                                                                  {::table/field-key      :Internal
+                                                                   ::table/header-content "Internal"
+                                                                   ::table/field-cell     Boolean}
                                                                   {::table/field-key      :Scope
                                                                    ::table/header-content "Scope"}])
-                                      ::!default-columns (r/atom [:id :Name :Created :Labels :Driver :Attachable :EnableIPv6])
+                                      ::!default-columns (r/atom [:Id :Name :Created :Labels :Driver :Attachable :EnableIPv6])
                                       ::resource-type    "networks"
                                       ::delete-fn        (partial delete-resource-fn "network")}
                control               {::docker-images         docker-images

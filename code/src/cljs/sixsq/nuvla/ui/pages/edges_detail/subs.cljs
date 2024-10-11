@@ -72,9 +72,9 @@
   (fn [images]
     (map (fn [image]
            (-> image
-               (assoc :id (str/replace (:Id image) #"^sha256:" ""))
+               (update :Id str/replace #"^sha256:" "")
                update-created
-               (dissoc :Id :SharedSize :Containers))) images)))
+               (dissoc :SharedSize :Containers))) images)))
 
 (reg-sub
   ::docker-images-ordering
@@ -84,15 +84,6 @@
   ::docker-volumes
   :<- [::docker]
   :-> :volumes)
-
-(reg-sub
-  ::docker-volumes-clean
-  :<- [::docker-volumes]
-  (fn [volumes]
-    (map (fn [volume]
-           (-> volume
-               (assoc :id (:Name volume))
-               (dissoc :Name))) volumes)))
 
 (reg-sub
   ::docker-containers
@@ -105,44 +96,15 @@
   (fn [containers]
     (map (fn [container]
            (-> container
-               (assoc :id (:Id container))
                update-ports
                update-created
                update-mounts
-               update-network-settings
-               (dissoc :Id))) containers)))
+               update-network-settings)) containers)))
 
 (reg-sub
   ::docker-networks
   :<- [::docker]
   :-> :networks)
-
-(reg-sub
-  ::docker-networks-clean
-  :<- [::docker-networks]
-  (fn [networks]
-    (map (fn [network]
-           (-> network
-               (assoc :id (:Id network))
-               (dissoc :Id))) networks)))
-
-;(reg-sub
-;  ::docker-configs
-;  :<- [::docker]
-;  :-> :configs)
-;
-;(reg-sub
-;  ::docker-configs-clean
-;  :<- [::docker-configs]
-;  (fn [configs]
-;    (map (fn [config]
-;           (-> config
-;               (assoc :id (:ID config)
-;                      :Name (get-in config [:Spec :Name])
-;                      :Data (.atob js/window (get-in config [:Spec :Data]))
-;                      :Labels (get-in config [:Spec :Labels])
-;                      :Version (get-in config [:Version :Index]))
-;               (dissoc :Spec :ID))) configs)))
 
 (reg-sub
   ::augmented-container-stats

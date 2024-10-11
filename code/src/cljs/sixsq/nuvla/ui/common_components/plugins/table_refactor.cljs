@@ -175,9 +175,8 @@
 
 (defn TableHeaderCell
   [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn] :as control}
-   {:keys [::no-sort?] :as column}]
-  (let [field-key      (::field-key column)
-        sortable       (dnd/useSortable #js {"id" (name field-key)})
+   {:keys [::no-sort? ::field-key] :as column}]
+  (let [sortable       (dnd/useSortable #js {"id" (some-> field-key name)})
         setNodeRef     (.-setNodeRef sortable)
         sort-direction (get-field-sort-direction @!sorting field-key)
         on-click       #(->> sort-direction

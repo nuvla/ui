@@ -43,7 +43,7 @@
         [ui/Segment {:color     (if success "green" "red")
                      :secondary true}
          [ui/Label {:horizontal true
-                    :color (if success "green" "red")} return-code]
+                    :color      (if success "green" "red")} return-code]
          (or message content)])]]
     [job-views/DefaultJobCell resource]))
 
@@ -95,13 +95,20 @@
   [cell-data _row _column]
   (label-group-overflow-detector
     (fn []
-      [ui/LabelGroup
+      [ui/ListSA
        (for [v cell-data]
          ^{:key (str v)}
-         [ui/Label {:content v}])])))
+         [ui/ListItem [ui/Label {:style {:white-space :pre} :content v}]])])))
+
+(defn Boolean
+  [cell-data _row _column]
+  (when (true? cell-data)
+    [:div {:style {:text-align :center}}
+     [icons/CheckIconFull {:color "green"}]]))
 
 (def field-id {::table/field-key      :id
-               ::table/header-content "Id"})
+               ::table/header-content "Id"
+               ::table/field-cell     (table/CellOverflowTooltipAs :div.max-width-12ch.ellipsing)})
 (def field-created {::table/field-key      :Created
                     ::table/header-content "Created"
                     ::table/field-cell     table/CellTimeAgo})
@@ -124,18 +131,19 @@
   [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination ::!can-action?] :as control} k]
   (let [{:keys [::!data ::!columns ::!default-columns]} (get control k)]
     [table/TableController
-     {:!columns               !columns
-      :!default-columns       !default-columns
-      :!current-columns       (subscribe [::main-subs/current-cols local-storage-key k])
-      :set-current-columns-fn #(dispatch [::set-current-cols k %])
-      :!data                  !data
-      :!enable-row-selection? !can-action?
-      :!selected              !selected
-      :set-selected-fn        set-selected-fn
-      :!global-filter         !global-filter
-      :!enable-pagination?    (r/atom true)
-      :!pagination            !pagination
-      :!enable-global-filter? (r/atom true)}]))
+     {:!columns                      !columns
+      :!default-columns              !default-columns
+      :!current-columns              (subscribe [::main-subs/current-cols local-storage-key k])
+      :set-current-columns-fn        #(dispatch [::set-current-cols k %])
+      :!data                         !data
+      :!enable-row-selection?        !can-action?
+      :!selected                     !selected
+      :set-selected-fn               set-selected-fn
+      :!global-filter                !global-filter
+      :!enable-pagination?           (r/atom true)
+      :!pagination                   !pagination
+      :!enable-global-filter?        (r/atom true)
+      :!enable-column-customization? (r/atom true)}]))
 
 (defn PullImageModal
   [{:keys [::!can-action? ::!selected] :as control} k]
@@ -237,7 +245,7 @@
                                                                      field-created
                                                                      {::table/field-key      :RepoTags
                                                                       ::table/header-content "Tags"
-                                                                      ::table/no-sort?       true
+                                                                      ;::table/no-sort?       true
                                                                       ::table/field-cell     PrimaryLabelGroup}
                                                                      field-labels
                                                                      {::table/field-key      :Repository
@@ -265,6 +273,7 @@
                                                                   field-labels
                                                                   {::table/field-key      :HostConfig
                                                                    ::table/header-content "Host config"
+                                                                   ::table/no-sort?       true
                                                                    ::table/field-cell     KeyValueLabelGroup}
                                                                   {::table/field-key      :Names
                                                                    ::table/header-content "Names"
@@ -276,24 +285,29 @@
                                                                    ::table/header-content "Image Id"}
                                                                   {::table/field-key      :Mounts
                                                                    ::table/header-content "Mounts"
+                                                                   ::table/field-cell     SecondaryLabelGroup
                                                                    ::table/no-sort?       true}
                                                                   {::table/field-key      :Name
                                                                    ::table/header-content "Name"}
                                                                   {::table/field-key      :NetworkSettings
-                                                                   ::table/header-content "NetworkSettings"
+                                                                   ::table/header-content "Networks"
+                                                                   ::table/field-cell     SecondaryLabelGroup
                                                                    ::table/no-sort?       true}
                                                                   {::table/field-key      :State
                                                                    ::table/header-content "State"}
                                                                   {::table/field-key      :Command
                                                                    ::table/header-content "Command"}
                                                                   {::table/field-key      :Ports
-                                                                   ::table/header-content "Ports"}])
-                                      ::!default-columns (r/atom [:id :Image :Created :Status :SizeRootFs])
+                                                                   ::table/header-content "Ports"
+                                                                   ::table/no-sort?       true
+                                                                   ::table/field-cell     SecondaryLabelGroup}])
+                                      ::!default-columns (r/atom [:id :Name :Image :Status :Created :Ports])
                                       ::resource-type    "containers"
                                       ::delete-fn        (partial delete-resource-fn "container")}
                docker-volumes        {::!data            (subscribe [::subs/docker-volumes-clean])
                                       ::!columns         (r/atom [{::table/field-key      :id
-                                                                   ::table/header-content "Name"}
+                                                                   ::table/header-content "Name"
+                                                                   ::table/field-cell     (table/CellOverflowTooltipAs :div.max-width-50ch.ellipsing)}
                                                                   field-driver
                                                                   {::table/field-key      :Scope
                                                                    ::table/header-content "Scope"}
@@ -303,7 +317,7 @@
                                                                   field-labels
                                                                   {::table/field-key      :Options
                                                                    ::table/header-content "Options"}])
-                                      ::!default-columns (r/atom [:id :Driver :Mountpoint :CreatedAt :Labels])
+                                      ::!default-columns (r/atom [:id :CreatedAt :Driver])
                                       ::resource-type    "volumes"}
                docker-networks       {::!data            (subscribe [::subs/docker-networks-clean])
                                       ::!columns         (r/atom [field-id
@@ -315,20 +329,22 @@
                                                                    ::table/field-cell     KeyValueLabelGroup}
                                                                   field-labels
                                                                   {::table/field-key      :Attachable
-                                                                   ::table/header-content "Attachable"}
+                                                                   ::table/header-content "Attachable"
+                                                                   ::table/field-cell     Boolean}
                                                                   {::table/field-key      :ConfigFrom
                                                                    ::table/header-content "ConfigFrom"}
                                                                   {::table/field-key      :ConfigOnly
                                                                    ::table/header-content "ConfigOnly"}
                                                                   {::table/field-key      :EnableIPv6
-                                                                   ::table/header-content "EnableIPv6"}
+                                                                   ::table/header-content "IPv6"
+                                                                   ::table/field-cell     Boolean}
                                                                   {::table/field-key      :IPAM
                                                                    ::table/header-content "IPAM"}
                                                                   {::table/field-key      :Ingress
                                                                    ::table/header-content "Internal"}
                                                                   {::table/field-key      :Scope
                                                                    ::table/header-content "Scope"}])
-                                      ::!default-columns (r/atom [:id :Name :Created :Labels :Driver])
+                                      ::!default-columns (r/atom [:id :Name :Created :Labels :Driver :Attachable :EnableIPv6])
                                       ::resource-type    "networks"
                                       ::delete-fn        (partial delete-resource-fn "network")}
                control               {::docker-images         docker-images

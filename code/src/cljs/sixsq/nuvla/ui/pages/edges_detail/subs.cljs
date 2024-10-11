@@ -48,6 +48,24 @@
   [doc]
   (update doc :Created #(some-> % time/parse-unix time/time->utc-str)))
 
+(defn update-ports
+  [{:keys [Ports] :as doc}]
+  (let [new-Ports (map #(when-let [public-port (:PublicPort %)]
+                          (str (:IP %) ":" public-port "->" (:PrivatePort %) "/" (:Type %))) Ports)]
+    (assoc doc :Ports (remove nil? new-Ports))))
+
+(defn update-mounts
+  [{:keys [Mounts] :as doc}]
+  (let [new-Mounts (map #(str (if (= (:Type %) "volume")
+                                (:Name %)
+                                (:Source %))
+                              ":" (:Destination %) ":" (if (:RW %) "rw" "ro")) Mounts)]
+    (assoc doc :Mounts new-Mounts)))
+
+(defn update-network-settings
+  [doc]
+  (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
+
 (reg-sub
   ::docker-images-clean
   :<- [::docker-images]
@@ -88,7 +106,10 @@
     (map (fn [container]
            (-> container
                (assoc :id (:Id container))
+               update-ports
                update-created
+               update-mounts
+               update-network-settings
                (dissoc :Id))) containers)))
 
 (reg-sub

@@ -87,9 +87,15 @@
            (str/includes? (str s) filter-str))))
 
 (defn CellOverflowTooltip
-  [cell-data _row _column]
+  [cell-data _row _column as]
   (let [str-cell-data (str cell-data)]
-    [tt/WithOverflowTooltip {:content str-cell-data :tooltip str-cell-data}]))
+    [tt/WithOverflowTooltip (cond-> {:content str-cell-data :tooltip str-cell-data}
+                                    as (assoc :as as))]))
+
+(defn CellOverflowTooltipAs
+  [as]
+  (fn [cell-data row column]
+    [CellOverflowTooltip cell-data row column as]))
 
 (defn CellTimeAgo
   [cell-data _row _column]
@@ -265,7 +271,7 @@
                         :border-width     "1px 1px 0px"
                         :border-color     "rgba(34,36,38,.1)"
                         :border-style     "solid"
-                        :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
+                        :opacity          (if @!hoverable 1 0.5)}} [icons/ListIcon]]]))
 
 (defn ColumnsSelectorModal
   [{:keys [::!default-columns ::!columns ::!enable-column-customization? ::!visible-columns] :as control}]

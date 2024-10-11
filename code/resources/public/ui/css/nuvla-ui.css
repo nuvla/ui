@@ -1173,6 +1173,12 @@ i.link.icons {
   max-width: 50ch;
 }
 
+.slideways-lr {
+    left: calc(50% - .5rem);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+
 .table-fixed-row-height td:not(:first-child),
 .table-fixed-row-height td:not(:first-child) > div {
   height: 30px;

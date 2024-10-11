@@ -107,6 +107,12 @@
   :-> :networks)
 
 (reg-sub
+  ::docker-networks-clean
+  :<- [::docker-networks]
+  (fn [networks]
+    (map #(update % :IPAM (comp first :Config)) networks)))
+
+(reg-sub
   ::augmented-container-stats
   :<- [::container-stats]
   (fn [container-stats]

@@ -15,14 +15,13 @@
 
 (defn DefaultJobCell
   [{:keys [state status-message] :as _resource}]
-  [ui/TableCell {:verticalAlign "top"}
-   [:div {:style (cond-> {:white-space :pre
-                          :overflow    :auto
-                          :min-height  "10em"}
-                         (= state "QUEUED") (assoc :display "none"))}
-    [uix/TruncateContent
-     {:content (some-> status-message
-                       (str/replace #"\\n" "\n")) :length 300}]]])
+  [:div {:style (cond-> {:white-space :pre
+                         :overflow    :auto
+                         :min-height  "10em"}
+                        (= state "QUEUED") (assoc :display "none"))}
+   [uix/TruncateContent
+    {:content (some-> status-message
+                      (str/replace #"\\n" "\n")) :length 300}]])
 
 (defmulti JobCell :action)
 
@@ -51,7 +50,8 @@
        [:<>
         [:dt [:b [uix/TR k str/capitalize] ":"]]
         [:dd v]])]]
-   [JobCell resource]])
+   [ui/TableCell {:verticalAlign "top"}
+    [JobCell resource]]])
 
 (defn JobsTable
   [_jobs]

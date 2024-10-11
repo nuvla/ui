@@ -33,20 +33,6 @@
 
 (main-events/reg-set-current-cols-event-fx ::set-current-cols local-storage-key)
 
-(defmethod job-views/JobCell "coe_resource_actions"
-  [{:keys [status-message] :as resource}]
-  (if-let [responses (some-> status-message general-utils/json->edn :docker)]
-    [ui/TableCell {:verticalAlign "top"}
-     [:div
-      (for [{:keys [success content message return-code] :as response} responses]
-        ^{:key (random-uuid)}
-        [ui/Segment {:color     (if success "green" "red")
-                     :secondary true}
-         [ui/Label {:horizontal true
-                    :color      (if success "green" "red")} return-code]
-         (or message content)])]]
-    [job-views/DefaultJobCell resource]))
-
 (reg-event-fx
   ::coe-resource-actions
   (fn [{{:keys [::spec/nuvlabox]} :db} [_ payload close-modal-fn]]
@@ -64,14 +50,34 @@
                               [:div
                                [:div {:ref   #(reset! ref %)
                                       :style {:overflow   :hidden
-                                              :max-height (if @show-more? nil "10ch")}}
+                                              :max-height (if @show-more? nil "15ch")}}
                                 [Component args]]
                                (when @overflow?
-                                 [ui/Button {:style    {:margin-top "0.5em"}
-                                             :basic    true
-                                             :on-click #(swap! show-more? not)
-                                             :size     :mini} (if @show-more? "▲" "▼")])])
+                                 [:div {:style {:display         :flex
+                                                :justify-content :center}}
+                                  [ui/Button {:style    {:margin-top    "0.5em"
+                                                         :margin-bottom "0.5em"}
+                                              :basic    true
+                                              :on-click #(swap! show-more? not)
+                                              :size     :mini} (if @show-more? "▲" "▼")]])])
        :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))
+
+(defmethod job-views/JobCell "coe_resource_actions"
+  [{:keys [status-message] :as resource}]
+  (if-let [responses (some-> status-message general-utils/json->edn :docker)]
+    (label-group-overflow-detector
+      (fn []
+        [ui/ListSA {:divided true :relaxed :very}
+         (for [{:keys [success content message return-code] :as response} responses]
+           ^{:key (random-uuid)}                           ;;fixme
+           [ui/ListItem {:style {:display     :flex
+                                 :align-items :center}}
+            [:div
+             [ui/Label {:horizontal true
+                        :color      (if success "green" "red")} return-code]]
+            [ui/ListContent
+             (or message content)]])]))
+    [job-views/DefaultJobCell resource]))
 
 (defn KeyValueLabelGroup
   [cell-data _row _column]
@@ -80,7 +86,8 @@
       [ui/LabelGroup
        (for [[k v] cell-data]
          ^{:key k}
-         [ui/Label {:content k :detail (str v)}])])))
+         [ui/Label {:style   {:white-space :pre}
+                    :content k :detail (str v)}])])))
 
 (defn PrimaryLabelGroup
   [cell-data _row _column]
@@ -102,9 +109,10 @@
 
 (defn Boolean
   [cell-data _row _column]
-  (when (true? cell-data)
-    [:div {:style {:text-align :center}}
-     [icons/CheckIconFull {:color "green"}]]))
+  [:div {:style {:text-align :center}}
+   (if (true? cell-data)
+     [icons/CheckIconFull]
+     [icons/MinusIcon])])
 
 (def field-id {::table/field-key      :Id
                ::table/header-content "Id"
@@ -144,7 +152,7 @@
       :!pagination                   !pagination
       :!enable-global-filter?        (r/atom true)
       :!enable-column-customization? (r/atom true)
-      :row-id-fn (or row-id-fn :Id)}]))
+      :row-id-fn                     (or row-id-fn :Id)}]))
 
 (defn PullImageModal
   [{:keys [::!can-action? ::!selected] :as control} k]
@@ -321,7 +329,7 @@
                                       ::row-id-fn        :Name
                                       ::!default-columns (r/atom [:Name :CreatedAt :Driver])
                                       ::resource-type    "volumes"}
-               docker-networks       {::!data            (subscribe [::subs/docker-networks])
+               docker-networks       {::!data            (subscribe [::subs/docker-networks-clean])
                                       ::!columns         (r/atom [field-id
                                                                   field-name
                                                                   field-created-iso
@@ -330,27 +338,32 @@
                                                                    ::table/header-content "Options"
                                                                    ::table/field-cell     KeyValueLabelGroup}
                                                                   field-labels
-                                                                  {::table/field-key      :Attachable
-                                                                   ::table/header-content "Attachable"
-                                                                   ::table/field-cell     Boolean}
                                                                   {::table/field-key      :ConfigFrom
                                                                    ::table/header-content "ConfigFrom"}
                                                                   {::table/field-key      :ConfigOnly
                                                                    ::table/header-content "ConfigOnly"}
+                                                                  {::table/field-key      :IPAM
+                                                                   ::table/header-content "IPAM"
+                                                                   ::table/field-cell     KeyValueLabelGroup}
+                                                                  {::table/field-key      :Attachable
+                                                                   ::table/header-content "Attachable"
+                                                                   ::table/field-cell     Boolean
+                                                                   ::table/div-class      ["slideways-lr"]}
                                                                   {::table/field-key      :EnableIPv6
                                                                    ::table/header-content "IPv6"
-                                                                   ::table/field-cell     Boolean}
-                                                                  {::table/field-key      :IPAM
-                                                                   ::table/header-content "IPAM"}
+                                                                   ::table/field-cell     Boolean
+                                                                   ::table/div-class      ["slideways-lr"]}
                                                                   {::table/field-key      :Ingress
                                                                    ::table/header-content "Ingress"
-                                                                   ::table/field-cell     Boolean}
+                                                                   ::table/field-cell     Boolean
+                                                                   ::table/div-class      ["slideways-lr"]}
                                                                   {::table/field-key      :Internal
                                                                    ::table/header-content "Internal"
-                                                                   ::table/field-cell     Boolean}
+                                                                   ::table/field-cell     Boolean
+                                                                   ::table/div-class      ["slideways-lr"]}
                                                                   {::table/field-key      :Scope
                                                                    ::table/header-content "Scope"}])
-                                      ::!default-columns (r/atom [:Id :Name :Created :Labels :Driver :Attachable :EnableIPv6])
+                                      ::!default-columns (r/atom [:Id :Name :Created :Driver :Scope :Attachable :Internal :Ingress :EnableIPv6 :IPAM])
                                       ::resource-type    "networks"
                                       ::delete-fn        (partial delete-resource-fn "network")}
                control               {::docker-images         docker-images

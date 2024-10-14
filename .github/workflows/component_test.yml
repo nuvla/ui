@@ -48,6 +48,10 @@ jobs:
         run: npm install
       - name: Install Playwright
         run: npx playwright install --with-deps
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@12.5
+        with:
+          lein: 2.11.2
       - name: Build Portfolio
         run: lein build-portfolio
       - name: Serve Portfolio and run tests

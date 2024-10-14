@@ -50,6 +50,11 @@ jobs:
           node-version: '18.x'
       - name: Install dependencies
         run: npm install
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@12.5
         with:

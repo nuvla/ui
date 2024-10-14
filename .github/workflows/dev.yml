@@ -24,6 +24,10 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting for sonar
           fetch-depth: 0
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@12.5
+        with:
+          lein: 2.11.2
       - name: Extract branch name and substitute slashes
         shell: bash
         working-directory: code

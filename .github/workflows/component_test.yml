@@ -23,6 +23,8 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.42.1-jammy
       env:
         TZ: Europe/Zurich
+    env:
+      HOME: /root
     steps:
       - uses: actions/checkout@v4
       - name: Cache node modules

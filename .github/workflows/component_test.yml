@@ -19,6 +19,10 @@ jobs:
   component-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.42.1-jammy
+      env:
+        TZ: Europe/Zurich
     steps:
       - uses: actions/checkout@v4
       - name: Cache node modules
@@ -46,8 +50,6 @@ jobs:
           node-version: '18.x'
       - name: Install dependencies
         run: npm install
-      - name: Install Playwright
-        run: npx playwright install --with-deps
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@12.5
         with:

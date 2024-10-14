@@ -106,13 +106,14 @@
      (subscribe [::price-completed?])
      (subscribe [::license-completed?])
      (subscribe [::registries-completed?])
+     (subscribe [::requirements-met?])
      (subscribe [::credentials-completed?])])
   (fn [[data-completed? env-variables-completed? price-completed? license-completed?
-        registries-completed? credentials-completed?]
+        registries-completed? requirements-met? credentials-completed?]
        [_ step-id]]
     (case step-id
       :data data-completed?
-      :infra-services credentials-completed?
+      :infra-services (and requirements-met? credentials-completed?)
       :env-variables env-variables-completed?
       :registries registries-completed?
       :license license-completed?

@@ -31,7 +31,7 @@ test('test', async ({ page }, { config }) => {
 
   await page.locator('.nuvla-apps button.add-button').first().click();
 
-  await page.getByRole('link', { name: 'BlackBox This app allows users to trigger the creation of an airplane… Project: sixsq Vendor: Vendorgroup/sixsq-vendor Price: free trial and then EUR 0.33/day blackbox ready Add to selection' }).click();
+  await page.getByRole('link', { name: 'BlackBox This app allows' }).getByLabel('Add to selection').click();
 
   await expect(page).toHaveURL(new RegExp(`${baseURL}/ui/deployment-groups/create`));
 

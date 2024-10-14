@@ -49,6 +49,11 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@12.5
+        with:
+          lein: 2.11.2
+
       - name: Project version
         working-directory: code
         shell: bash

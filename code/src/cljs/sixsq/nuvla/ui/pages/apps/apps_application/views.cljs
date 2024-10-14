@@ -82,13 +82,13 @@
             [apps-views-detail/trash id ::events/remove-file]])]))))
 
 (defn FilesSection []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        files         (subscribe [::subs/files])
-        editable?     (subscribe [::apps-subs/editable?])
-        compatibility (subscribe [::subs/compatibility])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        files     (subscribe [::subs/files])
+        editable? (subscribe [::apps-subs/editable?])
+        helm-app? (subscribe [::apps-subs/is-application-helm?])]
     (fn []
       [uix/Accordion
-       (if (contains? #{"helm"} @compatibility)
+       (if @helm-app?
          [ui/Message {:warning true} (@tr [:apps-file-config-helm-warning])]
          [:<>
           [:div (@tr [:module-files])
@@ -544,7 +544,6 @@
         is-new?       (subscribe [::apps-subs/is-new?])
         helm-app?     (subscribe [::apps-subs/is-application-helm?])]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
-    (dispatch [::events/update-compatibility (if @helm-app? "helm" "docker-compose")])
     (when-not @helm-app? (dispatch [::apps-events/set-form-spec ::spec/module-application]))
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))

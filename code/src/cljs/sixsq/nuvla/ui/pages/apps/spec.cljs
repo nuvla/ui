@@ -81,7 +81,7 @@
 ; Requirements
 
 ;; keep aligned with api-server, com.sixsq.nuvla.server.resources.spec.module-component/valid-architectures
-(def valid-architectures ["386" "x86" "x86_64" "amd64" "amd64p32" "arch64"
+(def valid-architectures ["386" "x86" "x86_64" "amd64" "amd64p32" "aarch64"
                           "arm" "armbe" "arm64" "arm64/v8" "arm64be"
                           "arm/v5" "arm/v6" "arm/v7" "armv7l"
                           "mips" "mipsle" "mips64" "mips64le" "mips64n32" "mips64p32" "mips64p32le"

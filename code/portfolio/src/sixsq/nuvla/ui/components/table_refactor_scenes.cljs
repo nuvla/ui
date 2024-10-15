@@ -115,7 +115,7 @@
                                                                  vec)))})]))
 
 (defscene basic-table
-          [TableController])
+  [TableController])
 
 (defn ColumnCustomizationParams
   [!enable-column-customization?]
@@ -128,26 +128,32 @@
                  :on-click    #(swap! !enable-column-customization? not)}]])
 
 (defscene column-customization
-          (r/with-let [!enable-column-customization? (r/atom true)]
-            [:div
-             [ColumnCustomizationParams !enable-column-customization?]
-             [TableController {:!enable-column-customization? !enable-column-customization?}]]))
+  (r/with-let [!enable-column-customization? (r/atom true)]
+    [:div
+     [ColumnCustomizationParams !enable-column-customization?]
+     [TableController {:!enable-column-customization? !enable-column-customization?}]]))
 
 (defn RowSelectionParams
-  [!enable-row-selection?]
+  [!enable-row-selection? !selected]
   [:div {:style {:margin-bottom "5px"}}
    [ui/Checkbox {:data-testid "checkbox-enable-row-selection"
                  :label       "Enable row selection ?"
                  :style       {:position       :relative
                                :vertical-align :middle}
                  :checked     @!enable-row-selection?
-                 :on-click    #(swap! !enable-row-selection? not)}]])
+                 :on-click    #(swap! !enable-row-selection? not)}]
+   (when @!enable-row-selection?
+     [:div {:data-testid "selected-items-summary"
+            :style       {:margin "10px"}}
+      (str (count @!selected) " items selected")])])
 
 (defscene row-selection
-  (r/with-let [!enable-row-selection? (r/atom true)]
+  (r/with-let [!enable-row-selection? (r/atom true)
+               !selected              (r/atom #{})]
     [:div
-     [RowSelectionParams !enable-row-selection?]
-     [TableController {:!enable-row-selection? !enable-row-selection?}]]))
+     [RowSelectionParams !enable-row-selection? !selected]
+     [TableController {:!enable-row-selection? !enable-row-selection?
+                       :!selected              !selected}]]))
 
 (defn SearchInput
   [!global-filter]
@@ -218,8 +224,10 @@
      [TableController {:!enable-pagination? !enable-pagination?
                        :!pagination         !pagination}]]))
 
-(defscene filter-sort-paginate
+(defscene filter-sort-paginate-select
   (r/with-let [!enable-global-filter?        (r/atom true)
+               !enable-row-selection?        (r/atom true)
+               !selected                     (r/atom #{})
                !enable-sorting?              (r/atom true)
                !enable-pagination?           (r/atom true)
                !enable-column-customization? (r/atom false)
@@ -228,11 +236,14 @@
                                                       :page-size  25})]
     [:div
      [GlobalFilterParams !enable-global-filter? !global-filter]
+     [RowSelectionParams !enable-row-selection? !selected]
      [SortingParams !enable-sorting?]
      [PaginationParams !enable-pagination?]
      [ColumnCustomizationParams !enable-column-customization?]
      [TableController {:!enable-global-filter?        !enable-global-filter?
                        :!enable-column-customization? !enable-column-customization?
+                       :!enable-row-selection?        !enable-row-selection?
+                       :!selected                     !selected
                        :!enable-sorting?              !enable-sorting?
                        :!enable-pagination?           !enable-pagination?
                        :!global-filter                !global-filter

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.common-components.plugins.table-refactor
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch inject-cofx reg-event-db
                                    reg-event-fx reg-sub subscribe]]
             [reagent.core :as r]
@@ -60,8 +61,8 @@
   (r/track (fn selected?-fn [] (contains? @!selected row-id))))
 
 (defn !all-row-ids-fn
-  [{:keys [::!data ::row-id-fn] :as _control}]
-  (r/track (fn all-row-ids-fn [] (set (mapv row-id-fn @!data)))))
+  [{:keys [::!processed-data ::row-id-fn] :as _control}]
+  (r/track (fn all-row-ids-fn [] (set (mapv row-id-fn @!processed-data)))))
 
 (defn set-current-columns-fn*
   [{:keys [::set-current-columns-fn ::!sorting ::set-sorting-fn] :as _control} columns]
@@ -150,12 +151,14 @@
 (defn TableSelectAllCheckbox
   [{:keys [::!selected ::set-selected-fn] :as control}]
   (r/with-let [!all-row-ids (!all-row-ids-fn control)
-               !selected?   (r/track (fn selected? [] (= @!all-row-ids @!selected)))]
+               !selected?   (r/track (fn selected? [] (every? @!selected @!all-row-ids)))]
     [:th [ui/Checkbox {:data-testid "checkbox-select-all"
                        :style       {:position       :relative
                                      :vertical-align :middle}
                        :checked     @!selected?
-                       :on-click    #(set-selected-fn (if @!selected? #{} @!all-row-ids))}]]))
+                       :on-click    #(set-selected-fn (if @!selected?
+                                                        (set/difference (set @!selected) (set @!all-row-ids))
+                                                        (set/union (set @!selected) (set @!all-row-ids))))}]]))
 
 (defn TableCellCheckbox
   [{:keys [::!selected ::set-selected-fn] :as control} row-id]

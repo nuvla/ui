@@ -63,20 +63,21 @@
        :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))
 
 (defmethod job-views/JobCell "coe_resource_actions"
-  [{:keys [status-message] :as resource}]
+  [{:keys [id status-message] :as resource}]
   (if-let [responses (some-> status-message general-utils/json->edn :docker)]
     (label-group-overflow-detector
       (fn []
         [ui/ListSA {:divided true :relaxed :very}
-         (for [{:keys [success content message return-code] :as response} responses]
-           ^{:key (random-uuid)}                           ;;fixme
+         (for [[i {:keys [success content message return-code] :as _response}] (map-indexed vector responses)]
+           ^{:key (str id "-" i)}
            [ui/ListItem {:style {:display     :flex
                                  :align-items :center}}
             [:div
              [ui/Label {:horizontal true
                         :color      (if success "green" "red")} return-code]]
             [ui/ListContent
-             (or message content)]])]))
+             (when message [:p message])
+             (when content [:p content])]])]))
     [job-views/DefaultJobCell resource]))
 
 (defn KeyValueLabelGroup
@@ -155,7 +156,7 @@
       :row-id-fn                     (or row-id-fn :Id)}]))
 
 (defn PullImageModal
-  [{:keys [::!can-action? ::!selected] :as control} k]
+  [{:keys [::!selected] :as control} k]
   (r/with-let [image-value           (r/atom "")
                update-image-value-fn #(reset! image-value %)
                {:keys [::!pull-modal-open? ::pull-modal-close-fn
@@ -164,8 +165,7 @@
                :close-icon true
                :on-close   pull-modal-close-fn
                :trigger    (r/as-element
-                             [ui/MenuItem {:disabled (not @!can-action?)
-                                           :on-click pull-modal-open-fn}
+                             [ui/MenuItem {:on-click pull-modal-open-fn}
                               [icons/DownloadIcon] "Pull"])}
      [ui/ModalHeader "Pull image"]
      [ui/ModalContent
@@ -180,7 +180,7 @@
                    :on-click #(pull-action-fn @image-value)}]]]))
 
 (defn DeleteMenuItem
-  [{:keys [::docker-image-delete-action-fn ::!selected ::set-selected-fn ::!action-disabled
+  [{:keys [::docker-image-delete-action-fn ::!selected ::set-selected-fn
            ::!delete-modal-open? ::delete-modal-open-fn ::delete-modal-close-fn] :as control} k]
   (r/with-let [tr  (subscribe [::i18n-subs/tr])
                {:keys [::delete-fn ::resource-type]} (get control k)
@@ -195,7 +195,7 @@
       :open               @!delete-modal-open?
       :on-close           delete-modal-close-fn
       :trigger            (r/as-element
-                            [ui/MenuItem {:disabled @!action-disabled
+                            [ui/MenuItem {:disabled (not (seq @!selected))
                                           :on-click delete-modal-open-fn}
                              [icons/TrashIcon] (@tr [:delete])])
       :header             msg
@@ -213,11 +213,12 @@
                                     (reset! !pagination default-pagination)))}]]))
 
 (defn ActionBar
-  [control k]
+  [{:keys [::!can-action?] :as control} k]
   [ui/Menu
-   [DeleteMenuItem control k]
-   (when (= k ::docker-images)
-     [PullImageModal control k])
+   (when @!can-action?
+     [:<> [DeleteMenuItem control k]
+      (when (= k ::docker-images)
+        [PullImageModal control k])])
    [ui/MenuMenu {:position "right"}
     [SearchInput control]]])
 
@@ -246,16 +247,15 @@
                                                                       ::table/no-sort?       true}
                                                                      {::table/field-key      :RepoDigests
                                                                       ::table/header-content "Repo Digests"
-                                                                      ::table/field-cell     SecondaryLabelGroup
-                                                                      ::table/no-sort?       true}
+                                                                      ::table/field-cell     SecondaryLabelGroup}
                                                                      {::table/field-key      :Size
                                                                       ::table/header-content "Size"
                                                                       ::table/field-cell     table/CellBytes}
                                                                      field-created
                                                                      {::table/field-key      :RepoTags
-                                                                      ::table/header-content "Tags"
+                                                                      ::table/header-content "Repo/Tags"
                                                                       ;::table/no-sort?       true
-                                                                      ::table/field-cell     PrimaryLabelGroup}
+                                                                      ::table/field-cell     SecondaryLabelGroup}
                                                                      field-labels
                                                                      {::table/field-key      :Repository
                                                                       ::table/header-content "Repository"}
@@ -376,7 +376,6 @@
                                       ::delete-modal-open-fn  #(reset! !delete-modal-open? true)
                                       ::delete-modal-close-fn delete-modal-close-fn
                                       ::!selected             !selected
-                                      ::!action-disabled      (r/track (fn action-disabled [] (not (and @!can-actions? (seq @!selected)))))
                                       ::set-selected-fn       set-selected-fn
                                       ::!global-filter        !global-filter
                                       ::!pagination           !pagination}]

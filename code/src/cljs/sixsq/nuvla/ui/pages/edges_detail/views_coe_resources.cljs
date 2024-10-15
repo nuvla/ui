@@ -328,7 +328,8 @@
                                                                    ::table/header-content "Options"}])
                                       ::row-id-fn        :Name
                                       ::!default-columns (r/atom [:Name :CreatedAt :Driver])
-                                      ::resource-type    "volumes"}
+                                      ::resource-type    "volumes"
+                                      ::delete-fn        (partial delete-resource-fn "volume")}
                docker-networks       {::!data            (subscribe [::subs/docker-networks-clean])
                                       ::!columns         (r/atom [field-id
                                                                   field-name

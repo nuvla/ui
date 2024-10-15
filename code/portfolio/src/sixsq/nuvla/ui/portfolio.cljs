@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.components.tooltip-scenes]
             [sixsq.nuvla.ui.components.overflow-tooltip-scenes]
             [sixsq.nuvla.ui.components.table-refactor-scenes]
+            [sixsq.nuvla.ui.components.job-cell-scenes]
             [sixsq.nuvla.ui.portfolio-utils :refer [Scene]]))
 
 (defn init [])

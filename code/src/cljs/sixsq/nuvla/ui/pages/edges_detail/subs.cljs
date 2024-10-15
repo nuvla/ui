@@ -48,15 +48,33 @@
   [doc]
   (update doc :Created #(some-> % time/parse-unix time/time->utc-str)))
 
+(defn update-ports
+  [{:keys [Ports] :as doc}]
+  (let [new-Ports (map #(when-let [public-port (:PublicPort %)]
+                          (str (:IP %) ":" public-port "->" (:PrivatePort %) "/" (:Type %))) Ports)]
+    (assoc doc :Ports (remove nil? new-Ports))))
+
+(defn update-mounts
+  [{:keys [Mounts] :as doc}]
+  (let [new-Mounts (map #(str (if (= (:Type %) "volume")
+                                (:Name %)
+                                (:Source %))
+                              ":" (:Destination %) ":" (if (:RW %) "rw" "ro")) Mounts)]
+    (assoc doc :Mounts new-Mounts)))
+
+(defn update-network-settings
+  [doc]
+  (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
+
 (reg-sub
   ::docker-images-clean
   :<- [::docker-images]
   (fn [images]
     (map (fn [image]
            (-> image
-               (assoc :id (str/replace (:Id image) #"^sha256:" ""))
+               (update :Id str/replace #"^sha256:" "")
                update-created
-               (dissoc :Id :SharedSize :Containers))) images)))
+               (dissoc :SharedSize :Containers))) images)))
 
 (reg-sub
   ::docker-images-ordering
@@ -66,15 +84,6 @@
   ::docker-volumes
   :<- [::docker]
   :-> :volumes)
-
-(reg-sub
-  ::docker-volumes-clean
-  :<- [::docker-volumes]
-  (fn [volumes]
-    (map (fn [volume]
-           (-> volume
-               (assoc :id (:Name volume))
-               (dissoc :Name))) volumes)))
 
 (reg-sub
   ::docker-containers
@@ -87,9 +96,10 @@
   (fn [containers]
     (map (fn [container]
            (-> container
-               (assoc :id (:Id container))
+               update-ports
                update-created
-               (dissoc :Id))) containers)))
+               update-mounts
+               update-network-settings)) containers)))
 
 (reg-sub
   ::docker-networks
@@ -100,28 +110,7 @@
   ::docker-networks-clean
   :<- [::docker-networks]
   (fn [networks]
-    (map (fn [network]
-           (-> network
-               (assoc :id (:Id network))
-               (dissoc :Id))) networks)))
-
-;(reg-sub
-;  ::docker-configs
-;  :<- [::docker]
-;  :-> :configs)
-;
-;(reg-sub
-;  ::docker-configs-clean
-;  :<- [::docker-configs]
-;  (fn [configs]
-;    (map (fn [config]
-;           (-> config
-;               (assoc :id (:ID config)
-;                      :Name (get-in config [:Spec :Name])
-;                      :Data (.atob js/window (get-in config [:Spec :Data]))
-;                      :Labels (get-in config [:Spec :Labels])
-;                      :Version (get-in config [:Version :Index]))
-;               (dissoc :Spec :ID))) configs)))
+    (map #(update % :IPAM (comp first :Config)) networks)))
 
 (reg-sub
   ::augmented-container-stats
@@ -240,6 +229,12 @@
   :<- [::nuvlabox]
   (fn [nuvlabox]
     (general-utils/can-operation? "update-nuvlabox" nuvlabox)))
+
+(reg-sub
+  ::can-coe-resource-actions?
+  :<- [::nuvlabox]
+  (fn [nuvlabox]
+    (general-utils/can-operation? "coe-resource-actions" nuvlabox)))
 
 (reg-sub
   ::update-available?

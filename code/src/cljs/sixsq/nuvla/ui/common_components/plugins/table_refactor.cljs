@@ -88,9 +88,15 @@
            (str/includes? (str s) filter-str))))
 
 (defn CellOverflowTooltip
-  [cell-data _row _column]
+  [cell-data _row _column as]
   (let [str-cell-data (str cell-data)]
-    [tt/WithOverflowTooltip {:content str-cell-data :tooltip str-cell-data}]))
+    [tt/WithOverflowTooltip (cond-> {:content str-cell-data :tooltip str-cell-data}
+                                    as (assoc :as as))]))
+
+(defn CellOverflowTooltipAs
+  [as]
+  (fn [cell-data row column]
+    [CellOverflowTooltip cell-data row column as]))
 
 (defn CellTimeAgo
   [cell-data _row _column]
@@ -172,9 +178,8 @@
 
 (defn TableHeaderCell
   [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn] :as control}
-   {:keys [::no-sort?] :as column}]
-  (let [field-key      (::field-key column)
-        sortable       (dnd/useSortable #js {"id" (name field-key)})
+   {:keys [::no-sort? ::field-key ::div-class] :as column}]
+  (let [sortable       (dnd/useSortable #js {"id" (name field-key)})
         setNodeRef     (.-setNodeRef sortable)
         sort-direction (get-field-sort-direction @!sorting field-key)
         on-click       #(->> sort-direction
@@ -195,9 +200,10 @@
                 (when @!enable-column-customization?
                   (merge {:ref setNodeRef}
                          (js->clj (.-listeners sortable)))))
-     [:span {:data-testid "column-header-text"} (::header-content column)]
-     [SortIcon control column sort-direction]
-     [DeleteColumn control column]]))
+     [:div {:class div-class}
+      [:span {:data-testid "column-header-text"} (::header-content column)]
+      [SortIcon control column sort-direction]
+      [DeleteColumn control column]]]))
 
 (defn TableHeader
   [{:keys [::!current-columns ::!default-columns ::!visible-columns
@@ -211,22 +217,24 @@
        (doall
          (cond->>
            (for [visible-column @!visible-columns]
-             ^{:key (str "header-column-" visible-column)}
-             [:f> TableHeaderCell control (get @!columns-by-key visible-column)])
+             (when-let [column (get @!columns-by-key visible-column)]
+               ^{:key (str "header-column-" visible-column)}
+               [:f> TableHeaderCell control column]))
            @!enable-row-selection? (cons
                                      ^{:key "select-all"}
                                      [TableSelectAllCheckbox control])))]]]))
 
 (defn TableCell
-  [{:keys [::!enable-column-customization?] :as _control} row column]
-  (let [sortable   (dnd/useSortable #js {"id"       (name (::field-key column))
+  [{:keys [::!enable-column-customization?] :as _control}
+   row {:keys [::field-key ::field-cell] :as column}]
+  (let [sortable   (dnd/useSortable #js {"id"       (name field-key)
                                          "disabled" (not @!enable-column-customization?)})
         setNodeRef (.-setNodeRef sortable)
-        Cell       (get column ::field-cell CellOverflowTooltip)]
+        Cell       (or field-cell CellOverflowTooltip)]
     ;Using html td tag instead of semantic ui TableCell, because for some reason it's not taking into account ref fn
     [:td {:ref   setNodeRef
           :style {:transform (dnd/translate-css sortable)}}
-     [Cell ((::field-key column) row) row column]]))
+     [Cell (field-key row) row column]]))
 
 (defn TableRow
   [{:keys [::row-id-fn ::!visible-columns ::!columns-by-key
@@ -238,7 +246,7 @@
        :strategy dnd/horizontalListSortingStrategy}
       (doall
         (cond->> (for [visible-column @!visible-columns]
-                   (let [column (get @!columns-by-key visible-column)]
+                   (when-let [column (get @!columns-by-key visible-column)]
                      ^{:key (str "row-" row-id "-column-" visible-column)}
                      [:f> TableCell control row column]))
                  @!enable-row-selection? (cons
@@ -268,7 +276,7 @@
                         :border-width     "1px 1px 0px"
                         :border-color     "rgba(34,36,38,.1)"
                         :border-style     "solid"
-                        :opacity          (if @!hoverable 1 0.2)}} [icons/ListIcon]]]))
+                        :opacity          (if @!hoverable 1 0.5)}} [icons/ListIcon]]]))
 
 (defn ColumnsSelectorModal
   [{:keys [::!default-columns ::!columns ::!enable-column-customization? ::!visible-columns] :as control}]

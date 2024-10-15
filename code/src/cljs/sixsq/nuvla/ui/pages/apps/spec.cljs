@@ -81,14 +81,15 @@
 ; Requirements
 
 ;; keep aligned with api-server, com.sixsq.nuvla.server.resources.spec.module-component/valid-architectures
-(def valid-architectures #{"386" "x86_64" "amd64" "amd64p32"
-                           "arm" "armbe" "arm64" "arm64/v8" "arm64be"
-                           "arm/v5" "arm/v6" "arm/v7"
-                           "ppc" "ppc64" "ppc64le"
-                           "mips" "mipsle" "mips64" "mips64le" "mips64p32" "mips64p32le"
-                           "s390" "s390x" "sparc" "sparc64"})
+(def valid-architectures ["386" "x86" "x86_64" "amd64" "amd64p32" "arch64"
+                          "arm" "armbe" "arm64" "arm64/v8" "arm64be"
+                          "arm/v5" "arm/v6" "arm/v7" "armv7l"
+                          "mips" "mipsle" "mips64" "mips64le" "mips64n32" "mips64p32" "mips64p32le"
+                          "mipsel64" "mips3l64n32" "mipsle"
+                          "ppc" "ppc64" "ppc64le"
+                          "riscv64" "s390" "s390x" "sparc" "sparc64"])
 
-(s/def ::architecture (s/and string? valid-architectures))
+(s/def ::architecture (s/and string? (set valid-architectures)))
 (s/def ::architectures (s/nilable (s/coll-of ::architecture :min-count 1)))
 
 (s/def ::min-cpu (s/nilable (s/and number? pos?)))

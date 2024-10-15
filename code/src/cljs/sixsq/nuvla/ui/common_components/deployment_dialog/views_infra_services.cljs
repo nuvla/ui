@@ -12,14 +12,28 @@
             [sixsq.nuvla.ui.utils.style :as style]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
+(defn UnmetRequirements
+  [{:keys [architecture cpu ram disk] :as _unmet-requirements}]
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    [:ul {:style {:margin 0, :padding-left "20px"}}
+     (when architecture [:li (tr [:edge-architecture-not-supported] [(str/join ", " (:supported architecture))
+                                                                     (:edge-architecture architecture)])])
+     (when cpu [:li (tr [:edge-does-not-meet-min-cpu-requirements] [(:min cpu) (:available cpu)])])
+     (when ram [:li (tr [:edge-does-not-meet-min-ram-requirements] [(:min ram) (:available ram)])])
+     (when disk [:li (tr [:edge-does-not-meet-min-disk-requirements] [(:min disk) (:available disk)])])]))
+
 (defn summary-row
   []
-  (let [tr                     (subscribe [::i18n-subs/tr])
-        selected-infra-service (subscribe [::subs/selected-infra-service])
-        selected-credential    (subscribe [::subs/selected-credential])
-        completed?             (subscribe [::subs/infra-services-completed?])
-        creds-completed?       (subscribe [::subs/credentials-completed?])
-        on-click-fn            #(dispatch [::events/set-active-step :infra-services])]
+  (let [tr                          (subscribe [::i18n-subs/tr])
+        selected-infra-service      (subscribe [::subs/selected-infra-service])
+        minimum-requirements        (subscribe [::subs/minimum-requirements])
+        min-requirements-met?       (subscribe [::subs/app-infra-requirements-met? @selected-infra-service])
+        unmet-requirements          (subscribe [::subs/app-infra-unmet-requirements @selected-infra-service])
+        unmet-requirements-accepted (subscribe [::subs/unmet-requirements-accepted])
+        selected-credential         (subscribe [::subs/selected-credential])
+        completed?                  (subscribe [::subs/infra-services-completed?])
+        creds-completed?            (subscribe [::subs/credentials-completed?])
+        on-click-fn                 #(dispatch [::events/set-active-step :infra-services])]
 
     ^{:key "clouds"}
     [:<>
@@ -37,6 +51,23 @@
                        [:span description]
                        [:br]
                        [:span subtype]]]])
+     (when (and @completed? (seq @minimum-requirements))
+       [ui/TableRow {:active   false
+                     :on-click on-click-fn}
+        [ui/TableCell {:collapsing true}
+         (if (or @min-requirements-met? @unmet-requirements-accepted)
+           [ui/Icon {:name "server", :size "large"}]
+           [icons/WarningIcon {:size "large", :color "red"}])]
+        [ui/TableCell {:collapsing true} (@tr [:minimum-requirements])]
+        [ui/TableCell [:div {:style {:display :flex, :flex-direction :row}}
+                       (if @min-requirements-met?
+                         (@tr [:edge-meets-app-minimum-requirements])
+                         [:div
+                          [UnmetRequirements @unmet-requirements]
+                          (when @unmet-requirements-accepted
+                            [:<>
+                             [:br]
+                             (@tr [:accepted-to-deploy-anyway])])])]]])
      (let [{:keys [id name description]} @selected-credential]
        [ui/TableRow {:active   false
                      :on-click on-click-fn}
@@ -91,7 +122,7 @@
        @compatibility-msg])))
 
 (defn RequirementsMessage
-  [min-requirements-met? {:keys [architecture cpu ram disk] :as _unmet-requirements}]
+  [min-requirements-met? unmet-requirements]
   (let [tr                          @(subscribe [::i18n-subs/tr])
         unmet-requirements-accepted (subscribe [::subs/unmet-requirements-accepted])]
     [ui/Message {:size    "tiny"
@@ -102,12 +133,7 @@
       (if min-requirements-met?
         (tr [:edge-meets-app-minimum-requirements])
         [:div
-         [:ul {:style {:margin 0, :padding-left "20px"}}
-          (when architecture [:li (tr [:edge-architecture-not-supported] [(str/join ", " (:supported architecture))
-                                                                          (:edge-architecture architecture)])])
-          (when cpu [:li (tr [:edge-does-not-meet-min-cpu-requirements] [(:min cpu) (:available cpu)])])
-          (when ram [:li (tr [:edge-does-not-meet-min-ram-requirements] [(:min ram) (:available ram)])])
-          (when disk [:li (tr [:edge-does-not-meet-min-disk-requirements] [(:min disk) (:available disk)])])]
+         [UnmetRequirements unmet-requirements]
          [ui/Checkbox {:style     {:margin-top "10px"}
                        :label     (tr [:deploy-anyway])
                        :checked   @unmet-requirements-accepted

@@ -15,7 +15,8 @@
             [sixsq.nuvla.ui.session.utils :as session-utils]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (s/def ::subtypes (s/nilable set?))
@@ -186,7 +187,7 @@
                         (if (seq apps)
                           [ui/ListSA
                            [Node db-path (dissoc apps :applications) (:applications apps)]]
-                          [ui/Message {:info true} "No applications found"])
+                          [uix/MsgNoItemsToShow "No applications found"])
                         [pagination/Pagination
                          {:db-path      (conj db-path ::pagination)
                           :total-items  count

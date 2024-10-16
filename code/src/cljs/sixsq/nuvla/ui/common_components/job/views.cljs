@@ -59,7 +59,7 @@
   (fn [{:keys [resources] :as jobs-data}]
     (let [{jobs-count :count} jobs-data]
       (if (empty? resources)
-        [uix/WarningMsgNoElements]
+        [uix/MsgNoItemsToShow]
         [ui/TabPane
          [ui/Table {:striped true
                     :fixed   true}

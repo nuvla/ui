@@ -219,7 +219,7 @@
         show-depl-set-column? (not hide-depl-group-column?)]
     (fn [deployments-list {:keys [show-options? no-module-name empty-msg] :as options}]
       (if (empty? deployments-list)
-        [uix/WarningMsgNoElements empty-msg]
+        [uix/MsgNoItemsToShow empty-msg]
         (let [selectable? (or (nil? show-options?) show-options?)
               {trigger           :trigger-config
                BulkEditTagsModal :modal} (bulk-edit-modal/create-bulk-edit-modal

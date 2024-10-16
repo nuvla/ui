@@ -213,7 +213,7 @@
                           @editable? (conj {:menuItem (r/as-element
                                                         ^{:key (str "add-apps-" id)}
                                                         [SelectAppsModal id])}))}]
-        [ui/Message {:info true} "No applications for this set yet"]))))
+        [uix/MsgNoItemsToShow "No applications for this set yet"]))))
 
 (defn AppSetTab
   [_opts]
@@ -471,7 +471,7 @@
                                         :key     (str apps-set-name "-" i)}
                              :render   #(r/as-element [ConfigureSetApplications id])}))
                         @apps-sets)}]
-      [ui/Message {:info true} "No apps sets created yet"])))
+      [uix/MsgNoItemsToShow "No apps sets created yet"])))
 
 (defn module-detail-panes
   []

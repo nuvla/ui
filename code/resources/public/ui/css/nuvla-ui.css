@@ -39,6 +39,8 @@ header {
   border-radius: 50px;
 }
 
+.ui.icon.message>.icon:not(.close){font-size:2em}
+
 /* Overriding semantic UI fonts when fa is used */
 i.icon.fa-classic,
 i.icon.fa-light,

@@ -227,8 +227,7 @@
      [ui/Message {:size     "tiny"
                   :info     (and min-requirements-met? (not no-arch-supported?))
                   :warning  (and (not min-requirements-met?) (not no-arch-supported?))
-                  :negative no-arch-supported?
-                  }
+                  :negative no-arch-supported?}
       [:div {:style {:display :flex, :flex-direction :row}}
        (if no-arch-supported?
          (tr [:no-architecture-supported])

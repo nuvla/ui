@@ -3,6 +3,9 @@
 
 (def dictionary
   {:en {
+        :do-you-want-to-proceed?                       "Do you want to proceed?"
+        :you-selected                                  "You selected"
+        :to-be-deleted                                 "to be deleted"
         :bulk-progress-help                            "Click on dots below for details."
         :running                                       "running"
         :queued                                        "queued"
@@ -780,6 +783,7 @@
         :nuvlaedge-operational-status                  "Operational status: "
         :nuvlaedge-operational-status-was              "Last operational status was: "
         :nuvlaedge-outdated-telemetry-warning          "Information displayed on this page might be outdated because the NuvlaEdge didn't send telemetry report on time!"
+        :nuvlaedge-outdated-coe-info                   "Results of your actions may be delayed depending on the telemetry reporting interval (which is %1 sec)."
         :object-count                                  "Number of data objects: %1"
         :objects                                       "objects"
         :of-month                                      "of month"
@@ -1179,6 +1183,10 @@
         }
 
    :fr {
+        :you-selected                                  "Vous avez sélectionné "
+        :to-be-deleted                                 "à être supprimer"
+        :do-you-want-to-proceed?                       "Voulez-vous continuer ?"
+        :nuvlaedge-outdated-coe-info                   "Les résultats de vos actions peuvent être retardés en fonction de l'intervalle de rapport de télémétrie (qui est de %1 sec)."
         :bulk-progress-help                            "Cliquez sur les points ci-dessous pour plus de détails."
         :running                                       "en exécution"
         :queued                                        "en attente"

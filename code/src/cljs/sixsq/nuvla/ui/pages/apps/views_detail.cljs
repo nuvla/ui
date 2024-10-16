@@ -1284,8 +1284,7 @@
            [ui/Form
             (when @editable?
               [:<>
-               [ui/Message {:info true}
-                (@tr [:choose-eula])]
+               [uix/MsgInfo {:content [uix/TR :choose-eula]}]
                [:div [:p {:style {:padding-bottom 10}} [:b (@tr [:choose-predefined-one])]]]
                [ui/Dropdown {:options     options
                              :placeholder "Select a license"
@@ -1304,9 +1303,9 @@
                                           #(do
                                              (dispatch [::main-events/changes-protection? true])
                                              (reset! is-custom? (not @is-custom?))))}]
-               [ui/Message {:info true}
-                [:a {:href   "https://www.eulatemplate.com/eula-generator/"
-                     :target "_blank"} (@tr [:eula-generator-details])]]])
+               [uix/MsgInfo
+                {:content [:a {:href   "https://www.eulatemplate.com/eula-generator/"
+                               :target "_blank"} (@tr [:eula-generator-details])]}]])
             [ui/Table {:compact true, :definition true}
              [ui/TableBody
               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
@@ -1323,8 +1322,7 @@
                :required? true, :default-value (:license-url @license),
                :on-change (partial on-change ::events/license-url)
                :on-validation ::apps-application-events/set-license-validation-error]]]]
-           [ui/Message {:info true}
-            (@tr [:eula-not-defined])])]))))
+           [uix/MsgNoItemsToShow [uix/TR :eula-not-defined]])]))))
 
 
 (defn AuthorVendorRow

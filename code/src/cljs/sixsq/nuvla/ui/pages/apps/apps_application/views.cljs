@@ -297,7 +297,7 @@
     [:div {:class :uix-apps-details-details}
      [:h4 {:class :tab-app-detail} [apps-views-detail/DeploymentsTitle]]
      (if @is-new?
-       [uix/WarningMsgNoElements]
+       [uix/MsgNoItemsToShow]
        [deployments-views/DeploymentTable
         {:no-actions         true
          :no-module-name     true

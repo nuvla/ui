@@ -90,16 +90,7 @@
          [ui/Label {:style   {:white-space :pre}
                     :content k :detail (str v)}])])))
 
-(defn PrimaryLabelGroup
-  [cell-data _row _column]
-  (label-group-overflow-detector
-    (fn []
-      [ui/LabelGroup {:color :blue}
-       (for [v cell-data]
-         ^{:key (str v)}
-         [ui/Label {:content v}])])))
-
-(defn SecondaryLabelGroup
+(defn LabelGroup
   [cell-data _row _column]
   (label-group-overflow-detector
     (fn []
@@ -155,6 +146,11 @@
       :!enable-column-customization? (r/atom true)
       :row-id-fn                     (or row-id-fn :Id)}]))
 
+(defn MsgWarnDataDelayed []
+  (r/with-let [tr (subscribe [::i18n-subs/tr])
+               nb (subscribe [::subs/nuvlabox])]
+    [uix/MsgWarn {:content [:span (@tr [:nuvlaedge-outdated-coe-info] [(:refresh-interval @nb)])]}]))
+
 (defn PullImageModal
   [{:keys [::!selected] :as control} k]
   (r/with-let [image-value           (r/atom "")
@@ -169,9 +165,11 @@
                               [icons/DownloadIcon] "Pull"])}
      [ui/ModalHeader "Pull image"]
      [ui/ModalContent
-      [ui/Form
-       [ui/FormInput {:label     "Image" :required true :placeholder "e.g. registry:port/image:tag"
-                      :on-change (ui-callback/input-callback update-image-value-fn)}]]]
+      [:<>
+       [MsgWarnDataDelayed]
+       [ui/Form
+        [ui/FormInput {:label     "Image" :required true :placeholder "e.g. registry:port/image:tag"
+                       :on-change (ui-callback/input-callback update-image-value-fn)}]]]]
      [ui/ModalActions
       [uix/Button {:primary  true
                    :disabled @(r/track #(str/blank? @image-value))
@@ -182,23 +180,30 @@
 (defn DeleteMenuItem
   [{:keys [::docker-image-delete-action-fn ::!selected ::set-selected-fn
            ::!delete-modal-open? ::delete-modal-open-fn ::delete-modal-close-fn] :as control} k]
-  (r/with-let [tr  (subscribe [::i18n-subs/tr])
-               {:keys [::delete-fn ::resource-type]} (get control k)
-               msg (str (str/capitalize (@tr [:delete])) " " resource-type)]
+  (r/with-let [tr         (subscribe [::i18n-subs/tr])
+               {:keys [::resource-type]} (get control k)
+               header     (str/capitalize (@tr [:delete]))
+               on-confirm #(do (dispatch [::coe-resource-actions
+                                          {:docker (mapv (fn [id] {:resource resource-type :action "remove" :id id}) @!selected)}
+                                          delete-modal-close-fn])
+                               (set-selected-fn #{}))]
     [uix/ModalDanger
      {:with-confirm-step? true
-      :button-text        msg
-      :on-confirm         #(do
-                             (delete-fn)
-                             (set-selected-fn #{}))
-      :content            (@tr [:are-you-sure?])
+      :button-text        header
+      :on-confirm         on-confirm
+      :content            [:<>
+                           [MsgWarnDataDelayed]
+                           [:p (@tr [:you-selected]) " "
+                            (as-> (count @!selected) selected-count
+                                  [:b selected-count " " resource-type (when (> selected-count 1) "s")]) " "
+                            (@tr [:to-be-deleted]) ". " (@tr [:do-you-want-to-proceed?])]]
       :open               @!delete-modal-open?
       :on-close           delete-modal-close-fn
       :trigger            (r/as-element
                             [ui/MenuItem {:disabled (not (seq @!selected))
                                           :on-click delete-modal-open-fn}
                              [icons/TrashIcon] (@tr [:delete])])
-      :header             msg
+      :header             header
       :header-class       [:nuvla-edges :delete-modal-header]}]))
 
 (defn SearchInput
@@ -237,9 +242,6 @@
                !pagination           (r/atom default-pagination)
                close-pull-modal      #(reset! !pull-modal-open? false)
                delete-modal-close-fn #(reset! !delete-modal-open? false)
-               delete-resource-fn    (fn [resource-type]
-                                       (dispatch [::coe-resource-actions {:docker (mapv (fn [id] {:resource resource-type :action "remove" :id id}) @!selected)}
-                                                  delete-modal-close-fn]))
                docker-images         {::!data               (subscribe [::subs/docker-images-clean])
                                       ::!columns            (r/atom [field-id
                                                                      {::table/field-key      :ParentId
@@ -247,23 +249,21 @@
                                                                       ::table/no-sort?       true}
                                                                      {::table/field-key      :RepoDigests
                                                                       ::table/header-content "Repo Digests"
-                                                                      ::table/field-cell     SecondaryLabelGroup}
+                                                                      ::table/field-cell     LabelGroup}
                                                                      {::table/field-key      :Size
                                                                       ::table/header-content "Size"
                                                                       ::table/field-cell     table/CellBytes}
                                                                      field-created
                                                                      {::table/field-key      :RepoTags
                                                                       ::table/header-content "Repo/Tags"
-                                                                      ;::table/no-sort?       true
-                                                                      ::table/field-cell     SecondaryLabelGroup}
+                                                                      ::table/field-cell     LabelGroup}
                                                                      field-labels
                                                                      {::table/field-key      :Repository
                                                                       ::table/header-content "Repository"}
                                                                      {::table/field-key      :Tag
                                                                       ::table/header-content "Tag"}])
                                       ::!default-columns    (r/atom [:Id :Size :Created :RepoTags])
-                                      ::resource-type       "images"
-                                      ::delete-fn           (partial delete-resource-fn "image")
+                                      ::resource-type       "image"
                                       ::!pull-modal-open?   !pull-modal-open?
                                       ::pull-modal-open-fn  #(reset! !pull-modal-open? true)
                                       ::pull-modal-close-fn close-pull-modal
@@ -286,7 +286,7 @@
                                                                    ::table/field-cell     KeyValueLabelGroup}
                                                                   {::table/field-key      :Names
                                                                    ::table/header-content "Names"
-                                                                   ::table/field-cell     SecondaryLabelGroup}
+                                                                   ::table/field-cell     LabelGroup}
                                                                   {::table/field-key      :SizeRw
                                                                    ::table/header-content "Size RW"
                                                                    ::table/field-cell     table/CellBytes}
@@ -294,13 +294,13 @@
                                                                    ::table/header-content "Image Id"}
                                                                   {::table/field-key      :Mounts
                                                                    ::table/header-content "Mounts"
-                                                                   ::table/field-cell     SecondaryLabelGroup
+                                                                   ::table/field-cell     LabelGroup
                                                                    ::table/no-sort?       true}
                                                                   {::table/field-key      :Name
                                                                    ::table/header-content "Name"}
                                                                   {::table/field-key      :NetworkSettings
                                                                    ::table/header-content "Networks"
-                                                                   ::table/field-cell     SecondaryLabelGroup
+                                                                   ::table/field-cell     LabelGroup
                                                                    ::table/no-sort?       true}
                                                                   {::table/field-key      :State
                                                                    ::table/header-content "State"}
@@ -309,10 +309,9 @@
                                                                   {::table/field-key      :Ports
                                                                    ::table/header-content "Ports"
                                                                    ::table/no-sort?       true
-                                                                   ::table/field-cell     SecondaryLabelGroup}])
+                                                                   ::table/field-cell     LabelGroup}])
                                       ::!default-columns (r/atom [:Id :Name :Image :Status :Created :Ports])
-                                      ::resource-type    "containers"
-                                      ::delete-fn        (partial delete-resource-fn "container")}
+                                      ::resource-type    "container"}
                docker-volumes        {::!data            (subscribe [::subs/docker-volumes])
                                       ::!columns         (r/atom [{::table/field-key      :Name
                                                                    ::table/header-content "Name"
@@ -328,8 +327,7 @@
                                                                    ::table/header-content "Options"}])
                                       ::row-id-fn        :Name
                                       ::!default-columns (r/atom [:Name :CreatedAt :Driver])
-                                      ::resource-type    "volumes"
-                                      ::delete-fn        (partial delete-resource-fn "volume")}
+                                      ::resource-type    "volume"}
                docker-networks       {::!data            (subscribe [::subs/docker-networks-clean])
                                       ::!columns         (r/atom [field-id
                                                                   field-name
@@ -365,8 +363,7 @@
                                                                   {::table/field-key      :Scope
                                                                    ::table/header-content "Scope"}])
                                       ::!default-columns (r/atom [:Id :Name :Created :Driver :Scope :Attachable :Internal :Ingress :EnableIPv6 :IPAM])
-                                      ::resource-type    "networks"
-                                      ::delete-fn        (partial delete-resource-fn "network")}
+                                      ::resource-type    "network"}
                control               {::docker-images         docker-images
                                       ::docker-containers     docker-containers
                                       ::docker-volumes        docker-volumes

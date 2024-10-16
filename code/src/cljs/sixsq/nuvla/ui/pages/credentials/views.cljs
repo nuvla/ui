@@ -366,7 +366,7 @@
 
 (defn MessageKeyGenerated
   [header-key]
-  [uix/Message
+  [uix/Msg
    {:header  [uix/TR header-key]
     :content [uix/TR :warning-secret-displayed-once]
     :icon    icons/i-circle-check

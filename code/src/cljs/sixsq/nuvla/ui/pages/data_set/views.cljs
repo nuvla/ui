@@ -398,10 +398,8 @@
                                         :label deployment-uuid))]
          [ui/TableCell (values/AsLink id :label uuid)]]))))
 
-(defn NoDataRecordsMessage
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Message {:info true} (@tr [:no-data-records])]))
+(defn NoDataRecordsMessage []
+  [uix/MsgNoItemsToShow [uix/TR :no-data-records]])
 
 (defn DataRecordTable
   [Pagination]

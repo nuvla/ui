@@ -120,8 +120,7 @@
      [icons/Icon {:name icon}])
    (general-utils/capitalize-first-letter header)])
 
-
-(defn Message
+(defn Msg
   [{:keys [icon content header type size] :as _ops}]
   [ui/Message
    (cond-> {}
@@ -134,6 +133,27 @@
      (when header header)]
     (when content content)]])
 
+(defn MsgInfo
+  [opts]
+  [Msg (assoc opts
+         :type :info
+         :icon icons/i-info-full)])
+
+(defn MsgWarn
+  [opts]
+  [Msg (assoc opts
+         :type :warning
+         :icon icons/i-warning)])
+
+(defn MsgError
+  [opts]
+  [Msg (assoc opts
+         :type :error
+         :icon icons/i-warning)])
+
+(defn MsgNoItemsToShow
+  [message]
+  [Msg {:content (or message [TR :no-items-to-show])}])
 
 (defn CopyToClipboard
   [{:keys [content value popup-text on-hover?] :as _opts}]
@@ -574,14 +594,6 @@
       :recompute-fn f
       :data         futur-moment
       :delay        1000}]))
-
-
-(defn WarningMsgNoElements
-  [_message]
-  (fn [message]
-    [ui/Message {:info true}
-     (or message [TR :no-items-to-show])]))
-
 
 (defn Tags
   [tags]

@@ -8,6 +8,7 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.icons :as icons]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -129,4 +130,4 @@
              [versions-compare @versions]])
           [versions-table versions current-version
            :on-click #(dispatch [::events/get-module %])]]
-         [ui/Message {:info true} (@tr [:no-versions])])])))
+         [uix/MsgNoItemsToShow [uix/TR :no-versions]])])))

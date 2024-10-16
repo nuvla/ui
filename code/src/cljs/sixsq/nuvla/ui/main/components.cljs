@@ -99,8 +99,8 @@
 
 (defn ErrorJobsMessage
   [_job-subs _set-active-tab-event _job-tab _on-click]
-  (let [tr                          (subscribe [::i18n-subs/tr])
-        most-recent-job-dismissed   (r/atom nil)]
+  (let [tr                        (subscribe [::i18n-subs/tr])
+        most-recent-job-dismissed (r/atom nil)]
     (fn [job-subs set-active-tab-event job-tab on-click]
       (let [all-jobs                       (->> @(subscribe [job-subs])
                                                 :resources)
@@ -182,18 +182,14 @@
 
 (defn NotFoundPortal
   [subs message-header message-content]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        not-found? (subscribe [subs])]
+  (let [not-found? (subscribe [subs])]
     [ui/Dimmer {:active   @not-found?
                 :inverted true}
-     [ui/Segment {:textAlign "center"
-                  :raised    true
+     [ui/Segment {:raised    true
                   :style     {:top    "20%"
                               :zIndex 1000}}
-      [ui/Message {:warning true
-                   :icon    "warning circle"
-                   :header  (@tr [message-header])
-                   :content (@tr [message-content])}]]]))
+      [uix/MsgWarn {:header  [uix/TR message-header]
+                    :content [uix/TR message-content]}]]]))
 
 
 (defn LoadingContent
@@ -341,7 +337,7 @@
          (when-not (seq tags)
            (if editable?
              (@tr [:add-first-tag])
-             [ui/Message (@tr [:no-items-to-show])]))
+             [uix/MsgNoItemsToShow]))
          utils-general/nbsp
          (when editable?
            [Pencil editing?])]))))

@@ -319,28 +319,24 @@ test('test simultaneous filtering, sorting, row selection and pagination', async
   await nextItemLink.click();
   await expectPaginationState(page, table, paginationDiv, 303, 25, 2);
 
-  // Select all rows
+  // Select all rows in the current page
   await selectAllClick(table);
-  await expectSelectedItemsCount(sceneRoot, 303);
+  await expectSelectedItemsCount(sceneRoot, 25);
 
   // Apply a global filter
   const filterInput = await locatorOne(sceneRoot, '.global-filter > input');
   // Global filter: 202 rows contain 1725, in column Created
   await filterInput.fill('1725');
   // Filtering does not change the selection
-  await expectSelectedItemsCount(sceneRoot, 303);
-  // Unselect all filtered rows
+  await expectSelectedItemsCount(sceneRoot, 25);
+  // Select all filtered rows
   await selectAllClick(table);
-  await expectSelectedItemsCount(sceneRoot, 101);
-  // Select all rows
-  await selectAllClick(table);
-  // Select all after filtering only selects filtered rows
-  await expectSelectedItemsCount(sceneRoot, 303);
+  await expectSelectedItemsCount(sceneRoot, 41);
 
   await nextItemLink.click();
   await expectPaginationState(page, table, paginationDiv, 202, 25, 2,
       [38,40,41,43,44,46,47,49,50,52,53,55,56,58,59,61,62,64,65,67,68,70,71,73,74]);
-  await expectSelectedItemsCount(sceneRoot, 303);
+  await expectSelectedItemsCount(sceneRoot, 41);
 
   // Sort by Created ascending and Idx descending
   await getColumnHeaderLabel(table, 'Created').click();
@@ -351,9 +347,11 @@ test('test simultaneous filtering, sorting, row selection and pagination', async
   await lastItemLink.click();
   await expectPaginationState(page, table, paginationDiv, 202, 25, 9,
       [4,1]);
-  await expectSelectedItemsCount(sceneRoot, 303);
-  // Clear the filter and deselect all rows
+  await expectSelectedItemsCount(sceneRoot, 41);
+  // Clear the filter and select all rows on the first page, then deselect them all
   await filterInput.fill('');
   await selectAllClick(table);
-  await expectSelectedItemsCount(sceneRoot, 0);
+  await expectSelectedItemsCount(sceneRoot, 66);
+  await selectAllClick(table);
+  await expectSelectedItemsCount(sceneRoot, 41);
 });

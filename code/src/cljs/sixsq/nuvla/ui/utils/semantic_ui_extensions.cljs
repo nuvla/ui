@@ -402,18 +402,6 @@
          ^{:key (or key name)}
          [TableRowCell options]]))))
 
-(defn TruncateContent
-  [{:keys [content length] :as _options
-    :or   {content "" length 200}}]
-  (r/with-let [show-more? (r/atom true)
-               on-click   #(swap! show-more? not)]
-    [:<>
-     [:p (if @show-more? (general-utils/truncate content length) content)]
-     (when (> (count content) length)
-       [ui/Label {:as :a :on-click on-click}
-        [TR (if @show-more? :show-more :show-less)]])]))
-
-
 (defn LinkIcon
   [{:keys [name on-click color class aria-label]}]
   [:a {:class class :aria-label aria-label} [icons/Icon {:name name, :link true, :on-click on-click :color color}]])
@@ -712,3 +700,27 @@
                             (when (= (count @token) character-count)
                               (on-submit @token)
                               (reset! token nil))))}])))
+
+(defn label-group-overflow-detector
+  [Component]
+  (r/with-let [ref        (atom nil)
+               overflow?  (r/atom false)
+               show-more? (r/atom false)]
+    (r/create-class
+      {:display-name        "LabelGroupOverflow"
+       :reagent-render      (fn [args]
+                              [:div
+                               [:div {:ref   #(reset! ref %)
+                                      :style {:overflow-y   :hidden
+                                              :overflow-x   :auto
+                                              :max-height (if @show-more? nil "15ch")}}
+                                [Component args]]
+                               (when @overflow?
+                                 [:div {:style {:display         :flex
+                                                :justify-content :center}}
+                                  [ui/Button {:style    {:margin-top    "0.5em"
+                                                         :margin-bottom "0.5em"}
+                                              :basic    true
+                                              :on-click #(swap! show-more? not)
+                                              :size     :mini} (if @show-more? "▲" "▼")]])])
+       :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))

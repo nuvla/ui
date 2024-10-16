@@ -221,7 +221,7 @@
 (defn MessageSubscriptionCanceled []
   (let [subs-canceled? @(subscribe [::profile-subs/subscription-canceled?])]
     (when subs-canceled?
-      [uix/MsgError {:header [uix/TR :subscription-is-canceled]
+      [uix/MsgError {:header  [uix/TR :subscription-is-canceled]
                      :content [:span
                                [uix/TR :to-reactivate-your-subscription]
                                [:a {:href (name->href routes/profile)} [uix/TR :go-to-profile]]

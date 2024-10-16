@@ -2249,7 +2249,7 @@
         [ui/Container {:fluid true}
          [PageHeader]
          [MenuBar uuid]
-         [components/ErrorJobsMessage ::job-subs/jobs nil nil
+         [job-views/ErrorJobsMessage ::job-subs/jobs nil nil
           #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
          [job-views/ProgressJobAction @nb-status]
          [TelemetryOutdatedMessage @nb-status]]

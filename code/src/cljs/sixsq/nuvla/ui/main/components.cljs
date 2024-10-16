@@ -97,41 +97,6 @@
      Refresh]))
 
 
-(defn ErrorJobsMessage
-  [_job-subs _set-active-tab-event _job-tab _on-click]
-  (let [tr                        (subscribe [::i18n-subs/tr])
-        most-recent-job-dismissed (r/atom nil)]
-    (fn [job-subs set-active-tab-event job-tab on-click]
-      (let [all-jobs                       (->> @(subscribe [job-subs])
-                                                :resources)
-            most-recent-failed-job         (->> all-jobs
-                                                (filter #(= "FAILED" (:state %)))
-                                                (sort-by :updated >)
-                                                (first))
-            action-of-interest?            (fn [a] (not (contains? #{"dct_check"} a)))
-            successful-jobs-after-failure? (filter (fn [{:keys [updated state action] :as _job}]
-                                                     (and (> updated
-                                                             (:updated most-recent-failed-job))
-                                                          (= state
-                                                             "SUCCESS")
-                                                          (action-of-interest? action)))
-                                                   all-jobs)]
-        [:<>
-         (when (and most-recent-failed-job
-                    (empty? successful-jobs-after-failure?)
-                    (not= (:id most-recent-failed-job) @most-recent-job-dismissed)) ;; it is a newer failed job that we haven't dismissed yet
-           (let [{:keys [id action status-message]} most-recent-failed-job]
-             ^{:key id}
-             [ui/Message {:error      true
-                          :on-dismiss #(reset! most-recent-job-dismissed id)}
-              [ui/MessageHeader
-               {:style    {:cursor "pointer"}
-                :on-click (or on-click
-                              #(dispatch [set-active-tab-event job-tab]))}
-               (str (str/capitalize (@tr [:job])) " " action " " (@tr [:failed]))]
-              [ui/MessageContent (last (str/split-lines (or status-message "")))]]))]))))
-
-
 (defn StatisticState
   ([{:keys [value icons label clickable? positive-color set-state-selector-event
             state-selector-subs stacked? on-click selected?]

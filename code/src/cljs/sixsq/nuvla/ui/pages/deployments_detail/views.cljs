@@ -653,7 +653,7 @@
            :no-deployment-message-content]
           [PageHeader]
           [MenuBar @deployment]
-          [components/ErrorJobsMessage ::job-subs/jobs
+          [job-views/ErrorJobsMessage ::job-subs/jobs
            nil nil #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
           [ProgressBars]
           [vpn-info]

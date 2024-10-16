@@ -39,33 +39,10 @@
     {:fx [[:dispatch [::events/operation (:id nuvlabox) "coe-resource-actions" payload
                       close-modal-fn close-modal-fn]]]}))
 
-(defn label-group-overflow-detector
-  [Component]
-  (r/with-let [ref        (atom nil)
-               overflow?  (r/atom false)
-               show-more? (r/atom false)]
-    (r/create-class
-      {:display-name        "LabelGroupOverflow"
-       :reagent-render      (fn [args]
-                              [:div
-                               [:div {:ref   #(reset! ref %)
-                                      :style {:overflow   :hidden
-                                              :max-height (if @show-more? nil "15ch")}}
-                                [Component args]]
-                               (when @overflow?
-                                 [:div {:style {:display         :flex
-                                                :justify-content :center}}
-                                  [ui/Button {:style    {:margin-top    "0.5em"
-                                                         :margin-bottom "0.5em"}
-                                              :basic    true
-                                              :on-click #(swap! show-more? not)
-                                              :size     :mini} (if @show-more? "▲" "▼")]])])
-       :component-did-mount #(reset! overflow? (general-utils/overflowed? @ref))})))
-
 (defmethod job-views/JobCell "coe_resource_actions"
   [{:keys [id status-message] :as resource}]
   (if-let [responses (some-> status-message general-utils/json->edn :docker)]
-    (label-group-overflow-detector
+    (uix/label-group-overflow-detector
       (fn []
         [ui/ListSA {:divided true :relaxed :very}
          (for [[i {:keys [success content message return-code] :as _response}] (map-indexed vector responses)]
@@ -76,13 +53,12 @@
              [ui/Label {:horizontal true
                         :color      (if success "green" "red")} return-code]]
             [ui/ListContent
-             (when message [:p message])
-             (when content [:p content])]])]))
+             (or message content)]])]))
     [job-views/DefaultJobCell resource]))
 
 (defn KeyValueLabelGroup
   [cell-data _row _column]
-  (label-group-overflow-detector
+  (uix/label-group-overflow-detector
     (fn []
       [ui/LabelGroup
        (for [[k v] cell-data]
@@ -92,7 +68,7 @@
 
 (defn LabelGroup
   [cell-data _row _column]
-  (label-group-overflow-detector
+  (uix/label-group-overflow-detector
     (fn []
       [ui/ListSA
        (for [v cell-data]

@@ -36,8 +36,9 @@
     ::!processed-data
     (r/track (fn processed-data []
                (let [filtered-data (if @!enable-global-filter?
-                                     (filterv #(some (partial global-filter-fn @!global-filter)
-                                                     (vals (select-keys % @!visible-columns)))
+                                     (filterv #(or (nil? @!global-filter)
+                                                   (some (partial global-filter-fn @!global-filter)
+                                                         (vals (select-keys % @!visible-columns))))
                                               @!data)
                                      @!data)]
                  (if @!enable-sorting?
@@ -77,15 +78,11 @@
 
 (defn case-insensitive-filter-fn
   [filter-str s]
-  (or (nil? filter-str)
-      (and (some? s)
-           (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
+  (and (some? s) (str/includes? (str/lower-case (str s)) (str/lower-case filter-str))))
 
 (defn case-sensitive-filter-fn
   [filter-str s]
-  (or (nil? filter-str)
-      (and (some? s)
-           (str/includes? (str s) filter-str))))
+  (and (some? s) (str/includes? (str s) filter-str)))
 
 (defn CellOverflowTooltip
   [cell-data _row _column as]

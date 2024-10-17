@@ -5,6 +5,7 @@
             [sixsq.nuvla.ui.common-components.filter-comp.views :as filter-comp]
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.job.subs :as job-subs]
+            [sixsq.nuvla.ui.common-components.job.views :as job-views]
             [sixsq.nuvla.ui.common-components.plugins.bulk-progress :as bulk-progress-plugin]
             [sixsq.nuvla.ui.common-components.plugins.full-text-search :as full-text-search-plugin]
             [sixsq.nuvla.ui.common-components.plugins.module :as module-plugin]
@@ -227,8 +228,7 @@
      [ui/Message {:size     "tiny"
                   :info     (and min-requirements-met? (not no-arch-supported?))
                   :warning  (and (not min-requirements-met?) (not no-arch-supported?))
-                  :negative no-arch-supported?
-                  }
+                  :negative no-arch-supported?}
       [:div {:style {:display :flex, :flex-direction :row}}
        (if no-arch-supported?
          (tr [:no-architecture-supported])
@@ -2006,7 +2006,7 @@
           [MenuBar false]
           [bulk-progress-plugin/MonitoredJobs
            {:db-path [::spec/bulk-jobs]}]
-          [components/ErrorJobsMessage
+          [job-views/ErrorJobsMessage
            ::job-subs/jobs nil nil
            #(dispatch [::tab/change-tab {:db-path [::spec/tab]
                                          :tab-key :jobs}])]

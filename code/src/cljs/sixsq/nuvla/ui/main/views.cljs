@@ -221,13 +221,11 @@
 (defn MessageSubscriptionCanceled []
   (let [subs-canceled? @(subscribe [::profile-subs/subscription-canceled?])]
     (when subs-canceled?
-      [uix/Message {:icon    "warning"
-                    :header  [uix/TR :subscription-is-canceled]
-                    :content [:span
-                              [uix/TR :to-reactivate-your-subscription]
-                              [:a {:href (name->href routes/profile)} [uix/TR :go-to-profile]]
-                              [uix/TR :make-sure-you-have-pm]]
-                    :type    :error}])))
+      [uix/MsgError {:header  [uix/TR :subscription-is-canceled]
+                     :content [:span
+                               [uix/TR :to-reactivate-your-subscription]
+                               [:a {:href (name->href routes/profile)} [uix/TR :go-to-profile]]
+                               [uix/TR :make-sure-you-have-pm]]}])))
 
 (defn MainDiv [children]
   (let [show?            @(subscribe [::subs/sidebar-open?])

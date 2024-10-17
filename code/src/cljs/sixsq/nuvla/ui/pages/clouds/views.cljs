@@ -225,7 +225,7 @@
 
 (defn CredentialPageLink
   []
-  [uix/Message {:type    "info"
+  [uix/Msg {:type        "info"
                 :icon    "info circle"
                 :size    :tiny
                 :content [:p

@@ -9,6 +9,7 @@ let baseURL = 'http://localhost:8281';
 const config: PlaywrightTestConfig = {
   testDir: '../test/component',
   testMatch: '*.spec.ts',
+  snapshotPathTemplate: '../test/component/snapshots/{projectName}/{testFilePath}/{arg}{ext}',
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,
   expect: {
@@ -36,8 +37,7 @@ const config: PlaywrightTestConfig = {
     timezoneId: 'Europe/Zurich',
     locale: 'de-CH',
     baseURL,
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on',
+    trace: 'off',
   },
 
   /* Configure projects for major browsers */

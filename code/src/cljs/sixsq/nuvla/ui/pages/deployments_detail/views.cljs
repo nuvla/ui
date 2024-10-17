@@ -134,7 +134,7 @@
                 :icon    icons/i-link}
      :render   #(r/as-element
                   (if (empty? urls)
-                    [uix/WarningMsgNoElements (@tr [:no-urls])]
+                    [uix/MsgNoItemsToShow (@tr [:no-urls])]
                     [ui/TabPane
                      [ui/Table {:basic   "very"
                                 :columns 2}
@@ -193,7 +193,7 @@
                 :icon    (key->icon section-key)}
      :render   #(r/as-element
                   (if (empty? items)
-                    [uix/WarningMsgNoElements]
+                    [uix/MsgNoItemsToShow]
                     [ui/TabPane
                      [ui/Table {:basic   "very"
                                 :columns 2}
@@ -653,7 +653,7 @@
            :no-deployment-message-content]
           [PageHeader]
           [MenuBar @deployment]
-          [components/ErrorJobsMessage ::job-subs/jobs
+          [job-views/ErrorJobsMessage ::job-subs/jobs
            nil nil #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
           [ProgressBars]
           [vpn-info]

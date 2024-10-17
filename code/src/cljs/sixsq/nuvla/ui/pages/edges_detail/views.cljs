@@ -90,7 +90,7 @@
       (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
     (fn [_operation on-change-fn]
       (if (nil? @ssh-keys)
-        [ui/Message {:info true} (@tr [:no-credentials-to-remove])]
+        [uix/MsgNoItemsToShow [uix/TR :no-credentials-to-remove]]
         [ui/FormDropdown
          {:label       "SSH key"
           :placeholder (if is-add?
@@ -1723,7 +1723,7 @@
             per-interface        (group-by :interface peripheral-resources)]
         [ui/TabPane
          (if (empty? peripheral-resources)
-           [uix/WarningMsgNoElements]
+           [uix/MsgNoItemsToShow]
            (for [[interface peripherals] per-interface]
              ^{:key interface}
              [uix/Accordion
@@ -2225,11 +2225,7 @@
   [nb-status]
   (r/with-let [C (fn [outdated?]
                    (when outdated?
-                     [ui/Message
-                      {:warning true
-                       :icon    icons/i-warning
-                       :content (r/as-element
-                                  [uix/TR :nuvlaedge-outdated-telemetry-warning])}]))]
+                     [uix/MsgWarn {:content [uix/TR :nuvlaedge-outdated-telemetry-warning]}]))]
     [uix/RerenderOnRecomputeChange
      {:Component    C
       :recompute-fn utils/telemetry-outdated?
@@ -2253,7 +2249,7 @@
         [ui/Container {:fluid true}
          [PageHeader]
          [MenuBar uuid]
-         [components/ErrorJobsMessage ::job-subs/jobs nil nil
+         [job-views/ErrorJobsMessage ::job-subs/jobs nil nil
           #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
          [job-views/ProgressJobAction @nb-status]
          [TelemetryOutdatedMessage @nb-status]]

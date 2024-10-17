@@ -1350,10 +1350,8 @@
           [ui/TableRow
            [ui/TableCell
             (if (empty? @members)
-              [ui/Message {:info true}
-               (if editable?
-                 (@tr [:empty-group-message])
-                 (@tr [:empty-group-or-no-access-message]))]
+              [uix/MsgNoItemsToShow [uix/TR (if editable? :empty-group-message
+                                                          :empty-group-or-no-access-message)]]
               [ui/ListSA
                (for [m @members]
                  ^{:key m}
@@ -1466,11 +1464,13 @@
             ^{:key (str "group-" group)}
             [GroupMembers group])]]))))
 
+(defn MsgNoSubscription []
+  [uix/MsgNoItemsToShow [uix/TR :no-subscription-information]])
+
 
 (defn Billing
   []
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        show-subscription    (subscribe [::subs/show-subscription])
+  (let [show-subscription    (subscribe [::subs/show-subscription])
         show-coupon          (subscribe [::subs/show-coupon])
         show-billing-contact (subscribe [::subs/show-billing-contact])
         show-invoices        (subscribe [::subs/show-invoices])
@@ -1492,8 +1492,7 @@
            (when @show-coupon [Coupon])]
           [ui/GridColumn {:style {:padding-bottom "20px"}}
            (when @show-invoices [Invoices])]]]
-        [ui/Message {:info true}
-         (@tr [:no-subscription-information])]))))
+        [MsgNoSubscription]))))
 
 (defn EdgeCurrentConsumption
   []
@@ -1563,9 +1562,7 @@
               ^{:key (random-uuid)}
               [GridColumPaddedBottom [s]])]]]
          [AppsSubsAndConsumption]]
-
-        [ui/Message {:info true}
-         (@tr [:no-subscription-information])]))))
+        [MsgNoSubscription]))))
 
 
 (defn TabMenuSubscriptions

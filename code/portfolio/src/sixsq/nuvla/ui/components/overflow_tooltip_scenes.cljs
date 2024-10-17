@@ -4,8 +4,6 @@
 
 (defscene overflow-tooltip
   [WithOverflowTooltip
-   [:div {:style {:max-width "120px"
-                  :overflow :hidden
-                  :text-wrap :nowrap}}
-    "Component with overflow tooltip"]
-   [:p "Tooltip content"]])
+   {:as :div.max-width-12ch.ellipsing
+    :content "Component with overflow tooltip"
+    :tooltip [:p "Tooltip content"]}])

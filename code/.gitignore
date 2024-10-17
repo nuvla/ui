@@ -2,6 +2,7 @@ node_modules/
 /test-results/
 /playwright-report/
 /playwright/.cache/
+/test/component/snapshots/
 .env.e2e
 storageState.json
 storage.json

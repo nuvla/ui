@@ -163,7 +163,7 @@
                                              :disabled  disabled?}
                                 n
                                 [icons/BellIcon {:class "large"
-                                                 :size "large"}]])}
+                                                 :size  "large"}]])}
          [ui/PopupHeader (@tr [:notifications])]
          [ui/PopupContent [ui/Divider]]
          [ui/PopupContent [message-feed]]

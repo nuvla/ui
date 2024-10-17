@@ -14,20 +14,21 @@
             [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn DefaultJobCell
-  [{:keys [state status-message] :as _resource}]
+  [{:keys [state status-message] :as _resource} last-line?]
   [:div {:style (cond-> {:white-space :pre
-                         :overflow    :auto
-                         :min-height  "10em"}
+                         :overflow    :auto}
                         (= state "QUEUED") (assoc :display "none"))}
-   [uix/TruncateContent
-    {:content (some-> status-message
-                      (str/replace #"\\n" "\n")) :length 300}]])
+   [(uix/label-group-overflow-detector
+      (fn []
+        (if last-line?
+          (some-> status-message str/split-lines last)
+          status-message)))]])
 
 (defmulti JobCell :action)
 
 (defmethod JobCell :default
-  [resource]
-  [DefaultJobCell resource])
+  [resource last-line?]
+  [DefaultJobCell resource last-line?])
 
 (defn JobRow
   [{:keys [id action state time-of-status-change updated progress return-code] :as resource}]
@@ -59,7 +60,7 @@
   (fn [{:keys [resources] :as jobs-data}]
     (let [{jobs-count :count} jobs-data]
       (if (empty? resources)
-        [uix/WarningMsgNoElements]
+        [uix/MsgNoItemsToShow]
         [ui/TabPane
          [ui/Table {:striped true
                     :fixed   true}
@@ -118,3 +119,40 @@
                      :size     "small"
                      :error    error
                      :class    ["green"]}]])))
+
+(defn ErrorJobsMessage
+  [_job-subs _set-active-tab-event _job-tab _on-click]
+  (let [tr                        (subscribe [::i18n-subs/tr])
+        most-recent-job-dismissed (r/atom nil)]
+    (fn [job-subs set-active-tab-event job-tab on-click]
+      (let [all-jobs                       (->> @(subscribe [job-subs])
+                                                :resources)
+            most-recent-failed-job         (->> all-jobs
+                                                (filter #(= "FAILED" (:state %)))
+                                                (sort-by :updated >)
+                                                (first))
+            action-of-interest?            (fn [a] (not (contains? #{"dct_check"} a)))
+            successful-jobs-after-failure? (filter (fn [{:keys [updated state action] :as _job}]
+                                                     (and (> updated
+                                                             (:updated most-recent-failed-job))
+                                                          (= state
+                                                             "SUCCESS")
+                                                          (action-of-interest? action)))
+                                                   all-jobs)]
+        [:<>
+         (when (and most-recent-failed-job
+                    (empty? successful-jobs-after-failure?)
+                    (not= (:id most-recent-failed-job) @most-recent-job-dismissed)) ;; it is a newer failed job that we haven't dismissed yet
+           (let [{:keys [id action]} most-recent-failed-job]
+             ^{:key id}
+             [ui/Message {:style      {:cursor "pointer"}
+                          :error      true
+                          :on-dismiss #(do (reset! most-recent-job-dismissed id)
+                                           (.stopPropagation %))
+                          :on-click   (or on-click
+                                          #(dispatch [set-active-tab-event job-tab]))}
+              [ui/MessageHeader
+               (str (str/capitalize (@tr [:job])) " " action " " (@tr [:failed]))]
+              [ui/MessageContent
+               [:div {:style {:margin-top "0.5em"}}
+                [JobCell most-recent-failed-job true]]]]))]))))

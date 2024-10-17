@@ -64,6 +64,10 @@
   [{:keys [::!processed-data ::row-id-fn] :as _control}]
   (r/track (fn all-row-ids-fn [] (set (mapv row-id-fn @!processed-data)))))
 
+(defn !current-page-row-ids-fn
+  [{:keys [::!paginated-data ::row-id-fn] :as _control}]
+  (r/track (fn all-row-ids-fn [] (set (mapv row-id-fn @!paginated-data)))))
+
 (defn set-current-columns-fn*
   [{:keys [::set-current-columns-fn ::!sorting ::set-sorting-fn] :as _control} columns]
   (let [columns-set (set columns)
@@ -156,15 +160,17 @@
 
 (defn TableSelectAllCheckbox
   [{:keys [::!selected ::set-selected-fn] :as control}]
-  (r/with-let [!all-row-ids (!all-row-ids-fn control)
-               !selected?   (r/track (fn selected? [] (every? @!selected @!all-row-ids)))]
+  (r/with-let [!current-page-row-ids (!current-page-row-ids-fn control)
+               !selected?            (r/track (fn selected? []
+                                                (and (seq @!selected)
+                                                     (every? @!selected @!current-page-row-ids))))]
     [:th [ui/Checkbox {:data-testid "checkbox-select-all"
                        :style       {:position       :relative
                                      :vertical-align :middle}
                        :checked     @!selected?
                        :on-click    #(set-selected-fn (if @!selected?
-                                                        (set/difference (set @!selected) (set @!all-row-ids))
-                                                        (set/union (set @!selected) (set @!all-row-ids))))}]]))
+                                                        (set/difference (set @!selected) (set @!current-page-row-ids))
+                                                        (set/union (set @!selected) (set @!current-page-row-ids))))}]]))
 
 (defn TableCellCheckbox
   [{:keys [::!selected ::set-selected-fn] :as control} row-id]

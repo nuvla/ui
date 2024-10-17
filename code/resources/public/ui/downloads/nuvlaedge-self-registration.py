@@ -101,6 +101,12 @@ def arguments():
     return parser.parse_args()
 
 
+def removesuffix(s, suffix):
+    if suffix and s.endswith(suffix):
+        return s[:-len(suffix)]
+    return s
+
+
 def get_mac():
     h = hex(uuid.getnode())[-12:]
     return ':'.join(h[i:i+2] for i in range(0,12,2))
@@ -334,7 +340,7 @@ def main():
 
     new_conf = ne_trigger_json.get('environment', {})
     nuvla_endpoint     = ne_trigger_json['endpoint']
-    nuvla_api_endpoint = nuvla_endpoint.rstrip('/').rstrip('/api') + "/api"
+    nuvla_api_endpoint = removesuffix(nuvla_endpoint.rstrip('/'), '/api') + "/api"
     nuvla_api_key      = ne_trigger_json['apikey']
     nuvla_api_secret   = ne_trigger_json['apisecret']
     nuvla_api_insecure = is_true(new_conf.get('NUVLA_ENDPOINT_INSECURE'), default=False)
@@ -517,5 +523,5 @@ if __name__ == "__main__":
             print('TLS/SSL error')
         else:
             print(str(e).splitlines()[-1], file=sys.stdout)
-        traceback.print_exception(e, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)

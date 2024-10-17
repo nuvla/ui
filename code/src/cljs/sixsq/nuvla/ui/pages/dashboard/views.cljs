@@ -101,12 +101,12 @@
 
       [StatisticStatesEdge]]
 
-     [uix/Button {:class   "center"
-                  :icon (utils/type->icon utils/type-nbs)
+     [uix/Button {:class    "center"
+                  :icon     (utils/type->icon utils/type-nbs)
                   :content  (tr [:show-me])
                   :on-click #(do (when (and tab-index tab-index-event)
-                                  (dispatch [tab-index-event tab-index]))
-                                (dispatch [::routing-events/navigate resource]))}]]))
+                                   (dispatch [tab-index-event tab-index]))
+                                 (dispatch [::routing-events/navigate resource]))}]]))
 (defn TabOverviewDeployments
   []
   (let [{:keys [resource tab-key tab-event]} utils/target-deployments]
@@ -124,15 +124,15 @@
                  :class     "audit-logs"
                  :style     {:display         "flex"
                              :flex-direction  "column"
-                             :justify-content "space-between"
-                             :overflow        :auto}}
+                             :justify-content "space-between"}}
 
      [:div
       [:h4 {:class "ui-header"}
        [icons/BoltIcon]
        (tr [:audit-log])]
 
-      [audit-log-plugin/EventsTableWithFilters {:db-path [::spec/events]}]]]))
+      [audit-log-plugin/EventsTableWithFilters {:db-path    [::spec/events]
+                                                :max-height 300}]]]))
 
 
 (defn Statistics
@@ -177,11 +177,11 @@
          [ui/GridColumn {:stretched true}
           [TabOverviewDeployments]]
          [ui/GridColumn {:stretched true
-                         :style {:max-height 320}}
+                         :style     {:max-height 320}}
           [TabOverviewNuvlaBox]]
          [ui/GridColumn {:stretched true
-                         :class "sixteen wide"
-                         :style {:max-height 500}}
+                         :class     "sixteen wide"
+                         :style     {:max-height 500}}
           [TabOverviewAuditLog]]]]]]]))
 
 

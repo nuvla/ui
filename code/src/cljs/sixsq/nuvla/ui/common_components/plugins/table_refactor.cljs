@@ -36,8 +36,9 @@
     ::!processed-data
     (r/track (fn processed-data []
                (let [filtered-data (if @!enable-global-filter?
-                                     (filterv #(some (partial global-filter-fn @!global-filter)
-                                                     (vals (select-keys % @!visible-columns)))
+                                     (filterv #(or (nil? @!global-filter)
+                                                   (some (partial global-filter-fn @!global-filter)
+                                                         (vals (select-keys % @!visible-columns))))
                                               @!data)
                                      @!data)]
                  (if @!enable-sorting?
@@ -81,15 +82,11 @@
 
 (defn case-insensitive-filter-fn
   [filter-str s]
-  (or (nil? filter-str)
-      (and (some? s)
-           (str/includes? (str/lower-case (str s)) (str/lower-case filter-str)))))
+  (and (some? s) (str/includes? (str/lower-case (str s)) (str/lower-case filter-str))))
 
 (defn case-sensitive-filter-fn
   [filter-str s]
-  (or (nil? filter-str)
-      (and (some? s)
-           (str/includes? (str s) filter-str))))
+  (and (some? s) (str/includes? (str s) filter-str)))
 
 (defn CellOverflowTooltip
   [cell-data _row _column as]
@@ -183,7 +180,7 @@
                                  :vertical-align :middle}}]]))
 
 (defn TableHeaderCell
-  [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn] :as control}
+  [{:keys [::!enable-column-customization? ::!enable-sorting? ::!sorting ::set-sorting-fn ::!sticky-headers?] :as control}
    {:keys [::no-sort? ::field-key ::div-class] :as column}]
   (let [sortable       (dnd/useSortable #js {"id" (name field-key)})
         setNodeRef     (.-setNodeRef sortable)
@@ -198,7 +195,11 @@
                                    (and @!enable-sorting? (not no-sort?))
                                    (assoc :cursor :pointer)
                                    @!enable-column-customization?
-                                   (assoc :transform (dnd/translate-css sortable)))
+                                   (assoc :transform (dnd/translate-css sortable))
+                                   @!sticky-headers?
+                                   (merge {:position :sticky
+                                           :top      0
+                                           :z-index  10}))
                  :on-click (when (and @!enable-sorting? (not no-sort?)) on-click)}
                 ;; always adding attributes for consistency on the `role` attribute of the header
                 ;; (.-attributes sortable) changes the role from `cell` to `button`
@@ -382,7 +383,7 @@
 (defn Table
   [control]
   (r/with-let [{:keys [::!enable-column-customization? ::set-current-columns-fn
-                       ::!enable-pagination? ::!visible-columns] :as control}
+                       ::!enable-pagination? ::!visible-columns ::!max-height] :as control}
                (->> control
                     set-!visible-columns
                     set-!columns-by-key
@@ -406,7 +407,9 @@
                       :onDragEnd          on-drag-end-fn
                       :sensors            (dnd/pointerSensor)}
       [:div.table-wrapper
-       [ui/Table
+       {:style (cond-> {}
+                       @!max-height (assoc :max-height @!max-height))}
+       [ui/Table {:style {:border :unset}}
         [TableHeader control]
         [TableBody control]]]]
      (when @!enable-pagination?
@@ -475,6 +478,11 @@
            ;; Optional
            ;; Translations
            tr-fn
+
+           ;; Optional
+           ;; Css options
+           !sticky-headers?
+           !max-height
            ]}]
   (r/with-let [row-id-fn                     (or row-id-fn :id)
                !sorting                      (or !sorting (r/atom []))
@@ -494,7 +502,10 @@
                global-filter-fn              (or global-filter-fn case-insensitive-filter-fn)
                !enable-pagination?           (or !enable-pagination? (r/atom false))
                set-pagination-fn             (or set-pagination-fn #(reset! !pagination %))
-               tr-fn                         (or tr-fn (comp str/capitalize name first))]
+               tr-fn                         (or tr-fn (comp str/capitalize name first))
+               !sticky-headers?              (or !sticky-headers? (r/atom false))
+               !max-height                   (or !max-height (r/atom nil))
+               ]
     [:f> Table {::row-id-fn                     row-id-fn
                 ::!columns                      !columns
                 ::!data                         !data
@@ -516,6 +527,8 @@
                 ::!pagination                   !pagination
                 ::set-pagination-fn             set-pagination-fn
                 ::tr-fn                         tr-fn
+                ::!sticky-headers?              !sticky-headers?
+                ::!max-height                   !max-height
                 }]))
 
 ;; table

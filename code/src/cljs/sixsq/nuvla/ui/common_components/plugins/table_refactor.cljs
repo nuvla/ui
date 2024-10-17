@@ -161,7 +161,9 @@
 (defn TableSelectAllCheckbox
   [{:keys [::!selected ::set-selected-fn] :as control}]
   (r/with-let [!current-page-row-ids (!current-page-row-ids-fn control)
-               !selected?            (r/track (fn selected? [] (every? @!selected @!current-page-row-ids)))]
+               !selected?            (r/track (fn selected? []
+                                                (and (seq @!selected)
+                                                     (every? @!selected @!current-page-row-ids))))]
     [:th [ui/Checkbox {:data-testid "checkbox-select-all"
                        :style       {:position       :relative
                                      :vertical-align :middle}

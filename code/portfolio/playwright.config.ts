@@ -31,7 +31,7 @@ const config: PlaywrightTestConfig = {
   reporter: process.env.CI ? [['github'], ['html'], ['list']] : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    screenshot: 'on',
+    screenshot: 'only-on-failure',
     video: process.env.CI ? 'retain-on-failure' : 'on',
     actionTimeout: 0,
     timezoneId: 'Europe/Zurich',

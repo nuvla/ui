@@ -201,7 +201,9 @@
                        :set-current-columns-fn #(dispatch [::set-events-table-current-cols %])
                        :!data                  !events
                        :!enable-global-filter? (r/atom false)
-                       :!enable-sorting?       (r/atom false)}]
+                       :!enable-sorting?       (r/atom false)
+                       :!sticky-headers?       (r/atom true)
+                       :!max-height            (r/atom 250)}]
      [pagination-plugin/Pagination
       {:db-path      (conj db-path ::pagination)
        :total-items  @!event-count

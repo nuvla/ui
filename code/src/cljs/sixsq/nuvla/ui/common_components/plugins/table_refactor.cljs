@@ -400,9 +400,10 @@
                       :modifiers          [dnd/restrictToHorizontalAxis]
                       :onDragEnd          on-drag-end-fn
                       :sensors            (dnd/pointerSensor)}
-      [:div.table-wrapper {:style (cond-> {}
-                                          @!max-height (assoc :max-height @!max-height))}
-       [ui/Table
+      [:div.table-wrapper
+       {:style (cond-> {}
+                       @!max-height (assoc :max-height @!max-height))}
+       [ui/Table {:style {:border :unset}}
         [TableHeader control]
         [TableBody control]]]]
      (when @!enable-pagination?

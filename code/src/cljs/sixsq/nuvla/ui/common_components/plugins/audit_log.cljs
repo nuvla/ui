@@ -172,7 +172,7 @@
     (:count events)))
 
 (defn EventsTable
-  [{:keys [db-path filters] :as _opts}]
+  [{:keys [db-path filters max-height] :as _opts}]
   (let [!events      (subscribe [::event-resources db-path])
         !event-count (subscribe [::event-count db-path])]
     [:<>
@@ -202,8 +202,8 @@
                        :!data                  !events
                        :!enable-global-filter? (r/atom false)
                        :!enable-sorting?       (r/atom false)
-                       :!sticky-headers?       (r/atom true)
-                       :!max-height            (r/atom 250)}]
+                       :!sticky-headers?       (r/atom (some? max-height))
+                       :!max-height            (r/atom max-height)}]
      [pagination-plugin/Pagination
       {:db-path      (conj db-path ::pagination)
        :total-items  @!event-count
@@ -231,7 +231,7 @@
                   :style     {:padding 5}}]))
 
 (defn EventsTableWithFilters
-  [{:keys [db-path] :as opts}]
+  [{:keys [db-path max-height] :as opts}]
   (let [show-all-events? @(subscribe [::show-all-events? db-path])]
     [ui/Grid
      [ui/GridColumn

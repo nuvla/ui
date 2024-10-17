@@ -31,14 +31,13 @@ const config: PlaywrightTestConfig = {
   reporter: process.env.CI ? [['github'], ['html'], ['list']] : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    screenshot: 'only-on-failure',
+    screenshot: 'on',
     video: process.env.CI ? 'retain-on-failure' : 'on',
     actionTimeout: 0,
     timezoneId: 'Europe/Zurich',
     locale: 'de-CH',
     baseURL,
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on',
+    trace: 'off',
   },
 
   /* Configure projects for major browsers */

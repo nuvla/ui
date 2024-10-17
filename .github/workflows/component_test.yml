@@ -10,11 +10,11 @@ on:
       - '*'
     tags:
       - '*'
-    workflow_dispatch:
-      inputs:
-        update-snapshots:
-          description: "Update snapshots?"
-          type: boolean
+  workflow_dispatch:
+    inputs:
+      update-snapshots:
+        description: "Update snapshots?"
+        type: boolean
 
 
 defaults:

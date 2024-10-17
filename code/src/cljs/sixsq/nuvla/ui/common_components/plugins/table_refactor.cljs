@@ -192,7 +192,8 @@
                                    (assoc :transform (dnd/translate-css sortable))
                                    @!sticky-headers?
                                    (merge {:position :sticky
-                                           :top      0}))
+                                           :top      0
+                                           :z-index  10}))
                  :on-click (when (and @!enable-sorting? (not no-sort?)) on-click)}
                 ;; always adding attributes for consistency on the `role` attribute of the header
                 ;; (.-attributes sortable) changes the role from `cell` to `button`

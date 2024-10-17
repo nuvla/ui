@@ -13,7 +13,7 @@
     "test:components:headed": "playwright test --config=portfolio/playwright.config.ts --project=chromium --headed",
     "test:components:all": "playwright test --config=portfolio/playwright.config.ts",
     "test:components:ci": "CI=true npx concurrently -k -s first -n \"PORTFOLIO,TEST\" -c \"magenta,blue\" \"lein serve\" \"npx wait-on tcp:127.0.0.1:8281 && npm run test:components:all\"",
-    "test:components:ci:update-snapshots": "npm run test:components:all -- --update-snapshots",
+    "test:components:ci:update-snapshots": "CI=true npx concurrently -k -s first -n \"PORTFOLIO,TEST\" -c \"magenta,blue\" \"lein serve\" \"npx wait-on tcp:127.0.0.1:8281 && npm run test:components:all -- --update-snapshots\"",
     "test:components:watch": "chokidar 'test/component/*.{spec,test}.{js,ts}' -c 'npm run test:components -- --retries=0 {path}'",
     "test:e2e:gen": "playwright codegen",
     "test:e2e": "playwright test --config=playwright.config.ts",

@@ -7,7 +7,9 @@
             [sixsq.nuvla.ui.common-components.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.common-components.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.common-components.plugins.pagination :as pagination-plugin]
-            [sixsq.nuvla.ui.common-components.plugins.table :refer [Table]]
+            [sixsq.nuvla.ui.common-components.plugins.table-refactor :as table-refactor :refer [TableController]]
+            [sixsq.nuvla.ui.main.events :as main-events]
+            [sixsq.nuvla.ui.main.subs :as main-subs]
             [sixsq.nuvla.ui.session.spec :as session-spec]
             [sixsq.nuvla.ui.session.subs :as session-subs]
             [sixsq.nuvla.ui.utils.general :as u]
@@ -105,49 +107,106 @@
   [event-name]
   (some->> event-name (re-matches #".*\.(.*)") second))
 
+(defn ResourceLink
+  [_cell-data {{{:keys [href]} :resource} :content :as _row} _column]
+  (let [resource-name (u/id->resource-name href)]
+    [values/AsPageLink href :label resource-name]))
+
+(defn EventLink
+  [_cell-data {event-id :id event-name :name :as _row} _column]
+  [values/AsLink event-id :label (if (= "legacy" event-name)
+                                   "event"
+                                   (event-name->operation event-name))])
+
+(defn UserLink
+  [_cell-data {{:keys [active-claim]} :authn-info :as _row} _column]
+  [EventUser active-claim])
+
+(defn EventTime
+  [timestamp _row _column]
+  [uix/TimeAgo timestamp])
+
+(defn EventDescription
+  [_cell-data {:keys [description] {:keys [state]} :content :as _row} _column]
+  (let [desc (or description state)]
+    [tt/WithOverflowTooltip {:as      :div.max-width-50ch.ellipsing
+                             :content desc :tooltip desc}]))
+
+(defn EventDetails
+  [_cell-data {{:keys [linked-identifiers]} :content :as _row} _column]
+  (when (seq linked-identifiers)
+    [ui/Popup {:position  "top center"
+               :trigger   (r/as-element
+                            [ui/Icon {:class icons/i-info
+                                      :link  true}])
+               :hoverable true}
+     [LinkedIdentifiers linked-identifiers]]))
+
+(def events-table-col-configs-local-storage-key "nuvla.ui.table.events.column-configs")
+
+(reg-sub
+  ::events-table-current-cols
+  :<- [::main-subs/current-cols events-table-col-configs-local-storage-key ::events-columns-ordering]
+  identity)
+
+(main-events/reg-set-current-cols-event-fx
+  ::set-events-table-current-cols-main events-table-col-configs-local-storage-key)
+
+(reg-event-fx
+  ::set-events-table-current-cols
+  (fn [_ [_ columns]]
+    {:fx [[:dispatch [::set-events-table-current-cols-main ::events-columns-ordering columns]]]}))
+
+(reg-sub
+  ::event-resources
+  (fn [[_ db-path]]
+    [(subscribe [::helpers/retrieve db-path ::events])])
+  (fn [[events]]
+    (:resources events)))
+
+(reg-sub
+  ::event-count
+  (fn [[_ db-path]]
+    [(subscribe [::helpers/retrieve db-path ::events])])
+  (fn [[events]]
+    (:count events)))
+
 (defn EventsTable
-  [{:keys [db-path filters] :as _opts}]
-  (let [tr        @(subscribe [::i18n-subs/tr])
-        events    @(subscribe [::helpers/retrieve db-path ::events])
-        resources (:resources events)]
+  [{:keys [db-path filters max-height] :as _opts}]
+  (let [!events      (subscribe [::event-resources db-path])
+        !event-count (subscribe [::event-count db-path])]
     [:<>
-     [Table {:columns
-             [{:field-key :resource
-               :cell      (fn [{{{{:keys [href]} :resource} :content} :row-data}]
-                            (let [resource-name (u/id->resource-name href)]
-                              [values/AsPageLink href :label resource-name]))}
-              {:field-key :event
-               :cell      (fn [{{event-id :id event-name :name} :row-data}]
-                            [values/AsLink event-id :label (if (= "legacy" event-name)
-                                                             "event"
-                                                             (event-name->operation event-name))])}
-              {:field-key :user
-               :cell      (fn [{{{:keys [active-claim]} :authn-info} :row-data}]
-                            [EventUser active-claim])}
-              {:field-key      :timestamp
-               :header-content (constantly (str/lower-case (tr [:time])))
-               :cell           (fn [{timestamp :cell-data}]
-                                 [uix/TimeAgo timestamp])}
-              {:field-key :description
-               :cell      (fn [{{:keys [description] {:keys [state]} :content} :row-data}]
-                            (let [desc (or description state)]
-                              [tt/WithOverflowTooltip {:as      :div.max-width-50ch.ellipsing
-                                                       :content desc :tooltip desc}]))}
-              {:field-key  :details
-               :accessor   #(get-in % [:content :state])
-               :cell       (fn [{{{:keys [linked-identifiers]} :content} :row-data}]
-                             (when (seq linked-identifiers)
-                               [ui/Popup {:position  "top center"
-                                          :trigger   (r/as-element
-                                                       [ui/Icon {:class icons/i-info
-                                                                 :link  true}])
-                                          :hoverable true}
-                                [LinkedIdentifiers linked-identifiers]]))
-               :cell-props {:style {:white-space "pre"}}}]
-             :rows resources}]
+     [TableController {:!columns               (r/atom [{::table-refactor/field-key      :resource
+                                                         ::table-refactor/header-content "Resource"
+                                                         ::table-refactor/field-cell     ResourceLink}
+                                                        {::table-refactor/field-key      :event
+                                                         ::table-refactor/header-content "Event"
+                                                         ::table-refactor/field-cell     EventLink}
+                                                        {::table-refactor/field-key      :user
+                                                         ::table-refactor/header-content "User"
+                                                         ::table-refactor/field-cell     UserLink}
+                                                        {::table-refactor/field-key      :timestamp
+                                                         ::table-refactor/header-content "Time"
+                                                         ::table-refactor/field-cell     EventTime}
+                                                        {::table-refactor/field-key      :description
+                                                         ::table-refactor/header-content "Description"
+                                                         ::table-refactor/field-cell     EventDescription}
+                                                        {::table-refactor/field-key      :details
+                                                         ::table-refactor/header-content "Details"
+                                                         :accessor                       #(get-in % [:content :state])
+                                                         ::table-refactor/field-cell     EventDetails
+                                                         :cell-props                     {:style {:white-space "pre"}}}])
+                       :!default-columns       (r/atom [:resource :event :user :timestamp :description :details])
+                       :!current-columns       (subscribe [::events-table-current-cols])
+                       :set-current-columns-fn #(dispatch [::set-events-table-current-cols %])
+                       :!data                  !events
+                       :!enable-global-filter? (r/atom false)
+                       :!enable-sorting?       (r/atom false)
+                       :!sticky-headers?       (r/atom (some? max-height))
+                       :!max-height            (r/atom max-height)}]
      [pagination-plugin/Pagination
       {:db-path      (conj db-path ::pagination)
-       :total-items  (:count events)
+       :total-items  @!event-count
        :change-event [::load-events db-path filters true]}]]))
 
 (s/def ::filters (s/nilable map?))
@@ -172,7 +231,7 @@
                   :style     {:padding 5}}]))
 
 (defn EventsTableWithFilters
-  [{:keys [db-path] :as opts}]
+  [{:keys [db-path max-height] :as opts}]
   (let [show-all-events? @(subscribe [::show-all-events? db-path])]
     [ui/Grid
      [ui/GridColumn

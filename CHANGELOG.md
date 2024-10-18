@@ -2,6 +2,50 @@
 
 ## Released
 
+## [2.40.0](https://github.com/nuvla/ui/compare/2.39.1...2.40.0) (2024-10-18)
+
+
+### Features
+
+* **audit-logs-new-table:** Replace audit logs table with refactored one ([#1662](https://github.com/nuvla/ui/issues/1662)) ([65a3c3c](https://github.com/nuvla/ui/commit/65a3c3c38e77d64083f41af57ebff45cbdef3567))
+* **Edge detail page:** Support for actions on coe-resources ([2d7302d](https://github.com/nuvla/ui/commit/2d7302da41d28b380b17a68011d34bd84adf4a97))
+* **Portfolio:** Integrate with the Portfolio library ([2d7302d](https://github.com/nuvla/ui/commit/2d7302da41d28b380b17a68011d34bd84adf4a97))
+* **Table-refactor:** Rewrite of table with testability and usability in mind ([2d7302d](https://github.com/nuvla/ui/commit/2d7302da41d28b380b17a68011d34bd84adf4a97))
+
+
+### Bug Fixes
+
+* **Application:** Fix helm app check ([#1652](https://github.com/nuvla/ui/issues/1652)) ([6d4acd8](https://github.com/nuvla/ui/commit/6d4acd8b3dcf2fad77f312634738dbe80a98a99b))
+* **Apps detail page:** add missing architectures ([21ce23f](https://github.com/nuvla/ui/commit/21ce23f3949ef025d51ef2cded57fa84b85e394a))
+* **Edge detail page:** Load nuvlabox status partially depending on current tab ([50da983](https://github.com/nuvla/ui/commit/50da9837590a517c851675eea58957824a8a3ac4))
+* **Edge detail page:** Remove popup from resource consumption tab selector ([50da983](https://github.com/nuvla/ui/commit/50da9837590a517c851675eea58957824a8a3ac4))
+* **Edge detail page:** Use table refactor for resource consumption new stats table ([2d7302d](https://github.com/nuvla/ui/commit/2d7302da41d28b380b17a68011d34bd84adf4a97))
+* **edge-page:** Job display enhancement for failed and in progress by reusing components ([331274d](https://github.com/nuvla/ui/commit/331274d8a5dee4a619dc3ab4074cef34a77486f0))
+* **Github workflow:** Install lein missing in ubuntu 24 ([#1657](https://github.com/nuvla/ui/issues/1657)) ([cbaa17c](https://github.com/nuvla/ui/commit/cbaa17ca8f2014d3eca2bd5703341ba0371b7fe4))
+* **min-req:** arch64 -&gt; aarch64 ([#1659](https://github.com/nuvla/ui/issues/1659)) ([a6791cd](https://github.com/nuvla/ui/commit/a6791cdbef7d52722a15460003245dcac5141f13))
+* **min-req:** Only show check icon if min requirements are met or unmet requirements are accepted ([#1658](https://github.com/nuvla/ui/issues/1658)) ([3ba5ffc](https://github.com/nuvla/ui/commit/3ba5ffc62c3541ea3479ea31e48eaa857d8d9e16))
+* **nuvlaedge-self-registration.py:** fix misusage of rstrip. ([0a0be1c](https://github.com/nuvla/ui/commit/0a0be1cd7d22b20160908a019594840f37536f7e))
+* **Switch group:** Check for unsaved changes before switching group ([#1651](https://github.com/nuvla/ui/issues/1651)) ([d4a86a7](https://github.com/nuvla/ui/commit/d4a86a774707af1ec87438c08804efc860b3f75a))
+* **table-refactor:** select all checkbox should only select the elements in the current page ([e7ad2a2](https://github.com/nuvla/ui/commit/e7ad2a27887efa69e154852517aaa11dc0d43366))
+* **Ui-demo:** Retire internal ui demo page replaced by Portfolio ([e9e16dc](https://github.com/nuvla/ui/commit/e9e16dc367ee59435de4c4f94f8b7b447d295c76))
+
+
+### Dependencies
+
+* **Dnd-kit:** Add drag and drop utilities for react ([2d7302d](https://github.com/nuvla/ui/commit/2d7302da41d28b380b17a68011d34bd84adf4a97))
+
+
+### Minor Changes
+
+* **nuvlaedge-self-registration.py:** compatibility with python &lt;3.10 ([0a0be1c](https://github.com/nuvla/ui/commit/0a0be1cd7d22b20160908a019594840f37536f7e))
+* **nuvlaedge-self-registration.py:** fallback to socket.gaierror if NameResolutionError is not available in urllib3 (&lt; v2.0.0) ([feb0bbf](https://github.com/nuvla/ui/commit/feb0bbf11b4118687790a46a3fa12f922c0fc872))
+* **nuvlaedge-self-registration.py:** in case of error, return exit code 1 ([322eba4](https://github.com/nuvla/ui/commit/322eba488c39a68630856672a901418d1419b1a2))
+
+
+### Continuous Integration
+
+* **playwright-snapshot:** Allow testing by snapshots ([331274d](https://github.com/nuvla/ui/commit/331274d8a5dee4a619dc3ab4074cef34a77486f0))
+
 ## [2.39.1](https://github.com/nuvla/ui/compare/2.39.0...2.39.1) (2024-09-26)
 
 

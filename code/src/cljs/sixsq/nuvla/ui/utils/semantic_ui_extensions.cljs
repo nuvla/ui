@@ -366,7 +366,9 @@
                [:div {:className "ui input icon"}
                 [ui/TextArea (assoc common-opts :on-change input-cbk)]
                 (when @active-input? [icons/Icon {:name icons/i-pencil}])]]])
-           [SpanBlockJustified default-value])]))))
+           [SpanBlockJustified (if (coll? default-value)
+                                 (str/join ", " default-value)
+                                 default-value)])]))))
 
 
 (defn FieldLabel

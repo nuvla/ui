@@ -539,12 +539,16 @@
 
 (defn ViewEdit
   []
-  (let [module-common (subscribe [::apps-subs/module-common])
-        active-tab    (sub-apps-tab)
-        is-new?       (subscribe [::apps-subs/is-new?])
-        helm-app?     (subscribe [::apps-subs/is-application-helm?])]
+  (let [module-common  (subscribe [::apps-subs/module-common])
+        compatibility  (subscribe [::subs/compatibility])
+        active-tab     (sub-apps-tab)
+        is-new?        (subscribe [::apps-subs/is-new?])
+        helm-app?      (subscribe [::apps-subs/is-application-helm?])]
     (dispatch [::apps-events/init-view {:tab-key (if (true? @is-new?) :details :overview)}])
-    (when-not @helm-app? (dispatch [::apps-events/set-form-spec ::spec/module-application]))
+    (when-not @helm-app?
+      (dispatch [::apps-events/set-form-spec ::spec/module-application])
+      (when-not @compatibility
+        (dispatch [::events/update-compatibility "docker-compose"])))
     (fn []
       (when @active-tab (dispatch [::apps-events/set-default-tab @active-tab]))
       (let [name  (get @module-common ::apps-spec/name)

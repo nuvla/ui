@@ -2,6 +2,15 @@
 
 ## Released
 
+## [2.40.1](https://github.com/nuvla/ui/compare/2.40.0...2.40.1) (2024-10-21)
+
+
+### Bug Fixes
+
+* **app-compatibility:** Set docker-compose as default compatibility on new apps ([#1665](https://github.com/nuvla/ui/issues/1665)) ([63730a8](https://github.com/nuvla/ui/commit/63730a87545000836dd746feee0346a398b00ca5))
+* **Apps detail:** Minimum requirements make application page crash when in read-only mode ([#1667](https://github.com/nuvla/ui/issues/1667)) ([c5478a6](https://github.com/nuvla/ui/commit/c5478a6f7f95c779995d03a8d013c40650f92737))
+* **UIX:** TableRowCell avoid crashing when value is a collection ([c5478a6](https://github.com/nuvla/ui/commit/c5478a6f7f95c779995d03a8d013c40650f92737))
+
 ## [2.40.0](https://github.com/nuvla/ui/compare/2.39.1...2.40.0) (2024-10-18)
 
 

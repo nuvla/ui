@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+let random_id = Math.random().toString(36).substring(2,7);
+
  test('create deployment group containing an app from deployment modal', async ({ page }, {config}) => {
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
@@ -9,7 +11,6 @@ import { test, expect } from '@playwright/test';
   await page.getByRole('link', { name: 'All Apps' }).click();
 
   await page.getByPlaceholder('Search...').click();
-
 
   await page.getByPlaceholder('Search...').fill('nginx');
 
@@ -25,9 +26,9 @@ import { test, expect } from '@playwright/test';
 
   await page.getByRole('cell', { name: /Deployment Group/ }).locator('i').click();
 
-   await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
+  await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').click();
 
-  await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill('nginx test');
+  await page.getByRole('row', { name: 'Name' }).locator('input[type="text"]').fill(random_id + ' nginx test');
 
   await page.getByRole('row', { name: 'Name' }).getByRole('button').click();
 
@@ -50,8 +51,7 @@ import { test, expect } from '@playwright/test';
 
   await page.locator('.ui > .ui > a:nth-child(3)').click();
 
-  await expect(page.getByRole('cell', { name: 'nginx test' })).toBeVisible();
-
+  await expect(page.getByRole('cell', { name: random_id + ' nginx test' })).toBeVisible();
 
 });
 
@@ -61,21 +61,20 @@ test('delete deployment group', async ({ page }, { config }) => {
  const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
 
-   const mainMenu = await page.getByTestId('nuvla-ui-sidebar');
+  const mainMenu = await page.getByTestId('nuvla-ui-sidebar');
 
-    await mainMenu.getByRole('link', { name: 'deployments'}).click();
+  await mainMenu.getByRole('link', { name: 'deployments'}).click();
 
   await page.getByRole('link', { name: 'Deployment groups' }).click();
   await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups`);
 
   await page.getByPlaceholder('Search...').click();
 
-  await page.getByPlaceholder('Search...').fill('nginx');
+  await page.getByPlaceholder('Search...').fill(random_id + ' nginx');
 
-  await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups?deployment-groups-search=nginx`);
+  await expect(page).toHaveURL(`${baseURL}/ui/deployment-groups?deployment-groups-search=${random_id}%20nginx`);
 
-  await page.getByRole('link', { name: /nginx test/i }).click();
-
+  await page.getByRole('link', { name: new RegExp(random_id + ' nginx') }).click();
 
   await page.locator('div[role="listbox"]:has-text("CancelDelete")').click();
 

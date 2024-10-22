@@ -8,6 +8,6 @@ test('table-basic', async ({ page }, { config }) => {
   const table = await locatorOne(sceneRoot, 'table.ui');
   await expectHeadersOrder(table, ['Id', 'Size', 'Created']);
 
-  expectHeaderRowCount(table, 1);
-  expectTableRowCount(table, 3);
+  await expectHeaderRowCount(table, 1);
+  await expectTableRowCount(table, 3);
 });

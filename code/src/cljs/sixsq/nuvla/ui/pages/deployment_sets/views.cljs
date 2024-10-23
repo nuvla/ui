@@ -115,14 +115,16 @@
           :on-refresh #(dispatch [::events/refresh])}]]])))
 
 (defn DeploymentSetRow
-  [{:keys [id name description created state tags] :as _deployment-set}]
-  (let [uuid (general-utils/id->uuid id)]
+  [{:keys [id name description created state auto-update tags] :as _deployment-set}]
+  (let [uuid (general-utils/id->uuid id)
+        tr   (subscribe [::i18n-subs/tr])]
     [ui/TableRow {:on-click #(dispatch [::routing-events/navigate routes/deployment-groups-details {:uuid uuid}])
                   :style    {:cursor "pointer"}}
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell state]
      [ui/TableCell [uix/TimeAgo created]]
+     [ui/TableCell (if auto-update (@tr [:yes]) (@tr [:no]))]
      [ui/TableCell [uix/Tags tags]]]))
 
 (defn Pagination
@@ -143,6 +145,7 @@
         [ui/TableHeaderCell "description"]
         [ui/TableHeaderCell "state"]
         [ui/TableHeaderCell "created"]
+        [ui/TableHeaderCell "auto update"]
         [ui/TableHeaderCell "tags"]]]
 
       [ui/TableBody
@@ -172,7 +175,7 @@
        [:div (ops-status-overview-string @tr ops-status)]])))
 
 (defn DeploymentSetCard
-  [{:keys [id updated name state description tags operational-status] :as _deployment-set}]
+  [{:keys [id updated name state description tags operational-status auto-update] :as _deployment-set}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
         href   (name->href routes/deployment-groups-details {:uuid (general-utils/id->uuid id)})]
@@ -180,9 +183,13 @@
 
     [uix/Card
      {:href        href
-      :header      [:<>
-                    [icons/Icon {:name (state->icon state)}]
-                    (or name id)]
+      :header      [:div {:style {:display         :flex
+                                  :justify-content :space-between
+                                  :align-items     :top}}
+                    [:div
+                     [icons/Icon {:name (state->icon state)}]
+                     (or name id)]
+                    (when auto-update [icons/Icon {:name "fal fa-refresh"}])]
       :meta        (str (str/capitalize (@tr [:updated])) " " (time/parse-ago updated @locale))
       :state       state
       :extra       [OperationalStatus operational-status]

@@ -1245,3 +1245,12 @@
   ::accept-unmet-requirements
   (fn [{db :db} [_ accept?]]
     {:db (assoc db ::spec/unmet-requirements-accepted accept?)}))
+
+(reg-event-fx
+  ::set-auto-update
+  (fn [{{:keys [::spec/deployment-set]} :db} [_ auto-update]]
+    (let [updated-deployment-set (assoc deployment-set :auto-update auto-update)]
+      {:fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
+            [:dispatch [::set-changes-protection
+                        (utils/unsaved-changes?
+                          deployment-set updated-deployment-set)]]]})))

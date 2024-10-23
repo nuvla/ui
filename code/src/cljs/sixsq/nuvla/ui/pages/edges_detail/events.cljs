@@ -33,9 +33,11 @@
   ::set-nuvlabox-status
   (fn [{{:keys [::spec/coe-resource-docker-available?] :as db} :db}
        [_ {:keys [vulnerabilities coe-resources] :as nuvlabox-status}]]
-    {:db (assoc db ::spec/nuvlabox-status nuvlabox-status
-                   ::spec/coe-resource-docker-available? (or coe-resource-docker-available?
-                                                             (some? (:docker coe-resources))))
+    {:db (assoc db
+           ::spec/nuvlabox-status nuvlabox-status
+           ::spec/nuvlabox-status-set-time (time/now)
+           ::spec/coe-resource-docker-available? (or coe-resource-docker-available?
+                                                     (some? (:docker coe-resources))))
      :fx [[:dispatch [::get-nuvlaedge-release nuvlabox-status]]
           [:dispatch [::set-nuvlabox-vulns vulnerabilities]]]}))
 

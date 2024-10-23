@@ -17,6 +17,19 @@
   :-> ::spec/nuvlabox-status)
 
 (reg-sub
+  ::nuvlabox-status-set-time
+  :-> ::spec/nuvlabox-status-set-time)
+
+(reg-sub
+  ::show-telemetry-outdated?
+  :<- [::nuvlabox-status]
+  :<- [::nuvlabox-status-set-time]
+  (fn [[nb-status _set-time]]
+    ;; subscription to ::nuvlabox-status-set-time is only used to force re-evaluate
+    ;; only when new nb-status document is being set
+    (edges-utils/telemetry-outdated? nb-status)))
+
+(reg-sub
   ::stats-container-ordering
   :-> ::spec/stats-container-ordering)
 

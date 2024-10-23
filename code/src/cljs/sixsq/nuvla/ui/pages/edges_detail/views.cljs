@@ -2221,16 +2221,10 @@
       [OnlineStatusIcon online true true]]
      (or name id)]))
 
-(defn TelemetryOutdatedMessage
-  [nb-status]
-  (r/with-let [C (fn [outdated?]
-                   (when outdated?
-                     [uix/MsgWarn {:content [uix/TR :nuvlaedge-outdated-telemetry-warning]}]))]
-    [uix/RerenderOnRecomputeChange
-     {:Component    C
-      :recompute-fn utils/telemetry-outdated?
-      :data         nb-status}]))
-
+(defn TelemetryOutdatedMessage []
+  (r/with-let [outdated? (subscribe [::subs/show-telemetry-outdated?])]
+    (when @outdated?
+      [uix/MsgWarn {:content [uix/TR :nuvlaedge-outdated-telemetry-warning]}])))
 
 (defn EdgeDetails
   [uuid]
@@ -2252,6 +2246,6 @@
          [job-views/ErrorJobsMessage ::job-subs/jobs nil nil
           #(dispatch [::tab-plugin/change-tab {:db-path [::spec/tab] :tab-key :jobs}])]
          [job-views/ProgressJobAction @nb-status]
-         [TelemetryOutdatedMessage @nb-status]]
+         [TelemetryOutdatedMessage]]
         [TabsNuvlaBox uuid]
         [AddPlaybookModal]]])))

@@ -613,7 +613,7 @@
        [MissingEdgesPanel deployment-set missing-edges]])))
 
 (defn TabOverviewDeploymentSet
-  [{:keys [id created updated created-by state operational-status] :as deployment-set} creating?]
+  [{:keys [id created updated created-by state operational-status auto-update] :as deployment-set} creating?]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :color     "blue"}
@@ -654,7 +654,13 @@
            [ui/TableCell [uix/TimeAgo created]]]
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:updated]))]
-           [ui/TableCell [uix/TimeAgo updated]]]])]]]))
+           [ui/TableCell [uix/TimeAgo updated]]]
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:auto-update]))]
+           [ui/TableCell auto-update [ui/Checkbox {:checked  auto-update
+                                                   :basic    "true"
+                                                   :label    ""
+                                                   :on-click #(dispatch [::events/set-auto-update (not auto-update)])}]]]])]]]))
 
 (defn AppsInAppsSetsCard
   [ids]

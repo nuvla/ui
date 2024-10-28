@@ -92,6 +92,11 @@
   :<- [::kubernetes]
   :-> :configmaps)
 
+(reg-sub
+  ::k8s-secrets
+  :<- [::kubernetes]
+  :-> :secrets)
+
 (defn update-created
   [doc]
   (update doc :Created #(some-> % time/parse-unix time/time->utc-str)))
@@ -171,6 +176,18 @@
              :creation_timestamp (:creation_timestamp metadata)
              :resource_version (:resource_version metadata)
              :namespace (:namespace metadata))) configmaps)))
+
+(reg-sub
+  ::k8s-secrets-clean
+  :<- [::k8s-secrets]
+  (fn [secrets]
+    (map (fn [{:keys [metadata] :as namespace}]
+           (assoc namespace
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) secrets)))
 
 (reg-sub
   ::docker-images-ordering

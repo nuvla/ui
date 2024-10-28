@@ -97,6 +97,51 @@
   :<- [::kubernetes]
   :-> :secrets)
 
+(reg-sub
+  ::k8s-statefulsets
+  :<- [::kubernetes]
+  :-> :statefulsets)
+
+(reg-sub
+  ::k8s-persistentvolumes
+  :<- [::kubernetes]
+  :-> :persistentvolumes)
+
+(reg-sub
+  ::k8s-persistentvolumeclaims
+  :<- [::kubernetes]
+  :-> :persistentvolumeclaims)
+
+(reg-sub
+  ::k8s-daemonsets
+  :<- [::kubernetes]
+  :-> :daemonsets)
+
+(reg-sub
+  ::k8s-deployments
+  :<- [::kubernetes]
+  :-> :deployments)
+
+(reg-sub
+  ::k8s-jobs
+  :<- [::kubernetes]
+  :-> :jobs)
+
+(reg-sub
+  ::k8s-ingresses
+  :<- [::kubernetes]
+  :-> :ingresses)
+
+(reg-sub
+  ::k8s-cronjobs
+  :<- [::kubernetes]
+  :-> :cronjobs)
+
+(reg-sub
+  ::k8s-services
+  :<- [::kubernetes]
+  :-> :services)
+
 (defn update-created
   [doc]
   (update doc :Created #(some-> % time/parse-unix time/time->utc-str)))
@@ -188,6 +233,114 @@
              :creation_timestamp (:creation_timestamp metadata)
              :resource_version (:resource_version metadata)
              :namespace (:namespace metadata))) secrets)))
+
+(reg-sub
+  ::k8s-statefulsets-clean
+  :<- [::k8s-statefulsets]
+  (fn [statefulsets]
+    (map (fn [{:keys [metadata] :as statefulset}]
+           (assoc statefulset
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) statefulsets)))
+
+(reg-sub
+  ::k8s-persistentvolumes-clean
+  :<- [::k8s-persistentvolumes]
+  (fn [statefulsets]
+    (map (fn [{:keys [metadata] :as statefulset}]
+           (assoc statefulset
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) statefulsets)))
+
+(reg-sub
+  ::k8s-persistentvolumeclaims-clean
+  :<- [::k8s-persistentvolumeclaims]
+  (fn [statefulsets]
+    (map (fn [{:keys [metadata] :as statefulset}]
+           (assoc statefulset
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) statefulsets)))
+
+(reg-sub
+  ::k8s-daemonsets-clean
+  :<- [::k8s-daemonsets]
+  (fn [statefulsets]
+    (map (fn [{:keys [metadata] :as statefulset}]
+           (assoc statefulset
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) statefulsets)))
+
+(reg-sub
+  ::k8s-deployments-clean
+  :<- [::k8s-deployments]
+  (fn [deployments]
+    (map (fn [{:keys [metadata] :as deployment}]
+           (assoc deployment
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) deployments)))
+
+(reg-sub
+  ::k8s-jobs-clean
+  :<- [::k8s-jobs]
+  (fn [jobs]
+    (map (fn [{:keys [metadata] :as job}]
+           (assoc job
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) jobs)))
+
+(reg-sub
+  ::k8s-ingresses-clean
+  :<- [::k8s-ingresses]
+  (fn [ingresses]
+    (map (fn [{:keys [metadata] :as ingress}]
+           (assoc ingress
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) ingresses)))
+
+(reg-sub
+  ::k8s-cronjobs-clean
+  :<- [::k8s-cronjobs]
+  (fn [cronjobs]
+    (map (fn [{:keys [metadata] :as cronjob}]
+           (assoc cronjob
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) cronjobs)))
+
+(reg-sub
+  ::k8s-services-clean
+  :<- [::k8s-services]
+  (fn [services]
+    (map (fn [{:keys [metadata] :as service}]
+           (assoc service
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) services)))
 
 (reg-sub
   ::docker-images-ordering

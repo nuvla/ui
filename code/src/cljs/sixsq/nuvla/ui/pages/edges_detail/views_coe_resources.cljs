@@ -209,19 +209,21 @@
                                              ::set-selected-fn       set-selected-fn
                                              ::!global-filter        !global-filter
                                              ::!pagination           !pagination
-                                             ::!pull-modal-open?   !pull-modal-open?
-                                             ::pull-modal-open-fn  #(reset! !pull-modal-open? true)
-                                             ::pull-modal-close-fn close-pull-modal
-                                             ::pull-action-fn      #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
-                                                                               close-pull-modal])}
+                                             ::!pull-modal-open?     !pull-modal-open?
+                                             ::pull-modal-open-fn    #(reset! !pull-modal-open? true)
+                                             ::pull-modal-close-fn   close-pull-modal
+                                             ::pull-action-fn        #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
+                                                                                 close-pull-modal])}
                                             extra-control)]
-    (js/console.info panes (mapv
-                             (fn [[pane-title k]]
-                               {:menuItem pane-title,
-                                :render   #(r/as-element [COETabPane control k])})
-                             panes))
     [ui/Tab
-     {:on-tab-change #(do (set-selected-fn #{})
+     {:menu          {
+                      :style    {:display   :flex
+                                 :flex-wrap :wrap}
+                      :secondary true
+                      :pointing true
+
+                      }
+      :on-tab-change #(do (set-selected-fn #{})
                           (reset! !pagination default-pagination)
                           (reset! !global-filter ""))
       :panes         (mapv

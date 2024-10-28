@@ -53,9 +53,44 @@
   :-> :docker)
 
 (reg-sub
+  ::kubernetes
+  :<- [::coe-resources]
+  :-> :kubernetes)
+
+(reg-sub
   ::docker-images
   :<- [::docker]
   :-> :images)
+
+(reg-sub
+  ::k8s-images
+  :<- [::kubernetes]
+  :-> :images)
+
+(reg-sub
+  ::k8s-namespaces
+  :<- [::kubernetes]
+  :-> :namespaces)
+
+(reg-sub
+  ::k8s-pods
+  :<- [::kubernetes]
+  :-> :pods)
+
+(reg-sub
+  ::k8s-nodes
+  :<- [::kubernetes]
+  :-> :nodes)
+
+(reg-sub
+  ::k8s-nodes
+  :<- [::kubernetes]
+  :-> :nodes)
+
+(reg-sub
+  ::k8s-configmaps
+  :<- [::kubernetes]
+  :-> :configmaps)
 
 (defn update-created
   [doc]
@@ -88,6 +123,54 @@
                (update :Id str/replace #"^sha256:" "")
                update-created
                (dissoc :SharedSize :Containers))) images)))
+
+(reg-sub
+  ::k8s-namespaces-clean
+  :<- [::k8s-namespaces]
+  (fn [namespaces]
+    (map (fn [{:keys [metadata] :as namespace}]
+           (assoc namespace
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata))) namespaces)))
+
+(reg-sub
+  ::k8s-pods-clean
+  :<- [::k8s-pods]
+  (fn [pods]
+    (map (fn [{:keys [metadata status] :as namespace}]
+           (assoc namespace
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata)
+             :phase (:phase status))) pods)))
+
+(reg-sub
+  ::k8s-nodes-clean
+  :<- [::k8s-nodes]
+  (fn [pods]
+    (map (fn [{:keys [metadata status] :as namespace}]
+           (assoc namespace
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :node_info (:node_info status))) pods)))
+
+(reg-sub
+  ::k8s-configmaps-clean
+  :<- [::k8s-configmaps]
+  (fn [configmaps]
+    (map (fn [{:keys [metadata] :as namespace}]
+           (assoc namespace
+             :uid (:uid metadata)
+             :name (:name metadata)
+             :creation_timestamp (:creation_timestamp metadata)
+             :resource_version (:resource_version metadata)
+             :namespace (:namespace metadata))) configmaps)))
 
 (reg-sub
   ::docker-images-ordering
@@ -126,6 +209,10 @@
     (map #(update % :IPAM (comp first :Config)) networks)))
 
 (reg-sub
+  ::coe-resource-k8s-available?
+  :-> ::spec/coe-resource-k8s-available?)
+
+(reg-sub
   ::augmented-container-stats
   :<- [::container-stats]
   (fn [container-stats]
@@ -138,7 +225,6 @@
 (reg-sub
   ::nuvlaedge-release
   :-> ::spec/nuvlaedge-release)
-
 
 (defn- version-string->number-vec [version]
   (map js/Number (str/split version ".")))

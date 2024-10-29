@@ -1248,8 +1248,8 @@
 
 (reg-event-fx
   ::set-auto-update
-  (fn [{{:keys [::spec/deployment-set]} :db} [_ auto-update]]
-    (let [updated-deployment-set (assoc deployment-set :auto-update auto-update)]
+  (fn [{{:keys [::spec/deployment-set ::spec/deployment-set-edited]} :db} [_ auto-update]]
+    (let [updated-deployment-set (assoc deployment-set-edited :auto-update auto-update)]
       {:fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
             [:dispatch [::set-changes-protection
                         (utils/unsaved-changes?
@@ -1257,8 +1257,8 @@
 
 (reg-event-fx
   ::set-auto-update-interval
-  (fn [{{:keys [::spec/deployment-set]} :db} [_ auto-update-interval]]
-    (let [updated-deployment-set (assoc deployment-set :auto-update-interval (int (/ auto-update-interval 60)))]
+  (fn [{{:keys [::spec/deployment-set ::spec/deployment-set-edited]} :db} [_ auto-update-interval]]
+    (let [updated-deployment-set (assoc deployment-set-edited :auto-update-interval (int (/ auto-update-interval 60)))]
       {:fx [[:dispatch [::set-deployment-set-edited updated-deployment-set]]
             [:dispatch [::set-changes-protection
                         (utils/unsaved-changes?

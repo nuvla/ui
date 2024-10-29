@@ -616,8 +616,11 @@
 (defn TabOverviewDeploymentSet
   [{:keys [id created updated created-by state operational-status auto-update auto-update-interval] :as deployment-set} creating?]
   (r/with-let [tr                               (subscribe [::i18n-subs/tr])
-               !auto-update-interval-in-seconds (r/atom nil)]
-    (reset! !auto-update-interval-in-seconds (some-> auto-update-interval (* 60)))
+               !auto-update-interval-in-seconds (r/atom nil)
+               !minutes-options                 (r/atom nil)]
+    (reset! !auto-update-interval-in-seconds (if (pos? auto-update-interval) (* auto-update-interval 60) 60))
+    (reset! !minutes-options (into (if (>= @!auto-update-interval-in-seconds 3600) [0] [])
+                                   [1 2 5 10 20 30 40 50]))
     [ui/Segment {:secondary true
                  :color     "blue"}
      [:h4 (if creating?
@@ -671,7 +674,7 @@
                             :align-items :center
                             :gap         10
                             :visibility  (if auto-update :visible :hidden)}}
-              [:span (str/capitalize (@tr [:auto-update-interval])) ":"]
+              [:span (str/capitalize (@tr [:interval])) ":"]
               [:span
                [duration-picker/DurationPickerController
                 {:!value           !auto-update-interval-in-seconds
@@ -679,7 +682,7 @@
                  :!show-days?      (r/atom false)
                  :!show-seconds?   (r/atom false)
                  :!hours-options   (r/atom (range 0 24))
-                 :!minutes-options (r/atom [0 1 2 5 10 20 30 40 50])}]]]]]]])]]]))
+                 :!minutes-options !minutes-options}]]]]]]])]]]))
 
 (defn AppsInAppsSetsCard
   [ids]

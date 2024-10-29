@@ -618,7 +618,7 @@
   (r/with-let [tr                               (subscribe [::i18n-subs/tr])
                !auto-update-interval-in-seconds (r/atom nil)
                !minutes-options                 (r/atom nil)]
-    (reset! !auto-update-interval-in-seconds (if (pos? auto-update-interval) (* auto-update-interval 60) 60))
+    (reset! !auto-update-interval-in-seconds (if (pos? auto-update-interval) (* auto-update-interval 60) 300))
     (reset! !minutes-options (into (if (>= @!auto-update-interval-in-seconds 3600) [0] [])
                                    [1 2 5 10 20 30 40 50]))
     [ui/Segment {:secondary true

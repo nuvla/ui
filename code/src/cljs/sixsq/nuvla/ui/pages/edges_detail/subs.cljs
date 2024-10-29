@@ -67,37 +67,26 @@
 
 (defn reg-sub-fn-coe-resource
   [coe-key sub-key-resource-key-list]
-  (doseq [[sub-key resource-key sub-key-clean clean-fn] sub-key-resource-key-list]
+  (doseq [[resource-key sub-key clean-fn] sub-key-resource-key-list]
     (reg-sub
       sub-key
       :<- [coe-key]
-      :-> resource-key)
-    (when (and sub-key-clean clean-fn)
-      (reg-sub
-        sub-key-clean
-        :<- [sub-key]
-        :-> #(mapv clean-fn %)))))
+      :-> (if clean-fn
+            (comp #(mapv clean-fn %) resource-key)
+            resource-key))))
 
 (reg-sub-fn-coe-resource
-  ::docker [[::docker-images :images
-             ::docker-images-clean (fn [image]
-                                     (-> image
-                                         (update :Id str/replace #"^sha256:" "")
-                                         update-created
-                                         (dissoc :SharedSize :Containers)))]
-            [::docker-volumes :volumes]
-            [::docker-containers :containers
-             ::docker-containers-clean (fn [container]
-                                         (-> container
-                                             update-ports
-                                             update-created
-                                             update-mounts
-                                             update-network-settings))]
-            [::docker-networks :networks
-             ::docker-networks-clean (fn [network]
-                                       (update network :IPAM (comp first :Config)))]])
-
-
+  ::docker [[:images ::docker-images
+             (fn [image]
+               (-> image
+                   (update :Id str/replace #"^sha256:" "")
+                   update-created
+                   (dissoc :SharedSize :Containers)))]
+            [:volumes ::docker-volumes]
+            [:containers ::docker-containers
+             #(-> % update-ports update-created update-mounts update-network-settings)]
+            [:networks ::docker-networks
+             #(update % :IPAM (comp first :Config))]])
 
 (reg-sub
   ::kubernetes
@@ -121,39 +110,27 @@
   ((comp k8s-flat-metadata k8s-namespace-metadata) resource))
 
 (reg-sub-fn-coe-resource
-  ::kubernetes [[::k8s-images :images]
-                [::k8s-namespaces :namespaces
-                 ::k8s-namespaces-clean k8s-flat-metadata]
-                [::k8s-pods :pods
-                 ::k8s-pods-clean (comp (fn [{:keys [status] :as resource}]
-                                          (assoc resource :phase (:phase status)))
-                                        k8s-flat-metadata)]
-                [::k8s-nodes :nodes
-                 ::k8s-nodes-clean (comp (fn [{:keys [status] :as resource}]
-                                           (assoc resource :node_info (:node_info status)))
-                                         k8s-flat-metadata)]
-                [::k8s-configmaps :configmaps
-                 ::k8s-configmaps-clean k8s-flat-metadata-namespace]
-                [::k8s-secrets :secrets
-                 ::k8s-secrets-clean k8s-flat-metadata-namespace]
-                [::k8s-statefulsets :statefulsets
-                 ::k8s-statefulsets-clean k8s-flat-metadata-namespace]
-                [::k8s-persistentvolumes :persistentvolumes
-                 ::k8s-persistentvolumes-clean k8s-flat-metadata-namespace]
-                [::k8s-persistentvolumeclaims :persistentvolumeclaims
-                 ::k8s-persistentvolumeclaims-clean k8s-flat-metadata-namespace]
-                [::k8s-daemonsets :daemonsets
-                 ::k8s-daemonsets-clean k8s-flat-metadata-namespace]
-                [::k8s-deployments :deployments
-                 ::k8s-deployments-clean k8s-flat-metadata-namespace]
-                [::k8s-jobs :jobs
-                 ::k8s-jobs-clean k8s-flat-metadata-namespace]
-                [::k8s-ingresses :ingresses
-                 ::k8s-ingresses-clean k8s-flat-metadata-namespace]
-                [::k8s-cronjobs :cronjobs
-                 ::k8s-cronjobs-clean k8s-flat-metadata-namespace]
-                [::k8s-services :services
-                 ::k8s-services-clean k8s-flat-metadata-namespace]])
+  ::kubernetes [[:images ::k8s-images]
+                [:namespaces ::k8s-namespaces k8s-flat-metadata]
+                [:pods ::k8s-pods
+                 (fn [{:keys [status] :as resource}]
+                   (-> (k8s-flat-metadata resource)
+                       (assoc :phase (:phase status))))]
+                [:nodes ::k8s-nodes
+                 (fn [{:keys [status] :as resource}]
+                   (-> (k8s-flat-metadata resource)
+                       (assoc :node_info (:node_info status))))]
+                [:configmaps ::k8s-configmaps k8s-flat-metadata-namespace]
+                [:secrets ::k8s-secrets k8s-flat-metadata-namespace]
+                [:statefulsets ::k8s-statefulsets k8s-flat-metadata-namespace]
+                [:persistentvolumes ::k8s-persistentvolumes k8s-flat-metadata-namespace]
+                [:persistentvolumeclaims ::k8s-persistentvolumeclaims k8s-flat-metadata-namespace]
+                [:daemonsets ::k8s-daemonsets k8s-flat-metadata-namespace]
+                [:deployments ::k8s-deployments k8s-flat-metadata-namespace]
+                [:jobs ::k8s-jobs k8s-flat-metadata-namespace]
+                [:ingresses ::k8s-ingresses k8s-flat-metadata-namespace]
+                [:cronjobs ::k8s-cronjobs k8s-flat-metadata-namespace]
+                [:services ::k8s-services k8s-flat-metadata-namespace]])
 
 (reg-sub
   ::coe-resource-k8s-available?

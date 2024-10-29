@@ -160,33 +160,18 @@
                                            ::coe/resource-type    "service"
                                            ::coe/row-id-fn        :uid}]
     [coe/Tab
-     [["Namespaces" ::k8s-namespaces]
-      ["Images" ::k8s-images]
-      ["Nodes" ::k8s-nodes]
-      ["Pods" ::k8s-pods]
-      ["Secrets" ::k8s-secrets]
-      ["Config maps" ::k8s-configmaps]
-      ["Deployments" ::k8s-deployments]
-      ["Stateful sets" ::k8s-statefulsets]
-      ["Daemon sets" ::k8s-daemonsets]
-      ["Services" ::k8s-services]
-      ["Jobs" ::k8s-jobs]
-      ["Cronjobs" ::k8s-cronjobs]
-      ["Persistent volumes" ::k8s-persistentvolumes]
-      ["Persistent volume claims" ::k8s-persistentvolumeclaims]
-      ["Ingresses" ::k8s-ingresses]]
-     {::k8s-images                 k8s-images
-      ::k8s-namespaces             k8s-namespaces
-      ::k8s-pods                   k8s-pods
-      ::k8s-nodes                  k8s-nodes
-      ::k8s-configmaps             k8s-configmaps
-      ::k8s-secrets                k8s-secrets
-      ::k8s-statefulsets           k8s-statefulsets
-      ::k8s-persistentvolumes      k8s-persistentvolumes
-      ::k8s-persistentvolumeclaims k8s-persistentvolumeclaims
-      ::k8s-daemonsets             k8s-daemonsets
-      ::k8s-deployments            k8s-deployments
-      ::k8s-jobs                   k8s-jobs
-      ::k8s-ingresses              k8s-ingresses
-      ::k8s-cronjobs               k8s-cronjobs
-      ::k8s-services               k8s-services}]))
+     [["Namespaces" ::k8s-namespaces k8s-namespaces]
+      ["Images" ::k8s-images k8s-images]
+      ["Nodes" ::k8s-nodes k8s-nodes]
+      ["Pods" ::k8s-pods k8s-pods]
+      ["Secrets" ::k8s-secrets k8s-secrets]
+      ["Config maps" ::k8s-configmaps k8s-configmaps]
+      ["Deployments" ::k8s-deployments k8s-deployments]
+      ["Stateful sets" ::k8s-statefulsets k8s-statefulsets]
+      ["Daemon sets" ::k8s-daemonsets k8s-daemonsets]
+      ["Services" ::k8s-services k8s-services]
+      ["Jobs" ::k8s-jobs k8s-jobs]
+      ["Cronjobs" ::k8s-cronjobs k8s-cronjobs]
+      ["Persistent volumes" ::k8s-persistentvolumes k8s-persistentvolumes]
+      ["Persistent volume claims" ::k8s-persistentvolumeclaims k8s-persistentvolumeclaims]
+      ["Ingresses" ::k8s-ingresses k8s-ingresses]]]))

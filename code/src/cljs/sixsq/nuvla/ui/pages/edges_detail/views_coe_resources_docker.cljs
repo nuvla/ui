@@ -149,11 +149,7 @@
                                   ::coe/!default-columns (r/atom [:Id :Name :Created :Driver :Scope :Attachable :Internal :Ingress :EnableIPv6 :IPAM])
                                   ::coe/resource-type    "network"}]
     [coe/Tab
-     [["Containers" ::docker-containers]
-      ["Images" ::docker-images]
-      ["Volumes" ::docker-volumes]
-      ["Networks" ::docker-networks]]
-     {::docker-images     docker-images
-      ::docker-containers docker-containers
-      ::docker-volumes    docker-volumes
-      ::docker-networks   docker-networks}]))
+     [["Containers" ::docker-containers docker-containers]
+      ["Images" ::docker-images docker-images]
+      ["Volumes" ::docker-volumes docker-volumes]
+      ["Networks" ::docker-networks docker-networks]]]))

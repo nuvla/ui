@@ -191,7 +191,7 @@
    [ActionBar control k]
    [CoeTable control k]])
 
-(defn Tab [panes extra-control]
+(defn Tab [title-k-data-list]
   (r/with-let [!can-actions?         (subscribe [::subs/can-coe-resource-actions?])
                !pull-modal-open?     (r/atom false)
                !delete-modal-open?   (r/atom false)
@@ -214,20 +214,20 @@
                                              ::pull-modal-close-fn   close-pull-modal
                                              ::pull-action-fn        #(dispatch [::coe-resource-actions {:docker [{:resource "image" :action "pull" :id %}]}
                                                                                  close-pull-modal])}
-                                            extra-control)]
+                                            (into {} (mapv
+                                                       (fn [[_title k data]]
+                                                         [k data])
+                                                       title-k-data-list)))]
     [ui/Tab
-     {:menu          {
-                      :style    {:display   :flex
-                                 :flex-wrap :wrap}
+     {:menu          {:style     {:display   :flex
+                                  :flex-wrap :wrap}
                       :secondary true
-                      :pointing true
-
-                      }
+                      :pointing  true}
       :on-tab-change #(do (set-selected-fn #{})
                           (reset! !pagination default-pagination)
                           (reset! !global-filter ""))
       :panes         (mapv
-                       (fn [[pane-title k]]
-                         {:menuItem pane-title,
+                       (fn [[title k _data]]
+                         {:menuItem title,
                           :render   #(r/as-element [COETabPane control k])})
-                       panes)}]))
+                       title-k-data-list)}]))

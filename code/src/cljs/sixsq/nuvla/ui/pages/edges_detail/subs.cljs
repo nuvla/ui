@@ -30,22 +30,9 @@
     (edges-utils/telemetry-outdated? nb-status)))
 
 (reg-sub
-  ::stats-container-ordering
-  :-> ::spec/stats-container-ordering)
-
-(reg-sub
-  ::container-stats
-  :<- [::nuvlabox-status]
-  :-> (comp :container-stats :resources))
-
-(reg-sub
   ::coe-resources
   :<- [::nuvlabox-status]
   :-> :coe-resources)
-
-(reg-sub
-  ::coe-resource-docker-available?
-  :-> ::spec/coe-resource-docker-available?)
 
 (reg-sub
   ::docker
@@ -53,94 +40,8 @@
   :-> :docker)
 
 (reg-sub
-  ::kubernetes
-  :<- [::coe-resources]
-  :-> :kubernetes)
-
-(reg-sub
-  ::docker-images
-  :<- [::docker]
-  :-> :images)
-
-(reg-sub
-  ::k8s-images
-  :<- [::kubernetes]
-  :-> :images)
-
-(reg-sub
-  ::k8s-namespaces
-  :<- [::kubernetes]
-  :-> :namespaces)
-
-(reg-sub
-  ::k8s-pods
-  :<- [::kubernetes]
-  :-> :pods)
-
-(reg-sub
-  ::k8s-nodes
-  :<- [::kubernetes]
-  :-> :nodes)
-
-(reg-sub
-  ::k8s-nodes
-  :<- [::kubernetes]
-  :-> :nodes)
-
-(reg-sub
-  ::k8s-configmaps
-  :<- [::kubernetes]
-  :-> :configmaps)
-
-(reg-sub
-  ::k8s-secrets
-  :<- [::kubernetes]
-  :-> :secrets)
-
-(reg-sub
-  ::k8s-statefulsets
-  :<- [::kubernetes]
-  :-> :statefulsets)
-
-(reg-sub
-  ::k8s-persistentvolumes
-  :<- [::kubernetes]
-  :-> :persistentvolumes)
-
-(reg-sub
-  ::k8s-persistentvolumeclaims
-  :<- [::kubernetes]
-  :-> :persistentvolumeclaims)
-
-(reg-sub
-  ::k8s-daemonsets
-  :<- [::kubernetes]
-  :-> :daemonsets)
-
-(reg-sub
-  ::k8s-deployments
-  :<- [::kubernetes]
-  :-> :deployments)
-
-(reg-sub
-  ::k8s-jobs
-  :<- [::kubernetes]
-  :-> :jobs)
-
-(reg-sub
-  ::k8s-ingresses
-  :<- [::kubernetes]
-  :-> :ingresses)
-
-(reg-sub
-  ::k8s-cronjobs
-  :<- [::kubernetes]
-  :-> :cronjobs)
-
-(reg-sub
-  ::k8s-services
-  :<- [::kubernetes]
-  :-> :services)
+  ::coe-resource-docker-available?
+  :-> ::spec/coe-resource-docker-available?)
 
 (defn update-created
   [doc]
@@ -164,223 +65,104 @@
   [doc]
   (update doc :NetworkSettings (comp #(map name %) keys :Networks)))
 
-(reg-sub
-  ::docker-images-clean
-  :<- [::docker-images]
-  (fn [images]
-    (map (fn [image]
-           (-> image
-               (update :Id str/replace #"^sha256:" "")
-               update-created
-               (dissoc :SharedSize :Containers))) images)))
+(defn reg-sub-fn-coe-resource
+  [coe-key sub-key-resource-key-list]
+  (doseq [[sub-key resource-key sub-key-clean clean-fn] sub-key-resource-key-list]
+    (reg-sub
+      sub-key
+      :<- [coe-key]
+      :-> resource-key)
+    (when (and sub-key-clean clean-fn)
+      (reg-sub
+        sub-key-clean
+        :<- [sub-key]
+        :-> #(mapv clean-fn %)))))
+
+(reg-sub-fn-coe-resource
+  ::docker [[::docker-images :images
+             ::docker-images-clean (fn [image]
+                                     (-> image
+                                         (update :Id str/replace #"^sha256:" "")
+                                         update-created
+                                         (dissoc :SharedSize :Containers)))]
+            [::docker-volumes :volumes]
+            [::docker-containers :containers
+             ::docker-containers-clean (fn [container]
+                                         (-> container
+                                             update-ports
+                                             update-created
+                                             update-mounts
+                                             update-network-settings))]
+            [::docker-networks :networks
+             ::docker-networks-clean (fn [network]
+                                       (update network :IPAM (comp first :Config)))]])
+
+
 
 (reg-sub
-  ::k8s-namespaces-clean
-  :<- [::k8s-namespaces]
-  (fn [namespaces]
-    (map (fn [{:keys [metadata] :as namespace}]
-           (assoc namespace
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata))) namespaces)))
+  ::kubernetes
+  :<- [::coe-resources]
+  :-> :kubernetes)
 
-(reg-sub
-  ::k8s-pods-clean
-  :<- [::k8s-pods]
-  (fn [pods]
-    (map (fn [{:keys [metadata status] :as namespace}]
-           (assoc namespace
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata)
-             :phase (:phase status))) pods)))
+(defn k8s-flat-metadata
+  [{:keys [metadata] :as resource}]
+  (assoc resource
+    :uid (:uid metadata)
+    :name (:name metadata)
+    :creation_timestamp (:creation_timestamp metadata)
+    :resource_version (:resource_version metadata)))
 
-(reg-sub
-  ::k8s-nodes-clean
-  :<- [::k8s-nodes]
-  (fn [pods]
-    (map (fn [{:keys [metadata status] :as namespace}]
-           (assoc namespace
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :node_info (:node_info status))) pods)))
+(defn k8s-namespace-metadata
+  [{:keys [metadata] :as resource}]
+  (assoc resource :namespace (:namespace metadata)))
 
-(reg-sub
-  ::k8s-configmaps-clean
-  :<- [::k8s-configmaps]
-  (fn [configmaps]
-    (map (fn [{:keys [metadata] :as namespace}]
-           (assoc namespace
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) configmaps)))
+(defn k8s-flat-metadata-namespace
+  [resource]
+  ((comp k8s-flat-metadata k8s-namespace-metadata) resource))
 
-(reg-sub
-  ::k8s-secrets-clean
-  :<- [::k8s-secrets]
-  (fn [secrets]
-    (map (fn [{:keys [metadata] :as namespace}]
-           (assoc namespace
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) secrets)))
-
-(reg-sub
-  ::k8s-statefulsets-clean
-  :<- [::k8s-statefulsets]
-  (fn [statefulsets]
-    (map (fn [{:keys [metadata] :as statefulset}]
-           (assoc statefulset
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) statefulsets)))
-
-(reg-sub
-  ::k8s-persistentvolumes-clean
-  :<- [::k8s-persistentvolumes]
-  (fn [statefulsets]
-    (map (fn [{:keys [metadata] :as statefulset}]
-           (assoc statefulset
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) statefulsets)))
-
-(reg-sub
-  ::k8s-persistentvolumeclaims-clean
-  :<- [::k8s-persistentvolumeclaims]
-  (fn [statefulsets]
-    (map (fn [{:keys [metadata] :as statefulset}]
-           (assoc statefulset
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) statefulsets)))
-
-(reg-sub
-  ::k8s-daemonsets-clean
-  :<- [::k8s-daemonsets]
-  (fn [statefulsets]
-    (map (fn [{:keys [metadata] :as statefulset}]
-           (assoc statefulset
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) statefulsets)))
-
-(reg-sub
-  ::k8s-deployments-clean
-  :<- [::k8s-deployments]
-  (fn [deployments]
-    (map (fn [{:keys [metadata] :as deployment}]
-           (assoc deployment
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) deployments)))
-
-(reg-sub
-  ::k8s-jobs-clean
-  :<- [::k8s-jobs]
-  (fn [jobs]
-    (map (fn [{:keys [metadata] :as job}]
-           (assoc job
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) jobs)))
-
-(reg-sub
-  ::k8s-ingresses-clean
-  :<- [::k8s-ingresses]
-  (fn [ingresses]
-    (map (fn [{:keys [metadata] :as ingress}]
-           (assoc ingress
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) ingresses)))
-
-(reg-sub
-  ::k8s-cronjobs-clean
-  :<- [::k8s-cronjobs]
-  (fn [cronjobs]
-    (map (fn [{:keys [metadata] :as cronjob}]
-           (assoc cronjob
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) cronjobs)))
-
-(reg-sub
-  ::k8s-services-clean
-  :<- [::k8s-services]
-  (fn [services]
-    (map (fn [{:keys [metadata] :as service}]
-           (assoc service
-             :uid (:uid metadata)
-             :name (:name metadata)
-             :creation_timestamp (:creation_timestamp metadata)
-             :resource_version (:resource_version metadata)
-             :namespace (:namespace metadata))) services)))
-
-(reg-sub
-  ::docker-images-ordering
-  :-> ::spec/docker-images-ordering)
-
-(reg-sub
-  ::docker-volumes
-  :<- [::docker]
-  :-> :volumes)
-
-(reg-sub
-  ::docker-containers
-  :<- [::docker]
-  :-> :containers)
-
-(reg-sub
-  ::docker-containers-clean
-  :<- [::docker-containers]
-  (fn [containers]
-    (map (fn [container]
-           (-> container
-               update-ports
-               update-created
-               update-mounts
-               update-network-settings)) containers)))
-
-(reg-sub
-  ::docker-networks
-  :<- [::docker]
-  :-> :networks)
-
-(reg-sub
-  ::docker-networks-clean
-  :<- [::docker-networks]
-  (fn [networks]
-    (map #(update % :IPAM (comp first :Config)) networks)))
+(reg-sub-fn-coe-resource
+  ::kubernetes [[::k8s-images :images]
+                [::k8s-namespaces :namespaces
+                 ::k8s-namespaces-clean k8s-flat-metadata]
+                [::k8s-pods :pods
+                 ::k8s-pods-clean (comp (fn [{:keys [status] :as resource}]
+                                          (assoc resource :phase (:phase status)))
+                                        k8s-flat-metadata)]
+                [::k8s-nodes :nodes
+                 ::k8s-nodes-clean (comp (fn [{:keys [status] :as resource}]
+                                           (assoc resource :node_info (:node_info status)))
+                                         k8s-flat-metadata)]
+                [::k8s-configmaps :configmaps
+                 ::k8s-configmaps-clean k8s-flat-metadata-namespace]
+                [::k8s-secrets :secrets
+                 ::k8s-secrets-clean k8s-flat-metadata-namespace]
+                [::k8s-statefulsets :statefulsets
+                 ::k8s-statefulsets-clean k8s-flat-metadata-namespace]
+                [::k8s-persistentvolumes :persistentvolumes
+                 ::k8s-persistentvolumes-clean k8s-flat-metadata-namespace]
+                [::k8s-persistentvolumeclaims :persistentvolumeclaims
+                 ::k8s-persistentvolumeclaims-clean k8s-flat-metadata-namespace]
+                [::k8s-daemonsets :daemonsets
+                 ::k8s-daemonsets-clean k8s-flat-metadata-namespace]
+                [::k8s-deployments :deployments
+                 ::k8s-deployments-clean k8s-flat-metadata-namespace]
+                [::k8s-jobs :jobs
+                 ::k8s-jobs-clean k8s-flat-metadata-namespace]
+                [::k8s-ingresses :ingresses
+                 ::k8s-ingresses-clean k8s-flat-metadata-namespace]
+                [::k8s-cronjobs :cronjobs
+                 ::k8s-cronjobs-clean k8s-flat-metadata-namespace]
+                [::k8s-services :services
+                 ::k8s-services-clean k8s-flat-metadata-namespace]])
 
 (reg-sub
   ::coe-resource-k8s-available?
   :-> ::spec/coe-resource-k8s-available?)
+
+(reg-sub
+  ::container-stats
+  :<- [::nuvlabox-status]
+  :-> (comp :container-stats :resources))
 
 (reg-sub
   ::augmented-container-stats

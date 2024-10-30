@@ -34,11 +34,15 @@
   [state]
   (cond
     (str/ends-with? state "ING") icons/i-sync
-    (str/starts-with? state "PARTIAL") icons/i-close
+    (str/starts-with? state "PARTIAL") icons/i-adjust
     :else (get {NEW     icons/i-sticky-note
                 STARTED icons/i-play
                 UPDATED icons/i-play
                 STOPPED icons/i-stop} state)))
+
+(defn AutoUpdateIcon
+  []
+  [icons/Icon {:name "fal fa-clock-rotate-left" :style {:margin-right 0}}])
 
 (defn StatisticStates
   [clickable?]
@@ -124,7 +128,7 @@
      [ui/TableCell description]
      [ui/TableCell state]
      [ui/TableCell [uix/TimeAgo created]]
-     [ui/TableCell (if auto-update (@tr [:yes]) (@tr [:no]))]
+     [ui/TableCell (when auto-update [AutoUpdateIcon])]
      [ui/TableCell [uix/Tags tags]]]))
 
 (defn Pagination
@@ -186,10 +190,10 @@
       :header      [:div {:style {:display         :flex
                                   :justify-content :space-between
                                   :align-items     :top}}
-                    [:div
-                     [icons/Icon {:name (state->icon state)}]
-                     (or name id)]
-                    (when auto-update [icons/Icon {:name "fal fa-refresh"}])]
+                    (or name id)
+                    [:div {:style {:text-align :right}}
+                     [icons/Icon {:name (state->icon state) :style {:margin-right 0}}]
+                     (when auto-update [AutoUpdateIcon])]]
       :meta        (str (str/capitalize (@tr [:updated])) " " (time/parse-ago updated @locale))
       :state       state
       :extra       [OperationalStatus operational-status]

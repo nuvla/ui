@@ -1326,7 +1326,7 @@
            [vc/TitledCard
             {:class :nuvla-edges
              :icon  icons/i-box
-             :label (str (@tr [:nuvlaedge]) "s")}
+             :label (@tr [:edges])}
             [EdgeOverviewContent @edges-stats creating?]]]
           [ui/GridColumn {:stretched true}
            [DeploymentsStatesCard]]]]))))

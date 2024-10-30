@@ -700,3 +700,5 @@
 (defn SearchIcon
   [opts]
   [I opts i-search])
+
+(def i-adjust "fas fa-adjust")

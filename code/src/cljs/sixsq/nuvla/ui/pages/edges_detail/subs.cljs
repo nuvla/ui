@@ -170,6 +170,11 @@
         modules->bool))))
 
 (reg-sub
+  ::installation-parameters
+  :<- [::nuvlabox-status]
+  :-> :installation-parameters)
+
+(reg-sub
   ::nuvlabox-components
   :<- [::nuvlabox-status]
   (fn [{:keys [components]}]

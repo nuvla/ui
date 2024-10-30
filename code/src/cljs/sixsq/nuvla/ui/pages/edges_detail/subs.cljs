@@ -114,7 +114,7 @@
                 [:namespaces ::k8s-namespaces k8s-flat-metadata]
                 [:pods ::k8s-pods
                  (fn [{:keys [status] :as resource}]
-                   (-> (k8s-flat-metadata resource)
+                   (-> (k8s-flat-metadata-namespace resource)
                        (assoc :phase (:phase status))))]
                 [:nodes ::k8s-nodes
                  (fn [{:keys [status] :as resource}]

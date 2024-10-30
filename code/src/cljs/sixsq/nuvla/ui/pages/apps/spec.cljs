@@ -84,10 +84,11 @@
 (def valid-architectures ["386" "x86" "x86_64" "amd64" "amd64p32" "aarch64"
                           "arm" "armbe" "arm64" "arm64/v8" "arm64be"
                           "arm/v5" "arm/v6" "arm/v7" "armv7l"
-                          "mips" "mipsle" "mips64" "mips64le" "mips64n32" "mips64p32" "mips64p32le"
-                          "mipsel64" "mips3l64n32" "mipsle"
+                          "mips" "mipsel" "mipsel64" "mipsle" "mips64" "mips64le" "mips64n32" "mips64p32" "mips64p32le"
+                          "mips3l64n32"
                           "ppc" "ppc64" "ppc64le"
                           "riscv64" "s390" "s390x" "sparc" "sparc64"])
+(def architectures-options (mapv (fn [arch] {:key arch :value arch :text arch}) valid-architectures))
 
 (s/def ::architecture (s/and string? (set valid-architectures)))
 (s/def ::architectures (s/nilable (s/coll-of ::architecture :min-count 1)))

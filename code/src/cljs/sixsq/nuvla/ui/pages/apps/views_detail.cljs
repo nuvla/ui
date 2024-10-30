@@ -1426,7 +1426,6 @@
         architectures    (subscribe [::subs/architectures])
         min-requirements (subscribe [::subs/minimum-requirements])
         editable?        (subscribe [::subs/editable?])
-        arch-options     (subscribe [::subs/architecture-options])
         on-change        (fn [update-event-kw value-fn value]
                            (dispatch [update-event-kw (if value-fn (value-fn value) value)])
                            (dispatch [::main-events/changes-protection? true])
@@ -1443,7 +1442,7 @@
                       :definition true}
             [ui/TableBody
              [uix/TableRowField (@tr [:architecture]), :key "architecture", :editable? @editable?,
-              :type :dropdown, :options @arch-options
+              :type :dropdown, :options spec/architectures-options
               :style (when @editable? {:padding-left edit-cell-left-padding})
               :spec ::spec/architectures, :validate-form? true, :required? false,
               :default-value @architectures, :show-pencil? false

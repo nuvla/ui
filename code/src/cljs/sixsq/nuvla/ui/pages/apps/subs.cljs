@@ -217,12 +217,6 @@
     (get-in db [::spec/module-common ::spec/architectures])))
 
 (reg-sub
-  ::architecture-options
-  (fn [_ _]
-    (mapv (fn [arch] {:key arch :value arch :text arch}) spec/valid-architectures)))
-
-
-(reg-sub
   ::minimum-requirements
   (fn [db]
     (get-in db [::spec/module-common ::spec/minimum-requirements])))

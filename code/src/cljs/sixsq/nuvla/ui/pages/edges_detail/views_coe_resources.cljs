@@ -56,7 +56,7 @@
              (or message content)]])]))
     [job-views/DefaultJobCell resource]))
 
-(defn KeyValueLabelGroup
+(defn CellKeyValueLabelGroup
   [cell-data _row _column]
   (uix/label-group-overflow-detector
     (fn []
@@ -66,7 +66,7 @@
          [ui/Label {:style   {:white-space :pre}
                     :content k :detail (str v)}])])))
 
-(defn LabelGroup
+(defn CellLabelGroup
   [cell-data _row _column]
   (uix/label-group-overflow-detector
     (fn []
@@ -75,12 +75,21 @@
          ^{:key (str v)}
          [ui/ListItem [ui/Label {:style {:white-space :pre} :content v}]])])))
 
-(defn Boolean
+(defn CellBoolean
   [cell-data _row _column]
   [:div {:style {:text-align :center}}
    (if (true? cell-data)
      [icons/CheckIconFull]
      [icons/MinusIcon])])
+
+(defn CellJson
+  [cell-data row _column]
+  [ui/Modal {:trigger    (r/as-element [:span [icons/ZoomInIcon {:style {:cursor :pointer}}]])
+             :close-icon true}
+   [ui/ModalHeader (or (:name row) (first (:names row)) (:uid row))]
+   [ui/ModalContent {:scrolling true}
+    [uix/EditorJson {:value     (general-utils/edn->json cell-data)
+                     :read-only true}]]])
 
 (defn CoeTable
   [{:keys [::!selected ::set-selected-fn ::!global-filter ::!pagination ::!can-action?] :as control} k]

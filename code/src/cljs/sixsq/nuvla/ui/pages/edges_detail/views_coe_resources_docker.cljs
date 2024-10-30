@@ -20,7 +20,7 @@
 (def field-labels {::table/field-key      :Labels
                    ::table/header-content "Labels"
                    ::table/no-sort?       true
-                   ::table/field-cell     coe/KeyValueLabelGroup})
+                   ::table/field-cell     coe/CellKeyValueLabelGroup})
 (def field-name {::table/field-key      :Name
                  ::table/header-content "Name"})
 (def field-driver {::table/field-key      :Driver
@@ -38,14 +38,14 @@
                                                                    ::table/no-sort?       true}
                                                                   {::table/field-key      :RepoDigests
                                                                    ::table/header-content "Repo Digests"
-                                                                   ::table/field-cell     coe/LabelGroup}
+                                                                   ::table/field-cell     coe/CellLabelGroup}
                                                                   {::table/field-key      :Size
                                                                    ::table/header-content "Size"
                                                                    ::table/field-cell     table/CellBytes}
                                                                   field-created
                                                                   {::table/field-key      :RepoTags
                                                                    ::table/header-content "Repo/Tags"
-                                                                   ::table/field-cell     coe/LabelGroup}
+                                                                   ::table/field-cell     coe/CellLabelGroup}
                                                                   field-labels
                                                                   {::table/field-key      :Repository
                                                                    ::table/header-content "Repository"}
@@ -67,10 +67,10 @@
                                                                   {::table/field-key      :HostConfig
                                                                    ::table/header-content "Host config"
                                                                    ::table/no-sort?       true
-                                                                   ::table/field-cell     coe/KeyValueLabelGroup}
+                                                                   ::table/field-cell     coe/CellKeyValueLabelGroup}
                                                                   {::table/field-key      :Names
                                                                    ::table/header-content "Names"
-                                                                   ::table/field-cell     coe/LabelGroup}
+                                                                   ::table/field-cell     coe/CellLabelGroup}
                                                                   {::table/field-key      :SizeRw
                                                                    ::table/header-content "Size RW"
                                                                    ::table/field-cell     table/CellBytes}
@@ -78,13 +78,13 @@
                                                                    ::table/header-content "Image Id"}
                                                                   {::table/field-key      :Mounts
                                                                    ::table/header-content "Mounts"
-                                                                   ::table/field-cell     coe/LabelGroup
+                                                                   ::table/field-cell     coe/CellLabelGroup
                                                                    ::table/no-sort?       true}
                                                                   {::table/field-key      :Name
                                                                    ::table/header-content "Name"}
                                                                   {::table/field-key      :NetworkSettings
                                                                    ::table/header-content "Networks"
-                                                                   ::table/field-cell     coe/LabelGroup
+                                                                   ::table/field-cell     coe/CellLabelGroup
                                                                    ::table/no-sort?       true}
                                                                   {::table/field-key      :State
                                                                    ::table/header-content "State"}
@@ -93,7 +93,7 @@
                                                                   {::table/field-key      :Ports
                                                                    ::table/header-content "Ports"
                                                                    ::table/no-sort?       true
-                                                                   ::table/field-cell     coe/LabelGroup}])
+                                                                   ::table/field-cell     coe/CellLabelGroup}])
                                   ::coe/!default-columns (r/atom [:Id :Name :Image :Status :Created :Ports])
                                   ::coe/resource-type    "container"}
                docker-volumes    {::coe/!data            (subscribe [::subs/docker-volumes])
@@ -119,7 +119,7 @@
                                                                   field-driver
                                                                   {::table/field-key      :Options
                                                                    ::table/header-content "Options"
-                                                                   ::table/field-cell     coe/KeyValueLabelGroup}
+                                                                   ::table/field-cell     coe/CellKeyValueLabelGroup}
                                                                   field-labels
                                                                   {::table/field-key      :ConfigFrom
                                                                    ::table/header-content "ConfigFrom"}
@@ -127,22 +127,22 @@
                                                                    ::table/header-content "ConfigOnly"}
                                                                   {::table/field-key      :IPAM
                                                                    ::table/header-content "IPAM"
-                                                                   ::table/field-cell     coe/KeyValueLabelGroup}
+                                                                   ::table/field-cell     coe/CellKeyValueLabelGroup}
                                                                   {::table/field-key      :Attachable
                                                                    ::table/header-content "Attachable"
-                                                                   ::table/field-cell     coe/Boolean
+                                                                   ::table/field-cell     coe/CellBoolean
                                                                    ::table/div-class      ["slideways-lr"]}
                                                                   {::table/field-key      :EnableIPv6
                                                                    ::table/header-content "IPv6"
-                                                                   ::table/field-cell     coe/Boolean
+                                                                   ::table/field-cell     coe/CellBoolean
                                                                    ::table/div-class      ["slideways-lr"]}
                                                                   {::table/field-key      :Ingress
                                                                    ::table/header-content "Ingress"
-                                                                   ::table/field-cell     coe/Boolean
+                                                                   ::table/field-cell     coe/CellBoolean
                                                                    ::table/div-class      ["slideways-lr"]}
                                                                   {::table/field-key      :Internal
                                                                    ::table/header-content "Internal"
-                                                                   ::table/field-cell     coe/Boolean
+                                                                   ::table/field-cell     coe/CellBoolean
                                                                    ::table/div-class      ["slideways-lr"]}
                                                                   {::table/field-key      :Scope
                                                                    ::table/header-content "Scope"}])

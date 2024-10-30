@@ -700,3 +700,8 @@
 (defn SearchIcon
   [opts]
   [I opts i-search])
+
+(def i-zoom-in "zoom in")
+(defn ZoomInIcon
+  [opts]
+  [I opts i-zoom-in])

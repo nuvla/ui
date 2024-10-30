@@ -33,7 +33,7 @@
                                                                            field-name
                                                                            field-creation-timestamp
                                                                            field-resource-version])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp])
                                            ::coe/resource-type    "namespace"
                                            ::coe/row-id-fn        :uid}
                k8s-pods                   {::coe/!data            (subscribe [::subs/k8s-pods])
@@ -44,7 +44,7 @@
                                                                            field-namespace
                                                                            {::table/field-key      :phase
                                                                             ::table/header-content "Status"}])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace :phase])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace :phase])
                                            ::coe/resource-type    "pod"
                                            ::coe/row-id-fn        :uid}
                k8s-nodes                  {::coe/!data            (subscribe [::subs/k8s-nodes])
@@ -55,7 +55,7 @@
                                                                            {::table/field-key      :node_info
                                                                             ::table/header-content "NodeInfo"
                                                                             ::table/field-cell     coe/KeyValueLabelGroup}])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :node_info])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :node_info])
                                            ::coe/resource-type    "node"
                                            ::coe/row-id-fn        :uid}
                k8s-configmaps             {::coe/!data            (subscribe [::subs/k8s-configmaps])
@@ -64,7 +64,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "configmap"
                                            ::coe/row-id-fn        :uid}
                k8s-secrets                {::coe/!data            (subscribe [::subs/k8s-secrets])
@@ -75,7 +75,7 @@
                                                                            field-namespace
                                                                            {::table/field-key      :type
                                                                             ::table/header-content "Type"}])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace :type])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace :type])
                                            ::coe/resource-type    "secret"
                                            ::coe/row-id-fn        :uid}
                k8s-statefulsets           {::coe/!data            (subscribe [::subs/k8s-statefulsets])
@@ -84,7 +84,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "statefulset"
                                            ::coe/row-id-fn        :uid}
                k8s-persistentvolumes      {::coe/!data            (subscribe [::subs/k8s-persistentvolumes])
@@ -93,7 +93,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "persistentvolume"
                                            ::coe/row-id-fn        :uid}
                k8s-persistentvolumeclaims {::coe/!data            (subscribe [::subs/k8s-persistentvolumeclaims])
@@ -102,7 +102,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "persistentvolumeclaim"
                                            ::coe/row-id-fn        :uid}
                k8s-daemonsets             {::coe/!data            (subscribe [::subs/k8s-daemonsets])
@@ -111,7 +111,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "daemonset"
                                            ::coe/row-id-fn        :uid}
                k8s-deployments            {::coe/!data            (subscribe [::subs/k8s-deployments])
@@ -120,7 +120,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "deployment"
                                            ::coe/row-id-fn        :uid}
                k8s-jobs                   {::coe/!data            (subscribe [::subs/k8s-jobs])
@@ -129,7 +129,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "job"
                                            ::coe/row-id-fn        :uid}
                k8s-ingresses              {::coe/!data            (subscribe [::subs/k8s-ingresses])
@@ -138,7 +138,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "ingresse"
                                            ::coe/row-id-fn        :uid}
                k8s-cronjobs               {::coe/!data            (subscribe [::subs/k8s-cronjobs])
@@ -147,7 +147,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "cronjob"
                                            ::coe/row-id-fn        :uid}
                k8s-services               {::coe/!data            (subscribe [::subs/k8s-services])
@@ -156,7 +156,7 @@
                                                                            field-creation-timestamp
                                                                            field-resource-version
                                                                            field-namespace])
-                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :resource_version :namespace])
+                                           ::coe/!default-columns (r/atom [:name :creation_timestamp :namespace])
                                            ::coe/resource-type    "service"
                                            ::coe/row-id-fn        :uid}]
     [coe/Tab

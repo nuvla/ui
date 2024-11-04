@@ -478,18 +478,13 @@
 (reg-sub
   ::save-enabled?
   :<- [::deployment-set-edited]
-  :<- [::edges-in-deployment-group-response]
-  :<- [::apps-creation]
-  :<- [::applications-sets]
   :<- [::unsaved-changes?]
   :<- [::persist-in-progress?]
-  (fn [[deployment-set-edited edges apps-creation _apps-sets unsaved-changes? persist-in-progress?]
+  (fn [[deployment-set-edited unsaved-changes? persist-in-progress?]
        [_ creating?]]
     (and (not persist-in-progress?)
          (if creating?
-           (and (not (str/blank? (:name deployment-set-edited)))
-                (seq edges)
-                (seq apps-creation))
+           (not (str/blank? (:name deployment-set-edited)))
            unsaved-changes?))))
 
 (reg-sub
@@ -509,13 +504,6 @@
   :<- [::opened-modal]
   (fn [opened-modal [_ id]]
     (= id opened-modal)))
-
-(defn apps-errors
-  [db]
-  (when-not (seq (apps-creation db))
-    [{:type    :missing-apps
-      :path    [:apps]
-      :message [:depl-group-apps-missing]}]))
 
 (defn env-vars-errors
   [{:keys [::spec/apps-edited?] :as db}]
@@ -546,8 +534,7 @@
    ```
   "
   [db]
-  (let [errors (concat (apps-errors db)
-                       (env-vars-errors db))]
+  (let [errors (env-vars-errors db)]
     {:valid? (not (seq errors))
      :errors errors}))
 

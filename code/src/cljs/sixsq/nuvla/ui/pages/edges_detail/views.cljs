@@ -21,7 +21,8 @@
             [sixsq.nuvla.ui.pages.edges-detail.spec :as spec]
             [sixsq.nuvla.ui.pages.edges-detail.subs :as subs]
             [sixsq.nuvla.ui.pages.edges-detail.views-timeseries :as timeseries]
-            [sixsq.nuvla.ui.pages.edges-detail.views-coe-resources :as coe-resources]
+            [sixsq.nuvla.ui.pages.edges-detail.views-coe-resources-docker :as coe-resources-docker]
+            [sixsq.nuvla.ui.pages.edges-detail.views-coe-resources-k8s :as coe-resources-k8s]
             [sixsq.nuvla.ui.pages.edges.events :as edges-events]
             [sixsq.nuvla.ui.pages.edges.subs :as edges-subs]
             [sixsq.nuvla.ui.pages.edges.utils :as utils]
@@ -2120,17 +2121,19 @@
 
 (defn tabs
   []
-  (let [tr                    @(subscribe [::i18n-subs/tr])
-        nuvlabox              (subscribe [::subs/nuvlabox])
+  (let [tr                        @(subscribe [::i18n-subs/tr])
+        nuvlabox                  (subscribe [::subs/nuvlabox])
         {:keys [id state]} @nuvlabox
-        can-edit?             @(subscribe [::subs/can-edit?])
-        peripherals           @(subscribe [::subs/nuvlabox-peripherals-ids])
-        deployments           @(subscribe [::deployments-subs/deployments])
-        overview              {:menuItem {:content "Overview"
-                                          :key     :overview
-                                          :icon    icons/i-eye}
-                               :render   #(r/as-element [TabOverview])}
-        coe-resources-docker? @(subscribe [::subs/coe-resource-docker-available?])]
+        can-edit?                 @(subscribe [::subs/can-edit?])
+        peripherals               @(subscribe [::subs/nuvlabox-peripherals-ids])
+        deployments               @(subscribe [::deployments-subs/deployments])
+        overview                  {:menuItem {:content "Overview"
+                                              :key     :overview
+                                              :icon    icons/i-eye}
+                                   :render   #(r/as-element [TabOverview])}
+        coe-res-docker-available? @(subscribe [::subs/coe-resource-docker-available?])
+        coe-res-k8s-available?    @(subscribe [::subs/coe-resource-k8s-available?])
+        ]
     (if (= state "SUSPENDED")
       [overview]
       [overview
@@ -2179,11 +2182,20 @@
                         :empty-msg          (tr [:empty-deployment-nuvlabox-msg])
                         :pagination-db-path ::spec/deployment-pagination
                         :fetch-event        [::events/get-deployments-for-edge]}]])}
-       (when coe-resources-docker?
+       (when coe-res-docker-available?
          {:menuItem {:content "Docker"
                      :key     events/tab-key-docker
                      :icon    icons/i-docker}
-          :render   #(r/as-element [coe-resources/Tab])})
+          :render   #(r/as-element [coe-resources-docker/Tab])})
+       (when coe-res-k8s-available?
+         {:menuItem {:content (r/as-element [:span
+
+                                             "Kubernetes"])
+                     :icon    (r/as-element [ui/Image {:src     "/ui/images/kubernetes-grey.svg"
+                                                       :style   {:width "16px"
+                                                                 :margin "0 .35714286em 0 0"}}])
+                     :key     events/tab-key-k8s}
+          :render   #(r/as-element [coe-resources-k8s/Tab])})
        {:menuItem {:content "Vulnerabilities"
                    :key     events/tab-key-vulnerabilities
                    :icon    icons/i-shield}
